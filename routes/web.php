@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
+use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Front\HomeController as FrontHomeController;
 use App\Http\Controllers\Front\SearchController as FrontSearchController;
@@ -143,6 +144,16 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+
+    // WordPress (TravelerWP) – tables cFdgeZ_*
+    Route::prefix('wordpress')->name('wordpress.')->group(function () {
+        Route::get('hotels', [HotelController::class, 'index'])->name('hotels.index');
+        Route::get('hotels/create', [HotelController::class, 'create'])->name('hotels.create');
+        Route::post('hotels', [HotelController::class, 'store'])->name('hotels.store');
+        Route::get('hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hotels.edit')->whereNumber('hotel');
+        Route::match(['put', 'patch'], 'hotels/{hotel}', [HotelController::class, 'update'])->name('hotels.update')->whereNumber('hotel');
+        Route::delete('hotels/{hotel}', [HotelController::class, 'destroy'])->name('hotels.destroy')->whereNumber('hotel');
+    });
 });
 
 Route::middleware('auth')->prefix('demo')->name('demo.')->group(function () {

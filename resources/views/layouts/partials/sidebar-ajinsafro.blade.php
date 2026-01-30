@@ -158,6 +158,15 @@
 
                 <li>
                     <a href="javascript: void(0);" class="has-arrow waves-effect">
+                        <i class="bx bx-wordpress"></i><span>WordPress</span>
+                    </a>
+                    <ul class="sub-menu" aria-expanded="false">
+                        <li><a href="{{ route('admin.wordpress.hotels.index') }}">Hotels</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a href="javascript: void(0);" class="has-arrow waves-effect">
                         <i class="bx bx-cog"></i><span>Paramètres</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
