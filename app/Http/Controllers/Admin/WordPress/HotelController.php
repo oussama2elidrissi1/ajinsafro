@@ -127,8 +127,9 @@ class HotelController extends Controller
             abort(404);
         }
         $stHotel = $hotel->stHotel ?? new StHotel(['post_id' => $hotel->ID]);
-        $featuredUrl = $this->media->getFeaturedImageUrl($hotel->ID);
-        $galleryUrls = $this->media->getGalleryUrls($hotel->ID);
+        // URLs construites via _wp_attached_file uniquement (jamais guid), vérifiées si fichier existe
+        $featuredUrl = $this->media->getFeaturedImageUrlVerified($hotel->ID);
+        $galleryUrls = $this->media->getGalleryUrlsVerified($hotel->ID);
 
         $meta = [
             'hotel_amenities' => WpPostmeta::getMeta($hotel->ID, 'hotel_amenities'),
@@ -145,11 +146,10 @@ class HotelController extends Controller
             '_logo_id' => WpPostmeta::getMeta($hotel->ID, '_logo_id'),
             '_single_layout' => WpPostmeta::getMeta($hotel->ID, '_single_layout'),
         ];
+        // Logo: URL via _logo_id → _wp_attached_file, uniquement si fichier existe
         $logoUrl = null;
-        if (! empty($hotelDetailMeta['_logo'])) {
-            $logoUrl = $hotelDetailMeta['_logo'];
-        } elseif (! empty($hotelDetailMeta['_logo_id']) && is_numeric($hotelDetailMeta['_logo_id'])) {
-            $logoUrl = $this->media->getAttachmentUrl((int) $hotelDetailMeta['_logo_id']);
+        if (! empty($hotelDetailMeta['_logo_id']) && is_numeric($hotelDetailMeta['_logo_id'])) {
+            $logoUrl = $this->media->getAttachmentUrlVerified((int) $hotelDetailMeta['_logo_id']);
         }
 
         return view('admin.wordpress.hotels.edit', [

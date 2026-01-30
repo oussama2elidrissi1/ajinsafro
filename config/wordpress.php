@@ -12,7 +12,8 @@ return [
     /*
     |--------------------------------------------------------------------------
     | WordPress uploads path (absolute path on disk)
-    | Used to store uploaded images in WP structure: uploads/Y/m/file.jpg
+    | Default: public/wp-content/uploads (e.g. public_html/booking/public/wp-content/uploads)
+    | When Laravel is under /booking, public_path() = .../booking/public
     |--------------------------------------------------------------------------
     */
     'uploads_path' => env('WP_UPLOADS_PATH', public_path('wp-content/uploads')),
@@ -20,7 +21,8 @@ return [
     /*
     |--------------------------------------------------------------------------
     | WordPress uploads URL base (no trailing slash)
-    | Used to build public URLs for images
+    | When null: url('/wp-content/uploads') is used so /booking is respected.
+    | Set WP_UPLOADS_URL if uploads are served from another domain/path.
     |--------------------------------------------------------------------------
     */
     'uploads_url' => env('WP_UPLOADS_URL', null),

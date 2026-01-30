@@ -36,11 +36,16 @@
     <label for="hotel_logo" class="form-label">Hotel logo</label>
     <div id="hotel-logo-preview" class="mb-2">
         @if($logoUrl)
-            <div class="d-flex align-items-center gap-2">
-                <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail" style="max-height: 80px;">
+            <div class="d-flex align-items-center gap-2 hotel-logo-wrap">
+                <div class="hotel-logo-img-wrap position-relative" style="width: 80px; height: 80px;">
+                    <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail hotel-logo-img" style="max-height: 80px; max-width: 80px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                    <div class="d-none hotel-logo-placeholder position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-light border rounded text-muted small text-center" style="font-size: 10px;">Image introuvable</div>
+                </div>
                 <button type="button" class="btn btn-sm btn-outline-danger" id="hotel-logo-remove">Remove logo</button>
                 <input type="hidden" name="hotel_logo_remove" id="hotel_logo_remove_input" value="0">
             </div>
+        @else
+            <div class="bg-light border rounded d-flex align-items-center justify-content-center text-muted small" style="width: 80px; height: 50px;">Aucun logo</div>
         @endif
     </div>
     <input type="file" class="form-control @error('hotel_logo') is-invalid @enderror" id="hotel_logo" name="hotel_logo" accept="image/jpeg,image/png,image/webp">
@@ -69,8 +74,11 @@
 @if(!empty($galleryUrls))
     <div class="d-flex flex-wrap gap-2 mb-2" id="gallery-current">
         @foreach($galleryUrls as $item)
-            <div class="gallery-item position-relative d-inline-block" data-id="{{ $item['id'] }}">
-                <img src="{{ $item['url'] }}" alt="Galerie" class="img-thumbnail" style="height: 80px; width: auto;">
+            <div class="gallery-item position-relative d-inline-block" data-id="{{ $item['id'] }}" style="width: 80px; height: 80px;">
+                <div class="position-relative w-100 h-100">
+                    <img src="{{ $item['url'] }}" alt="Galerie" class="img-thumbnail gallery-img" style="height: 80px; width: 80px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                    <div class="d-none gallery-placeholder position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-light border rounded text-muted small text-center" style="font-size: 9px;">Image introuvable</div>
+                </div>
                 <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 gallery-remove" style="transform: translate(50%, -50%);" title="Retirer"><i class="bx bx-trash font-size-12"></i></button>
                 <input type="hidden" name="gallery_keep_ids[]" value="{{ $item['id'] }}">
             </div>

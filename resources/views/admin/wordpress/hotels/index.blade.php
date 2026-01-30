@@ -54,11 +54,14 @@
                                 </thead>
                                 <tbody>
                                     @foreach($hotels as $hotel)
-                                        @php $thumbUrl = $media->getFeaturedImageUrl($hotel->ID); @endphp
+                                        @php $thumbUrl = $media->getFeaturedImageUrlVerified($hotel->ID); @endphp
                                         <tr>
                                             <td>
                                                 @if($thumbUrl)
-                                                    <img src="{{ $thumbUrl }}" alt="" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <div class="position-relative" style="width: 50px; height: 50px;">
+                                                        <img src="{{ $thumbUrl }}" alt="" class="rounded hotel-thumb-img" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                                                        <span class="d-none hotel-thumb-placeholder rounded bg-light text-muted small d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 10px;">—</span>
+                                                    </div>
                                                 @else
                                                     <span class="text-muted">—</span>
                                                 @endif

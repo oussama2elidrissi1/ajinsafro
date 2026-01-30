@@ -82,10 +82,13 @@
 <div class="mb-3">
     <label for="featured_image" class="form-label">Image à la une (thumbnail)</label>
     @if($featuredUrl)
-        <div class="mb-2">
-            <img src="{{ $featuredUrl }}" alt="Image à la une" class="img-thumbnail" style="max-height: 120px;">
+        <div class="mb-2 position-relative d-inline-block">
+            <img src="{{ $featuredUrl }}" alt="Image à la une" class="img-thumbnail featured-img" style="max-height: 120px;" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+            <div class="d-none featured-placeholder img-thumbnail bg-light text-muted small d-flex align-items-center justify-content-center text-center" style="max-height: 120px; min-width: 120px;">Image introuvable</div>
             <span class="text-muted small d-block">Remplacer en choisissant un nouveau fichier.</span>
         </div>
+    @else
+        <div class="bg-light border rounded d-inline-block p-2 text-muted small mb-2">Aucune image à la une</div>
     @endif
     <input type="file" class="form-control @error('featured_image') is-invalid @enderror" id="featured_image" name="featured_image" accept="image/jpeg,image/png,image/webp">
     <small class="text-muted">JPG, PNG, WebP. Max 5 Mo.</small>
