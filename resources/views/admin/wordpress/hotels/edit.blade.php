@@ -40,7 +40,7 @@
         <a href="{{ route('admin.wordpress.hotels.index') }}" class="btn btn-secondary waves-effect">Retour à la liste</a>
     </div>
 
-    <form action="{{ route('admin.wordpress.hotels.update', $hotel) }}" method="POST">
+    <form action="{{ route('admin.wordpress.hotels.update', $hotel) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <div class="row">
@@ -48,7 +48,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Informations de l'hôtel</h4>
-                        @include('admin.wordpress.hotels._form', ['hotel' => $hotel, 'stHotel' => $stHotel])
+                        @include('admin.wordpress.hotels._form', ['hotel' => $hotel, 'stHotel' => $stHotel, 'meta' => $meta ?? [], 'galleryUrls' => $galleryUrls ?? [], 'featuredUrl' => $featuredUrl ?? null])
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary waves-effect waves-light">Enregistrer</button>

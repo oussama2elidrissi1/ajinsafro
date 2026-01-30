@@ -29,14 +29,14 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.wordpress.hotels.store') }}" method="POST">
+    <form action="{{ route('admin.wordpress.hotels.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Informations de l'hôtel</h4>
-                        @include('admin.wordpress.hotels._form', ['hotel' => null, 'stHotel' => null])
+                        @include('admin.wordpress.hotels._form', ['hotel' => null, 'stHotel' => null, 'meta' => [], 'galleryUrls' => [], 'featuredUrl' => null])
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary waves-effect waves-light">Créer l'hôtel</button>

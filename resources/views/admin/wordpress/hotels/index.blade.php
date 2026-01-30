@@ -42,6 +42,7 @@
                             <table class="table table-hover table-centered mb-0">
                                 <thead class="table-light">
                                     <tr>
+                                        <th>Image</th>
                                         <th>ID</th>
                                         <th>Titre</th>
                                         <th>Statut</th>
@@ -53,7 +54,15 @@
                                 </thead>
                                 <tbody>
                                     @foreach($hotels as $hotel)
+                                        @php $thumbUrl = $media->getFeaturedImageUrl($hotel->ID); @endphp
                                         <tr>
+                                            <td>
+                                                @if($thumbUrl)
+                                                    <img src="{{ $thumbUrl }}" alt="" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
                                             <td>{{ $hotel->ID }}</td>
                                             <td>
                                                 <a href="{{ route('admin.wordpress.hotels.edit', $hotel) }}" class="text-body fw-medium">{{ $hotel->post_title }}</a>

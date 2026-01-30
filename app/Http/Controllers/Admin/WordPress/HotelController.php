@@ -7,6 +7,8 @@ use App\Http\Requests\HotelStoreRequest;
 use App\Http\Requests\HotelUpdateRequest;
 use App\Models\StHotel;
 use App\Models\WpPost;
+use App\Models\WpPostmeta;
+use App\Services\WordPressMediaService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,10 @@ use Illuminate\View\View;
 
 class HotelController extends Controller
 {
+    public function __construct(
+        protected WordPressMediaService $media
+    ) {}
+
     public function index(): View
     {
         $hotels = WpPost::typeHotel()
@@ -22,7 +28,10 @@ class HotelController extends Controller
             ->orderBy('post_modified', 'desc')
             ->paginate(15);
 
-        return view('admin.wordpress.hotels.index', compact('hotels'));
+        return view('admin.wordpress.hotels.index', [
+            'hotels' => $hotels,
+            'media' => $this->media,
+        ]);
     }
 
     public function create(): View
@@ -77,6 +86,25 @@ class HotelController extends Controller
             $stHotel->is_featured = ($validated['is_featured'] ?? 'off') === 'on' ? 'on' : 'off';
             $stHotel->save();
 
+            $this->saveHotelMeta($post->ID, $validated);
+
+            if ($request->hasFile('featured_image')) {
+                $attachmentId = $this->media->uploadAndCreateAttachment($request->file('featured_image'));
+                $this->media->setHotelThumbnail($post->ID, $attachmentId);
+            }
+
+            $galleryIds = [];
+            if ($request->hasFile('gallery_images')) {
+                foreach ($request->file('gallery_images') as $file) {
+                    if ($file->isValid()) {
+                        $galleryIds[] = $this->media->uploadAndCreateAttachment($file);
+                    }
+                }
+                if (! empty($galleryIds)) {
+                    $this->media->setHotelGallery($post->ID, $galleryIds);
+                }
+            }
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -98,10 +126,22 @@ class HotelController extends Controller
             abort(404);
         }
         $stHotel = $hotel->stHotel ?? new StHotel(['post_id' => $hotel->ID]);
+        $featuredUrl = $this->media->getFeaturedImageUrl($hotel->ID);
+        $galleryUrls = $this->media->getGalleryUrls($hotel->ID);
+        $meta = [
+            'hotel_amenities' => WpPostmeta::getMeta($hotel->ID, 'hotel_amenities'),
+            'hotel_policies' => WpPostmeta::getMeta($hotel->ID, 'hotel_policies'),
+            'hotel_phone' => WpPostmeta::getMeta($hotel->ID, 'hotel_phone'),
+            'hotel_email' => WpPostmeta::getMeta($hotel->ID, 'hotel_email'),
+        ];
 
         return view('admin.wordpress.hotels.edit', [
             'hotel' => $hotel,
             'stHotel' => $stHotel,
+            'featuredUrl' => $featuredUrl,
+            'galleryUrls' => $galleryUrls,
+            'meta' => $meta,
+            'media' => $this->media,
         ]);
     }
 
@@ -145,6 +185,25 @@ class HotelController extends Controller
             $stHotel->is_featured = ($validated['is_featured'] ?? 'off') === 'on' ? 'on' : 'off';
             $stHotel->save();
 
+            $this->saveHotelMeta($hotel->ID, $validated);
+
+            if ($request->hasFile('featured_image')) {
+                $attachmentId = $this->media->uploadAndCreateAttachment($request->file('featured_image'));
+                $this->media->setHotelThumbnail($hotel->ID, $attachmentId);
+            }
+
+            $galleryKeepIds = array_values(array_filter(array_map('intval', $validated['gallery_keep_ids'] ?? [])));
+            $newGalleryIds = [];
+            if ($request->hasFile('gallery_images')) {
+                foreach ($request->file('gallery_images') as $file) {
+                    if ($file->isValid()) {
+                        $newGalleryIds[] = $this->media->uploadAndCreateAttachment($file);
+                    }
+                }
+            }
+            $finalGalleryIds = array_merge($galleryKeepIds, $newGalleryIds);
+            $this->media->setHotelGallery($hotel->ID, $finalGalleryIds);
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -168,5 +227,22 @@ class HotelController extends Controller
         return redirect()
             ->route('admin.wordpress.hotels.index')
             ->with('success', 'Hôtel déplacé dans la corbeille.');
+    }
+
+    protected function saveHotelMeta(int $postId, array $validated): void
+    {
+        $metaKeys = [
+            'hotel_amenities' => 'hotel_amenities',
+            'hotel_policies' => 'hotel_policies',
+            'hotel_phone' => 'hotel_phone',
+            'hotel_email' => 'hotel_email',
+        ];
+        foreach ($metaKeys as $key => $metaKey) {
+            $value = $validated[$key] ?? null;
+            if (is_string($value)) {
+                $value = trim($value) === '' ? null : $value;
+            }
+            WpPostmeta::setMeta($postId, $metaKey, $value);
+        }
     }
 }
