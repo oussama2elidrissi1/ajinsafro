@@ -102,6 +102,7 @@ class HotelController extends Controller
                 }
                 if (! empty($galleryIds)) {
                     $this->media->setHotelGallery($post->ID, $galleryIds);
+                    $this->media->setGalleryMeta($post->ID, $galleryIds);
                 }
             }
 
@@ -128,6 +129,7 @@ class HotelController extends Controller
         $stHotel = $hotel->stHotel ?? new StHotel(['post_id' => $hotel->ID]);
         $featuredUrl = $this->media->getFeaturedImageUrl($hotel->ID);
         $galleryUrls = $this->media->getGalleryUrls($hotel->ID);
+
         $meta = [
             'hotel_amenities' => WpPostmeta::getMeta($hotel->ID, 'hotel_amenities'),
             'hotel_policies' => WpPostmeta::getMeta($hotel->ID, 'hotel_policies'),
@@ -135,12 +137,29 @@ class HotelController extends Controller
             'hotel_email' => WpPostmeta::getMeta($hotel->ID, 'hotel_email'),
         ];
 
+        $hotelDetailMeta = [
+            '_is_featured' => WpPostmeta::getMeta($hotel->ID, '_is_featured'),
+            '_external_booking' => WpPostmeta::getMeta($hotel->ID, '_external_booking'),
+            '_external_booking_link' => WpPostmeta::getMeta($hotel->ID, '_external_booking_link'),
+            '_logo' => WpPostmeta::getMeta($hotel->ID, '_logo'),
+            '_logo_id' => WpPostmeta::getMeta($hotel->ID, '_logo_id'),
+            '_single_layout' => WpPostmeta::getMeta($hotel->ID, '_single_layout'),
+        ];
+        $logoUrl = null;
+        if (! empty($hotelDetailMeta['_logo'])) {
+            $logoUrl = $hotelDetailMeta['_logo'];
+        } elseif (! empty($hotelDetailMeta['_logo_id']) && is_numeric($hotelDetailMeta['_logo_id'])) {
+            $logoUrl = $this->media->getAttachmentUrl((int) $hotelDetailMeta['_logo_id']);
+        }
+
         return view('admin.wordpress.hotels.edit', [
             'hotel' => $hotel,
             'stHotel' => $stHotel,
             'featuredUrl' => $featuredUrl,
             'galleryUrls' => $galleryUrls,
             'meta' => $meta,
+            'hotelDetailMeta' => $hotelDetailMeta,
+            'logoUrl' => $logoUrl,
             'media' => $this->media,
         ]);
     }
@@ -203,6 +222,9 @@ class HotelController extends Controller
             }
             $finalGalleryIds = array_merge($galleryKeepIds, $newGalleryIds);
             $this->media->setHotelGallery($hotel->ID, $finalGalleryIds);
+            $this->media->setGalleryMeta($hotel->ID, $finalGalleryIds);
+
+            $this->saveHotelDetailMeta($hotel->ID, $request, $validated);
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -242,7 +264,34 @@ class HotelController extends Controller
             if (is_string($value)) {
                 $value = trim($value) === '' ? null : $value;
             }
-            WpPostmeta::setMeta($postId, $metaKey, $value);
+            WpPostmeta::updateOrInsertMeta($postId, $metaKey, $value);
         }
+    }
+
+    protected function saveHotelDetailMeta(int $postId, \Illuminate\Http\Request $request, array $validated): void
+    {
+        $isFeatured = ($validated['_is_featured'] ?? '') === '1' ? '1' : '0';
+        WpPostmeta::updateOrInsertMeta($postId, '_is_featured', $isFeatured);
+
+        $externalBooking = ($validated['_external_booking'] ?? '') === '1' ? '1' : '0';
+        WpPostmeta::updateOrInsertMeta($postId, '_external_booking', $externalBooking);
+
+        if ($externalBooking === '1') {
+            $link = trim($validated['external_booking_link'] ?? '');
+            WpPostmeta::updateOrInsertMeta($postId, '_external_booking_link', $link === '' ? null : $link);
+        }
+
+        if ($request->boolean('hotel_logo_remove')) {
+            WpPostmeta::deleteMeta($postId, '_logo_id');
+            WpPostmeta::deleteMeta($postId, '_logo');
+        } elseif ($request->hasFile('hotel_logo') && $request->file('hotel_logo')->isValid()) {
+            $attachmentId = $this->media->uploadAndCreateAttachment($request->file('hotel_logo'));
+            $logoUrl = $this->media->getAttachmentUrl($attachmentId);
+            WpPostmeta::updateOrInsertMeta($postId, '_logo_id', (string) $attachmentId);
+            WpPostmeta::updateOrInsertMeta($postId, '_logo', $logoUrl ?? '');
+        }
+
+        $layout = $validated['_single_layout'] ?? null;
+        WpPostmeta::updateOrInsertMeta($postId, '_single_layout', $layout && in_array($layout, ['layout-1', 'layout-2'], true) ? $layout : null);
     }
 }

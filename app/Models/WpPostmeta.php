@@ -56,4 +56,20 @@ class WpPostmeta extends Model
             }
         }
     }
+
+    /**
+     * Alias for setMeta: update or insert meta (used by HotelController).
+     */
+    public static function updateOrInsertMeta(int $postId, string $metaKey, ?string $metaValue): void
+    {
+        static::setMeta($postId, $metaKey, $metaValue);
+    }
+
+    /**
+     * Delete a meta row for a post.
+     */
+    public static function deleteMeta(int $postId, string $metaKey): void
+    {
+        static::where('post_id', $postId)->where('meta_key', $metaKey)->delete();
+    }
 }

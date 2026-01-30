@@ -35,6 +35,13 @@ class HotelUpdateRequest extends FormRequest
             'hotel_policies' => ['nullable', 'string'],
             'hotel_phone' => ['nullable', 'string', 'max:100'],
             'hotel_email' => ['nullable', 'string', 'email', 'max:255'],
+            // Hotel detail tab
+            '_is_featured' => ['nullable', 'in:0,1'],
+            '_external_booking' => ['nullable', 'in:0,1'],
+            'external_booking_link' => ['nullable', 'string', 'max:500'],
+            'hotel_logo' => $imageRule,
+            'hotel_logo_remove' => ['nullable', 'boolean'],
+            '_single_layout' => ['nullable', 'string', 'in:layout-1,layout-2'],
         ];
     }
 
@@ -58,6 +65,11 @@ class HotelUpdateRequest extends FormRequest
             'hotel_policies' => 'politiques',
             'hotel_phone' => 'téléphone',
             'hotel_email' => 'email',
+            '_is_featured' => 'hôtel en vedette',
+            '_external_booking' => 'réservation externe',
+            'external_booking_link' => 'lien réservation externe',
+            'hotel_logo' => 'logo',
+            '_single_layout' => 'mise en page',
         ];
     }
 }

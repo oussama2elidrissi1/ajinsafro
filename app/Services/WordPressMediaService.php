@@ -141,11 +141,13 @@ class WordPressMediaService
     }
 
     /**
-     * Get gallery image URLs for a post (hotel). Reads st_gallery then gallery fallback.
+     * Get gallery image URLs for a post (hotel). Reads _gallery, then st_gallery, then gallery.
      */
     public function getGalleryUrls(int $postId): array
     {
-        $ids = WpPostmeta::getMeta($postId, 'st_gallery') ?: WpPostmeta::getMeta($postId, 'gallery');
+        $ids = WpPostmeta::getMeta($postId, '_gallery')
+            ?: WpPostmeta::getMeta($postId, 'st_gallery')
+            ?: WpPostmeta::getMeta($postId, 'gallery');
         if (! $ids || trim($ids) === '') {
             return [];
         }
@@ -161,14 +163,50 @@ class WordPressMediaService
     }
 
     /**
+     * Set gallery meta key _gallery (comma-separated attachment IDs).
+     */
+    public function setGalleryMeta(int $hotelPostId, array $attachmentIds): void
+    {
+        $value = implode(',', array_map('intval', array_filter($attachmentIds)));
+        WpPostmeta::setMeta($hotelPostId, '_gallery', $value);
+    }
+
+    /**
      * Full flow: upload file, create attachment, return attachment ID.
+     * Mime is read BEFORE move to avoid "tmp file does not exist" on cPanel.
      */
     public function uploadAndCreateAttachment(UploadedFile $file): int
     {
+        $mimeType = $file->getClientMimeType();
+        if (empty($mimeType)) {
+            $ext = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?? '');
+            $mimeType = match ($ext) {
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'webp' => 'image/webp',
+                'gif' => 'image/gif',
+                default => 'application/octet-stream',
+            };
+            if (config('app.debug')) {
+                \Log::debug('WordPressMediaService: mime from extension', ['ext' => $ext, 'mime' => $mimeType]);
+            }
+        }
+
         $relativePath = $this->uploadToWpUploads($file);
-        $mimeType = $file->getMimeType();
         $guid = $this->url($relativePath);
 
         return $this->createAttachment($relativePath, $mimeType, $guid);
+    }
+
+    /**
+     * Get public URL for an attachment by ID (reads _wp_attached_file).
+     */
+    public function getAttachmentUrl(int $attachmentId): ?string
+    {
+        $relativePath = WpPostmeta::getMeta($attachmentId, '_wp_attached_file');
+        if (! $relativePath) {
+            return null;
+        }
+        return $this->url($relativePath);
     }
 }
