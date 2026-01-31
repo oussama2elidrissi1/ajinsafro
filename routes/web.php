@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Auth\LockScreenController;
+use App\Http\Controllers\Booking\StartBookingController;
 use App\Http\Controllers\Front\HomeController as FrontHomeController;
 use App\Http\Controllers\Front\SearchController as FrontSearchController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
@@ -41,6 +42,8 @@ Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
 Route::get('/search', [FrontSearchController::class, 'index'])->name('front.search');
 Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voyages.index');
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
+
+Route::get('/booking/start', StartBookingController::class)->name('booking.start');
 
 Route::middleware('auth')->group(function () {
     Route::get('lock-screen', [LockScreenController::class, 'show'])->name('lock-screen');
