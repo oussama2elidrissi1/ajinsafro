@@ -22,6 +22,7 @@ use App\Http\Controllers\Booking\StartBookingController;
 use App\Http\Controllers\Front\HomeController as FrontHomeController;
 use App\Http\Controllers\Front\SearchController as FrontSearchController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
+use App\Http\Controllers\Internal\SyncInboundController;
 use App\Http\Controllers\DemoController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +45,9 @@ Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voy
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
 
 Route::get('/booking/start', StartBookingController::class)->name('booking.start');
+
+Route::post('/internal/sync/wp-to-laravel', [SyncInboundController::class, 'wpToLaravel'])
+    ->middleware('sync.token');
 
 Route::middleware('auth')->group(function () {
     Route::get('lock-screen', [LockScreenController::class, 'show'])->name('lock-screen');

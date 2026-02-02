@@ -12,12 +12,13 @@ class Voyage extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'description', 'accroche', 'destination', 'duration_text',
+        'wp_post_id', 'name', 'slug', 'description', 'accroche', 'destination', 'duration_text',
         'price_from', 'old_price', 'currency', 'min_people', 'departure_policy', 'status',
         'featured_image',
     ];
 
     protected $casts = [
+        'wp_post_id' => 'integer',
         'price_from' => 'integer',
         'old_price' => 'integer',
         'min_people' => 'integer',
@@ -63,6 +64,11 @@ class Voyage extends Model
     {
         if (empty($this->featured_image)) {
             return null;
+        }
+        if (str_starts_with($this->featured_image, 'http://')
+            || str_starts_with($this->featured_image, 'https://')
+            || str_starts_with($this->featured_image, 'data:')) {
+            return $this->featured_image;
         }
         return Storage::disk('public')->url($this->featured_image);
     }
