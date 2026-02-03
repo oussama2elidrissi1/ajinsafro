@@ -36,10 +36,18 @@ class Settings
     {
         $sanitized = [];
 
+        // Laravel → WP settings
         $sanitized['laravel_base_url'] = esc_url_raw(trim($input['laravel_base_url'] ?? ''));
         $sanitized['booking_checkout_base_url'] = esc_url_raw(trim($input['booking_checkout_base_url'] ?? ''));
         $sanitized['hmac_secret'] = sanitize_text_field($input['hmac_secret'] ?? '');
         $sanitized['enable_sync'] = !empty($input['enable_sync']);
+        
+        // WP → Laravel settings
+        $sanitized['enable_laravel_sync'] = !empty($input['enable_laravel_sync']);
+        $sanitized['laravel_sync_base_url'] = esc_url_raw(trim($input['laravel_sync_base_url'] ?? ''));
+        $sanitized['laravel_webhook_token'] = sanitize_text_field($input['laravel_webhook_token'] ?? '');
+        
+        // Other settings
         $sanitized['cache_ttl_seconds'] = absint($input['cache_ttl_seconds'] ?? 300);
         $sanitized['auto_inject_builder'] = !empty($input['auto_inject_builder']);
         $sanitized['auto_inject_position'] = in_array($input['auto_inject_position'] ?? 'after', ['before', 'after']) 
@@ -64,6 +72,9 @@ class Settings
                 'booking_checkout_base_url' => $_POST['booking_checkout_base_url'] ?? '',
                 'hmac_secret' => $_POST['hmac_secret'] ?? '',
                 'enable_sync' => isset($_POST['enable_sync']),
+                'enable_laravel_sync' => isset($_POST['enable_laravel_sync']),
+                'laravel_sync_base_url' => $_POST['laravel_sync_base_url'] ?? '',
+                'laravel_webhook_token' => $_POST['laravel_webhook_token'] ?? '',
                 'cache_ttl_seconds' => absint($_POST['cache_ttl_seconds'] ?? 300),
                 'auto_inject_builder' => isset($_POST['auto_inject_builder']),
                 'auto_inject_position' => $_POST['auto_inject_position'] ?? 'after',

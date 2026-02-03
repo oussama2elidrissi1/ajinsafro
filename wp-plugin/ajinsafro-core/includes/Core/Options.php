@@ -7,10 +7,18 @@ class Options
     const OPTION_KEY = 'ajinsafro_settings';
 
     private static $defaults = [
+        // Laravel → WP sync (existing)
         'laravel_base_url' => '',
         'booking_checkout_base_url' => '',
         'hmac_secret' => '',
         'enable_sync' => false,
+        
+        // WP → Laravel sync (new)
+        'enable_laravel_sync' => false,
+        'laravel_sync_base_url' => 'https://booking.ajinsafro.net',
+        'laravel_webhook_token' => '',
+        
+        // Other settings
         'cache_ttl_seconds' => 300,
         'auto_inject_builder' => true,
         'auto_inject_position' => 'after',

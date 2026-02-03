@@ -61,7 +61,7 @@ if (!defined('ABSPATH')) exit;
 
             <tr>
                 <th scope="row">
-                    <label for="enable_sync"><?php _e('Enable Sync', 'ajinsafro-core'); ?></label>
+                    <label for="enable_sync"><?php _e('Enable Laravel → WP Sync', 'ajinsafro-core'); ?></label>
                 </th>
                 <td>
                     <label>
@@ -70,7 +70,7 @@ if (!defined('ABSPATH')) exit;
                                name="enable_sync" 
                                value="1" 
                                <?php checked($options['enable_sync'], true); ?>>
-                        <?php _e('Enable Laravel to WordPress sync endpoint', 'ajinsafro-core'); ?>
+                        <?php _e('Enable Laravel to WordPress sync endpoint (receive updates from Laravel)', 'ajinsafro-core'); ?>
                     </label>
                 </td>
             </tr>
@@ -88,6 +88,58 @@ if (!defined('ABSPATH')) exit;
                            class="small-text">
                     <p class="description">
                         <?php _e('Cache duration for package state (0 to disable)', 'ajinsafro-core'); ?>
+                    </p>
+                </td>
+            </tr>
+        </table>
+
+        <h2><?php _e('Bi-directional Sync (WP → Laravel)', 'ajinsafro-core'); ?></h2>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="enable_laravel_sync"><?php _e('Enable WP → Laravel Sync', 'ajinsafro-core'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox" 
+                               id="enable_laravel_sync" 
+                               name="enable_laravel_sync" 
+                               value="1" 
+                               <?php checked($options['enable_laravel_sync'], true); ?>>
+                        <?php _e('Automatically push tour changes to Laravel (when saving tours in WP)', 'ajinsafro-core'); ?>
+                    </label>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">
+                    <label for="laravel_sync_base_url"><?php _e('Laravel Sync Endpoint URL', 'ajinsafro-core'); ?></label>
+                </th>
+                <td>
+                    <input type="url" 
+                           id="laravel_sync_base_url" 
+                           name="laravel_sync_base_url" 
+                           value="<?php echo esc_attr($options['laravel_sync_base_url']); ?>" 
+                           class="regular-text" 
+                           placeholder="https://booking.ajinsafro.net">
+                    <p class="description">
+                        <?php _e('Laravel base URL for WP→Laravel sync (without trailing slash)', 'ajinsafro-core'); ?>
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">
+                    <label for="laravel_webhook_token"><?php _e('Laravel Webhook Token', 'ajinsafro-core'); ?></label>
+                </th>
+                <td>
+                    <input type="text" 
+                           id="laravel_webhook_token" 
+                           name="laravel_webhook_token" 
+                           value="<?php echo esc_attr($options['laravel_webhook_token']); ?>" 
+                           class="regular-text">
+                    <p class="description">
+                        <?php _e('Bearer token for authenticating with Laravel webhook (SYNC_WEBHOOK_TOKEN)', 'ajinsafro-core'); ?>
                     </p>
                 </td>
             </tr>

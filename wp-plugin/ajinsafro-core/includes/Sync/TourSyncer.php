@@ -41,11 +41,18 @@ class TourSyncer
             ],
         ];
 
+        // Set sync lock to prevent WordPress → Laravel push during this update
+        if ($existing_post) {
+            update_post_meta($existing_post->ID, '_aj_sync_lock', '1');
+        }
+
         if ($existing_post) {
             $post_data['ID'] = $existing_post->ID;
             $post_id = wp_update_post($post_data, true);
         } else {
             $post_id = wp_insert_post($post_data, true);
+            // Set lock for new posts too
+            update_post_meta($post_id, '_aj_sync_lock', '1');
         }
 
         if (is_wp_error($post_id)) {
@@ -63,8 +70,17 @@ class TourSyncer
         // Update custom table
         $this->update_custom_table($post_id, $data);
 
+        // Store sync hash to prevent unnecessary pushes
+        if (isset($data['sync_hash'])) {
+            update_post_meta($post_id, '_aj_sync_hash', $data['sync_hash']);
+        }
+
+        // Remove sync lock after all updates are done
+        delete_post_meta($post_id, '_aj_sync_lock');
+
         return [
             'post_id' => $post_id,
+            'wp_post_id' => $post_id, // For Laravel response
             'laravel_id' => $laravel_id,
             'action' => $existing_post ? 'updated' : 'created',
         ];

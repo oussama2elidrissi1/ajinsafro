@@ -14,7 +14,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register SyncContext as singleton to track sync operations
+        $this->app->singleton(\App\Services\Sync\SyncContext::class);
     }
 
     /**

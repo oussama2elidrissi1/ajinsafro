@@ -65,20 +65,24 @@ final class Ajinsafro_Core
         add_action('init', [$this, 'load_textdomain']);
     }
 
-    public function init()
-    {
-        // Initialize components
-        new Ajinsafro\Admin\Settings();
-        
-        $shortcode = new Ajinsafro\Frontend\Shortcode();
-        
-        // Initialize auto-injector (pass shortcode instance for consistency)
-        new Ajinsafro\Frontend\AutoInjector($shortcode);
-        
-        new Ajinsafro\Ajax\Handler();
-        new Ajinsafro\Sync\RestEndpoint();
-        new Ajinsafro\Core\Assets();
-    }
+            public function init()
+            {
+                // Initialize components
+                new Ajinsafro\Admin\Settings();
+                
+                $shortcode = new Ajinsafro\Frontend\Shortcode();
+                
+                // Initialize auto-injector (pass shortcode instance for consistency)
+                new Ajinsafro\Frontend\AutoInjector($shortcode);
+                
+                new Ajinsafro\Ajax\Handler();
+                
+                // Bi-directional sync
+                new Ajinsafro\Sync\RestEndpoint(); // Laravel → WP
+                new Ajinsafro\Sync\LaravelPushSync(); // WP → Laravel
+                
+                new Ajinsafro\Core\Assets();
+            }
 
     public function load_textdomain()
     {

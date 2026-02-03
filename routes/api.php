@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\PublicPackageController;
+use App\Http\Controllers\Sync\WpToLaravelController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,4 +38,19 @@ Route::prefix('public')->name('api.public.')->group(function () {
     // Create checkout token
     Route::post('checkout/create', [PublicPackageController::class, 'createCheckout'])
         ->name('checkout.create');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Bi-directional Sync API (WordPress → Laravel)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('sync')->name('api.sync.')->group(function () {
+    // Upsert tour from WordPress
+    Route::post('wp-to-laravel', [WpToLaravelController::class, 'upsertTour'])
+        ->name('wp-to-laravel.upsert');
+    
+    // Delete tour from WordPress
+    Route::post('wp-to-laravel/delete', [WpToLaravelController::class, 'deleteTour'])
+        ->name('wp-to-laravel.delete');
 });
