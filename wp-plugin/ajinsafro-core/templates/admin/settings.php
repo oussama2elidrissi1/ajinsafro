@@ -93,6 +93,47 @@ if (!defined('ABSPATH')) exit;
             </tr>
         </table>
 
+        <h2><?php _e('Package Builder Display', 'ajinsafro-core'); ?></h2>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="auto_inject_builder"><?php _e('Auto-inject Package Builder', 'ajinsafro-core'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox" 
+                               id="auto_inject_builder" 
+                               name="auto_inject_builder" 
+                               value="1" 
+                               <?php checked($options['auto_inject_builder'] ?? true, true); ?>>
+                        <?php _e('Automatically display Package Builder on tour pages', 'ajinsafro-core'); ?>
+                    </label>
+                    <p class="description">
+                        <?php _e('When enabled, the Package Builder will be automatically added to single tour pages without needing the shortcode.', 'ajinsafro-core'); ?>
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">
+                    <label for="auto_inject_position"><?php _e('Auto-inject Position', 'ajinsafro-core'); ?></label>
+                </th>
+                <td>
+                    <select id="auto_inject_position" name="auto_inject_position">
+                        <option value="after" <?php selected($options['auto_inject_position'] ?? 'after', 'after'); ?>>
+                            <?php _e('After content', 'ajinsafro-core'); ?>
+                        </option>
+                        <option value="before" <?php selected($options['auto_inject_position'] ?? 'after', 'before'); ?>>
+                            <?php _e('Before content', 'ajinsafro-core'); ?>
+                        </option>
+                    </select>
+                    <p class="description">
+                        <?php _e('Choose where to display the Package Builder relative to the tour content', 'ajinsafro-core'); ?>
+                    </p>
+                </td>
+            </tr>
+        </table>
+
         <p class="submit">
             <input type="submit" 
                    name="ajinsafro_save_settings" 
@@ -105,8 +146,21 @@ if (!defined('ABSPATH')) exit;
 
     <h2><?php _e('Usage', 'ajinsafro-core'); ?></h2>
     <p>
-        <?php _e('Add the shortcode on single tour pages:', 'ajinsafro-core'); ?>
-        <code>[aj_package_builder]</code>
+        <?php _e('The Package Builder can be displayed in two ways:', 'ajinsafro-core'); ?>
+    </p>
+    <ol>
+        <li>
+            <strong><?php _e('Auto-injection (Recommended)', 'ajinsafro-core'); ?>:</strong>
+            <?php _e('Enable "Auto-inject Package Builder" above and it will automatically appear on all tour pages.', 'ajinsafro-core'); ?>
+        </li>
+        <li>
+            <strong><?php _e('Manual shortcode', 'ajinsafro-core'); ?>:</strong>
+            <?php _e('Add the shortcode manually in your tour content:', 'ajinsafro-core'); ?>
+            <code>[aj_package_builder]</code>
+        </li>
+    </ol>
+    <p class="description">
+        <?php _e('Note: If auto-injection is enabled and you also add the shortcode manually, the plugin will prevent duplicate display.', 'ajinsafro-core'); ?>
     </p>
 
     <h3><?php _e('Sync Endpoint', 'ajinsafro-core'); ?></h3>

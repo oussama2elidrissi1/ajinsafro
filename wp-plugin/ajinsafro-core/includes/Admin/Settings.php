@@ -41,6 +41,10 @@ class Settings
         $sanitized['hmac_secret'] = sanitize_text_field($input['hmac_secret'] ?? '');
         $sanitized['enable_sync'] = !empty($input['enable_sync']);
         $sanitized['cache_ttl_seconds'] = absint($input['cache_ttl_seconds'] ?? 300);
+        $sanitized['auto_inject_builder'] = !empty($input['auto_inject_builder']);
+        $sanitized['auto_inject_position'] = in_array($input['auto_inject_position'] ?? 'after', ['before', 'after']) 
+            ? $input['auto_inject_position'] 
+            : 'after';
 
         return $sanitized;
     }
@@ -61,6 +65,8 @@ class Settings
                 'hmac_secret' => $_POST['hmac_secret'] ?? '',
                 'enable_sync' => isset($_POST['enable_sync']),
                 'cache_ttl_seconds' => absint($_POST['cache_ttl_seconds'] ?? 300),
+                'auto_inject_builder' => isset($_POST['auto_inject_builder']),
+                'auto_inject_position' => $_POST['auto_inject_position'] ?? 'after',
             ];
 
             Options::update_all($this->sanitize_settings($options));

@@ -69,7 +69,12 @@ final class Ajinsafro_Core
     {
         // Initialize components
         new Ajinsafro\Admin\Settings();
-        new Ajinsafro\Frontend\Shortcode();
+        
+        $shortcode = new Ajinsafro\Frontend\Shortcode();
+        
+        // Initialize auto-injector (pass shortcode instance for consistency)
+        new Ajinsafro\Frontend\AutoInjector($shortcode);
+        
         new Ajinsafro\Ajax\Handler();
         new Ajinsafro\Sync\RestEndpoint();
         new Ajinsafro\Core\Assets();

@@ -26,11 +26,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 */
 Route::prefix('public')->name('api.public.')->group(function () {
     // Get package state for a tour
-    Route::get('tours/{voyage_id}/package-state', [PublicPackageController::class, 'getPackageState'])
+    Route::get('tours/{voyageId}/package-state', [PublicPackageController::class, 'getPackageState'])
+        ->whereNumber('voyageId')
         ->name('tours.package-state');
     
     // Perform action on package session
-    Route::post('package/session/{session_id}/action', [PublicPackageController::class, 'performAction'])
+    Route::post('package/session/{sessionId}/action', [PublicPackageController::class, 'performAction'])
         ->name('package.action');
     
     // Create checkout token

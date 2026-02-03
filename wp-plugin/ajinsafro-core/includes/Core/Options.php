@@ -12,6 +12,8 @@ class Options
         'hmac_secret' => '',
         'enable_sync' => false,
         'cache_ttl_seconds' => 300,
+        'auto_inject_builder' => true,
+        'auto_inject_position' => 'after',
     ];
 
     public static function get($key = null, $default = null)
