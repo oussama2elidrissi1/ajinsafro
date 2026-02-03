@@ -1,0 +1,166 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    FIX RAPIDE 404 - PRODUCTION                                 ║
+║                    https://booking.ajinsafro.net                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 1 : Connexion SSH au serveur                                            │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+ssh votre_user@votre_serveur.com
+cd /path/to/booking.ajinsafro.net
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 2 : Git pull (si vous utilisez Git)                                     │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+git pull origin main
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 3 : Nettoyer TOUS les caches Laravel                                    │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+php artisan route:clear
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 4 : Re-cache pour production (IMPORTANT)                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+php artisan route:cache
+php artisan config:cache
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 5 : Vérifier que les routes sont enregistrées                           │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+php artisan route:list --path=api/public
+
+ATTENDU :
+  POST   api/public/checkout/create
+  POST   api/public/package/session/{sessionId}/action
+  GET    api/public/tours/{voyageId}/package-state
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 6 : Redémarrer PHP-FPM                                                  │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Adapter selon votre version PHP (8.0, 8.1, 8.2, 8.3)
+sudo systemctl restart php8.2-fpm
+
+# OU si vous utilisez php-fpm générique
+sudo systemctl restart php-fpm
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 7 : Recharger Nginx (ou Apache)                                         │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Pour Nginx
+sudo systemctl reload nginx
+
+# OU pour Apache
+sudo systemctl restart apache2
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 8 : TESTER L'API                                                        │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+curl -i https://booking.ajinsafro.net/api/public/tours/1/package-state \
+  -H "Accept: application/json"
+
+ATTENDU :
+  HTTP/2 200
+  Content-Type: application/json
+
+  {"success":true,"data":{"tour":{...}}}
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ SI TOUJOURS 404 : Vérifier les logs                                           │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Logs Laravel
+tail -50 storage/logs/laravel.log
+
+# Logs Nginx
+sudo tail -50 /var/log/nginx/error.log
+
+# Logs PHP-FPM
+sudo tail -50 /var/log/php8.2-fpm.log
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    COMMANDE RAPIDE (copier-coller)                            ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+cd /path/to/booking.ajinsafro.net && \
+git pull origin main && \
+php artisan route:clear && \
+php artisan config:clear && \
+php artisan cache:clear && \
+php artisan view:clear && \
+php artisan route:cache && \
+php artisan config:cache && \
+sudo systemctl restart php8.2-fpm && \
+sudo systemctl reload nginx && \
+php artisan route:list --path=api/public && \
+echo "✓ Déploiement terminé. Testez l'API :" && \
+curl -i https://booking.ajinsafro.net/api/public/tours/1/package-state -H "Accept: application/json"
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    ALTERNATIVE : Script automatique                            ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+# Rendre le script exécutable
+chmod +x deploy.sh
+
+# Lancer le script
+./deploy.sh
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    TROUBLESHOOTING                                             ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Problème 1 : Commande "route:cache" échoue
+Solution : Vérifiez qu'il n'y a pas de closures dans vos routes
+
+Problème 2 : Toujours 404 après tout
+Solution : Vérifiez le .htaccess ou la config Nginx (voir DEPLOYMENT_FIX_404.md)
+
+Problème 3 : Erreur 500 au lieu de 404
+Solution : Vérifiez storage/logs/laravel.log pour l'erreur exacte
+
+Problème 4 : "Class not found" ou "Service not found"
+Solution : composer install --no-dev --optimize-autoloader
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    CONTACTS ET DOCUMENTATION                                   ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Documentation complète :
+  - DEPLOYMENT_FIX_404.md (guide détaillé)
+  - API_STATUS_REPORT.md (rapport de statut)
+  - PACKAGE_BUILDER_README.md (documentation API)
+
+Scripts de déploiement :
+  - deploy.sh (Linux/macOS)
+  - deploy.ps1 (Windows PowerShell)
+
+Tests locaux réussis : ✅
+Code Laravel fonctionnel : ✅
+Reste à faire : Déployer en production
+
+
+═══════════════════════════════════════════════════════════════════════════════════

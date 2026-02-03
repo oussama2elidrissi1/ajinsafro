@@ -1,0 +1,236 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║              WORDPRESS TOUR IMPORT - QUICK START                               ║
+║              Import TravelerWP tours → Laravel voyages                         ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 1 : Vérifier les fichiers créés                                         │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+✅ app/Services/Wp/WpTourImporter.php
+✅ app/Console/Commands/WpImportTours.php
+✅ WP_IMPORT_GUIDE.md (documentation complète)
+✅ WP_IMPORT_TEST.md (guide de test)
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 2 : Upload sur le serveur de production                                 │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Option A : Via Git (recommandé)
+git add app/Services/Wp/WpTourImporter.php
+git add app/Console/Commands/WpImportTours.php
+git add WP_IMPORT_GUIDE.md WP_IMPORT_TEST.md
+git commit -m "feat: Add WordPress TravelerWP tour import system"
+git push origin main
+
+# Sur le serveur
+cd /path/to/laravel
+git pull origin main
+
+# Option B : Via SCP/FTP
+# Uploadez les fichiers manuellement
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 3 : Sur le serveur - Vérifier la connexion WordPress                    │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+ssh your_user@your_server.com
+cd /path/to/laravel
+
+# Test rapide
+php artisan tinker --execute="echo DB::table('cFdgeZ_posts')->where('post_type', 'st_tours')->where('post_status', 'publish')->count() . ' tours WordPress trouvés';"
+
+# Attendu : "26 tours WordPress trouvés" (ou votre nombre actuel)
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 4 : Lancer l'import complet                                             │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+php artisan wp:import-tours --all
+
+# Attendu :
+# ✅ Created: 26
+# 🔄 Updated: 0
+# ⏭️  Skipped: 0
+# ❌ Errors: 0
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 5 : Vérifier l'import                                                   │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+php artisan tinker
+
+# Vérifications à exécuter dans Tinker :
+
+# 1. Compter les voyages
+\App\Models\Voyage::count();
+// Attendu : 26
+
+# 2. Voir les 5 premiers
+\App\Models\Voyage::orderBy('id')->limit(5)->get(['id', 'wp_post_id', 'name', 'slug']);
+
+# 3. Vérifier qu'ils sont synchronisés
+\App\Models\Voyage::whereNotNull('wp_post_id')->count();
+// Attendu : 26
+
+# 4. Voir un tour détaillé
+$voyage = \App\Models\Voyage::first();
+$voyage->toArray();
+
+# Sortir de Tinker
+exit
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 6 : Tester l'API                                                        │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Obtenir l'ID d'un voyage
+php artisan tinker --execute="echo \App\Models\Voyage::first()->id;"
+
+# Tester l'endpoint API
+curl -i https://booking.ajinsafro.net/api/public/tours/1/package-state \
+  -H "Accept: application/json"
+
+# Attendu : HTTP/2 200 + JSON avec données du tour
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       COMMANDES UTILES                                         ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+# Importer TOUS les tours
+php artisan wp:import-tours --all
+
+# Importer avec limite (test)
+php artisan wp:import-tours --all --limit=5
+
+# Importer UN seul tour
+php artisan wp:import-tours --wp_id=123
+
+# Re-importer (met à jour les tours modifiés)
+php artisan wp:import-tours --all
+
+# Compter les voyages
+php artisan tinker --execute="echo \App\Models\Voyage::count() . ' voyages';"
+
+# Voir les tours actifs
+php artisan tinker --execute="echo \App\Models\Voyage::where('status', 'actif')->count() . ' tours actifs';"
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       VÉRIFICATIONS RAPIDES                                    ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+✓ Tous les voyages ont wp_post_id ?
+  php artisan tinker --execute="\App\Models\Voyage::whereNull('wp_post_id')->count();"
+  Attendu : 0
+
+✓ Slugs uniques ?
+  php artisan tinker --execute="echo \App\Models\Voyage::count() . ' vs ' . \App\Models\Voyage::distinct('slug')->count();"
+  Attendu : même nombre
+
+✓ Tous synchronisés récemment ?
+  php artisan tinker --execute="\App\Models\Voyage::whereNotNull('wp_synced_at')->count();"
+  Attendu : 26
+
+✓ Prix corrects (en centimes) ?
+  php artisan tinker --execute="\App\Models\Voyage::pluck('price_from', 'name');"
+  Attendu : valeurs comme 10900 (= 109.00 MAD)
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       DONNÉES IMPORTÉES                                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+WordPress → Laravel Mapping :
+
+┌─────────────────────┬────────────────────────────────────────────────────────┐
+│ Champ Laravel       │ Source WordPress                                       │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ wp_post_id          │ wp_posts.ID                                            │
+│ name                │ wp_posts.post_title                                    │
+│ slug                │ wp_posts.post_name (avec vérification unicité)         │
+│ description         │ wp_posts.post_content                                  │
+│ accroche            │ wp_posts.post_excerpt                                  │
+│ destination         │ st_tours.address OU postmeta(address)                  │
+│ duration_text       │ st_tours.duration_day OU postmeta(duration_day)        │
+│ price_from          │ st_tours.adult_price > min_price > postmeta (1er > 0)  │
+│ currency            │ 'MAD' (fixe)                                           │
+│ status              │ 'actif' si publish, sinon 'brouillon'                  │
+│ wp_synced_at        │ now()                                                  │
+│ wp_sync_hash        │ SHA256 des données (pour détecter changements)         │
+└─────────────────────┴────────────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       TROUBLESHOOTING                                          ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Problème : "0 tours WordPress trouvés"
+Solution : 
+  - Vérifier DB_DATABASE dans .env (doit être ajinsafronet_wp_tkrpc)
+  - Vérifier que les tables cFdgeZ_posts existent
+  - Vérifier post_status='publish'
+
+Problème : "Table cFdgeZ_posts doesn't exist"
+Solution :
+  - La base WordPress n'est pas accessible
+  - Vérifier connexion DB
+  - Vérifier le préfixe des tables (cFdgeZ_)
+
+Problème : "Duplicate entry for key 'voyages_slug_unique'"
+Solution :
+  - Normalement géré automatiquement (ajoute -ID au slug)
+  - Si persiste, vérifier les slugs existants
+
+Problème : Import lent (> 10s pour 26 tours)
+Solution :
+  - Normal, requêtes optimisées déjà en place
+  - Vérifier les indexes sur voyages.wp_post_id
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       PROCHAINES ÉTAPES                                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Après l'import réussi :
+
+1. ✅ Tester l'API Package Builder
+   curl https://booking.ajinsafro.net/api/public/tours/1/package-state
+
+2. ✅ Créer des travel_day_items via l'admin Laravel
+   Aller dans Voyages → Edit → Section "Items"
+
+3. ✅ Installer le plugin WordPress ajinsafro-core
+   Activer et configurer dans WP Admin
+
+4. ✅ Tester le shortcode WordPress
+   [aj_package_builder] sur une page st_tours
+
+5. ✅ Configurer la sync automatique (optionnel)
+   Ajouter dans app/Console/Kernel.php
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       COMMANDE TOUT-EN-UN (PRODUCTION)                         ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+# Copier-coller sur le serveur de production :
+
+cd /path/to/laravel && \
+git pull origin main && \
+php artisan wp:import-tours --all && \
+php artisan tinker --execute="echo PHP_EOL . '✅ Import terminé : ' . \App\Models\Voyage::count() . ' voyages dans la base';"
+
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+Documentation complète : WP_IMPORT_GUIDE.md
+Tests et troubleshooting : WP_IMPORT_TEST.md
+
+═══════════════════════════════════════════════════════════════════════════════════
