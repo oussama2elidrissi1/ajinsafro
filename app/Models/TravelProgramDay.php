@@ -51,6 +51,13 @@ class TravelProgramDay extends Model
         return $this->belongsTo(Voyage::class);
     }
 
+    public function items()
+    {
+        return $this->hasMany(TravelDayItem::class, 'day_number', 'day_number')
+            ->where('voyage_id', $this->voyage_id)
+            ->orderBy('sort_order');
+    }
+
     public function getDayTypeLabelAttribute(): string
     {
         return self::DAY_TYPES[$this->day_type] ?? $this->day_type;

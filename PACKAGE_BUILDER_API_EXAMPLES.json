@@ -1,0 +1,419 @@
+{
+  "api_examples": {
+    "1_get_package_state": {
+      "description": "Récupérer l'état initial du package pour un voyage",
+      "method": "GET",
+      "url": "/api/public/tours/1/package-state?pax_adults=2&pax_children=1&currency=MAD",
+      "response": {
+        "success": true,
+        "data": {
+          "tour": {
+            "id": 1,
+            "name": "Circuit Découverte Dubai",
+            "total_days": 7
+          },
+          "session": {
+            "id": "uuid-here",
+            "pax_adults": 2,
+            "pax_children": 1,
+            "currency": "MAD"
+          },
+          "pricing": {
+            "base_per_person": 850000,
+            "total_per_person": 850000,
+            "total_group": 1700000,
+            "currency": "MAD"
+          }
+        }
+      }
+    },
+    "2_add_optional_activity": {
+      "description": "Ajouter une activité optionnelle (Safari désert)",
+      "method": "POST",
+      "url": "/api/public/package/session/{session_id}/action",
+      "body": {
+        "action": "add",
+        "add_data": {
+          "day_number": 3,
+          "type": "activity",
+          "title": "Safari dans le désert avec dîner BBQ",
+          "details": "Excursion 4x4 dans les dunes + spectacle traditionnel + dîner BBQ sous les étoiles",
+          "price_delta_per_person": 8000
+        }
+      },
+      "response": {
+        "success": true,
+        "message": "Action effectuée avec succès.",
+        "data": {
+          "pricing": {
+            "base_per_person": 850000,
+            "options_per_person": 8000,
+            "total_per_person": 858000,
+            "total_group": 1716000,
+            "delta_last_action": 8000
+          },
+          "session": {
+            "state": {
+              "added_items": [
+                {
+                  "day_number": 3,
+                  "type": "activity",
+                  "title": "Safari dans le désert avec dîner BBQ",
+                  "price_delta_per_person": 8000
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "3_remove_meal": {
+      "description": "Retirer un repas non souhaité",
+      "method": "POST",
+      "url": "/api/public/package/session/{session_id}/action",
+      "body": {
+        "action": "remove",
+        "item_id": 42
+      },
+      "response": {
+        "success": true,
+        "message": "Action effectuée avec succès.",
+        "data": {
+          "pricing": {
+            "delta_last_action": -2000,
+            "total_per_person": 856000
+          },
+          "session": {
+            "state": {
+              "removed_items": [42]
+            }
+          }
+        }
+      }
+    },
+    "4_modify_hotel_upgrade": {
+      "description": "Upgrade vers un hôtel 5 étoiles",
+      "method": "POST",
+      "url": "/api/public/package/session/{session_id}/action",
+      "body": {
+        "action": "modify",
+        "item_id": 3,
+        "new_option": {
+          "title": "Upgrade hôtel 5* Burj Al Arab",
+          "price_delta": 50000
+        }
+      },
+      "response": {
+        "success": true,
+        "message": "Action effectuée avec succès.",
+        "data": {
+          "pricing": {
+            "options_per_person": 50000,
+            "total_per_person": 900000,
+            "total_group": 1800000,
+            "delta_last_action": 50000
+          },
+          "session": {
+            "state": {
+              "modified_items": {
+                "3": {
+                  "title": "Upgrade hôtel 5* Burj Al Arab",
+                  "price_delta": 50000
+                }
+              }
+            }
+          },
+          "days": [
+            {
+              "items": [
+                {
+                  "id": 3,
+                  "type": "hotel_stay",
+                  "title": "Hôtel 4* - Downtown Dubai",
+                  "active_option": {
+                    "title": "Upgrade hôtel 5* Burj Al Arab",
+                    "price_delta": 50000
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "5_create_checkout": {
+      "description": "Créer un token de checkout avec verrouillage du prix",
+      "method": "POST",
+      "url": "/api/public/checkout/create",
+      "body": {
+        "session_id": "9a5c3e40-1234-5678-90ab-cdef12345678"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "checkout_token": "chk_a7b3c9d1e2f4g5h6i7j8k9l0m1n2o3p4",
+          "redirect_url": "https://example.com/booking/checkout/chk_a7b3c9d1e2f4g5h6i7j8k9l0m1n2o3p4",
+          "expires_at": "2026-02-03T11:15:00+00:00",
+          "remaining_seconds": 900
+        }
+      }
+    },
+    "6_error_expired_session": {
+      "description": "Erreur quand la session a expiré",
+      "method": "POST",
+      "url": "/api/public/package/session/{session_id}/action",
+      "body": {
+        "action": "add",
+        "add_data": {}
+      },
+      "response": {
+        "success": false,
+        "message": "La session a expiré. Veuillez recharger la page."
+      },
+      "status_code": 410
+    }
+  },
+  "example_item_structures": {
+    "flight_item": {
+      "id": 1,
+      "voyage_id": 1,
+      "day_number": 1,
+      "start_day": 1,
+      "end_day": null,
+      "nights": 0,
+      "type": "flight",
+      "title": "Vol Emirates EK073 Paris CDG - Dubai DXB",
+      "details": "Vol direct de jour (8h30 de vol). Bagages inclus : 30kg en soute + 7kg cabine. Repas et divertissements à bord.",
+      "included": true,
+      "price_delta_per_person": 0,
+      "options_json": {
+        "business_class": {
+          "title": "Upgrade classe affaires",
+          "price_delta": 200000,
+          "details": "Siège lie-flat, lounge accès, bagages 40kg"
+        }
+      },
+      "meta_json": {
+        "flight_number": "EK073",
+        "departure_airport": "CDG",
+        "arrival_airport": "DXB",
+        "departure_time": "13:45",
+        "arrival_time": "23:15",
+        "airline": "Emirates",
+        "aircraft": "Boeing 777-300ER"
+      },
+      "sort_order": 0
+    },
+    "hotel_stay_multiday": {
+      "id": 2,
+      "voyage_id": 1,
+      "day_number": 1,
+      "start_day": 1,
+      "end_day": 6,
+      "nights": 6,
+      "type": "hotel_stay",
+      "title": "Rove Downtown Dubai (4*)",
+      "details": "Hôtel moderne en plein centre. Chambre double standard avec petit-déjeuner buffet. Vue sur la ville. WiFi gratuit, piscine, gym.",
+      "included": true,
+      "price_delta_per_person": 0,
+      "options_json": {
+        "upgrade_5star": {
+          "title": "Upgrade Address Dubai Mall (5*)",
+          "price_delta": 35000,
+          "details": "Hôtel 5* luxe avec vue Burj Khalifa"
+        },
+        "suite": {
+          "title": "Suite Junior (même hôtel)",
+          "price_delta": 15000,
+          "details": "45m² avec salon séparé"
+        },
+        "single_supplement": {
+          "title": "Supplément chambre individuelle",
+          "price_delta": 12000
+        }
+      },
+      "meta_json": {
+        "hotel_id": 1234,
+        "check_in": "15:00",
+        "check_out": "12:00",
+        "room_type": "Standard Double",
+        "address": "Sheikh Mohammed bin Rashid Blvd, Downtown Dubai"
+      },
+      "sort_order": 1
+    },
+    "transfer_item": {
+      "id": 3,
+      "voyage_id": 1,
+      "day_number": 1,
+      "start_day": 1,
+      "type": "transfer",
+      "title": "Transfert privé Aéroport DXB → Hôtel",
+      "details": "Véhicule privé climatisé avec chauffeur anglophone. Panneau nominatif à l'arrivée. Eau fraîche offerte.",
+      "included": true,
+      "price_delta_per_person": 0,
+      "options_json": {
+        "luxury_car": {
+          "title": "Upgrade véhicule luxe (Mercedes/BMW)",
+          "price_delta": 3000
+        }
+      },
+      "meta_json": {
+        "vehicle_type": "Sedan Standard",
+        "max_passengers": 4,
+        "max_luggage": 4,
+        "supplier_id": 567
+      },
+      "sort_order": 2
+    },
+    "activity_included": {
+      "id": 4,
+      "voyage_id": 1,
+      "day_number": 2,
+      "start_day": 2,
+      "type": "activity",
+      "title": "Visite guidée de Dubai - Tour panoramique",
+      "details": "Demi-journée avec guide francophone. Visite de Burj Khalifa (étage 124), Dubai Mall, Quartier historique Al Fahidi, Souks de l'Or et des Épices, Palm Jumeirah, Burj Al Arab (photo stop).",
+      "included": true,
+      "price_delta_per_person": 0,
+      "options_json": {
+        "private_tour": {
+          "title": "Tour privé (au lieu de groupe)",
+          "price_delta": 8000
+        },
+        "burj_khalifa_top": {
+          "title": "Upgrade Burj Khalifa étage 148 (At The Top SKY)",
+          "price_delta": 5000
+        }
+      },
+      "meta_json": {
+        "duration_hours": 4,
+        "meeting_time": "09:00",
+        "meeting_point": "Hotel Lobby",
+        "included_tickets": ["Burj Khalifa 124th floor"],
+        "language": "Français"
+      },
+      "sort_order": 0
+    },
+    "activity_optional": {
+      "id": 5,
+      "voyage_id": 1,
+      "day_number": 3,
+      "start_day": 3,
+      "type": "activity",
+      "title": "Safari Désert avec Dîner BBQ (Optionnel)",
+      "details": "Excursion après-midi dans les dunes rouges en 4x4. Balade chameau, sandboarding, spectacle tanoura, dîner BBQ buffet sous les étoiles avec spectacle de danse du ventre.",
+      "included": false,
+      "price_delta_per_person": 8000,
+      "options_json": null,
+      "meta_json": {
+        "duration_hours": 6,
+        "pickup_time": "15:00",
+        "return_time": "21:00",
+        "includes": ["4x4 ride", "camel ride", "sandboarding", "BBQ dinner", "shows"],
+        "meal_type": "Buffet BBQ (végétarien disponible)"
+      },
+      "sort_order": 1
+    },
+    "meal_item": {
+      "id": 6,
+      "voyage_id": 1,
+      "day_number": 4,
+      "start_day": 4,
+      "type": "meal",
+      "title": "Déjeuner - Restaurant At.mosphere (Burj Khalifa)",
+      "details": "Déjeuner gastronomique au 122ème étage du Burj Khalifa. Menu 3 plats avec vue panoramique sur Dubai. Cuisine internationale fusion.",
+      "included": false,
+      "price_delta_per_person": 12000,
+      "options_json": {
+        "window_table": {
+          "title": "Table côté fenêtre garantie",
+          "price_delta": 3000
+        }
+      },
+      "meta_json": {
+        "restaurant_name": "At.mosphere",
+        "meal_time": "13:00",
+        "dress_code": "Smart casual",
+        "dietary_options": ["végétarien", "halal", "sans gluten sur demande"]
+      },
+      "sort_order": 0
+    },
+    "addon_item": {
+      "id": 7,
+      "voyage_id": 1,
+      "day_number": 1,
+      "start_day": 1,
+      "type": "addon",
+      "title": "Pack Photos Professionnelles",
+      "details": "Photographe professionnel pour une séance photo de 2h dans les lieux emblématiques de Dubai. Livraison de 50 photos retouchées en haute résolution.",
+      "included": false,
+      "price_delta_per_person": 15000,
+      "options_json": {
+        "extra_hour": {
+          "title": "Heure supplémentaire",
+          "price_delta": 5000
+        },
+        "drone_shots": {
+          "title": "Photos aériennes drone",
+          "price_delta": 8000
+        }
+      },
+      "meta_json": {
+        "photographer_lang": ["English", "French"],
+        "delivery_days": 7,
+        "format": "JPG haute résolution",
+        "includes": ["retouche professionnelle", "galerie privée en ligne"]
+      },
+      "sort_order": 10
+    }
+  },
+  "usage_scenarios": {
+    "scenario_1_family_booking": {
+      "description": "Famille de 2 adultes + 2 enfants réserve le package standard puis ajoute safari désert",
+      "steps": [
+        {
+          "step": 1,
+          "action": "GET /api/public/tours/1/package-state?pax_adults=2&pax_children=2",
+          "result": "Session créée, prix base: 850000 x 2 = 1700000 MAD"
+        },
+        {
+          "step": 2,
+          "action": "POST /api/public/package/session/{id}/action",
+          "body": {"action": "add", "add_data": {"day_number": 3, "type": "activity", "title": "Safari désert", "price_delta_per_person": 8000}},
+          "result": "Options ajoutées: +8000 x 2 = +16000. Total: 1716000 MAD"
+        },
+        {
+          "step": 3,
+          "action": "POST /api/public/checkout/create",
+          "body": {"session_id": "uuid"},
+          "result": "Token créé, redirect vers checkout"
+        }
+      ]
+    },
+    "scenario_2_luxury_upgrade": {
+      "description": "Couple upgrade vers hôtel 5* et ajoute repas gastronomique",
+      "steps": [
+        {
+          "step": 1,
+          "action": "GET package-state",
+          "result": "Session 2 adultes, prix base: 1700000"
+        },
+        {
+          "step": 2,
+          "action": "MODIFY hotel item 3 → upgrade_5star",
+          "result": "Options: +35000 x 2 = +70000. Total: 1770000"
+        },
+        {
+          "step": 3,
+          "action": "ADD meal At.mosphere",
+          "result": "Options: +12000 x 2 = +24000. Total: 1794000"
+        },
+        {
+          "step": 4,
+          "action": "CREATE checkout",
+          "result": "Token + redirect"
+        }
+      ]
+    }
+  }
+}

@@ -13,11 +13,13 @@ use App\Http\Controllers\Admin\ReportingController;
 use App\Http\Controllers\Admin\ReservationsController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\DepartureController;
+use App\Http\Controllers\Admin\TravelDayItemController;
 use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Auth\LockScreenController;
+use App\Http\Controllers\Booking\CheckoutController;
 use App\Http\Controllers\Booking\StartBookingController;
 use App\Http\Controllers\Front\HomeController as FrontHomeController;
 use App\Http\Controllers\Front\SearchController as FrontSearchController;
@@ -45,6 +47,8 @@ Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voy
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
 
 Route::get('/booking/start', StartBookingController::class)->name('booking.start');
+Route::get('/booking/checkout/{token}', [CheckoutController::class, 'show'])->name('booking.checkout');
+Route::post('/booking/checkout/{token}', [CheckoutController::class, 'process'])->name('booking.checkout.process');
 
 Route::post('/internal/sync/wp-to-laravel', [SyncInboundController::class, 'wpToLaravel'])
     ->middleware('sync.token');
@@ -106,6 +110,13 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::post('circuits/voyages/{voyage}/departures', [DepartureController::class, 'store'])->name('circuits.voyages.departures.store');
     Route::match(['put', 'patch'], 'circuits/voyages/{voyage}/departures/{departure}', [DepartureController::class, 'update'])->name('circuits.voyages.departures.update');
     Route::delete('circuits/voyages/{voyage}/departures/{departure}', [DepartureController::class, 'destroy'])->name('circuits.voyages.departures.destroy');
+    
+    // Travel Day Items (Package Builder)
+    Route::post('circuits/voyages/{voyage}/items', [TravelDayItemController::class, 'store'])->name('circuits.voyages.items.store');
+    Route::get('circuits/voyages/{voyage}/items/{item}/edit', [TravelDayItemController::class, 'edit'])->name('circuits.voyages.items.edit');
+    Route::match(['put', 'patch'], 'circuits/voyages/{voyage}/items/{item}', [TravelDayItemController::class, 'update'])->name('circuits.voyages.items.update');
+    Route::delete('circuits/voyages/{voyage}/items/{item}', [TravelDayItemController::class, 'destroy'])->name('circuits.voyages.items.destroy');
+    Route::post('circuits/voyages/{voyage}/items/reorder', [TravelDayItemController::class, 'reorder'])->name('circuits.voyages.items.reorder');
 
     Route::get('accommodations', [AccommodationsController::class, 'index'])->name('accommodations.index');
     Route::get('accommodations/hotels', [AccommodationsController::class, 'page'])->name('accommodations.hotels')->defaults('submenu', 'hotels');

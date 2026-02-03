@@ -1,0 +1,17 @@
+/* Ajinsafro Admin Styles */
+
+.ajinsafro-admin-settings {
+    max-width: 800px;
+}
+
+.ajinsafro-admin-settings .form-table th {
+    width: 200px;
+}
+
+.ajinsafro-admin-settings code {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: #f0f0f1;
+    border-radius: 3px;
+    font-size: 0.9rem;
+}

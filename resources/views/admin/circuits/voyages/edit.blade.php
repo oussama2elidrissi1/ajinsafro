@@ -284,6 +284,9 @@
         </div>
     </div>
 
+    {{-- Package Builder Items Section --}}
+    @include('admin.circuits.voyages.partials._items_section')
+
     {{-- Modal Ajouter un départ --}}
     <div class="modal fade" id="modalAddDeparture" tabindex="-1">
         <div class="modal-dialog">
