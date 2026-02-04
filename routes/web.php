@@ -100,10 +100,10 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::get('circuits/voyages', [VoyageController::class, 'index'])->name('circuits.voyages.index');
     Route::get('circuits/voyages/create', [VoyageController::class, 'create'])->name('circuits.voyages.create');
     Route::post('circuits/voyages', [VoyageController::class, 'store'])->name('circuits.voyages.store');
-    Route::get('circuits/voyages/{voyage}', [VoyageController::class, 'show'])->name('circuits.voyages.show');
-    Route::get('circuits/voyages/{voyage}/edit', [VoyageController::class, 'edit'])->name('circuits.voyages.edit');
-    Route::match(['put', 'patch'], 'circuits/voyages/{voyage}', [VoyageController::class, 'update'])->name('circuits.voyages.update');
-    Route::delete('circuits/voyages/{voyage}', [VoyageController::class, 'destroy'])->name('circuits.voyages.destroy');
+    Route::get('circuits/voyages/{id}', [VoyageController::class, 'show'])->name('circuits.voyages.show')->whereNumber('id');
+    Route::get('circuits/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('circuits.voyages.edit')->whereNumber('id');
+    Route::match(['put', 'patch'], 'circuits/voyages/{id}', [VoyageController::class, 'update'])->name('circuits.voyages.update')->whereNumber('id');
+    Route::delete('circuits/voyages/{id}', [VoyageController::class, 'destroy'])->name('circuits.voyages.destroy')->whereNumber('id');
     Route::delete('circuits/voyages/{voyage}/images/{voyageImage}', [VoyageController::class, 'destroyImage'])->name('circuits.voyages.images.destroy');
     Route::post('circuits/voyages/{voyage}/programme', [TravelProgramDayController::class, 'store'])->name('circuits.voyages.programme.store');
     Route::match(['put', 'patch'], 'circuits/voyages/{voyage}/programme/{programDay}', [TravelProgramDayController::class, 'update'])->name('circuits.voyages.programme.update');
