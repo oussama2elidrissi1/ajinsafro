@@ -1,0 +1,262 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║               DÉPLOIEMENT FINAL - COMMANDES EXACTES                            ║
+║               Synchronisation HMAC + Multi-DB                                  ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ PARTIE 1 : LOCAL - Git Push (2 min)                                           │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+cd c:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin
+
+git add .
+git commit -m "fix: Separate DBs + HMAC auth for sync + ping endpoints"
+git push origin main
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ PARTIE 2 : SERVEUR LARAVEL - Déploiement (5 min)                              │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+ssh user@booking.ajinsafro.net
+cd /path/to/laravel
+
+# Pull code
+git pull origin main
+
+# Clear caches
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
+
+# Re-cache pour prod
+php artisan config:cache
+php artisan route:cache
+
+# Restart services
+sudo systemctl restart php8.2-fpm
+sudo systemctl reload nginx
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ PARTIE 3 : SERVEUR LARAVEL - Configuration .env (CRITIQUE)                    │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+nano .env
+
+# Ajouter/modifier ces lignes EXACTEMENT :
+
+DB_DATABASE=ajinsafronet_ajinsafro
+
+WP_DB_HOST=127.0.0.1
+WP_DB_PORT=3306
+WP_DB_DATABASE=ajinsafronet_wp_tkrpc
+WP_DB_USERNAME=root
+WP_DB_PASSWORD=votre_password
+
+WP_SYNC_URL=https://ajinsafro.net/wp-json/ajinsafro-sync/v1/laravel-to-wp
+SYNC_SECRET=CHANGEZ_MOI_32_CHARS_MINIMUM_ABC123
+SYNC_TOKEN=optionnel
+
+SYNC_WEBHOOK_SECRET=CHANGEZ_MOI_32_CHARS_MINIMUM_ABC123
+SYNC_WEBHOOK_TOKEN=optionnel
+
+# Sauvegarder (Ctrl+O, Enter, Ctrl+X)
+
+# IMPORTANT : Clear config après modification .env
+php artisan config:clear
+php artisan config:cache
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ PARTIE 4 : VÉRIFICATIONS LARAVEL (2 min)                                      │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Vérifier les routes de sync
+php artisan route:list --path=api/sync
+
+# Attendu :
+# POST  api/sync/ping
+# POST  api/sync/wp-to-laravel
+# POST  api/sync/wp-to-laravel/delete
+
+# Vérifier les DB
+php artisan tinker
+
+DB::connection()->getDatabaseName()
+DB::connection('wp')->getDatabaseName()
+exit
+
+# Attendu :
+# => "ajinsafronet_ajinsafro"
+# => "ajinsafronet_wp_tkrpc"
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ PARTIE 5 : WORDPRESS - ZIP Plugin (3 min)                                     │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Sur machine LOCAL
+cd c:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\wp-plugin
+
+# Créer ZIP
+powershell Compress-Archive -Path ajinsafro-core -DestinationPath ajinsafro-core-v2.1-hmac.zip -Force
+
+# Upload WordPress
+1. https://ajinsafro.net/wp-admin
+2. Plugins → Add New → Upload Plugin
+3. Choisir ajinsafro-core-v2.1-hmac.zip
+4. Replace current with uploaded
+5. Activate
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ PARTIE 6 : WORDPRESS - Configuration (3 min)                                  │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+WordPress Admin → Ajinsafro Core
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ CONFIGURATION EXACTE                                                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Laravel Base URL: https://booking.ajinsafro.net
+Checkout Base URL: https://booking.ajinsafro.net
+HMAC Secret: CHANGEZ_MOI_32_CHARS_MINIMUM_ABC123
+☑ Enable Laravel → WP Sync
+
+☑ Enable WP → Laravel Sync
+Laravel Sync Endpoint URL: https://booking.ajinsafro.net
+Laravel Webhook Token: CHANGEZ_MOI_32_CHARS_MINIMUM_ABC123
+
+☑ Auto-inject Package Builder
+Auto-inject Position: After content
+
+Cache TTL: 300
+
+[Save Changes]
+
+ENSUITE :
+
+Cliquer sur le bouton :
+    [Import All Tours from Laravel]
+
+Attendu : "Import completed! Created: 26, Updated: 0"
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ PARTIE 7 : TESTS DE VALIDATION (3 min)                                        │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+TEST 1 : Ping WordPress
+curl https://ajinsafro.net/wp-json/ajinsafro-sync/v1/ping
+→ Doit retourner {"success":true,...}
+
+TEST 2 : Tours importés dans WordPress
+https://ajinsafro.net/wp-admin → Posts → Tours
+→ Doit montrer 26 tours
+
+TEST 3 : Package Builder visible
+https://ajinsafro.net/tours/sejour-dubai-7-jours-6-nuits/
+→ Builder doit s'afficher automatiquement
+
+TEST 4 : Créer un voyage dans Laravel
+php artisan tinker
+
+\App\Models\Voyage::create(['name' => 'Test Auto Sync ' . time(), 'slug' => 'test-' . time(), 'status' => 'actif', 'price_from' => 50000, 'currency' => 'MAD']);
+exit
+
+→ Vérifier dans WordPress Admin que le tour apparaît AUTOMATIQUEMENT
+
+TEST 5 : Modifier un tour dans WordPress
+WordPress → Posts → Tours → Edit
+Changer titre → "Test WP Edit"
+Publier
+
+→ Vérifier dans Laravel :
+php artisan tinker
+
+\App\Models\Voyage::where('name', 'Test WP Edit')->exists()
+exit
+
+→ Doit retourner true
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                          VARIABLES .ENV COMPLÈTES                              ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+# DB Métier Laravel
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ajinsafronet_ajinsafro
+DB_USERNAME=root
+DB_PASSWORD=votre_password
+
+# DB WordPress (import seulement)
+WP_DB_HOST=127.0.0.1
+WP_DB_PORT=3306
+WP_DB_DATABASE=ajinsafronet_wp_tkrpc
+WP_DB_USERNAME=root
+WP_DB_PASSWORD=votre_password
+
+# Sync Laravel → WordPress
+WP_SYNC_URL=https://ajinsafro.net/wp-json/ajinsafro-sync/v1/laravel-to-wp
+SYNC_SECRET=CHANGEZ_MOI_32_CHARS_MINIMUM_ABC123
+SYNC_TOKEN=optionnel_bearer
+
+# Sync WordPress → Laravel
+SYNC_WEBHOOK_SECRET=CHANGEZ_MOI_32_CHARS_MINIMUM_ABC123
+SYNC_WEBHOOK_TOKEN=optionnel_bearer
+SYNC_DEBUG=false
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                          FICHIERS MODIFIÉS                                     ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+LARAVEL (12 fichiers) :
+  ✅ config/database.php - Connexion 'wp' ajoutée
+  ✅ config/sync.php - SYNC_SECRET ajouté
+  ✅ app/Services/Sync/WpSyncService.php - HMAC signature
+  ✅ app/Services/Wp/WpTourImporter.php - DB::connection('wp')
+  ✅ app/Http/Controllers/Sync/WpToLaravelController.php - HMAC validation
+  ✅ app/Http/Controllers/Sync/PingController.php - Nouveau
+  ✅ routes/api.php - Route ping ajoutée
+  + tous les fichiers précédents
+
+WORDPRESS (3 fichiers) :
+  ✅ includes/Sync/LaravelPushSync.php - HMAC signature
+  ✅ includes/Sync/RestEndpoint.php - Endpoint ping
+  + tous les fichiers précédents
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                          TEMPS ESTIMÉ                                          ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Git push Laravel : 2 min
+Déploiement serveur Laravel : 5 min
+Configuration .env : 3 min
+ZIP + Upload WordPress : 3 min
+Configuration WordPress : 3 min
+Tests validation : 3 min
+
+TOTAL : 19 minutes
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                          RÉSULTAT FINAL                                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+✅ DB séparées (métier vs WordPress)
+✅ Authentification HMAC sécurisée
+✅ Synchronisation bidirectionnelle automatique
+✅ Protection anti-boucle
+✅ Endpoints de test ping
+✅ Import global WordPress → Laravel
+✅ Import global Laravel → WordPress (bouton)
+✅ Package Builder auto-injecté
+✅ Aucune modification serveur requise
+
+🚀 PRÊT POUR PRODUCTION

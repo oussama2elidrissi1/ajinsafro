@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\PublicPackageController;
 use App\Http\Controllers\Api\PublicToursListController;
+use App\Http\Controllers\Sync\PingController;
 use App\Http\Controllers\Sync\WpToLaravelController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,10 @@ Route::prefix('public')->name('api.public.')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('sync')->name('api.sync.')->group(function () {
+    // Test endpoint
+    Route::post('ping', [PingController::class, 'ping'])
+        ->name('ping');
+    
     // Upsert tour from WordPress
     Route::post('wp-to-laravel', [WpToLaravelController::class, 'upsertTour'])
         ->name('wp-to-laravel.upsert');

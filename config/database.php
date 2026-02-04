@@ -63,6 +63,22 @@ return [
             ]) : [],
         ],
 
+        'wp' => [
+            'driver' => 'mysql',
+            'host' => env('WP_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('WP_DB_PORT', env('DB_PORT', '3306')),
+            'database' => env('WP_DB_DATABASE', 'ajinsafronet_wp_tkrpc'),
+            'username' => env('WP_DB_USERNAME', env('DB_USERNAME', 'forge')),
+            'password' => env('WP_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('WP_DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => 'cFdgeZ_',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),

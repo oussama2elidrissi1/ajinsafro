@@ -197,12 +197,13 @@ class LaravelPushSync
     protected function pushToLaravel($payload, $endpoint = 'upsert')
     {
         $base_url = Options::get('laravel_sync_base_url', 'https://booking.ajinsafro.net');
-        $token = Options::get('laravel_webhook_token', Options::get('hmac_secret', ''));
+        $secret = Options::get('laravel_webhook_token', Options::get('hmac_secret', ''));
+        $token = Options::get('laravel_webhook_token', ''); // Optional Bearer token
 
-        if (empty($token)) {
+        if (empty($secret)) {
             return [
                 'success' => false,
-                'message' => 'Laravel webhook token not configured',
+                'message' => 'Laravel webhook secret not configured',
             ];
         }
 
@@ -211,13 +212,27 @@ class LaravelPushSync
             $url .= '/delete';
         }
 
+        // Serialize payload with consistent encoding
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        
+        // Compute HMAC signature
+        $signature = hash_hmac('sha256', $body, $secret);
+
+        // Build headers
+        $headers = [
+            'X-AJ-Signature' => $signature,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ];
+        
+        // Add Bearer token if configured
+        if (!empty($token)) {
+            $headers['Authorization'] = 'Bearer ' . $token;
+        }
+
         $args = [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $token,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ],
-            'body' => json_encode($payload),
+            'headers' => $headers,
+            'body' => $body,
             'timeout' => 15,
             'sslverify' => true,
         ];

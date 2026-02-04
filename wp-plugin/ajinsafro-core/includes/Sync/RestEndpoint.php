@@ -13,11 +13,23 @@ class RestEndpoint
 
     public function register_routes()
     {
+        register_rest_route('ajinsafro-sync/v1', '/ping', [
+            'methods' => 'GET',
+            'callback' => [$this, 'handle_ping'],
+            'permission_callback' => [$this, 'check_ping_permission'],
+        ]);
+
         register_rest_route('ajinsafro-sync/v1', '/laravel-to-wp', [
             'methods' => 'POST',
             'callback' => [$this, 'handle_sync'],
             'permission_callback' => [$this, 'check_permission'],
         ]);
+    }
+
+    public function check_ping_permission(\WP_REST_Request $request)
+    {
+        // Ping endpoint is open for testing
+        return true;
     }
 
     public function check_permission(\WP_REST_Request $request)
@@ -48,6 +60,17 @@ class RestEndpoint
         }
 
         return true;
+    }
+
+    public function handle_ping(\WP_REST_Request $request)
+    {
+        return rest_ensure_response([
+            'success' => true,
+            'message' => 'Ping successful - WordPress sync endpoint working',
+            'timestamp' => current_time('c'),
+            'source' => 'wordpress',
+            'sync_enabled' => Options::get('enable_sync', false),
+        ]);
     }
 
     public function handle_sync(\WP_REST_Request $request)

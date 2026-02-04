@@ -9,13 +9,15 @@ use Illuminate\Support\Facades\Log;
 class WpSyncService
 {
     protected string $wpSyncUrl;
-    protected string $syncToken;
+    protected ?string $syncToken;
+    protected string $syncSecret;
     protected bool $debugMode;
 
     public function __construct()
     {
         $this->wpSyncUrl = config('sync.wp_sync_url');
         $this->syncToken = config('sync.token');
+        $this->syncSecret = config('sync.secret');
         $this->debugMode = config('sync.debug', false);
     }
 
@@ -35,22 +37,38 @@ class WpSyncService
             $syncHash = hash('sha256', json_encode($payload));
             $payload['sync_hash'] = $syncHash;
 
+            // Serialize body with consistent encoding
+            $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            
+            // Compute HMAC signature
+            $signature = hash_hmac('sha256', $body, $this->syncSecret);
+
             if ($this->debugMode) {
                 Log::info('[WpSyncService] Pushing voyage to WordPress', [
                     'voyage_id' => $voyage->id,
                     'wp_post_id' => $voyage->wp_post_id,
                     'payload' => $payload,
+                    'signature' => $signature,
                 ]);
+            }
+
+            // Build headers
+            $headers = [
+                'X-AJ-Signature' => $signature,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ];
+            
+            // Add Bearer token if configured
+            if (!empty($this->syncToken)) {
+                $headers['Authorization'] = 'Bearer ' . $this->syncToken;
             }
 
             // Send to WordPress
             $response = Http::timeout(30)
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . $this->syncToken,
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($this->wpSyncUrl, $payload);
+                ->withHeaders($headers)
+                ->withBody($body, 'application/json')
+                ->post($this->wpSyncUrl);
 
             if (!$response->successful()) {
                 $error = $response->json('message') ?? $response->body();
@@ -130,6 +148,12 @@ class WpSyncService
                 'laravel_id' => $voyage->id,
             ];
 
+            // Serialize body with consistent encoding
+            $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            
+            // Compute HMAC signature
+            $signature = hash_hmac('sha256', $body, $this->syncSecret);
+
             if ($this->debugMode) {
                 Log::info('[WpSyncService] Deleting from WordPress', [
                     'voyage_id' => $voyage->id,
@@ -137,13 +161,22 @@ class WpSyncService
                 ]);
             }
 
+            // Build headers
+            $headers = [
+                'X-AJ-Signature' => $signature,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ];
+            
+            // Add Bearer token if configured
+            if (!empty($this->syncToken)) {
+                $headers['Authorization'] = 'Bearer ' . $this->syncToken;
+            }
+
             $response = Http::timeout(30)
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . $this->syncToken,
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($this->wpSyncUrl, $payload);
+                ->withHeaders($headers)
+                ->withBody($body, 'application/json')
+                ->post($this->wpSyncUrl);
 
             if (!$response->successful()) {
                 $error = $response->json('message') ?? $response->body();

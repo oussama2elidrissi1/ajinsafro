@@ -31,7 +31,7 @@ class WpTourImporter
 
         try {
             // Fetch all published st_tours posts
-            $postsQuery = DB::table($this->prefix . 'posts')
+            $postsQuery = DB::connection('wp')->table($this->prefix . 'posts')
                 ->where('post_type', 'st_tours')
                 ->where('post_status', 'publish')
                 ->select('ID', 'post_title', 'post_name', 'post_content', 'post_excerpt', 'post_status');
@@ -50,7 +50,7 @@ class WpTourImporter
             $postIds = $posts->pluck('ID')->toArray();
 
             // Fetch st_tours table data (efficient: one query)
-            $stToursData = DB::table($this->prefix . 'st_tours')
+            $stToursData = DB::connection('wp')->table($this->prefix . 'st_tours')
                 ->whereIn('post_id', $postIds)
                 ->select('post_id', 'adult_price', 'child_price', 'min_price', 'duration_day', 'address')
                 ->get()
@@ -58,7 +58,7 @@ class WpTourImporter
 
             // Fetch postmeta (efficient: one query, only needed keys)
             $metaKeys = ['address', 'duration_day', 'adult_price', 'child_price', 'min_price', 'gallery', '_thumbnail_id'];
-            $postMeta = DB::table($this->prefix . 'postmeta')
+            $postMeta = DB::connection('wp')->table($this->prefix . 'postmeta')
                 ->whereIn('post_id', $postIds)
                 ->whereIn('meta_key', $metaKeys)
                 ->select('post_id', 'meta_key', 'meta_value')
@@ -107,7 +107,7 @@ class WpTourImporter
     {
         try {
             // Fetch the post
-            $post = DB::table($this->prefix . 'posts')
+            $post = DB::connection('wp')->table($this->prefix . 'posts')
                 ->where('ID', $wpPostId)
                 ->where('post_type', 'st_tours')
                 ->select('ID', 'post_title', 'post_name', 'post_content', 'post_excerpt', 'post_status')
@@ -122,7 +122,7 @@ class WpTourImporter
             }
 
             // Fetch st_tours data
-            $stToursData = DB::table($this->prefix . 'st_tours')
+            $stToursData = DB::connection('wp')->table($this->prefix . 'st_tours')
                 ->where('post_id', $wpPostId)
                 ->select('post_id', 'adult_price', 'child_price', 'min_price', 'duration_day', 'address')
                 ->get()
@@ -130,7 +130,7 @@ class WpTourImporter
 
             // Fetch postmeta
             $metaKeys = ['address', 'duration_day', 'adult_price', 'child_price', 'min_price', 'gallery', '_thumbnail_id'];
-            $postMeta = DB::table($this->prefix . 'postmeta')
+            $postMeta = DB::connection('wp')->table($this->prefix . 'postmeta')
                 ->where('post_id', $wpPostId)
                 ->whereIn('meta_key', $metaKeys)
                 ->select('post_id', 'meta_key', 'meta_value')

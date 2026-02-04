@@ -234,17 +234,54 @@ class WpToLaravelController extends Controller
     }
 
     /**
-     * Validate sync token.
+     * Validate HMAC signature and optionally Bearer token.
      *
      * @param Request $request
      * @return bool
      */
     protected function validateToken(Request $request): bool
     {
-        $token = $request->bearerToken();
-        $expectedToken = config('sync.webhook_token') ?? config('sync.token');
+        $secret = config('sync.webhook_secret') ?? config('sync.secret');
+        
+        if (empty($secret)) {
+            Log::error('[WpToLaravelController] SYNC_SECRET not configured');
+            return false;
+        }
 
-        return $token && $token === $expectedToken;
+        // Get signature from header
+        $signature = $request->header('X-AJ-Signature');
+        
+        if (empty($signature)) {
+            Log::warning('[WpToLaravelController] Missing X-AJ-Signature header');
+            return false;
+        }
+
+        // Get raw body
+        $body = $request->getContent();
+        
+        // Compute expected signature
+        $expectedSignature = hash_hmac('sha256', $body, $secret);
+
+        // Verify signature
+        if (!hash_equals($expectedSignature, $signature)) {
+            Log::warning('[WpToLaravelController] Invalid HMAC signature', [
+                'expected' => $expectedSignature,
+                'received' => $signature,
+            ]);
+            return false;
+        }
+
+        // Optionally verify Bearer token if configured
+        $expectedToken = config('sync.webhook_token');
+        if (!empty($expectedToken)) {
+            $token = $request->bearerToken();
+            if ($token !== $expectedToken) {
+                Log::warning('[WpToLaravelController] Invalid Bearer token');
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
