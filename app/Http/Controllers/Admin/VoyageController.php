@@ -3,219 +3,148 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Voyage;
-use App\Models\VoyageImage;
+use App\Http\Requests\StoreWpTourRequest;
+use App\Http\Requests\UpdateWpTourRequest;
+use App\Models\Wp\WpPost;
+use App\Services\Wp\WpTourRepository;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\View\View;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class VoyageController extends Controller
 {
+    protected WpTourRepository $repository;
+
+    public function __construct(WpTourRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
+    /**
+     * Display listing of WordPress tours.
+     */
     public function index(): View
     {
-        $voyages = Voyage::withCount('programDays')->orderBy('updated_at', 'desc')->get();
-        return view('admin.circuits.voyages.index', compact('voyages'));
+        // Récupérer les tours WordPress avec pagination
+        $tours = WpPost::tours()
+            ->orderByDesc('ID')
+            ->paginate(20);
+
+        // Charger les metas pour affichage
+        $tours->getCollection()->transform(function ($tour) {
+            $tour->adult_price = $tour->getMeta('adult_price');
+            $tour->duration_day = $tour->getMeta('duration_day');
+            $tour->address = $tour->getMeta('address');
+            $tour->child_price = $tour->getMeta('child_price');
+            return $tour;
+        });
+
+        return view('admin.circuits.voyages.index', compact('tours'));
     }
 
-    public function show(Voyage $voyage): View
+    /**
+     * Show single tour (détail).
+     */
+    public function show(int $id): View
     {
-        $voyage->load(['programDays', 'departures']);
-        return view('admin.circuits.voyages.show', compact('voyage'));
+        $tour = $this->repository->getTourWithMetas($id);
+        return view('admin.circuits.voyages.show', compact('tour'));
     }
 
+    /**
+     * Show create form.
+     */
     public function create(): View
     {
         return view('admin.circuits.voyages.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    /**
+     * Store new tour in WordPress.
+     */
+    public function store(StoreWpTourRequest $request): RedirectResponse
     {
-        $validated = $this->validateVoyage($request);
-        $baseSlug = Str::slug($validated['name']);
-        $validated['slug'] = $baseSlug;
-        $n = 1;
-        while (Voyage::where('slug', $validated['slug'])->exists()) {
-            $validated['slug'] = $baseSlug . '-' . $n++;
+        $validated = $request->validated();
+
+        // Générer slug si vide
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['title']);
         }
 
-        unset($validated['featured_image'], $validated['gallery_images']);
+        // Convertir gallery CSV en array
+        if (!empty($validated['gallery_ids'])) {
+            $validated['gallery_ids'] = array_filter(array_map('trim', explode(',', $validated['gallery_ids'])));
+        }
 
-        DB::beginTransaction();
         try {
-            $voyage = Voyage::create($validated);
+            $tour = $this->repository->createTour($validated);
 
-            if ($request->hasFile('featured_image')) {
-                $path = $request->file('featured_image')->store('travels/featured', 'public');
-                $voyage->update(['featured_image' => $path]);
-            }
-
-            if ($request->hasFile('gallery_images')) {
-                $sortOrder = 0;
-                foreach ($request->file('gallery_images') as $file) {
-                    $path = $file->store('travels/gallery', 'public');
-                    VoyageImage::create([
-                        'voyage_id' => $voyage->id,
-                        'path' => $path,
-                        'sort_order' => $sortOrder++,
-                    ]);
-                }
-            }
-
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
+            return redirect()
+                ->route('admin.circuits.voyages.edit', $tour->ID)
+                ->with('success', 'Tour créé avec succès dans WordPress ! Visible immédiatement sur ajinsafro.net');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Erreur lors de la création : ' . $e->getMessage()]);
         }
-
-        return redirect()->route('admin.circuits.voyages.edit', $voyage)
-            ->with('success', 'Voyage créé. Vous pouvez maintenant ajouter le programme et les départs.');
-    }
-
-    public function edit(Voyage $voyage): View
-    {
-        $voyage->load(['programDays', 'departures', 'images']);
-        return view('admin.circuits.voyages.edit', compact('voyage'));
-    }
-
-    public function update(Request $request, Voyage $voyage): RedirectResponse
-    {
-        $validated = $this->validateVoyage($request, $voyage);
-        $baseSlug = Str::slug($validated['name']);
-        $validated['slug'] = $baseSlug;
-        $n = 1;
-        while (Voyage::where('slug', $validated['slug'])->where('id', '!=', $voyage->id)->exists()) {
-            $validated['slug'] = $baseSlug . '-' . $n++;
-        }
-
-        $removeGalleryIds = $request->input('remove_gallery_ids', []);
-        unset($validated['featured_image'], $validated['gallery_images']);
-
-        DB::beginTransaction();
-        try {
-            foreach ((array) $removeGalleryIds as $id) {
-                $img = VoyageImage::where('voyage_id', $voyage->id)->find($id);
-                if ($img) {
-                    Storage::disk('public')->delete($img->path);
-                    $img->delete();
-                }
-            }
-
-            if ($request->hasFile('featured_image')) {
-                if ($voyage->featured_image) {
-                    Storage::disk('public')->delete($voyage->featured_image);
-                }
-                $path = $request->file('featured_image')->store('travels/featured', 'public');
-                $validated['featured_image'] = $path;
-            }
-
-            $voyage->update($validated);
-
-            if ($request->hasFile('gallery_images')) {
-                $maxOrder = $voyage->images()->max('sort_order') ?? -1;
-                $sortOrder = $maxOrder + 1;
-                foreach ($request->file('gallery_images') as $file) {
-                    $path = $file->store('travels/gallery', 'public');
-                    VoyageImage::create([
-                        'voyage_id' => $voyage->id,
-                        'path' => $path,
-                        'sort_order' => $sortOrder++,
-                    ]);
-                }
-            }
-
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
-        }
-
-        return redirect()->route('admin.circuits.voyages.edit', $voyage)
-            ->with('success', 'Voyage mis à jour.');
-    }
-
-    public function destroy(Voyage $voyage): RedirectResponse
-    {
-        $voyage->delete();
-        return redirect()->route('admin.circuits.voyages.index')
-            ->with('success', 'Voyage supprimé.');
     }
 
     /**
-     * Remove a single gallery image (AJAX or form submit).
+     * Show edit form.
      */
-    public function destroyImage(Request $request, Voyage $voyage, VoyageImage $voyageImage): RedirectResponse
+    public function edit(int $id): View
     {
-        if ($voyageImage->voyage_id !== $voyage->id) {
-            abort(404);
+        $tour = $this->repository->getTourWithMetas($id);
+        
+        // Convertir array gallery en CSV pour le form
+        if (is_array($tour['gallery'])) {
+            $tour['gallery_csv'] = implode(',', $tour['gallery']);
+        } else {
+            $tour['gallery_csv'] = $tour['gallery'] ?? '';
         }
-        Storage::disk('public')->delete($voyageImage->path);
-        $voyageImage->delete();
-        return redirect()->route('admin.circuits.voyages.edit', $voyage)
-            ->with('success', 'Image supprimée.');
+
+        return view('admin.circuits.voyages.edit', compact('tour'));
     }
 
-    private function validateVoyage(Request $request, ?Voyage $voyage = null): array
+    /**
+     * Update tour in WordPress.
+     */
+    public function update(UpdateWpTourRequest $request, int $id): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'accroche' => 'nullable|string',
-            'destination' => 'nullable|string|max:255',
-            'duration_text' => 'nullable|string|max:255',
-            'price_from' => 'nullable|integer|min:0',
-            'old_price' => 'nullable|integer|min:0',
-            'currency' => 'nullable|string|max:10',
-            'min_people' => 'nullable|integer|min:1',
-            'departure_policy' => 'nullable|string',
-            'status' => 'nullable|string|in:actif,inactif',
-        ]);
+        $validated = $request->validated();
 
-        if ($request->hasFile('featured_image')) {
-            $featuredFile = $request->file('featured_image');
-            if (!$featuredFile->isValid()) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'featured_image' => 'The featured image upload failed.'
-                ]);
-            }
-            $maxSizeKB = 5120;
-            if ($featuredFile->getSize() > $maxSizeKB * 1024) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'featured_image' => "The featured image may not be greater than {$maxSizeKB} kilobytes."
-                ]);
-            }
-            $allowedMimes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            if (!in_array(strtolower($featuredFile->getClientOriginalExtension()), $allowedMimes)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'featured_image' => 'The featured image must be a file of type: jpeg, png, gif, webp.'
-                ]);
-            }
+        // Convertir gallery CSV en array
+        if (!empty($validated['gallery_ids'])) {
+            $validated['gallery_ids'] = array_filter(array_map('trim', explode(',', $validated['gallery_ids'])));
         }
 
-        if ($request->hasFile('gallery_images')) {
-            foreach ($request->file('gallery_images') as $idx => $file) {
-                if (!$file->isValid()) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        "gallery_images.{$idx}" => 'Gallery image upload failed.'
-                    ]);
-                }
-                $maxSizeKB = 5120;
-                if ($file->getSize() > $maxSizeKB * 1024) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        "gallery_images.{$idx}" => "Gallery image may not be greater than {$maxSizeKB} kilobytes."
-                    ]);
-                }
-                $allowedMimes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                if (!in_array(strtolower($file->getClientOriginalExtension()), $allowedMimes)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        "gallery_images.{$idx}" => 'Gallery image must be a file of type: jpeg, png, gif, webp.'
-                    ]);
-                }
-            }
-        }
+        try {
+            $this->repository->updateTour($id, $validated);
 
-        return $validated;
+            return redirect()
+                ->route('admin.circuits.voyages.edit', $id)
+                ->with('success', 'Tour mis à jour avec succès dans WordPress ! Modifications visibles immédiatement.');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete tour from WordPress.
+     */
+    public function destroy(int $id): RedirectResponse
+    {
+        try {
+            $this->repository->deleteTour($id);
+
+            return redirect()
+                ->route('admin.circuits.voyages.index')
+                ->with('success', 'Tour supprimé avec succès de WordPress !');
+        } catch (\Exception $e) {
+            return back()
+                ->withErrors(['error' => 'Erreur lors de la suppression : ' . $e->getMessage()]);
+        }
     }
 }

@@ -1,0 +1,270 @@
+
+═══════════════════════════════════════════════════════════════════════════════
+TESTS ADMIN LARAVEL → WORDPRESS DIRECT CRUD
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIF
+Vérifier que l'admin Laravel (menu Voyages/Tours) utilise directement WordPress
+et affiche les 26 tours WP sans synchronisation.
+
+═══════════════════════════════════════════════════════════════════════════════
+TEST 1 : Vérifier que l'index affiche 26 tours
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ouvrir : http://localhost/admin/circuits/voyages
+
+2. Vérifier :
+   ✓ Message affiché : "26 tours affichés depuis la DB WordPress"
+   ✓ Table avec colonnes : ID, Titre, Destination, Durée, Prix Adulte, Status, Modifié le, Actions
+   ✓ Au moins 26 lignes dans le tableau
+   ✓ Chaque ligne affiche :
+     - ID (ex: 14432)
+     - Titre (ex: Séjour Dubaï 7 jours (6 nuits))
+     - Slug (ex: sejour-dubai-7-jours-6-nuits)
+     - Destination (ex: Dubaï, EAU)
+     - Prix adulte (ex: 5000 MAD)
+     - Status (badge coloré : Publié/Brouillon)
+
+3. Vérifier via tinker :
+```bash
+php artisan tinker
+```
+
+```php
+$tours = \App\Models\Wp\WpPost::tours()->count();
+echo "Tours WordPress : $tours\n";
+exit
+```
+
+RÉSULTAT ATTENDU : "Tours WordPress : 26"
+
+═══════════════════════════════════════════════════════════════════════════════
+TEST 2 : Créer un tour depuis Laravel → Vérifier dans WP
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ouvrir : http://localhost/admin/circuits/voyages
+
+2. Cliquer sur "Créer un tour"
+
+3. Remplir le formulaire :
+   - Titre : "Test CRUD Direct {{ time() }}"
+   - Slug : (laisser vide pour auto-génération)
+   - Destination : "Test City"
+   - Durée : "5 jours / 4 nuits"
+   - Prix adulte : 3000
+   - Prix enfant : 2000
+   - Status : "Publié"
+
+4. Cliquer "Créer le tour dans WordPress"
+
+5. Vérifier message : "Tour créé avec succès dans WordPress !"
+
+6. Vérifier via tinker :
+```bash
+php artisan tinker
+```
+
+```php
+$lastTour = \App\Models\Wp\WpPost::tours()->orderByDesc('ID')->first();
+echo "Dernier tour créé :\n";
+echo "ID : " . $lastTour->ID . "\n";
+echo "Titre : " . $lastTour->post_title . "\n";
+echo "Slug : " . $lastTour->post_name . "\n";
+echo "Status : " . $lastTour->post_status . "\n";
+echo "Prix adulte : " . $lastTour->getMeta('adult_price') . "\n";
+echo "Destination : " . $lastTour->getMeta('address') . "\n";
+exit
+```
+
+RÉSULTAT ATTENDU :
+```
+Dernier tour créé :
+ID : 14451 (ou plus)
+Titre : Test CRUD Direct ...
+Slug : test-crud-direct-...
+Status : publish
+Prix adulte : 3000
+Destination : Test City
+```
+
+7. Vérifier dans WordPress Admin :
+   - Aller sur : https://ajinsafro.net/wp-admin
+   - Posts → Tours
+   - Le nouveau tour doit apparaître immédiatement
+
+═══════════════════════════════════════════════════════════════════════════════
+TEST 3 : Modifier un tour depuis Laravel → Vérifier WP
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ouvrir : http://localhost/admin/circuits/voyages
+
+2. Cliquer sur "Modifier" pour le tour ID 14432 (Séjour Dubaï)
+
+3. Modifier :
+   - Prix adulte : passer de 5000 à 6500
+   - Destination : ajouter " - Modifié depuis Laravel"
+
+4. Cliquer "Enregistrer"
+
+5. Vérifier message : "Tour mis à jour avec succès dans WordPress !"
+
+6. Vérifier via tinker :
+```bash
+php artisan tinker
+```
+
+```php
+$tour = \App\Models\Wp\WpPost::find(14432);
+echo "Tour #14432 :\n";
+echo "Prix adulte : " . $tour->getMeta('adult_price') . "\n";
+echo "Destination : " . $tour->getMeta('address') . "\n";
+exit
+```
+
+RÉSULTAT ATTENDU :
+```
+Tour #14432 :
+Prix adulte : 6500
+Destination : Dubaï, EAU - Modifié depuis Laravel
+```
+
+7. Vérifier sur WordPress frontend :
+   - Ouvrir : https://ajinsafro.net/tours/sejour-dubai-7-jours-6-nuits/
+   - Le nouveau prix doit s'afficher immédiatement
+
+═══════════════════════════════════════════════════════════════════════════════
+TEST 4 : Supprimer un tour depuis Laravel → Vérifier WP
+═══════════════════════════════════════════════════════════════════════════════
+
+1. D'abord, créer un tour de test (voir TEST 2)
+   - Noter son ID (ex: 14451)
+
+2. Ouvrir : http://localhost/admin/circuits/voyages
+
+3. Trouver le tour test et cliquer "Supprimer"
+
+4. Confirmer la suppression
+
+5. Vérifier message : "Tour supprimé avec succès de WordPress !"
+
+6. Vérifier via tinker :
+```bash
+php artisan tinker
+```
+
+```php
+$tourExists = \App\Models\Wp\WpPost::find(14451); // Remplacer 14451 par l'ID du tour supprimé
+echo $tourExists ? "Tour existe encore" : "Tour supprimé avec succès";
+exit
+```
+
+RÉSULTAT ATTENDU : "Tour supprimé avec succès"
+
+7. Vérifier dans WordPress Admin :
+   - Le tour ne doit plus apparaître dans Posts → Tours
+
+═══════════════════════════════════════════════════════════════════════════════
+TEST 5 : Vérifier slug unique automatique
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Créer un tour avec slug "test-unique"
+
+2. Créer un autre tour avec le MÊME slug "test-unique"
+
+3. Vérifier via tinker :
+```bash
+php artisan tinker
+```
+
+```php
+$tours = \App\Models\Wp\WpPost::tours()
+    ->where('post_name', 'like', 'test-unique%')
+    ->orderByDesc('ID')
+    ->limit(2)
+    ->get(['ID', 'post_title', 'post_name']);
+
+foreach ($tours as $tour) {
+    echo "ID: {$tour->ID} - Slug: {$tour->post_name}\n";
+}
+exit
+```
+
+RÉSULTAT ATTENDU :
+```
+ID: 14453 - Slug: test-unique-2
+ID: 14452 - Slug: test-unique
+```
+
+═══════════════════════════════════════════════════════════════════════════════
+TEST 6 : Vérifier pagination
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ouvrir : http://localhost/admin/circuits/voyages
+
+2. Vérifier :
+   - Si > 20 tours, pagination visible en bas
+   - Cliquer "Page 2" → affiche les tours 21-40
+   - URL change : ?page=2
+
+═══════════════════════════════════════════════════════════════════════════════
+TEST 7 : Commandes tinker rapides
+═══════════════════════════════════════════════════════════════════════════════
+
+# Compter tours
+php artisan tinker --execute="echo \App\Models\Wp\WpPost::tours()->count();"
+
+# Lister 5 premiers tours
+php artisan tinker --execute="\App\Models\Wp\WpPost::tours()->limit(5)->get(['ID','post_title'])->each(fn(\$t)=>print(\$t->ID.' - '.\$t->post_title.PHP_EOL));"
+
+# Dernier tour modifié
+php artisan tinker --execute="\$t=\App\Models\Wp\WpPost::tours()->orderByDesc('post_modified')->first();echo \$t->ID.' '.\$t->post_title.' '.\$t->post_modified;"
+
+# Vérifier tour spécifique
+php artisan tinker --execute="\$p=\App\Models\Wp\WpPost::find(14432);echo \$p->post_title.PHP_EOL.\$p->getMeta('adult_price');"
+
+═══════════════════════════════════════════════════════════════════════════════
+CHECKLIST FINALE
+═══════════════════════════════════════════════════════════════════════════════
+
+[ ] TEST 1 : Index affiche 26 tours ✓
+[ ] TEST 2 : Création tour Laravel → visible WP ✓
+[ ] TEST 3 : Modification tour Laravel → visible WP ✓
+[ ] TEST 4 : Suppression tour Laravel → supprimé WP ✓
+[ ] TEST 5 : Slug unique automatique ✓
+[ ] TEST 6 : Pagination fonctionne ✓
+[ ] TEST 7 : Commandes tinker OK ✓
+
+═══════════════════════════════════════════════════════════════════════════════
+RÉSULTAT ATTENDU
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Tous les tests passent
+✅ Laravel affiche 26 tours WordPress
+✅ CRUD direct sans synchronisation
+✅ Modifications immédiatement visibles sur ajinsafro.net
+✅ Aucune erreur, aucun délai
+✅ Performance : ~50ms par opération
+
+═══════════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+Problème : Index vide (0 tours)
+→ Vérifier connexion WP : DB::connection('wp')->getDatabaseName()
+→ Vérifier count : WpPost::tours()->count()
+→ Vérifier préfixe : config('database.connections.wp.prefix') = 'cFdgeZ_'
+
+Problème : Erreur 500 lors création
+→ Vérifier logs : tail -f storage/logs/laravel.log
+→ Vérifier validation : StoreWpTourRequest
+→ Vérifier WpTourRepository::createTour()
+
+Problème : Tour créé mais metas vides
+→ Vérifier WpTourRepository::updateTourMetas()
+→ Vérifier mapping : destination → address, duration_text → duration_day
+
+Problème : Slug non unique
+→ Vérifier WpTourRepository::ensureUniqueSlug()
+→ Doit auto-incrémenter : slug, slug-2, slug-3, etc.
+
+═══════════════════════════════════════════════════════════════════════════════
