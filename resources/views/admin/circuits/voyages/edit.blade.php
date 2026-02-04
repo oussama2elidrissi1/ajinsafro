@@ -154,26 +154,39 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary waves-effect waves-light">
-                            <i class="bx bx-save me-1"></i> Enregistrer les modifications
-                        </button>
-                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
-                        <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" 
-                              method="POST" 
-                              onsubmit="return confirm('Supprimer définitivement ce tour de WordPress ?');"
-                              class="d-inline float-end">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger waves-effect waves-light">
-                                <i class="bx bx-trash me-1"></i> Supprimer
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                <i class="bx bx-save me-1"></i> Enregistrer les modifications
                             </button>
-                        </form>
+                            <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </form>
+
+    {{-- Formulaire de suppression séparé --}}
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">Zone dangereuse</h5>
+                    <p class="text-muted">Cette action supprimera définitivement le tour de WordPress.</p>
+                    <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" 
+                          method="POST" 
+                          onsubmit="return confirm('⚠️ ATTENTION : Supprimer définitivement ce tour de WordPress ?\n\nCette action est irréversible.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger waves-effect waves-light">
+                            <i class="bx bx-trash me-1"></i> Supprimer ce tour définitivement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
