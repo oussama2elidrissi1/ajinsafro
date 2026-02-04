@@ -1,0 +1,211 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    CHECKLIST DÉPLOIEMENT - HMAC SYNC                           ║
+║                    À cocher avant mise en production                           ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ 📋 AVANT DÉPLOIEMENT (LOCAL)                                                   │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+[ ] 1. Vérifier que tous les fichiers sont bien modifiés :
+       - config/database.php (connexion 'wp' ajoutée)
+       - config/sync.php (variables HMAC)
+       - app/Services/Sync/WpSyncService.php (signature HMAC)
+       - app/Services/Wp/WpTourImporter.php (DB::connection('wp'))
+       - app/Http/Controllers/Sync/WpToLaravelController.php (validation HMAC)
+       - app/Http/Controllers/Sync/PingController.php (nouveau)
+       - routes/api.php (route ping)
+       - wp-plugin/ajinsafro-core/includes/Sync/LaravelPushSync.php (HMAC)
+       - wp-plugin/ajinsafro-core/includes/Sync/RestEndpoint.php (ping)
+
+[ ] 2. ZIP WordPress créé :
+       wp-plugin\ajinsafro-core-v2.1-hmac.zip
+
+[ ] 3. Git status propre (pas de fichiers non commités critiques)
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ 🚀 DÉPLOIEMENT LARAVEL                                                         │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+[ ] 4. Git push effectué :
+       git add .
+       git commit -m "fix: Separate DBs + HMAC auth for sync"
+       git push origin main
+
+[ ] 5. Sur serveur : git pull effectué
+
+[ ] 6. Sur serveur : caches Laravel clears :
+       php artisan config:clear
+       php artisan route:clear
+       php artisan cache:clear
+
+[ ] 7. Variables .env TOUTES ajoutées/modifiées :
+       DB_DATABASE=ajinsafronet_ajinsafro ✓
+       WP_DB_HOST=127.0.0.1 ✓
+       WP_DB_DATABASE=ajinsafronet_wp_tkrpc ✓
+       WP_DB_USERNAME=root ✓
+       WP_DB_PASSWORD=*** ✓
+       WP_SYNC_URL=https://ajinsafro.net/wp-json/... ✓
+       SYNC_SECRET=*** (32+ chars) ✓
+       SYNC_WEBHOOK_SECRET=*** (32+ chars) ✓
+
+[ ] 8. Config cache refait APRÈS modification .env :
+       php artisan config:cache
+       php artisan route:cache
+
+[ ] 9. Services redémarrés :
+       sudo systemctl restart php8.2-fpm
+       sudo systemctl reload nginx
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ 🔌 DÉPLOIEMENT WORDPRESS                                                       │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+[ ] 10. Plugin uploadé (ajinsafro-core-v2.1-hmac.zip)
+
+[ ] 11. Plugin activé
+
+[ ] 12. Settings WordPress configurées :
+        HMAC Secret = SYNC_SECRET Laravel ✓
+        Laravel Webhook Token = SYNC_WEBHOOK_SECRET ✓
+        ☑ Enable Laravel → WP Sync ✓
+        ☑ Enable WP → Laravel Sync ✓
+        ☑ Auto-inject Package Builder ✓
+
+[ ] 13. Bouton "Import All Tours from Laravel" cliqué
+        Résultat : Created: 26, Updated: 0
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ✅ TESTS DE VALIDATION                                                         │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+[ ] TEST 1 : DB séparées
+    Commande : php artisan tinker
+    Code : DB::connection()->getDatabaseName()
+    Attendu : "ajinsafronet_ajinsafro" ✓
+    Code : DB::connection('wp')->getDatabaseName()
+    Attendu : "ajinsafronet_wp_tkrpc" ✓
+
+[ ] TEST 2 : Ping WordPress
+    Commande : curl https://ajinsafro.net/wp-json/ajinsafro-sync/v1/ping
+    Attendu : {"success":true,...} ✓
+
+[ ] TEST 3 : Routes Laravel sync
+    Commande : php artisan route:list --path=api/sync
+    Attendu : Voir POST api/sync/ping ✓
+
+[ ] TEST 4 : Ping Laravel (avec HMAC)
+    Commande : Voir QUICK_TESTS.md Test 2
+    Attendu : {"success":true,...} ✓
+
+[ ] TEST 5 : Sync Laravel → WordPress (auto)
+    Action : Créer un voyage dans Laravel
+    Vérification : Tour apparaît dans WordPress Admin
+    Résultat : ✓
+
+[ ] TEST 6 : Sync WordPress → Laravel (auto)
+    Action : Modifier un tour dans WordPress
+    Vérification : Voyage modifié dans Laravel
+    Résultat : ✓
+
+[ ] TEST 7 : Package Builder visible
+    URL : https://ajinsafro.net/tours/sejour-dubai-7-jours-6-nuits/
+    Vérification : Builder s'affiche en bas de page
+    Résultat : ✓
+
+[ ] TEST 8 : Signature HMAC invalide rejetée
+    Commande : Voir QUICK_TESTS.md Test 7
+    Attendu : 401 Unauthorized ✓
+
+[ ] TEST 9 : Logs propres
+    Laravel : tail -f storage/logs/laravel.log
+    WordPress : wp-content/uploads/ajinsafro-sync.log
+    Vérification : Pas d'erreurs critiques ✓
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ 🔍 VÉRIFICATIONS FINALES                                                       │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+[ ] 14. Nombre de voyages cohérent :
+        Laravel : \App\Models\Voyage::count() = 26 ✓
+        WordPress : 26 tours visibles dans Admin ✓
+
+[ ] 15. Aucune boucle infinie détectée :
+        Logs Laravel : pas de répétitions infinies ✓
+        Logs WordPress : pas de flood ✓
+
+[ ] 16. Performance acceptable :
+        Temps réponse API < 2s ✓
+        Pas de timeout ✓
+
+[ ] 17. Sécurité vérifiée :
+        Secrets différents de "CHANGEZ_MOI" ✓
+        Secrets min 32 caractères ✓
+        HMAC fonctionnel des deux côtés ✓
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ 🎉 VALIDATION FINALE                                                           │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+[ ] TOUS LES TESTS CI-DESSUS PASSENT
+
+[ ] Documentation lue et comprise :
+    - PATCH_FINAL_SUMMARY.md
+    - QUICK_TESTS.md
+    - FINAL_DEPLOY_COMMANDS.txt
+
+[ ] Backup DB effectué avant mise en prod
+
+[ ] Équipe informée du déploiement
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║  SI TOUS LES TESTS PASSENT :                                                  ║
+║  🟢 SYSTÈME PRÊT POUR PRODUCTION                                              ║
+║                                                                                ║
+║  Temps estimé : 15-20 minutes                                                 ║
+║  Risque : FAIBLE (aucune modification serveur manuelle)                       ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ⚠️ EN CAS DE PROBLÈME                                                          │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+Problème : DB toujours mauvaise
+→ Vérifier .env : DB_DATABASE=ajinsafronet_ajinsafro
+→ php artisan config:clear && php artisan config:cache
+→ Redémarrer PHP-FPM
+
+Problème : 401 Missing signature
+→ Vérifier secrets identiques Laravel/WordPress
+→ Vérifier header X-AJ-Signature présent
+
+Problème : 401 Invalid signature
+→ Secrets probablement différents
+→ Reconfigurer Settings WordPress avec exact SYNC_SECRET
+
+Problème : Boucle infinie
+→ Vérifier logs _aj_sync_lock
+→ Vérifier SyncContext Laravel
+
+Problème : Import échoue
+→ Vérifier WP_DB_* dans .env
+→ Vérifier connexion 'wp' accessible
+
+Documentation complète : QUICK_TESTS.md
+
+
+═══════════════════════════════════════════════════════════════════════════════
+DATE DÉPLOIEMENT : ___/___/______
+DÉPLOYÉ PAR : ___________________
+TOUS LES TESTS : [ ] OK  [ ] KO
+═══════════════════════════════════════════════════════════════════════════════

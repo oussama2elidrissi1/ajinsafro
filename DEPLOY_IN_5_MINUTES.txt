@@ -1,0 +1,123 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                  DÉPLOIEMENT EN 5 MINUTES - VERSION EXPRESS                   ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+⏱️  TEMPS TOTAL : 5 MINUTES
+🎯 OBJECTIF : Corriger 3 bugs critiques de sync
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ÉTAPE 1 : GIT PUSH (30 secondes)                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+git add .
+git commit -m "fix: Separate DBs + HMAC auth"
+git push origin main
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ÉTAPE 2 : SERVEUR LARAVEL (2 minutes)                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+ssh user@booking.ajinsafro.net
+cd /path/to/laravel
+git pull origin main
+
+# ⚠️ CRITIQUE : Modifier .env
+nano .env
+
+# Ajouter CES 4 LIGNES (en haut après DB_PASSWORD) :
+WP_DB_HOST=127.0.0.1
+WP_DB_DATABASE=ajinsafronet_wp_tkrpc
+WP_DB_USERNAME=root
+WP_DB_PASSWORD=votre_password
+
+# Ajouter CES 2 LIGNES (à la fin) :
+SYNC_SECRET=GenerezSecret32CharsMinimumIci123
+SYNC_WEBHOOK_SECRET=GenerezSecret32CharsMinimumIci123
+
+# SAUVEGARDER : Ctrl+O, Enter, Ctrl+X
+
+# Clear + cache
+php artisan config:clear && php artisan config:cache && php artisan route:cache
+sudo systemctl restart php8.2-fpm
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ÉTAPE 3 : WORDPRESS (2 minutes)                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. Upload wp-plugin\ajinsafro-core-v2.1-hmac.zip dans WordPress Admin
+2. Remplacer le plugin existant
+3. Activer
+
+4. WordPress Admin → Ajinsafro Core → Settings :
+
+   HMAC Secret: GenerezSecret32CharsMinimumIci123
+   Laravel Webhook Token: GenerezSecret32CharsMinimumIci123
+   
+   ☑ Enable Laravel → WP Sync
+   ☑ Enable WP → Laravel Sync
+   
+   [Save Changes]
+
+5. Cliquer : [Import All Tours from Laravel]
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ÉTAPE 4 : TEST RAPIDE (30 secondes)                                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+# Test 1 : DB correcte
+php artisan tinker
+DB::connection()->getDatabaseName()
+# DOIT afficher : "ajinsafronet_ajinsafro" ✓
+
+# Test 2 : Ping
+curl https://ajinsafro.net/wp-json/ajinsafro-sync/v1/ping
+# DOIT afficher : {"success":true,...} ✓
+
+# Test 3 : Créer voyage
+php artisan tinker
+\App\Models\Voyage::create(['name'=>'Test '.time(),'slug'=>'test-'.time(),'status'=>'actif','price_from'=>5000,'currency'=>'MAD']);
+# Vérifier dans WordPress Admin → Tours
+# DOIT apparaître automatiquement ✓
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║ ✅ SI LES 3 TESTS PASSENT → C'EST BON !                                       ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔥 IMPORTANT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Les secrets DOIVENT être IDENTIQUES Laravel/WordPress
+2. Les secrets DOIVENT faire 32+ caractères
+3. Toujours faire config:cache APRÈS modification .env
+4. Ne PAS utiliser "CHANGEZ_MOI" en production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 DOCUMENTATION COMPLÈTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Si problème, voir :
+  - QUICK_TESTS.md (tests détaillés)
+  - PATCH_FINAL_SUMMARY.md (explications complètes)
+  - CHECKLIST_DEPLOYMENT.txt (checklist complète)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+═══════════════════════════════════════════════════════════════════════════════
+RÉSULTAT FINAL
+
+✅ DB métier séparée de DB WordPress
+✅ HMAC sécurisé (bidirectionnel)
+✅ Synchronisation automatique
+✅ Aucune boucle infinie
+✅ Package Builder auto-injecté
+
+🟢 PRODUCTION-READY
+═══════════════════════════════════════════════════════════════════════════════
