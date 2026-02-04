@@ -47,8 +47,29 @@ class VoyageController extends Controller
      */
     public function show(int $id): View
     {
-        $tour = $this->repository->getTourWithMetas($id);
-        return view('admin.circuits.voyages.show', compact('tour'));
+        $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
+        
+        // Créer un objet compatible avec les vues existantes
+        $voyage = $wpPost;
+        $voyage->name = $wpPost->post_title; // Alias pour compatibilité
+        $voyage->slug = $wpPost->post_name;
+        $voyage->description = $wpPost->post_content;
+        $voyage->updated_at = $wpPost->post_modified;
+        $voyage->created_at = $wpPost->post_date;
+        
+        // Charger les metas
+        $meta = [
+            'adult_price' => $wpPost->getMeta('adult_price'),
+            'child_price' => $wpPost->getMeta('child_price'),
+            'duration_day' => $wpPost->getMeta('duration_day'),
+            'address' => $wpPost->getMeta('address'),
+            'min_price' => $wpPost->getMeta('min_price'),
+            'min_people' => $wpPost->getMeta('min_people'),
+            'thumbnail_id' => $wpPost->getMeta('_thumbnail_id'),
+            'gallery' => $wpPost->getMeta('gallery'),
+        ];
+        
+        return view('admin.circuits.voyages.show', compact('voyage', 'meta'));
     }
 
     /**
@@ -94,16 +115,41 @@ class VoyageController extends Controller
      */
     public function edit(int $id): View
     {
-        $tour = $this->repository->getTourWithMetas($id);
+        $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
         
-        // Convertir array gallery en CSV pour le form
-        if (is_array($tour['gallery'])) {
-            $tour['gallery_csv'] = implode(',', $tour['gallery']);
-        } else {
-            $tour['gallery_csv'] = $tour['gallery'] ?? '';
+        // Créer un objet compatible avec les vues existantes
+        $voyage = $wpPost;
+        $voyage->name = $wpPost->post_title; // Alias pour compatibilité
+        $voyage->slug = $wpPost->post_name;
+        $voyage->description = $wpPost->post_content;
+        $voyage->accroche = $wpPost->post_excerpt;
+        $voyage->updated_at = $wpPost->post_modified;
+        $voyage->created_at = $wpPost->post_date;
+        $voyage->status = $wpPost->post_status;
+        
+        // Charger les metas
+        $meta = [
+            'adult_price' => $wpPost->getMeta('adult_price'),
+            'child_price' => $wpPost->getMeta('child_price'),
+            'duration_day' => $wpPost->getMeta('duration_day'),
+            'address' => $wpPost->getMeta('address'),
+            'min_price' => $wpPost->getMeta('min_price'),
+            'min_people' => $wpPost->getMeta('min_people'),
+            'thumbnail_id' => $wpPost->getMeta('_thumbnail_id'),
+            'gallery' => $wpPost->getMeta('gallery'),
+        ];
+        
+        // Convertir gallery en CSV pour le form
+        $gallery_csv = '';
+        if (!empty($meta['gallery'])) {
+            if (is_array($meta['gallery'])) {
+                $gallery_csv = implode(',', $meta['gallery']);
+            } else {
+                $gallery_csv = $meta['gallery'];
+            }
         }
-
-        return view('admin.circuits.voyages.edit', compact('tour'));
+        
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv'));
     }
 
     /**
