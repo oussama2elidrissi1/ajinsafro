@@ -63,6 +63,30 @@ class Settings
             return;
         }
 
+        // Handle global import
+        if (isset($_POST['ajinsafro_global_import'])) {
+            check_admin_referer('ajinsafro_global_import_nonce');
+            
+            $result = GlobalImporter::importAllTours();
+            
+            if ($result['success']) {
+                echo '<div class="notice notice-success"><p>';
+                echo sprintf(
+                    __('Import completed! Created: %d, Updated: %d', 'ajinsafro-core'),
+                    $result['imported'],
+                    $result['updated']
+                );
+                if (!empty($result['errors'])) {
+                    echo '<br>' . __('Errors:', 'ajinsafro-core') . ' ' . implode(', ', $result['errors']);
+                }
+                echo '</p></div>';
+            } else {
+                echo '<div class="notice notice-error"><p>';
+                echo __('Import failed:', 'ajinsafro-core') . ' ' . implode(', ', $result['errors']);
+                echo '</p></div>';
+            }
+        }
+
         // Save settings
         if (isset($_POST['ajinsafro_save_settings'])) {
             check_admin_referer('ajinsafro_settings_nonce');

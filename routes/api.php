@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\PublicPackageController;
+use App\Http\Controllers\Api\PublicToursListController;
 use App\Http\Controllers\Sync\WpToLaravelController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 |--------------------------------------------------------------------------
 */
 Route::prefix('public')->name('api.public.')->group(function () {
+    // List all active tours
+    Route::get('tours', [PublicToursListController::class, 'index'])
+        ->name('tours.index');
+    
     // Get package state for a tour
     Route::get('tours/{voyageId}/package-state', [PublicPackageController::class, 'getPackageState'])
         ->whereNumber('voyageId')

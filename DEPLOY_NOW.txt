@@ -1,0 +1,199 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║           DÉPLOIEMENT SYNCHRONISATION AUTOMATIQUE - 15 MINUTES                 ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 1 : Laravel (5 min)                                                     │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Sur votre machine LOCAL
+cd c:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin
+
+git add .
+git commit -m "feat: Complete auto-sync system with global import"
+git push origin main
+
+# Sur le SERVEUR (SSH)
+ssh user@booking.ajinsafro.net
+cd /path/to/laravel
+git pull origin main
+php artisan route:cache
+php artisan config:cache
+sudo systemctl restart php8.2-fpm
+sudo systemctl reload nginx
+
+# Vérifier .env contient :
+WP_SYNC_URL=https://ajinsafro.net/wp-json/ajinsafro-sync/v1/laravel-to-wp
+SYNC_TOKEN=votre_token_32_chars
+SYNC_WEBHOOK_TOKEN=votre_token_32_chars
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 2 : WordPress Plugin (5 min)                                            │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+# Sur votre machine LOCAL
+cd c:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\wp-plugin
+
+# Créer le ZIP
+powershell Compress-Archive -Path ajinsafro-core -DestinationPath ajinsafro-core-v2.1.zip -Force
+
+# Upload WordPress
+1. Ouvrir https://ajinsafro.net/wp-admin
+2. Plugins → Add New → Upload Plugin
+3. Choisir ajinsafro-core-v2.1.zip
+4. "Replace current with uploaded"
+5. Activate
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 3 : Configuration WordPress (5 min)                                     │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+WordPress Admin → Ajinsafro Core
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ SECTION : Configuration de base                                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Laravel Base URL: https://booking.ajinsafro.net
+Checkout Base URL: https://booking.ajinsafro.net
+HMAC Secret: votre_token_32_chars
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ SECTION : Laravel → WP Sync                                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+☑ Enable Laravel → WP Sync
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ SECTION : Bi-directional Sync (WP → Laravel)                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+☑ Enable WP → Laravel Sync
+Laravel Sync Endpoint URL: https://booking.ajinsafro.net
+Laravel Webhook Token: votre_token_32_chars
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ SECTION : Package Builder Display                                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+☑ Auto-inject Package Builder
+Auto-inject Position: After content
+
+[Save Changes]
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ CRITIQUE : IMPORT GLOBAL                                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+En haut de la page Settings, cliquer sur :
+
+    ┌─────────────────────────────────────────────────┐
+    │  [Import All Tours from Laravel]                │
+    └─────────────────────────────────────────────────┘
+
+Attendre le message :
+    ✅ Import completed! Created: 26, Updated: 0
+
+Si erreur, vérifier Laravel Base URL est correct.
+
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ TESTS RAPIDES (2 min)                                                         │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+TEST 1 : Tours visibles
+→ WordPress Admin → Posts → Tours
+→ Doit montrer 26 tours (ou votre nombre)
+
+TEST 2 : Package Builder
+→ Ouvrir https://ajinsafro.net/tours/nom-du-tour/
+→ Builder doit s'afficher automatiquement
+
+TEST 3 : Sync Laravel → WordPress
+→ Sur serveur Laravel :
+  php artisan tinker --execute="\App\Models\Voyage::first()->update(['name' => 'Test ' . time()]);"
+→ Dans WordPress Admin → Posts → Tours
+→ Le titre doit changer automatiquement
+
+TEST 4 : Sync WordPress → Laravel
+→ WordPress Admin → Posts → Tours → Edit
+→ Changer le titre → "Test WP"
+→ Sur serveur Laravel :
+  php artisan tinker --execute="echo \App\Models\Voyage::where('name', 'Test WP')->exists() ? 'OK' : 'FAIL';"
+→ Doit afficher "OK"
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                           SYSTÈME ACTIF !                                      ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+À PARTIR DE MAINTENANT :
+
+✅ Toute création de Voyage dans Laravel → Automatiquement dans WordPress
+✅ Toute modification de Voyage dans Laravel → Automatiquement dans WordPress
+✅ Toute modification de tour dans WordPress → Automatiquement dans Laravel
+✅ Package Builder s'injecte automatiquement sur toutes les pages de tours
+✅ Aucune action manuelle requise
+✅ Aucune boucle infinie
+✅ Aucune duplication
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       FICHIERS CRÉÉS/MODIFIÉS                                  ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+LARAVEL (11 fichiers) :
+  ✅ app/Services/Sync/WpSyncService.php
+  ✅ app/Services/Sync/SyncContext.php
+  ✅ app/Observers/VoyageObserver.php
+  ✅ app/Http/Controllers/Sync/WpToLaravelController.php
+  ✅ app/Http/Controllers/Api/PublicToursListController.php
+  ✅ app/Services/Wp/WpTourImporter.php
+  ✅ app/Console/Commands/WpImportTours.php
+  ✅ app/Providers/AppServiceProvider.php (modifié)
+  ✅ routes/api.php (modifié)
+  ✅ config/sync.php (modifié)
+  ✅ FINAL_DEPLOYMENT_README.md
+
+WORDPRESS (7 fichiers) :
+  ✅ includes/Sync/LaravelPushSync.php
+  ✅ includes/Sync/TourSyncer.php (modifié)
+  ✅ includes/Admin/GlobalImporter.php
+  ✅ includes/Admin/Settings.php (modifié)
+  ✅ includes/Core/Options.php (modifié)
+  ✅ templates/admin/settings.php (modifié)
+  ✅ ajinsafro-core.php (modifié)
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       LOGS À SURVEILLER                                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Laravel :
+  tail -f storage/logs/laravel.log | grep -i sync
+
+WordPress :
+  tail -f wp-content/uploads/ajinsafro-sync.log
+
+Nginx :
+  sudo tail -f /var/log/nginx/error.log
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                       DOCUMENTATION COMPLÈTE                                   ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+  FINAL_DEPLOYMENT_README.md           - Guide complet
+  BIDIRECTIONAL_SYNC_DEPLOYMENT.md     - Détails techniques
+  QUICK_SYNC_TESTS.txt                 - Tests rapides
+  WP_IMPORT_GUIDE.md                   - Guide import WP→Laravel
+
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+TEMPS TOTAL ESTIMÉ : 15 minutes
+RÉSULTAT : Synchronisation bidirectionnelle 100% automatique
+
+═══════════════════════════════════════════════════════════════════════════════════

@@ -5,6 +5,23 @@ if (!defined('ABSPATH')) exit;
 <div class="wrap">
     <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 
+    <!-- Global Import Section -->
+    <div class="card" style="max-width: 800px; margin: 20px 0;">
+        <h2><?php _e('Global Import', 'ajinsafro-core'); ?></h2>
+        <p><?php _e('Import ALL tours from Laravel to WordPress. This will create or update all tours.', 'ajinsafro-core'); ?></p>
+        <form method="post" action="" style="margin-top: 15px;">
+            <?php wp_nonce_field('ajinsafro_global_import_nonce'); ?>
+            <button type="submit" 
+                    name="ajinsafro_global_import" 
+                    class="button button-primary button-large"
+                    onclick="return confirm('<?php _e('Import all tours from Laravel? This may take a few seconds.', 'ajinsafro-core'); ?>');">
+                <?php _e('Import All Tours from Laravel', 'ajinsafro-core'); ?>
+            </button>
+        </form>
+    </div>
+
+    <hr style="margin: 30px 0;">
+
     <form method="post" action="">
         <?php wp_nonce_field('ajinsafro_settings_nonce'); ?>
 
