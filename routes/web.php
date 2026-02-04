@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
+use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Booking\CheckoutController;
 use App\Http\Controllers\Booking\StartBookingController;
@@ -171,6 +172,14 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
         Route::get('hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hotels.edit')->whereNumber('hotel');
         Route::match(['put', 'patch'], 'hotels/{hotel}', [HotelController::class, 'update'])->name('hotels.update')->whereNumber('hotel');
         Route::delete('hotels/{hotel}', [HotelController::class, 'destroy'])->name('hotels.destroy')->whereNumber('hotel');
+        
+        // Tours (st_tours) - Direct CRUD dans DB WordPress
+        Route::get('tours', [WpTourController::class, 'index'])->name('tours.index');
+        Route::get('tours/create', [WpTourController::class, 'create'])->name('tours.create');
+        Route::post('tours', [WpTourController::class, 'store'])->name('tours.store');
+        Route::get('tours/{tour}/edit', [WpTourController::class, 'edit'])->name('tours.edit')->whereNumber('tour');
+        Route::match(['put', 'patch'], 'tours/{tour}', [WpTourController::class, 'update'])->name('tours.update')->whereNumber('tour');
+        Route::delete('tours/{tour}', [WpTourController::class, 'destroy'])->name('tours.destroy')->whereNumber('tour');
     });
 });
 
