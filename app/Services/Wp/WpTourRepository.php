@@ -509,4 +509,117 @@ class WpTourRepository
         
         return implode(',', $formatted);
     }
+    
+    /**
+     * Safely decode WordPress PHP serialized data.
+     *
+     * @param mixed $value
+     * @return array
+     */
+    public function decodeWpSerialized($value): array
+    {
+        if (empty($value) || !is_string($value)) {
+            return [];
+        }
+        
+        // Check if it's serialized (starts with a:, s:, O:, etc.)
+        if (!preg_match('/^[aOs]:\d+:/', $value)) {
+            return [];
+        }
+        
+        try {
+            // Unserialize with security: block objects
+            $decoded = @unserialize($value, ['allowed_classes' => false]);
+            
+            if ($decoded === false) {
+                return [];
+            }
+            
+            return is_array($decoded) ? $decoded : [];
+        } catch (\Exception $e) {
+            \Log::warning('Failed to unserialize WP data', [
+                'error' => $e->getMessage(),
+                'value_preview' => substr($value, 0, 100)
+            ]);
+            return [];
+        }
+    }
+    
+    /**
+     * Encode array to WordPress PHP serialized format.
+     *
+     * @param array $data
+     * @return string
+     */
+    public function encodeWpSerialized(array $data): string
+    {
+        return serialize($data);
+    }
+    
+    /**
+     * Get tour program from WordPress.
+     *
+     * @param int $postId
+     * @return array ['style' => string, 'items' => array]
+     */
+    public function getTourProgram(int $postId): array
+    {
+        $post = WpPost::tours()->find($postId);
+        
+        if (!$post) {
+            return ['style' => 'style1', 'items' => []];
+        }
+        
+        $style = $post->getMeta('tours_program_style') ?: 'style1';
+        $programSerialized = $post->getMeta('tours_program');
+        
+        $items = $this->decodeWpSerialized($programSerialized);
+        
+        // Normalize items structure
+        $normalized = [];
+        foreach ($items as $item) {
+            if (is_array($item)) {
+                $normalized[] = [
+                    'title' => $item['title'] ?? '',
+                    'desc' => $item['desc'] ?? $item['description'] ?? '',
+                ];
+            }
+        }
+        
+        return [
+            'style' => $style,
+            'items' => $normalized,
+        ];
+    }
+    
+    /**
+     * Save tour program to WordPress.
+     *
+     * @param int $postId
+     * @param string $style
+     * @param array $items
+     * @return void
+     */
+    public function saveTourProgram(int $postId, string $style, array $items): void
+    {
+        $post = WpPost::tours()->findOrFail($postId);
+        
+        // Clean items: remove empty rows
+        $cleanedItems = [];
+        foreach ($items as $item) {
+            if (!empty($item['title']) || !empty($item['desc'])) {
+                $cleanedItems[] = [
+                    'title' => $item['title'] ?? '',
+                    'desc' => $item['desc'] ?? '',
+                ];
+            }
+        }
+        
+        // Serialize for WordPress
+        $serialized = $this->encodeWpSerialized($cleanedItems);
+        
+        // Save metas
+        $post->setMeta('tours_program_style', $style);
+        $post->setMeta('tours_program', $serialized);
+    }
 }

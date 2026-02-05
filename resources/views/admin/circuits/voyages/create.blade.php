@@ -168,6 +168,47 @@
             </div>
         </div>
 
+        {{-- Tour Program Section --}}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Tour Program</h4>
+                        <p class="text-muted">Définissez le programme jour par jour de votre tour (identique à WordPress Traveler)</p>
+                        
+                        {{-- Program Style --}}
+                        <div class="mb-4">
+                            <label for="tours_program_style" class="form-label">Program Style</label>
+                            <select name="tours_program_style" id="tours_program_style" class="form-select">
+                                <option value="style1" selected>Style 1</option>
+                                <option value="style2">Style 2</option>
+                                <option value="style3">Style 3</option>
+                            </select>
+                            <small class="text-muted">Choisissez le style d'affichage du programme sur le front-end</small>
+                        </div>
+                        
+                        {{-- Program Items --}}
+                        <div id="programItemsContainer">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Programme items</h5>
+                                <button type="button" class="btn btn-success btn-sm" id="addProgramItemCreate">
+                                    <i class="bx bx-plus"></i> Add new
+                                </button>
+                            </div>
+                            
+                            <div id="programItemsListCreate">
+                                {{-- Items will be added dynamically --}}
+                            </div>
+                            
+                            <div class="alert alert-info" id="emptyProgramAlert">
+                                <i class="bx bx-info-circle"></i> Aucun item de programme. Cliquez sur "Add new" pour ajouter un élément.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -233,6 +274,80 @@
             
             checkboxes.forEach(function(checkbox) {
                 checkbox.addEventListener('change', updateCount);
+            });
+        });
+        
+        // Tour Program: Add/Remove items (create form)
+        document.addEventListener('DOMContentLoaded', function() {
+            let programItemIndex = 0;
+            
+            // Add new program item
+            document.getElementById('addProgramItemCreate').addEventListener('click', function() {
+                const container = document.getElementById('programItemsListCreate');
+                const newItem = document.createElement('div');
+                newItem.className = 'program-item card mb-3';
+                newItem.setAttribute('data-index', programItemIndex);
+                newItem.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0">Item ${programItemIndex + 1}</h6>
+                            <button type="button" class="btn btn-danger btn-sm remove-program-item-create">
+                                <i class="bx bx-trash"></i> Remove
+                            </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" 
+                                   name="tours_program[${programItemIndex}][title]" 
+                                   class="form-control" 
+                                   placeholder="Ex: 08:00 - Départ de l'hôtel">
+                        </div>
+                        
+                        <div class="mb-0">
+                            <label class="form-label">Description</label>
+                            <textarea name="tours_program[${programItemIndex}][desc]" 
+                                      class="form-control" 
+                                      rows="3"
+                                      placeholder="Description détaillée de cette étape du programme"></textarea>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(newItem);
+                programItemIndex++;
+                
+                // Hide empty message
+                const emptyAlert = document.getElementById('emptyProgramAlert');
+                if (emptyAlert) {
+                    emptyAlert.style.display = 'none';
+                }
+            });
+            
+            // Remove program item (delegated event)
+            document.getElementById('programItemsListCreate').addEventListener('click', function(e) {
+                if (e.target.closest('.remove-program-item-create')) {
+                    const item = e.target.closest('.program-item');
+                    if (confirm('Supprimer cet item du programme ?')) {
+                        item.remove();
+                        
+                        // Update item numbers
+                        const items = document.querySelectorAll('#programItemsListCreate .program-item');
+                        items.forEach(function(item, index) {
+                            const title = item.querySelector('h6');
+                            if (title) {
+                                title.textContent = 'Item ' + (index + 1);
+                            }
+                        });
+                        
+                        // Show empty message if no items left
+                        if (items.length === 0) {
+                            const emptyAlert = document.getElementById('emptyProgramAlert');
+                            if (emptyAlert) {
+                                emptyAlert.style.display = 'block';
+                            }
+                        }
+                    }
+                }
             });
         });
     </script>

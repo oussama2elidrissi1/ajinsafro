@@ -114,6 +114,11 @@ class StoreWpTourRequest extends FormRequest
             'language.*' => 'integer',
             'languages' => 'nullable|array',
             'languages.*' => 'integer',
+            
+            // Tour Program
+            'tours_program' => 'nullable|array',
+            'tours_program.*.title' => 'nullable|string',
+            'tours_program.*.desc' => 'nullable|string',
         ];
     }
 

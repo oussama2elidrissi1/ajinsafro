@@ -81,7 +81,10 @@ class VoyageController extends Controller
         $locationsTree = $this->repository->getLocationsTree();
         $selectedLocationIds = [];
         
-        return view('admin.circuits.voyages.create', compact('locationsTree', 'selectedLocationIds'));
+        // Programme vide pour création
+        $tourProgram = ['style' => 'style1', 'items' => []];
+        
+        return view('admin.circuits.voyages.create', compact('locationsTree', 'selectedLocationIds', 'tourProgram'));
     }
 
     /**
@@ -103,6 +106,13 @@ class VoyageController extends Controller
 
         try {
             $tour = $this->repository->createTour($validated);
+            
+            // Save tour program if provided (PHP serialized)
+            if ($request->has('tours_program')) {
+                $programStyle = $request->input('tours_program_style', 'style1');
+                $programItems = $request->input('tours_program', []);
+                $this->repository->saveTourProgram($tour->ID, $programStyle, $programItems);
+            }
 
             return redirect()
                 ->route('admin.circuits.voyages.edit', $tour->ID)
@@ -228,7 +238,10 @@ class VoyageController extends Controller
         $multiLocationValue = $wpPost->getMeta('multi_location');
         $selectedLocationIds = $this->repository->parseMultiLocation($multiLocationValue);
         
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds'));
+        // Charger tour program
+        $tourProgram = $this->repository->getTourProgram($id);
+        
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'tourProgram'));
     }
     
     /**
@@ -305,6 +318,13 @@ class VoyageController extends Controller
 
         try {
             $this->repository->updateTour($id, $validated);
+            
+            // Save tour program separately (PHP serialized)
+            if ($request->has('tours_program')) {
+                $programStyle = $request->input('tours_program_style', 'style1');
+                $programItems = $request->input('tours_program', []);
+                $this->repository->saveTourProgram($id, $programStyle, $programItems);
+            }
 
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
