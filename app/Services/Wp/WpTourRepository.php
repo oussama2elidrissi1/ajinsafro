@@ -161,13 +161,14 @@ class WpTourRepository
             // Basic (existing)
             'destination' => 'address',
             'duration_text' => 'duration_day',
+            'duration_day' => 'duration_day', // Direct mapping
             'status' => 'status',
             
             // LOCATION
             'address' => 'address',
             'id_location' => 'id_location',
             'location_id' => 'location_id',
-            'multi_location' => 'multi_location',
+            // 'multi_location' handled separately below (special format)
             'map_lat' => 'map_lat',
             'map_lng' => 'map_lng',
             'map_zoom' => 'map_zoom',
@@ -272,8 +273,10 @@ class WpTourRepository
         }
         
         // Handle multi_location (array of IDs -> WP format "_ID1_,_ID2_,_ID3_")
-        if (isset($data['multi_location'])) {
-            $locationIds = is_array($data['multi_location']) ? $data['multi_location'] : [];
+        // Accept both 'locations' (from form) and 'multi_location' (legacy)
+        if (isset($data['locations']) || isset($data['multi_location'])) {
+            $locationIds = $data['locations'] ?? $data['multi_location'] ?? [];
+            $locationIds = is_array($locationIds) ? $locationIds : [];
             $formattedValue = $this->formatMultiLocation($locationIds);
             $post->setMeta('multi_location', $formattedValue);
         }

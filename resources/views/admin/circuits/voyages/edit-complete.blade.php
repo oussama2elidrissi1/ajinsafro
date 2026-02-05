@@ -178,7 +178,8 @@
                                 
                                 <div class="mb-3">
                                     <label for="st_tour_external_booking" class="form-label">Lien réservation externe</label>
-                                    <input type="url" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
+                                    <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
+                                    <small class="text-muted">Optionnel</small>
                                 </div>
                             </div>
                         </div>
@@ -302,7 +303,8 @@
                                 
                                 <div class="mb-3">
                                     <label for="website" class="form-label">Site web</label>
-                                    <input type="url" class="form-control" id="website" name="website" value="{{ old('website', $meta['website'] ?? '') }}" placeholder="https://...">
+                                    <input type="text" class="form-control" id="website" name="website" value="{{ old('website', $meta['website'] ?? '') }}" placeholder="https://...">
+                                    <small class="text-muted">Optionnel</small>
                                 </div>
                             </div>
                         </div>
@@ -485,7 +487,8 @@
                         
                         <div class="mb-3">
                             <label for="ical_url" class="form-label">URL calendrier iCal</label>
-                            <input type="url" class="form-control" id="ical_url" name="ical_url" value="{{ old('ical_url', $meta['ical_url'] ?? '') }}" placeholder="https://...">
+                            <input type="text" class="form-control" id="ical_url" name="ical_url" value="{{ old('ical_url', $meta['ical_url'] ?? '') }}" placeholder="https://...">
+                            <small class="text-muted">Optionnel</small>
                         </div>
                     </div>
                 </div>
@@ -511,8 +514,8 @@
                         
                         <div class="mb-3">
                             <label for="video" class="form-label">URL Vidéo</label>
-                            <input type="url" class="form-control" id="video" name="video" value="{{ old('video', $meta['video'] ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
-                            <small class="text-muted">YouTube, Vimeo, etc.</small>
+                            <input type="text" class="form-control" id="video" name="video" value="{{ old('video', $meta['video'] ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
+                            <small class="text-muted">YouTube, Vimeo, etc. (Optionnel)</small>
                         </div>
                     </div>
                 </div>
