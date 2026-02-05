@@ -190,6 +190,38 @@
             <div class="tab-pane" id="location" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
+                        <h4 class="card-title mb-4">Tour location</h4>
+                        <p class="text-muted">Select one or more location for your tour</p>
+                        
+                        <div class="mb-4">
+                            <input 
+                                type="text" 
+                                id="locationSearch" 
+                                class="form-control" 
+                                placeholder="Type to search..."
+                            >
+                        </div>
+                        
+                        <div id="locationTreeContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #e9ecef; padding: 15px; border-radius: 4px; background: #f8f9fa;">
+                            @if(!empty($locationsTree))
+                                @include('admin.circuits.voyages.partials.location-tree', [
+                                    'locations' => $locationsTree, 
+                                    'selectedIds' => $selectedLocationIds ?? []
+                                ])
+                            @else
+                                <p class="text-muted mb-0">Aucune location disponible. Créez des locations dans WordPress d'abord.</p>
+                            @endif
+                        </div>
+                        
+                        <small class="text-muted d-block mt-2">
+                            <i class="bx bx-info-circle"></i> 
+                            {{ count($selectedLocationIds ?? []) }} location(s) sélectionnée(s)
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
                         <h4 class="card-title mb-4">Localisation & Carte</h4>
                         
                         <div class="row">
@@ -670,4 +702,41 @@
 @endsection
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
+    <script>
+        // Location search filter
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('locationSearch');
+            const locationItems = document.querySelectorAll('.location-item');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    
+                    locationItems.forEach(function(item) {
+                        const title = item.getAttribute('data-title');
+                        
+                        if (searchTerm === '' || title.includes(searchTerm)) {
+                            item.style.display = '';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            }
+            
+            // Update selected count
+            const checkboxes = document.querySelectorAll('.location-checkbox');
+            const updateCount = function() {
+                const checked = document.querySelectorAll('.location-checkbox:checked').length;
+                const countElement = document.querySelector('.text-muted small');
+                if (countElement) {
+                    countElement.innerHTML = '<i class="bx bx-info-circle"></i> ' + checked + ' location(s) sélectionnée(s)';
+                }
+            };
+            
+            checkboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', updateCount);
+            });
+        });
+    </script>
 @endpush

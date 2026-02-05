@@ -271,6 +271,13 @@ class WpTourRepository
             $post->setMeta('_thumbnail_id', $data['featured_image']);
         }
         
+        // Handle multi_location (array of IDs -> WP format "_ID1_,_ID2_,_ID3_")
+        if (isset($data['multi_location'])) {
+            $locationIds = is_array($data['multi_location']) ? $data['multi_location'] : [];
+            $formattedValue = $this->formatMultiLocation($locationIds);
+            $post->setMeta('multi_location', $formattedValue);
+        }
+        
         // Update taxonomies
         $this->updateTourTaxonomies($post, $data);
     }
@@ -409,5 +416,89 @@ class WpTourRepository
             'gallery' => isset($metas['gallery']) ? explode(',', $metas['gallery']) : [],
             'metas' => $metas,
         ];
+    }
+    
+    /**
+     * Get all locations as tree structure for tour selection.
+     *
+     * @return array
+     */
+    public function getLocationsTree(): array
+    {
+        $locations = \DB::connection('wp')
+            ->table('posts')
+            ->where('post_type', 'location')
+            ->where('post_status', 'publish')
+            ->select('ID', 'post_title', 'post_parent')
+            ->orderBy('post_parent')
+            ->orderBy('post_title')
+            ->get()
+            ->toArray();
+        
+        return $this->buildLocationTree($locations);
+    }
+    
+    /**
+     * Build hierarchical tree from flat location array.
+     *
+     * @param array $locations
+     * @param int $parentId
+     * @return array
+     */
+    protected function buildLocationTree(array $locations, int $parentId = 0): array
+    {
+        $tree = [];
+        
+        foreach ($locations as $location) {
+            if ($location->post_parent == $parentId) {
+                $children = $this->buildLocationTree($locations, $location->ID);
+                
+                $tree[] = [
+                    'id' => $location->ID,
+                    'title' => $location->post_title,
+                    'parent_id' => $location->post_parent,
+                    'children' => $children,
+                ];
+            }
+        }
+        
+        return $tree;
+    }
+    
+    /**
+     * Parse multi_location meta value from WP format "_ID1_,_ID2_,_ID3_"
+     *
+     * @param string|null $multiLocationValue
+     * @return array
+     */
+    public function parseMultiLocation(?string $multiLocationValue): array
+    {
+        if (empty($multiLocationValue)) {
+            return [];
+        }
+        
+        // Extract IDs from format "_54_,_55_,_56_"
+        preg_match_all('/_(\d+)_/', $multiLocationValue, $matches);
+        
+        return array_map('intval', $matches[1] ?? []);
+    }
+    
+    /**
+     * Format location IDs to WP multi_location format "_ID1_,_ID2_,_ID3_"
+     *
+     * @param array $locationIds
+     * @return string
+     */
+    public function formatMultiLocation(array $locationIds): string
+    {
+        if (empty($locationIds)) {
+            return '';
+        }
+        
+        $formatted = array_map(function($id) {
+            return '_' . intval($id) . '_';
+        }, $locationIds);
+        
+        return implode(',', $formatted);
     }
 }

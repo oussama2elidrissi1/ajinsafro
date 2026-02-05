@@ -80,6 +80,31 @@
                             <label for="destination" class="form-label">Destination</label>
                             <input type="text" class="form-control" id="destination" name="destination" value="{{ old('destination') }}" placeholder="Ex : Dubaï, EAU">
                         </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h5 class="mb-3">Tour location</h5>
+                        <p class="text-muted small">Select one or more location for your tour</p>
+                        
+                        <div class="mb-3">
+                            <input 
+                                type="text" 
+                                id="locationSearchCreate" 
+                                class="form-control form-control-sm" 
+                                placeholder="Type to search..."
+                            >
+                        </div>
+                        
+                        <div id="locationTreeContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #e9ecef; padding: 10px; border-radius: 4px; background: #f8f9fa;">
+                            @if(!empty($locationsTree))
+                                @include('admin.circuits.voyages.partials.location-tree', [
+                                    'locations' => $locationsTree, 
+                                    'selectedIds' => $selectedLocationIds ?? []
+                                ])
+                            @else
+                                <p class="text-muted mb-0 small">Aucune location disponible</p>
+                            @endif
+                        </div>
 
                         <div class="mb-3">
                             <label for="duration_text" class="form-label">Durée</label>
@@ -158,4 +183,27 @@
 @endsection
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
+    <script>
+        // Location search filter for create form
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('locationSearchCreate');
+            const locationItems = document.querySelectorAll('.location-item');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    
+                    locationItems.forEach(function(item) {
+                        const title = item.getAttribute('data-title');
+                        
+                        if (searchTerm === '' || title.includes(searchTerm)) {
+                            item.style.display = '';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 @endpush

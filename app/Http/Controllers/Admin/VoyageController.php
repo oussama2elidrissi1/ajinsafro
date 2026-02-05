@@ -77,7 +77,11 @@ class VoyageController extends Controller
      */
     public function create(): View
     {
-        return view('admin.circuits.voyages.create');
+        // Charger les locations pour le formulaire create
+        $locationsTree = $this->repository->getLocationsTree();
+        $selectedLocationIds = [];
+        
+        return view('admin.circuits.voyages.create', compact('locationsTree', 'selectedLocationIds'));
     }
 
     /**
@@ -217,7 +221,14 @@ class VoyageController extends Controller
         // Charger les taxonomies assignées à ce tour
         $assignedTaxonomies = $this->getPostTaxonomies($id);
         
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies'));
+        // Charger les locations (tree)
+        $locationsTree = $this->repository->getLocationsTree();
+        
+        // Parser multi_location actuel
+        $multiLocationValue = $wpPost->getMeta('multi_location');
+        $selectedLocationIds = $this->repository->parseMultiLocation($multiLocationValue);
+        
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds'));
     }
     
     /**
