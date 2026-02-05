@@ -83,28 +83,34 @@
                         
                         <hr class="my-4">
                         
-                        <h5 class="mb-3">Tour location</h5>
-                        <p class="text-muted small">Select one or more location for your tour</p>
+                        <h5 class="mb-2" style="font-size: 16px; font-weight: 600; color: #23282d;">Tour location</h5>
+                        <p class="text-muted mb-3" style="font-size: 13px;">Select one or more location for your tour</p>
                         
                         <div class="mb-3">
                             <input 
                                 type="text" 
                                 id="locationSearchCreate" 
-                                class="form-control form-control-sm" 
-                                placeholder="Type to search..."
+                                class="form-control" 
+                                placeholder="Type to search"
+                                style="font-size: 14px; padding: 6px 12px; border: 1px solid #ddd; border-radius: 3px;"
                             >
                         </div>
                         
-                        <div id="locationTreeContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #e9ecef; padding: 10px; border-radius: 4px; background: #f8f9fa;">
+                        <div class="wp-location-box" id="locationTreeContainer" style="border: 1px solid #ccd0d4; background: #fff; padding: 12px; max-height: 300px; overflow-y: auto; border-radius: 3px;">
                             @if(!empty($locationsTree))
                                 @include('admin.circuits.voyages.partials.location-tree', [
                                     'locations' => $locationsTree, 
                                     'selectedIds' => $selectedLocationIds ?? []
                                 ])
                             @else
-                                <p class="text-muted mb-0 small">Aucune location disponible</p>
+                                <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible</p>
                             @endif
                         </div>
+                        
+                        <small class="text-muted d-block mt-2" style="font-size: 12px; color: #646970;">
+                            <i class="bx bx-info-circle"></i> 
+                            <span id="locationCountTextCreate">0 location(s) sélectionnée(s)</span>
+                        </small>
 
                         <div class="mb-3">
                             <label for="duration_text" class="form-label">Durée</label>
@@ -184,26 +190,50 @@
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
-        // Location search filter for create form
+        // Location search filter for create form (WordPress Traveler behavior)
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('locationSearchCreate');
-            const locationItems = document.querySelectorAll('.location-item');
+            const locationItems = document.querySelectorAll('.wp-location-item');
             
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
                     const searchTerm = this.value.toLowerCase().trim();
                     
-                    locationItems.forEach(function(item) {
-                        const title = item.getAttribute('data-title');
-                        
-                        if (searchTerm === '' || title.includes(searchTerm)) {
+                    if (searchTerm === '') {
+                        locationItems.forEach(function(item) {
                             item.style.display = '';
-                        } else {
-                            item.style.display = 'none';
-                        }
-                    });
+                        });
+                    } else {
+                        locationItems.forEach(function(item) {
+                            const title = item.getAttribute('data-title');
+                            const selfMatches = title.includes(searchTerm);
+                            const childMatches = Array.from(item.querySelectorAll('.wp-location-item')).some(function(child) {
+                                return child.getAttribute('data-title').includes(searchTerm);
+                            });
+                            
+                            if (selfMatches || childMatches) {
+                                item.style.display = '';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    }
                 });
             }
+            
+            // Update count
+            const checkboxes = document.querySelectorAll('.location-checkbox');
+            const updateCount = function() {
+                const checked = document.querySelectorAll('.location-checkbox:checked').length;
+                const countText = document.getElementById('locationCountTextCreate');
+                if (countText) {
+                    countText.textContent = checked + ' location(s) sélectionnée(s)';
+                }
+            };
+            
+            checkboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', updateCount);
+            });
         });
     </script>
 @endpush

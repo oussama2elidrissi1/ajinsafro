@@ -188,34 +188,36 @@
 
             {{-- TAB 2: LOCATION --}}
             <div class="tab-pane" id="location" role="tabpanel">
+                {{-- Tour location (WordPress Traveler style) --}}
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Tour location</h4>
-                        <p class="text-muted">Select one or more location for your tour</p>
+                        <h4 class="mb-2" style="font-size: 18px; font-weight: 600; color: #23282d;">Tour location</h4>
+                        <p class="text-muted mb-3" style="font-size: 13px;">Select one or more location for your tour</p>
                         
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <input 
                                 type="text" 
                                 id="locationSearch" 
                                 class="form-control" 
-                                placeholder="Type to search..."
+                                placeholder="Type to search"
+                                style="font-size: 14px; padding: 6px 12px; border: 1px solid #ddd; border-radius: 3px;"
                             >
                         </div>
                         
-                        <div id="locationTreeContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #e9ecef; padding: 15px; border-radius: 4px; background: #f8f9fa;">
+                        <div class="wp-location-box" id="locationTreeContainer" style="border: 1px solid #ccd0d4; background: #fff; padding: 12px; max-height: 360px; overflow-y: auto; border-radius: 3px;">
                             @if(!empty($locationsTree))
                                 @include('admin.circuits.voyages.partials.location-tree', [
                                     'locations' => $locationsTree, 
                                     'selectedIds' => $selectedLocationIds ?? []
                                 ])
                             @else
-                                <p class="text-muted mb-0">Aucune location disponible. Créez des locations dans WordPress d'abord.</p>
+                                <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible. Créez des locations dans WordPress d'abord.</p>
                             @endif
                         </div>
                         
-                        <small class="text-muted d-block mt-2">
+                        <small class="text-muted d-block mt-2" id="locationCount" style="font-size: 12px; color: #646970;">
                             <i class="bx bx-info-circle"></i> 
-                            {{ count($selectedLocationIds ?? []) }} location(s) sélectionnée(s)
+                            <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} location(s) sélectionnée(s)</span>
                         </small>
                     </div>
                 </div>
@@ -696,10 +698,10 @@
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
-        // Location search filter (identical to WordPress Traveler)
+        // Location search filter (WordPress Traveler behavior)
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('locationSearch');
-            const locationItems = document.querySelectorAll('.location-item');
+            const locationItems = document.querySelectorAll('.wp-location-item');
             
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
@@ -711,14 +713,17 @@
                             item.style.display = '';
                         });
                     } else {
-                        // Filter: show item if title matches OR if any child matches
+                        // Filter: show item if title matches OR if any descendant matches
                         locationItems.forEach(function(item) {
                             const title = item.getAttribute('data-title');
-                            const hasMatchingChild = Array.from(item.querySelectorAll('.location-item')).some(function(child) {
+                            
+                            // Check if this item or any child matches
+                            const selfMatches = title.includes(searchTerm);
+                            const childMatches = Array.from(item.querySelectorAll('.wp-location-item')).some(function(child) {
                                 return child.getAttribute('data-title').includes(searchTerm);
                             });
                             
-                            if (title.includes(searchTerm) || hasMatchingChild) {
+                            if (selfMatches || childMatches) {
                                 item.style.display = '';
                             } else {
                                 item.style.display = 'none';
@@ -732,9 +737,9 @@
             const checkboxes = document.querySelectorAll('.location-checkbox');
             const updateCount = function() {
                 const checked = document.querySelectorAll('.location-checkbox:checked').length;
-                const countElement = document.querySelector('#locationTreeContainer + small');
-                if (countElement) {
-                    countElement.innerHTML = '<i class="bx bx-info-circle"></i> ' + checked + ' location(s) sélectionnée(s)';
+                const countText = document.getElementById('locationCountText');
+                if (countText) {
+                    countText.textContent = checked + ' location(s) sélectionnée(s)';
                 }
             };
             
