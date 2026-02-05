@@ -156,35 +156,79 @@ class WpTourRepository
      */
     protected function updateTourMetas(WpPost $post, array $data): void
     {
+        // COMPLETE Traveler meta mapping
         $metaMapping = [
-            // Existing fields
+            // Basic (existing)
             'destination' => 'address',
             'duration_text' => 'duration_day',
-            'adult_price' => 'adult_price',
-            'child_price' => 'child_price',
-            'min_price' => 'min_price',
-            'min_people' => 'min_people',
-            'gallery_ids' => 'gallery',
-            'thumbnail_id' => '_thumbnail_id',
             'status' => 'status',
             
-            // NEW: Traveler fields (23/23 metas)
-            'max_people' => 'max_people',
-            'tour_price_by' => 'tour_price_by',
-            'is_featured' => 'is_featured',
-            'st_google_map' => 'st_google_map',
+            // LOCATION
+            'address' => 'address',
+            'id_location' => 'id_location',
+            'location_id' => 'location_id',
             'multi_location' => 'multi_location',
-            'discount_by_people_type' => 'discount_by_people_type',
-            'discount_type' => 'discount_type',
-            'calculator_discount_by_people_type' => 'calculator_discount_by_people_type',
-            'tours_program_style' => 'tours_program_style',
-            'hide_adult_in_booking_form' => 'hide_adult_in_booking_form',
-            'st_tour_external_booking' => 'st_tour_external_booking',
+            'map_lat' => 'map_lat',
+            'map_lng' => 'map_lng',
+            'map_zoom' => 'map_zoom',
+            'map_type' => 'map_type',
             
-            // Payment gateways
-            'is_meta_payment_gateway_st_onepay_atm' => 'is_meta_payment_gateway_st_onepay_atm',
-            'is_meta_payment_gateway_st_onepay' => 'is_meta_payment_gateway_st_onepay',
+            // GENERAL
+            'is_featured' => 'is_featured',
+            'tour_price_by' => 'tour_price_by',
+            'st_tour_external_booking' => 'st_tour_external_booking',
+            'hide_adult_in_booking_form' => 'hide_adult_in_booking_form',
+            'max_people' => 'max_people',
+            'min_people' => 'min_people',
+            
+            // CONTACT
+            'contact_email' => 'contact_email',
+            'phone' => 'phone',
+            'fax' => 'fax',
+            'website' => 'website',
+            
+            // PRICE
+            'min_price' => 'min_price',
+            'base_price' => 'base_price',
+            'sale_price' => 'sale_price',
+            'adult_price' => 'adult_price',
+            'child_price' => 'child_price',
+            'infant_price' => 'infant_price',
+            'discount' => 'discount',
+            'discount_type' => 'discount_type',
+            'discount_by_people_type' => 'discount_by_people_type',
+            'calculator_discount_by_people_type' => 'calculator_discount_by_people_type',
+            
+            // INFORMATION
+            'tours_program_style' => 'tours_program_style',
+            'tours_faq' => 'tours_faq',
+            
+            // AVAILABILITY
+            'tours_booking_period' => 'tours_booking_period',
+            'st_booking_option_type' => 'st_booking_option_type',
+            'check_in' => 'check_in',
+            'check_out' => 'check_out',
+            
+            // CANCEL BOOKING
+            'st_allow_cancel' => 'st_allow_cancel',
+            'st_cancel_percent' => 'st_cancel_percent',
+            'st_cancel_number_day' => 'st_cancel_number_day',
+            
+            // ICAL
+            'ical_url' => 'ical_url',
+            
+            // MEDIA
+            'gallery_ids' => 'gallery',
+            'thumbnail_id' => '_thumbnail_id',
+            'video' => 'video',
+            
+            // MAP
+            'st_google_map' => 'st_google_map',
+            
+            // PAYMENT GATEWAYS
             'is_meta_payment_gateway_st_paypal' => 'is_meta_payment_gateway_st_paypal',
+            'is_meta_payment_gateway_st_onepay' => 'is_meta_payment_gateway_st_onepay',
+            'is_meta_payment_gateway_st_onepay_atm' => 'is_meta_payment_gateway_st_onepay_atm',
             'is_meta_payment_gateway_st_payu' => 'is_meta_payment_gateway_st_payu',
             'is_meta_payment_gateway_st_payulatam' => 'is_meta_payment_gateway_st_payulatam',
             'is_meta_payment_gateway_st_payumoney' => 'is_meta_payment_gateway_st_payumoney',
@@ -195,8 +239,8 @@ class WpTourRepository
             if (array_key_exists($inputKey, $data)) {
                 $value = $data[$inputKey];
                 
-                // Skip null/empty except for checkboxes
-                if (($value === null || $value === '') && !str_starts_with($inputKey, 'is_')) {
+                // Skip null/empty except for checkboxes and specific fields
+                if (($value === null || $value === '') && !str_starts_with($inputKey, 'is_') && !str_starts_with($inputKey, 'st_allow_')) {
                     continue;
                 }
 
@@ -205,8 +249,8 @@ class WpTourRepository
                     $value = implode(',', $value);
                 }
                 
-                // Boolean fields: convert to 'on' or ''
-                if (str_starts_with($inputKey, 'is_')) {
+                // Boolean/checkbox fields: convert to 'on' or ''
+                if (str_starts_with($inputKey, 'is_') || str_starts_with($inputKey, 'st_allow_')) {
                     $value = !empty($value) ? 'on' : '';
                 }
 
@@ -214,16 +258,10 @@ class WpTourRepository
             }
         }
         
-        // Text arrays (tours_include, tours_exclude, tours_highlight)
-        foreach (['tours_include', 'tours_exclude', 'tours_highlight'] as $field) {
+        // HTML/Text fields (tours_include, tours_exclude, tours_highlight, tours_faq)
+        foreach (['tours_include', 'tours_exclude', 'tours_highlight', 'tours_faq'] as $field) {
             if (isset($data[$field])) {
-                // If string with line breaks, convert to array
-                if (is_string($data[$field])) {
-                    $lines = array_filter(array_map('trim', explode("\n", $data[$field])));
-                    $value = implode("\n", $lines); // Store as plain text
-                } else {
-                    $value = $data[$field];
-                }
+                $value = $data[$field]; // Store as-is (HTML or plain text)
                 $post->setMeta($field, $value);
             }
         }

@@ -127,38 +127,78 @@ class VoyageController extends Controller
         $voyage->created_at = $wpPost->post_date;
         $voyage->status = $wpPost->post_status;
         
-        // Charger TOUTES les metas (existantes + nouvelles Traveler)
+        // Charger TOUTES les metas Traveler (lecture complète)
         $meta = [
-            // Existing
+            // LOCATION
+            'address' => $wpPost->getMeta('address'),
+            'id_location' => $wpPost->getMeta('id_location'),
+            'location_id' => $wpPost->getMeta('location_id'),
+            'multi_location' => $wpPost->getMeta('multi_location'),
+            'map_lat' => $wpPost->getMeta('map_lat'),
+            'map_lng' => $wpPost->getMeta('map_lng'),
+            'map_zoom' => $wpPost->getMeta('map_zoom'),
+            'map_type' => $wpPost->getMeta('map_type'),
+            
+            // GENERAL
+            'is_featured' => $wpPost->getMeta('is_featured'),
+            'tour_price_by' => $wpPost->getMeta('tour_price_by'),
+            'st_tour_external_booking' => $wpPost->getMeta('st_tour_external_booking'),
+            'hide_adult_in_booking_form' => $wpPost->getMeta('hide_adult_in_booking_form'),
+            'duration_day' => $wpPost->getMeta('duration_day'),
+            'max_people' => $wpPost->getMeta('max_people'),
+            'min_people' => $wpPost->getMeta('min_people'),
+            
+            // CONTACT
+            'contact_email' => $wpPost->getMeta('contact_email'),
+            'phone' => $wpPost->getMeta('phone'),
+            'fax' => $wpPost->getMeta('fax'),
+            'website' => $wpPost->getMeta('website'),
+            
+            // PRICE
+            'min_price' => $wpPost->getMeta('min_price'),
+            'base_price' => $wpPost->getMeta('base_price'),
+            'sale_price' => $wpPost->getMeta('sale_price'),
             'adult_price' => $wpPost->getMeta('adult_price'),
             'child_price' => $wpPost->getMeta('child_price'),
-            'duration_day' => $wpPost->getMeta('duration_day'),
-            'address' => $wpPost->getMeta('address'),
-            'min_price' => $wpPost->getMeta('min_price'),
-            'min_people' => $wpPost->getMeta('min_people'),
-            'thumbnail_id' => $wpPost->getMeta('_thumbnail_id'),
-            'gallery' => $wpPost->getMeta('gallery'),
-            
-            // NEW: Traveler fields (23/23)
-            'max_people' => $wpPost->getMeta('max_people'),
-            'tour_price_by' => $wpPost->getMeta('tour_price_by'),
-            'is_featured' => $wpPost->getMeta('is_featured'),
-            'st_google_map' => $wpPost->getMeta('st_google_map'),
-            'multi_location' => $wpPost->getMeta('multi_location'),
-            'discount_by_people_type' => $wpPost->getMeta('discount_by_people_type'),
+            'infant_price' => $wpPost->getMeta('infant_price'),
+            'discount' => $wpPost->getMeta('discount'),
             'discount_type' => $wpPost->getMeta('discount_type'),
+            'discount_by_people_type' => $wpPost->getMeta('discount_by_people_type'),
             'calculator_discount_by_people_type' => $wpPost->getMeta('calculator_discount_by_people_type'),
-            'tours_program_style' => $wpPost->getMeta('tours_program_style'),
-            'hide_adult_in_booking_form' => $wpPost->getMeta('hide_adult_in_booking_form'),
-            'st_tour_external_booking' => $wpPost->getMeta('st_tour_external_booking'),
+            
+            // INFORMATION
             'tours_include' => $wpPost->getMeta('tours_include'),
             'tours_exclude' => $wpPost->getMeta('tours_exclude'),
             'tours_highlight' => $wpPost->getMeta('tours_highlight'),
+            'tours_faq' => $wpPost->getMeta('tours_faq'),
+            'tours_program_style' => $wpPost->getMeta('tours_program_style'),
             
-            // Payment gateways
-            'is_meta_payment_gateway_st_onepay_atm' => $wpPost->getMeta('is_meta_payment_gateway_st_onepay_atm'),
-            'is_meta_payment_gateway_st_onepay' => $wpPost->getMeta('is_meta_payment_gateway_st_onepay'),
+            // AVAILABILITY
+            'tours_booking_period' => $wpPost->getMeta('tours_booking_period'),
+            'st_booking_option_type' => $wpPost->getMeta('st_booking_option_type'),
+            'check_in' => $wpPost->getMeta('check_in'),
+            'check_out' => $wpPost->getMeta('check_out'),
+            
+            // CANCEL BOOKING
+            'st_allow_cancel' => $wpPost->getMeta('st_allow_cancel'),
+            'st_cancel_percent' => $wpPost->getMeta('st_cancel_percent'),
+            'st_cancel_number_day' => $wpPost->getMeta('st_cancel_number_day'),
+            
+            // ICAL
+            'ical_url' => $wpPost->getMeta('ical_url'),
+            
+            // MEDIA
+            'thumbnail_id' => $wpPost->getMeta('_thumbnail_id'),
+            'gallery' => $wpPost->getMeta('gallery'),
+            'video' => $wpPost->getMeta('video'),
+            
+            // MAP
+            'st_google_map' => $wpPost->getMeta('st_google_map'),
+            
+            // PAYMENT GATEWAYS
             'is_meta_payment_gateway_st_paypal' => $wpPost->getMeta('is_meta_payment_gateway_st_paypal'),
+            'is_meta_payment_gateway_st_onepay' => $wpPost->getMeta('is_meta_payment_gateway_st_onepay'),
+            'is_meta_payment_gateway_st_onepay_atm' => $wpPost->getMeta('is_meta_payment_gateway_st_onepay_atm'),
             'is_meta_payment_gateway_st_payu' => $wpPost->getMeta('is_meta_payment_gateway_st_payu'),
             'is_meta_payment_gateway_st_payulatam' => $wpPost->getMeta('is_meta_payment_gateway_st_payulatam'),
             'is_meta_payment_gateway_st_payumoney' => $wpPost->getMeta('is_meta_payment_gateway_st_payumoney'),
