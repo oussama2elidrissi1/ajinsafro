@@ -189,15 +189,22 @@ class VoyageController extends Controller
         $result = [];
         
         foreach ($taxonomies as $taxonomy) {
-            $terms = \DB::connection('wp')
-                ->table('cFdgeZ_terms as t')
-                ->join('cFdgeZ_term_taxonomy as tt', 't.term_id', '=', 'tt.term_id')
-                ->where('tt.taxonomy', $taxonomy)
-                ->select('t.term_id', 't.name', 't.slug')
-                ->orderBy('t.name')
-                ->get();
-            
-            $result[$taxonomy] = $terms;
+            try {
+                $terms = \DB::connection('wp')
+                    ->table('terms as t')
+                    ->join('term_taxonomy as tt', 't.term_id', '=', 'tt.term_id')
+                    ->where('tt.taxonomy', $taxonomy)
+                    ->select('t.term_id', 't.name', 't.slug')
+                    ->orderBy('t.name')
+                    ->get();
+                
+                $result[$taxonomy] = $terms;
+            } catch (\Exception $e) {
+                \Log::warning("Taxonomy '$taxonomy' not found or error loading terms", [
+                    'error' => $e->getMessage()
+                ]);
+                $result[$taxonomy] = collect(); // Empty collection
+            }
         }
         
         return $result;
@@ -212,15 +219,22 @@ class VoyageController extends Controller
         $result = [];
         
         foreach ($taxonomies as $taxonomy) {
-            $termIds = \DB::connection('wp')
-                ->table('cFdgeZ_term_relationships as tr')
-                ->join('cFdgeZ_term_taxonomy as tt', 'tr.term_taxonomy_id', '=', 'tt.term_taxonomy_id')
-                ->where('tr.object_id', $postId)
-                ->where('tt.taxonomy', $taxonomy)
-                ->pluck('tt.term_id')
-                ->toArray();
-            
-            $result[$taxonomy] = $termIds;
+            try {
+                $termIds = \DB::connection('wp')
+                    ->table('term_relationships as tr')
+                    ->join('term_taxonomy as tt', 'tr.term_taxonomy_id', '=', 'tt.term_taxonomy_id')
+                    ->where('tr.object_id', $postId)
+                    ->where('tt.taxonomy', $taxonomy)
+                    ->pluck('tt.term_id')
+                    ->toArray();
+                
+                $result[$taxonomy] = $termIds;
+            } catch (\Exception $e) {
+                \Log::warning("Error loading assigned terms for taxonomy '$taxonomy' on post $postId", [
+                    'error' => $e->getMessage()
+                ]);
+                $result[$taxonomy] = [];
+            }
         }
         
         return $result;

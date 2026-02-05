@@ -270,36 +270,44 @@ class WpTourRepository
      */
     protected function setPostTerms(int $postId, array $termIds, string $taxonomy): void
     {
-        // Delete existing relationships
-        \DB::connection('wp')->table('cFdgeZ_term_relationships')
-            ->where('object_id', $postId)
-            ->whereIn('term_taxonomy_id', function($query) use ($taxonomy) {
-                $query->select('term_taxonomy_id')
-                    ->from('cFdgeZ_term_taxonomy')
-                    ->where('taxonomy', $taxonomy);
-            })
-            ->delete();
-        
-        // Insert new relationships
-        foreach ($termIds as $termId) {
-            // Get term_taxonomy_id
-            $termTaxonomy = \DB::connection('wp')->table('cFdgeZ_term_taxonomy')
-                ->where('term_id', $termId)
-                ->where('taxonomy', $taxonomy)
-                ->first();
+        try {
+            // Delete existing relationships
+            \DB::connection('wp')->table('term_relationships')
+                ->where('object_id', $postId)
+                ->whereIn('term_taxonomy_id', function($query) use ($taxonomy) {
+                    $query->select('term_taxonomy_id')
+                        ->from('term_taxonomy')
+                        ->where('taxonomy', $taxonomy);
+                })
+                ->delete();
             
-            if ($termTaxonomy) {
-                \DB::connection('wp')->table('cFdgeZ_term_relationships')->insert([
-                    'object_id' => $postId,
-                    'term_taxonomy_id' => $termTaxonomy->term_taxonomy_id,
-                    'term_order' => 0,
-                ]);
+            // Insert new relationships
+            foreach ($termIds as $termId) {
+                // Get term_taxonomy_id
+                $termTaxonomy = \DB::connection('wp')->table('term_taxonomy')
+                    ->where('term_id', $termId)
+                    ->where('taxonomy', $taxonomy)
+                    ->first();
                 
-                // Update term count
-                \DB::connection('wp')->table('cFdgeZ_term_taxonomy')
-                    ->where('term_taxonomy_id', $termTaxonomy->term_taxonomy_id)
-                    ->increment('count');
+                if ($termTaxonomy) {
+                    \DB::connection('wp')->table('term_relationships')->insert([
+                        'object_id' => $postId,
+                        'term_taxonomy_id' => $termTaxonomy->term_taxonomy_id,
+                        'term_order' => 0,
+                    ]);
+                    
+                    // Update term count
+                    \DB::connection('wp')->table('term_taxonomy')
+                        ->where('term_taxonomy_id', $termTaxonomy->term_taxonomy_id)
+                        ->increment('count');
+                }
             }
+        } catch (\Exception $e) {
+            \Log::error("Error setting terms for taxonomy '$taxonomy' on post $postId", [
+                'error' => $e->getMessage(),
+                'term_ids' => $termIds
+            ]);
+            // Don't throw, continue gracefully
         }
     }
 
