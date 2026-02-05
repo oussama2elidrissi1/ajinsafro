@@ -13,8 +13,14 @@ class Voyage extends Model
 
     protected $fillable = [
         'wp_post_id', 'name', 'slug', 'description', 'accroche', 'destination', 'duration_text',
-        'price_from', 'old_price', 'currency', 'min_people', 'departure_policy', 'status',
-        'featured_image', 'wp_synced_at', 'wp_sync_hash',
+        'price_from', 'old_price', 'currency', 'min_people', 'max_people', 'departure_policy', 'status',
+        'featured_image', 'wp_synced_at', 'wp_sync_hash', 'wp_last_modified_gmt_cache',
+        // Traveler metas
+        'tour_price_by', 'is_featured', 'st_google_map', 'multi_location',
+        'discount_by_people_type', 'discount_type', 'calculator_discount_by_people_type',
+        'hide_adult_in_booking_form', 'st_tour_external_booking',
+        'tours_include', 'tours_exclude', 'tours_highlight', 'tours_program_style',
+        'payment_gateway_metas', 'gallery_wp_ids',
     ];
 
     protected $casts = [
@@ -22,7 +28,15 @@ class Voyage extends Model
         'price_from' => 'integer',
         'old_price' => 'integer',
         'min_people' => 'integer',
+        'max_people' => 'integer',
         'wp_synced_at' => 'datetime',
+        'wp_last_modified_gmt_cache' => 'datetime',
+        'is_featured' => 'boolean',
+        'hide_adult_in_booking_form' => 'boolean',
+        'tours_include' => 'array',
+        'tours_exclude' => 'array',
+        'tours_highlight' => 'array',
+        'payment_gateway_metas' => 'array',
     ];
 
     protected static function boot()

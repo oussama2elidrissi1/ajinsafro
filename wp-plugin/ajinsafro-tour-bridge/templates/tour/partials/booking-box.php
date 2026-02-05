@@ -1,0 +1,271 @@
+<?php
+/**
+ * Booking Box Partial - Sticky Sidebar with Price & CTA
+ *
+ * @var array $tour Tour data
+ * @package AjinsafroTourBridge
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+$pricing = $tour['pricing'] ?? [];
+$display_price = $pricing['display_price'] ?? 0;
+$original_price = $pricing['original_price'] ?? $pricing['adult'] ?? 0;
+$has_discount = $pricing['has_discount'] ?? false;
+$discount = $pricing['discount'] ?? 0;
+$currency_symbol = $pricing['currency_symbol'] ?? 'DH';
+$has_seasonal = !empty($pricing['seasonal_rules']);
+$current_season = $pricing['current_season'] ?? null;
+?>
+
+<div class="ajtb-booking-box">
+    <!-- Price Header -->
+    <div class="booking-price-header">
+        <?php if ($current_season): ?>
+            <span class="season-badge">
+                <?php echo esc_html($current_season['season_name'] ?? 'Saison en cours'); ?>
+            </span>
+        <?php endif; ?>
+
+        <div class="price-display">
+            <?php if ($has_discount && $original_price > $display_price): ?>
+                <span class="price-original"><?php echo ajtb_format_price($original_price); ?></span>
+            <?php endif; ?>
+            <span class="price-current">
+                <?php echo number_format($display_price, 0, ',', ' '); ?>
+                <small><?php echo esc_html($currency_symbol); ?></small>
+            </span>
+            <span class="price-unit">/ personne</span>
+        </div>
+
+        <?php if ($has_discount && $discount > 0): ?>
+            <div class="discount-badge">
+                -<?php echo (int)$discount; ?>% de réduction
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Price Breakdown -->
+    <div class="booking-price-breakdown">
+        <div class="price-row">
+            <span class="label">Adulte</span>
+            <span class="value"><?php echo ajtb_format_price($pricing['adult'] ?? $display_price); ?></span>
+        </div>
+        <?php if (($pricing['child'] ?? 0) > 0): ?>
+            <div class="price-row">
+                <span class="label">Enfant (2-12 ans)</span>
+                <span class="value"><?php echo ajtb_format_price($pricing['child']); ?></span>
+            </div>
+        <?php endif; ?>
+        <?php if (($pricing['infant'] ?? 0) > 0): ?>
+            <div class="price-row">
+                <span class="label">Bébé (0-2 ans)</span>
+                <span class="value"><?php echo ajtb_format_price($pricing['infant']); ?></span>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Quick Info -->
+    <div class="booking-quick-info">
+        <?php if ($tour['duration_day'] > 0): ?>
+            <div class="info-item">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span><?php echo esc_html($tour['duration_day']); ?> jour<?php echo $tour['duration_day'] > 1 ? 's' : ''; ?></span>
+            </div>
+        <?php endif; ?>
+        <div class="info-item">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22,4 12,14.01 9,11.01"></polyline>
+            </svg>
+            <span>Confirmation immédiate</span>
+        </div>
+    </div>
+
+    <!-- Booking Form -->
+    <form class="booking-form" id="ajtb-booking-form">
+        <input type="hidden" name="tour_id" value="<?php echo esc_attr($tour['id']); ?>">
+        
+        <!-- Date -->
+        <div class="form-group">
+            <label for="booking-date">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Date de départ
+            </label>
+            <input type="date" 
+                   id="booking-date" 
+                   name="date" 
+                   min="<?php echo date('Y-m-d'); ?>" 
+                   required>
+        </div>
+
+        <!-- Travelers -->
+        <div class="form-group travelers">
+            <label>Voyageurs</label>
+            <div class="travelers-selector">
+                <div class="traveler-row">
+                    <span class="traveler-type">
+                        Adultes
+                        <small>13+ ans</small>
+                    </span>
+                    <div class="qty-control">
+                        <button type="button" class="qty-btn minus" data-target="adults">−</button>
+                        <input type="number" name="adults" id="adults" value="2" min="1" max="<?php echo $tour['max_people'] ?: 20; ?>" readonly>
+                        <button type="button" class="qty-btn plus" data-target="adults">+</button>
+                    </div>
+                </div>
+
+                <?php if (($pricing['child'] ?? 0) > 0): ?>
+                    <div class="traveler-row">
+                        <span class="traveler-type">
+                            Enfants
+                            <small>2-12 ans</small>
+                        </span>
+                        <div class="qty-control">
+                            <button type="button" class="qty-btn minus" data-target="children">−</button>
+                            <input type="number" name="children" id="children" value="0" min="0" max="10" readonly>
+                            <button type="button" class="qty-btn plus" data-target="children">+</button>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Total -->
+        <div class="booking-total">
+            <span class="total-label">Total estimé</span>
+            <span class="total-value" id="booking-total">
+                <?php echo number_format($display_price * 2, 0, ',', ' '); ?> <?php echo esc_html($currency_symbol); ?>
+            </span>
+        </div>
+
+        <!-- CTA Buttons -->
+        <?php if (!empty($tour['external_booking_link'])): ?>
+            <a href="<?php echo esc_url($tour['external_booking_link']); ?>" 
+               class="btn-primary btn-book" 
+               target="_blank" 
+               rel="noopener noreferrer">
+                Réserver maintenant
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12,5 19,12 12,19"></polyline>
+                </svg>
+            </a>
+        <?php else: ?>
+            <button type="submit" class="btn-primary btn-book">
+                Réserver maintenant
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12,5 19,12 12,19"></polyline>
+                </svg>
+            </button>
+        <?php endif; ?>
+
+        <button type="button" class="btn-secondary btn-inquiry">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            Demander un devis
+        </button>
+    </form>
+
+    <!-- Trust Badges -->
+    <div class="booking-trust">
+        <div class="trust-item">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>Paiement sécurisé</span>
+        </div>
+        <div class="trust-item">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12,6 12,12 16,14"></polyline>
+            </svg>
+            <span>Support 24/7</span>
+        </div>
+        <div class="trust-item">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22,4 12,14.01 9,11.01"></polyline>
+            </svg>
+            <span>Meilleur prix garanti</span>
+        </div>
+    </div>
+
+    <!-- Share & Wishlist -->
+    <div class="booking-actions">
+        <button type="button" class="action-btn" id="share-tour" data-url="<?php echo esc_url($tour['permalink']); ?>">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            Partager
+        </button>
+        <button type="button" class="action-btn" id="save-tour" data-tour-id="<?php echo esc_attr($tour['id']); ?>">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            Sauvegarder
+        </button>
+    </div>
+</div>
+
+<!-- Seasonal Pricing Table (if available) -->
+<?php if ($has_seasonal && count($pricing['seasonal_rules']) > 1): ?>
+    <div class="ajtb-seasonal-pricing">
+        <h4>
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            Tarifs par Saison
+        </h4>
+        <div class="seasons-list">
+            <?php foreach ($pricing['seasonal_rules'] as $rule): 
+                $is_current = $current_season && ($current_season['id'] ?? null) === ($rule['id'] ?? null);
+            ?>
+                <div class="season-item <?php echo $is_current ? 'current' : ''; ?>">
+                    <div class="season-info">
+                        <span class="season-name">
+                            <?php echo esc_html($rule['season_name'] ?? 'Saison'); ?>
+                            <?php if ($is_current): ?>
+                                <small>(actuelle)</small>
+                            <?php endif; ?>
+                        </span>
+                        <span class="season-dates">
+                            <?php if (!empty($rule['start_date']) && !empty($rule['end_date'])): ?>
+                                <?php 
+                                $start = new DateTime($rule['start_date']);
+                                $end = new DateTime($rule['end_date']);
+                                echo $start->format('d M') . ' - ' . $end->format('d M Y');
+                                ?>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="season-price">
+                        <?php echo ajtb_format_price($rule['adult_price']); ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>

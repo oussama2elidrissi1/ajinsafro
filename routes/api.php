@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\PublicPackageController;
 use App\Http\Controllers\Api\PublicToursListController;
+use App\Http\Controllers\Api\WpSyncWebhookController;
 use App\Http\Controllers\Sync\PingController;
 use App\Http\Controllers\Sync\WpToLaravelController;
 use Illuminate\Http\Request;
@@ -63,4 +64,19 @@ Route::prefix('sync')->name('api.sync.')->group(function () {
     // Delete tour from WordPress
     Route::post('wp-to-laravel/delete', [WpToLaravelController::class, 'deleteTour'])
         ->name('wp-to-laravel.delete');
+});
+
+/*
+|--------------------------------------------------------------------------
+| WordPress Bidirectional Sync Webhooks (New System)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('wp-sync')->name('api.wp-sync.')->group(function () {
+    // WP notifies Laravel of tour update (HMAC secured)
+    Route::post('/tour-updated', [WpSyncWebhookController::class, 'tourUpdated'])
+        ->name('tour-updated');
+    
+    // Manual sync trigger (token secured)
+    Route::get('/pull/{wpPostId}', [WpSyncWebhookController::class, 'manualPull'])
+        ->name('pull');
 });

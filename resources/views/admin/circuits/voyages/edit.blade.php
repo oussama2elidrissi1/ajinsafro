@@ -127,6 +127,11 @@
                             <label for="min_people" class="form-label">Nombre min. de personnes</label>
                             <input type="number" class="form-control" id="min_people" name="min_people" value="{{ old('min_people', $meta['min_people'] ?? '') }}" min="1" placeholder="2">
                         </div>
+                        
+                        <div class="mb-3">
+                            <label for="max_people" class="form-label">Nombre max. de personnes</label>
+                            <input type="number" class="form-control" id="max_people" name="max_people" value="{{ old('max_people', $meta['max_people'] ?? '') }}" min="1" placeholder="15">
+                        </div>
 
                         <div class="mb-3">
                             <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
@@ -139,12 +144,228 @@
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids', $gallery_csv ?? '') }}" placeholder="14435,14436,14437">
                             <small class="text-muted">IDs des images de la galerie WordPress</small>
                         </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured', $meta['is_featured'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_featured">
+                                Tour à la une (Featured)
+                            </label>
+                        </div>
 
                         <div class="alert alert-secondary">
                             <small>
                                 <strong>Créé :</strong> {{ $voyage->post_date->format('d/m/Y H:i') }}<br>
                                 <strong>Modifié :</strong> {{ $voyage->post_modified->format('d/m/Y H:i') }}
                             </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- NEW: Traveler Advanced Fields --}}
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Paramètres Traveler</h4>
+                        
+                        <div class="mb-3">
+                            <label for="tour_price_by" class="form-label">Tarification par</label>
+                            <select class="form-select" id="tour_price_by" name="tour_price_by">
+                                <option value="">-- Sélectionner --</option>
+                                <option value="person" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'person' ? 'selected' : '' }}>Par personne</option>
+                                <option value="group" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'group' ? 'selected' : '' }}>Par groupe</option>
+                                <option value="fixed" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'fixed' ? 'selected' : '' }}>Prix fixe</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="discount_type" class="form-label">Type de réduction</label>
+                            <select class="form-select" id="discount_type" name="discount_type">
+                                <option value="">Aucune</option>
+                                <option value="percent" {{ old('discount_type', $meta['discount_type'] ?? '') === 'percent' ? 'selected' : '' }}>Pourcentage</option>
+                                <option value="fixed" {{ old('discount_type', $meta['discount_type'] ?? '') === 'fixed' ? 'selected' : '' }}>Montant fixe</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="discount_by_people_type" class="form-label">Réduction selon type de personne</label>
+                            <input type="text" class="form-control" id="discount_by_people_type" name="discount_by_people_type" value="{{ old('discount_by_people_type', $meta['discount_by_people_type'] ?? '') }}" placeholder="adult,child">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="calculator_discount_by_people_type" class="form-label">Calculateur réduction par personne</label>
+                            <input type="text" class="form-control" id="calculator_discount_by_people_type" name="calculator_discount_by_people_type" value="{{ old('calculator_discount_by_people_type', $meta['calculator_discount_by_people_type'] ?? '') }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="multi_location" class="form-label">Multi-localisation</label>
+                            <input type="text" class="form-control" id="multi_location" name="multi_location" value="{{ old('multi_location', $meta['multi_location'] ?? '') }}" placeholder="on/off">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tours_program_style" class="form-label">Style du programme</label>
+                            <select class="form-select" id="tours_program_style" name="tours_program_style">
+                                <option value="">-- Défaut --</option>
+                                <option value="tab" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'tab' ? 'selected' : '' }}>Onglets</option>
+                                <option value="accordion" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'accordion' ? 'selected' : '' }}>Accordéon</option>
+                                <option value="list" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'list' ? 'selected' : '' }}>Liste</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="hide_adult_in_booking_form" name="hide_adult_in_booking_form" value="1" {{ old('hide_adult_in_booking_form', $meta['hide_adult_in_booking_form'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="hide_adult_in_booking_form">
+                                Masquer champ adulte dans formulaire réservation
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="st_tour_external_booking" class="form-label">Lien réservation externe</label>
+                            <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="st_google_map" class="form-label">Google Map (iframe ou code)</label>
+                            <textarea class="form-control" id="st_google_map" name="st_google_map" rows="3">{{ old('st_google_map', $meta['st_google_map'] ?? '') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Contenu Tour</h4>
+                        
+                        <div class="mb-3">
+                            <label for="tours_include" class="form-label">Inclus dans le prix</label>
+                            <textarea class="form-control" id="tours_include" name="tours_include" rows="5" placeholder="- Hébergement&#10;- Petit-déjeuner&#10;- Guide">{{ old('tours_include', $meta['tours_include'] ?? '') }}</textarea>
+                            <small class="text-muted">Une ligne par élément</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tours_exclude" class="form-label">Non inclus</label>
+                            <textarea class="form-control" id="tours_exclude" name="tours_exclude" rows="5" placeholder="- Vol international&#10;- Assurance&#10;- Boissons">{{ old('tours_exclude', $meta['tours_exclude'] ?? '') }}</textarea>
+                            <small class="text-muted">Une ligne par élément</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tours_highlight" class="form-label">Points forts</label>
+                            <textarea class="form-control" id="tours_highlight" name="tours_highlight" rows="5" placeholder="- Vue panoramique&#10;- Expérience unique&#10;- Soirée culturelle">{{ old('tours_highlight', $meta['tours_highlight'] ?? '') }}</textarea>
+                            <small class="text-muted">Une ligne par élément</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Moyens de paiement</h4>
+                        <small class="text-muted d-block mb-3">Cocher les passerelles activées</small>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">PayPal</label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">OnePay</label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">OnePay ATM</label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_meta_payment_gateway_st_payu">PayU</label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">PayU Latam</label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">PayUmoney</label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_meta_payment_gateway_st_razor">Razorpay</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {{-- NEW: Taxonomies --}}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Catégories & Taxonomies</h4>
+                        
+                        <div class="row">
+                            @if(isset($availableTaxonomies['st_tour_type']) && $availableTaxonomies['st_tour_type']->isNotEmpty())
+                            <div class="col-lg-3">
+                                <label class="form-label">Type de tour</label>
+                                @foreach($availableTaxonomies['st_tour_type'] as $term)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="st_tour_type[]" value="{{ $term->term_id }}" id="st_tour_type_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['st_tour_type'] ?? []) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="st_tour_type_{{ $term->term_id }}">
+                                        {{ $term->name }}
+                                    </label>
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                            
+                            @if(isset($availableTaxonomies['durations']) && $availableTaxonomies['durations']->isNotEmpty())
+                            <div class="col-lg-3">
+                                <label class="form-label">Durée</label>
+                                @foreach($availableTaxonomies['durations'] as $term)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="durations[]" value="{{ $term->term_id }}" id="durations_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['durations'] ?? []) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="durations_{{ $term->term_id }}">
+                                        {{ $term->name }}
+                                    </label>
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                            
+                            @if(isset($availableTaxonomies['language']) && $availableTaxonomies['language']->isNotEmpty())
+                            <div class="col-lg-3">
+                                <label class="form-label">Langue (language)</label>
+                                @foreach($availableTaxonomies['language'] as $term)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="language[]" value="{{ $term->term_id }}" id="language_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['language'] ?? []) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="language_{{ $term->term_id }}">
+                                        {{ $term->name }}
+                                    </label>
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                            
+                            @if(isset($availableTaxonomies['languages']) && $availableTaxonomies['languages']->isNotEmpty())
+                            <div class="col-lg-3">
+                                <label class="form-label">Langues (languages)</label>
+                                @foreach($availableTaxonomies['languages'] as $term)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="languages[]" value="{{ $term->term_id }}" id="languages_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['languages'] ?? []) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="languages_{{ $term->term_id }}">
+                                        {{ $term->name }}
+                                    </label>
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>

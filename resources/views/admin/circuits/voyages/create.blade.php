@@ -105,6 +105,11 @@
                             <label for="min_people" class="form-label">Nombre min. de personnes</label>
                             <input type="number" class="form-control" id="min_people" name="min_people" value="{{ old('min_people') }}" min="1" placeholder="2">
                         </div>
+                        
+                        <div class="mb-3">
+                            <label for="max_people" class="form-label">Nombre max. de personnes</label>
+                            <input type="number" class="form-control" id="max_people" name="max_people" value="{{ old('max_people') }}" min="1" placeholder="15">
+                        </div>
 
                         <div class="mb-3">
                             <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
@@ -117,6 +122,16 @@
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids') }}" placeholder="14435,14436,14437">
                             <small class="text-muted">IDs des images de la galerie WordPress</small>
                         </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_featured">
+                                Tour à la une (Featured)
+                            </label>
+                        </div>
+                        
+                        <hr>
+                        <p class="text-muted small"><i class="bx bx-info-circle"></i> Les champs Traveler avancés (tarification, réductions, taxonomies...) sont modifiables après création.</p>
                     </div>
                 </div>
             </div>

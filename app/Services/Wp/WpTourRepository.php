@@ -157,6 +157,7 @@ class WpTourRepository
     protected function updateTourMetas(WpPost $post, array $data): void
     {
         $metaMapping = [
+            // Existing fields
             'destination' => 'address',
             'duration_text' => 'duration_day',
             'adult_price' => 'adult_price',
@@ -165,15 +166,37 @@ class WpTourRepository
             'min_people' => 'min_people',
             'gallery_ids' => 'gallery',
             'thumbnail_id' => '_thumbnail_id',
-            'status' => 'status', // Laravel status if needed
+            'status' => 'status',
+            
+            // NEW: Traveler fields (23/23 metas)
+            'max_people' => 'max_people',
+            'tour_price_by' => 'tour_price_by',
+            'is_featured' => 'is_featured',
+            'st_google_map' => 'st_google_map',
+            'multi_location' => 'multi_location',
+            'discount_by_people_type' => 'discount_by_people_type',
+            'discount_type' => 'discount_type',
+            'calculator_discount_by_people_type' => 'calculator_discount_by_people_type',
+            'tours_program_style' => 'tours_program_style',
+            'hide_adult_in_booking_form' => 'hide_adult_in_booking_form',
+            'st_tour_external_booking' => 'st_tour_external_booking',
+            
+            // Payment gateways
+            'is_meta_payment_gateway_st_onepay_atm' => 'is_meta_payment_gateway_st_onepay_atm',
+            'is_meta_payment_gateway_st_onepay' => 'is_meta_payment_gateway_st_onepay',
+            'is_meta_payment_gateway_st_paypal' => 'is_meta_payment_gateway_st_paypal',
+            'is_meta_payment_gateway_st_payu' => 'is_meta_payment_gateway_st_payu',
+            'is_meta_payment_gateway_st_payulatam' => 'is_meta_payment_gateway_st_payulatam',
+            'is_meta_payment_gateway_st_payumoney' => 'is_meta_payment_gateway_st_payumoney',
+            'is_meta_payment_gateway_st_razor' => 'is_meta_payment_gateway_st_razor',
         ];
 
         foreach ($metaMapping as $inputKey => $metaKey) {
             if (array_key_exists($inputKey, $data)) {
                 $value = $data[$inputKey];
                 
-                // Handle null values
-                if ($value === null || $value === '') {
+                // Skip null/empty except for checkboxes
+                if (($value === null || $value === '') && !str_starts_with($inputKey, 'is_')) {
                     continue;
                 }
 
@@ -181,14 +204,102 @@ class WpTourRepository
                 if ($inputKey === 'gallery_ids' && is_array($value)) {
                     $value = implode(',', $value);
                 }
+                
+                // Boolean fields: convert to 'on' or ''
+                if (str_starts_with($inputKey, 'is_')) {
+                    $value = !empty($value) ? 'on' : '';
+                }
 
                 $post->setMeta($metaKey, $value);
+            }
+        }
+        
+        // Text arrays (tours_include, tours_exclude, tours_highlight)
+        foreach (['tours_include', 'tours_exclude', 'tours_highlight'] as $field) {
+            if (isset($data[$field])) {
+                // If string with line breaks, convert to array
+                if (is_string($data[$field])) {
+                    $lines = array_filter(array_map('trim', explode("\n", $data[$field])));
+                    $value = implode("\n", $lines); // Store as plain text
+                } else {
+                    $value = $data[$field];
+                }
+                $post->setMeta($field, $value);
             }
         }
 
         // Handle featured image separately if provided
         if (isset($data['featured_image'])) {
             $post->setMeta('_thumbnail_id', $data['featured_image']);
+        }
+        
+        // Update taxonomies
+        $this->updateTourTaxonomies($post, $data);
+    }
+    
+    /**
+     * Update tour taxonomies.
+     *
+     * @param WpPost $post
+     * @param array $data
+     * @return void
+     */
+    protected function updateTourTaxonomies(WpPost $post, array $data): void
+    {
+        $taxonomies = ['language', 'languages', 'durations', 'st_tour_type'];
+        
+        foreach ($taxonomies as $taxonomy) {
+            if (isset($data[$taxonomy])) {
+                $termIds = is_array($data[$taxonomy]) ? $data[$taxonomy] : [$data[$taxonomy]];
+                $termIds = array_filter(array_map('intval', $termIds));
+                
+                if (!empty($termIds)) {
+                    $this->setPostTerms($post->ID, $termIds, $taxonomy);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Set terms for a post (replaces existing).
+     *
+     * @param int $postId
+     * @param array $termIds
+     * @param string $taxonomy
+     * @return void
+     */
+    protected function setPostTerms(int $postId, array $termIds, string $taxonomy): void
+    {
+        // Delete existing relationships
+        \DB::connection('wp')->table('cFdgeZ_term_relationships')
+            ->where('object_id', $postId)
+            ->whereIn('term_taxonomy_id', function($query) use ($taxonomy) {
+                $query->select('term_taxonomy_id')
+                    ->from('cFdgeZ_term_taxonomy')
+                    ->where('taxonomy', $taxonomy);
+            })
+            ->delete();
+        
+        // Insert new relationships
+        foreach ($termIds as $termId) {
+            // Get term_taxonomy_id
+            $termTaxonomy = \DB::connection('wp')->table('cFdgeZ_term_taxonomy')
+                ->where('term_id', $termId)
+                ->where('taxonomy', $taxonomy)
+                ->first();
+            
+            if ($termTaxonomy) {
+                \DB::connection('wp')->table('cFdgeZ_term_relationships')->insert([
+                    'object_id' => $postId,
+                    'term_taxonomy_id' => $termTaxonomy->term_taxonomy_id,
+                    'term_order' => 0,
+                ]);
+                
+                // Update term count
+                \DB::connection('wp')->table('cFdgeZ_term_taxonomy')
+                    ->where('term_taxonomy_id', $termTaxonomy->term_taxonomy_id)
+                    ->increment('count');
+            }
         }
     }
 

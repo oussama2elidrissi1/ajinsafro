@@ -3,19 +3,25 @@
 namespace App\Observers;
 
 use App\Models\Voyage;
-use App\Services\Sync\SyncContext;
-use App\Services\Sync\WpSyncService;
+use App\Services\WpTourSyncService;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Voyage Observer
+ * Auto-syncs to WordPress on create/update
+ */
 class VoyageObserver
 {
-    protected WpSyncService $wpSyncService;
-    protected SyncContext $syncContext;
+    protected WpTourSyncService $syncService;
+    
+    /**
+     * Flag to prevent infinite loops during sync
+     */
+    public static bool $syncEnabled = true;
 
-    public function __construct(WpSyncService $wpSyncService, SyncContext $syncContext)
+    public function __construct(WpTourSyncService $syncService)
     {
-        $this->wpSyncService = $wpSyncService;
-        $this->syncContext = $syncContext;
+        $this->syncService = $syncService;
     }
 
     /**
@@ -23,7 +29,21 @@ class VoyageObserver
      */
     public function created(Voyage $voyage): void
     {
-        $this->syncToWordPress($voyage, 'created');
+        if (!self::$syncEnabled || !config('wordpress.auto_sync_enabled', true)) {
+            return;
+        }
+
+        try {
+            // Create in WP
+            $this->syncService->createWpTourFromLaravel($voyage->id);
+            
+            Log::info("Auto-sync: WP tour created", ['voyage_id' => $voyage->id]);
+        } catch (\Exception $e) {
+            Log::error("Auto-sync failed on create", [
+                'voyage_id' => $voyage->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -31,64 +51,61 @@ class VoyageObserver
      */
     public function updated(Voyage $voyage): void
     {
-        $this->syncToWordPress($voyage, 'updated');
+        if (!self::$syncEnabled || !config('wordpress.auto_sync_enabled', true)) {
+            return;
+        }
+
+        // Skip if this is a sync update (prevent loop)
+        if ($voyage->isDirty('wp_synced_at') && !$voyage->isDirty('name', 'description')) {
+            return;
+        }
+
+        try {
+            if ($voyage->wp_post_id) {
+                // Update existing WP tour
+                $this->syncService->updateWpTourFromLaravel($voyage->id);
+                
+                Log::info("Auto-sync: WP tour updated", ['voyage_id' => $voyage->id]);
+            } else {
+                // Create if not linked yet
+                $this->syncService->createWpTourFromLaravel($voyage->id);
+                
+                Log::info("Auto-sync: WP tour created on update", ['voyage_id' => $voyage->id]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Auto-sync failed on update", [
+                'voyage_id' => $voyage->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
      * Handle the Voyage "deleted" event.
+     * 
+     * Note: We don't auto-delete from WP to prevent data loss.
+     * You can implement this manually if needed.
      */
     public function deleted(Voyage $voyage): void
     {
-        // Skip if sync is from WordPress
-        if ($this->syncContext->isFromWp()) {
-            Log::info('[VoyageObserver] Skipping deletion sync - source is WordPress', [
-                'voyage_id' => $voyage->id,
-            ]);
-            return;
-        }
-
-        // Delete from WordPress
-        $result = $this->wpSyncService->deleteVoyage($voyage);
-
-        if (!$result['success']) {
-            Log::warning('[VoyageObserver] Failed to delete from WordPress', [
-                'voyage_id' => $voyage->id,
-                'message' => $result['message'],
-            ]);
-        }
+        // Optional: Implement WP deletion if needed
+        // For safety, we don't auto-delete from WP
+        
+        Log::info("Voyage deleted (WP not affected)", ['voyage_id' => $voyage->id]);
     }
 
     /**
-     * Sync voyage to WordPress if needed.
-     *
-     * @param Voyage $voyage
-     * @param string $event
+     * Temporarily disable sync (useful during batch operations)
      */
-    protected function syncToWordPress(Voyage $voyage, string $event): void
+    public static function withoutSync(callable $callback)
     {
-        // Skip if sync is coming from WordPress (to prevent loops)
-        if ($this->syncContext->isFromWp()) {
-            Log::info('[VoyageObserver] Skipping sync - source is WordPress', [
-                'voyage_id' => $voyage->id,
-                'event' => $event,
-            ]);
-            return;
-        }
+        $previousState = self::$syncEnabled;
+        self::$syncEnabled = false;
 
-        // Skip if no changes detected (based on sync hash)
-        if ($event === 'updated' && $this->wpSyncService->shouldSkipSync($voyage)) {
-            return;
-        }
-
-        // Push to WordPress
-        $result = $this->wpSyncService->upsertVoyage($voyage);
-
-        if (!$result['success']) {
-            Log::warning('[VoyageObserver] Failed to sync to WordPress', [
-                'voyage_id' => $voyage->id,
-                'event' => $event,
-                'message' => $result['message'],
-            ]);
+        try {
+            return $callback();
+        } finally {
+            self::$syncEnabled = $previousState;
         }
     }
 }
