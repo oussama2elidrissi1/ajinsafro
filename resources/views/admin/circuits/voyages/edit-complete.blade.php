@@ -239,14 +239,7 @@
                                 <div class="mb-3">
                                     <label for="location_id" class="form-label">Location ID (alias)</label>
                                     <input type="number" class="form-control" id="location_id" name="location_id" value="{{ old('location_id', $meta['location_id'] ?? '') }}">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="multi_location" class="form-label">Multi-localisation</label>
-                                    <select class="form-select" id="multi_location" name="multi_location">
-                                        <option value="">Non</option>
-                                        <option value="on" {{ old('multi_location', $meta['multi_location'] ?? '') === 'on' ? 'selected' : '' }}>Oui</option>
-                                    </select>
+                                    <small class="text-muted">Champ optionnel, peut rester vide</small>
                                 </div>
                             </div>
                             
@@ -703,7 +696,7 @@
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
-        // Location search filter
+        // Location search filter (identical to WordPress Traveler)
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('locationSearch');
             const locationItems = document.querySelectorAll('.location-item');
@@ -712,15 +705,26 @@
                 searchInput.addEventListener('input', function() {
                     const searchTerm = this.value.toLowerCase().trim();
                     
-                    locationItems.forEach(function(item) {
-                        const title = item.getAttribute('data-title');
-                        
-                        if (searchTerm === '' || title.includes(searchTerm)) {
+                    if (searchTerm === '') {
+                        // Show all
+                        locationItems.forEach(function(item) {
                             item.style.display = '';
-                        } else {
-                            item.style.display = 'none';
-                        }
-                    });
+                        });
+                    } else {
+                        // Filter: show item if title matches OR if any child matches
+                        locationItems.forEach(function(item) {
+                            const title = item.getAttribute('data-title');
+                            const hasMatchingChild = Array.from(item.querySelectorAll('.location-item')).some(function(child) {
+                                return child.getAttribute('data-title').includes(searchTerm);
+                            });
+                            
+                            if (title.includes(searchTerm) || hasMatchingChild) {
+                                item.style.display = '';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    }
                 });
             }
             
@@ -728,7 +732,7 @@
             const checkboxes = document.querySelectorAll('.location-checkbox');
             const updateCount = function() {
                 const checked = document.querySelectorAll('.location-checkbox:checked').length;
-                const countElement = document.querySelector('.text-muted small');
+                const countElement = document.querySelector('#locationTreeContainer + small');
                 if (countElement) {
                     countElement.innerHTML = '<i class="bx bx-info-circle"></i> ' + checked + ' location(s) sélectionnée(s)';
                 }

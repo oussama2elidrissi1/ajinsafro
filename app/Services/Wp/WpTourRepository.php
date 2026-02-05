@@ -495,8 +495,13 @@ class WpTourRepository
             return '';
         }
         
+        // Remove duplicates and sort
+        $locationIds = array_unique(array_map('intval', $locationIds));
+        sort($locationIds);
+        
+        // Format: "_54_,_55_,_56_" (NO spaces)
         $formatted = array_map(function($id) {
-            return '_' . intval($id) . '_';
+            return '_' . $id . '_';
         }, $locationIds);
         
         return implode(',', $formatted);
