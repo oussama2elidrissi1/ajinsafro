@@ -786,10 +786,12 @@
                                                         <input type="hidden" name="programme_activities[][activity_id]" value="{{ $da->activity_id }}">
                                                         <span class="fw-medium">{{ $da->activity->title ?? 'Activité #'.$da->activity_id }}</span>
                                                         <span class="form-check form-check-inline mb-0">
+                                                            <input type="hidden" name="programme_activities[][is_included]" value="0">
                                                             <input class="form-check-input" type="checkbox" name="programme_activities[][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
                                                             <label class="form-check-label small">Inclus</label>
                                                         </span>
                                                         <span class="form-check form-check-inline mb-0">
+                                                            <input type="hidden" name="programme_activities[][is_mandatory]" value="0">
                                                             <input class="form-check-input" type="checkbox" name="programme_activities[][is_mandatory]" value="1" {{ $da->is_mandatory ? 'checked' : '' }} {{ $da->is_mandatory ? 'readonly' : '' }}>
                                                             <label class="form-check-label small">Obligatoire</label>
                                                         </span>
@@ -1020,8 +1022,8 @@
                         '<input type="hidden" name="programme_activities[][day_id]" value="' + dayId + '">' +
                         '<input type="hidden" name="programme_activities[][activity_id]" value="' + activityId + '">' +
                         '<span class="fw-medium">' + (activityTitle || 'Activité') + '</span>' +
-                        '<span class="form-check form-check-inline mb-0"><input class="form-check-input" type="checkbox" name="programme_activities[][is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
-                        '<span class="form-check form-check-inline mb-0"><input class="form-check-input" type="checkbox" name="programme_activities[][is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
+                        '<span class="form-check form-check-inline mb-0"><input type="hidden" name="programme_activities[][is_included]" value="0"><input class="form-check-input" type="checkbox" name="programme_activities[][is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
+                        '<span class="form-check form-check-inline mb-0"><input type="hidden" name="programme_activities[][is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="programme_activities[][is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
                         '<input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_activities[][custom_title]" placeholder="Titre personnalisé">' +
                         '<textarea class="form-control form-control-sm" name="programme_activities[][custom_description]" rows="1" placeholder="Description personnalisée"></textarea>' +
                         '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>' +

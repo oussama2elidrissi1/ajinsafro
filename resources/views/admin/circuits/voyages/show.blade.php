@@ -68,7 +68,7 @@
     @endif
 
     {{-- Départs --}}
-    @if($voyage->departures->isNotEmpty())
+    @if(optional($voyage->departures)->isNotEmpty())
         <div class="card mb-4">
             <div class="card-body">
                 <h4 class="card-title mb-3">Départs</h4>
@@ -97,44 +97,51 @@
         </div>
     @endif
 
-    {{-- Programme jour par jour (brochure) --}}
-    @if($voyage->programDays->isNotEmpty())
+    {{-- Programme du circuit (aj_tour_days + activités) — timeline --}}
+    @if(isset($programDays) && $programDays->isNotEmpty())
         <div class="card mb-4">
             <div class="card-body">
-                <h4 class="card-title mb-4">Programme du voyage – Jour par jour</h4>
+                <h4 class="card-title mb-4">Programme du circuit</h4>
                 <div class="row">
-                    @foreach($voyage->programDays as $day)
+                    @foreach($programDays as $entry)
+                        @php
+                            $day = $entry['day'];
+                            $activities = $entry['activities'];
+                            $mode = $day->mode ?? 'program';
+                        @endphp
                         <div class="col-12 mb-4">
                             <div class="card border h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title mt-0">Jour {{ $day->day_number }} – {{ $day->title }}</h5>
-                                    @if($day->city)
-                                        <p class="text-muted mb-2"><i class="bx bx-map-pin font-size-12 me-1"></i> {{ $day->city }}</p>
+                                    <h5 class="card-title mt-0">
+                                        Jour {{ $day->day_number }}
+                                        @if($mode === 'free')
+                                            <span class="badge bg-secondary ms-2">Jour libre</span>
+                                        @endif
+                                        @if(!empty($day->day_title))
+                                            – {{ $day->day_title }}
+                                        @elseif(!empty($day->title))
+                                            – {{ $day->title }}
+                                        @endif
+                                    </h5>
+                                    @if(!empty($day->notes))
+                                        <div class="text-muted small mb-2">{!! nl2br(e($day->notes)) !!}</div>
                                     @endif
-                                    <p class="mb-2">
-                                        @if($day->day_label)
-                                            <span class="badge bg-soft-primary">{{ $day->day_label_badge }}</span>
-                                        @endif
-                                        @if($day->nights)
-                                            <span class="badge bg-soft-secondary">{{ $day->nights }} nuit(s)</span>
-                                        @endif
-                                    </p>
-                                    @if($day->hasMealBreakfast() || $day->hasMealLunch() || $day->hasMealDinner())
-                                        <p class="text-muted small mb-2">
-                                            Repas inclus : @if($day->hasMealBreakfast()) Petit-déjeuner @endif @if($day->hasMealLunch()) Déjeuner @endif @if($day->hasMealDinner()) Dîner @endif
-                                        </p>
-                                    @endif
-                                    @php $content = $day->content_for_display; $plain = strip_tags($content); $previewLen = 200; @endphp
-                                    @if($content)
-                                        @if(strlen($plain) > $previewLen)
-                                            <div class="day-content-preview text-muted small mb-2">{{ Str::limit($plain, $previewLen) }}</div>
-                                            <button type="button" class="btn btn-sm btn-soft-primary waves-effect waves-light" data-bs-toggle="collapse" data-bs-target="#dayContent{{ $day->id }}">Voir plus</button>
-                                            <div class="collapse mt-2" id="dayContent{{ $day->id }}">
-                                                <div class="program-html">{!! $content !!}</div>
-                                            </div>
-                                        @else
-                                            <div class="program-html text-muted small">{!! $content !!}</div>
-                                        @endif
+                                    @if($activities->isNotEmpty())
+                                        <ul class="list-unstyled mb-0">
+                                            @foreach($activities as $da)
+                                                @if($da->is_included)
+                                                    <li class="mb-2">
+                                                        <span class="fw-medium">{{ $da->custom_title ?: (optional($da->activity)->title ?? 'Activité') }}</span>
+                                                        @if($da->is_mandatory)
+                                                            <span class="badge bg-primary ms-1">Obligatoire</span>
+                                                        @endif
+                                                        @if($da->custom_description || optional($da->activity)->description)
+                                                            <div class="text-muted small mt-1">{!! nl2br(e($da->custom_description ?: optional($da->activity)->description)) !!}</div>
+                                                        @endif
+                                                    </li>
+                                                @endif
+                                            @endforeach
+                                        </ul>
                                     @endif
                                 </div>
                             </div>

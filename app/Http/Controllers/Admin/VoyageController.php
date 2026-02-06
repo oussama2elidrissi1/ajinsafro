@@ -74,8 +74,16 @@ class VoyageController extends Controller
             'thumbnail_id' => $wpPost->getMeta('_thumbnail_id'),
             'gallery' => $wpPost->getMeta('gallery'),
         ];
+
+        // Programme par jours (aj_tour_days + activités) pour la timeline "Programme du circuit"
+        $programDays = collect();
+        try {
+            $programDays = $this->programService->loadProgram((int) $id);
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageController@show loadProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
+        }
         
-        return view('admin.circuits.voyages.show', compact('voyage', 'meta'));
+        return view('admin.circuits.voyages.show', compact('voyage', 'meta', 'programDays'));
     }
 
     /**
@@ -346,7 +354,21 @@ class VoyageController extends Controller
 
             // Programme par jours (aj_tour_days + aj_tour_day_activities)
             if ($request->has('programme_days')) {
-                $this->syncProgrammeDaysAndActivities($id, $request);
+                \Log::info('VoyageController@update programme_days received', [
+                    'tour_id' => $id,
+                    'programme_days_count' => is_array($request->input('programme_days')) ? count($request->input('programme_days')) : 0,
+                    'programme_activities_count' => is_array($request->input('programme_activities')) ? count($request->input('programme_activities')) : 0,
+                ]);
+                try {
+                    $this->syncProgrammeDaysAndActivities($id, $request);
+                } catch (\Throwable $e) {
+                    \Log::error('VoyageController@update syncProgrammeDaysAndActivities failed', [
+                        'tour_id' => $id,
+                        'message' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    throw $e;
+                }
             }
 
             return redirect()
@@ -361,6 +383,12 @@ class VoyageController extends Controller
 
     /**
      * Sync programme days and day-activities from request.
+     * Tables (connexion wp, préfixe cFdgeZ_) :
+     * - cFdgeZ_aj_tour_days (tour_id, day_number, mode, day_title, notes, ...)
+     * - cFdgeZ_aj_tour_day_activities (tour_id, day_id, activity_id, sort_order, is_included, is_mandatory, ...)
+     * Vérification manuelle en DB :
+     *   SELECT * FROM cFdgeZ_aj_tour_days WHERE tour_id = <ID> ORDER BY day_number;
+     *   SELECT * FROM cFdgeZ_aj_tour_day_activities WHERE tour_id = <ID> ORDER BY day_id, sort_order;
      */
     protected function syncProgrammeDaysAndActivities(int $tourId, UpdateWpTourRequest $request): void
     {
@@ -388,10 +416,12 @@ class VoyageController extends Controller
                 continue;
             }
             $id = (int) ($row['id'] ?? 0);
+            $isIncluded = $this->normalizeCheckboxValue($row['is_included'] ?? 0, 1);
+            $isMandatory = $this->normalizeCheckboxValue($row['is_mandatory'] ?? 0, 0);
             if ($id > 0) {
                 $this->programService->updateDayActivity($id, [
-                    'is_mandatory' => isset($row['is_mandatory']) ? (int) $row['is_mandatory'] : 0,
-                    'is_included' => isset($row['is_included']) ? (int) $row['is_included'] : 1,
+                    'is_mandatory' => $isMandatory,
+                    'is_included' => $isIncluded,
                     'custom_title' => $row['custom_title'] ?? null,
                     'custom_description' => $row['custom_description'] ?? null,
                     'sort_order' => $index,
@@ -400,8 +430,8 @@ class VoyageController extends Controller
             } else {
                 $newDa = $this->programService->addActivityToDay($dayId, $activityId, [
                     'sort_order' => $index,
-                    'is_included' => isset($row['is_included']) ? (int) $row['is_included'] : 1,
-                    'is_mandatory' => isset($row['is_mandatory']) ? (int) $row['is_mandatory'] : 0,
+                    'is_included' => $isIncluded,
+                    'is_mandatory' => $isMandatory,
                     'custom_title' => $row['custom_title'] ?? null,
                     'custom_description' => $row['custom_description'] ?? null,
                 ]);
@@ -419,6 +449,17 @@ class VoyageController extends Controller
             }
             $this->programService->removeDayActivity($da->id);
         }
+    }
+
+    /**
+     * Normalize checkbox value (hidden 0 + checkbox 1 can send array [0,1]).
+     */
+    protected function normalizeCheckboxValue(mixed $value, int $default): int
+    {
+        if (is_array($value)) {
+            $value = end($value);
+        }
+        return (int) ($value ?? $default);
     }
 
     /**
