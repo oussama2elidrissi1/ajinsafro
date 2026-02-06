@@ -31,10 +31,9 @@ class AJTB_Activity_Selections {
     public function __construct() {
         global $wpdb;
         $this->wpdb = $wpdb;
-        $prefix = $wpdb->prefix . AJTB_LARAVEL_PREFIX;
-        $this->table = $prefix . 'tour_activity_selections';
-        $this->table_activities = $prefix . 'tour_day_activities';
-        $this->table_catalog = $prefix . 'activities';
+        $this->table = ajtb_table('aj_tour_activity_selections');
+        $this->table_activities = ajtb_table('aj_tour_day_activities');
+        $this->table_catalog = ajtb_table('aj_activities');
     }
 
     /**
@@ -78,7 +77,7 @@ class AJTB_Activity_Selections {
             return [];
         }
         $table = $this->table;
-        if ($this->wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+        if ($this->wpdb->get_var($this->wpdb->prepare("SHOW TABLES LIKE %s", $table)) != $table) {
             return [];
         }
         $tour_id = (int) $tour_id;
@@ -164,7 +163,7 @@ class AJTB_Activity_Selections {
             return [];
         }
         $table = $this->table_catalog;
-        if ($this->wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+        if ($this->wpdb->get_var($this->wpdb->prepare("SHOW TABLES LIKE %s", $table)) != $table) {
             return [];
         }
         $ids = array_map('intval', $activity_ids);
@@ -214,7 +213,10 @@ class AJTB_Activity_Selections {
         }
 
         $table = $this->table;
-        if ($this->wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+        if ($this->wpdb->get_var($this->wpdb->prepare("SHOW TABLES LIKE %s", $table)) != $table) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AJTB Activity_Selections: table missing, name=' . $table . ', prefix=' . $this->wpdb->prefix);
+            }
             return ['success' => false, 'message' => __('Table des sélections indisponible.', 'ajinsafro-tour-bridge')];
         }
 
@@ -258,7 +260,7 @@ class AJTB_Activity_Selections {
      */
     private function is_activity_mandatory_in_day($tour_id, $day_id, $activity_id) {
         $t = $this->table_activities;
-        if ($this->wpdb->get_var("SHOW TABLES LIKE '$t'") != $t) {
+        if ($this->wpdb->get_var($this->wpdb->prepare("SHOW TABLES LIKE %s", $t)) != $t) {
             return false;
         }
         $v = $this->wpdb->get_var($this->wpdb->prepare(
@@ -276,7 +278,7 @@ class AJTB_Activity_Selections {
     private function activity_allowed_for_day($tour_id, $day_id, $activity_id) {
         $t = $this->table_activities;
         $c = $this->table_catalog;
-        if ($this->wpdb->get_var("SHOW TABLES LIKE '$t'") != $t || $this->wpdb->get_var("SHOW TABLES LIKE '$c'") != $c) {
+        if ($this->wpdb->get_var($this->wpdb->prepare("SHOW TABLES LIKE %s", $t)) != $t || $this->wpdb->get_var($this->wpdb->prepare("SHOW TABLES LIKE %s", $c)) != $c) {
             return false;
         }
         $in_day = $this->wpdb->get_var($this->wpdb->prepare(

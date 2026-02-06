@@ -198,117 +198,78 @@
         },
 
         /**
-         * Activity toggle (add/remove optional activities) — AJAX + re-render
+         * Activity toggle (add/remove) — event delegation + replace container HTML from server
          */
         initActivityToggle: function() {
             var self = this;
+            var ajtbData = typeof window.ajtbData !== 'undefined' ? window.ajtbData : {};
+            var ajaxUrl = ajtbData.ajax_url || ajtbData.ajaxUrl || '';
+            var nonce = ajtbData.nonce || '';
             var $section = $('#itinerary');
-            if (!$section.length) return;
-            var tourId = $section.data('tour-id') || (typeof ajtbData !== 'undefined' && ajtbData.tour_id) || (typeof ajtbData !== 'undefined' && ajtbData.postId);
-            var sessionToken = $section.data('session-token');
-            var catalog = [];
-            try {
-                var raw = $section.data('activities-catalog');
-                if (raw) catalog = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            } catch (e) {}
-            if (!tourId || !sessionToken) {
-                console.warn('AJTB initActivityToggle: missing tourId or sessionToken', { tourId: tourId, hasSession: !!sessionToken });
-                return;
-            }
-            var ajaxUrl = (typeof ajtbData !== 'undefined' && (ajtbData.ajax_url || ajtbData.ajaxUrl)) || '';
-            var nonce = (typeof ajtbData !== 'undefined' && ajtbData.nonce) || '';
+            var tourId = $section.length ? ($section.data('tour-id') || ajtbData.tour_id || ajtbData.postId) : (ajtbData.tour_id || ajtbData.postId);
+            var sessionToken = $section.length ? $section.data('session-token') : '';
+
             if (!ajaxUrl || !nonce) {
-                console.warn('AJTB initActivityToggle: missing ajax_url or nonce');
+                console.warn('AJTB initActivityToggle: missing ajax_url or nonce', { ajaxUrl: !!ajaxUrl, nonce: !!nonce });
                 return;
             }
 
-            function escapeHtml(text) {
-                if (!text) return '';
-                var div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
+            // Event delegation: one listener for all [data-aj-action] buttons (including dynamically inserted)
+            document.addEventListener('click', function(e) {
+                var btn = e.target && e.target.closest ? e.target.closest('[data-aj-action]') : null;
+                if (!btn) return;
+                var action = btn.getAttribute('data-aj-action');
+                if (action !== 'remove' && action !== 'add') return;
 
-            function renderDayActivitiesList(dayActivities, dayId) {
-                var html = '';
-                if (dayActivities && dayActivities.length) {
-                    dayActivities.forEach(function(act) {
-                        if (!act.is_included) return;
-                        var title = act.title || 'Activité';
-                        var mandatory = act.is_mandatory ? '<span class="badge badge-mandatory">Obligatoire</span>' : '';
-                        var removeBtn = !act.is_mandatory ? '<button type="button" class="ajtb-btn-remove-activity" data-tour-id="' + tourId + '" data-day-id="' + dayId + '" data-activity-id="' + act.activity_id + '" data-action="removed" aria-label="Retirer cette activité">Retirer</button>' : '';
-                        var desc = act.description ? '<div class="activity-description">' + escapeHtml(act.description).replace(/\n/g, '<br>') + '</div>' : '';
-                        html += '<li class="day-activity-item" data-activity-id="' + act.activity_id + '" data-is-mandatory="' + (act.is_mandatory ? '1' : '0') + '">' +
-                            '<span class="activity-title">' + escapeHtml(title) + '</span> ' + mandatory + ' ' + removeBtn + desc + '</li>';
-                    });
+                var tourIdVal = parseInt(btn.getAttribute('data-tour-id'), 10) || tourId;
+                var dayIdVal = parseInt(btn.getAttribute('data-day-id'), 10);
+                if (!dayIdVal) return;
+
+                var activityIdVal = 0;
+                if (action === 'remove') {
+                    activityIdVal = parseInt(btn.getAttribute('data-activity-id'), 10);
+                } else {
+                    var selectId = btn.getAttribute('data-select-id');
+                    var selectEl = selectId ? document.getElementById(selectId) : null;
+                    if (!selectEl) return;
+                    activityIdVal = parseInt(selectEl.value, 10);
                 }
-                if (!html) html = '<li class="day-activity-item day-no-activities">Aucune activité</li>';
-                return html;
-            }
+                if (!activityIdVal) {
+                    if (action === 'add') AJTB.showToast('Choisissez une activité');
+                    return;
+                }
 
-            // Remove activity
-            $(document).on('click', '.ajtb-btn-remove-activity', function() {
-                var $btn = $(this);
-                if ($btn.prop('disabled')) return;
-                var dayId = $btn.data('day-id');
-                var activityId = $btn.data('activity-id');
-                $btn.prop('disabled', true);
-                $.post(ajaxUrl, {
+                if (btn.disabled) return;
+                btn.disabled = true;
+
+                var payload = {
                     action: 'aj_toggle_activity',
                     nonce: nonce,
-                    tour_id: tourId,
-                    day_id: dayId,
-                    activity_id: activityId,
-                    toggle_action: 'removed',
+                    tour_id: tourIdVal,
+                    day_id: dayIdVal,
+                    activity_id: activityIdVal,
+                    toggle_action: action === 'remove' ? 'removed' : 'added',
                     session_token: sessionToken
-                }, function(resp) {
-                    if (resp.success && resp.data) {
-                        var $ul = $btn.closest('.day-activities-list');
-                        $ul.html(renderDayActivitiesList(resp.data.day_activities || [], dayId));
-                        AJTB.showToast(resp.data.message || 'Activité retirée');
-                    } else {
-                        AJTB.showToast(resp.data && resp.data.message ? resp.data.message : 'Erreur');
-                    }
-                }, 'json').fail(function() {
-                    AJTB.showToast('Erreur réseau');
-                }).always(function() {
-                    $btn.prop('disabled', false);
-                });
-            });
+                };
+                console.log('AJ TB payload', payload);
 
-            // Add activity
-            $(document).on('click', '.ajtb-btn-add-activity', function() {
-                var $btn = $(this);
-                if ($btn.prop('disabled')) return;
-                var $block = $btn.closest('.day-add-activity');
-                var dayId = $block.data('day-id');
-                var $select = $block.find('.ajtb-add-activity-select');
-                var activityId = $select.val();
-                if (!activityId) return;
-                $btn.prop('disabled', true);
-                $.post(ajaxUrl, {
-                    action: 'aj_toggle_activity',
-                    nonce: nonce,
-                    tour_id: tourId,
-                    day_id: dayId,
-                    activity_id: activityId,
-                    toggle_action: 'added',
-                    session_token: sessionToken
-                }, function(resp) {
-                    if (resp.success && resp.data) {
-                        var $day = $btn.closest('.itinerary-day');
-                        var $ul = $day.find('.day-activities-list');
-                        $ul.html(renderDayActivitiesList(resp.data.day_activities || [], dayId));
-                        $select.find('option[value="' + activityId + '"]').remove();
-                        $select.val('');
-                        AJTB.showToast(resp.data.message || 'Activité ajoutée');
+                $.post(ajaxUrl, payload).done(function(resp) {
+                    console.log('AJ TB response', resp);
+                    if (resp.success && resp.data && resp.data.html !== undefined) {
+                        var container = document.getElementById('aj-day-activities-' + dayIdVal);
+                        if (container) {
+                            container.innerHTML = resp.data.html;
+                        }
+                        AJTB.showToast(resp.data.message || (action === 'remove' ? 'Activité retirée' : 'Activité ajoutée'));
                     } else {
-                        AJTB.showToast(resp.data && resp.data.message ? resp.data.message : 'Erreur');
+                        var msg = (resp.data && resp.data.message) ? resp.data.message : 'Erreur';
+                        AJTB.showToast(msg);
                     }
-                }, 'json').fail(function() {
+                }).fail(function(xhr, status, err) {
+                    console.warn('AJ TB request failed', status, err);
                     AJTB.showToast('Erreur réseau');
                 }).always(function() {
-                    $btn.prop('disabled', false);
+                    btn.disabled = false;
                 });
             });
         },

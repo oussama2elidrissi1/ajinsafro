@@ -22,12 +22,6 @@ class AJTB_Laravel_Repository {
     private $wpdb;
 
     /**
-     * Table prefix (wp_prefix + laravel_prefix)
-     * @var string
-     */
-    private $prefix;
-
-    /**
      * Tour ID (WP post_id)
      * @var int
      */
@@ -41,18 +35,17 @@ class AJTB_Laravel_Repository {
     public function __construct($tour_id) {
         global $wpdb;
         $this->wpdb = $wpdb;
-        $this->prefix = $wpdb->prefix . AJTB_LARAVEL_PREFIX;
         $this->tour_id = (int) $tour_id;
     }
 
     /**
-     * Get table name with prefix
+     * Get table name (single prefix via ajtb_table)
      *
-     * @param string $table Table name without prefix
+     * @param string $short Short name: tour_days, tour_day_activities, activities, tour_sections, tour_pricing_rules
      * @return string Full table name
      */
-    private function table($table) {
-        return $this->prefix . $table;
+    private function table($short) {
+        return ajtb_table('aj_' . $short);
     }
 
     /**

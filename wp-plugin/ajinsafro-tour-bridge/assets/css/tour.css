@@ -825,6 +825,47 @@
     cursor: not-allowed;
 }
 
+/* WP Programme (tours_program list: 08:00... + description) */
+.aj-program-list {
+    margin-top: 16px;
+}
+.aj-program-item {
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--ajtb-border);
+    border-radius: var(--ajtb-radius, 8px);
+    background: var(--ajtb-bg, #fff);
+}
+.aj-program-item:last-child {
+    margin-bottom: 0;
+}
+.aj-program-item-title {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ajtb-text);
+}
+.aj-program-item-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ajtb-text-muted);
+}
+.aj-program-item-desc p:last-child {
+    margin-bottom: 0;
+}
+.program-style-style1 .aj-program-item {
+    border-left: 3px solid var(--ajtb-primary, #0d6efd);
+}
+.program-style-style2 .aj-program-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.program-style-style2 .aj-program-item {
+    border-left-width: 4px;
+    border-left-color: var(--ajtb-primary, #0d6efd);
+}
+
 /* Itinerary Actions */
 .itinerary-actions {
     display: flex;

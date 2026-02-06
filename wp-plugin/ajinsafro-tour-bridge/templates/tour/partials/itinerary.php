@@ -1,6 +1,6 @@
 <?php
 /**
- * Itinerary Partial - Day by Day Timeline/Accordion
+ * Itinerary Partial - WP Programme (tours_program) or Laravel Day-by-Day Timeline
  *
  * @var array $tour Tour data
  * @package AjinsafroTourBridge
@@ -11,14 +11,26 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+$wp_program = $tour['wp_program'] ?? ['style' => 'style1', 'items' => []];
 $itinerary = $tour['itinerary'] ?? [];
 $source = $tour['_sources']['itinerary'] ?? 'wordpress';
 $session_token = $tour['_session_token'] ?? '';
 $tour_id = (int) ($tour['id'] ?? 0);
 $activities_catalog = $tour['activities_catalog'] ?? [];
 $can_toggle_activities = ($source === 'laravel' && !empty($session_token) && $tour_id > 0);
+$use_wp_program = !empty($wp_program['items']);
+$program_style = isset($wp_program['style']) ? sanitize_html_class($wp_program['style']) : 'style1';
+if ($program_style === '') {
+    $program_style = 'style1';
+}
 
-if (empty($itinerary)) {
+if (!$use_wp_program && empty($itinerary)) {
+    ?>
+    <section class="ajtb-section" id="itinerary">
+        <h2 class="ajtb-section-title">Programme du Circuit</h2>
+        <p class="aj-program-unavailable"><?php esc_html_e('Programme non disponible.', 'ajinsafro-tour-bridge'); ?></p>
+    </section>
+    <?php
     return;
 }
 ?>
@@ -36,9 +48,36 @@ if (empty($itinerary)) {
             <path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"></path>
         </svg>
         Programme du Circuit
-        <span class="section-badge"><?php echo count($itinerary); ?> jour<?php echo count($itinerary) > 1 ? 's' : ''; ?></span>
+        <span class="section-badge"><?php echo $use_wp_program ? count($wp_program['items']) : count($itinerary); ?> <?php echo $use_wp_program ? 'étape' : 'jour'; ?><?php echo ($use_wp_program ? count($wp_program['items']) : count($itinerary)) > 1 ? 's' : ''; ?></span>
     </h2>
 
+<?php if ($use_wp_program): ?>
+    <div class="aj-program-list program-style-<?php echo esc_attr($program_style); ?>">
+        <?php foreach ($wp_program['items'] as $item): 
+            $title = isset($item['title']) ? trim((string) $item['title']) : '';
+            $desc = isset($item['desc']) ? trim((string) $item['desc']) : '';
+        ?>
+            <div class="aj-program-item">
+                <?php if ($title !== ''): ?>
+                    <h4 class="aj-program-item-title"><?php echo esc_html($title); ?></h4>
+                <?php endif; ?>
+                <?php if ($desc !== ''): ?>
+                    <div class="aj-program-item-desc"><?php echo wp_kses_post(nl2br($desc)); ?></div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <div class="itinerary-actions">
+        <button type="button" class="btn-outline" onclick="window.print();">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <polyline points="6,9 6,2 18,2 18,9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Imprimer le programme
+        </button>
+    </div>
+<?php else: ?>
     <div class="ajtb-itinerary-timeline">
         <?php foreach ($itinerary as $index => $day): 
             $day_number = $day['day'] ?? ($index + 1);
@@ -88,7 +127,8 @@ if (empty($itinerary)) {
                             </div>
                         <?php endif; ?>
 
-                        <!-- Day notes / description (only if non empty) -->
+                        <!-- Day notes (id stable for DOM) -->
+                        <div id="aj-day-notes-<?php echo $day_id; ?>">
                         <?php 
                         $day_notes = trim((string) ($day['notes'] ?? ''));
                         if ($day_notes === '' && isset($day['description'])) {
@@ -98,10 +138,12 @@ if (empty($itinerary)) {
                             $day_notes = trim((string) $day['content']);
                         }
                         if ($day_notes !== ''): ?>
-                            <p class="day-notes day-description"><?php echo wp_kses_post(nl2br($day_notes)); ?></p>
+                            <p class="aj-day-notes day-notes day-description"><?php echo wp_kses_post(nl2br($day_notes)); ?></p>
                         <?php endif; ?>
+                        </div>
 
-                        <!-- Activities (Laravel: aj_tour_day_activities + client selections) -->
+                        <!-- Activities container (id stable: JS replaces innerHTML after AJAX) -->
+                        <div id="aj-day-activities-<?php echo $day_id; ?>">
                         <ul class="day-activities-list" data-day-id="<?php echo $day_id; ?>">
                             <?php 
                             $included_count = 0;
@@ -121,7 +163,7 @@ if (empty($itinerary)) {
                                             <span class="badge badge-mandatory">Obligatoire</span>
                                         <?php endif; ?>
                                         <?php if ($show_remove): ?>
-                                            <button type="button" class="ajtb-btn-remove-activity" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" data-action="removed" aria-label="<?php esc_attr_e('Retirer cette activité', 'ajinsafro-tour-bridge'); ?>">Retirer</button>
+                                            <button type="button" class="ajtb-btn-remove-activity" data-aj-action="remove" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" aria-label="<?php esc_attr_e('Retirer cette activité', 'ajinsafro-tour-bridge'); ?>">Retirer</button>
                                         <?php endif; ?>
                                         <?php if ($act_desc !== ''): ?>
                                             <div class="activity-description"><?php echo wp_kses_post($act_desc); ?></div>
@@ -135,8 +177,8 @@ if (empty($itinerary)) {
                         </ul>
                         <?php if ($can_toggle_activities && $day_id > 0): ?>
                             <div class="day-add-activity" data-day-id="<?php echo $day_id; ?>">
-                                <label for="ajtb-add-activity-<?php echo $index; ?>"><?php esc_html_e('Ajouter une activité', 'ajinsafro-tour-bridge'); ?></label>
-                                <select id="ajtb-add-activity-<?php echo $index; ?>" class="ajtb-add-activity-select" data-day-id="<?php echo $day_id; ?>" data-day-index="<?php echo $index; ?>">
+                                <label for="aj-add-select-<?php echo $day_id; ?>"><?php esc_html_e('Ajouter une activité', 'ajinsafro-tour-bridge'); ?></label>
+                                <select id="aj-add-select-<?php echo $day_id; ?>" class="ajtb-add-activity-select" data-day-id="<?php echo $day_id; ?>">
                                     <option value="">— <?php esc_html_e('Choisir', 'ajinsafro-tour-bridge'); ?> —</option>
                                     <?php
                                     $in_day = $day_activity_ids;
@@ -146,9 +188,10 @@ if (empty($itinerary)) {
                                             <option value="<?php echo $cid; ?>"><?php echo esc_html($c['title'] ?? ''); ?></option>
                                     <?php endif; endforeach; ?>
                                 </select>
-                                <button type="button" class="ajtb-btn-add-activity" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>"><?php esc_html_e('Ajouter', 'ajinsafro-tour-bridge'); ?></button>
+                                <button type="button" class="ajtb-btn-add-activity" data-aj-action="add" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-select-id="aj-add-select-<?php echo $day_id; ?>"><?php esc_html_e('Ajouter', 'ajinsafro-tour-bridge'); ?></button>
                             </div>
                         <?php endif; ?>
+                        </div>
 
                         <!-- Day Details (Laravel: meals, accommodation) -->
                         <?php if ($source === 'laravel'): ?>
@@ -185,7 +228,7 @@ if (empty($itinerary)) {
         <?php endforeach; ?>
     </div>
 
-    <!-- Print/Download Itinerary -->
+    <!-- Print/Download Itinerary (Laravel timeline only) -->
     <div class="itinerary-actions">
         <button type="button" class="btn-outline" onclick="window.print();">
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
@@ -206,4 +249,5 @@ if (empty($itinerary)) {
             Tout déplier
         </button>
     </div>
+<?php endif; ?>
 </section>

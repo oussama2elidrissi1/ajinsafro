@@ -11,6 +11,21 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Get full table name for aj_* tables. Prevents double prefix.
+ *
+ * @param string $suffix Table name suffix, e.g. 'aj_tour_activity_selections', 'aj_tour_days', 'aj_activities'
+ * @return string Full table name (e.g. {$wpdb->prefix}aj_tour_activity_selections)
+ */
+function ajtb_table($suffix) {
+    global $wpdb;
+    $p = $wpdb->prefix;
+    if ($p !== '' && substr((string) $suffix, 0, strlen($p)) === $p) {
+        return $suffix;
+    }
+    return $wpdb->prefix . ltrim($suffix, '_');
+}
+
+/**
  * Get currency symbol based on currency code
  *
  * @param string|null $currency Currency code (MAD, EUR, USD, etc.)
@@ -271,6 +286,74 @@ function ajtb_is_tour_single() {
 function ajtb_get_meta($post_id, $key, $default = '') {
     $value = get_post_meta($post_id, $key, true);
     return ($value !== '' && $value !== false) ? $value : $default;
+}
+
+/**
+ * Render HTML for one day's activities list + add block (for AJAX response).
+ * Uses $wpdb->prefix via repository; no hardcoded table prefix.
+ *
+ * @param int $tour_id
+ * @param int $day_id
+ * @param array $day_activities List of activity items (title, description, activity_id, is_mandatory, is_included)
+ * @param string $session_token
+ * @param array $activities_catalog [['id'=>, 'title'=>], ...]
+ * @return string HTML fragment (inner content for #aj-day-activities-{day_id})
+ */
+function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $session_token, $activities_catalog = []) {
+    $tour_id = (int) $tour_id;
+    $day_id = (int) $day_id;
+    $can_toggle = $tour_id > 0 && $day_id > 0 && $session_token !== '';
+    $day_activity_ids = array_map(function ($a) {
+        return (int) isset($a['activity_id']) ? $a['activity_id'] : 0;
+    }, $day_activities);
+    $included = array_filter($day_activities, function ($a) {
+        return !empty($a['is_included']);
+    });
+    $included = array_values($included);
+
+    $html = '<ul class="day-activities-list" data-day-id="' . esc_attr($day_id) . '">';
+    if (!empty($included)) {
+        foreach ($included as $act) {
+            $act_id = (int) isset($act['activity_id']) ? $act['activity_id'] : 0;
+            $title = isset($act['title']) && (string) $act['title'] !== '' ? $act['title'] : __('Activité', 'ajinsafro-tour-bridge');
+            $desc = isset($act['description']) && (string) $act['description'] !== '' ? $act['description'] : '';
+            $is_mandatory = !empty($act['is_mandatory']);
+            $show_remove = $can_toggle && !$is_mandatory;
+            $html .= '<li class="day-activity-item" data-activity-id="' . esc_attr($act_id) . '" data-is-mandatory="' . ($is_mandatory ? '1' : '0') . '">';
+            $html .= '<span class="activity-title">' . esc_html($title) . '</span>';
+            if ($is_mandatory) {
+                $html .= ' <span class="badge badge-mandatory">' . esc_html__('Obligatoire', 'ajinsafro-tour-bridge') . '</span>';
+            }
+            if ($show_remove) {
+                $html .= ' <button type="button" class="ajtb-btn-remove-activity" data-aj-action="remove" data-tour-id="' . esc_attr($tour_id) . '" data-day-id="' . esc_attr($day_id) . '" data-activity-id="' . esc_attr($act_id) . '" aria-label="' . esc_attr__('Retirer cette activité', 'ajinsafro-tour-bridge') . '">' . esc_html__('Retirer', 'ajinsafro-tour-bridge') . '</button>';
+            }
+            if ($desc !== '') {
+                $html .= '<div class="activity-description">' . wp_kses_post($desc) . '</div>';
+            }
+            $html .= '</li>';
+        }
+    } else {
+        $html .= '<li class="day-activity-item day-no-activities">' . esc_html__('Aucune activité', 'ajinsafro-tour-bridge') . '</li>';
+    }
+    $html .= '</ul>';
+    if ($can_toggle && !empty($activities_catalog)) {
+        $select_id = 'aj-add-select-' . $day_id;
+        $html .= '<div class="day-add-activity" data-day-id="' . esc_attr($day_id) . '">';
+        $html .= '<label for="' . esc_attr($select_id) . '">' . esc_html__('Ajouter une activité', 'ajinsafro-tour-bridge') . '</label>';
+        $html .= '<select id="' . esc_attr($select_id) . '" class="ajtb-add-activity-select" data-day-id="' . esc_attr($day_id) . '">';
+        $html .= '<option value="">— ' . esc_html__('Choisir', 'ajinsafro-tour-bridge') . ' —</option>';
+        foreach ($activities_catalog as $c) {
+            $cid = (int) isset($c['id']) ? $c['id'] : 0;
+            if ($cid && !in_array($cid, $day_activity_ids, true)) {
+                $ctitle = isset($c['title']) ? $c['title'] : '';
+                $html .= '<option value="' . esc_attr($cid) . '">' . esc_html($ctitle) . '</option>';
+            }
+        }
+        $html .= '</select>';
+        $html .= ' <button type="button" class="ajtb-btn-add-activity" data-aj-action="add" data-tour-id="' . esc_attr($tour_id) . '" data-day-id="' . esc_attr($day_id) . '" data-select-id="' . esc_attr($select_id) . '">' . esc_html__('Ajouter', 'ajinsafro-tour-bridge') . '</button>';
+        $html .= '</div>';
+    }
+    return $html;
 }
 
 /**

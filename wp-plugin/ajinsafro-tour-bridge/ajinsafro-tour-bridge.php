@@ -28,8 +28,8 @@ define('AJTB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AJTB_POST_TYPE', 'st_tours');
 
 /**
- * Laravel tables prefix (after WP prefix)
- * Tables: {wp_prefix}aj_tour_days, {wp_prefix}aj_tour_sections, etc.
+ * Laravel table suffix prefix (use ajtb_table() for full name to avoid double prefix).
+ * Tables: ajtb_table('aj_tour_days'), ajtb_table('aj_tour_activity_selections'), etc.
  */
 define('AJTB_LARAVEL_PREFIX', 'aj_');
 
@@ -111,6 +111,7 @@ class Ajinsafro_Tour_Bridge {
 
     /**
      * AJAX: toggle activity (added/removed) for client selection. Never modifies aj_tour_day_activities.
+     * Persists in {$wpdb->prefix}aj_tour_activity_selections. Returns HTML for the day block.
      */
     public function ajax_toggle_activity() {
         if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -124,19 +125,67 @@ class Ajinsafro_Tour_Bridge {
         if (!in_array($action, ['added', 'removed'], true)) {
             wp_send_json_error(['message' => __('Action invalide.', 'ajinsafro-tour-bridge')]);
         }
+        global $wpdb;
+        $table_selections = ajtb_table('aj_tour_activity_selections');
+        $show_tables_result = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_selections));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB tables: wpdb->prefix=' . $wpdb->prefix . ', table_selections=' . $table_selections . ', SHOW TABLES result=' . ($show_tables_result ?: 'null'));
+        }
+        if ($show_tables_result != $table_selections) {
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            $charset_collate = $wpdb->get_charset_collate();
+            $sql = "CREATE TABLE $table_selections (
+                id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                tour_id bigint(20) UNSIGNED NOT NULL,
+                day_id bigint(20) UNSIGNED NOT NULL,
+                activity_id bigint(20) UNSIGNED NOT NULL,
+                source_day_activity_id bigint(20) UNSIGNED DEFAULT NULL,
+                action varchar(20) NOT NULL DEFAULT 'added',
+                session_token varchar(64) NOT NULL,
+                user_id bigint(20) UNSIGNED DEFAULT NULL,
+                created_at timestamp NULL DEFAULT NULL,
+                updated_at timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (id),
+                KEY session_token (session_token),
+                KEY user_id (user_id),
+                KEY tour_day_session (tour_id, day_id, session_token),
+                UNIQUE KEY tour_day_activity_session (tour_id, day_id, activity_id, session_token)
+            ) $charset_collate;";
+            dbDelta($sql);
+            $show_tables_after = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_selections));
+            if ($show_tables_after != $table_selections) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('AJTB table create failed: ' . $table_selections);
+                }
+                wp_send_json_error(['message' => sprintf(__('Table selections missing: %s', 'ajinsafro-tour-bridge'), $table_selections)]);
+            }
+        }
+
+        $selections = new AJTB_Activity_Selections();
         $session_token = isset($_POST['session_token']) ? sanitize_text_field($_POST['session_token']) : '';
+        if ($session_token === '') {
+            $session_token = $selections->get_session_token();
+        }
         if (empty($tour_id) || empty($day_id) || empty($activity_id) || $session_token === '') {
             wp_send_json_error(['message' => __('Paramètres manquants.', 'ajinsafro-tour-bridge')]);
         }
-        $selections = new AJTB_Activity_Selections();
         $user_id = is_user_logged_in() ? get_current_user_id() : null;
         $result = $selections->toggle($tour_id, $day_id, $activity_id, $action, $session_token, $user_id);
         if (empty($result['success'])) {
             wp_send_json_error(['message' => $result['message'] ?? __('Erreur.', 'ajinsafro-tour-bridge')]);
         }
+        $day_activities = $result['day_activities'];
+        $repo = new AJTB_Laravel_Repository($tour_id);
+        $activities_catalog = $repo->get_activities_catalog();
+        $html = ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $session_token, $activities_catalog);
+        $count = is_array($day_activities) ? count(array_filter($day_activities, function ($a) {
+            return !empty($a['is_included']);
+        })) : 0;
         wp_send_json_success([
             'message' => $result['message'],
-            'day_activities' => $result['day_activities'],
+            'day_id' => $day_id,
+            'html' => $html,
+            'count' => $count,
         ]);
     }
 
@@ -215,19 +264,17 @@ class Ajinsafro_Tour_Bridge {
     }
 
     /**
-     * Create Laravel custom tables if they don't exist
+     * Create Laravel custom tables if they don't exist (uses ajtb_table = single prefix)
      */
     private function maybe_create_tables() {
         global $wpdb;
-        
-        $charset_collate = $wpdb->get_charset_collate();
-        $prefix = $wpdb->prefix . AJTB_LARAVEL_PREFIX;
 
+        $charset_collate = $wpdb->get_charset_collate();
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
         // Table: aj_tour_days
-        $table_days = $prefix . 'tour_days';
-        if ($wpdb->get_var("SHOW TABLES LIKE '$table_days'") != $table_days) {
+        $table_days = ajtb_table('aj_tour_days');
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_days)) != $table_days) {
             $sql = "CREATE TABLE $table_days (
                 id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
                 tour_id bigint(20) UNSIGNED NOT NULL,
@@ -247,8 +294,8 @@ class Ajinsafro_Tour_Bridge {
         }
 
         // Table: aj_tour_sections
-        $table_sections = $prefix . 'tour_sections';
-        if ($wpdb->get_var("SHOW TABLES LIKE '$table_sections'") != $table_sections) {
+        $table_sections = ajtb_table('aj_tour_sections');
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_sections)) != $table_sections) {
             $sql = "CREATE TABLE $table_sections (
                 id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
                 tour_id bigint(20) UNSIGNED NOT NULL,
@@ -265,8 +312,8 @@ class Ajinsafro_Tour_Bridge {
         }
 
         // Table: aj_tour_pricing_rules
-        $table_pricing = $prefix . 'tour_pricing_rules';
-        if ($wpdb->get_var("SHOW TABLES LIKE '$table_pricing'") != $table_pricing) {
+        $table_pricing = ajtb_table('aj_tour_pricing_rules');
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_pricing)) != $table_pricing) {
             $sql = "CREATE TABLE $table_pricing (
                 id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
                 tour_id bigint(20) UNSIGNED NOT NULL,
@@ -287,8 +334,8 @@ class Ajinsafro_Tour_Bridge {
         }
 
         // Table: aj_tour_activity_selections (client add/remove optional activities; never modifies aj_tour_day_activities)
-        $table_selections = $prefix . 'tour_activity_selections';
-        if ($wpdb->get_var("SHOW TABLES LIKE '$table_selections'") != $table_selections) {
+        $table_selections = ajtb_table('aj_tour_activity_selections');
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_selections)) != $table_selections) {
             $sql = "CREATE TABLE $table_selections (
                 id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
                 tour_id bigint(20) UNSIGNED NOT NULL,

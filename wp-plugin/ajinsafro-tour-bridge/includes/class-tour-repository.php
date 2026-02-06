@@ -55,6 +55,7 @@ class AJTB_Tour_Repository {
         // Tour details
         'type_tour',
         'tours_program',
+        'tours_program_style',
         'included',
         'excluded',
         'tour_external_booking_link',
@@ -161,9 +162,48 @@ class AJTB_Tour_Repository {
             'tour_types' => $this->get_taxonomies('st_tour_type'),
             'tags' => $this->get_taxonomies('tour_tag'),
 
+            // WP Programme (items list: 08:00... + description). Used when non-empty; else fallback to Laravel itinerary.
+            'wp_program' => $this->get_wp_program(),
+
             // Raw meta for custom access
             '_meta' => $meta,
         ];
+    }
+
+    /**
+     * Get WP Traveler programme (tours_program_style + tours_program).
+     * Safe unserialize; normalizes to [{title, desc}]. Returns {style, items}.
+     *
+     * @return array{style: string, items: array<array{title: string, desc: string}>}
+     */
+    public function get_wp_program() {
+        $meta = $this->get_all_meta();
+        $style = isset($meta['tours_program_style']) ? sanitize_text_field($meta['tours_program_style']) : '';
+        if ($style === '') {
+            $style = 'style1';
+        }
+        $raw = isset($meta['tours_program']) ? $meta['tours_program'] : '';
+        if ($raw === '' || $raw === null) {
+            return ['style' => $style, 'items' => []];
+        }
+        $data = ajtb_maybe_unserialize($raw);
+        if (!is_array($data)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AJTB get_wp_program: tours_program is not array for post ' . $this->post_id);
+            }
+            return ['style' => $style, 'items' => []];
+        }
+        $items = [];
+        foreach ($data as $index => $item) {
+            if (is_array($item)) {
+                $title = isset($item['title']) ? (string) $item['title'] : '';
+                $desc = isset($item['desc']) ? (string) $item['desc'] : (isset($item['description']) ? (string) $item['description'] : (isset($item['content']) ? (string) $item['content'] : ''));
+                $items[] = ['title' => $title, 'desc' => $desc];
+            } elseif (is_string($item)) {
+                $items[] = ['title' => '', 'desc' => $item];
+            }
+        }
+        return ['style' => $style, 'items' => $items];
     }
 
     /**

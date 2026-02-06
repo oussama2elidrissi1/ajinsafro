@@ -218,6 +218,8 @@ class AJTB_Template_Loader {
             ],
             // Client activity selections (front add/remove)
             'activities_catalog' => $laravel_data['activities_catalog'] ?? [],
+            // WP Programme (tours_program_style + tours_program). Priority over Laravel when items non-empty.
+            'wp_program' => $wp_data['wp_program'] ?? ['style' => 'style1', 'items' => []],
         ];
     }
 }
