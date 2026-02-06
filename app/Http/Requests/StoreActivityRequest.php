@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class StoreActivityRequest extends FormRequest
 {
@@ -17,7 +16,7 @@ class StoreActivityRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('aj_activities', 'slug')->connection('wp')],
+            'slug' => 'nullable|string|max:255|unique:wp.aj_activities,slug',
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'default_duration_minutes' => 'nullable|integer|min:0',
