@@ -683,7 +683,8 @@
     display: block;
 }
 
-.day-body .day-description {
+.day-body .day-description,
+.day-body .day-notes {
     font-size: 14px;
     line-height: 1.7;
     color: var(--ajtb-text-light);

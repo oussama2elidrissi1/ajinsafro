@@ -8,8 +8,13 @@
 (function($) {
     'use strict';
 
+    console.log('ajinsafro tour js loaded');
+
     // Wait for DOM ready
     $(document).ready(function() {
+        if (typeof ajtbData !== 'undefined') {
+            console.log('ajtbData:', { ajax_url: ajtbData.ajax_url || ajtbData.ajaxUrl, nonce: ajtbData.nonce ? 'set' : 'missing', postId: ajtbData.postId, tour_id: ajtbData.tour_id });
+        }
         AJTB.init();
     });
 
@@ -199,14 +204,23 @@
             var self = this;
             var $section = $('#itinerary');
             if (!$section.length) return;
-            var tourId = $section.data('tour-id');
+            var tourId = $section.data('tour-id') || (typeof ajtbData !== 'undefined' && ajtbData.tour_id) || (typeof ajtbData !== 'undefined' && ajtbData.postId);
             var sessionToken = $section.data('session-token');
             var catalog = [];
             try {
                 var raw = $section.data('activities-catalog');
                 if (raw) catalog = typeof raw === 'string' ? JSON.parse(raw) : raw;
             } catch (e) {}
-            if (!tourId || !sessionToken) return;
+            if (!tourId || !sessionToken) {
+                console.warn('AJTB initActivityToggle: missing tourId or sessionToken', { tourId: tourId, hasSession: !!sessionToken });
+                return;
+            }
+            var ajaxUrl = (typeof ajtbData !== 'undefined' && (ajtbData.ajax_url || ajtbData.ajaxUrl)) || '';
+            var nonce = (typeof ajtbData !== 'undefined' && ajtbData.nonce) || '';
+            if (!ajaxUrl || !nonce) {
+                console.warn('AJTB initActivityToggle: missing ajax_url or nonce');
+                return;
+            }
 
             function escapeHtml(text) {
                 if (!text) return '';
@@ -222,7 +236,7 @@
                         if (!act.is_included) return;
                         var title = act.title || 'Activité';
                         var mandatory = act.is_mandatory ? '<span class="badge badge-mandatory">Obligatoire</span>' : '';
-                        var removeBtn = !act.is_mandatory ? '<button type="button" class="ajtb-btn-remove-activity" data-tour-id="' + tourId + '" data-day-id="' + dayId + '" data-activity-id="' + act.activity_id + '" aria-label="Retirer cette activité">Retirer</button>' : '';
+                        var removeBtn = !act.is_mandatory ? '<button type="button" class="ajtb-btn-remove-activity" data-tour-id="' + tourId + '" data-day-id="' + dayId + '" data-activity-id="' + act.activity_id + '" data-action="removed" aria-label="Retirer cette activité">Retirer</button>' : '';
                         var desc = act.description ? '<div class="activity-description">' + escapeHtml(act.description).replace(/\n/g, '<br>') + '</div>' : '';
                         html += '<li class="day-activity-item" data-activity-id="' + act.activity_id + '" data-is-mandatory="' + (act.is_mandatory ? '1' : '0') + '">' +
                             '<span class="activity-title">' + escapeHtml(title) + '</span> ' + mandatory + ' ' + removeBtn + desc + '</li>';
@@ -239,13 +253,13 @@
                 var dayId = $btn.data('day-id');
                 var activityId = $btn.data('activity-id');
                 $btn.prop('disabled', true);
-                $.post(ajtbData.ajaxUrl, {
+                $.post(ajaxUrl, {
                     action: 'aj_toggle_activity',
-                    nonce: ajtbData.activityNonce,
+                    nonce: nonce,
                     tour_id: tourId,
                     day_id: dayId,
                     activity_id: activityId,
-                    action_type: 'removed',
+                    toggle_action: 'removed',
                     session_token: sessionToken
                 }, function(resp) {
                     if (resp.success && resp.data) {
@@ -272,13 +286,13 @@
                 var activityId = $select.val();
                 if (!activityId) return;
                 $btn.prop('disabled', true);
-                $.post(ajtbData.ajaxUrl, {
+                $.post(ajaxUrl, {
                     action: 'aj_toggle_activity',
-                    nonce: ajtbData.activityNonce,
+                    nonce: nonce,
                     tour_id: tourId,
                     day_id: dayId,
                     activity_id: activityId,
-                    action_type: 'added',
+                    toggle_action: 'added',
                     session_token: sessionToken
                 }, function(resp) {
                     if (resp.success && resp.data) {

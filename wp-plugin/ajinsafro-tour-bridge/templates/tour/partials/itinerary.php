@@ -88,11 +88,17 @@ if (empty($itinerary)) {
                             </div>
                         <?php endif; ?>
 
-                        <!-- Day Description / Notes (program mode or fallback) -->
-                        <?php if ($mode === 'program' && (!empty($day['notes']) || !empty($day['description']) || !empty($day['content']))): ?>
-                            <div class="day-description">
-                                <?php echo wp_kses_post($day['notes'] ?? $day['description'] ?? $day['content']); ?>
-                            </div>
+                        <!-- Day notes / description (only if non empty) -->
+                        <?php 
+                        $day_notes = trim((string) ($day['notes'] ?? ''));
+                        if ($day_notes === '' && isset($day['description'])) {
+                            $day_notes = trim((string) $day['description']);
+                        }
+                        if ($day_notes === '' && isset($day['content'])) {
+                            $day_notes = trim((string) $day['content']);
+                        }
+                        if ($day_notes !== ''): ?>
+                            <p class="day-notes day-description"><?php echo wp_kses_post(nl2br($day_notes)); ?></p>
                         <?php endif; ?>
 
                         <!-- Activities (Laravel: aj_tour_day_activities + client selections) -->
@@ -103,21 +109,21 @@ if (empty($itinerary)) {
                                 <?php foreach ($activities as $act): 
                                     if (empty($act['is_included'])) { continue; }
                                     $included_count++;
-                                    $act_title = !empty($act['title']) ? $act['title'] : '';
-                                    $act_desc = !empty($act['description']) ? $act['description'] : '';
+                                    $act_title = isset($act['title']) && (string) $act['title'] !== '' ? $act['title'] : '';
+                                    $act_desc = isset($act['description']) && (string) $act['description'] !== '' ? $act['description'] : '';
                                     $act_id = (int) ($act['activity_id'] ?? 0);
                                     $is_mandatory = !empty($act['is_mandatory']);
                                     $show_remove = $can_toggle_activities && !$is_mandatory;
                                 ?>
                                     <li class="day-activity-item" data-activity-id="<?php echo $act_id; ?>" data-is-mandatory="<?php echo $is_mandatory ? '1' : '0'; ?>">
-                                        <span class="activity-title"><?php echo $act_title ? esc_html($act_title) : esc_html__('Activité', 'ajinsafro-tour-bridge'); ?></span>
+                                        <span class="activity-title"><?php echo $act_title !== '' ? esc_html($act_title) : esc_html__('Activité', 'ajinsafro-tour-bridge'); ?></span>
                                         <?php if ($is_mandatory): ?>
                                             <span class="badge badge-mandatory">Obligatoire</span>
                                         <?php endif; ?>
                                         <?php if ($show_remove): ?>
-                                            <button type="button" class="ajtb-btn-remove-activity" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" aria-label="<?php esc_attr_e('Retirer cette activité', 'ajinsafro-tour-bridge'); ?>">Retirer</button>
+                                            <button type="button" class="ajtb-btn-remove-activity" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" data-action="removed" aria-label="<?php esc_attr_e('Retirer cette activité', 'ajinsafro-tour-bridge'); ?>">Retirer</button>
                                         <?php endif; ?>
-                                        <?php if ($act_desc): ?>
+                                        <?php if ($act_desc !== ''): ?>
                                             <div class="activity-description"><?php echo wp_kses_post($act_desc); ?></div>
                                         <?php endif; ?>
                                     </li>

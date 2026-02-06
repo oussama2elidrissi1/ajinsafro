@@ -113,16 +113,19 @@ class Ajinsafro_Tour_Bridge {
      * AJAX: toggle activity (added/removed) for client selection. Never modifies aj_tour_day_activities.
      */
     public function ajax_toggle_activity() {
-        check_ajax_referer('ajtb_activity_toggle', 'nonce');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJ TOGGLE REQUEST ' . json_encode($_POST));
+        }
+        check_ajax_referer('aj_tour_activity', 'nonce');
         $tour_id = isset($_POST['tour_id']) ? (int) $_POST['tour_id'] : 0;
         $day_id = isset($_POST['day_id']) ? (int) $_POST['day_id'] : 0;
         $activity_id = isset($_POST['activity_id']) ? (int) $_POST['activity_id'] : 0;
-        $action = isset($_POST['action_type']) ? sanitize_text_field($_POST['action_type']) : '';
+        $action = isset($_POST['toggle_action']) ? sanitize_text_field($_POST['toggle_action']) : (isset($_POST['action_type']) ? sanitize_text_field($_POST['action_type']) : '');
         if (!in_array($action, ['added', 'removed'], true)) {
             wp_send_json_error(['message' => __('Action invalide.', 'ajinsafro-tour-bridge')]);
         }
         $session_token = isset($_POST['session_token']) ? sanitize_text_field($_POST['session_token']) : '';
-        if (empty($tour_id) || empty($day_id) || empty($activity_id) || strlen($session_token) < 10) {
+        if (empty($tour_id) || empty($day_id) || empty($activity_id) || $session_token === '') {
             wp_send_json_error(['message' => __('Paramètres manquants.', 'ajinsafro-tour-bridge')]);
         }
         $selections = new AJTB_Activity_Selections();
@@ -163,12 +166,14 @@ class Ajinsafro_Tour_Bridge {
             true
         );
 
-        // Pass data to JS
+        // Pass data to JS (ajax_url + nonce for aj_toggle_activity)
+        $post_id = get_the_ID();
         wp_localize_script('ajtb-tour-js', 'ajtbData', [
+            'ajax_url' => admin_url('admin-ajax.php'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('ajtb_nonce'),
-            'activityNonce' => wp_create_nonce('ajtb_activity_toggle'),
-            'postId' => get_the_ID(),
+            'nonce' => wp_create_nonce('aj_tour_activity'),
+            'postId' => $post_id,
+            'tour_id' => $post_id,
             'currency' => get_option('st_currency', 'MAD'),
             'currencySymbol' => ajtb_get_currency_symbol(),
         ]);
