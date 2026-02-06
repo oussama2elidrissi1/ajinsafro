@@ -32,6 +32,7 @@ class TourProgramService
 
     /**
      * Ensure a tour has exactly $count days (create missing, do not delete extra).
+     * @deprecated Prefer addDay() / dynamic days; use only for migration or initial seed.
      */
     public function ensureDaysExist(int $tourId, int $count): void
     {
@@ -46,6 +47,59 @@ class TourProgramService
                 ]);
             }
         }
+    }
+
+    /**
+     * Add a new day to the tour (day_number = last + 1).
+     *
+     * @param int $tourId wp_posts.ID (st_tours)
+     * @return TourDay
+     */
+    public function addDay(int $tourId): TourDay
+    {
+        $max = TourDay::where('tour_id', $tourId)->max('day_number') ?? 0;
+        $next = (int) $max + 1;
+        return TourDay::create([
+            'tour_id' => $tourId,
+            'day_number' => $next,
+            'title' => 'Jour ' . $next,
+            'mode' => 'program',
+        ]);
+    }
+
+    /**
+     * Delete a day and renumber remaining days to 1..N.
+     * Deletes all day activities first.
+     *
+     * @param int $tourId wp_posts.ID (st_tours)
+     * @param int $dayId aj_tour_days.id
+     * @return void
+     */
+    public function deleteDay(int $tourId, int $dayId): void
+    {
+        $day = TourDay::where('id', $dayId)->where('tour_id', $tourId)->firstOrFail();
+        TourDayActivity::where('day_id', $dayId)->delete();
+        $day->delete();
+
+        $remaining = TourDay::where('tour_id', $tourId)->orderBy('day_number')->get();
+        foreach ($remaining as $index => $d) {
+            $newNumber = $index + 1;
+            if ((int) $d->day_number !== $newNumber) {
+                $d->day_number = $newNumber;
+                $d->save();
+            }
+        }
+    }
+
+    /**
+     * Count days for a tour (for updating duration_day meta).
+     *
+     * @param int $tourId
+     * @return int
+     */
+    public function countDays(int $tourId): int
+    {
+        return TourDay::where('tour_id', $tourId)->count();
     }
 
     /**

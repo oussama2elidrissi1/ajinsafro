@@ -252,16 +252,10 @@ class VoyageController extends Controller
         $multiLocationValue = $wpPost->getMeta('multi_location');
         $selectedLocationIds = $this->repository->parseMultiLocation($multiLocationValue);
         
-        // Charger tour program (WP meta)
-        $tourProgram = $this->repository->getTourProgram($id);
-
-        // Programme par jours (Laravel: aj_tour_days + activités)
+        // Programme par jours (Laravel: aj_tour_days + activités). Nombre de jours = réel en base.
         $programDays = collect();
         $activitiesCatalog = collect();
         try {
-            $durationDays = $this->parseDurationDays($meta['duration_day'] ?? null);
-            $this->programService->ensureDaysExist($id, $durationDays);
-            // One-time: import WP tours_program into day 1 notes if empty
             $this->programService->importWpToursProgramToDayNotesIfEmpty($id);
             $programDays = $this->programService->loadProgram($id);
             $activitiesCatalog = Activity::orderBy('title')->get();
@@ -269,7 +263,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: could not load program days', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'tourProgram', 'programDays', 'activitiesCatalog'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog'));
     }
     
     /**
@@ -346,23 +340,13 @@ class VoyageController extends Controller
 
         try {
             $this->repository->updateTour($id, $validated);
-            
-            // Save tour program separately (PHP serialized)
-            if ($request->has('tours_program')) {
-                $programStyle = $request->input('tours_program_style', 'style1');
-                $programItems = $request->input('tours_program', []);
-                $this->repository->saveTourProgram($id, $programStyle, $programItems);
-            }
 
-            // Programme par jours (aj_tour_days + aj_tour_day_activities)
+            // Programme par jours uniquement (aj_tour_days + aj_tour_day_activities). Plus d'édition tours_program.
             if ($request->has('programme_days')) {
-                \Log::info('VoyageController@update programme_days received', [
-                    'tour_id' => $id,
-                    'programme_days' => $request->input('programme_days'),
-                    'programme_days_0_activities' => $request->input('programme_days.0.activities'),
-                ]);
                 try {
                     $this->syncProgrammeDaysAndActivities($id, $request);
+                    $dayCount = $this->programService->countDays($id);
+                    $this->repository->updateTour($id, ['duration_day' => $dayCount]);
                 } catch (\Throwable $e) {
                     \Log::error('VoyageController@update syncProgrammeDaysAndActivities failed', [
                         'tour_id' => $id,
@@ -488,6 +472,43 @@ class VoyageController extends Controller
             $value = end($value);
         }
         return (int) ($value ?? $default);
+    }
+
+    /**
+     * Add a program day (POST). Redirects back to edit with #program-days.
+     */
+    public function addProgramDay(int $id): RedirectResponse
+    {
+        try {
+            $this->programService->addDay($id);
+            return redirect()
+                ->route('admin.circuits.voyages.edit', $id)
+                ->with('success', 'Jour ajouté.')
+                ->withFragment('program-days');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Impossible d\'ajouter le jour : ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete a program day (POST). Renumbers remaining days. Confirmation expected via JS/form.
+     */
+    public function deleteProgramDay(int $id, int $dayId): RedirectResponse
+    {
+        try {
+            $count = $this->programService->countDays($id);
+            if ($count <= 1) {
+                return back()->withErrors(['error' => 'Impossible de supprimer le dernier jour.']);
+            }
+            $this->programService->deleteDay($id, $dayId);
+            $this->repository->updateTour($id, ['duration_day' => $this->programService->countDays($id)]);
+            return redirect()
+                ->route('admin.circuits.voyages.edit', $id)
+                ->with('success', 'Jour supprimé.')
+                ->withFragment('program-days');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Impossible de supprimer le jour : ' . $e->getMessage()]);
+        }
     }
 
     /**

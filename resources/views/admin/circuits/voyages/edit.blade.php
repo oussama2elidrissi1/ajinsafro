@@ -89,13 +89,8 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#program" role="tab">
-                    <i class="bx bx-list-ul"></i> Programme
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#program-days" role="tab">
-                    <i class="bx bx-calendar-week"></i> Programme (Jours)
+                    <i class="bx bx-calendar-week"></i> Programme
                 </a>
             </li>
         </ul>
@@ -666,83 +661,22 @@
                 </div>
             </div>
 
-            {{-- TAB 9: PROGRAMME --}}
-            <div class="tab-pane" id="program" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Tour Program</h4>
-                        <p class="text-muted">Définissez le programme jour par jour de votre tour (identique à WordPress Traveler)</p>
-                        
-                        {{-- Program Style --}}
-                        <div class="mb-4">
-                            <label for="tours_program_style" class="form-label">Program Style</label>
-                            <select name="tours_program_style" id="tours_program_style" class="form-select">
-                                <option value="style1" {{ ($tourProgram['style'] ?? 'style1') === 'style1' ? 'selected' : '' }}>Style 1</option>
-                                <option value="style2" {{ ($tourProgram['style'] ?? '') === 'style2' ? 'selected' : '' }}>Style 2</option>
-                                <option value="style3" {{ ($tourProgram['style'] ?? '') === 'style3' ? 'selected' : '' }}>Style 3</option>
-                            </select>
-                            <small class="text-muted">Choisissez le style d'affichage du programme sur le front-end</small>
-                        </div>
-                        
-                        {{-- Program Items --}}
-                        <div id="programItemsContainer">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Programme items</h5>
-                                <button type="button" class="btn btn-success btn-sm" id="addProgramItem">
-                                    <i class="bx bx-plus"></i> Add new
-                                </button>
-                            </div>
-                            
-                            <div id="programItemsList">
-                                @if(!empty($tourProgram['items']))
-                                    @foreach($tourProgram['items'] as $index => $item)
-                                    <div class="program-item card mb-3" data-index="{{ $index }}">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h6 class="mb-0">Item {{ $index + 1 }}</h6>
-                                                <button type="button" class="btn btn-danger btn-sm remove-program-item">
-                                                    <i class="bx bx-trash"></i> Remove
-                                                </button>
-                                            </div>
-                                            
-                                            <div class="mb-3">
-                                                <label class="form-label">Title</label>
-                                                <input type="text" 
-                                                       name="tours_program[{{ $index }}][title]" 
-                                                       class="form-control" 
-                                                       value="{{ $item['title'] ?? '' }}"
-                                                       placeholder="Ex: 08:00 - Départ de l'hôtel">
-                                            </div>
-                                            
-                                            <div class="mb-0">
-                                                <label class="form-label">Description</label>
-                                                <textarea name="tours_program[{{ $index }}][desc]" 
-                                                          class="form-control" 
-                                                          rows="3"
-                                                          placeholder="Description détaillée de cette étape du programme">{{ $item['desc'] ?? '' }}</textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endforeach
-                                @endif
-                            </div>
-                            
-                            @if(empty($tourProgram['items']))
-                            <div class="alert alert-info">
-                                <i class="bx bx-info-circle"></i> Aucun item de programme. Cliquez sur "Add new" pour ajouter un élément.
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- TAB 10: PROGRAMME (JOURS) — Accordion Jours + Activités Laravel --}}
+            {{-- TAB PROGRAMME (unique) — Jours + notes + activités --}}
             <div class="tab-pane" id="program-days" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Programme par jours</h4>
-                        <p class="text-muted">Chaque jour peut être en mode <strong>Libre</strong> ou <strong>Programme</strong>. @if(Route::has('admin.circuits.activities.index'))Ajoutez des activités depuis le <a href="{{ route('admin.circuits.activities.index') }}" target="_blank">catalogue d’activités</a>.@else Ajoutez des activités depuis le catalogue (module Activités). @endif</p>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                            <div>
+                                <h4 class="card-title mb-1">Programme</h4>
+                                <p class="text-muted mb-0 small">Chaque jour : mode, titre, notes, activités. @if(Route::has('admin.circuits.activities.index'))<a href="{{ route('admin.circuits.activities.index') }}" target="_blank">Catalogue d’activités</a>.@endif</p>
+                            </div>
+                            <form action="{{ route('admin.circuits.voyages.program.addDay', $voyage->ID) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bx bx-plus"></i> Ajouter un jour
+                                </button>
+                            </form>
+                        </div>
 
                         <div class="accordion" id="accordionProgrammeDays">
                         @forelse($programDays as $dayIndex => $entry)
@@ -754,10 +688,18 @@
                                 $dayTitleDisplay = $day->day_title ?? $day->title ?? ('Jour ' . $day->day_number);
                             @endphp
                             <div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button {{ $isFirst ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
+                                <h2 class="accordion-header d-flex align-items-center">
+                                    <button class="accordion-button {{ $isFirst ? '' : 'collapsed' }} flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
                                         JOUR {{ $day->day_number }} – {{ $dayTitleDisplay }}
                                     </button>
+                                    @if($programDays->count() > 1)
+                                    <form action="{{ route('admin.circuits.voyages.program.deleteDay', [$voyage->ID, $day->id]) }}" method="POST" class="me-2" onsubmit="return confirm('Supprimer ce jour ? Les activités du jour seront supprimées.');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer ce jour">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </form>
+                                    @endif
                                 </h2>
                                 <div id="{{ $collapseId }}" class="accordion-collapse collapse {{ $isFirst ? 'show' : '' }}" data-bs-parent="#accordionProgrammeDays">
                                     <div class="accordion-body" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
@@ -832,8 +774,12 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="alert alert-info">
-                                <i class="bx bx-info-circle"></i> Aucun jour de programme. Vérifiez la <strong>Durée (nombre de jours)</strong> dans l’onglet Basique / General, enregistrez le tour, puis revenez ici.
+                            <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <span><i class="bx bx-info-circle"></i> Aucun jour. Ajoutez un jour pour définir le programme.</span>
+                                <form action="{{ route('admin.circuits.voyages.program.addDay', $voyage->ID) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-success"><i class="bx bx-plus"></i> Ajouter un jour</button>
+                                </form>
                             </div>
                         @endforelse
                         </div>
@@ -936,80 +882,6 @@
             });
         });
         
-        // Tour Program: Add/Remove items
-        document.addEventListener('DOMContentLoaded', function() {
-            let programItemIndex = {{ count($tourProgram['items'] ?? []) }};
-            
-            // Add new program item
-            document.getElementById('addProgramItem').addEventListener('click', function() {
-                const container = document.getElementById('programItemsList');
-                const newItem = document.createElement('div');
-                newItem.className = 'program-item card mb-3';
-                newItem.setAttribute('data-index', programItemIndex);
-                newItem.innerHTML = `
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="mb-0">Item ${programItemIndex + 1}</h6>
-                            <button type="button" class="btn btn-danger btn-sm remove-program-item">
-                                <i class="bx bx-trash"></i> Remove
-                            </button>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Title</label>
-                            <input type="text" 
-                                   name="tours_program[${programItemIndex}][title]" 
-                                   class="form-control" 
-                                   placeholder="Ex: 08:00 - Départ de l'hôtel">
-                        </div>
-                        
-                        <div class="mb-0">
-                            <label class="form-label">Description</label>
-                            <textarea name="tours_program[${programItemIndex}][desc]" 
-                                      class="form-control" 
-                                      rows="3"
-                                      placeholder="Description détaillée de cette étape du programme"></textarea>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(newItem);
-                programItemIndex++;
-                
-                // Hide empty message if exists
-                const emptyAlert = container.parentElement.querySelector('.alert-info');
-                if (emptyAlert) {
-                    emptyAlert.style.display = 'none';
-                }
-            });
-            
-            // Remove program item (delegated event)
-            document.getElementById('programItemsList').addEventListener('click', function(e) {
-                if (e.target.closest('.remove-program-item')) {
-                    const item = e.target.closest('.program-item');
-                    if (confirm('Supprimer cet item du programme ?')) {
-                        item.remove();
-                        
-                        // Update item numbers
-                        const items = document.querySelectorAll('.program-item');
-                        items.forEach(function(item, index) {
-                            const title = item.querySelector('h6');
-                            if (title) {
-                                title.textContent = 'Item ' + (index + 1);
-                            }
-                        });
-                        
-                        // Show empty message if no items left
-                        if (items.length === 0) {
-                            const emptyAlert = document.querySelector('#programItemsContainer .alert-info');
-                            if (emptyAlert) {
-                                emptyAlert.style.display = 'block';
-                            }
-                        }
-                    }
-                }
-            });
-        });
-
         // Programme (Jours): Add activity to day — names: programme_days[i][activities][k][...]; accordion-body = card content
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.add-activity-to-day').forEach(function(btn) {
