@@ -356,8 +356,8 @@ class VoyageController extends Controller
             if ($request->has('programme_days')) {
                 \Log::info('VoyageController@update programme_days received', [
                     'tour_id' => $id,
-                    'programme_days_count' => is_array($request->input('programme_days')) ? count($request->input('programme_days')) : 0,
-                    'programme_activities_count' => is_array($request->input('programme_activities')) ? count($request->input('programme_activities')) : 0,
+                    'programme_days' => $request->input('programme_days'),
+                    'programme_days_0_activities' => $request->input('programme_days.0.activities'),
                 ]);
                 try {
                     $this->syncProgrammeDaysAndActivities($id, $request);
@@ -393,55 +393,63 @@ class VoyageController extends Controller
     protected function syncProgrammeDaysAndActivities(int $tourId, UpdateWpTourRequest $request): void
     {
         $programmeDays = $request->input('programme_days', []);
-        $programmeActivities = $request->input('programme_activities', []);
-
-        foreach ($programmeDays as $row) {
-            if (empty($row['id'])) {
-                continue;
-            }
-            $this->programService->updateDay((int) $row['id'], [
-                'mode' => $row['mode'] ?? 'program',
-                'day_title' => $row['day_title'] ?? null,
-                'notes' => $row['notes'] ?? null,
-                'title' => $row['title'] ?? null,
-                'description' => $row['description'] ?? null,
-            ]);
+        if (!is_array($programmeDays)) {
+            return;
         }
 
-        $submittedIds = [];
-        foreach ($programmeActivities as $index => $row) {
-            $dayId = (int) ($row['day_id'] ?? 0);
-            $activityId = (int) ($row['activity_id'] ?? 0);
-            if (!$dayId || !$activityId) {
+        $submittedDayActivityIds = [];
+
+        foreach ($programmeDays as $dayRow) {
+            $dayId = (int) ($dayRow['id'] ?? $dayRow['day_id'] ?? 0);
+            if ($dayId <= 0) {
                 continue;
             }
-            $id = (int) ($row['id'] ?? 0);
-            $isIncluded = $this->normalizeCheckboxValue($row['is_included'] ?? 0, 1);
-            $isMandatory = $this->normalizeCheckboxValue($row['is_mandatory'] ?? 0, 0);
-            if ($id > 0) {
-                $this->programService->updateDayActivity($id, [
-                    'is_mandatory' => $isMandatory,
-                    'is_included' => $isIncluded,
-                    'custom_title' => $row['custom_title'] ?? null,
-                    'custom_description' => $row['custom_description'] ?? null,
-                    'sort_order' => $index,
-                ]);
-                $submittedIds[] = $id;
-            } else {
-                $newDa = $this->programService->addActivityToDay($dayId, $activityId, [
-                    'sort_order' => $index,
-                    'is_included' => $isIncluded,
-                    'is_mandatory' => $isMandatory,
-                    'custom_title' => $row['custom_title'] ?? null,
-                    'custom_description' => $row['custom_description'] ?? null,
-                ]);
-                $submittedIds[] = $newDa->id;
+            $this->programService->updateDay($dayId, [
+                'mode' => $dayRow['mode'] ?? 'program',
+                'day_title' => $dayRow['day_title'] ?? null,
+                'notes' => $dayRow['notes'] ?? null,
+                'title' => $dayRow['title'] ?? null,
+                'description' => $dayRow['description'] ?? null,
+            ]);
+
+            $activities = $dayRow['activities'] ?? [];
+            if (!is_array($activities)) {
+                continue;
+            }
+            foreach ($activities as $k => $row) {
+                $activityId = (int) ($row['activity_id'] ?? 0);
+                if ($activityId <= 0) {
+                    continue;
+                }
+                $dayActivityId = (int) ($row['day_activity_id'] ?? $row['id'] ?? 0);
+                $isIncluded = $this->normalizeCheckboxValue($row['is_included'] ?? 0, 1);
+                $isMandatory = $this->normalizeCheckboxValue($row['is_mandatory'] ?? 0, 0);
+
+                if ($dayActivityId > 0) {
+                    $this->programService->updateDayActivity($dayActivityId, [
+                        'is_mandatory' => $isMandatory,
+                        'is_included' => $isIncluded,
+                        'custom_title' => $row['custom_title'] ?? null,
+                        'custom_description' => $row['custom_description'] ?? null,
+                        'sort_order' => $k,
+                    ]);
+                    $submittedDayActivityIds[] = $dayActivityId;
+                } else {
+                    $newDa = $this->programService->addActivityToDay($dayId, $activityId, [
+                        'sort_order' => $k,
+                        'is_included' => $isIncluded,
+                        'is_mandatory' => $isMandatory,
+                        'custom_title' => $row['custom_title'] ?? null,
+                        'custom_description' => $row['custom_description'] ?? null,
+                    ]);
+                    $submittedDayActivityIds[] = $newDa->id;
+                }
             }
         }
 
         $current = TourDayActivity::where('tour_id', $tourId)->get();
         foreach ($current as $da) {
-            if (in_array($da->id, $submittedIds)) {
+            if (in_array($da->id, $submittedDayActivityIds)) {
                 continue;
             }
             if ($da->is_mandatory) {

@@ -753,8 +753,9 @@
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0">Jour {{ $day->day_number }}</h5>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][id]" value="{{ $day->id }}">
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][day_id]" value="{{ $day->id }}">
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Mode</label>
@@ -776,31 +777,31 @@
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
 
                                     <h6 class="mt-3 mb-2">Activités incluses</h6>
-                                    <div class="programme-activities-list mb-3" data-day-id="{{ $day->id }}">
-                                        @foreach($activities as $da)
+                                    <div class="programme-activities-list mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
+                                        @foreach($activities as $actIndex => $da)
                                             <div class="programme-activity-row card mb-2" data-day-activity-id="{{ $da->id }}">
                                                 <div class="card-body py-2">
                                                     <div class="d-flex flex-wrap align-items-start gap-2">
-                                                        <input type="hidden" name="programme_activities[][id]" value="{{ $da->id }}">
-                                                        <input type="hidden" name="programme_activities[][day_id]" value="{{ $day->id }}">
-                                                        <input type="hidden" name="programme_activities[][activity_id]" value="{{ $da->activity_id }}">
+                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][day_activity_id]" value="{{ $da->id }}">
+                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][activity_id]" value="{{ $da->activity_id }}">
+                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][sort_order]" value="{{ $actIndex }}">
                                                         <span class="fw-medium">{{ $da->activity->title ?? 'Activité #'.$da->activity_id }}</span>
                                                         <span class="form-check form-check-inline mb-0">
-                                                            <input type="hidden" name="programme_activities[][is_included]" value="0">
-                                                            <input class="form-check-input" type="checkbox" name="programme_activities[][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
+                                                            <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="0">
+                                                            <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
                                                             <label class="form-check-label small">Inclus</label>
                                                         </span>
                                                         <span class="form-check form-check-inline mb-0">
-                                                            <input type="hidden" name="programme_activities[][is_mandatory]" value="0">
-                                                            <input class="form-check-input" type="checkbox" name="programme_activities[][is_mandatory]" value="1" {{ $da->is_mandatory ? 'checked' : '' }} {{ $da->is_mandatory ? 'readonly' : '' }}>
+                                                            <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_mandatory]" value="0">
+                                                            <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_mandatory]" value="1" {{ $da->is_mandatory ? 'checked' : '' }} {{ $da->is_mandatory ? 'readonly' : '' }}>
                                                             <label class="form-check-label small">Obligatoire</label>
                                                         </span>
                                                         @if($da->is_editable)
-                                                        <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_activities[][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
-                                                        <textarea class="form-control form-control-sm" name="programme_activities[][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
+                                                        <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
+                                                        <textarea class="form-control form-control-sm" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
                                                         @else
-                                                        <input type="hidden" name="programme_activities[][custom_title]" value="{{ $da->custom_title }}">
-                                                        <input type="hidden" name="programme_activities[][custom_description]" value="{{ $da->custom_description }}">
+                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}">
+                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" value="{{ $da->custom_description }}">
                                                         @endif
                                                         @if(!$da->is_mandatory)
                                                         <button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>
@@ -812,13 +813,13 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <label class="form-label mb-0">Ajouter une activité:</label>
-                                        <select class="form-select form-select-sm add-activity-select" style="max-width:280px" data-day-id="{{ $day->id }}">
+                                        <select class="form-select form-select-sm add-activity-select" style="max-width:280px" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
                                             <option value="">-- Choisir --</option>
                                             @foreach($activitiesCatalog as $act)
                                                 <option value="{{ $act->id }}">{{ $act->title }}</option>
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-id="{{ $day->id }}"><i class="bx bx-plus"></i> Ajouter</button>
+                                        <button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"><i class="bx bx-plus"></i> Ajouter</button>
                                     </div>
                                 </div>
                             </div>
@@ -1000,32 +1001,35 @@
             });
         });
 
-        // Programme (Jours): Add activity to day
+        // Programme (Jours): Add activity to day — names: programme_days[i][activities][k][...]
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.add-activity-to-day').forEach(function(btn) {
                 btn.addEventListener('click', function() {
+                    var dayIndex = this.getAttribute('data-day-index');
                     var dayId = this.getAttribute('data-day-id');
                     var card = this.closest('.programme-day-card');
                     var select = card.querySelector('.add-activity-select');
                     var activityId = select && select.value;
                     var activityTitle = select && select.options[select.selectedIndex] && select.options[select.selectedIndex].text;
-                    if (!activityId) {
+                    if (!activityId || dayIndex === null) {
                         return;
                     }
                     var list = card.querySelector('.programme-activities-list');
+                    var k = list.querySelectorAll('.programme-activity-row').length;
+                    var prefix = 'programme_days[' + dayIndex + '][activities][' + k + ']';
                     var row = document.createElement('div');
                     row.className = 'programme-activity-row card mb-2';
                     row.setAttribute('data-day-activity-id', '0');
                     row.innerHTML = '<div class="card-body py-2">' +
                         '<div class="d-flex flex-wrap align-items-start gap-2">' +
-                        '<input type="hidden" name="programme_activities[][id]" value="0">' +
-                        '<input type="hidden" name="programme_activities[][day_id]" value="' + dayId + '">' +
-                        '<input type="hidden" name="programme_activities[][activity_id]" value="' + activityId + '">' +
+                        '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
+                        '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
+                        '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
                         '<span class="fw-medium">' + (activityTitle || 'Activité') + '</span>' +
-                        '<span class="form-check form-check-inline mb-0"><input type="hidden" name="programme_activities[][is_included]" value="0"><input class="form-check-input" type="checkbox" name="programme_activities[][is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
-                        '<span class="form-check form-check-inline mb-0"><input type="hidden" name="programme_activities[][is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="programme_activities[][is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
-                        '<input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_activities[][custom_title]" placeholder="Titre personnalisé">' +
-                        '<textarea class="form-control form-control-sm" name="programme_activities[][custom_description]" rows="1" placeholder="Description personnalisée"></textarea>' +
+                        '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
+                        '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
+                        '<input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre personnalisé">' +
+                        '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description personnalisée"></textarea>' +
                         '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>' +
                         '</div></div>';
                     list.appendChild(row);

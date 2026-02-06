@@ -123,19 +123,20 @@ class UpdateWpTourRequest extends FormRequest
             // Programme par jours (Laravel aj_tour_days + activities)
             'programme_days' => 'nullable|array',
             'programme_days.*.id' => 'nullable|integer',
+            'programme_days.*.day_id' => 'nullable|integer',
             'programme_days.*.mode' => 'nullable|string|in:free,program',
             'programme_days.*.day_title' => 'nullable|string',
             'programme_days.*.notes' => 'nullable|string',
             'programme_days.*.title' => 'nullable|string',
             'programme_days.*.description' => 'nullable|string',
-            'programme_activities' => 'nullable|array',
-            'programme_activities.*.id' => 'nullable|integer',
-            'programme_activities.*.day_id' => 'nullable|integer',
-            'programme_activities.*.activity_id' => 'nullable|integer',
-            'programme_activities.*.is_mandatory' => 'nullable',
-            'programme_activities.*.is_included' => 'nullable',
-            'programme_activities.*.custom_title' => 'nullable|string',
-            'programme_activities.*.custom_description' => 'nullable|string',
+            'programme_days.*.activities' => 'nullable|array',
+            'programme_days.*.activities.*.day_activity_id' => 'nullable|integer',
+            'programme_days.*.activities.*.activity_id' => 'nullable|integer',
+            'programme_days.*.activities.*.sort_order' => 'nullable|integer',
+            'programme_days.*.activities.*.is_mandatory' => 'nullable',
+            'programme_days.*.activities.*.is_included' => 'nullable',
+            'programme_days.*.activities.*.custom_title' => 'nullable|string',
+            'programme_days.*.activities.*.custom_description' => 'nullable|string',
         ];
     }
 
