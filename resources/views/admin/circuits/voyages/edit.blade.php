@@ -742,7 +742,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Programme par jours</h4>
-                        <p class="text-muted">Chaque jour peut être en mode <strong>Libre</strong> ou <strong>Programme</strong>. Ajoutez des activités depuis le <a href="{{ route('admin.circuits.activities.index') }}" target="_blank">catalogue d’activités</a>.</p>
+                        <p class="text-muted">Chaque jour peut être en mode <strong>Libre</strong> ou <strong>Programme</strong>. @if(Route::has('admin.circuits.activities.index'))Ajoutez des activités depuis le <a href="{{ route('admin.circuits.activities.index') }}" target="_blank">catalogue d’activités</a>.@else Ajoutez des activités depuis le catalogue (module Activités). @endif</p>
 
                         @forelse($programDays as $dayIndex => $entry)
                             @php
