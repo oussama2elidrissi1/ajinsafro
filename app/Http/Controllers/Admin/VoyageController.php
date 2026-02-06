@@ -259,7 +259,7 @@ class VoyageController extends Controller
         $programDays = collect();
         $activitiesCatalog = collect();
         try {
-            $durationDays = (int) ($meta['duration_day'] ?? 0) ?: 1;
+            $durationDays = $this->parseDurationDays($meta['duration_day'] ?? null);
             $this->programService->ensureDaysExist($id, $durationDays);
             $programDays = $this->programService->loadProgram($id);
             $activitiesCatalog = Activity::orderBy('title')->get();
@@ -404,10 +404,12 @@ class VoyageController extends Controller
             if ($dayId <= 0) {
                 continue;
             }
+            $dayTitle = isset($dayRow['day_title']) ? trim((string) $dayRow['day_title']) : null;
+            $notes = isset($dayRow['notes']) ? trim((string) $dayRow['notes']) : null;
             $this->programService->updateDay($dayId, [
                 'mode' => $dayRow['mode'] ?? 'program',
-                'day_title' => $dayRow['day_title'] ?? null,
-                'notes' => $dayRow['notes'] ?? null,
+                'day_title' => $dayTitle !== '' ? $dayTitle : null,
+                'notes' => $notes !== '' ? $notes : null,
                 'title' => $dayRow['title'] ?? null,
                 'description' => $dayRow['description'] ?? null,
             ]);
@@ -457,6 +459,22 @@ class VoyageController extends Controller
             }
             $this->programService->removeDayActivity($da->id);
         }
+    }
+
+    /**
+     * Parse duration_day meta to number of days. Avoids "5 hours" creating 5 days.
+     */
+    protected function parseDurationDays($value): int
+    {
+        if ($value === null || $value === '') {
+            return 1;
+        }
+        $s = is_string($value) ? trim($value) : (string) $value;
+        if (stripos($s, 'hour') !== false) {
+            return 1;
+        }
+        $n = (int) $s;
+        return $n >= 1 && $n <= 365 ? $n : 1;
     }
 
     /**

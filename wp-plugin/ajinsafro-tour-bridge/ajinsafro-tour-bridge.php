@@ -95,6 +95,9 @@ class Ajinsafro_Tour_Bridge {
      * Initialize plugin components
      */
     public function init() {
+        // Ensure selections table exists (e.g. if plugin was installed without activation, or table dropped)
+        $this->ensure_selections_table();
+
         // Initialize template loader
         $this->template_loader = new AJTB_Template_Loader();
 
@@ -107,6 +110,38 @@ class Ajinsafro_Tour_Bridge {
 
         // Admin notice if Traveler not active
         add_action('admin_notices', [$this, 'admin_notices']);
+    }
+
+    /**
+     * Ensure aj_tour_activity_selections table exists (uses {$wpdb->prefix}aj_tour_activity_selections).
+     * Called on init so add/remove activity works even if plugin was not activated.
+     */
+    public function ensure_selections_table() {
+        global $wpdb;
+        $table = ajtb_table('aj_tour_activity_selections');
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) === $table) {
+            return;
+        }
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        $charset_collate = $wpdb->get_charset_collate();
+        $sql = "CREATE TABLE $table (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            tour_id bigint(20) UNSIGNED NOT NULL,
+            day_id bigint(20) UNSIGNED NOT NULL,
+            activity_id bigint(20) UNSIGNED NOT NULL,
+            source_day_activity_id bigint(20) UNSIGNED DEFAULT NULL,
+            action varchar(20) NOT NULL DEFAULT 'added',
+            session_token varchar(64) NOT NULL,
+            user_id bigint(20) UNSIGNED DEFAULT NULL,
+            created_at timestamp NULL DEFAULT NULL,
+            updated_at timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY session_token (session_token),
+            KEY user_id (user_id),
+            KEY tour_day_session (tour_id, day_id, session_token),
+            UNIQUE KEY tour_day_activity_session (tour_id, day_id, activity_id, session_token)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**

@@ -83,7 +83,7 @@ get_header();
                 <!-- Navigation Tabs -->
                 <nav class="ajtb-tabs-nav">
                     <a href="#overview" class="tab-link active">Aperçu</a>
-                    <?php if (!empty($tour['itinerary']) || !empty($tour['wp_program']['items'])): ?>
+                    <?php if (!empty($tour['itinerary'])): ?>
                         <a href="#itinerary" class="tab-link">Itinéraire</a>
                     <?php endif; ?>
                     <?php if (!empty($tour['inclusions']) || !empty($tour['exclusions'])): ?>
@@ -121,7 +121,7 @@ get_header();
                 <?php endif; ?>
 
                 <!-- Itinerary / Programme Section (WP programme or Laravel days) -->
-                <?php if (!empty($tour['itinerary']) || !empty($tour['wp_program']['items'])): ?>
+                <?php if (!empty($tour['itinerary'])): ?>
                     <?php ajtb_get_partial('itinerary', ['tour' => $tour]); ?>
                 <?php endif; ?>
 

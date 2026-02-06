@@ -669,6 +669,8 @@
 
 .day-body {
     padding: 0 20px 20px;
+    max-height: 70vh;
+    overflow-y: auto;
 }
 
 .day-body .day-image {
@@ -689,6 +691,69 @@
     line-height: 1.7;
     color: var(--ajtb-text-light);
     margin-bottom: 16px;
+}
+
+/* Compact: limit height of long notes (Traveler-style accordion) */
+.aj-day-notes-clamp {
+    max-height: 120px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    line-clamp: 5;
+}
+
+.aj-day-free-label {
+    color: var(--ajtb-text-muted);
+    font-style: italic;
+}
+
+/* WP programme inside day 1 (compact list) */
+.aj-day-wp-program {
+    margin: 12px 0 16px;
+    padding: 10px 0 10px 12px;
+    border-left: 3px solid var(--ajtb-primary);
+    background: var(--ajtb-bg-light);
+    border-radius: 0 var(--ajtb-radius) var(--ajtb-radius) 0;
+}
+
+.aj-day-wp-program-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+    margin: 0 0 8px 0;
+}
+
+.aj-day-wp-program-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.aj-day-wp-program-item {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--ajtb-border-light);
+}
+
+.aj-day-wp-program-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.aj-day-wp-program-item-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ajtb-text);
+    display: block;
+}
+
+.aj-day-wp-program-item-desc {
+    font-size: 13px;
+    color: var(--ajtb-text-muted);
+    line-height: 1.5;
+    margin-top: 4px;
 }
 
 .day-body .day-details {

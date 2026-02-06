@@ -737,23 +737,30 @@
                 </div>
             </div>
 
-            {{-- TAB 10: PROGRAMME (JOURS) — Jours + Activités Laravel --}}
+            {{-- TAB 10: PROGRAMME (JOURS) — Accordion Jours + Activités Laravel --}}
             <div class="tab-pane" id="program-days" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Programme par jours</h4>
                         <p class="text-muted">Chaque jour peut être en mode <strong>Libre</strong> ou <strong>Programme</strong>. @if(Route::has('admin.circuits.activities.index'))Ajoutez des activités depuis le <a href="{{ route('admin.circuits.activities.index') }}" target="_blank">catalogue d’activités</a>.@else Ajoutez des activités depuis le catalogue (module Activités). @endif</p>
 
+                        <div class="accordion" id="accordionProgrammeDays">
                         @forelse($programDays as $dayIndex => $entry)
                             @php
                                 $day = $entry['day'];
                                 $activities = $entry['activities'];
+                                $collapseId = 'collapse-day-' . $day->id;
+                                $isFirst = ($dayIndex === 0);
+                                $dayTitleDisplay = $day->day_title ?? $day->title ?? ('Jour ' . $day->day_number);
                             @endphp
-                            <div class="card border mb-4 programme-day-card" data-day-id="{{ $day->id }}">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">Jour {{ $day->day_number }}</h5>
-                                </div>
-                                <div class="card-body" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
+                            <div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button {{ $isFirst ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
+                                        JOUR {{ $day->day_number }} – {{ $dayTitleDisplay }}
+                                    </button>
+                                </h2>
+                                <div id="{{ $collapseId }}" class="accordion-collapse collapse {{ $isFirst ? 'show' : '' }}" data-bs-parent="#accordionProgrammeDays">
+                                    <div class="accordion-body" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][id]" value="{{ $day->id }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][day_id]" value="{{ $day->id }}">
                                     <div class="row mb-3">
@@ -821,6 +828,7 @@
                                         </select>
                                         <button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"><i class="bx bx-plus"></i> Ajouter</button>
                                     </div>
+                                    </div>
                                 </div>
                             </div>
                         @empty
@@ -828,6 +836,7 @@
                                 <i class="bx bx-info-circle"></i> Aucun jour de programme. Vérifiez la <strong>Durée (nombre de jours)</strong> dans l’onglet Basique / General, enregistrez le tour, puis revenez ici.
                             </div>
                         @endforelse
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1001,20 +1010,21 @@
             });
         });
 
-        // Programme (Jours): Add activity to day — names: programme_days[i][activities][k][...]
+        // Programme (Jours): Add activity to day — names: programme_days[i][activities][k][...]; accordion-body = card content
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.add-activity-to-day').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var dayIndex = this.getAttribute('data-day-index');
                     var dayId = this.getAttribute('data-day-id');
-                    var card = this.closest('.programme-day-card');
-                    var select = card.querySelector('.add-activity-select');
+                    var card = this.closest('.programme-day-card') || this.closest('.accordion-item');
+                    var select = card ? card.querySelector('.add-activity-select') : null;
                     var activityId = select && select.value;
                     var activityTitle = select && select.options[select.selectedIndex] && select.options[select.selectedIndex].text;
                     if (!activityId || dayIndex === null) {
                         return;
                     }
-                    var list = card.querySelector('.programme-activities-list');
+                    var list = card ? card.querySelector('.programme-activities-list') : null;
+                    if (!list) return;
                     var k = list.querySelectorAll('.programme-activity-row').length;
                     var prefix = 'programme_days[' + dayIndex + '][activities][' + k + ']';
                     var row = document.createElement('div');

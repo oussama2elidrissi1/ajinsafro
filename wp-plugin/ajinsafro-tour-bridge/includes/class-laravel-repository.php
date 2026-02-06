@@ -194,6 +194,31 @@ class AJTB_Laravel_Repository {
                     $days_array = $selections->apply_to_days($days_array, $selections_list, $this->tour_id);
                 }
             }
+
+            // Inject WP tours_program into day 1 (phase 1: all items in first day)
+            $raw = get_post_meta($this->tour_id, 'tours_program', true);
+            $style = get_post_meta($this->tour_id, 'tours_program_style', true);
+            $style = $style !== '' && $style !== null ? sanitize_text_field($style) : 'style1';
+            $wp_items = [];
+            if ($raw !== '' && $raw !== null) {
+                $data = maybe_unserialize($raw);
+                if (is_array($data)) {
+                    foreach ($data as $item) {
+                        if (is_array($item)) {
+                            $title = isset($item['title']) ? (string) $item['title'] : '';
+                            $desc = isset($item['desc']) ? (string) $item['desc'] : (isset($item['description']) ? (string) $item['description'] : (isset($item['content']) ? (string) $item['content'] : ''));
+                            $wp_items[] = ['title' => $title, 'desc' => $desc];
+                        } elseif (is_string($item)) {
+                            $wp_items[] = ['title' => '', 'desc' => $item];
+                        }
+                    }
+                }
+            }
+            if (!empty($days_array)) {
+                $days_array[0]['wp_program_items'] = $wp_items;
+                $days_array[0]['wp_program_style'] = $style;
+            }
+
             return $days_array;
         } catch (Exception $e) {
             $this->log_error('get_days', $e);

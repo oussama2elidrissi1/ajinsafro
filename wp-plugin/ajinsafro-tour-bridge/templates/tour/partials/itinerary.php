@@ -1,6 +1,6 @@
 <?php
 /**
- * Itinerary Partial - WP Programme (tours_program) or Laravel Day-by-Day Timeline
+ * Itinerary Partial - Accordion: days (aj_tour_days) + WP programme in day 1 + activities (add/remove)
  *
  * @var array $tour Tour data
  * @package AjinsafroTourBridge
@@ -11,20 +11,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$wp_program = $tour['wp_program'] ?? ['style' => 'style1', 'items' => []];
 $itinerary = $tour['itinerary'] ?? [];
 $source = $tour['_sources']['itinerary'] ?? 'wordpress';
 $session_token = $tour['_session_token'] ?? '';
 $tour_id = (int) ($tour['id'] ?? 0);
 $activities_catalog = $tour['activities_catalog'] ?? [];
 $can_toggle_activities = ($source === 'laravel' && !empty($session_token) && $tour_id > 0);
-$use_wp_program = !empty($wp_program['items']);
-$program_style = isset($wp_program['style']) ? sanitize_html_class($wp_program['style']) : 'style1';
-if ($program_style === '') {
-    $program_style = 'style1';
-}
 
-if (!$use_wp_program && empty($itinerary)) {
+if (empty($itinerary)) {
     ?>
     <section class="ajtb-section" id="itinerary">
         <h2 class="ajtb-section-title">Programme du Circuit</h2>
@@ -48,36 +42,9 @@ if (!$use_wp_program && empty($itinerary)) {
             <path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"></path>
         </svg>
         Programme du Circuit
-        <span class="section-badge"><?php echo $use_wp_program ? count($wp_program['items']) : count($itinerary); ?> <?php echo $use_wp_program ? 'étape' : 'jour'; ?><?php echo ($use_wp_program ? count($wp_program['items']) : count($itinerary)) > 1 ? 's' : ''; ?></span>
+        <span class="section-badge"><?php echo count($itinerary); ?> jour<?php echo count($itinerary) > 1 ? 's' : ''; ?></span>
     </h2>
 
-<?php if ($use_wp_program): ?>
-    <div class="aj-program-list program-style-<?php echo esc_attr($program_style); ?>">
-        <?php foreach ($wp_program['items'] as $item): 
-            $title = isset($item['title']) ? trim((string) $item['title']) : '';
-            $desc = isset($item['desc']) ? trim((string) $item['desc']) : '';
-        ?>
-            <div class="aj-program-item">
-                <?php if ($title !== ''): ?>
-                    <h4 class="aj-program-item-title"><?php echo esc_html($title); ?></h4>
-                <?php endif; ?>
-                <?php if ($desc !== ''): ?>
-                    <div class="aj-program-item-desc"><?php echo wp_kses_post(nl2br($desc)); ?></div>
-                <?php endif; ?>
-            </div>
-        <?php endforeach; ?>
-    </div>
-    <div class="itinerary-actions">
-        <button type="button" class="btn-outline" onclick="window.print();">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
-                <polyline points="6,9 6,2 18,2 18,9"></polyline>
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                <rect x="6" y="14" width="12" height="8"></rect>
-            </svg>
-            Imprimer le programme
-        </button>
-    </div>
-<?php else: ?>
     <div class="ajtb-itinerary-timeline">
         <?php foreach ($itinerary as $index => $day): 
             $day_number = $day['day'] ?? ($index + 1);
@@ -127,8 +94,8 @@ if (!$use_wp_program && empty($itinerary)) {
                             </div>
                         <?php endif; ?>
 
-                        <!-- Day notes (id stable for DOM) -->
-                        <div id="aj-day-notes-<?php echo $day_id; ?>">
+                        <!-- Programme du jour: notes or "Jour libre" (Traveler-style) -->
+                        <div id="aj-day-notes-<?php echo $day_id; ?>" class="aj-day-programme-block">
                         <?php 
                         $day_notes = trim((string) ($day['notes'] ?? ''));
                         if ($day_notes === '' && isset($day['description'])) {
@@ -138,9 +105,38 @@ if (!$use_wp_program && empty($itinerary)) {
                             $day_notes = trim((string) $day['content']);
                         }
                         if ($day_notes !== ''): ?>
-                            <p class="aj-day-notes day-notes day-description"><?php echo wp_kses_post(nl2br($day_notes)); ?></p>
+                            <p class="aj-day-notes day-notes day-description aj-day-notes-clamp"><?php echo wp_kses_post(nl2br($day_notes)); ?></p>
+                        <?php elseif ($mode === 'free'): ?>
+                            <p class="aj-day-notes day-notes day-description aj-day-free-label"><?php esc_html_e('Jour libre', 'ajinsafro-tour-bridge'); ?></p>
                         <?php endif; ?>
                         </div>
+
+                        <?php
+                        $wp_program_items = isset($day['wp_program_items']) && is_array($day['wp_program_items']) ? $day['wp_program_items'] : [];
+                        $wp_program_style = isset($day['wp_program_style']) ? sanitize_html_class($day['wp_program_style']) : 'style1';
+                        if ($wp_program_style === '') { $wp_program_style = 'style1'; }
+                        $show_wp_program = ($day_number === 1 || $is_first) && !empty($wp_program_items);
+                        ?>
+                        <?php if ($show_wp_program): ?>
+                        <div class="aj-day-wp-program program-style-<?php echo esc_attr($wp_program_style); ?>">
+                            <h4 class="aj-day-wp-program-title">Programme du jour</h4>
+                            <ul class="aj-day-wp-program-list">
+                                <?php foreach ($wp_program_items as $item): 
+                                    $ptitle = isset($item['title']) ? trim((string) $item['title']) : '';
+                                    $pdesc = isset($item['desc']) ? trim((string) $item['desc']) : '';
+                                ?>
+                                    <li class="aj-day-wp-program-item">
+                                        <?php if ($ptitle !== ''): ?>
+                                            <span class="aj-day-wp-program-item-title"><?php echo esc_html($ptitle); ?></span>
+                                        <?php endif; ?>
+                                        <?php if ($pdesc !== ''): ?>
+                                            <div class="aj-day-wp-program-item-desc"><?php echo wp_kses_post(nl2br($pdesc)); ?></div>
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php endif; ?>
 
                         <!-- Activities container (id stable: JS replaces innerHTML after AJAX) -->
                         <div id="aj-day-activities-<?php echo $day_id; ?>">
@@ -249,5 +245,4 @@ if (!$use_wp_program && empty($itinerary)) {
             Tout déplier
         </button>
     </div>
-<?php endif; ?>
 </section>
