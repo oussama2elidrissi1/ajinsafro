@@ -670,12 +670,9 @@
                                 <h4 class="card-title mb-1">Programme</h4>
                                 <p class="text-muted mb-0 small">Chaque jour : mode, titre, notes, activités. @if(Route::has('admin.circuits.activities.index'))<a href="{{ route('admin.circuits.activities.index') }}" target="_blank">Catalogue d’activités</a>.@endif</p>
                             </div>
-                            <form action="{{ route('admin.circuits.voyages.program.addDay', $voyage->ID) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bx bx-plus"></i> Ajouter un jour
-                                </button>
-                            </form>
+                            <button type="submit" form="program-add-day-form" class="btn btn-success">
+                                <i class="bx bx-plus"></i> Ajouter un jour
+                            </button>
                         </div>
 
                         <div class="accordion" id="accordionProgrammeDays">
@@ -693,12 +690,9 @@
                                         JOUR {{ $day->day_number }} – {{ $dayTitleDisplay }}
                                     </button>
                                     @if($programDays->count() > 1)
-                                    <form action="{{ route('admin.circuits.voyages.program.deleteDay', [$voyage->ID, $day->id]) }}" method="POST" class="me-2" onsubmit="return confirm('Supprimer ce jour ? Les activités du jour seront supprimées.');">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer ce jour">
-                                            <i class="bx bx-trash"></i>
-                                        </button>
-                                    </form>
+                                    <button type="submit" form="program-delete-day-{{ $day->id }}" class="btn btn-sm btn-outline-danger me-2" title="Supprimer ce jour" onclick="return confirm('Supprimer ce jour ? Les activités du jour seront supprimées.');">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
                                     @endif
                                 </h2>
                                 <div id="{{ $collapseId }}" class="accordion-collapse collapse {{ $isFirst ? 'show' : '' }}" data-bs-parent="#accordionProgrammeDays">
@@ -776,10 +770,7 @@
                         @empty
                             <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2">
                                 <span><i class="bx bx-info-circle"></i> Aucun jour. Ajoutez un jour pour définir le programme.</span>
-                                <form action="{{ route('admin.circuits.voyages.program.addDay', $voyage->ID) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-success"><i class="bx bx-plus"></i> Ajouter un jour</button>
-                                </form>
+                                <button type="submit" form="program-add-day-form" class="btn btn-sm btn-success"><i class="bx bx-plus"></i> Ajouter un jour</button>
                             </div>
                         @endforelse
                         </div>
@@ -807,6 +798,16 @@
             </div>
         </div>
     </form>
+
+    {{-- Formulaires hors du form principal (évite form imbriqué) — Ajouter / Supprimer jour --}}
+    <form id="program-add-day-form" action="{{ route('admin.circuits.voyages.program.addDay', $voyage->ID) }}" method="POST" class="d-none">
+        @csrf
+    </form>
+    @foreach($programDays as $entry)
+    <form id="program-delete-day-{{ $entry['day']->id }}" action="{{ route('admin.circuits.voyages.program.deleteDay', [$voyage->ID, $entry['day']->id]) }}" method="POST" class="d-none">
+        @csrf
+    </form>
+    @endforeach
 
     {{-- DELETE ZONE --}}
     <div class="row mt-3">
