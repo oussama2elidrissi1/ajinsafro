@@ -13,13 +13,17 @@ if (!defined('ABSPATH')) {
 
 $itinerary = $tour['itinerary'] ?? [];
 $source = $tour['_sources']['itinerary'] ?? 'wordpress';
+$session_token = $tour['_session_token'] ?? '';
+$tour_id = (int) ($tour['id'] ?? 0);
+$activities_catalog = $tour['activities_catalog'] ?? [];
+$can_toggle_activities = ($source === 'laravel' && !empty($session_token) && $tour_id > 0);
 
 if (empty($itinerary)) {
     return;
 }
 ?>
 
-<section class="ajtb-section" id="itinerary">
+<section class="ajtb-section" id="itinerary" data-tour-id="<?php echo $tour_id; ?>" data-session-token="<?php echo esc_attr($session_token); ?>" data-activities-catalog="<?php echo esc_attr(wp_json_encode($activities_catalog)); ?>">
     <h2 class="ajtb-section-title">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
             <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"></path>
@@ -43,8 +47,10 @@ if (empty($itinerary)) {
             $day_title_display = !empty($day['day_title']) ? $day['day_title'] : ($day['title'] ?? 'Jour ' . $day_number);
             $mode = isset($day['mode']) ? $day['mode'] : 'program';
             $activities = isset($day['activities']) ? $day['activities'] : [];
+            $day_id = (int) ($day['id'] ?? 0);
+            $day_activity_ids = array_map(function ($a) { return (int) ($a['activity_id'] ?? 0); }, $activities);
         ?>
-            <div class="itinerary-day <?php echo $is_first ? 'first' : ''; ?> <?php echo $is_last ? 'last' : ''; ?> itinerary-day-mode-<?php echo esc_attr($mode); ?>" data-day="<?php echo $day_number; ?>">
+            <div class="itinerary-day <?php echo $is_first ? 'first' : ''; ?> <?php echo $is_last ? 'last' : ''; ?> itinerary-day-mode-<?php echo esc_attr($mode); ?>" data-day="<?php echo $day_number; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>">
                 <!-- Timeline Marker -->
                 <div class="day-marker">
                     <span class="day-number"><?php echo $day_number; ?></span>
@@ -89,27 +95,53 @@ if (empty($itinerary)) {
                             </div>
                         <?php endif; ?>
 
-                        <!-- Activities (Laravel: aj_tour_day_activities) -->
-                        <?php if (!empty($activities)): ?>
-                            <ul class="day-activities-list">
+                        <!-- Activities (Laravel: aj_tour_day_activities + client selections) -->
+                        <ul class="day-activities-list" data-day-id="<?php echo $day_id; ?>">
+                            <?php 
+                            $included_count = 0;
+                            if (!empty($activities)): ?>
                                 <?php foreach ($activities as $act): 
                                     if (empty($act['is_included'])) { continue; }
+                                    $included_count++;
                                     $act_title = !empty($act['title']) ? $act['title'] : '';
                                     $act_desc = !empty($act['description']) ? $act['description'] : '';
+                                    $act_id = (int) ($act['activity_id'] ?? 0);
+                                    $is_mandatory = !empty($act['is_mandatory']);
+                                    $show_remove = $can_toggle_activities && !$is_mandatory;
                                 ?>
-                                    <li class="day-activity-item">
-                                        <?php if ($act_title): ?>
-                                            <span class="activity-title"><?php echo esc_html($act_title); ?></span>
-                                            <?php if (!empty($act['is_mandatory'])): ?>
-                                                <span class="badge badge-mandatory">Obligatoire</span>
-                                            <?php endif; ?>
+                                    <li class="day-activity-item" data-activity-id="<?php echo $act_id; ?>" data-is-mandatory="<?php echo $is_mandatory ? '1' : '0'; ?>">
+                                        <span class="activity-title"><?php echo $act_title ? esc_html($act_title) : esc_html__('Activité', 'ajinsafro-tour-bridge'); ?></span>
+                                        <?php if ($is_mandatory): ?>
+                                            <span class="badge badge-mandatory">Obligatoire</span>
+                                        <?php endif; ?>
+                                        <?php if ($show_remove): ?>
+                                            <button type="button" class="ajtb-btn-remove-activity" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" aria-label="<?php esc_attr_e('Retirer cette activité', 'ajinsafro-tour-bridge'); ?>">Retirer</button>
                                         <?php endif; ?>
                                         <?php if ($act_desc): ?>
                                             <div class="activity-description"><?php echo wp_kses_post($act_desc); ?></div>
                                         <?php endif; ?>
                                     </li>
                                 <?php endforeach; ?>
-                            </ul>
+                            <?php endif; ?>
+                            <?php if ($included_count === 0): ?>
+                                <li class="day-activity-item day-no-activities"><?php esc_html_e('Aucune activité', 'ajinsafro-tour-bridge'); ?></li>
+                            <?php endif; ?>
+                        </ul>
+                        <?php if ($can_toggle_activities && $day_id > 0): ?>
+                            <div class="day-add-activity" data-day-id="<?php echo $day_id; ?>">
+                                <label for="ajtb-add-activity-<?php echo $index; ?>"><?php esc_html_e('Ajouter une activité', 'ajinsafro-tour-bridge'); ?></label>
+                                <select id="ajtb-add-activity-<?php echo $index; ?>" class="ajtb-add-activity-select" data-day-id="<?php echo $day_id; ?>" data-day-index="<?php echo $index; ?>">
+                                    <option value="">— <?php esc_html_e('Choisir', 'ajinsafro-tour-bridge'); ?> —</option>
+                                    <?php
+                                    $in_day = $day_activity_ids;
+                                    foreach ($activities_catalog as $c): 
+                                        $cid = (int) ($c['id'] ?? 0);
+                                        if ($cid && !in_array($cid, $in_day, true)): ?>
+                                            <option value="<?php echo $cid; ?>"><?php echo esc_html($c['title'] ?? ''); ?></option>
+                                    <?php endif; endforeach; ?>
+                                </select>
+                                <button type="button" class="ajtb-btn-add-activity" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>"><?php esc_html_e('Ajouter', 'ajinsafro-tour-bridge'); ?></button>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Day Details (Laravel: meals, accommodation) -->

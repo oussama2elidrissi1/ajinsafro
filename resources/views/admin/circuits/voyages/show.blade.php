@@ -97,51 +97,53 @@
         </div>
     @endif
 
-    {{-- Programme du circuit (aj_tour_days + activités) — timeline --}}
+    {{-- Programme du circuit (uniquement $programDays issu de TourProgramService->loadProgram) — timeline accordion --}}
     @if(isset($programDays) && $programDays->isNotEmpty())
         <div class="card mb-4">
             <div class="card-body">
                 <h4 class="card-title mb-4">Programme du circuit</h4>
-                <div class="row">
-                    @foreach($programDays as $entry)
+                <div class="accordion" id="programme-accordion">
+                    @foreach($programDays as $idx => $entry)
                         @php
                             $day = $entry['day'];
                             $activities = $entry['activities'];
                             $mode = $day->mode ?? 'program';
+                            $includedActivities = $activities->where('is_included', 1);
+                            $dayTitleDisplay = !empty($day->day_title) ? $day->day_title : 'Jour ' . $day->day_number;
                         @endphp
-                        <div class="col-12 mb-4">
-                            <div class="card border h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title mt-0">
-                                        Jour {{ $day->day_number }}
-                                        @if($mode === 'free')
-                                            <span class="badge bg-secondary ms-2">Jour libre</span>
-                                        @endif
-                                        @if(!empty($day->day_title))
-                                            – {{ $day->day_title }}
-                                        @elseif(!empty($day->title))
-                                            – {{ $day->title }}
-                                        @endif
-                                    </h5>
-                                    @if(!empty($day->notes))
-                                        <div class="text-muted small mb-2">{!! nl2br(e($day->notes)) !!}</div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button {{ $idx > 0 ? 'collapsed' : '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#programme-day-{{ $idx }}" aria-expanded="{{ $idx === 0 ? 'true' : 'false' }}" aria-controls="programme-day-{{ $idx }}">
+                                    <span class="fw-semibold">JOUR {{ $day->day_number }}</span>
+                                    @if(!empty($dayTitleDisplay))
+                                        <span class="ms-2 text-muted">– {{ $dayTitleDisplay }}</span>
                                     @endif
-                                    @if($activities->isNotEmpty())
+                                    @if($mode === 'free')
+                                        <span class="badge bg-secondary ms-2">Jour libre</span>
+                                    @endif
+                                </button>
+                            </h2>
+                            <div id="programme-day-{{ $idx }}" class="accordion-collapse collapse {{ $idx === 0 ? 'show' : '' }}" data-bs-parent="#programme-accordion">
+                                <div class="accordion-body">
+                                    @if(!empty($day->notes))
+                                        <div class="text-muted small mb-3">{!! nl2br(e($day->notes)) !!}</div>
+                                    @endif
+                                    @if($includedActivities->isNotEmpty())
                                         <ul class="list-unstyled mb-0">
-                                            @foreach($activities as $da)
-                                                @if($da->is_included)
-                                                    <li class="mb-2">
-                                                        <span class="fw-medium">{{ $da->custom_title ?: (optional($da->activity)->title ?? 'Activité') }}</span>
-                                                        @if($da->is_mandatory)
-                                                            <span class="badge bg-primary ms-1">Obligatoire</span>
-                                                        @endif
-                                                        @if($da->custom_description || optional($da->activity)->description)
-                                                            <div class="text-muted small mt-1">{!! nl2br(e($da->custom_description ?: optional($da->activity)->description)) !!}</div>
-                                                        @endif
-                                                    </li>
-                                                @endif
+                                            @foreach($includedActivities as $da)
+                                                <li class="mb-2">
+                                                    <span class="fw-medium">{{ $da->custom_title ?: (optional($da->activity)->title ?? 'Activité') }}</span>
+                                                    @if($da->is_mandatory)
+                                                        <span class="badge bg-primary ms-1">Obligatoire</span>
+                                                    @endif
+                                                    @if($da->custom_description || optional($da->activity)->description)
+                                                        <div class="text-muted small mt-1">{!! nl2br(e($da->custom_description ?: optional($da->activity)->description)) !!}</div>
+                                                    @endif
+                                                </li>
                                             @endforeach
                                         </ul>
+                                    @else
+                                        <p class="text-muted small mb-0">Aucune activité</p>
                                     @endif
                                 </div>
                             </div>

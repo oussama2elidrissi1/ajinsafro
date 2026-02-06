@@ -39,6 +39,7 @@ define('AJTB_LARAVEL_PREFIX', 'aj_');
 require_once AJTB_PLUGIN_DIR . 'includes/helpers.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-tour-repository.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-laravel-repository.php';
+require_once AJTB_PLUGIN_DIR . 'includes/class-activity-selections.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-template-loader.php';
 
 /**
@@ -100,8 +101,40 @@ class Ajinsafro_Tour_Bridge {
         // Enqueue assets
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
 
+        // AJAX: client toggle optional activities (add/remove)
+        add_action('wp_ajax_aj_toggle_activity', [$this, 'ajax_toggle_activity']);
+        add_action('wp_ajax_nopriv_aj_toggle_activity', [$this, 'ajax_toggle_activity']);
+
         // Admin notice if Traveler not active
         add_action('admin_notices', [$this, 'admin_notices']);
+    }
+
+    /**
+     * AJAX: toggle activity (added/removed) for client selection. Never modifies aj_tour_day_activities.
+     */
+    public function ajax_toggle_activity() {
+        check_ajax_referer('ajtb_activity_toggle', 'nonce');
+        $tour_id = isset($_POST['tour_id']) ? (int) $_POST['tour_id'] : 0;
+        $day_id = isset($_POST['day_id']) ? (int) $_POST['day_id'] : 0;
+        $activity_id = isset($_POST['activity_id']) ? (int) $_POST['activity_id'] : 0;
+        $action = isset($_POST['action_type']) ? sanitize_text_field($_POST['action_type']) : '';
+        if (!in_array($action, ['added', 'removed'], true)) {
+            wp_send_json_error(['message' => __('Action invalide.', 'ajinsafro-tour-bridge')]);
+        }
+        $session_token = isset($_POST['session_token']) ? sanitize_text_field($_POST['session_token']) : '';
+        if (empty($tour_id) || empty($day_id) || empty($activity_id) || strlen($session_token) < 10) {
+            wp_send_json_error(['message' => __('Paramètres manquants.', 'ajinsafro-tour-bridge')]);
+        }
+        $selections = new AJTB_Activity_Selections();
+        $user_id = is_user_logged_in() ? get_current_user_id() : null;
+        $result = $selections->toggle($tour_id, $day_id, $activity_id, $action, $session_token, $user_id);
+        if (empty($result['success'])) {
+            wp_send_json_error(['message' => $result['message'] ?? __('Erreur.', 'ajinsafro-tour-bridge')]);
+        }
+        wp_send_json_success([
+            'message' => $result['message'],
+            'day_activities' => $result['day_activities'],
+        ]);
     }
 
     /**
@@ -134,6 +167,7 @@ class Ajinsafro_Tour_Bridge {
         wp_localize_script('ajtb-tour-js', 'ajtbData', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('ajtb_nonce'),
+            'activityNonce' => wp_create_nonce('ajtb_activity_toggle'),
             'postId' => get_the_ID(),
             'currency' => get_option('st_currency', 'MAD'),
             'currencySymbol' => ajtb_get_currency_symbol(),
@@ -243,6 +277,29 @@ class Ajinsafro_Tour_Bridge {
                 PRIMARY KEY (id),
                 KEY tour_id (tour_id),
                 KEY is_active (is_active)
+            ) $charset_collate;";
+            dbDelta($sql);
+        }
+
+        // Table: aj_tour_activity_selections (client add/remove optional activities; never modifies aj_tour_day_activities)
+        $table_selections = $prefix . 'tour_activity_selections';
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_selections'") != $table_selections) {
+            $sql = "CREATE TABLE $table_selections (
+                id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                tour_id bigint(20) UNSIGNED NOT NULL,
+                day_id bigint(20) UNSIGNED NOT NULL,
+                activity_id bigint(20) UNSIGNED NOT NULL,
+                source_day_activity_id bigint(20) UNSIGNED DEFAULT NULL,
+                action varchar(20) NOT NULL DEFAULT 'added',
+                session_token varchar(64) NOT NULL,
+                user_id bigint(20) UNSIGNED DEFAULT NULL,
+                created_at timestamp NULL DEFAULT NULL,
+                updated_at timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (id),
+                KEY session_token (session_token),
+                KEY user_id (user_id),
+                KEY tour_day_session (tour_id, day_id, session_token),
+                UNIQUE KEY tour_day_activity_session (tour_id, day_id, activity_id, session_token)
             ) $charset_collate;";
             dbDelta($sql);
         }

@@ -71,15 +71,31 @@ class AJTB_Laravel_Repository {
     /**
      * Get all Laravel data for a tour
      *
+     * @param string|null $session_token Optional; if set, client activity selections are applied to days
      * @return array
      */
-    public function get_all_data() {
+    public function get_all_data($session_token = null) {
         return [
-            'days' => $this->get_days(),
+            'days' => $this->get_days($session_token),
             'sections' => $this->get_sections(),
             'pricing_rules' => $this->get_pricing_rules(),
+            'activities_catalog' => $this->get_activities_catalog(),
             'has_data' => $this->has_any_data(),
         ];
+    }
+
+    /**
+     * Get activities catalog (id, title) for "Add activity" dropdown on front.
+     *
+     * @return array [['id'=>, 'title'=>], ...]
+     */
+    public function get_activities_catalog() {
+        $table = $this->table('activities');
+        if (!$this->table_exists($table)) {
+            return [];
+        }
+        $rows = $this->wpdb->get_results("SELECT id, title FROM {$table} ORDER BY title ASC", ARRAY_A);
+        return $rows ?: [];
     }
 
     /**
@@ -97,10 +113,12 @@ class AJTB_Laravel_Repository {
     /**
      * Get tour days/itinerary from aj_tour_days
      * With activities from aj_tour_day_activities + aj_activities when tables exist.
+     * If $session_token is provided, client selections (aj_tour_activity_selections) are applied.
      *
+     * @param string|null $session_token Optional; apply client add/remove selections
      * @return array
      */
-    public function get_days() {
+    public function get_days($session_token = null) {
         $table_days = $this->table('tour_days');
 
         if (!$this->table_exists($table_days)) {
@@ -175,7 +193,15 @@ class AJTB_Laravel_Repository {
                 }
             }
 
-            return array_values($days_by_id);
+            $days_array = array_values($days_by_id);
+            if (!empty($session_token)) {
+                $selections = new AJTB_Activity_Selections();
+                $selections_list = $selections->get_selections($this->tour_id, $session_token);
+                if (!empty($selections_list)) {
+                    $days_array = $selections->apply_to_days($days_array, $selections_list, $this->tour_id);
+                }
+            }
+            return $days_array;
         } catch (Exception $e) {
             $this->log_error('get_days', $e);
             return [];

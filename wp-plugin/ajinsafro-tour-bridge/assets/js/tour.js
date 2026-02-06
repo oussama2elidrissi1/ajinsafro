@@ -36,6 +36,7 @@
             this.initQuantityControls();
             this.initPriceCalculation();
             this.initItineraryAccordion();
+            this.initActivityToggle();
             this.initFAQAccordion();
             this.initGallery();
             this.initShareButton();
@@ -188,6 +189,113 @@
                     $('.day-toggle').attr('aria-expanded', 'true');
                     $btn.html('<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><polyline points="4,14 10,14 10,20"></polyline><polyline points="20,10 14,10 14,4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg> Tout réduire');
                 }
+            });
+        },
+
+        /**
+         * Activity toggle (add/remove optional activities) — AJAX + re-render
+         */
+        initActivityToggle: function() {
+            var self = this;
+            var $section = $('#itinerary');
+            if (!$section.length) return;
+            var tourId = $section.data('tour-id');
+            var sessionToken = $section.data('session-token');
+            var catalog = [];
+            try {
+                var raw = $section.data('activities-catalog');
+                if (raw) catalog = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            } catch (e) {}
+            if (!tourId || !sessionToken) return;
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                var div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function renderDayActivitiesList(dayActivities, dayId) {
+                var html = '';
+                if (dayActivities && dayActivities.length) {
+                    dayActivities.forEach(function(act) {
+                        if (!act.is_included) return;
+                        var title = act.title || 'Activité';
+                        var mandatory = act.is_mandatory ? '<span class="badge badge-mandatory">Obligatoire</span>' : '';
+                        var removeBtn = !act.is_mandatory ? '<button type="button" class="ajtb-btn-remove-activity" data-tour-id="' + tourId + '" data-day-id="' + dayId + '" data-activity-id="' + act.activity_id + '" aria-label="Retirer cette activité">Retirer</button>' : '';
+                        var desc = act.description ? '<div class="activity-description">' + escapeHtml(act.description).replace(/\n/g, '<br>') + '</div>' : '';
+                        html += '<li class="day-activity-item" data-activity-id="' + act.activity_id + '" data-is-mandatory="' + (act.is_mandatory ? '1' : '0') + '">' +
+                            '<span class="activity-title">' + escapeHtml(title) + '</span> ' + mandatory + ' ' + removeBtn + desc + '</li>';
+                    });
+                }
+                if (!html) html = '<li class="day-activity-item day-no-activities">Aucune activité</li>';
+                return html;
+            }
+
+            // Remove activity
+            $(document).on('click', '.ajtb-btn-remove-activity', function() {
+                var $btn = $(this);
+                if ($btn.prop('disabled')) return;
+                var dayId = $btn.data('day-id');
+                var activityId = $btn.data('activity-id');
+                $btn.prop('disabled', true);
+                $.post(ajtbData.ajaxUrl, {
+                    action: 'aj_toggle_activity',
+                    nonce: ajtbData.activityNonce,
+                    tour_id: tourId,
+                    day_id: dayId,
+                    activity_id: activityId,
+                    action_type: 'removed',
+                    session_token: sessionToken
+                }, function(resp) {
+                    if (resp.success && resp.data) {
+                        var $ul = $btn.closest('.day-activities-list');
+                        $ul.html(renderDayActivitiesList(resp.data.day_activities || [], dayId));
+                        AJTB.showToast(resp.data.message || 'Activité retirée');
+                    } else {
+                        AJTB.showToast(resp.data && resp.data.message ? resp.data.message : 'Erreur');
+                    }
+                }, 'json').fail(function() {
+                    AJTB.showToast('Erreur réseau');
+                }).always(function() {
+                    $btn.prop('disabled', false);
+                });
+            });
+
+            // Add activity
+            $(document).on('click', '.ajtb-btn-add-activity', function() {
+                var $btn = $(this);
+                if ($btn.prop('disabled')) return;
+                var $block = $btn.closest('.day-add-activity');
+                var dayId = $block.data('day-id');
+                var $select = $block.find('.ajtb-add-activity-select');
+                var activityId = $select.val();
+                if (!activityId) return;
+                $btn.prop('disabled', true);
+                $.post(ajtbData.ajaxUrl, {
+                    action: 'aj_toggle_activity',
+                    nonce: ajtbData.activityNonce,
+                    tour_id: tourId,
+                    day_id: dayId,
+                    activity_id: activityId,
+                    action_type: 'added',
+                    session_token: sessionToken
+                }, function(resp) {
+                    if (resp.success && resp.data) {
+                        var $day = $btn.closest('.itinerary-day');
+                        var $ul = $day.find('.day-activities-list');
+                        $ul.html(renderDayActivitiesList(resp.data.day_activities || [], dayId));
+                        $select.find('option[value="' + activityId + '"]').remove();
+                        $select.val('');
+                        AJTB.showToast(resp.data.message || 'Activité ajoutée');
+                    } else {
+                        AJTB.showToast(resp.data && resp.data.message ? resp.data.message : 'Erreur');
+                    }
+                }, 'json').fail(function() {
+                    AJTB.showToast('Erreur réseau');
+                }).always(function() {
+                    $btn.prop('disabled', false);
+                });
             });
         },
 

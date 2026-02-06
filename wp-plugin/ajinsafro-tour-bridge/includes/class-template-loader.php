@@ -98,12 +98,15 @@ class AJTB_Template_Loader {
             return [];
         }
 
-        // Get Laravel data
+        // Get Laravel data (with client activity selections if session token present)
         $laravel_repo = new AJTB_Laravel_Repository($post_id);
-        $laravel_data = $laravel_repo->get_all_data();
+        $session_token = (new AJTB_Activity_Selections())->get_session_token();
+        $laravel_data = $laravel_repo->get_all_data($session_token);
 
         // Merge data with priority to Laravel if available
-        return self::merge_tour_data($wp_data, $laravel_data);
+        $merged = self::merge_tour_data($wp_data, $laravel_data);
+        $merged['_session_token'] = $session_token;
+        return $merged;
     }
 
     /**
@@ -213,6 +216,8 @@ class AJTB_Template_Loader {
                 'exclusions' => !empty($sections['exclusions']['content']) ? 'laravel' : 'wordpress',
                 'pricing' => !empty($laravel_data['pricing_rules']) ? 'laravel' : 'wordpress',
             ],
+            // Client activity selections (front add/remove)
+            'activities_catalog' => $laravel_data['activities_catalog'] ?? [],
         ];
     }
 }

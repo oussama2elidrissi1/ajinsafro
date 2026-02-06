@@ -768,6 +768,62 @@
     line-height: 1.5;
 }
 
+.day-activity-item .ajtb-btn-remove-activity {
+    margin-left: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--ajtb-danger, #dc3545);
+    background: transparent;
+    border: 1px solid var(--ajtb-danger, #dc3545);
+    border-radius: 4px;
+    cursor: pointer;
+}
+.day-activity-item .ajtb-btn-remove-activity:hover:not(:disabled) {
+    background: var(--ajtb-danger, #dc3545);
+    color: #fff;
+}
+.day-activity-item .ajtb-btn-remove-activity:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.day-add-activity {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--ajtb-border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.day-add-activity label {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+.day-add-activity .ajtb-add-activity-select {
+    min-width: 200px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--ajtb-border);
+}
+.day-add-activity .ajtb-btn-add-activity {
+    padding: 6px 14px;
+    font-size: 14px;
+    background: var(--ajtb-primary, #0d6efd);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.day-add-activity .ajtb-btn-add-activity:hover:not(:disabled) {
+    opacity: 0.9;
+}
+.day-add-activity .ajtb-btn-add-activity:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Itinerary Actions */
 .itinerary-actions {
     display: flex;
