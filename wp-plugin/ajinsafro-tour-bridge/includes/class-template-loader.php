@@ -117,10 +117,9 @@ class AJTB_Template_Loader {
      * @return array Merged data
      */
     private static function merge_tour_data($wp_data, $laravel_data) {
-        // Determine itinerary source (Laravel days take priority)
-        $itinerary = !empty($laravel_data['days']) 
-            ? $laravel_data['days'] 
-            : $wp_data['tours_program'];
+        // Itinerary = only from Laravel days (aj_tour_days). No WP tours_program in a day.
+        // Fallback to WP programme is handled in template when itinerary is empty.
+        $itinerary = !empty($laravel_data['days']) ? $laravel_data['days'] : [];
 
         // Determine inclusions (Laravel sections take priority)
         $sections = $laravel_data['sections'] ?? [];

@@ -6,6 +6,7 @@ use App\Models\Wp\Activity;
 use App\Models\Wp\TourDay;
 use App\Models\Wp\TourDayActivity;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TourProgramService
 {
@@ -142,5 +143,53 @@ class TourProgramService
         foreach ($dayActivityIdsInOrder as $order => $id) {
             TourDayActivity::where('id', $id)->where('day_id', $dayId)->update(['sort_order' => $order]);
         }
+    }
+
+    /**
+     * One-time import: if day 1 notes are empty and WP meta tours_program exists,
+     * convert tours_program to HTML and save into day 1 notes.
+     * Front will then use notes only (no WP programme items in a day).
+     *
+     * @param int $tourId wp_posts.ID (st_tours)
+     */
+    public function importWpToursProgramToDayNotesIfEmpty(int $tourId): void
+    {
+        $day1 = TourDay::where('tour_id', $tourId)->where('day_number', 1)->first();
+        if (!$day1 || trim((string) ($day1->notes ?? '')) !== '') {
+            return;
+        }
+
+        $raw = DB::connection('wp')
+            ->table('postmeta')
+            ->where('post_id', $tourId)
+            ->where('meta_key', 'tours_program')
+            ->value('meta_value');
+
+        if ($raw === null || $raw === '') {
+            return;
+        }
+
+        $data = @unserialize($raw);
+        if (!is_array($data) || empty($data)) {
+            return;
+        }
+
+        $parts = [];
+        foreach ($data as $item) {
+            $title = '';
+            $desc = '';
+            if (is_array($item)) {
+                $title = trim((string) ($item['title'] ?? ''));
+                $desc = trim((string) ($item['desc'] ?? $item['description'] ?? $item['content'] ?? ''));
+            } elseif (is_string($item)) {
+                $desc = trim($item);
+            }
+            $descSafe = strip_tags($desc, '<p><br><strong><em><a><ul><ol><li>');
+            $parts[] = '<p><strong>' . e($title) . '</strong><br>' . $descSafe . '</p>';
+        }
+
+        $html = implode("\n", $parts);
+        $day1->notes = $html;
+        $day1->save();
     }
 }

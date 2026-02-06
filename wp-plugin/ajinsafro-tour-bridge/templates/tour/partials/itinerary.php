@@ -1,6 +1,7 @@
 <?php
 /**
- * Itinerary Partial - Accordion: days (aj_tour_days) + WP programme in day 1 + activities (add/remove)
+ * Itinerary Partial - By day: aj_tour_days (notes) + aj_tour_day_activities. No WP tours_program in a day.
+ * Fallback: when no Laravel days, show WP tours_program list (Traveler style).
  *
  * @var array $tour Tour data
  * @package AjinsafroTourBridge
@@ -12,19 +13,45 @@ if (!defined('ABSPATH')) {
 }
 
 $itinerary = $tour['itinerary'] ?? [];
+$wp_program = $tour['wp_program'] ?? ['style' => 'style1', 'items' => []];
 $source = $tour['_sources']['itinerary'] ?? 'wordpress';
 $session_token = $tour['_session_token'] ?? '';
 $tour_id = (int) ($tour['id'] ?? 0);
 $activities_catalog = $tour['activities_catalog'] ?? [];
 $can_toggle_activities = ($source === 'laravel' && !empty($session_token) && $tour_id > 0);
 
+// No Laravel days: fallback to WP tours_program list only if WP has items
 if (empty($itinerary)) {
-    ?>
+    if (!empty($wp_program['items'])) {
+        $program_style = isset($wp_program['style']) ? sanitize_html_class($wp_program['style']) : 'style1';
+        if ($program_style === '') { $program_style = 'style1'; }
+        ?>
+    <section class="ajtb-section" id="itinerary">
+        <h2 class="ajtb-section-title">Programme du Circuit</h2>
+        <div class="aj-program-list program-style-<?php echo esc_attr($program_style); ?>">
+            <?php foreach ($wp_program['items'] as $item): 
+                $title = isset($item['title']) ? trim((string) $item['title']) : '';
+                $desc = isset($item['desc']) ? trim((string) $item['desc']) : '';
+            ?>
+                <div class="aj-program-item">
+                    <?php if ($title !== ''): ?><h4 class="aj-program-item-title"><?php echo esc_html($title); ?></h4><?php endif; ?>
+                    <?php if ($desc !== ''): ?><div class="aj-program-item-desc"><?php echo wp_kses_post(nl2br($desc)); ?></div><?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="itinerary-actions">
+            <button type="button" class="btn-outline" onclick="window.print();"><?php esc_html_e('Imprimer le programme', 'ajinsafro-tour-bridge'); ?></button>
+        </div>
+    </section>
+    <?php
+    } else {
+        ?>
     <section class="ajtb-section" id="itinerary">
         <h2 class="ajtb-section-title">Programme du Circuit</h2>
         <p class="aj-program-unavailable"><?php esc_html_e('Programme non disponible.', 'ajinsafro-tour-bridge'); ?></p>
     </section>
     <?php
+    }
     return;
 }
 ?>
@@ -94,7 +121,7 @@ if (empty($itinerary)) {
                             </div>
                         <?php endif; ?>
 
-                        <!-- Programme du jour: notes or "Jour libre" (Traveler-style) -->
+                        <!-- Programme du jour: une seule description (notes) ou "Jour libre" -->
                         <div id="aj-day-notes-<?php echo $day_id; ?>" class="aj-day-programme-block">
                         <?php 
                         $day_notes = trim((string) ($day['notes'] ?? ''));
@@ -104,39 +131,20 @@ if (empty($itinerary)) {
                         if ($day_notes === '' && isset($day['content'])) {
                             $day_notes = trim((string) $day['content']);
                         }
-                        if ($day_notes !== ''): ?>
-                            <p class="aj-day-notes day-notes day-description aj-day-notes-clamp"><?php echo wp_kses_post(nl2br($day_notes)); ?></p>
+                        if ($day_notes !== ''): 
+                            $notes_html = wp_kses_post(nl2br($day_notes));
+                            $is_long = strlen(strip_tags($day_notes)) > 300;
+                        ?>
+                            <div class="aj-day-notes-wrap <?php echo $is_long ? 'aj-day-notes-collapsed' : ''; ?>">
+                                <div class="aj-day-notes-content"><?php echo $notes_html; ?></div>
+                                <?php if ($is_long): ?>
+                                    <button type="button" class="aj-day-notes-read-more" aria-expanded="false"><?php esc_html_e('Lire plus', 'ajinsafro-tour-bridge'); ?></button>
+                                <?php endif; ?>
+                            </div>
                         <?php elseif ($mode === 'free'): ?>
                             <p class="aj-day-notes day-notes day-description aj-day-free-label"><?php esc_html_e('Jour libre', 'ajinsafro-tour-bridge'); ?></p>
                         <?php endif; ?>
                         </div>
-
-                        <?php
-                        $wp_program_items = isset($day['wp_program_items']) && is_array($day['wp_program_items']) ? $day['wp_program_items'] : [];
-                        $wp_program_style = isset($day['wp_program_style']) ? sanitize_html_class($day['wp_program_style']) : 'style1';
-                        if ($wp_program_style === '') { $wp_program_style = 'style1'; }
-                        $show_wp_program = ($day_number === 1 || $is_first) && !empty($wp_program_items);
-                        ?>
-                        <?php if ($show_wp_program): ?>
-                        <div class="aj-day-wp-program program-style-<?php echo esc_attr($wp_program_style); ?>">
-                            <h4 class="aj-day-wp-program-title">Programme du jour</h4>
-                            <ul class="aj-day-wp-program-list">
-                                <?php foreach ($wp_program_items as $item): 
-                                    $ptitle = isset($item['title']) ? trim((string) $item['title']) : '';
-                                    $pdesc = isset($item['desc']) ? trim((string) $item['desc']) : '';
-                                ?>
-                                    <li class="aj-day-wp-program-item">
-                                        <?php if ($ptitle !== ''): ?>
-                                            <span class="aj-day-wp-program-item-title"><?php echo esc_html($ptitle); ?></span>
-                                        <?php endif; ?>
-                                        <?php if ($pdesc !== ''): ?>
-                                            <div class="aj-day-wp-program-item-desc"><?php echo wp_kses_post(nl2br($pdesc)); ?></div>
-                                        <?php endif; ?>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                        <?php endif; ?>
 
                         <!-- Activities container (id stable: JS replaces innerHTML after AJAX) -->
                         <div id="aj-day-activities-<?php echo $day_id; ?>">

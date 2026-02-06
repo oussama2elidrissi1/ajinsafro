@@ -195,6 +195,13 @@
                     $btn.html('<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><polyline points="4,14 10,14 10,20"></polyline><polyline points="20,10 14,10 14,4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg> Tout réduire');
                 }
             });
+
+            // Lire plus: expand long notes
+            $(document).on('click', '.aj-day-notes-read-more', function() {
+                var $wrap = $(this).closest('.aj-day-notes-wrap');
+                $wrap.addClass('aj-day-notes-expanded').removeClass('aj-day-notes-collapsed');
+                $(this).attr('aria-expanded', 'true');
+            });
         },
 
         /**

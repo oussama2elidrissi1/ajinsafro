@@ -708,7 +708,36 @@
     font-style: italic;
 }
 
-/* WP programme inside day 1 (compact list) */
+/* Long notes: excerpt + Lire plus (collapse) */
+.aj-day-notes-wrap.aj-day-notes-collapsed .aj-day-notes-content {
+    max-height: 5.5em;
+    overflow: hidden;
+}
+
+.aj-day-notes-wrap.aj-day-notes-expanded .aj-day-notes-content {
+    max-height: none;
+}
+
+.aj-day-notes-read-more {
+    margin-top: 6px;
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--ajtb-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.aj-day-notes-read-more:hover {
+    color: var(--ajtb-primary-dark);
+}
+
+.aj-day-notes-wrap.aj-day-notes-expanded .aj-day-notes-read-more {
+    display: none;
+}
+
+/* WP programme inside day 1 (compact list) - kept for fallback list only */
 .aj-day-wp-program {
     margin: 12px 0 16px;
     padding: 10px 0 10px 12px;

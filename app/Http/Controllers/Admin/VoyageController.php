@@ -261,6 +261,8 @@ class VoyageController extends Controller
         try {
             $durationDays = $this->parseDurationDays($meta['duration_day'] ?? null);
             $this->programService->ensureDaysExist($id, $durationDays);
+            // One-time: import WP tours_program into day 1 notes if empty
+            $this->programService->importWpToursProgramToDayNotesIfEmpty($id);
             $programDays = $this->programService->loadProgram($id);
             $activitiesCatalog = Activity::orderBy('title')->get();
         } catch (\Throwable $e) {
