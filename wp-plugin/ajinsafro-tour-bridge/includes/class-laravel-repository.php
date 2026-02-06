@@ -96,20 +96,21 @@ class AJTB_Laravel_Repository {
 
     /**
      * Get tour days/itinerary from aj_tour_days
+     * With activities from aj_tour_day_activities + aj_activities when tables exist.
      *
      * @return array
      */
     public function get_days() {
-        $table = $this->table('tour_days');
+        $table_days = $this->table('tour_days');
 
-        if (!$this->table_exists($table)) {
+        if (!$this->table_exists($table_days)) {
             return [];
         }
 
         try {
             $results = $this->wpdb->get_results(
                 $this->wpdb->prepare(
-                    "SELECT * FROM {$table} WHERE tour_id = %d ORDER BY day_number ASC",
+                    "SELECT * FROM {$table_days} WHERE tour_id = %d ORDER BY day_number ASC",
                     $this->tour_id
                 ),
                 ARRAY_A
@@ -119,18 +120,62 @@ class AJTB_Laravel_Repository {
                 return [];
             }
 
-            return array_map(function ($row) {
-                return [
-                    'id' => (int) $row['id'],
+            $table_activities = $this->table('tour_day_activities');
+            $table_catalog = $this->table('activities');
+            $has_activities = $this->table_exists($table_activities) && $this->table_exists($table_catalog);
+
+            $days_by_id = [];
+            foreach ($results as $row) {
+                $day_id = (int) $row['id'];
+                $days_by_id[$day_id] = [
+                    'id' => $day_id,
                     'day' => (int) $row['day_number'],
                     'title' => $row['title'] ?? '',
                     'description' => $row['description'] ?? '',
                     'meals' => $row['meals'] ?? '',
                     'accommodation' => $row['accommodation'] ?? '',
                     'image' => $row['image_url'] ?? '',
+                    'mode' => isset($row['mode']) ? $row['mode'] : 'program',
+                    'day_title' => isset($row['day_title']) ? $row['day_title'] : '',
+                    'notes' => isset($row['notes']) ? $row['notes'] : '',
+                    'activities' => [],
                 ];
-            }, $results);
+            }
 
+            if ($has_activities) {
+                $day_ids = array_keys($days_by_id);
+                if (!empty($day_ids)) {
+                    $placeholders = implode(',', array_fill(0, count($day_ids), '%d'));
+                    $query = $this->wpdb->prepare(
+                        "SELECT da.id, da.day_id, da.activity_id, da.sort_order, da.is_included, da.is_mandatory, da.custom_title, da.custom_description, " .
+                        "a.title AS activity_title, a.description AS activity_description " .
+                        "FROM {$table_activities} da " .
+                        "INNER JOIN {$table_catalog} a ON a.id = da.activity_id " .
+                        "WHERE da.tour_id = %d AND da.day_id IN ($placeholders) " .
+                        "ORDER BY da.day_id ASC, da.sort_order ASC",
+                        array_merge([$this->tour_id], $day_ids)
+                    );
+                    $activities_rows = $this->wpdb->get_results($query, ARRAY_A);
+                    if ($activities_rows) {
+                        foreach ($activities_rows as $ar) {
+                            $day_id = (int) $ar['day_id'];
+                            if (!isset($days_by_id[$day_id])) {
+                                continue;
+                            }
+                            $days_by_id[$day_id]['activities'][] = [
+                                'id' => (int) $ar['id'],
+                                'activity_id' => (int) $ar['activity_id'],
+                                'title' => !empty($ar['custom_title']) ? $ar['custom_title'] : ($ar['activity_title'] ?? ''),
+                                'description' => !empty($ar['custom_description']) ? $ar['custom_description'] : ($ar['activity_description'] ?? ''),
+                                'is_mandatory' => !empty($ar['is_mandatory']),
+                                'is_included' => !empty($ar['is_included']),
+                            ];
+                        }
+                    }
+                }
+            }
+
+            return array_values($days_by_id);
         } catch (Exception $e) {
             $this->log_error('get_days', $e);
             return [];

@@ -40,8 +40,11 @@ if (empty($itinerary)) {
             $day_number = $day['day'] ?? ($index + 1);
             $is_first = ($index === 0);
             $is_last = ($index === count($itinerary) - 1);
+            $day_title_display = !empty($day['day_title']) ? $day['day_title'] : ($day['title'] ?? 'Jour ' . $day_number);
+            $mode = isset($day['mode']) ? $day['mode'] : 'program';
+            $activities = isset($day['activities']) ? $day['activities'] : [];
         ?>
-            <div class="itinerary-day <?php echo $is_first ? 'first' : ''; ?> <?php echo $is_last ? 'last' : ''; ?>" data-day="<?php echo $day_number; ?>">
+            <div class="itinerary-day <?php echo $is_first ? 'first' : ''; ?> <?php echo $is_last ? 'last' : ''; ?> itinerary-day-mode-<?php echo esc_attr($mode); ?>" data-day="<?php echo $day_number; ?>">
                 <!-- Timeline Marker -->
                 <div class="day-marker">
                     <span class="day-number"><?php echo $day_number; ?></span>
@@ -55,8 +58,11 @@ if (empty($itinerary)) {
                     <div class="day-header" data-toggle="day-content-<?php echo $index; ?>">
                         <div class="day-header-content">
                             <span class="day-label">Jour <?php echo $day_number; ?></span>
+                            <?php if ($mode === 'free'): ?>
+                                <span class="badge badge-free-day">Jour libre</span>
+                            <?php endif; ?>
                             <h3 class="day-title">
-                                <?php echo esc_html($day['title'] ?? 'Jour ' . $day_number); ?>
+                                <?php echo esc_html($day_title_display); ?>
                             </h3>
                         </div>
                         <button class="day-toggle" aria-expanded="<?php echo $is_first ? 'true' : 'false'; ?>">
@@ -76,14 +82,37 @@ if (empty($itinerary)) {
                             </div>
                         <?php endif; ?>
 
-                        <!-- Day Description -->
-                        <?php if (!empty($day['description']) || !empty($day['content'])): ?>
+                        <!-- Day Description / Notes (program mode or fallback) -->
+                        <?php if ($mode === 'program' && (!empty($day['notes']) || !empty($day['description']) || !empty($day['content']))): ?>
                             <div class="day-description">
-                                <?php echo wp_kses_post($day['description'] ?? $day['content']); ?>
+                                <?php echo wp_kses_post($day['notes'] ?? $day['description'] ?? $day['content']); ?>
                             </div>
                         <?php endif; ?>
 
-                        <!-- Day Details (Laravel data) -->
+                        <!-- Activities (Laravel: aj_tour_day_activities) -->
+                        <?php if (!empty($activities)): ?>
+                            <ul class="day-activities-list">
+                                <?php foreach ($activities as $act): 
+                                    if (empty($act['is_included'])) { continue; }
+                                    $act_title = !empty($act['title']) ? $act['title'] : '';
+                                    $act_desc = !empty($act['description']) ? $act['description'] : '';
+                                ?>
+                                    <li class="day-activity-item">
+                                        <?php if ($act_title): ?>
+                                            <span class="activity-title"><?php echo esc_html($act_title); ?></span>
+                                            <?php if (!empty($act['is_mandatory'])): ?>
+                                                <span class="badge badge-mandatory">Obligatoire</span>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                        <?php if ($act_desc): ?>
+                                            <div class="activity-description"><?php echo wp_kses_post($act_desc); ?></div>
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+
+                        <!-- Day Details (Laravel: meals, accommodation) -->
                         <?php if ($source === 'laravel'): ?>
                             <div class="day-details">
                                 <?php if (!empty($day['meals'])): ?>

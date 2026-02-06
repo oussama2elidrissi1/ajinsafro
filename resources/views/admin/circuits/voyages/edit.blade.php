@@ -93,6 +93,11 @@
                     <i class="bx bx-list-ul"></i> Programme
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#program-days" role="tab">
+                    <i class="bx bx-calendar-week"></i> Programme (Jours)
+                </a>
+            </li>
         </ul>
 
         <div class="tab-content p-3 border border-top-0">
@@ -731,6 +736,98 @@
                     </div>
                 </div>
             </div>
+
+            {{-- TAB 10: PROGRAMME (JOURS) — Jours + Activités Laravel --}}
+            <div class="tab-pane" id="program-days" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Programme par jours</h4>
+                        <p class="text-muted">Chaque jour peut être en mode <strong>Libre</strong> ou <strong>Programme</strong>. Ajoutez des activités depuis le <a href="{{ route('admin.circuits.activities.index') }}" target="_blank">catalogue d’activités</a>.</p>
+
+                        @forelse($programDays as $dayIndex => $entry)
+                            @php
+                                $day = $entry['day'];
+                                $activities = $entry['activities'];
+                            @endphp
+                            <div class="card border mb-4 programme-day-card" data-day-id="{{ $day->id }}">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Jour {{ $day->day_number }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][id]" value="{{ $day->id }}">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Mode</label>
+                                            <select name="programme_days[{{ $dayIndex }}][mode]" class="form-select programme-day-mode">
+                                                <option value="program" {{ ($day->mode ?? 'program') === 'program' ? 'selected' : '' }}>Programme</option>
+                                                <option value="free" {{ ($day->mode ?? '') === 'free' ? 'selected' : '' }}>Libre</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Titre du jour</label>
+                                            <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex: Jour 1 - Arrivée">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description / Notes</label>
+                                        <textarea class="form-control" name="programme_days[{{ $dayIndex }}][notes]" rows="2" placeholder="Notes ou description du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                                    </div>
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
+
+                                    <h6 class="mt-3 mb-2">Activités incluses</h6>
+                                    <div class="programme-activities-list mb-3" data-day-id="{{ $day->id }}">
+                                        @foreach($activities as $da)
+                                            <div class="programme-activity-row card mb-2" data-day-activity-id="{{ $da->id }}">
+                                                <div class="card-body py-2">
+                                                    <div class="d-flex flex-wrap align-items-start gap-2">
+                                                        <input type="hidden" name="programme_activities[][id]" value="{{ $da->id }}">
+                                                        <input type="hidden" name="programme_activities[][day_id]" value="{{ $day->id }}">
+                                                        <input type="hidden" name="programme_activities[][activity_id]" value="{{ $da->activity_id }}">
+                                                        <span class="fw-medium">{{ $da->activity->title ?? 'Activité #'.$da->activity_id }}</span>
+                                                        <span class="form-check form-check-inline mb-0">
+                                                            <input class="form-check-input" type="checkbox" name="programme_activities[][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
+                                                            <label class="form-check-label small">Inclus</label>
+                                                        </span>
+                                                        <span class="form-check form-check-inline mb-0">
+                                                            <input class="form-check-input" type="checkbox" name="programme_activities[][is_mandatory]" value="1" {{ $da->is_mandatory ? 'checked' : '' }} {{ $da->is_mandatory ? 'readonly' : '' }}>
+                                                            <label class="form-check-label small">Obligatoire</label>
+                                                        </span>
+                                                        @if($da->is_editable)
+                                                        <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_activities[][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
+                                                        <textarea class="form-control form-control-sm" name="programme_activities[][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
+                                                        @else
+                                                        <input type="hidden" name="programme_activities[][custom_title]" value="{{ $da->custom_title }}">
+                                                        <input type="hidden" name="programme_activities[][custom_description]" value="{{ $da->custom_description }}">
+                                                        @endif
+                                                        @if(!$da->is_mandatory)
+                                                        <button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <label class="form-label mb-0">Ajouter une activité:</label>
+                                        <select class="form-select form-select-sm add-activity-select" style="max-width:280px" data-day-id="{{ $day->id }}">
+                                            <option value="">-- Choisir --</option>
+                                            @foreach($activitiesCatalog as $act)
+                                                <option value="{{ $act->id }}">{{ $act->title }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-id="{{ $day->id }}"><i class="bx bx-plus"></i> Ajouter</button>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="alert alert-info">
+                                <i class="bx bx-info-circle"></i> Aucun jour de programme. Vérifiez la <strong>Durée (nombre de jours)</strong> dans l’onglet Basique / General, enregistrez le tour, puis revenez ici.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- SAVE BUTTON (Fixed bottom) --}}
@@ -896,6 +993,49 @@
                                 emptyAlert.style.display = 'block';
                             }
                         }
+                    }
+                }
+            });
+        });
+
+        // Programme (Jours): Add activity to day
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.add-activity-to-day').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var dayId = this.getAttribute('data-day-id');
+                    var card = this.closest('.programme-day-card');
+                    var select = card.querySelector('.add-activity-select');
+                    var activityId = select && select.value;
+                    var activityTitle = select && select.options[select.selectedIndex] && select.options[select.selectedIndex].text;
+                    if (!activityId) {
+                        return;
+                    }
+                    var list = card.querySelector('.programme-activities-list');
+                    var row = document.createElement('div');
+                    row.className = 'programme-activity-row card mb-2';
+                    row.setAttribute('data-day-activity-id', '0');
+                    row.innerHTML = '<div class="card-body py-2">' +
+                        '<div class="d-flex flex-wrap align-items-start gap-2">' +
+                        '<input type="hidden" name="programme_activities[][id]" value="0">' +
+                        '<input type="hidden" name="programme_activities[][day_id]" value="' + dayId + '">' +
+                        '<input type="hidden" name="programme_activities[][activity_id]" value="' + activityId + '">' +
+                        '<span class="fw-medium">' + (activityTitle || 'Activité') + '</span>' +
+                        '<span class="form-check form-check-inline mb-0"><input class="form-check-input" type="checkbox" name="programme_activities[][is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
+                        '<span class="form-check form-check-inline mb-0"><input class="form-check-input" type="checkbox" name="programme_activities[][is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
+                        '<input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_activities[][custom_title]" placeholder="Titre personnalisé">' +
+                        '<textarea class="form-control form-control-sm" name="programme_activities[][custom_description]" rows="1" placeholder="Description personnalisée"></textarea>' +
+                        '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>' +
+                        '</div></div>';
+                    list.appendChild(row);
+                    select.value = '';
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-programme-activity')) {
+                    var row = e.target.closest('.programme-activity-row');
+                    if (row && confirm('Retirer cette activité du jour ?')) {
+                        row.remove();
                     }
                 }
             });

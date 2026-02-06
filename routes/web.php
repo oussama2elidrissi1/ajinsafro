@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\TravelDayItemController;
 use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
+use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Auth\LockScreenController;
@@ -96,6 +97,13 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::get('circuits/departs-dates', [CircuitsController::class, 'page'])->name('circuits.departs-dates')->defaults('submenu', 'departs-dates');
     Route::get('circuits/options', [CircuitsController::class, 'page'])->name('circuits.options')->defaults('submenu', 'options');
     Route::get('circuits/politiques-conditions', [CircuitsController::class, 'page'])->name('circuits.politiques-conditions')->defaults('submenu', 'politiques-conditions');
+
+    Route::get('circuits/activities', [ActivityController::class, 'index'])->name('circuits.activities.index');
+    Route::get('circuits/activities/create', [ActivityController::class, 'create'])->name('circuits.activities.create');
+    Route::post('circuits/activities', [ActivityController::class, 'store'])->name('circuits.activities.store');
+    Route::get('circuits/activities/{activity}/edit', [ActivityController::class, 'edit'])->name('circuits.activities.edit');
+    Route::match(['put', 'patch'], 'circuits/activities/{activity}', [ActivityController::class, 'update'])->name('circuits.activities.update');
+    Route::delete('circuits/activities/{activity}', [ActivityController::class, 'destroy'])->name('circuits.activities.destroy');
 
     Route::get('circuits/voyages', [VoyageController::class, 'index'])->name('circuits.voyages.index');
     Route::get('circuits/voyages/create', [VoyageController::class, 'create'])->name('circuits.voyages.create');

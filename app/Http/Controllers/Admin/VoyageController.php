@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWpTourRequest;
 use App\Http\Requests\UpdateWpTourRequest;
 use App\Models\Wp\WpPost;
+use App\Models\Wp\Activity;
+use App\Models\Wp\TourDayActivity;
+use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpTourRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -15,9 +18,12 @@ class VoyageController extends Controller
 {
     protected WpTourRepository $repository;
 
-    public function __construct(WpTourRepository $repository)
+    protected TourProgramService $programService;
+
+    public function __construct(WpTourRepository $repository, TourProgramService $programService)
     {
         $this->repository = $repository;
+        $this->programService = $programService;
     }
 
     /**
@@ -238,10 +244,22 @@ class VoyageController extends Controller
         $multiLocationValue = $wpPost->getMeta('multi_location');
         $selectedLocationIds = $this->repository->parseMultiLocation($multiLocationValue);
         
-        // Charger tour program
+        // Charger tour program (WP meta)
         $tourProgram = $this->repository->getTourProgram($id);
-        
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'tourProgram'));
+
+        // Programme par jours (Laravel: aj_tour_days + activités)
+        $programDays = collect();
+        $activitiesCatalog = collect();
+        try {
+            $durationDays = (int) ($meta['duration_day'] ?? 0) ?: 1;
+            $this->programService->ensureDaysExist($id, $durationDays);
+            $programDays = $this->programService->loadProgram($id);
+            $activitiesCatalog = Activity::orderBy('title')->get();
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageController@edit: could not load program days', ['tour_id' => $id, 'error' => $e->getMessage()]);
+        }
+
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'tourProgram', 'programDays', 'activitiesCatalog'));
     }
     
     /**
@@ -326,6 +344,11 @@ class VoyageController extends Controller
                 $this->repository->saveTourProgram($id, $programStyle, $programItems);
             }
 
+            // Programme par jours (aj_tour_days + aj_tour_day_activities)
+            if ($request->has('programme_days')) {
+                $this->syncProgrammeDaysAndActivities($id, $request);
+            }
+
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
                 ->with('success', 'Tour mis à jour avec succès dans WordPress ! Modifications visibles immédiatement.');
@@ -333,6 +356,68 @@ class VoyageController extends Controller
             return back()
                 ->withInput()
                 ->withErrors(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Sync programme days and day-activities from request.
+     */
+    protected function syncProgrammeDaysAndActivities(int $tourId, UpdateWpTourRequest $request): void
+    {
+        $programmeDays = $request->input('programme_days', []);
+        $programmeActivities = $request->input('programme_activities', []);
+
+        foreach ($programmeDays as $row) {
+            if (empty($row['id'])) {
+                continue;
+            }
+            $this->programService->updateDay((int) $row['id'], [
+                'mode' => $row['mode'] ?? 'program',
+                'day_title' => $row['day_title'] ?? null,
+                'notes' => $row['notes'] ?? null,
+                'title' => $row['title'] ?? null,
+                'description' => $row['description'] ?? null,
+            ]);
+        }
+
+        $submittedIds = [];
+        foreach ($programmeActivities as $index => $row) {
+            $dayId = (int) ($row['day_id'] ?? 0);
+            $activityId = (int) ($row['activity_id'] ?? 0);
+            if (!$dayId || !$activityId) {
+                continue;
+            }
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0) {
+                $this->programService->updateDayActivity($id, [
+                    'is_mandatory' => isset($row['is_mandatory']) ? (int) $row['is_mandatory'] : 0,
+                    'is_included' => isset($row['is_included']) ? (int) $row['is_included'] : 1,
+                    'custom_title' => $row['custom_title'] ?? null,
+                    'custom_description' => $row['custom_description'] ?? null,
+                    'sort_order' => $index,
+                ]);
+                $submittedIds[] = $id;
+            } else {
+                $newDa = $this->programService->addActivityToDay($dayId, $activityId, [
+                    'sort_order' => $index,
+                    'is_included' => isset($row['is_included']) ? (int) $row['is_included'] : 1,
+                    'is_mandatory' => isset($row['is_mandatory']) ? (int) $row['is_mandatory'] : 0,
+                    'custom_title' => $row['custom_title'] ?? null,
+                    'custom_description' => $row['custom_description'] ?? null,
+                ]);
+                $submittedIds[] = $newDa->id;
+            }
+        }
+
+        $current = TourDayActivity::where('tour_id', $tourId)->get();
+        foreach ($current as $da) {
+            if (in_array($da->id, $submittedIds)) {
+                continue;
+            }
+            if ($da->is_mandatory) {
+                continue;
+            }
+            $this->programService->removeDayActivity($da->id);
         }
     }
 
