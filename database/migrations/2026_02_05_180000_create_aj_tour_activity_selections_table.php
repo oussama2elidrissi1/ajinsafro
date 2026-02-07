@@ -12,6 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::connection('wp')->hasTable('aj_tour_activity_selections')) {
+            return;
+        }
         Schema::connection('wp')->create('aj_tour_activity_selections', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tour_id')->comment('wp_posts.ID');
