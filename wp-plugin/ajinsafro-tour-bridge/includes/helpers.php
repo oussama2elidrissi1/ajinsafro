@@ -368,6 +368,24 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
 }
 
 /**
+ * Whether a flight array has any displayable content (from, to, or dates).
+ * Used to hide the card when vol is "empty" (e.g. after REMOVE).
+ *
+ * @param array|null $flight Flight row (from_city, to_city, depart_date_formatted, etc.)
+ * @return bool
+ */
+function ajtb_flight_has_content($flight) {
+    if (empty($flight) || !is_array($flight)) {
+        return false;
+    }
+    $from = isset($flight['from_city']) ? trim((string) $flight['from_city']) : trim((string) ($flight['depart_label'] ?? ''));
+    $to = isset($flight['to_city']) ? trim((string) $flight['to_city']) : trim((string) ($flight['arrive_label'] ?? ''));
+    $dep = isset($flight['depart_date_formatted']) ? trim((string) $flight['depart_date_formatted']) : '';
+    $arr = isset($flight['arrive_date_formatted']) ? trim((string) $flight['arrive_date_formatted']) : '';
+    return $from !== '' || $to !== '' || $dep !== '' || $arr !== '';
+}
+
+/**
  * Render HTML for flights block (Flight Cards + Add/Remove). Used on initial load and AJAX response.
  *
  * @param int $tour_id

@@ -92,13 +92,13 @@ class Voyage extends Model
         return $this->hasMany(VoyageFlight::class)->orderBy('direction');
     }
 
-    /** Vol aller (Jour 1). */
+    /** Vol aller — toujours attaché au Jour 1 du programme. */
     public function outboundFlight()
     {
         return $this->hasOne(VoyageFlight::class)->where('direction', 'outbound');
     }
 
-    /** Vol retour (dernier jour). */
+    /** Vol retour — toujours attaché au dernier jour du programme (Jour N). */
     public function inboundFlight()
     {
         return $this->hasOne(VoyageFlight::class)->where('direction', 'inbound');

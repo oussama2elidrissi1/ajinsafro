@@ -85,7 +85,9 @@ get_header();
                 <!-- Navigation Tabs -->
                 <nav class="ajtb-tabs-nav">
                     <a href="#overview" class="tab-link active">Aperçu</a>
-                    <?php if (!empty($tour['flights']) || !empty($tour['all_flights']) || !empty($tour['outboundFlight']) || !empty($tour['inboundFlight'])): ?>
+                    <?php
+                    $has_flights_section = (empty($tour['outboundFlight']) && empty($tour['inboundFlight'])) && (!empty($tour['flights']) || !empty($tour['all_flights']));
+                    if ($has_flights_section): ?>
                         <a href="#flights" class="tab-link">Vols</a>
                     <?php endif; ?>
                     <?php if (!empty($tour['itinerary']) || !empty($tour['wp_program']['items'])): ?>
@@ -102,8 +104,10 @@ get_header();
                 <!-- Overview Section (Aperçu du Circuit) -->
                 <?php ajtb_get_partial('overview', ['tour' => $tour]); ?>
 
-                <!-- Flights Section: between Aperçu and Programme (only if flights data exists) -->
-                <?php ajtb_get_partial('flights', ['tour' => $tour]); ?>
+                <!-- Flights Section: only when NOT showing Laravel vols in programme (no standalone "Informations Vols") -->
+                <?php if (empty($tour['outboundFlight']) && empty($tour['inboundFlight'])): ?>
+                    <?php ajtb_get_partial('flights', ['tour' => $tour]); ?>
+                <?php endif; ?>
 
                 <!-- Gallery Section -->
                 <?php if (!empty($tour['gallery'])): ?>

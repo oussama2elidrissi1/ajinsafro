@@ -15,6 +15,9 @@ if (!defined('ABSPATH')) {
 if (empty($flight) || !is_array($flight)) {
     return;
 }
+if (function_exists('ajtb_flight_has_content') && !ajtb_flight_has_content($flight)) {
+    return;
+}
 
 $dash = '—';
 $from = isset($flight['from_city']) ? (string) $flight['from_city'] : (string) ($flight['depart_label'] ?? '');

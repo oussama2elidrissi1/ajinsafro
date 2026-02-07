@@ -131,10 +131,17 @@ if (empty($itinerary)) {
                     </div>
 
                     <div class="day-body" id="day-content-<?php echo $index; ?>" <?php echo !$is_first ? 'style="display:none;"' : ''; ?>>
-                        <?php // Vol Aller — affiché uniquement au premier jour (Jour 1) ?>
-                        <?php if ($is_first && !empty($outboundFlight)): ?>
-                            <div class="ajtb-day-flight-block ajtb-day-flight-outbound">
-                                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> (Jour 1)</h4>
+                        <?php
+                        // Vol Aller — uniquement Jour 1, avant les activités. Si vol vide (REMOVE) on n'affiche rien.
+                        $show_outbound = $is_first && !empty($outboundFlight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($outboundFlight);
+                        if ($show_outbound):
+                            $fo_from = trim((string) ($outboundFlight['from_city'] ?? $outboundFlight['depart_label'] ?? ''));
+                            $fo_to   = trim((string) ($outboundFlight['to_city'] ?? $outboundFlight['arrive_label'] ?? ''));
+                            $fo_from = $fo_from !== '' ? $fo_from : '—';
+                            $fo_to   = $fo_to !== '' ? $fo_to : '—';
+                        ?>
+                            <div class="ajtb-day-flight-block ajtb-day-flight-outbound" data-aj-day-flight="outbound" data-aj-day-number="1">
+                                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> — Jour 1 • <?php echo esc_html($fo_from); ?> → <?php echo esc_html($fo_to); ?></h4>
                                 <?php
                                 $flight = $outboundFlight;
                                 $show_remove = false;
@@ -142,13 +149,20 @@ if (empty($itinerary)) {
                                 ?>
                             </div>
                         <?php endif; ?>
-                        <?php // Vol Retour — affiché uniquement au dernier jour ?>
-                        <?php if ($is_last && !empty($inboundFlight)): ?>
-                            <div class="ajtb-day-flight-block ajtb-day-flight-inbound">
-                                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?> (Jour <?php echo $total_days; ?>)</h4>
+                        <?php
+                        // Vol Retour — uniquement dernier jour (Jour N). Si vol vide (REMOVE) on n'affiche rien.
+                        $show_inbound = $is_last && !empty($inboundFlight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($inboundFlight);
+                        if ($show_inbound):
+                            $fi_from = trim((string) ($inboundFlight['from_city'] ?? $inboundFlight['depart_label'] ?? ''));
+                            $fi_to   = trim((string) ($inboundFlight['to_city'] ?? $inboundFlight['arrive_label'] ?? ''));
+                            $fi_from = $fi_from !== '' ? $fi_from : '—';
+                            $fi_to   = $fi_to !== '' ? $fi_to : '—';
+                        ?>
+                            <div class="ajtb-day-flight-block ajtb-day-flight-inbound" data-aj-day-flight="inbound" data-aj-day-number="<?php echo $total_days; ?>">
+                                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?> — Jour <?php echo $total_days; ?> • <?php echo esc_html($fi_from); ?> → <?php echo esc_html($fi_to); ?></h4>
                                 <?php
                                 $flight = $inboundFlight;
-                                $show_remove = false;
+                                $show_remove = true;
                                 include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
                                 ?>
                             </div>

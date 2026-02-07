@@ -84,7 +84,12 @@
     function initFlightRemove() {
         $(document).on('click', '#itinerary [data-aj-flight-remove]', function() {
             var $card = $(this).closest('.aj-flight-card');
-            $card.addClass('aj-flight-card--removed').slideUp(200);
+            var $block = $card.closest('.ajtb-day-flight-block');
+            if ($block.length) {
+                $block.addClass('aj-flight-card--removed').slideUp(200);
+            } else {
+                $card.addClass('aj-flight-card--removed').slideUp(200);
+            }
         });
     }
 

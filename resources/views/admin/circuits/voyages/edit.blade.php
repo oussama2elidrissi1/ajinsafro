@@ -868,11 +868,11 @@
                 </div>
             </div>
 
-            {{-- TAB VOLS — Vol Aller (Jour 1) + Vol Retour (Dernier jour) — Laravel voyage_flights --}}
+            {{-- TAB VOLS — Vol Aller = toujours Jour 1, Vol Retour = toujours Dernier jour (N) — Laravel voyage_flights --}}
             @php
                 $fOutbound = $outboundFlight ?? null;
                 $fInbound = $inboundFlight ?? null;
-                $lastDayNumber = max(1, (int)($meta['duration_day'] ?? 1));
+                $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1));
                 $flightDash = '—';
                 $fmtDate = function($d) { return $d ? (\Carbon\Carbon::parse($d)->format('D, d M')) : null; };
             @endphp
