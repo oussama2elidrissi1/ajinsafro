@@ -10,6 +10,8 @@ use App\Models\Wp\Activity;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Voyage;
 use App\Models\Airline;
+use App\Models\TourHotel;
+use App\Models\TourTransfer;
 use App\Services\VoyageFlightService;
 use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpHeroImageService;
@@ -330,7 +332,18 @@ class VoyageController extends Controller
             $heroImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'heroImageUrl'));
+        // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — intégrés au CRUD voyage
+        $tourHotel = TourHotel::getForTour($id);
+        $transfers = TourTransfer::getForTour($id);
+        $transferArrival = $transfers['arrival'];
+        $transferDeparture = $transfers['departure'];
+        // Valeurs suggérées : transfert aller = aéroport d'arrivée (vol aller to_city) → hôtel ; transfert retour = hôtel → aéroport de départ (vol retour from_city)
+        $suggestedArrivalFrom = $outboundFlight ? trim($outboundFlight->to_city ?? $outboundFlight->to_label ?? '') : '';
+        $suggestedArrivalTo = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
+        $suggestedDepartureFrom = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
+        $suggestedDepartureTo = $inboundFlight ? trim($inboundFlight->from_city ?? $inboundFlight->from_label ?? '') : '';
+
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'heroImageUrl', 'tourHotel', 'transferArrival', 'transferDeparture', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo'));
     }
     
     /**
@@ -439,6 +452,75 @@ class VoyageController extends Controller
                 } catch (\Throwable $e) {
                     \Log::error('VoyageController@update voyage flights failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
                     throw $e;
+                }
+            }
+
+            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers)
+            if ($request->has('tour_hotel')) {
+                $raw = $request->input('tour_hotel', []);
+                $hotelData = [
+                    'hotel_name' => $raw['hotel_name'] ?? null,
+                    'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
+                    'address' => $raw['address'] ?? null,
+                    'room_type' => $raw['room_type'] ?? null,
+                    'meal_plan' => $raw['meal_plan'] ?? null,
+                    'notes' => $raw['notes'] ?? null,
+                ];
+                $tourHotel = TourHotel::getForTour($id);
+                if ($tourHotel) {
+                    $tourHotel->update($hotelData);
+                } elseif (array_filter($hotelData, fn ($v) => $v !== null && $v !== '')) {
+                    TourHotel::create(array_merge($hotelData, ['tour_id' => $id]));
+                }
+            }
+            if ($request->has('tour_transfer_arrival')) {
+                $arr = $request->input('tour_transfer_arrival', []);
+                $existing = TourTransfer::where('tour_id', $id)->where('direction', TourTransfer::DIRECTION_ARRIVAL)->first();
+                if ($existing) {
+                    $existing->update([
+                        'from_label' => $arr['from_label'] ?? null,
+                        'to_label' => $arr['to_label'] ?? null,
+                        'pickup_time' => $arr['pickup_time'] ?? null,
+                        'dropoff_time' => $arr['dropoff_time'] ?? null,
+                        'vehicle_type' => $arr['vehicle_type'] ?? null,
+                        'notes' => $arr['notes'] ?? null,
+                    ]);
+                } else {
+                    TourTransfer::create([
+                        'tour_id' => $id,
+                        'direction' => TourTransfer::DIRECTION_ARRIVAL,
+                        'from_label' => $arr['from_label'] ?? null,
+                        'to_label' => $arr['to_label'] ?? null,
+                        'pickup_time' => $arr['pickup_time'] ?? null,
+                        'dropoff_time' => $arr['dropoff_time'] ?? null,
+                        'vehicle_type' => $arr['vehicle_type'] ?? null,
+                        'notes' => $arr['notes'] ?? null,
+                    ]);
+                }
+            }
+            if ($request->has('tour_transfer_departure')) {
+                $dep = $request->input('tour_transfer_departure', []);
+                $existing = TourTransfer::where('tour_id', $id)->where('direction', TourTransfer::DIRECTION_DEPARTURE)->first();
+                if ($existing) {
+                    $existing->update([
+                        'from_label' => $dep['from_label'] ?? null,
+                        'to_label' => $dep['to_label'] ?? null,
+                        'pickup_time' => $dep['pickup_time'] ?? null,
+                        'dropoff_time' => $dep['dropoff_time'] ?? null,
+                        'vehicle_type' => $dep['vehicle_type'] ?? null,
+                        'notes' => $dep['notes'] ?? null,
+                    ]);
+                } else {
+                    TourTransfer::create([
+                        'tour_id' => $id,
+                        'direction' => TourTransfer::DIRECTION_DEPARTURE,
+                        'from_label' => $dep['from_label'] ?? null,
+                        'to_label' => $dep['to_label'] ?? null,
+                        'pickup_time' => $dep['pickup_time'] ?? null,
+                        'dropoff_time' => $dep['dropoff_time'] ?? null,
+                        'vehicle_type' => $dep['vehicle_type'] ?? null,
+                        'notes' => $dep['notes'] ?? null,
+                    ]);
                 }
             }
 

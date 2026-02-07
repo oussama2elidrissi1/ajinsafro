@@ -1021,6 +1021,114 @@
                 </div>
 
                 <p class="text-muted small mt-3">Vol Aller = Jour 1, Vol Retour = Dernier jour ({{ $lastDayNumber }}). REMOVE vide les champs sans supprimer le voyage. Enregistrez le voyage pour sauvegarder.</p>
+
+                <hr class="my-4">
+                <h5 class="mb-3"><i class="bx bx-hotel"></i> Hôtel (séjour — check-in J1, check-out J{{ $lastDayNumber }})</h5>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nom de l'hôtel</label>
+                                <input type="text" class="form-control" name="tour_hotel[hotel_name]" id="tour_hotel_name" value="{{ old('tour_hotel.hotel_name', $tourHotel?->hotel_name ?? '') }}" placeholder="Ex. Hôtel Les Almoravides">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Étoiles (0–5)</label>
+                                <input type="number" class="form-control" name="tour_hotel[stars]" value="{{ old('tour_hotel.stars', $tourHotel?->stars ?? '') }}" min="0" max="5" placeholder="3">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Type de chambre</label>
+                                <input type="text" class="form-control" name="tour_hotel[room_type]" value="{{ old('tour_hotel.room_type', $tourHotel?->room_type ?? '') }}" placeholder="Ex. Chambre double">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Adresse</label>
+                                <input type="text" class="form-control" name="tour_hotel[address]" value="{{ old('tour_hotel.address', $tourHotel?->address ?? '') }}" placeholder="Ville, pays">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Repas (formule)</label>
+                                <input type="text" class="form-control" name="tour_hotel[meal_plan]" value="{{ old('tour_hotel.meal_plan', $tourHotel?->meal_plan ?? '') }}" placeholder="Ex. Petit-déjeuner inclus">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" name="tour_hotel[notes]" rows="2">{{ old('tour_hotel.notes', $tourHotel?->notes ?? '') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mb-3"><i class="bx bx-car"></i> Transferts (remplis automatiquement depuis le vol et l'hôtel si vides)</h5>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light py-2">
+                                <strong>Transfert aller — Jour 1</strong> (Aéroport → Hôtel)
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label small">De (ex. aéroport d'arrivée)</label>
+                                    <input type="text" class="form-control form-control-sm" name="tour_transfer_arrival[from_label]" id="transfer_arrival_from" value="{{ old('tour_transfer_arrival.from_label', $transferArrival?->from_label ?? $suggestedArrivalFrom ?? '') }}" placeholder="{{ $suggestedArrivalFrom ?: 'Aéroport arrivée (vol aller)' }}">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">À (ex. hôtel)</label>
+                                    <input type="text" class="form-control form-control-sm" name="tour_transfer_arrival[to_label]" id="transfer_arrival_to" value="{{ old('tour_transfer_arrival.to_label', $transferArrival?->to_label ?? $suggestedArrivalTo ?? '') }}" placeholder="{{ $suggestedArrivalTo ?: 'Hôtel' }}">
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label small">Heure prise en charge</label>
+                                        <input type="text" class="form-control form-control-sm" name="tour_transfer_arrival[pickup_time]" value="{{ old('tour_transfer_arrival.pickup_time', $transferArrival?->pickup_time ?? '') }}" placeholder="14:00">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Heure arrivée</label>
+                                        <input type="text" class="form-control form-control-sm" name="tour_transfer_arrival[dropoff_time]" value="{{ old('tour_transfer_arrival.dropoff_time', $transferArrival?->dropoff_time ?? '') }}" placeholder="15:00">
+                                    </div>
+                                </div>
+                                <div class="mb-2 mt-2">
+                                    <label class="form-label small">Véhicule</label>
+                                    <input type="text" class="form-control form-control-sm" name="tour_transfer_arrival[vehicle_type]" value="{{ old('tour_transfer_arrival.vehicle_type', $transferArrival?->vehicle_type ?? '') }}" placeholder="Minivan">
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label small">Notes</label>
+                                    <textarea class="form-control form-control-sm" name="tour_transfer_arrival[notes]" rows="1">{{ old('tour_transfer_arrival.notes', $transferArrival?->notes ?? '') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light py-2">
+                                <strong>Transfert retour — Jour {{ $lastDayNumber }}</strong> (Hôtel → Aéroport)
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label small">De (ex. hôtel)</label>
+                                    <input type="text" class="form-control form-control-sm" name="tour_transfer_departure[from_label]" id="transfer_departure_from" value="{{ old('tour_transfer_departure.from_label', $transferDeparture?->from_label ?? $suggestedDepartureFrom ?? '') }}" placeholder="{{ $suggestedDepartureFrom ?: 'Hôtel' }}">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">À (ex. aéroport de départ)</label>
+                                    <input type="text" class="form-control form-control-sm" name="tour_transfer_departure[to_label]" id="transfer_departure_to" value="{{ old('tour_transfer_departure.to_label', $transferDeparture?->to_label ?? $suggestedDepartureTo ?? '') }}" placeholder="{{ $suggestedDepartureTo ?: 'Aéroport départ (vol retour)' }}">
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label small">Heure prise en charge</label>
+                                        <input type="text" class="form-control form-control-sm" name="tour_transfer_departure[pickup_time]" value="{{ old('tour_transfer_departure.pickup_time', $transferDeparture?->pickup_time ?? '') }}" placeholder="10:00">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Heure arrivée</label>
+                                        <input type="text" class="form-control form-control-sm" name="tour_transfer_departure[dropoff_time]" value="{{ old('tour_transfer_departure.dropoff_time', $transferDeparture?->dropoff_time ?? '') }}" placeholder="11:00">
+                                    </div>
+                                </div>
+                                <div class="mb-2 mt-2">
+                                    <label class="form-label small">Véhicule</label>
+                                    <input type="text" class="form-control form-control-sm" name="tour_transfer_departure[vehicle_type]" value="{{ old('tour_transfer_departure.vehicle_type', $transferDeparture?->vehicle_type ?? '') }}" placeholder="Minivan">
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label small">Notes</label>
+                                    <textarea class="form-control form-control-sm" name="tour_transfer_departure[notes]" rows="1">{{ old('tour_transfer_departure.notes', $transferDeparture?->notes ?? '') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted small">Les champs « De / À » des transferts sont préremplis avec l'aéroport du vol et l'hôtel ci-dessus. Vous pouvez les modifier.</p>
             </div>
 
             <script>
@@ -1080,6 +1188,27 @@
                         updateCard(t);
                     });
                 });
+
+                // Remplir automatiquement les transferts depuis vol + hôtel (si champs vides ou non modifiés)
+                var hotelNameEl = document.getElementById('tour_hotel_name');
+                var arrFrom = document.getElementById('transfer_arrival_from');
+                var arrTo = document.getElementById('transfer_arrival_to');
+                var depFrom = document.getElementById('transfer_departure_from');
+                var depTo = document.getElementById('transfer_departure_to');
+                var outboundTo = document.querySelector('input[name="flights[outbound][to_city]"]');
+                var inboundFrom = document.querySelector('input[name="flights[inbound][from_city]"]');
+                function applyHotelToTransfers() {
+                    var h = hotelNameEl && hotelNameEl.value ? hotelNameEl.value.trim() : '';
+                    if (h && arrTo) arrTo.value = arrTo.value.trim() === '' ? h : (arrTo.dataset.auto === '1' ? h : arrTo.value);
+                    if (h && depFrom) depFrom.value = depFrom.value.trim() === '' ? h : (depFrom.dataset.auto === '1' ? h : depFrom.value);
+                }
+                function applyVolToTransfers() {
+                    if (outboundTo && outboundTo.value.trim() && arrFrom) arrFrom.value = arrFrom.value.trim() === '' ? outboundTo.value.trim() : (arrFrom.dataset.auto === '1' ? outboundTo.value.trim() : arrFrom.value);
+                    if (inboundFrom && inboundFrom.value.trim() && depTo) depTo.value = depTo.value.trim() === '' ? inboundFrom.value.trim() : (depTo.dataset.auto === '1' ? inboundFrom.value.trim() : depTo.value);
+                }
+                if (hotelNameEl) { hotelNameEl.addEventListener('blur', applyHotelToTransfers); }
+                if (outboundTo) { outboundTo.addEventListener('blur', applyVolToTransfers); }
+                if (inboundFrom) { inboundFrom.addEventListener('blur', applyVolToTransfers); }
             })();
             </script>
 
@@ -1255,6 +1384,16 @@
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
+        // Ouvrir l'onglet Vols si ?tab=flights (depuis Hôtels / Transferts sidebar)
+        document.addEventListener('DOMContentLoaded', function() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('tab') === 'flights') {
+                var tabEl = document.querySelector('a[href="#flights"][data-bs-toggle="tab"]');
+                if (tabEl && window.bootstrap && bootstrap.Tab) {
+                    new bootstrap.Tab(tabEl).show();
+                }
+            }
+        });
         // Location search filter (WordPress Traveler behavior)
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('locationSearch');

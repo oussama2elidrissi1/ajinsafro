@@ -71,7 +71,7 @@
                                                 @endif
                                             </td>
                                             <td class="text-end">
-                                                <a href="{{ route('admin.circuits.tour-hotels.edit', $tour->ID) }}" class="btn btn-sm btn-soft-primary waves-effect waves-light">Gérer l'hôtel</a>
+                                                <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}?tab=flights" class="btn btn-sm btn-soft-primary waves-effect waves-light">Gérer (dans le voyage)</a>
                                             </td>
                                         </tr>
                                     @endforeach

@@ -171,6 +171,29 @@ class UpdateWpTourRequest extends FormRequest
             'flights.inbound.baggage_cabin_kg' => 'nullable|integer|min:0',
             'flights.inbound.baggage_checkin_kg' => 'nullable|integer|min:0',
             'flights.inbound.is_tentative' => 'nullable',
+
+            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — intégrés au CRUD voyage
+            'tour_hotel' => 'nullable|array',
+            'tour_hotel.hotel_name' => 'nullable|string|max:255',
+            'tour_hotel.stars' => 'nullable|integer|min:0|max:5',
+            'tour_hotel.address' => 'nullable|string|max:500',
+            'tour_hotel.room_type' => 'nullable|string|max:255',
+            'tour_hotel.meal_plan' => 'nullable|string|max:255',
+            'tour_hotel.notes' => 'nullable|string|max:2000',
+            'tour_transfer_arrival' => 'nullable|array',
+            'tour_transfer_arrival.from_label' => 'nullable|string|max:255',
+            'tour_transfer_arrival.to_label' => 'nullable|string|max:255',
+            'tour_transfer_arrival.pickup_time' => 'nullable|string|max:20',
+            'tour_transfer_arrival.dropoff_time' => 'nullable|string|max:20',
+            'tour_transfer_arrival.vehicle_type' => 'nullable|string|max:255',
+            'tour_transfer_arrival.notes' => 'nullable|string|max:2000',
+            'tour_transfer_departure' => 'nullable|array',
+            'tour_transfer_departure.from_label' => 'nullable|string|max:255',
+            'tour_transfer_departure.to_label' => 'nullable|string|max:255',
+            'tour_transfer_departure.pickup_time' => 'nullable|string|max:20',
+            'tour_transfer_departure.dropoff_time' => 'nullable|string|max:20',
+            'tour_transfer_departure.vehicle_type' => 'nullable|string|max:255',
+            'tour_transfer_departure.notes' => 'nullable|string|max:2000',
         ];
     }
 
