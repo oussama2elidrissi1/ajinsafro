@@ -74,7 +74,40 @@ class AJTB_Laravel_Repository {
             'pricing_rules' => $this->get_pricing_rules(),
             'activities_catalog' => $this->get_activities_catalog(),
             'flights' => $this->get_flights($session_token),
+            'laravel_voyage_flights' => $this->get_laravel_voyage_flights(),
             'has_data' => $this->has_any_data(),
+        ];
+    }
+
+    /**
+     * Fetch outbound/inbound flights from Laravel API (voyage_flights).
+     * Requires ajtb_laravel_api_url() to be set.
+     *
+     * @return array { outbound: array|null, inbound: array|null }
+     */
+    public function get_laravel_voyage_flights() {
+        $base = ajtb_laravel_api_url();
+        if ($base === '') {
+            return ['outbound' => null, 'inbound' => null];
+        }
+        $url = rtrim($base, '/') . '/api/public/tours/' . $this->tour_id . '/flights';
+        $response = wp_remote_get($url, ['timeout' => 5]);
+        if (is_wp_error($response)) {
+            return ['outbound' => null, 'inbound' => null];
+        }
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code !== 200) {
+            return ['outbound' => null, 'inbound' => null];
+        }
+        $body = wp_remote_retrieve_body($response);
+        $json = json_decode($body, true);
+        if (!is_array($json) || empty($json['success']) || !isset($json['data'])) {
+            return ['outbound' => null, 'inbound' => null];
+        }
+        $data = $json['data'];
+        return [
+            'outbound' => isset($data['outbound']) && is_array($data['outbound']) ? $data['outbound'] : null,
+            'inbound' => isset($data['inbound']) && is_array($data['inbound']) ? $data['inbound'] : null,
         ];
     }
 

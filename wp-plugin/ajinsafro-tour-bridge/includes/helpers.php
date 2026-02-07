@@ -11,6 +11,17 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Laravel API base URL for voyage flights (optional).
+ * Define AJTB_LARAVEL_API_URL or use filter 'ajtb_laravel_api_url'.
+ *
+ * @return string Empty if not configured (e.g. same-server DB only).
+ */
+function ajtb_laravel_api_url() {
+    $url = defined('AJTB_LARAVEL_API_URL') ? AJTB_LARAVEL_API_URL : '';
+    return (string) apply_filters('ajtb_laravel_api_url', $url);
+}
+
+/**
  * Get full table name for aj_* tables. Prevents double prefix.
  *
  * @param string $suffix Table name suffix, e.g. 'aj_tour_activity_selections', 'aj_tour_days', 'aj_activities'

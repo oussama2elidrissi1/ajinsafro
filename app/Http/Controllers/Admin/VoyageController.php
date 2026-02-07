@@ -8,8 +8,9 @@ use App\Http\Requests\UpdateWpTourRequest;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\Activity;
 use App\Models\Wp\TourDayActivity;
-use App\Models\AjAirline;
-use App\Services\TourFlightsService;
+use App\Models\Voyage;
+use App\Models\Airline;
+use App\Services\VoyageFlightService;
 use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
@@ -23,13 +24,13 @@ class VoyageController extends Controller
 
     protected TourProgramService $programService;
 
-    protected TourFlightsService $tourFlightsService;
+    protected VoyageFlightService $voyageFlightService;
 
-    public function __construct(WpTourRepository $repository, TourProgramService $programService, TourFlightsService $tourFlightsService)
+    public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $voyageFlightService)
     {
         $this->repository = $repository;
         $this->programService = $programService;
-        $this->tourFlightsService = $tourFlightsService;
+        $this->voyageFlightService = $voyageFlightService;
     }
 
     /**
@@ -104,7 +105,7 @@ class VoyageController extends Controller
         
         // Programme vide pour création
         $tourProgram = ['style' => 'style1', 'items' => []];
-        $airlines = AjAirline::active()->orderBy('name')->get();
+        $airlines = Airline::active()->orderBy('name')->get();
 
         return view('admin.circuits.voyages.create', compact('locationsTree', 'selectedLocationIds', 'tourProgram', 'airlines'));
     }
@@ -138,9 +139,13 @@ class VoyageController extends Controller
 
             if ($request->has('flights')) {
                 try {
-                    $this->tourFlightsService->syncFlights($tour->ID, $request->input('flights', []));
+                    $laravelVoyage = Voyage::firstOrCreate(
+                        ['wp_post_id' => $tour->ID],
+                        ['name' => $tour->post_title ?? 'Tour', 'slug' => 'tour-' . $tour->ID]
+                    );
+                    $this->voyageFlightService->syncFlights($laravelVoyage->id, $request->input('flights', []));
                 } catch (\Throwable $e) {
-                    \Log::error('VoyageController@store syncFlights failed', ['tour_id' => $tour->ID, 'message' => $e->getMessage()]);
+                    \Log::error('VoyageController@store voyage flights failed', ['tour_id' => $tour->ID, 'message' => $e->getMessage()]);
                 }
             }
 
@@ -280,15 +285,23 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: could not load program days', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        $airlines = AjAirline::active()->orderBy('name')->get();
-        $voyageFlights = $this->tourFlightsService->getFlightsForTour($id);
+        $laravelVoyage = Voyage::where('wp_post_id', $id)->first();
+        if (!$laravelVoyage) {
+            $laravelVoyage = Voyage::firstOrCreate(
+                ['wp_post_id' => $id],
+                ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
+            );
+        }
+        $outboundFlight = $laravelVoyage->outboundFlight;
+        $inboundFlight = $laravelVoyage->inboundFlight;
+        $airlines = Airline::active()->orderBy('name')->get();
         $heroImageUrl = null;
         $heroId = !empty($meta['hero_image_id']) ? (int) $meta['hero_image_id'] : (!empty($meta['thumbnail_id']) ? (int) $meta['thumbnail_id'] : null);
         if ($heroId) {
             $heroImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'voyageFlights', 'heroImageUrl'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'heroImageUrl'));
     }
     
     /**
@@ -389,9 +402,13 @@ class VoyageController extends Controller
 
             if ($request->has('flights')) {
                 try {
-                    $this->tourFlightsService->syncFlights($id, $request->input('flights', []));
+                    $laravelVoyage = Voyage::firstOrCreate(
+                        ['wp_post_id' => $id],
+                        ['name' => $this->repository->getPost($id)->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
+                    );
+                    $this->voyageFlightService->syncFlights($laravelVoyage->id, $request->input('flights', []));
                 } catch (\Throwable $e) {
-                    \Log::error('VoyageController@update syncFlights failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
+                    \Log::error('VoyageController@update voyage flights failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
                     throw $e;
                 }
             }

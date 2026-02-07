@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\PublicPackageController;
 use App\Http\Controllers\Api\PublicToursListController;
+use App\Http\Controllers\Api\TourFlightsController;
 use App\Http\Controllers\Api\WpSyncWebhookController;
 use App\Http\Controllers\Sync\PingController;
 use App\Http\Controllers\Sync\WpToLaravelController;
@@ -37,6 +38,11 @@ Route::prefix('public')->name('api.public.')->group(function () {
     Route::get('tours/{voyageId}/package-state', [PublicPackageController::class, 'getPackageState'])
         ->whereNumber('voyageId')
         ->name('tours.package-state');
+
+    // Get flights for a tour (by WP post ID) – outbound (day 1) + inbound (last day)
+    Route::get('tours/{wpPostId}/flights', TourFlightsController::class)
+        ->whereNumber('wpPostId')
+        ->name('tours.flights');
     
     // Perform action on package session
     Route::post('package/session/{sessionId}/action', [PublicPackageController::class, 'performAction'])

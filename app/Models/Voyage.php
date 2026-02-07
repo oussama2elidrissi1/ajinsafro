@@ -87,6 +87,23 @@ class Voyage extends Model
         return $this->hasMany(CheckoutToken::class);
     }
 
+    public function flights()
+    {
+        return $this->hasMany(VoyageFlight::class)->orderBy('direction');
+    }
+
+    /** Vol aller (Jour 1). */
+    public function outboundFlight()
+    {
+        return $this->hasOne(VoyageFlight::class)->where('direction', 'outbound');
+    }
+
+    /** Vol retour (dernier jour). */
+    public function inboundFlight()
+    {
+        return $this->hasOne(VoyageFlight::class)->where('direction', 'inbound');
+    }
+
     /**
      * Public URL for the featured image (public disk).
      * Falls back to first gallery image if featured_image is null.

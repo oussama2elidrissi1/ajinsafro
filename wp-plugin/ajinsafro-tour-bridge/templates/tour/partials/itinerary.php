@@ -19,6 +19,9 @@ $session_token = $tour['_session_token'] ?? '';
 $tour_id = (int) ($tour['id'] ?? 0);
 $activities_catalog = $tour['activities_catalog'] ?? [];
 $can_toggle_activities = ($source === 'laravel' && !empty($session_token) && $tour_id > 0);
+$outboundFlight = $tour['outboundFlight'] ?? null;
+$inboundFlight = $tour['inboundFlight'] ?? null;
+$total_days = count($itinerary);
 
 // No Laravel days: fallback to WP tours_program list only if WP has items
 if (empty($itinerary)) {
@@ -92,14 +95,14 @@ if (empty($itinerary)) {
         <?php foreach ($itinerary as $index => $day): 
             $day_number = $day['day'] ?? ($index + 1);
             $is_first = ($index === 0);
-            $is_last = ($index === count($itinerary) - 1);
+            $is_last = ($index === $total_days - 1);
             $day_title_display = !empty($day['day_title']) ? $day['day_title'] : ($day['title'] ?? 'Jour ' . $day_number);
             $mode = isset($day['mode']) ? $day['mode'] : 'program';
             $activities = isset($day['activities']) ? $day['activities'] : [];
             $day_id = (int) ($day['id'] ?? 0);
             $day_activity_ids = array_map(function ($a) { return (int) ($a['activity_id'] ?? 0); }, $activities);
         ?>
-            <div class="itinerary-day <?php echo $is_first ? 'first' : ''; ?> <?php echo $is_last ? 'last' : ''; ?> itinerary-day-mode-<?php echo esc_attr($mode); ?>" data-day="<?php echo $day_number; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>">
+            <div class="itinerary-day aj-day-panel <?php echo $is_first ? 'first active' : ''; ?> <?php echo $is_last ? 'last' : ''; ?> itinerary-day-mode-<?php echo esc_attr($mode); ?>" data-day="<?php echo $day_number; ?>" data-day-index="<?php echo $index; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>" <?php echo !$is_first ? 'style="display:none;"' : ''; ?>>
                 <!-- Timeline Marker -->
                 <div class="day-marker">
                     <span class="day-number"><?php echo $day_number; ?></span>
@@ -128,6 +131,18 @@ if (empty($itinerary)) {
                     </div>
 
                     <div class="day-body" id="day-content-<?php echo $index; ?>" <?php echo !$is_first ? 'style="display:none;"' : ''; ?>>
+                        <?php // Vol Aller (Jour 1) — Laravel voyage_flights ?>
+                        <?php if ($is_first && !empty($outboundFlight)): 
+                            $flight = $outboundFlight;
+                            $show_remove = false;
+                            include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
+                        endif; ?>
+                        <?php // Vol Retour (Dernier jour) — Laravel voyage_flights ?>
+                        <?php if ($is_last && !empty($inboundFlight)): 
+                            $flight = $inboundFlight;
+                            $show_remove = false;
+                            include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
+                        endif; ?>
                         <!-- Day Image (if available) -->
                         <?php if (!empty($day['image'])): ?>
                             <div class="day-image">

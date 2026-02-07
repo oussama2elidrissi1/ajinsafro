@@ -234,7 +234,7 @@
                             <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
                                 <select class="form-select" name="flights[0][airline_id]"><option value="">— Choisir —</option>
                                     @foreach($airlines as $airline)
-                                        <option value="{{ $airline->id }}" {{ old('flights.0.airline_id') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->iata_code)({{ $airline->iata_code }})@endif</option>
+                                        <option value="{{ $airline->id }}" {{ old('flights.0.airline_id') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->code_iata)({{ $airline->code_iata }})@endif</option>
                                     @endforeach
                                 </select></div>
                             <div class="col-md-6"><label class="form-label">Type de cabine</label>
@@ -290,7 +290,7 @@
                             <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
                                 <select class="form-select" name="flights[1][airline_id]"><option value="">— Choisir —</option>
                                     @foreach($airlines as $airline)
-                                        <option value="{{ $airline->id }}" {{ old('flights.1.airline_id') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->iata_code)({{ $airline->iata_code }})@endif</option>
+                                        <option value="{{ $airline->id }}" {{ old('flights.1.airline_id') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->code_iata)({{ $airline->code_iata }})@endif</option>
                                     @endforeach
                                 </select></div>
                             <div class="col-md-6"><label class="form-label">Type de cabine</label>

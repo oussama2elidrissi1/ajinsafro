@@ -2,57 +2,43 @@
 
 namespace App\Services;
 
-use App\Models\Airline;
+use App\Models\Voyage;
 use App\Models\VoyageFlight;
-use Illuminate\Support\Carbon;
 
 class VoyageFlightService
 {
     /**
-     * Sync flights for a voyage. Max 2 flights. Exactly one is_default when 2 exist.
-     *
-     * @param int $voyageId Tour/voyage ID (e.g. WP post ID)
-     * @param array $flights Array of flight data: [ ['airline_id'=>, 'cabin_class'=>, ...], ... ]
+     * Sync voyage flights (outbound + inbound). Create/update or delete per direction.
+     * voyage_id = Laravel Voyage id.
      */
     public function syncFlights(int $voyageId, array $flights): void
     {
-        $flights = array_values(array_filter($flights, function ($f) {
-            return !empty($f['airline_id']) || !empty($f['flight_number']) || !empty($f['departure_airport']);
-        }));
+        foreach (['outbound', 'inbound'] as $direction) {
+            $payload = $flights[$direction] ?? [];
+            $filled = !empty($payload['airline_id']) || !empty($payload['from_city']) || !empty($payload['to_city'])
+                || !empty($payload['departure_date']) || !empty($payload['flight_number']);
 
-        if (count($flights) > 2) {
-            $flights = array_slice($flights, 0, 2);
-        }
+            $flight = VoyageFlight::where('voyage_id', $voyageId)->where('direction', $direction)->first();
 
-        $existing = VoyageFlight::where('voyage_id', $voyageId)->orderBy('sort_order')->get();
-
-        foreach ($flights as $index => $payload) {
-            $sortOrder = $index + 1;
-            $isDefault = $this->resolveDefault($flights, $index);
-            $airlineId = isset($payload['airline_id']) && $payload['airline_id'] !== '' ? (int) $payload['airline_id'] : null;
-            $cabinClass = in_array($payload['cabin_class'] ?? '', ['economy', 'premium_economy', 'business', 'first'], true)
-                ? $payload['cabin_class']
-                : VoyageFlight::CABIN_ECONOMY;
-
-            $flight = $existing->firstWhere('sort_order', $sortOrder);
+            if (!$filled) {
+                if ($flight) {
+                    $flight->delete();
+                }
+                continue;
+            }
 
             $data = [
                 'voyage_id' => $voyageId,
-                'airline_id' => $airlineId,
-                'cabin_class' => $cabinClass,
-                'flight_number' => $payload['flight_number'] ?? null,
-                'departure_airport' => $payload['departure_airport'] ?? null,
-                'arrival_airport' => $payload['arrival_airport'] ?? null,
-                'departure_at' => $this->parseDateTime($payload['departure_at'] ?? null),
-                'arrival_at' => $this->parseDateTime($payload['arrival_at'] ?? null),
-                'baggage' => $payload['baggage'] ?? null,
-                'cabin_baggage' => $payload['cabin_baggage'] ?? null,
-                'checkin_baggage' => $payload['checkin_baggage'] ?? null,
-                'price' => isset($payload['price']) && $payload['price'] !== '' ? (float) $payload['price'] : null,
-                'currency' => !empty($payload['currency']) ? substr($payload['currency'], 0, 3) : 'MAD',
-                'is_default' => $isDefault,
+                'direction' => $direction,
+                'airline_id' => isset($payload['airline_id']) && $payload['airline_id'] !== '' ? (int) $payload['airline_id'] : null,
+                'cabin' => in_array($payload['cabin'] ?? '', ['economy', 'business', 'first'], true) ? $payload['cabin'] : VoyageFlight::CABIN_ECONOMY,
+                'flight_number' => isset($payload['flight_number']) ? trim((string) $payload['flight_number']) : null,
+                'from_city' => isset($payload['from_city']) ? trim((string) $payload['from_city']) : null,
+                'to_city' => isset($payload['to_city']) ? trim((string) $payload['to_city']) : null,
+                'departure_date' => $this->parseDate($payload['departure_date'] ?? null),
+                'baggage_cabin_kg' => isset($payload['baggage_cabin_kg']) && $payload['baggage_cabin_kg'] !== '' ? (int) $payload['baggage_cabin_kg'] : null,
+                'baggage_checkin_kg' => isset($payload['baggage_checkin_kg']) && $payload['baggage_checkin_kg'] !== '' ? (int) $payload['baggage_checkin_kg'] : null,
                 'is_tentative' => !empty($payload['is_tentative']) && (string) $payload['is_tentative'] === '1',
-                'sort_order' => $sortOrder,
             ];
 
             if ($flight) {
@@ -61,63 +47,26 @@ class VoyageFlightService
                 VoyageFlight::create($data);
             }
         }
-
-        $keepSortOrders = array_map(fn ($i) => $i + 1, array_keys($flights));
-        VoyageFlight::where('voyage_id', $voyageId)->whereNotIn('sort_order', $keepSortOrders)->delete();
-
-        $this->ensureSingleDefault($voyageId);
     }
 
-    protected function resolveDefault(array $flights, int $index): bool
-    {
-        $explicitDefault = null;
-        foreach ($flights as $i => $f) {
-            if (!empty($f['is_default']) && (string) $f['is_default'] === '1') {
-                $explicitDefault = $i;
-                break;
-            }
-        }
-        if (count($flights) === 1) {
-            return true;
-        }
-        return $explicitDefault === $index;
-    }
-
-    protected function ensureSingleDefault(int $voyageId): void
-    {
-        $flights = VoyageFlight::where('voyage_id', $voyageId)->orderBy('sort_order')->get();
-        if ($flights->isEmpty()) {
-            return;
-        }
-        $defaultCount = $flights->where('is_default', true)->count();
-        if ($defaultCount === 0) {
-            $flights->first()->update(['is_default' => true]);
-        } elseif ($defaultCount > 1) {
-            $first = $flights->first();
-            VoyageFlight::where('voyage_id', $voyageId)->where('id', '!=', $first->id)->update(['is_default' => false]);
-        }
-    }
-
-    protected function parseDateTime($value): ?Carbon
+    protected function parseDate($value): ?string
     {
         if ($value === null || $value === '') {
             return null;
         }
         try {
-            return Carbon::parse($value);
+            $d = \Carbon\Carbon::parse($value);
+            return $d->format('Y-m-d');
         } catch (\Throwable $e) {
             return null;
         }
     }
 
     /**
-     * Get flights for a voyage (for edit form).
-     *
-     * @param int $voyageId
-     * @return \Illuminate\Support\Collection<int, VoyageFlight>
+     * Get flights for a voyage (for admin form). Keyed by direction.
      */
     public function getFlightsForVoyage(int $voyageId)
     {
-        return VoyageFlight::where('voyage_id', $voyageId)->with('airline')->orderBy('sort_order')->get();
+        return VoyageFlight::where('voyage_id', $voyageId)->with('airline')->orderBy('direction')->get()->keyBy('direction');
     }
 }

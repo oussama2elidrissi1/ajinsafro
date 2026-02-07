@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class VoyageFlight extends Model
 {
+    public const DIRECTION_OUTBOUND = 'outbound';
+    public const DIRECTION_INBOUND = 'inbound';
+
     public const CABIN_ECONOMY = 'economy';
-    public const CABIN_PREMIUM_ECONOMY = 'premium_economy';
     public const CABIN_BUSINESS = 'business';
     public const CABIN_FIRST = 'first';
 
@@ -16,7 +18,6 @@ class VoyageFlight extends Model
     {
         return [
             self::CABIN_ECONOMY => 'Économique',
-            self::CABIN_PREMIUM_ECONOMY => 'Premium Économique',
             self::CABIN_BUSINESS => 'Business',
             self::CABIN_FIRST => 'First',
         ];
@@ -24,60 +25,73 @@ class VoyageFlight extends Model
 
     protected $fillable = [
         'voyage_id',
+        'direction',
         'airline_id',
-        'cabin_class',
+        'cabin',
         'flight_number',
-        'departure_airport',
-        'arrival_airport',
-        'departure_at',
-        'arrival_at',
-        'baggage',
-        'cabin_baggage',
-        'checkin_baggage',
-        'price',
-        'currency',
-        'is_default',
+        'from_city',
+        'to_city',
+        'departure_date',
+        'baggage_cabin_kg',
+        'baggage_checkin_kg',
         'is_tentative',
-        'sort_order',
     ];
 
     protected $casts = [
-        'departure_at' => 'datetime',
-        'arrival_at' => 'datetime',
-        'is_default' => 'boolean',
+        'departure_date' => 'date',
         'is_tentative' => 'boolean',
-        'price' => 'decimal:2',
     ];
 
-    /**
-     * Display value for cabin baggage (card view). Falls back to baggage if only one value exists.
-     */
-    public function getCabinBaggageDisplayAttribute(): string
+    public function voyage(): BelongsTo
     {
-        return $this->cabin_baggage ?: $this->baggage ?: '—';
-    }
-
-    /**
-     * Display value for check-in baggage (card view). Falls back to baggage if only one value exists.
-     */
-    public function getCheckinBaggageDisplayAttribute(): string
-    {
-        return $this->checkin_baggage ?: $this->baggage ?: '—';
-    }
-
-    /** Format date for card: Thu, 02 Jul */
-    public function getDepartureDateFormattedAttribute(): ?string
-    {
-        return $this->departure_at?->format('D, d M') ?? null;
-    }
-
-    public function getArrivalDateFormattedAttribute(): ?string
-    {
-        return $this->arrival_at?->format('D, d M') ?? null;
+        return $this->belongsTo(Voyage::class);
     }
 
     public function airline(): BelongsTo
     {
         return $this->belongsTo(Airline::class);
+    }
+
+    public function getFromLabelAttribute(): string
+    {
+        return $this->from_city ?: '—';
+    }
+
+    public function getToLabelAttribute(): string
+    {
+        return $this->to_city ?: '—';
+    }
+
+    public function getDepartureDateFormattedAttribute(): ?string
+    {
+        return $this->departure_date?->format('D, d M');
+    }
+
+    public function getCabinBaggageDisplayAttribute(): string
+    {
+        return $this->baggage_cabin_kg !== null ? (string) $this->baggage_cabin_kg . ' KGS' : '—';
+    }
+
+    public function getCheckinBaggageDisplayAttribute(): string
+    {
+        return $this->baggage_checkin_kg !== null ? (string) $this->baggage_checkin_kg . ' KGS' : '—';
+    }
+
+    /**
+     * For front partial: array shape expected by flight-card.
+     */
+    public function toDisplayArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'flight_type' => $this->direction,
+            'from_city' => $this->from_city ?? '',
+            'to_city' => $this->to_city ?? '',
+            'depart_date_formatted' => $this->departure_date_formatted ?? '—',
+            'arrive_date_formatted' => $this->departure_date_formatted ?? '—',
+            'cabin_baggage_display' => $this->cabin_baggage_display,
+            'checkin_baggage_display' => $this->checkin_baggage_display,
+            'is_tentative' => $this->is_tentative,
+        ];
     }
 }

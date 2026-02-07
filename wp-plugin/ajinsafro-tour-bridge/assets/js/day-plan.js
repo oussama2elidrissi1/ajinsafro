@@ -30,6 +30,7 @@
                 $body.slideDown(200);
                 $panel.find('.day-toggle').attr('aria-expanded', 'true');
             }
+            $panel[0] && $panel[0].scrollIntoView && $panel[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
 
         $panels.filter(':not(.active)').hide();

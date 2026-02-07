@@ -224,6 +224,9 @@ class AJTB_Template_Loader {
             // Flights (displayed after session selections) and all flights (for "Add this flight" links)
             'flights' => $laravel_data['flights'] ?? [],
             'all_flights' => $laravel_data['all_flights'] ?? [],
+            // Laravel voyage_flights: Vol Aller (Jour 1) + Vol Retour (dernier jour)
+            'outboundFlight' => $laravel_data['laravel_voyage_flights']['outbound'] ?? null,
+            'inboundFlight' => $laravel_data['laravel_voyage_flights']['inbound'] ?? null,
         ];
     }
 }

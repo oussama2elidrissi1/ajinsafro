@@ -16,39 +16,11 @@ class UpdateWpTourRequest extends FormRequest
     }
 
     /**
-     * Configure the validator instance (e.g. flights: exactly one default when 2 vols).
+     * Optional: extra validation for voyage flights (Laravel voyage_flights).
      */
     public function withValidator(Validator $validator): void
     {
-        $validator->after(function (Validator $v) {
-            $flights = $this->input('flights', []);
-            $count = 0;
-            foreach ($flights as $f) {
-                if (! empty($f['airline_id']) || ! empty($f['cabin_class'])) {
-                    $count++;
-                }
-            }
-            if ($count >= 1) {
-                $f0 = $flights[0] ?? [];
-                if (! empty($f0['airline_id']) && empty($f0['cabin_class'])) {
-                    $v->errors()->add('flights.0.cabin_class', 'Le type de cabine est requis pour le vol 1.');
-                }
-                if (empty($f0['airline_id']) && ! empty($f0['cabin_class'])) {
-                    $v->errors()->add('flights.0.airline_id', 'La compagnie aérienne est requise pour le vol 1.');
-                }
-            }
-            if ($count === 2) {
-                $defaults = 0;
-                foreach ($flights as $f) {
-                    if (! empty($f['is_default']) && (string) $f['is_default'] === '1') {
-                        $defaults++;
-                    }
-                }
-                if ($defaults !== 1) {
-                    $v->errors()->add('flights', 'Lorsqu\'il y a deux vols, un seul doit être choisi comme vol par défaut.');
-                }
-            }
-        });
+        // No strict rules: outbound/inbound are optional; cabin defaults to economy in service.
     }
 
     /**
@@ -177,34 +149,28 @@ class UpdateWpTourRequest extends FormRequest
             'programme_days.*.activities.*.custom_title' => 'nullable|string',
             'programme_days.*.activities.*.custom_description' => 'nullable|string',
 
-            // Vols aj_tour_flights: outbound (Jour 1) + inbound (dernier jour)
+            // Vols Laravel voyage_flights: outbound (Jour 1) + inbound (dernier jour)
             'flights' => 'nullable|array',
             'flights.outbound' => 'nullable|array',
             'flights.outbound.airline_id' => 'nullable|integer',
-            'flights.outbound.cabin_class' => 'nullable|string|in:economy,business,first',
+            'flights.outbound.cabin' => 'nullable|string|in:economy,business,first',
+            'flights.outbound.flight_number' => 'nullable|string|max:50',
             'flights.outbound.from_city' => 'nullable|string|max:100',
             'flights.outbound.to_city' => 'nullable|string|max:100',
-            'flights.outbound.depart_date' => 'nullable|string|date',
-            'flights.outbound.depart_time' => 'nullable|string|max:20',
-            'flights.outbound.arrive_date' => 'nullable|string|date',
-            'flights.outbound.arrive_time' => 'nullable|string|max:20',
+            'flights.outbound.departure_date' => 'nullable|string|date',
             'flights.outbound.baggage_cabin_kg' => 'nullable|integer|min:0',
             'flights.outbound.baggage_checkin_kg' => 'nullable|integer|min:0',
             'flights.outbound.is_tentative' => 'nullable',
-            'flights.outbound.notes' => 'nullable|string|max:2000',
             'flights.inbound' => 'nullable|array',
             'flights.inbound.airline_id' => 'nullable|integer',
-            'flights.inbound.cabin_class' => 'nullable|string|in:economy,business,first',
+            'flights.inbound.cabin' => 'nullable|string|in:economy,business,first',
+            'flights.inbound.flight_number' => 'nullable|string|max:50',
             'flights.inbound.from_city' => 'nullable|string|max:100',
             'flights.inbound.to_city' => 'nullable|string|max:100',
-            'flights.inbound.depart_date' => 'nullable|string|date',
-            'flights.inbound.depart_time' => 'nullable|string|max:20',
-            'flights.inbound.arrive_date' => 'nullable|string|date',
-            'flights.inbound.arrive_time' => 'nullable|string|max:20',
+            'flights.inbound.departure_date' => 'nullable|string|date',
             'flights.inbound.baggage_cabin_kg' => 'nullable|integer|min:0',
             'flights.inbound.baggage_checkin_kg' => 'nullable|integer|min:0',
             'flights.inbound.is_tentative' => 'nullable',
-            'flights.inbound.notes' => 'nullable|string|max:2000',
         ];
     }
 
