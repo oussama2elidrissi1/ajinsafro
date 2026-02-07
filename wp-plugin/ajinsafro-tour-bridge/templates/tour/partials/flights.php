@@ -1,8 +1,11 @@
 <?php
 /**
- * Tour Flights partial – Flight Cards (same UI as admin)
+ * Tour Flights partial – Between "Aperçu du Circuit" and "Programme du Circuit".
+ * Same section style as overview/itinerary: container, title, spacing.
  * Uses session selections: default shows is_default=1; client can Add/Remove via AJAX.
+ * If no flights data, nothing is output (return).
  *
+ * @var array $tour Tour data (id, flights, all_flights, _session_token)
  * @package AjinsafroTourBridge
  */
 
@@ -24,7 +27,7 @@ if (empty($flights) && empty($all_flights)) {
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
             <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a2.5 2.5 0 0 1 0 5H3"></path>
         </svg>
-        <?php esc_html_e('Vols', 'ajinsafro-tour-bridge'); ?>
+        <?php esc_html_e('Informations Vols', 'ajinsafro-tour-bridge'); ?>
     </h2>
     <div id="ajtb-flights-container" class="ajtb-flights-container">
         <?php echo ajtb_render_flights_html($tour_id, $flights, $all_flights, $session_token); ?>

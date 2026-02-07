@@ -97,8 +97,11 @@ get_header();
                     <?php endif; ?>
                 </nav>
 
-                <!-- Overview Section -->
+                <!-- Overview Section (Aperçu du Circuit) -->
                 <?php ajtb_get_partial('overview', ['tour' => $tour]); ?>
+
+                <!-- Flights Section: between Aperçu and Programme (only if flights data exists) -->
+                <?php ajtb_get_partial('flights', ['tour' => $tour]); ?>
 
                 <!-- Gallery Section -->
                 <?php if (!empty($tour['gallery'])): ?>
@@ -123,12 +126,7 @@ get_header();
                     </section>
                 <?php endif; ?>
 
-                <!-- Flights: Laravel aj_tour_flights + session add/remove -->
-                <?php if (!empty($tour['flights']) || !empty($tour['all_flights'])): ?>
-                    <?php ajtb_get_partial('flights', ['tour' => $tour]); ?>
-                <?php endif; ?>
-
-                <!-- Itinerary: Laravel days (notes + activities) or fallback WP tours_program -->
+                <!-- Itinerary (Programme du Circuit): Laravel days or fallback WP tours_program -->
                 <?php if (!empty($tour['itinerary']) || !empty($tour['wp_program']['items'])): ?>
                     <?php ajtb_get_partial('itinerary', ['tour' => $tour]); ?>
                 <?php endif; ?>

@@ -94,9 +94,14 @@ class AJTB_Laravel_Repository {
         if (!empty($session_token)) {
             $flights = $this->apply_flight_selections($flights, $session_token);
         } else {
-            $flights = array_values(array_filter($flights, function ($f) {
-                return !empty($f['is_default']);
-            }));
+            // No session: show default flight(s). If only one flight, always show it.
+            if (count($flights) === 1) {
+                // keep as-is
+            } else {
+                $flights = array_values(array_filter($flights, function ($f) {
+                    return !empty($f['is_default']);
+                }));
+            }
         }
         return $flights;
     }
@@ -182,6 +187,9 @@ class AJTB_Laravel_Repository {
     private function apply_flight_selections(array $flights, $session_token) {
         $table_sel = $this->table('tour_flight_selections');
         if (!$this->table_exists($table_sel)) {
+            if (count($flights) === 1) {
+                return $flights;
+            }
             return array_values(array_filter($flights, function ($f) {
                 return !empty($f['is_default']);
             }));
@@ -211,6 +219,10 @@ class AJTB_Laravel_Repository {
                 $default_id = $f['id'];
                 break;
             }
+        }
+        // If only one flight, treat it as default so it is shown unless user removed it
+        if ($default_id === null && count($flights) === 1) {
+            $default_id = $flights[0]['id'];
         }
 
         $out = [];

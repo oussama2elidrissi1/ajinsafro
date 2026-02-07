@@ -1706,7 +1706,8 @@
 }
 
 /* ===================================
-   Flight Cards (same UI as admin)
+   Flight Cards – section between Aperçu and Programme
+   .ajtb-section-flights uses .ajtb-section + .ajtb-section-title (same container, title, spacing)
    =================================== */
 .ajtb-section-flights .ajtb-flights-container {
     margin-top: 12px;
