@@ -105,7 +105,12 @@ class VoyageController extends Controller
         
         // Programme vide pour création
         $tourProgram = ['style' => 'style1', 'items' => []];
-        $airlines = Airline::active()->orderBy('name')->get();
+        try {
+            $airlines = Airline::query()->orderBy('name')->get();
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageController@create: could not load airlines', ['error' => $e->getMessage()]);
+            $airlines = collect();
+        }
 
         return view('admin.circuits.voyages.create', compact('locationsTree', 'selectedLocationIds', 'tourProgram', 'airlines'));
     }
@@ -294,7 +299,12 @@ class VoyageController extends Controller
         }
         $outboundFlight = $laravelVoyage->outboundFlight;
         $inboundFlight = $laravelVoyage->inboundFlight;
-        $airlines = Airline::active()->orderBy('name')->get();
+        try {
+            $airlines = Airline::query()->orderBy('name')->get();
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageController@edit: could not load airlines', ['tour_id' => $id, 'error' => $e->getMessage()]);
+            $airlines = collect();
+        }
         $heroImageUrl = null;
         $heroId = !empty($meta['hero_image_id']) ? (int) $meta['hero_image_id'] : (!empty($meta['thumbnail_id']) ? (int) $meta['thumbnail_id'] : null);
         if ($heroId) {

@@ -901,6 +901,12 @@
                 .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 </style>
 
+                @if(($airlines ?? collect())->isEmpty() && Route::has('admin.circuits.airlines.create'))
+                <div class="alert alert-info mb-3">
+                    Aucune compagnie aérienne. <a href="{{ route('admin.circuits.airlines.create') }}">Créer une compagnie</a> pour l’afficher dans la liste « Compagnie aérienne » ci‑dessous. Pensez à exécuter les migrations Laravel (<code>php artisan migrate</code>) si la table <code>airlines</code> n’existe pas encore.
+                </div>
+                @endif
+
                 {{-- Vol Aller (Jour 1) --}}
                 <div class="flight-block" data-flight-type="outbound">
                     <div class="flight-card-view" id="flight-outbound-card-view">
