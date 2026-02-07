@@ -243,7 +243,7 @@ if (empty($itinerary)) {
                                         <?php if (!empty($day_transfer)): ?>
                                         <div class="ajtb-transfer-hotel-col">
                                             <div class="ajtb-card-with-image">
-                                                <div class="ajtb-card-image ajtb-card-image--transfer"></div>
+                                                <div class="ajtb-card-image ajtb-card-image--transfer"<?php if (!empty($day_transfer['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer['image_url']) . ')"'; } ?>></div>
                                                 <div class="ajtb-card-inner">
                                                     <?php $transfer = $day_transfer; $label = __('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?>
                                                 </div>
@@ -253,7 +253,7 @@ if (empty($itinerary)) {
                                         <?php if (!empty($day_hotel)): ?>
                                         <div class="ajtb-transfer-hotel-col">
                                             <div class="ajtb-card-with-image">
-                                                <div class="ajtb-card-image ajtb-card-image--hotel"></div>
+                                                <div class="ajtb-card-image ajtb-card-image--hotel"<?php if (!empty($day_hotel['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel['image_url']) . ')"'; } ?>></div>
                                                 <div class="ajtb-card-inner">
                                                     <?php $hotel = $day_hotel; $is_checkout = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?>
                                                 </div>
@@ -286,7 +286,7 @@ if (empty($itinerary)) {
                                         <?php if (!empty($day_hotel_last) && $hotel_checkout): ?>
                                         <div class="ajtb-transfer-hotel-col">
                                             <div class="ajtb-card-with-image">
-                                                <div class="ajtb-card-image ajtb-card-image--hotel"></div>
+                                                <div class="ajtb-card-image ajtb-card-image--hotel"<?php if (!empty($day_hotel_last['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel_last['image_url']) . ')"'; } ?>></div>
                                                 <div class="ajtb-card-inner">
                                                     <?php $hotel = $day_hotel_last; $is_checkout = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?>
                                                 </div>
@@ -296,7 +296,7 @@ if (empty($itinerary)) {
                                         <?php if (!empty($day_transfer_return)): ?>
                                         <div class="ajtb-transfer-hotel-col">
                                             <div class="ajtb-card-with-image">
-                                                <div class="ajtb-card-image ajtb-card-image--transfer"></div>
+                                                <div class="ajtb-card-image ajtb-card-image--transfer"<?php if (!empty($day_transfer_return['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer_return['image_url']) . ')"'; } ?>></div>
                                                 <div class="ajtb-card-inner">
                                                     <?php $transfer = $day_transfer_return; $label = __('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?>
                                                 </div>

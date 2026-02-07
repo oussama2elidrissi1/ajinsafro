@@ -695,14 +695,26 @@
                                     col.querySelector('.hero-media-item').addEventListener('click', function() {
                                         var id = this.getAttribute('data-id');
                                         var url = this.getAttribute('data-url');
-                                        var fd = new FormData();
-                                        fd.append('attachment_id', id);
-                                        if (csrfToken) fd.append('_token', csrfToken);
-                                        fetch(heroSelectUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' } })
-                                            .then(function(r) { return r.json(); })
-                                            .then(function(r) {
-                                                if (r.success) { setHeroPreview(r.url, r.attachment_id); if (window.bootstrap && mediaModal) { var m = bootstrap.Modal.getInstance(mediaModal); if (m) m.hide(); } }
-                                            });
+                                        if (window.logistiqueMediaTarget) {
+                                            var t = window.logistiqueMediaTarget;
+                                            var inp = document.getElementById(t.inputId);
+                                            var prev = document.getElementById(t.previewId);
+                                            var wrap = document.getElementById(t.previewWrapId);
+                                            if (inp) inp.value = id;
+                                            if (prev) prev.src = url || '';
+                                            if (wrap) wrap.style.display = 'flex';
+                                            if (mediaModal && window.bootstrap) { var m = bootstrap.Modal.getInstance(mediaModal); if (m) m.hide(); }
+                                            window.logistiqueMediaTarget = null;
+                                        } else {
+                                            var fd = new FormData();
+                                            fd.append('attachment_id', id);
+                                            if (csrfToken) fd.append('_token', csrfToken);
+                                            fetch(heroSelectUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' } })
+                                                .then(function(r) { return r.json(); })
+                                                .then(function(r) {
+                                                    if (r.success) { setHeroPreview(r.url, r.attachment_id); if (window.bootstrap && mediaModal) { var m = bootstrap.Modal.getInstance(mediaModal); if (m) m.hide(); } }
+                                                });
+                                        }
                                     });
                                     mediaResults.appendChild(col);
                                 });
@@ -718,8 +730,10 @@
                         .catch(function() { if (mediaLoading) mediaLoading.classList.add('d-none'); if (mediaResults) mediaResults.innerHTML = '<div class="col-12 text-danger">Erreur chargement.</div>'; });
                 }
 
+                window.logistiqueMediaTarget = null;
                 if (document.getElementById('hero-choose-media-btn')) {
                     document.getElementById('hero-choose-media-btn').addEventListener('click', function() {
+                        window.logistiqueMediaTarget = null;
                         if (mediaModal && window.bootstrap) {
                             var m = new bootstrap.Modal(mediaModal);
                             m.show();
@@ -727,6 +741,30 @@
                         }
                     });
                 }
+                document.querySelectorAll('.ajtb-logistique-media-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        window.logistiqueMediaTarget = {
+                            inputId: this.getAttribute('data-input'),
+                            previewId: this.getAttribute('data-preview'),
+                            previewWrapId: this.getAttribute('data-preview-wrap')
+                        };
+                        if (mediaModal && window.bootstrap) {
+                            var m = new bootstrap.Modal(mediaModal);
+                            m.show();
+                            loadMediaSearch(1);
+                        }
+                    });
+                });
+                document.querySelectorAll('.ajtb-logistique-media-remove').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var inp = document.getElementById(this.getAttribute('data-input'));
+                        var prev = document.getElementById(this.getAttribute('data-preview'));
+                        var wrap = document.getElementById(this.getAttribute('data-preview-wrap'));
+                        if (inp) inp.value = '';
+                        if (prev) prev.src = '';
+                        if (wrap) wrap.style.display = 'none';
+                    });
+                });
                 if (mediaSearch) {
                     mediaSearch.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); loadMediaSearch(1); } });
                 }
@@ -1051,6 +1089,19 @@
                                 <label class="form-label">Notes</label>
                                 <textarea class="form-control" name="tour_hotel[notes]" rows="2">{{ old('tour_hotel.notes', $tourHotel?->notes ?? '') }}</textarea>
                             </div>
+                            <div class="col-12">
+                                <label class="form-label">Image de la carte (affichée sur le circuit)</label>
+                                <input type="hidden" name="tour_hotel[image_id]" id="tour_hotel_image_id" value="{{ old('tour_hotel.image_id', $tourHotel?->image_id ?? '') }}">
+                                <div class="d-flex flex-wrap align-items-center gap-3">
+                                    <div id="tour-hotel-image-preview-wrap" class="border rounded overflow-hidden bg-light" style="width: 120px; height: 80px; display: {{ ($tourHotelImageUrl ?? '') ? 'flex' : 'none' }};">
+                                        <img id="tour-hotel-image-preview" src="{{ $tourHotelImageUrl ?? '' }}" alt="" class="img-fluid" style="max-width:100%; max-height:100%; object-fit: cover;">
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="tour_hotel" data-input="tour_hotel_image_id" data-preview="tour-hotel-image-preview" data-preview-wrap="tour-hotel-image-preview-wrap"><i class="bx bx-images"></i> Choisir image</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="tour_hotel_image_id" data-preview="tour-hotel-image-preview" data-preview-wrap="tour-hotel-image-preview-wrap">Supprimer</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1085,9 +1136,20 @@
                                     <label class="form-label small">Véhicule</label>
                                     <input type="text" class="form-control form-control-sm" name="tour_transfer_arrival[vehicle_type]" value="{{ old('tour_transfer_arrival.vehicle_type', $transferArrival?->vehicle_type ?? '') }}" placeholder="Minivan">
                                 </div>
-                                <div class="mb-0">
+                                <div class="mb-2">
                                     <label class="form-label small">Notes</label>
                                     <textarea class="form-control form-control-sm" name="tour_transfer_arrival[notes]" rows="1">{{ old('tour_transfer_arrival.notes', $transferArrival?->notes ?? '') }}</textarea>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label small">Image de la carte</label>
+                                    <input type="hidden" name="tour_transfer_arrival[image_id]" id="tour_transfer_arrival_image_id" value="{{ old('tour_transfer_arrival.image_id', $transferArrival?->image_id ?? '') }}">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div id="transfer-arrival-image-preview-wrap" class="border rounded overflow-hidden bg-light" style="width: 80px; height: 56px; display: {{ ($transferArrivalImageUrl ?? '') ? 'flex' : 'none' }};">
+                                            <img id="transfer-arrival-image-preview" src="{{ $transferArrivalImageUrl ?? '' }}" alt="" style="max-width:100%; max-height:100%; object-fit: cover;">
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="transfer_arrival" data-input="tour_transfer_arrival_image_id" data-preview="transfer-arrival-image-preview" data-preview-wrap="transfer-arrival-image-preview-wrap"><i class="bx bx-image"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="tour_transfer_arrival_image_id" data-preview="transfer-arrival-image-preview" data-preview-wrap="transfer-arrival-image-preview-wrap">×</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1120,9 +1182,20 @@
                                     <label class="form-label small">Véhicule</label>
                                     <input type="text" class="form-control form-control-sm" name="tour_transfer_departure[vehicle_type]" value="{{ old('tour_transfer_departure.vehicle_type', $transferDeparture?->vehicle_type ?? '') }}" placeholder="Minivan">
                                 </div>
-                                <div class="mb-0">
+                                <div class="mb-2">
                                     <label class="form-label small">Notes</label>
                                     <textarea class="form-control form-control-sm" name="tour_transfer_departure[notes]" rows="1">{{ old('tour_transfer_departure.notes', $transferDeparture?->notes ?? '') }}</textarea>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label small">Image de la carte</label>
+                                    <input type="hidden" name="tour_transfer_departure[image_id]" id="tour_transfer_departure_image_id" value="{{ old('tour_transfer_departure.image_id', $transferDeparture?->image_id ?? '') }}">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div id="transfer-departure-image-preview-wrap" class="border rounded overflow-hidden bg-light" style="width: 80px; height: 56px; display: {{ ($transferDepartureImageUrl ?? '') ? 'flex' : 'none' }};">
+                                            <img id="transfer-departure-image-preview" src="{{ $transferDepartureImageUrl ?? '' }}" alt="" style="max-width:100%; max-height:100%; object-fit: cover;">
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="transfer_departure" data-input="tour_transfer_departure_image_id" data-preview="transfer-departure-image-preview" data-preview-wrap="transfer-departure-image-preview-wrap"><i class="bx bx-image"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="tour_transfer_departure_image_id" data-preview="transfer-departure-image-preview" data-preview-wrap="transfer-departure-image-preview-wrap">×</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

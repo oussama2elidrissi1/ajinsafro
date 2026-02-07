@@ -267,7 +267,7 @@ class AJTB_Laravel_Repository {
             return ['arrival' => null, 'departure' => null];
         }
         $rows = $this->wpdb->get_results($this->wpdb->prepare(
-            "SELECT id, tour_id, direction, from_label, to_label, pickup_time, dropoff_time, vehicle_type, notes FROM {$t} WHERE tour_id = %d",
+            "SELECT * FROM {$t} WHERE tour_id = %d",
             $this->tour_id
         ), ARRAY_A);
         $out = ['arrival' => null, 'departure' => null];
@@ -276,6 +276,11 @@ class AJTB_Laravel_Repository {
         }
         foreach ($rows as $r) {
             $dir = isset($r['direction']) ? trim(strtolower((string) $r['direction'])) : '';
+            if (isset($r['image_id']) && $r['image_id'] && function_exists('wp_get_attachment_image_url')) {
+                $r['image_url'] = wp_get_attachment_image_url((int) $r['image_id'], 'medium') ?: '';
+            } else {
+                $r['image_url'] = '';
+            }
             if ($dir === 'arrival') {
                 $out['arrival'] = $r;
             } elseif ($dir === 'departure') {
@@ -296,9 +301,16 @@ class AJTB_Laravel_Repository {
             return null;
         }
         $row = $this->wpdb->get_row($this->wpdb->prepare(
-            "SELECT id, tour_id, hotel_name, stars, address, room_type, meal_plan, notes FROM {$t} WHERE tour_id = %d LIMIT 1",
+            "SELECT * FROM {$t} WHERE tour_id = %d LIMIT 1",
             $this->tour_id
         ), ARRAY_A);
+        if ($row && isset($row['image_id']) && $row['image_id'] && function_exists('wp_get_attachment_image_url')) {
+            $row['image_url'] = wp_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
+        } else {
+            if ($row) {
+                $row['image_url'] = '';
+            }
+        }
         return $row ?: null;
     }
 

@@ -180,6 +180,7 @@ class UpdateWpTourRequest extends FormRequest
             'tour_hotel.room_type' => 'nullable|string|max:255',
             'tour_hotel.meal_plan' => 'nullable|string|max:255',
             'tour_hotel.notes' => 'nullable|string|max:2000',
+            'tour_hotel.image_id' => 'nullable|integer|min:0',
             'tour_transfer_arrival' => 'nullable|array',
             'tour_transfer_arrival.from_label' => 'nullable|string|max:255',
             'tour_transfer_arrival.to_label' => 'nullable|string|max:255',
@@ -187,6 +188,7 @@ class UpdateWpTourRequest extends FormRequest
             'tour_transfer_arrival.dropoff_time' => 'nullable|string|max:20',
             'tour_transfer_arrival.vehicle_type' => 'nullable|string|max:255',
             'tour_transfer_arrival.notes' => 'nullable|string|max:2000',
+            'tour_transfer_arrival.image_id' => 'nullable|integer|min:0',
             'tour_transfer_departure' => 'nullable|array',
             'tour_transfer_departure.from_label' => 'nullable|string|max:255',
             'tour_transfer_departure.to_label' => 'nullable|string|max:255',
@@ -194,6 +196,7 @@ class UpdateWpTourRequest extends FormRequest
             'tour_transfer_departure.dropoff_time' => 'nullable|string|max:20',
             'tour_transfer_departure.vehicle_type' => 'nullable|string|max:255',
             'tour_transfer_departure.notes' => 'nullable|string|max:2000',
+            'tour_transfer_departure.image_id' => 'nullable|integer|min:0',
         ];
     }
 

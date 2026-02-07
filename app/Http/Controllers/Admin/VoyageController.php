@@ -343,7 +343,11 @@ class VoyageController extends Controller
         $suggestedDepartureFrom = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
         $suggestedDepartureTo = $inboundFlight ? trim($inboundFlight->from_city ?? $inboundFlight->from_label ?? '') : '';
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'heroImageUrl', 'tourHotel', 'transferArrival', 'transferDeparture', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo'));
+        $tourHotelImageUrl = $tourHotel && $tourHotel->image_id ? WpHeroImageService::getAttachmentUrl((int) $tourHotel->image_id) : null;
+        $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
+        $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
+
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'heroImageUrl', 'tourHotel', 'transferArrival', 'transferDeparture', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl'));
     }
     
     /**
@@ -465,6 +469,7 @@ class VoyageController extends Controller
                     'room_type' => $raw['room_type'] ?? null,
                     'meal_plan' => $raw['meal_plan'] ?? null,
                     'notes' => $raw['notes'] ?? null,
+                    'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
                 ];
                 $tourHotel = TourHotel::getForTour($id);
                 if ($tourHotel) {
@@ -484,6 +489,7 @@ class VoyageController extends Controller
                         'dropoff_time' => $arr['dropoff_time'] ?? null,
                         'vehicle_type' => $arr['vehicle_type'] ?? null,
                         'notes' => $arr['notes'] ?? null,
+                        'image_id' => isset($arr['image_id']) && $arr['image_id'] !== '' ? (int) $arr['image_id'] : null,
                     ]);
                 } else {
                     TourTransfer::create([
@@ -495,6 +501,7 @@ class VoyageController extends Controller
                         'dropoff_time' => $arr['dropoff_time'] ?? null,
                         'vehicle_type' => $arr['vehicle_type'] ?? null,
                         'notes' => $arr['notes'] ?? null,
+                        'image_id' => isset($arr['image_id']) && $arr['image_id'] !== '' ? (int) $arr['image_id'] : null,
                     ]);
                 }
             }
@@ -509,6 +516,7 @@ class VoyageController extends Controller
                         'dropoff_time' => $dep['dropoff_time'] ?? null,
                         'vehicle_type' => $dep['vehicle_type'] ?? null,
                         'notes' => $dep['notes'] ?? null,
+                        'image_id' => isset($dep['image_id']) && $dep['image_id'] !== '' ? (int) $dep['image_id'] : null,
                     ]);
                 } else {
                     TourTransfer::create([
@@ -520,6 +528,7 @@ class VoyageController extends Controller
                         'dropoff_time' => $dep['dropoff_time'] ?? null,
                         'vehicle_type' => $dep['vehicle_type'] ?? null,
                         'notes' => $dep['notes'] ?? null,
+                        'image_id' => isset($dep['image_id']) && $dep['image_id'] !== '' ? (int) $dep['image_id'] : null,
                     ]);
                 }
             }

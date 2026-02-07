@@ -22,6 +22,11 @@ class TourTransfer extends Model
         'dropoff_time',
         'vehicle_type',
         'notes',
+        'image_id',
+    ];
+
+    protected $casts = [
+        'image_id' => 'integer',
     ];
 
     public function getPickupTimeFormattedAttribute(): string
