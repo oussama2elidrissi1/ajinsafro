@@ -11,8 +11,11 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Laravel API base URL for voyage flights (optional).
- * Define AJTB_LARAVEL_API_URL or use filter 'ajtb_laravel_api_url'.
+ * Laravel API base URL for voyage flights (Vol Aller / Vol Retour).
+ * Without this, Vol Aller (Jour 1) and Vol Retour (dernier jour) will not load on the front.
+ *
+ * In wp-config.php add: define('AJTB_LARAVEL_API_URL', 'https://your-laravel-domain.com');
+ * Or use filter 'ajtb_laravel_api_url'. URL must not end with a trailing slash.
  *
  * @return string Empty if not configured (e.g. same-server DB only).
  */

@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Models\Voyage;
 use App\Models\VoyageFlight;
+use Illuminate\Support\Facades\DB;
 
 class VoyageFlightService
 {
     /**
      * Sync voyage flights (outbound + inbound). Create/update or delete per direction.
      * voyage_id = Laravel Voyage id.
+     * Also syncs to WP aj_tour_flights so the front plugin can read from DB (no API).
      */
     public function syncFlights(int $voyageId, array $flights): void
     {
@@ -46,6 +48,65 @@ class VoyageFlightService
             } else {
                 VoyageFlight::create($data);
             }
+        }
+
+        $voyage = Voyage::find($voyageId);
+        if ($voyage && $voyage->wp_post_id) {
+            $this->syncFlightsToWp($voyageId, (int) $voyage->wp_post_id);
+        }
+    }
+
+    /**
+     * Sync voyage_flights to WP table aj_tour_flights (tour_id = wp_post_id).
+     * So the WP plugin can read Vol Aller / Vol Retour directly from DB.
+     */
+    public function syncFlightsToWp(int $voyageId, int $wpPostId): void
+    {
+        try {
+            $wp = DB::connection('wp');
+            $table = 'aj_tour_flights';
+
+            foreach (['outbound', 'inbound'] as $direction) {
+                $flight = VoyageFlight::where('voyage_id', $voyageId)->where('direction', $direction)->first();
+                $depDate = $flight && $flight->departure_date ? $flight->departure_date->format('Y-m-d') : null;
+
+                $row = [
+                    'tour_id' => $wpPostId,
+                    'flight_type' => $direction,
+                    'airline_id' => $flight ? $flight->airline_id : null,
+                    'cabin_class' => $flight ? ($flight->cabin ?? 'economy') : 'economy',
+                    'from_city' => $flight ? $flight->from_city : null,
+                    'to_city' => $flight ? $flight->to_city : null,
+                    'depart_date' => $depDate,
+                    'depart_time' => null,
+                    'arrive_date' => $depDate,
+                    'arrive_time' => null,
+                    'baggage_cabin_kg' => $flight ? $flight->baggage_cabin_kg : null,
+                    'baggage_checkin_kg' => $flight ? $flight->baggage_checkin_kg : null,
+                    'is_tentative' => $flight ? $flight->is_tentative : false,
+                    'notes' => null,
+                    'updated_at' => now(),
+                ];
+
+                $existing = $wp->table($table)->where('tour_id', $wpPostId)->where('flight_type', $direction)->first();
+
+                if ($existing) {
+                    if ($flight) {
+                        $wp->table($table)->where('id', $existing->id)->update($row);
+                    } else {
+                        $wp->table($table)->where('id', $existing->id)->delete();
+                    }
+                } elseif ($flight) {
+                    $row['created_at'] = now();
+                    $wp->table($table)->insert($row);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageFlightService::syncFlightsToWp failed', [
+                'voyage_id' => $voyageId,
+                'wp_post_id' => $wpPostId,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 

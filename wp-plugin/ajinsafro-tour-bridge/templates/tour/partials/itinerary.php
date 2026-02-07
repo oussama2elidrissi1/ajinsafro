@@ -22,9 +22,68 @@ $can_toggle_activities = ($source === 'laravel' && !empty($session_token) && $to
 $outboundFlight = $tour['outboundFlight'] ?? null;
 $inboundFlight = $tour['inboundFlight'] ?? null;
 $total_days = count($itinerary);
+$duration_day = max(1, (int) ($tour['duration_day'] ?? 1));
 
-// No Laravel days: fallback to WP tours_program list only if WP has items
+// No Laravel days: show flights in programme when present, then WP programme or "non disponible"
 if (empty($itinerary)) {
+    $show_out = !empty($outboundFlight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($outboundFlight);
+    $show_in = !empty($inboundFlight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($inboundFlight);
+    $has_flights_in_program = $show_out || $show_in;
+    $last_day_num = $duration_day;
+
+    if ($has_flights_in_program) {
+        // Programme avec uniquement les vols (Jour 1 + dernier jour) quand pas de jours Laravel
+        ?>
+    <section class="ajtb-section" id="itinerary" data-tour-id="<?php echo $tour_id; ?>">
+        <h2 class="ajtb-section-title">Programme du Circuit</h2>
+        <div class="ajtb-flights-in-programme">
+            <?php if ($show_out): 
+                $fo_from = trim((string) ($outboundFlight['from_city'] ?? $outboundFlight['depart_label'] ?? ''));
+                $fo_to   = trim((string) ($outboundFlight['to_city'] ?? $outboundFlight['arrive_label'] ?? ''));
+                $fo_from = $fo_from !== '' ? $fo_from : '—';
+                $fo_to   = $fo_to !== '' ? $fo_to : '—';
+            ?>
+            <div class="ajtb-day-flight-block ajtb-day-flight-outbound" data-aj-day-flight="outbound" data-aj-day-number="1">
+                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> — Jour 1 • <?php echo esc_html($fo_from); ?> → <?php echo esc_html($fo_to); ?></h4>
+                <?php $flight = $outboundFlight; $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
+            </div>
+            <?php endif; ?>
+            <?php if ($show_in): 
+                $fi_from = trim((string) ($inboundFlight['from_city'] ?? $inboundFlight['depart_label'] ?? ''));
+                $fi_to   = trim((string) ($inboundFlight['to_city'] ?? $inboundFlight['arrive_label'] ?? ''));
+                $fi_from = $fi_from !== '' ? $fi_from : '—';
+                $fi_to   = $fi_to !== '' ? $fi_to : '—';
+            ?>
+            <div class="ajtb-day-flight-block ajtb-day-flight-inbound" data-aj-day-flight="inbound" data-aj-day-number="<?php echo $last_day_num; ?>">
+                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?> — Jour <?php echo $last_day_num; ?> • <?php echo esc_html($fi_from); ?> → <?php echo esc_html($fi_to); ?></h4>
+                <?php $flight = $inboundFlight; $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php if (!empty($wp_program['items'])): 
+            $program_style = isset($wp_program['style']) ? sanitize_html_class($wp_program['style']) : 'style1';
+            if ($program_style === '') { $program_style = 'style1'; }
+        ?>
+        <div class="aj-program-list program-style-<?php echo esc_attr($program_style); ?> mt-4">
+            <?php foreach ($wp_program['items'] as $item): 
+                $title = isset($item['title']) ? trim((string) $item['title']) : '';
+                $desc = isset($item['desc']) ? trim((string) $item['desc']) : '';
+            ?>
+                <div class="aj-program-item">
+                    <?php if ($title !== ''): ?><h4 class="aj-program-item-title"><?php echo esc_html($title); ?></h4><?php endif; ?>
+                    <?php if ($desc !== ''): ?><div class="aj-program-item-desc"><?php echo wp_kses_post(nl2br($desc)); ?></div><?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        <div class="itinerary-actions">
+            <button type="button" class="btn-outline" onclick="window.print();"><?php esc_html_e('Imprimer le programme', 'ajinsafro-tour-bridge'); ?></button>
+        </div>
+    </section>
+    <?php
+        return;
+    }
+
     if (!empty($wp_program['items'])) {
         $program_style = isset($wp_program['style']) ? sanitize_html_class($wp_program['style']) : 'style1';
         if ($program_style === '') { $program_style = 'style1'; }
