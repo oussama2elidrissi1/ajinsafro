@@ -933,6 +933,11 @@
     display: none !important;
 }
 
+.aj-flight-card--unavailable .aj-flight-card__unavailable-msg {
+    color: var(--ajtb-text-muted);
+    font-style: italic;
+}
+
 .aj-flight-card__header {
     display: flex;
     align-items: center;
