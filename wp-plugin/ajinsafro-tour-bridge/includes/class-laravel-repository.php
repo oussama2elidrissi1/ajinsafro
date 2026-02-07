@@ -220,7 +220,10 @@ class AJTB_Laravel_Repository {
             return $out;
         }
         foreach ($rows as $r) {
-            $ft = isset($r['flight_type']) ? $r['flight_type'] : ((int) ($r['segment_number'] ?? 0) === 1 ? 'outbound' : 'inbound');
+            $ft = isset($r['flight_type']) ? trim(strtolower((string) $r['flight_type'])) : '';
+            if ($ft === '') {
+                $ft = (int) ($r['segment_number'] ?? 0) === 1 ? 'outbound' : 'inbound';
+            }
             if ($ft !== 'outbound' && $ft !== 'inbound') {
                 continue;
             }

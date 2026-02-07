@@ -310,6 +310,14 @@ class VoyageController extends Controller
         }
         $outboundFlight = $laravelVoyage->outboundFlight;
         $inboundFlight = $laravelVoyage->inboundFlight;
+        // Sync voyage_flights → aj_tour_flights (WP) so the front always reflects CRUD when edit page is opened
+        if ($laravelVoyage->wp_post_id) {
+            try {
+                $this->voyageFlightService->syncFlightsToWp($laravelVoyage->id, (int) $laravelVoyage->wp_post_id);
+            } catch (\Throwable $e) {
+                \Log::warning('VoyageController@edit: syncFlightsToWp failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
+            }
+        }
         try {
             $airlines = Airline::query()->orderBy('name')->get();
         } catch (\Throwable $e) {
