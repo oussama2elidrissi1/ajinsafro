@@ -264,11 +264,17 @@ class AJTB_Tour_Repository {
             'alt' => '',
         ];
 
-        // 1) Image principale du voyage (Hero / Cover)
+        // 1) Image principale du voyage (Hero / Cover) – priorité
         $hero_id = isset($meta['_tour_hero_image_id']) ? (int) $meta['_tour_hero_image_id'] : 0;
         if ($hero_id > 0) {
             $url = wp_get_attachment_image_url($hero_id, 'full');
-            if ($url) {
+            if (empty($url)) {
+                $attachment_post = get_post($hero_id);
+                if ($attachment_post && $attachment_post->post_type === 'attachment' && !empty($attachment_post->guid)) {
+                    $url = $attachment_post->guid;
+                }
+            }
+            if (!empty($url)) {
                 return [
                     'id' => $hero_id,
                     'url' => $url,

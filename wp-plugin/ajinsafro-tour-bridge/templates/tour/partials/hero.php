@@ -11,8 +11,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$hero_image = $tour['featured_image']['url'] ?? '';
-$hero_alt = $tour['featured_image']['alt'] ?? $tour['title'];
+// Image hero : hero_image (image principale) ou featured_image (même chose en fallback)
+$hero_image = $tour['hero_image']['url'] ?? $tour['featured_image']['url'] ?? '';
+$hero_alt = $tour['hero_image']['alt'] ?? $tour['featured_image']['alt'] ?? $tour['title'];
 ?>
 
 <section class="ajtb-hero" <?php if ($hero_image): ?>style="background-image: url('<?php echo esc_url($hero_image); ?>');"<?php endif; ?>>

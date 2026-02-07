@@ -163,8 +163,9 @@ class AJTB_Template_Loader {
             'excerpt' => $wp_data['excerpt'],
             'permalink' => $wp_data['permalink'],
             
-            // Images
+            // Images (featured_image = image hero principale, hero_image = même chose pour le partial hero)
             'featured_image' => $wp_data['featured_image'],
+            'hero_image' => $wp_data['hero_image'] ?? $wp_data['featured_image'],
             'gallery' => $wp_data['gallery'],
             
             // Location
