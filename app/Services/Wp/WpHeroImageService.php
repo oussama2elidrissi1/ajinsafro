@@ -34,8 +34,12 @@ class WpHeroImageService
             throw new \RuntimeException('WP uploads path is not configured or does not exist. Set WP_UPLOADS_PATH in .env.');
         }
 
+        // Read mime and title before move() — after move the temp file is gone and getMimeType() can fail
+        $mime = $file->getMimeType();
+        $originalName = $file->getClientOriginalName();
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension();
-        $safeName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+
+        $safeName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME));
         if (strlen($safeName) > 100) {
             $safeName = Str::limit($safeName, 100, '');
         }
@@ -51,8 +55,6 @@ class WpHeroImageService
         if (!$file->move($dir, $filename)) {
             throw new \RuntimeException('Failed to move uploaded file.');
         }
-
-        $mime = $file->getMimeType();
         $uploadsUrl = config('wordpress.uploads_url') ?: (rtrim(config('wordpress.site_url'), '/') . '/wp-content/uploads');
         $guid = rtrim($uploadsUrl, '/') . '/' . $relativePath;
 
@@ -61,7 +63,7 @@ class WpHeroImageService
             'post_date' => now()->format('Y-m-d H:i:s'),
             'post_date_gmt' => now('UTC')->format('Y-m-d H:i:s'),
             'post_content' => '',
-            'post_title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+            'post_title' => pathinfo($originalName, PATHINFO_FILENAME),
             'post_excerpt' => '',
             'post_status' => 'inherit',
             'comment_status' => 'open',
