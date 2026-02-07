@@ -197,39 +197,69 @@ if (empty($itinerary)) {
 
                     <div class="day-body" id="day-content-<?php echo $index; ?>" <?php echo !$is_first ? 'style="display:none;"' : ''; ?>>
                         <?php
-                        // Vol Aller — Jour 1 : toujours afficher le bloc (vol ou "non disponible")
-                        if ($is_first): 
-                            $show_outbound = !empty($outboundFlight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($outboundFlight);
+                        // —— Jour 1 : Vol Aller → Transfert Aéroport→Hôtel → Hôtel (check-in) → description → activités
+                        if ($is_first):
+                            $day_flight = $day['flight'] ?? null;
+                            $day_transfer = $day['transfer'] ?? null;
+                            $day_hotel = $day['hotel'] ?? null;
+                            $show_outbound = !empty($day_flight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day_flight);
                         ?>
                             <div class="ajtb-day-flight-block ajtb-day-flight-outbound" data-aj-day-flight="outbound" data-aj-day-number="1">
                                 <?php if ($show_outbound): 
-                                    $fo_from = trim((string) ($outboundFlight['from_city'] ?? $outboundFlight['depart_label'] ?? ''));
-                                    $fo_to   = trim((string) ($outboundFlight['to_city'] ?? $outboundFlight['arrive_label'] ?? ''));
+                                    $fo_from = trim((string) ($day_flight['from_city'] ?? $day_flight['depart_label'] ?? ''));
+                                    $fo_to   = trim((string) ($day_flight['to_city'] ?? $day_flight['arrive_label'] ?? ''));
                                     $fo_from = $fo_from !== '' ? $fo_from : '—';
                                     $fo_to   = $fo_to !== '' ? $fo_to : '—';
                                 ?>
                                     <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> — Jour 1 • <?php echo esc_html($fo_from); ?> → <?php echo esc_html($fo_to); ?></h4>
-                                    <?php $flight = $outboundFlight; $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
+                                    <?php $flight = $day_flight; $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
                                 <?php else: ?>
                                     <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> — Jour 1</h4>
                                     <?php $label = __('Vol Aller non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; ?>
                                 <?php endif; ?>
                             </div>
+                            <?php if (!empty($day_transfer)): ?>
+                            <div class="ajtb-day-transfer-block ajtb-day-transfer-arrival" data-aj-day-transfer="arrival">
+                                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); ?></h4>
+                                <?php $transfer = $day_transfer; $label = __('Transfert Aller', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($day_hotel)): ?>
+                            <div class="ajtb-day-hotel-block ajtb-day-hotel-checkin">
+                                <?php $hotel = $day_hotel; $is_checkout = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?>
+                            </div>
+                            <?php endif; ?>
                         <?php endif; ?>
+
                         <?php
-                        // Vol Retour — Dernier jour : toujours afficher le bloc (vol ou "non disponible")
-                        if ($is_last): 
-                            $show_inbound = !empty($inboundFlight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($inboundFlight);
+                        // —— Dernier jour : Hôtel (check-out) → Transfert Hôtel→Aéroport → Vol Retour → notes (même jour si circuit 1 jour)
+                        if ($is_last):
+                            $day_flight_return = $day['flight_return'] ?? null;
+                            $day_transfer_return = $day['transfer_return'] ?? null;
+                            $day_hotel = $day['hotel'] ?? null;
+                            $hotel_checkout = !empty($day['hotel_checkout']);
+                            $show_inbound = !empty($day_flight_return) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day_flight_return);
                         ?>
+                            <?php if (!empty($day_hotel) && $hotel_checkout): ?>
+                            <div class="ajtb-day-hotel-block ajtb-day-hotel-checkout">
+                                <?php $hotel = $day_hotel; $is_checkout = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($day_transfer_return)): ?>
+                            <div class="ajtb-day-transfer-block ajtb-day-transfer-departure" data-aj-day-transfer="departure">
+                                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); ?></h4>
+                                <?php $transfer = $day_transfer_return; $label = __('Transfert Retour', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?>
+                            </div>
+                            <?php endif; ?>
                             <div class="ajtb-day-flight-block ajtb-day-flight-inbound" data-aj-day-flight="inbound" data-aj-day-number="<?php echo $total_days; ?>">
                                 <?php if ($show_inbound): 
-                                    $fi_from = trim((string) ($inboundFlight['from_city'] ?? $inboundFlight['depart_label'] ?? ''));
-                                    $fi_to   = trim((string) ($inboundFlight['to_city'] ?? $inboundFlight['arrive_label'] ?? ''));
+                                    $fi_from = trim((string) ($day_flight_return['from_city'] ?? $day_flight_return['depart_label'] ?? ''));
+                                    $fi_to   = trim((string) ($day_flight_return['to_city'] ?? $day_flight_return['arrive_label'] ?? ''));
                                     $fi_from = $fi_from !== '' ? $fi_from : '—';
                                     $fi_to   = $fi_to !== '' ? $fi_to : '—';
                                 ?>
                                     <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?> — Jour <?php echo $total_days; ?> • <?php echo esc_html($fi_from); ?> → <?php echo esc_html($fi_to); ?></h4>
-                                    <?php $flight = $inboundFlight; $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
+                                    <?php $flight = $day_flight_return; $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
                                 <?php else: ?>
                                     <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?> — Jour <?php echo $total_days; ?></h4>
                                     <?php $label = __('Vol Retour non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; ?>

@@ -257,6 +257,52 @@ class AJTB_Laravel_Repository {
     }
 
     /**
+     * Get transfers for this tour: arrival (day 1) and departure (last day).
+     *
+     * @return array ['arrival' => array|null, 'departure' => array|null]
+     */
+    private function get_tour_transfers() {
+        $t = $this->table('tour_transfers');
+        if (!$this->table_exists($t)) {
+            return ['arrival' => null, 'departure' => null];
+        }
+        $rows = $this->wpdb->get_results($this->wpdb->prepare(
+            "SELECT id, tour_id, direction, from_label, to_label, pickup_time, dropoff_time, vehicle_type, notes FROM {$t} WHERE tour_id = %d",
+            $this->tour_id
+        ), ARRAY_A);
+        $out = ['arrival' => null, 'departure' => null];
+        if (!$rows) {
+            return $out;
+        }
+        foreach ($rows as $r) {
+            $dir = isset($r['direction']) ? trim(strtolower((string) $r['direction'])) : '';
+            if ($dir === 'arrival') {
+                $out['arrival'] = $r;
+            } elseif ($dir === 'departure') {
+                $out['departure'] = $r;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Get the main hotel for this tour (one per tour).
+     *
+     * @return array|null
+     */
+    private function get_tour_hotel() {
+        $t = $this->table('tour_hotels');
+        if (!$this->table_exists($t)) {
+            return null;
+        }
+        $row = $this->wpdb->get_row($this->wpdb->prepare(
+            "SELECT id, tour_id, hotel_name, stars, address, room_type, meal_plan, notes FROM {$t} WHERE tour_id = %d LIMIT 1",
+            $this->tour_id
+        ), ARRAY_A);
+        return $row ?: null;
+    }
+
+    /**
      * Get all flights for this tour (no session filter). Used on front to show "Add this flight" for non-displayed segments.
      *
      * @return array Same structure as get_flights()
@@ -460,13 +506,44 @@ class AJTB_Laravel_Repository {
             // Attach flights: outbound => day 1, inbound => last day
             $flights_by_type = $this->get_tour_flights_for_days();
             $last_day_number = count($days_array) > 0 ? (int) $days_array[ count($days_array) - 1 ]['day'] : 0;
+
+            $transfers = $this->get_tour_transfers();
+            $hotel = $this->get_tour_hotel();
+
             foreach ($days_array as &$day) {
                 $day['flight'] = null;
+                $day['flight_return'] = null;
+                $day['transfer'] = null;
+                $day['transfer_return'] = null;
+                $day['hotel'] = null;
+                $day['hotel_checkout'] = false;
                 $dn = (int) ($day['day'] ?? 0);
-                if ($dn === 1 && !empty($flights_by_type['outbound'])) {
-                    $day['flight'] = $flights_by_type['outbound'];
-                } elseif ($last_day_number > 0 && $dn === $last_day_number && !empty($flights_by_type['inbound'])) {
-                    $day['flight'] = $flights_by_type['inbound'];
+                // Jour 1 : vol aller, transfert arrivée, hôtel (check-in)
+                if ($dn === 1) {
+                    if (!empty($flights_by_type['outbound'])) {
+                        $day['flight'] = $flights_by_type['outbound'];
+                    }
+                    if (!empty($transfers['arrival'])) {
+                        $day['transfer'] = $transfers['arrival'];
+                    }
+                    if (!empty($hotel)) {
+                        $day['hotel'] = $hotel;
+                    }
+                }
+                // Dernier jour : hôtel (check-out), transfert retour, vol retour (peut être le même jour que J1)
+                if ($last_day_number > 0 && $dn === $last_day_number) {
+                    if (!empty($transfers['departure'])) {
+                        $day['transfer_return'] = $transfers['departure'];
+                    }
+                    if (!empty($hotel)) {
+                        if (empty($day['hotel'])) {
+                            $day['hotel'] = $hotel;
+                        }
+                        $day['hotel_checkout'] = true;
+                    }
+                    if (!empty($flights_by_type['inbound'])) {
+                        $day['flight_return'] = $flights_by_type['inbound'];
+                    }
                 }
             }
             unset($day);

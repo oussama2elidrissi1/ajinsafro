@@ -1056,6 +1056,38 @@
     font-weight: 600;
 }
 
+/* Transfer & Hotel cards: same width/padding as flight card */
+.aj-transfer-card.aj-flight-card,
+.aj-hotel-card.aj-flight-card {
+    margin-bottom: 16px;
+}
+.aj-transfer-card__notes,
+.aj-hotel-card__notes {
+    padding: 0 16px 12px;
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+}
+.aj-hotel-card__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+    margin-bottom: 4px;
+}
+.aj-hotel-card__stars {
+    color: var(--ajtb-primary);
+    margin-left: 4px;
+}
+.aj-hotel-card__address,
+.aj-hotel-card__meta {
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+    margin-top: 2px;
+}
+.ajtb-day-transfer-block,
+.ajtb-day-hotel-block {
+    margin-bottom: 16px;
+}
+
 @media (max-width: 768px) {
     .ajtb-day-plan {
         flex-direction: column;
