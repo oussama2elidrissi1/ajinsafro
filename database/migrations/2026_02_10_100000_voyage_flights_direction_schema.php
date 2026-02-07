@@ -73,7 +73,7 @@ return new class extends Migration
             }
         }
 
-        Schema::table($table, function (Blueprint $t) {
+        Schema::table($table, function (Blueprint $t) use ($table) {
             if (Schema::hasColumn($table, 'voyage_id') && Schema::hasColumn($table, 'sort_order')) {
                 try {
                     $t->dropUnique(['voyage_id', 'sort_order']);
