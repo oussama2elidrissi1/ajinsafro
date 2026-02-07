@@ -39,7 +39,9 @@ get_header();
         <div class="ajtb-tour-layout">
             <!-- Left Column: Content -->
             <main class="ajtb-tour-main">
-                
+                <!-- Search Bar (MakeMyTrip style: Starting from / Travelling on / Rooms & Guests) -->
+                <?php ajtb_get_partial('searchbar', ['tour' => $tour]); ?>
+
                 <!-- Quick Info Bar -->
                 <div class="ajtb-quick-info">
                     <?php if ($tour['duration_day'] > 0): ?>

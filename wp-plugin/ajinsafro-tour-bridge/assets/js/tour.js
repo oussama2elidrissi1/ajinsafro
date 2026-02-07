@@ -49,6 +49,7 @@
             this.initSaveButton();
             this.initSmoothScroll();
             this.initStickyNav();
+            this.initSearchbar();
         },
 
         /**
@@ -689,6 +690,133 @@
                     }
                 });
             });
+        },
+
+        /**
+         * Search bar (MakeMyTrip style): cookie persistence + sync with booking form
+         * Event delegation so it works with dynamic content.
+         */
+        initSearchbar: function() {
+            var self = this;
+            var cookieName = 'aj_tb_search';
+            var cookieDays = 30;
+
+            function getCookie() {
+                var match = document.cookie.match(new RegExp('(^| )' + cookieName + '=([^;]+)'));
+                if (match) {
+                    try {
+                        return JSON.parse(decodeURIComponent(match[2]));
+                    } catch (e) {}
+                }
+                return {};
+            }
+
+            function setCookie(data) {
+                var d = new Date();
+                d.setTime(d.getTime() + cookieDays * 24 * 60 * 60 * 1000);
+                document.cookie = cookieName + '=' + encodeURIComponent(JSON.stringify(data)) + ';path=/;expires=' + d.toUTCString() + ';SameSite=Lax';
+            }
+
+            function getSearchbarState() {
+                var $bar = $('#aj-searchbar');
+                if (!$bar.length) return {};
+                var dateVal = ($bar.find('#aj-searchbar-date').val() || '').trim();
+                var adults = parseInt($bar.find('#aj-searchbar-adults').text(), 10) || 0;
+                var children = parseInt($bar.find('#aj-searchbar-children').text(), 10) || 0;
+                var from = ($bar.find('#aj-searchbar-from').text() || '').trim();
+                if (from === '—') from = '';
+                return { starting_from: from, travelling_on: dateVal, adults: adults, children: children };
+            }
+
+            function setSearchbarDisplay(state) {
+                var $bar = $('#aj-searchbar');
+                if (!$bar.length) return;
+                var $dateInput = $bar.find('#aj-searchbar-date');
+                var $dateDisplay = $bar.find('#aj-searchbar-date-display');
+                var $adults = $bar.find('#aj-searchbar-adults');
+                var $children = $bar.find('#aj-searchbar-children');
+                if (state.travelling_on) {
+                    $dateInput.val(state.travelling_on);
+                    var parts = state.travelling_on.split('-');
+                    if (parts.length === 3) {
+                        $dateDisplay.text(parts[2] + '/' + parts[1] + '/' + parts[0]);
+                    } else {
+                        $dateDisplay.text(state.travelling_on);
+                    }
+                } else {
+                    $dateInput.val('');
+                    $dateDisplay.text($dateDisplay.attr('data-placeholder') || '');
+                }
+                if (typeof state.adults === 'number') $adults.text(state.adults);
+                if (typeof state.children === 'number') $children.text(state.children);
+                var $av = $bar.find('#aj-searchbar-adults-val');
+                var $cv = $bar.find('#aj-searchbar-children-val');
+                if ($av.length) $av.val(state.adults);
+                if ($cv.length) $cv.val(state.children);
+            }
+
+            function syncToBookingForm(state) {
+                var $date = $('#booking-date');
+                var $adults = $('#adults');
+                var $children = $('#children');
+                if ($date.length && state.travelling_on) $date.val(state.travelling_on);
+                if ($adults.length && typeof state.adults === 'number') $adults.val(state.adults);
+                if ($children.length && typeof state.children === 'number') $children.val(state.children);
+                if (typeof self.calculateTotal === 'function') self.calculateTotal();
+            }
+
+            // Date change (event delegation)
+            $(document).on('change', '#aj-searchbar-date', function() {
+                var val = $(this).val() || '';
+                var state = getSearchbarState();
+                state.travelling_on = val;
+                setCookie(state);
+                var $display = $('#aj-searchbar-date-display');
+                if (val) {
+                    var parts = val.split('-');
+                    if (parts.length === 3) $display.text(parts[2] + '/' + parts[1] + '/' + parts[0]);
+                    else $display.text(val);
+                } else {
+                    $display.text($display.attr('data-placeholder') || '');
+                }
+                syncToBookingForm(state);
+            });
+
+            // Guest +/- (event delegation on searchbar only)
+            $(document).on('click', '#aj-searchbar .aj-searchbar__btn-plus, #aj-searchbar .aj-searchbar__btn-minus', function(e) {
+                var btn = e.currentTarget;
+                var target = $(btn).data('target');
+                if (target !== 'adults' && target !== 'children') return;
+                var $num = $('#aj-searchbar-' + target);
+                var $val = $('#aj-searchbar-' + target + '-val');
+                if (!$num.length) return;
+                var max = 99;
+                if ($val.length) max = parseInt($val.attr('data-max'), 10) || 99;
+                var current = parseInt($num.text(), 10) || 0;
+                var min = target === 'children' ? 0 : 1;
+                if ($(btn).hasClass('aj-searchbar__btn-plus')) {
+                    if (current < max) current++;
+                } else {
+                    if (current > min) current--;
+                }
+                $num.text(current);
+                if ($val.length) $val.val(current);
+                var state = getSearchbarState();
+                setCookie(state);
+                syncToBookingForm(state);
+            });
+
+            // On load: apply cookie to searchbar and booking form
+            var saved = getCookie();
+            if ($('#aj-searchbar').length) {
+                var state = getSearchbarState();
+                if (saved.travelling_on) state.travelling_on = saved.travelling_on;
+                if (typeof saved.adults === 'number') state.adults = saved.adults;
+                if (typeof saved.children === 'number') state.children = saved.children;
+                setSearchbarDisplay(state);
+                setCookie(state);
+                syncToBookingForm(state);
+            }
         }
     };
 
