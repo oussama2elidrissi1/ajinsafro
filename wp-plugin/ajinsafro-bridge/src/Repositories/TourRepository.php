@@ -130,8 +130,8 @@ class TourRepository
         // Get all meta at once for performance
         $meta = $this->getAllMeta($post->ID);
 
-        // Get featured image
-        $featured_image = $this->getFeaturedImage($post->ID);
+        // Get featured image (hero _tour_hero_image_id first, then _thumbnail_id)
+        $featured_image = $this->getFeaturedImage($post->ID, $meta);
 
         // Get gallery images
         $gallery = $this->getGallery($meta);
@@ -245,16 +245,31 @@ class TourRepository
     }
 
     /**
-     * Get featured image data
+     * Get featured image data (hero image first: _tour_hero_image_id, then _thumbnail_id).
      *
      * @param int $postId
+     * @param array $meta Post meta (for _tour_hero_image_id)
      * @return array
      */
-    private function getFeaturedImage(int $postId): array
+    private function getFeaturedImage(int $postId, array $meta = []): array
     {
-        $thumbnail_id = get_post_thumbnail_id($postId);
+        $attachment_id = 0;
 
-        if (!$thumbnail_id) {
+        // 1) Image principale du voyage (Hero / Cover) – priorité
+        $hero_id = isset($meta['_tour_hero_image_id']) ? (int) $meta['_tour_hero_image_id'] : 0;
+        if ($hero_id > 0) {
+            $url = wp_get_attachment_image_url($hero_id, 'full');
+            if ($url) {
+                $attachment_id = $hero_id;
+            }
+        }
+
+        // 2) Image à la une WordPress
+        if ($attachment_id === 0) {
+            $attachment_id = get_post_thumbnail_id($postId);
+        }
+
+        if (!$attachment_id) {
             return [
                 'id' => 0,
                 'url' => '',
@@ -264,14 +279,14 @@ class TourRepository
         }
 
         return [
-            'id' => $thumbnail_id,
-            'url' => get_the_post_thumbnail_url($postId, 'full'),
-            'alt' => get_post_meta($thumbnail_id, '_wp_attachment_image_alt', true),
+            'id' => $attachment_id,
+            'url' => wp_get_attachment_image_url($attachment_id, 'full') ?: '',
+            'alt' => get_post_meta($attachment_id, '_wp_attachment_image_alt', true),
             'sizes' => [
-                'thumbnail' => get_the_post_thumbnail_url($postId, 'thumbnail'),
-                'medium' => get_the_post_thumbnail_url($postId, 'medium'),
-                'large' => get_the_post_thumbnail_url($postId, 'large'),
-                'full' => get_the_post_thumbnail_url($postId, 'full'),
+                'thumbnail' => wp_get_attachment_image_url($attachment_id, 'thumbnail'),
+                'medium' => wp_get_attachment_image_url($attachment_id, 'medium'),
+                'large' => wp_get_attachment_image_url($attachment_id, 'large'),
+                'full' => wp_get_attachment_image_url($attachment_id, 'full'),
             ],
         ];
     }
