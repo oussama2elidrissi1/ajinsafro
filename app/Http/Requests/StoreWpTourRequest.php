@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreWpTourRequest extends FormRequest
@@ -12,6 +13,42 @@ class StoreWpTourRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Configure the validator (flights: exactly one default when 2 vols).
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v) {
+            $flights = $this->input('flights', []);
+            $count = 0;
+            foreach ($flights as $f) {
+                if (! empty($f['airline_id']) || ! empty($f['cabin_class'])) {
+                    $count++;
+                }
+            }
+            if ($count >= 1) {
+                $f0 = $flights[0] ?? [];
+                if (! empty($f0['airline_id']) && empty($f0['cabin_class'])) {
+                    $v->errors()->add('flights.0.cabin_class', 'Le type de cabine est requis pour le vol 1.');
+                }
+                if (empty($f0['airline_id']) && ! empty($f0['cabin_class'])) {
+                    $v->errors()->add('flights.0.airline_id', 'La compagnie aérienne est requise pour le vol 1.');
+                }
+            }
+            if ($count === 2) {
+                $defaults = 0;
+                foreach ($flights as $f) {
+                    if (! empty($f['is_default']) && (string) $f['is_default'] === '1') {
+                        $defaults++;
+                    }
+                }
+                if ($defaults !== 1) {
+                    $v->errors()->add('flights', 'Lorsqu\'il y a deux vols, un seul doit être choisi comme vol par défaut.');
+                }
+            }
+        });
     }
 
     /**
@@ -119,6 +156,31 @@ class StoreWpTourRequest extends FormRequest
             'tours_program' => 'nullable|array',
             'tours_program.*.title' => 'nullable|string',
             'tours_program.*.desc' => 'nullable|string',
+
+            // Vols (max 2)
+            'flights' => 'nullable|array',
+            'flights.0.airline_id' => 'nullable|integer|exists:airlines,id',
+            'flights.0.cabin_class' => 'nullable|string|in:economy,premium_economy,business,first',
+            'flights.0.flight_number' => 'nullable|string|max:50',
+            'flights.0.departure_airport' => 'nullable|string|max:20',
+            'flights.0.arrival_airport' => 'nullable|string|max:20',
+            'flights.0.departure_at' => 'nullable|string',
+            'flights.0.arrival_at' => 'nullable|string',
+            'flights.0.baggage' => 'nullable|string|max:50',
+            'flights.0.price' => 'nullable|numeric|min:0',
+            'flights.0.currency' => 'nullable|string|max:3',
+            'flights.0.is_default' => 'nullable',
+            'flights.1.airline_id' => 'nullable|integer|exists:airlines,id',
+            'flights.1.cabin_class' => 'nullable|string|in:economy,premium_economy,business,first',
+            'flights.1.flight_number' => 'nullable|string|max:50',
+            'flights.1.departure_airport' => 'nullable|string|max:20',
+            'flights.1.arrival_airport' => 'nullable|string|max:20',
+            'flights.1.departure_at' => 'nullable|string',
+            'flights.1.arrival_at' => 'nullable|string',
+            'flights.1.baggage' => 'nullable|string|max:50',
+            'flights.1.price' => 'nullable|numeric|min:0',
+            'flights.1.currency' => 'nullable|string|max:3',
+            'flights.1.is_default' => 'nullable',
         ];
     }
 
