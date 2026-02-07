@@ -6,13 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private const TABLE = 'aj_tour_day_activities';
+
     /**
      * Run the migrations.
-     * Pivot: activities per day (tour_id = wp_posts.ID, day_id = aj_tour_days.id)
+     * Pivot: activities per day (tour_id = wp_posts.ID, day_id = aj_tour_days.id).
+     * Idempotent: skip create if table already exists (connexion wp applique le préfixe).
      */
     public function up(): void
     {
-        Schema::connection('wp')->create('aj_tour_day_activities', function (Blueprint $table) {
+        if (Schema::connection('wp')->hasTable(self::TABLE)) {
+            return;
+        }
+
+        Schema::connection('wp')->create(self::TABLE, function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tour_id')->comment('wp_posts.ID (st_tours)');
             $table->unsignedBigInteger('day_id')->comment('aj_tour_days.id');
@@ -37,6 +44,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::connection('wp')->dropIfExists('aj_tour_day_activities');
+        Schema::connection('wp')->dropIfExists(self::TABLE);
     }
 };
