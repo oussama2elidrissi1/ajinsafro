@@ -72,6 +72,7 @@ class HeroImageController
         return response()->json([
             'success' => true,
             'attachment_id' => $attachmentId,
+            'attached_file' => $relativePath,
             'url' => $url,
         ]);
     }
@@ -100,10 +101,12 @@ class HeroImageController
         $tour->setMeta('_tour_hero_image_id', (string) $attachmentId);
         $tour->setMeta('_thumbnail_id', (string) $attachmentId);
         $url = WpHeroImageService::getAttachmentUrl($attachmentId);
+        $attachedFile = WpHeroImageService::getAttachedFile($attachmentId);
 
         return response()->json([
             'success' => true,
             'attachment_id' => $attachmentId,
+            'attached_file' => $attachedFile ?? '',
             'url' => $url,
         ]);
     }

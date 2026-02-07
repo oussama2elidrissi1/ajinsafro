@@ -58,8 +58,8 @@ class WpHeroImageService
             \Log::error('WpHeroImageService: échec écriture fichier', ['fullPath' => $fullPath, 'tour_id' => $tourId]);
             throw new \RuntimeException('Impossible d\'enregistrer le fichier dans les uploads WordPress. Vérifiez les droits du dossier.');
         }
-        $uploadsUrl = config('wordpress.uploads_url') ?: (rtrim(config('wordpress.site_url'), '/') . '/wp-content/uploads');
-        $guid = rtrim($uploadsUrl, '/') . '/' . $relativePath;
+        $baseUploadsUrl = self::getUploadsBaseUrl();
+        $guid = rtrim($baseUploadsUrl, '/') . '/' . ltrim($relativePath, '/');
 
         $attachment = WpPost::create([
             'post_author' => 1,
@@ -131,22 +131,62 @@ class WpHeroImageService
     }
 
     /**
-     * Get attachment URL (guid or from _wp_attached_file). Prefer full size.
+     * URL publique stable à partir de _wp_attached_file uniquement (jamais guid).
+     * Input: attachment_id. Output: URL absolue ou null.
      */
     public static function getAttachmentUrl(int $attachmentId): ?string
     {
-        $post = WpPost::on('wp')->where('ID', $attachmentId)->where('post_type', 'attachment')->first();
-        if (!$post) {
+        $attachedFile = WpPostMeta::on('wp')
+            ->where('post_id', $attachmentId)
+            ->where('meta_key', '_wp_attached_file')
+            ->value('meta_value');
+
+        if (empty($attachedFile) || !is_string($attachedFile)) {
             return null;
         }
-        if (!empty($post->guid)) {
-            return $post->guid;
+
+        $attachedFile = trim($attachedFile);
+
+        if (str_starts_with($attachedFile, 'http://') || str_starts_with($attachedFile, 'https://')) {
+            return $attachedFile;
         }
-        $file = WpPostMeta::where('post_id', $attachmentId)->where('meta_key', '_wp_attached_file')->value('meta_value');
-        if ($file) {
-            $base = config('wordpress.uploads_url') ?: (rtrim(config('wordpress.site_url'), '/') . '/wp-content/uploads');
-            return rtrim($base, '/') . '/' . $file;
+
+        if (str_starts_with($attachedFile, '/wp-content/uploads')) {
+            $siteUrl = rtrim(config('wordpress.site_url', ''), '/');
+            return $siteUrl . (str_starts_with($attachedFile, '/') ? $attachedFile : '/' . $attachedFile);
         }
-        return null;
+
+        $base = self::getUploadsBaseUrl();
+        if (empty($base)) {
+            return null;
+        }
+
+        return rtrim($base, '/') . '/' . ltrim($attachedFile, '/');
+    }
+
+    /**
+     * Valeur _wp_attached_file pour un attachment (ex: 2026/02/hero-974-xxx.webp).
+     */
+    public static function getAttachedFile(int $attachmentId): ?string
+    {
+        $value = WpPostMeta::on('wp')
+            ->where('post_id', $attachmentId)
+            ->where('meta_key', '_wp_attached_file')
+            ->value('meta_value');
+
+        return $value ? trim((string) $value) : null;
+    }
+
+    /**
+     * Base URL des uploads (WP_UPLOADS_URL ou WP_SITE_URL + /wp-content/uploads).
+     */
+    public static function getUploadsBaseUrl(): string
+    {
+        $url = config('wordpress.uploads_url');
+        if (!empty($url)) {
+            return rtrim($url, '/');
+        }
+        $siteUrl = rtrim(config('wordpress.site_url', ''), '/');
+        return $siteUrl . '/wp-content/uploads';
     }
 }
