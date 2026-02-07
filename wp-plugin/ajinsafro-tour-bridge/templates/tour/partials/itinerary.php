@@ -84,7 +84,7 @@ if (empty($itinerary)) {
                     $day_title_short = wp_trim_words($day_title_short, 4);
                 }
             ?>
-                <button type="button" class="aj-day-link <?php echo $index === 0 ? 'active' : ''; ?>" data-day-index="<?php echo $index; ?>" data-day="<?php echo $day_num; ?>">
+                <button type="button" class="aj-day-link aj-day-nav-item <?php echo $index === 0 ? 'active is-active' : ''; ?>" data-day-index="<?php echo $index; ?>" data-day="<?php echo $day_num; ?>" data-aj-nav-day="<?php echo $day_num; ?>">
                     <span class="aj-day-link-num"><?php echo $day_num; ?></span>
                     <span class="aj-day-link-title"><?php echo esc_html($day_title_short); ?></span>
                 </button>
@@ -102,7 +102,7 @@ if (empty($itinerary)) {
             $day_id = (int) ($day['id'] ?? 0);
             $day_activity_ids = array_map(function ($a) { return (int) ($a['activity_id'] ?? 0); }, $activities);
         ?>
-            <div class="itinerary-day aj-day-panel <?php echo $is_first ? 'first active' : ''; ?> <?php echo $is_last ? 'last' : ''; ?> itinerary-day-mode-<?php echo esc_attr($mode); ?>" data-day="<?php echo $day_number; ?>" data-day-index="<?php echo $index; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>" <?php echo !$is_first ? 'style="display:none;"' : ''; ?>>
+            <div class="itinerary-day aj-day-panel <?php echo $is_first ? 'first' : ''; ?> <?php echo $is_last ? 'last' : ''; ?> itinerary-day-mode-<?php echo esc_attr($mode); ?>" id="aj-day-panel-<?php echo $day_number; ?>" data-aj-day-panel="<?php echo $day_number; ?>" data-day="<?php echo $day_number; ?>" data-day-index="<?php echo $index; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>">
                 <!-- Timeline Marker -->
                 <div class="day-marker">
                     <span class="day-number"><?php echo $day_number; ?></span>
@@ -113,7 +113,7 @@ if (empty($itinerary)) {
 
                 <!-- Day Content -->
                 <div class="day-card">
-                    <div class="day-header" data-toggle="day-content-<?php echo $index; ?>">
+                    <div class="day-header" data-toggle="day-content-<?php echo $index; ?>" data-aj-day-toggle="<?php echo $day_number; ?>">
                         <div class="day-header-content">
                             <span class="day-label">Jour <?php echo $day_number; ?></span>
                             <?php if ($mode === 'free'): ?>
