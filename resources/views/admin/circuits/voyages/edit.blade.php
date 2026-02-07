@@ -42,7 +42,7 @@
         <strong>Admin aligné avec WordPress Traveler</strong> - Tous les champs ci-dessous écrivent directement dans la DB WordPress (cFdgeZ_postmeta + taxonomies).
     </div>
 
-    <form action="{{ route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST">
+    <form action="{{ route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST" id="edit-voyage-form" data-voyage-id="{{ $voyage->ID }}">
         @csrf
         @method('PUT')
 
@@ -510,22 +510,39 @@
                     <div class="card-body">
                         <h4 class="card-title mb-4">Images & Vidéos</h4>
 
-                        {{-- Section 1 : Image principale (Hero / Cover) --}}
+                        {{-- Section 1 : Image principale (Hero / Cover) — Upload ou médiathèque --}}
                         <div class="mb-4 p-3 border rounded bg-light">
                             <h5 class="mb-2">Image principale du voyage (Hero / Cover)</h5>
                             <p class="text-muted small mb-2">Cette image est utilisée comme image principale du voyage (hero, cartes, partage social). Une seule image.</p>
-                            <div class="row align-items-end">
-                                <div class="col-md-6">
-                                    <label for="hero_image_id" class="form-label">ID de l'image (médiathèque WordPress)</label>
-                                    <input type="number" class="form-control" id="hero_image_id" name="hero_image_id" value="{{ old('hero_image_id', $meta['hero_image_id'] ?? '') }}" placeholder="Ex. 14434" min="0">
-                                    <small class="text-muted">Saisir l'ID de l'attachment ou choisir via la médiathèque WP sur le site.</small>
+                            <input type="hidden" name="hero_image_id" id="hero_image_id" value="{{ old('hero_image_id', $meta['hero_image_id'] ?? '') }}">
+                            <div class="d-flex flex-wrap align-items-start gap-3">
+                                <div id="hero-image-preview-wrap" class="border rounded overflow-hidden bg-white" style="width: 200px; min-height: 120px; display: {{ ($heroImageUrl ?? '') ? 'block' : 'none' }};">
+                                    <img id="hero-image-preview" src="{{ $heroImageUrl ?? '' }}" alt="Hero" class="img-fluid" style="max-height: 200px; object-fit: cover;">
                                 </div>
-                                @php $hid = old('hero_image_id', $meta['hero_image_id'] ?? ''); @endphp
-                                @if($hid && is_numeric($hid))
-                                <div class="col-md-4 text-center">
-                                    <span class="text-muted small">Aperçu : ID {{ $hid }}</span>
+                                <div class="flex-grow-1">
+                                    <div class="mb-2">
+                                        <button type="button" class="btn btn-outline-primary btn-sm me-2" id="hero-upload-btn">
+                                            <i class="bx bx-upload"></i> Uploader une image
+                                        </button>
+                                        <input type="file" id="hero_image_file" accept="image/jpeg,image/png,image/webp" class="d-none">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="hero-choose-media-btn">
+                                            <i class="bx bx-images"></i> Choisir depuis la médiathèque
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="hero-remove-btn">
+                                            <i class="bx bx-trash"></i> Supprimer
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block">JPG, PNG ou WebP — max 5 Mo.</small>
                                 </div>
-                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Option : utiliser l'image principale comme image à la une WP --}}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                @php $useHeroAsThumb = old('hero_use_as_thumbnail') !== null ? (bool) old('hero_use_as_thumbnail') : (isset($meta['hero_image_id']) && isset($meta['thumbnail_id']) && (string)$meta['hero_image_id'] === (string)$meta['thumbnail_id']); @endphp
+                                <input class="form-check-input" type="checkbox" name="hero_use_as_thumbnail" value="1" id="hero_use_as_thumbnail" {{ $useHeroAsThumb ? 'checked' : '' }}>
+                                <label class="form-check-label" for="hero_use_as_thumbnail">Utiliser l'image principale comme image à la une WordPress</label>
                             </div>
                         </div>
 
@@ -533,7 +550,7 @@
                         <div class="mb-3">
                             <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
                             <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id', $meta['thumbnail_id'] ?? '') }}" placeholder="14434">
-                            <small class="text-muted">Image à la une WordPress. Utilisée en secours si aucune image principale ci-dessus.</small>
+                            <small class="text-muted">Utilisée en secours si aucune image principale. Peut être synchronisée via la case ci-dessus.</small>
                         </div>
 
                         <div class="mb-3">
@@ -550,6 +567,153 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Modal Médiathèque WP (choix image hero) --}}
+            <div class="modal fade" id="hero-media-modal" tabindex="-1" aria-labelledby="hero-media-modal-label" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="hero-media-modal-label">Choisir une image depuis la médiathèque</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <input type="search" class="form-control" id="hero-media-search" placeholder="Rechercher...">
+                            </div>
+                            <div id="hero-media-results" class="row g-2" style="min-height: 200px;"></div>
+                            <div id="hero-media-loading" class="text-center py-4 text-muted d-none">Chargement...</div>
+                            <nav id="hero-media-pagination" class="mt-2 d-none"></nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            (function() {
+                var heroUploadUrl = "{{ route('admin.circuits.voyages.hero-image.upload', ['id' => $voyage->ID]) }}";
+                var heroSelectUrl = "{{ route('admin.circuits.voyages.hero-image.select', ['id' => $voyage->ID]) }}";
+                var heroRemoveUrl = "{{ route('admin.circuits.voyages.hero-image.remove', ['id' => $voyage->ID]) }}";
+                var wpMediaSearchUrl = "{{ url('admin/wp-media/search') }}";
+                var csrfToken = document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                var heroPreview = document.getElementById('hero-image-preview');
+                var heroPreviewWrap = document.getElementById('hero-image-preview-wrap');
+                var heroInput = document.getElementById('hero_image_id');
+                var heroFileInput = document.getElementById('hero_image_file');
+
+                function setHeroPreview(url, id) {
+                    if (heroInput) heroInput.value = id || '';
+                    if (heroPreview) heroPreview.src = url || '';
+                    if (heroPreviewWrap) heroPreviewWrap.style.display = (url ? 'block' : 'none');
+                }
+
+                if (document.getElementById('hero-upload-btn')) {
+                    document.getElementById('hero-upload-btn').addEventListener('click', function() { heroFileInput && heroFileInput.click(); });
+                }
+                if (heroFileInput) {
+                    heroFileInput.addEventListener('change', function() {
+                        if (!this.files || !this.files[0]) return;
+                        var fd = new FormData();
+                        fd.append('hero_image', this.files[0]);
+                        if (csrfToken) fd.append('_token', csrfToken);
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', heroUploadUrl);
+                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                        xhr.setRequestHeader('Accept', 'application/json');
+                        if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+                        xhr.onload = function() {
+                            var r = JSON.parse(xhr.responseText || '{}');
+                            if (r.success) { setHeroPreview(r.url, r.attachment_id); }
+                            else { alert(r.message || 'Erreur upload'); }
+                            heroFileInput.value = '';
+                        };
+                        xhr.onerror = function() { alert('Erreur réseau'); heroFileInput.value = ''; };
+                        xhr.send(fd);
+                    });
+                }
+
+                if (document.getElementById('hero-remove-btn')) {
+                    document.getElementById('hero-remove-btn').addEventListener('click', function() {
+                        if (!confirm('Retirer l\'image principale ?')) return;
+                        var fd = new FormData();
+                        if (csrfToken) fd.append('_token', csrfToken);
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', heroRemoveUrl);
+                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                        xhr.setRequestHeader('Accept', 'application/json');
+                        if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+                        xhr.onload = function() {
+                            var r = JSON.parse(xhr.responseText || '{}');
+                            if (r.success) setHeroPreview('', '');
+                        };
+                        xhr.send(fd);
+                    });
+                }
+
+                var mediaModal = document.getElementById('hero-media-modal');
+                var mediaSearch = document.getElementById('hero-media-search');
+                var mediaResults = document.getElementById('hero-media-results');
+                var mediaLoading = document.getElementById('hero-media-loading');
+                var mediaPag = document.getElementById('hero-media-pagination');
+                var mediaPage = 1;
+
+                function loadMediaSearch(page) {
+                    page = page || 1;
+                    var q = (mediaSearch && mediaSearch.value) || '';
+                    if (mediaLoading) mediaLoading.classList.remove('d-none');
+                    if (mediaResults) mediaResults.innerHTML = '';
+                    var url = wpMediaSearchUrl + '?page=' + page + '&per_page=24';
+                    if (q) url += '&q=' + encodeURIComponent(q);
+                    fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            if (mediaLoading) mediaLoading.classList.add('d-none');
+                            if (!data.data || !data.data.length) {
+                                if (mediaResults) mediaResults.innerHTML = '<div class="col-12 text-muted">Aucune image.</div>';
+                            } else {
+                                data.data.forEach(function(item) {
+                                    var col = document.createElement('div');
+                                    col.className = 'col-6 col-md-4 col-lg-3';
+                                    col.innerHTML = '<div class="card h-100 cursor-pointer hero-media-item" data-id="' + item.id + '" data-url="' + (item.url || '') + '"><img src="' + (item.url || '') + '" class="card-img-top" style="height:120px;object-fit:cover" alt=""></div>';
+                                    col.querySelector('.hero-media-item').addEventListener('click', function() {
+                                        var id = this.getAttribute('data-id');
+                                        var url = this.getAttribute('data-url');
+                                        var fd = new FormData();
+                                        fd.append('attachment_id', id);
+                                        if (csrfToken) fd.append('_token', csrfToken);
+                                        fetch(heroSelectUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' } })
+                                            .then(function(r) { return r.json(); })
+                                            .then(function(r) {
+                                                if (r.success) { setHeroPreview(r.url, r.attachment_id); if (window.bootstrap && mediaModal) { var m = bootstrap.Modal.getInstance(mediaModal); if (m) m.hide(); } }
+                                            });
+                                    });
+                                    mediaResults.appendChild(col);
+                                });
+                            }
+                            if (data.last_page > 1 && mediaPag) {
+                                mediaPag.classList.remove('d-none');
+                                mediaPag.innerHTML = '<ul class="pagination pagination-sm mb-0"><li class="page-item' + (data.current_page <= 1 ? ' disabled' : '') + '"><a class="page-link" href="#" data-page="' + (data.current_page - 1) + '">Préc.</a></li><li class="page-item"><span class="page-link">' + data.current_page + ' / ' + data.last_page + '</span></li><li class="page-item' + (data.current_page >= data.last_page ? ' disabled' : '') + '"><a class="page-link" href="#" data-page="' + (data.current_page + 1) + '">Suiv.</a></li></ul>';
+                                mediaPag.querySelectorAll('a[data-page]').forEach(function(a) {
+                                    a.addEventListener('click', function(e) { e.preventDefault(); loadMediaSearch(parseInt(this.getAttribute('data-page'), 10)); });
+                                });
+                            } else if (mediaPag) mediaPag.classList.add('d-none');
+                        })
+                        .catch(function() { if (mediaLoading) mediaLoading.classList.add('d-none'); if (mediaResults) mediaResults.innerHTML = '<div class="col-12 text-danger">Erreur chargement.</div>'; });
+                }
+
+                if (document.getElementById('hero-choose-media-btn')) {
+                    document.getElementById('hero-choose-media-btn').addEventListener('click', function() {
+                        if (mediaModal && window.bootstrap) {
+                            var m = new bootstrap.Modal(mediaModal);
+                            m.show();
+                            loadMediaSearch(1);
+                        }
+                    });
+                }
+                if (mediaSearch) {
+                    mediaSearch.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); loadMediaSearch(1); } });
+                }
+            })();
+            </script>
 
             {{-- TAB 7: PAYMENT --}}
             <div class="tab-pane" id="payment" role="tabpanel">

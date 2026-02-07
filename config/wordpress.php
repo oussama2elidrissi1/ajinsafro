@@ -46,6 +46,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | WordPress Uploads (for hero image upload from Laravel)
+    |--------------------------------------------------------------------------
+    | Path: filesystem path to wp-content/uploads (e.g. /var/www/html/wp-content/uploads)
+    | URL base for attachments: site_url + /wp-content/uploads/ or custom WP_UPLOADS_URL
+    */
+    'uploads_path' => env('WP_UPLOADS_PATH', ''),
+    'uploads_url' => env('WP_UPLOADS_URL', null), // null = site_url . '/wp-content/uploads'
+
+    /*
+    |--------------------------------------------------------------------------
     | Sync Conflict Resolution
     |--------------------------------------------------------------------------
     | 

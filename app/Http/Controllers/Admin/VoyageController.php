@@ -11,6 +11,7 @@ use App\Models\Wp\TourDayActivity;
 use App\Models\AjAirline;
 use App\Services\TourFlightsService;
 use App\Services\Wp\TourProgramService;
+use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -281,8 +282,12 @@ class VoyageController extends Controller
 
         $airlines = AjAirline::active()->orderBy('name')->get();
         $voyageFlights = $this->tourFlightsService->getFlightsForTour($id);
+        $heroImageUrl = null;
+        if (!empty($meta['hero_image_id'])) {
+            $heroImageUrl = WpHeroImageService::getAttachmentUrl((int) $meta['hero_image_id']);
+        }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'voyageFlights'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'voyageFlights', 'heroImageUrl'));
     }
     
     /**
@@ -351,6 +356,11 @@ class VoyageController extends Controller
     public function update(UpdateWpTourRequest $request, int $id): RedirectResponse
     {
         $validated = $request->validated();
+
+        // Option "Utiliser l'image principale comme image à la une WP"
+        if (!empty($validated['hero_use_as_thumbnail']) && !empty($validated['hero_image_id'])) {
+            $validated['thumbnail_id'] = $validated['hero_image_id'];
+        }
 
         // Convertir gallery CSV en array
         if (!empty($validated['gallery_ids'])) {

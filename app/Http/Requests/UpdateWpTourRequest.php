@@ -128,6 +128,7 @@ class UpdateWpTourRequest extends FormRequest
             // Media
             'thumbnail_id' => 'nullable|integer',
             'hero_image_id' => 'nullable|integer',
+            'hero_use_as_thumbnail' => 'nullable',
             'gallery_ids' => 'nullable|string',
             'video' => 'nullable|string',
             

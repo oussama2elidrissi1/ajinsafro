@@ -272,9 +272,13 @@ class WpTourRepository
             $post->setMeta('_thumbnail_id', $data['featured_image']);
         }
 
-        // Image principale (hero) : toujours enregistrer pour pouvoir vider le champ
+        // Image principale (hero) : enregistrer ou supprimer la meta
         if (array_key_exists('hero_image_id', $data)) {
-            $post->setMeta('_tour_hero_image_id', $data['hero_image_id'] === '' || $data['hero_image_id'] === null ? '' : (int) $data['hero_image_id']);
+            if ($data['hero_image_id'] === '' || $data['hero_image_id'] === null) {
+                $post->deleteMeta('_tour_hero_image_id');
+            } else {
+                $post->setMeta('_tour_hero_image_id', (string) (int) $data['hero_image_id']);
+            }
         }
 
         // Handle multi_location (array of IDs -> WP format "_ID1_,_ID2_,_ID3_")
