@@ -509,17 +509,37 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Images & Vidéos</h4>
-                        
+
+                        {{-- Section 1 : Image principale (Hero / Cover) --}}
+                        <div class="mb-4 p-3 border rounded bg-light">
+                            <h5 class="mb-2">Image principale du voyage (Hero / Cover)</h5>
+                            <p class="text-muted small mb-2">Cette image est utilisée comme image principale du voyage (hero, cartes, partage social). Une seule image.</p>
+                            <div class="row align-items-end">
+                                <div class="col-md-6">
+                                    <label for="hero_image_id" class="form-label">ID de l'image (médiathèque WordPress)</label>
+                                    <input type="number" class="form-control" id="hero_image_id" name="hero_image_id" value="{{ old('hero_image_id', $meta['hero_image_id'] ?? '') }}" placeholder="Ex. 14434" min="0">
+                                    <small class="text-muted">Saisir l'ID de l'attachment ou choisir via la médiathèque WP sur le site.</small>
+                                </div>
+                                @php $hid = old('hero_image_id', $meta['hero_image_id'] ?? ''); @endphp
+                                @if($hid && is_numeric($hid))
+                                <div class="col-md-4 text-center">
+                                    <span class="text-muted small">Aperçu : ID {{ $hid }}</span>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Section 2 : Image à la une (WP standard) + Galerie --}}
                         <div class="mb-3">
                             <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
                             <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id', $meta['thumbnail_id'] ?? '') }}" placeholder="14434">
-                            <small class="text-muted">ID de l'attachment dans la médiathèque WordPress</small>
+                            <small class="text-muted">Image à la une WordPress. Utilisée en secours si aucune image principale ci-dessus.</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie (IDs séparés par virgule)</label>
+                            <label for="gallery_ids" class="form-label">Galerie (images secondaires)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids', $gallery_csv ?? '') }}" placeholder="14435,14436,14437">
-                            <small class="text-muted">IDs des images de la galerie WordPress (format: 123,456,789)</small>
+                            <small class="text-muted">IDs séparés par des virgules. Ne pas utiliser comme image principale.</small>
                         </div>
                         
                         <div class="mb-3">

@@ -115,6 +115,28 @@ class Ajinsafro_Tour_Bridge {
 
         // Admin notice if Traveler not active
         add_action('admin_notices', [$this, 'admin_notices']);
+
+        // SEO: og:image on single tour (image principale > featured > gallery)
+        add_action('wp_head', [$this, 'output_tour_og_image'], 5);
+    }
+
+    /**
+     * Output og:image meta for single tour using hero image resolution.
+     */
+    public function output_tour_og_image() {
+        if (!is_singular(AJTB_POST_TYPE)) {
+            return;
+        }
+        $post_id = get_the_ID();
+        if (!$post_id) {
+            return;
+        }
+        $repo = new AJTB_Tour_Repository($post_id);
+        $data = $repo->get_tour_data();
+        if (empty($data['hero_image_url'])) {
+            return;
+        }
+        echo '<meta property="og:image" content="' . esc_url($data['hero_image_url']) . '">' . "\n";
     }
 
     /**

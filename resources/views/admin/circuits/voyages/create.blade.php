@@ -143,15 +143,21 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
-                            <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id') }}" placeholder="14434">
-                            <small class="text-muted">ID de l'image dans la médiathèque WordPress</small>
+                            <label for="hero_image_id" class="form-label">Image principale du voyage (Hero / Cover)</label>
+                            <input type="number" class="form-control" id="hero_image_id" name="hero_image_id" value="{{ old('hero_image_id') }}" placeholder="Ex. 14434" min="0">
+                            <small class="text-muted">ID de l'attachment. Utilisée en priorité pour hero, cartes et partage. Une seule image.</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie (IDs séparés par virgule)</label>
+                            <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
+                            <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id') }}" placeholder="14434">
+                            <small class="text-muted">Image à la une WordPress (secours si pas d'image principale)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="gallery_ids" class="form-label">Galerie (images secondaires)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids') }}" placeholder="14435,14436,14437">
-                            <small class="text-muted">IDs des images de la galerie WordPress</small>
+                            <small class="text-muted">IDs séparés par des virgules</small>
                         </div>
                         
                         <div class="form-check mb-3">

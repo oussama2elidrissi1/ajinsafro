@@ -127,6 +127,7 @@ class UpdateWpTourRequest extends FormRequest
             
             // Media
             'thumbnail_id' => 'nullable|integer',
+            'hero_image_id' => 'nullable|integer',
             'gallery_ids' => 'nullable|string',
             'video' => 'nullable|string',
             
@@ -223,6 +224,7 @@ class UpdateWpTourRequest extends FormRequest
             'min_price' => 'prix minimum',
             'min_people' => 'nombre minimum de personnes',
             'thumbnail_id' => 'image à la une',
+            'hero_image_id' => 'image principale (hero)',
             'gallery_ids' => 'galerie',
             'post_status' => 'statut',
         ];

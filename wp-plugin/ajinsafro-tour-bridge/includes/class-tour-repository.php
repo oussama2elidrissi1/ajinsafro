@@ -60,9 +60,10 @@ class AJTB_Tour_Repository {
         'excluded',
         'tour_external_booking_link',
         
-        // Gallery
+        // Gallery & Hero
         'gallery',
         'st_gallery',
+        '_tour_hero_image_id',
         
         // Reviews
         'rate_review',
@@ -101,6 +102,8 @@ class AJTB_Tour_Repository {
 
         // Load all meta
         $meta = $this->get_all_meta();
+        $gallery = $this->get_gallery($meta);
+        $hero_image = $this->get_hero_image($meta, $gallery);
 
         return [
             // Basic post data
@@ -111,9 +114,11 @@ class AJTB_Tour_Repository {
             'permalink' => get_permalink($post),
             'slug' => $post->post_name,
 
-            // Images
-            'featured_image' => $this->get_featured_image(),
-            'gallery' => $this->get_gallery($meta),
+            // Images: hero = image principale (hero > featured > gallery[0]). featured_image = same for compatibility.
+            'featured_image' => $hero_image,
+            'hero_image' => $hero_image,
+            'hero_image_url' => $hero_image['url'] ?? '',
+            'gallery' => $gallery,
 
             // Location
             'address' => $meta['address'] ?? '',
@@ -243,28 +248,82 @@ class AJTB_Tour_Repository {
     }
 
     /**
-     * Get featured image data
+     * Get the main display image (hero): image principale > featured > first gallery > placeholder.
+     * Used for Hero section, cards, og:image. Does NOT use gallery first as automatic fallback for hero.
      *
-     * @return array
+     * @param array $meta Post meta
+     * @param array $gallery Parsed gallery (from get_gallery)
+     * @return array { id, url, large, medium, alt }
      */
-    private function get_featured_image() {
-        $thumbnail_id = get_post_thumbnail_id($this->post_id);
+    private function get_hero_image($meta, $gallery) {
+        $placeholder = [
+            'id' => 0,
+            'url' => '',
+            'large' => '',
+            'medium' => '',
+            'alt' => '',
+        ];
 
-        if (!$thumbnail_id) {
+        // 1) Image principale du voyage (Hero / Cover)
+        $hero_id = isset($meta['_tour_hero_image_id']) ? (int) $meta['_tour_hero_image_id'] : 0;
+        if ($hero_id > 0) {
+            $url = wp_get_attachment_image_url($hero_id, 'full');
+            if ($url) {
+                return [
+                    'id' => $hero_id,
+                    'url' => $url,
+                    'large' => wp_get_attachment_image_url($hero_id, 'large') ?: $url,
+                    'medium' => wp_get_attachment_image_url($hero_id, 'medium') ?: $url,
+                    'alt' => get_post_meta($hero_id, '_wp_attachment_image_alt', true),
+                ];
+            }
+        }
+
+        // 2) Featured image WordPress
+        $thumbnail_id = get_post_thumbnail_id($this->post_id);
+        if ($thumbnail_id) {
+            $url = get_the_post_thumbnail_url($this->post_id, 'full');
+            if ($url) {
+                return [
+                    'id' => $thumbnail_id,
+                    'url' => $url,
+                    'large' => get_the_post_thumbnail_url($this->post_id, 'large') ?: $url,
+                    'medium' => get_the_post_thumbnail_url($this->post_id, 'medium') ?: $url,
+                    'alt' => get_post_meta($thumbnail_id, '_wp_attachment_image_alt', true),
+                ];
+            }
+        }
+
+        // 3) First image of gallery
+        if (!empty($gallery) && !empty($gallery[0]['url'])) {
+            $first = $gallery[0];
             return [
-                'id' => 0,
-                'url' => '',
-                'alt' => '',
+                'id' => isset($first['id']) ? (int) $first['id'] : 0,
+                'url' => $first['url'],
+                'large' => $first['large'] ?? $first['url'],
+                'medium' => $first['medium'] ?? $first['url'],
+                'alt' => $first['alt'] ?? '',
             ];
         }
 
         return [
-            'id' => $thumbnail_id,
-            'url' => get_the_post_thumbnail_url($this->post_id, 'full'),
-            'large' => get_the_post_thumbnail_url($this->post_id, 'large'),
-            'medium' => get_the_post_thumbnail_url($this->post_id, 'medium'),
-            'alt' => get_post_meta($thumbnail_id, '_wp_attachment_image_alt', true),
+            'id' => 0,
+            'url' => AJTB_PLUGIN_URL . 'assets/images/placeholder-tour.jpg',
+            'large' => AJTB_PLUGIN_URL . 'assets/images/placeholder-tour.jpg',
+            'medium' => AJTB_PLUGIN_URL . 'assets/images/placeholder-tour.jpg',
+            'alt' => '',
         ];
+    }
+
+    /**
+     * Get featured image data (legacy: now points to hero resolution).
+     *
+     * @return array
+     */
+    private function get_featured_image() {
+        $meta = $this->get_all_meta();
+        $gallery = $this->get_gallery($meta);
+        return $this->get_hero_image($meta, $gallery);
     }
 
     /**
