@@ -11,6 +11,9 @@ class TourFlight extends Model
 
     protected $table = 'aj_tour_flights';
 
+    public const TYPE_OUTBOUND = 'outbound';
+    public const TYPE_INBOUND = 'inbound';
+
     public const CABIN_ECONOMY = 'economy';
     public const CABIN_BUSINESS = 'business';
     public const CABIN_FIRST = 'first';
@@ -26,28 +29,25 @@ class TourFlight extends Model
 
     protected $fillable = [
         'tour_id',
-        'segment_number',
+        'flight_type',
         'airline_id',
         'cabin_class',
-        'flight_number',
+        'from_city',
+        'to_city',
         'depart_date',
-        'depart_city',
-        'depart_airport',
+        'depart_time',
         'arrive_date',
-        'arrive_city',
-        'arrive_airport',
-        'cabin_baggage',
-        'checkin_baggage',
+        'arrive_time',
+        'baggage_cabin_kg',
+        'baggage_checkin_kg',
         'is_tentative',
-        'is_default',
-        'sort_order',
+        'notes',
     ];
 
     protected $casts = [
         'depart_date' => 'date',
         'arrive_date' => 'date',
         'is_tentative' => 'boolean',
-        'is_default' => 'boolean',
     ];
 
     public function airline(): BelongsTo
@@ -55,14 +55,14 @@ class TourFlight extends Model
         return $this->belongsTo(AjAirline::class, 'airline_id');
     }
 
-    public function getDepartLabelAttribute(): string
+    public function getFromLabelAttribute(): string
     {
-        return $this->depart_city ?: $this->depart_airport ?: '—';
+        return $this->from_city ?: '—';
     }
 
-    public function getArriveLabelAttribute(): string
+    public function getToLabelAttribute(): string
     {
-        return $this->arrive_city ?: $this->arrive_airport ?: '—';
+        return $this->to_city ?: '—';
     }
 
     public function getDepartDateFormattedAttribute(): ?string
@@ -75,13 +75,13 @@ class TourFlight extends Model
         return $this->arrive_date?->format('D, d M');
     }
 
-    public function getCabinBaggageDisplayAttribute(): string
+    public function getBaggageCabinDisplayAttribute(): string
     {
-        return $this->cabin_baggage ?: '—';
+        return $this->baggage_cabin_kg !== null ? (string) $this->baggage_cabin_kg . ' KGS' : '—';
     }
 
-    public function getCheckinBaggageDisplayAttribute(): string
+    public function getBaggageCheckinDisplayAttribute(): string
     {
-        return $this->checkin_baggage ?: '—';
+        return $this->baggage_checkin_kg !== null ? (string) $this->baggage_checkin_kg . ' KGS' : '—';
     }
 }

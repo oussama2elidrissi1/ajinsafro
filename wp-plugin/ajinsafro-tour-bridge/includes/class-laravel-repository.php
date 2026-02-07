@@ -94,10 +94,8 @@ class AJTB_Laravel_Repository {
         if (!empty($session_token)) {
             $flights = $this->apply_flight_selections($flights, $session_token);
         } else {
-            // No session: show default flight(s). If only one flight, always show it.
-            if (count($flights) === 1) {
-                // keep as-is
-            } else {
+            $has_flight_type = !empty($flights) && isset($flights[0]['flight_type']);
+            if (!$has_flight_type && count($flights) > 1) {
                 $flights = array_values(array_filter($flights, function ($f) {
                     return !empty($f['is_default']);
                 }));
@@ -129,7 +127,9 @@ class AJTB_Laravel_Repository {
         if ($airlines_exist) {
             $sql .= " LEFT JOIN {$table_airlines} a ON a.id = f.airline_id";
         }
-        $sql .= " WHERE f.tour_id = %d ORDER BY f.segment_number ASC";
+        $has_flight_type = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'flight_type'", $table_flights));
+        $order_by = $has_flight_type ? "f.flight_type ASC" : "f.segment_number ASC";
+        $sql .= " WHERE f.tour_id = %d ORDER BY {$order_by}";
         $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $this->tour_id), ARRAY_A);
         if (!$rows) {
             return [];
@@ -139,32 +139,106 @@ class AJTB_Laravel_Repository {
         foreach ($rows as $r) {
             $dep_date = !empty($r['depart_date']) ? $r['depart_date'] : null;
             $arr_date = !empty($r['arrive_date']) ? $r['arrive_date'] : null;
+            $from_city = isset($r['from_city']) ? ($r['from_city'] ?? '') : ($r['depart_city'] ?? '');
+            $to_city = isset($r['to_city']) ? ($r['to_city'] ?? '') : ($r['arrive_city'] ?? '');
+            $baggage_cabin = isset($r['baggage_cabin_kg']) && $r['baggage_cabin_kg'] !== null && $r['baggage_cabin_kg'] !== '' ? ((int) $r['baggage_cabin_kg']) . ' KGS' : (isset($r['cabin_baggage']) && $r['cabin_baggage'] !== '' ? $r['cabin_baggage'] : '—');
+            $baggage_checkin = isset($r['baggage_checkin_kg']) && $r['baggage_checkin_kg'] !== null && $r['baggage_checkin_kg'] !== '' ? ((int) $r['baggage_checkin_kg']) . ' KGS' : (isset($r['checkin_baggage']) && $r['checkin_baggage'] !== '' ? $r['checkin_baggage'] : '—');
             $flights[] = [
                 'id' => (int) $r['id'],
                 'tour_id' => (int) $r['tour_id'],
-                'segment_number' => (int) $r['segment_number'],
+                'flight_type' => $r['flight_type'] ?? (isset($r['segment_number']) && (int) $r['segment_number'] === 1 ? 'outbound' : 'inbound'),
+                'segment_number' => isset($r['segment_number']) ? (int) $r['segment_number'] : (($r['flight_type'] ?? '') === 'inbound' ? 2 : 1),
                 'airline_id' => isset($r['airline_id']) ? (int) $r['airline_id'] : null,
                 'airline_name' => $airlines_exist ? ($r['airline_name'] ?? '') : '',
                 'airline_iata' => $airlines_exist ? ($r['airline_iata'] ?? '') : '',
                 'cabin_class' => $r['cabin_class'] ?? 'economy',
                 'flight_number' => $r['flight_number'] ?? '',
+                'from_city' => $from_city,
+                'to_city' => $to_city,
                 'depart_date' => $dep_date,
+                'depart_time' => $r['depart_time'] ?? null,
                 'depart_date_formatted' => $dep_date ? date('D, d M', strtotime($dep_date)) : '—',
-                'depart_city' => $r['depart_city'] ?? '',
+                'depart_city' => $from_city,
                 'depart_airport' => $r['depart_airport'] ?? '',
-                'depart_label' => !empty($r['depart_city']) ? $r['depart_city'] : (!empty($r['depart_airport']) ? $r['depart_airport'] : '—'),
+                'depart_label' => $from_city !== '' ? $from_city : '—',
                 'arrive_date' => $arr_date,
+                'arrive_time' => $r['arrive_time'] ?? null,
                 'arrive_date_formatted' => $arr_date ? date('D, d M', strtotime($arr_date)) : '—',
-                'arrive_city' => $r['arrive_city'] ?? '',
+                'arrive_city' => $to_city,
                 'arrive_airport' => $r['arrive_airport'] ?? '',
-                'arrive_label' => !empty($r['arrive_city']) ? $r['arrive_city'] : (!empty($r['arrive_airport']) ? $r['arrive_airport'] : '—'),
-                'cabin_baggage' => !empty($r['cabin_baggage']) ? $r['cabin_baggage'] : '—',
-                'checkin_baggage' => !empty($r['checkin_baggage']) ? $r['checkin_baggage'] : '—',
+                'arrive_label' => $to_city !== '' ? $to_city : '—',
+                'baggage_cabin_kg' => isset($r['baggage_cabin_kg']) ? (int) $r['baggage_cabin_kg'] : null,
+                'baggage_checkin_kg' => isset($r['baggage_checkin_kg']) ? (int) $r['baggage_checkin_kg'] : null,
+                'cabin_baggage' => $baggage_cabin,
+                'checkin_baggage' => $baggage_checkin,
                 'is_tentative' => !empty($r['is_tentative']),
                 'is_default' => !empty($r['is_default']),
+                'notes' => $r['notes'] ?? null,
             ];
         }
         return $flights;
+    }
+
+    /**
+     * Get flights keyed by flight_type (outbound, inbound) for attaching to days.
+     * Outbound => Jour 1, Inbound => Dernier jour.
+     *
+     * @return array ['outbound' => flight row or null, 'inbound' => flight row or null]
+     */
+    private function get_tour_flights_for_days() {
+        $table_flights = $this->table('tour_flights');
+        $table_airlines = $this->table('airlines');
+        if (!$this->table_exists($table_flights)) {
+            return ['outbound' => null, 'inbound' => null];
+        }
+        $airlines_exist = $this->table_exists($table_airlines);
+        $has_flight_type = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'flight_type'", $table_flights));
+        $sql = "SELECT f.*";
+        if ($airlines_exist) {
+            $sql .= ", a.name AS airline_name, a.iata_code AS airline_iata";
+        }
+        $sql .= " FROM {$table_flights} f";
+        if ($airlines_exist) {
+            $sql .= " LEFT JOIN {$table_airlines} a ON a.id = f.airline_id";
+        }
+        $sql .= " WHERE f.tour_id = %d ORDER BY " . ($has_flight_type ? "f.flight_type ASC" : "f.segment_number ASC");
+        $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $this->tour_id), ARRAY_A);
+        $out = ['outbound' => null, 'inbound' => null];
+        if (!$rows) {
+            return $out;
+        }
+        foreach ($rows as $r) {
+            $ft = isset($r['flight_type']) ? $r['flight_type'] : ((int) ($r['segment_number'] ?? 0) === 1 ? 'outbound' : 'inbound');
+            if ($ft !== 'outbound' && $ft !== 'inbound') {
+                continue;
+            }
+            $dep_date = !empty($r['depart_date']) ? $r['depart_date'] : null;
+            $arr_date = !empty($r['arrive_date']) ? $r['arrive_date'] : null;
+            $from_city = isset($r['from_city']) ? ($r['from_city'] ?? '') : ($r['depart_city'] ?? '');
+            $to_city = isset($r['to_city']) ? ($r['to_city'] ?? '') : ($r['arrive_city'] ?? '');
+            $row = [
+                'id' => (int) $r['id'],
+                'flight_type' => $ft,
+                'from_city' => $from_city,
+                'to_city' => $to_city,
+                'depart_date' => $dep_date,
+                'depart_time' => $r['depart_time'] ?? null,
+                'depart_date_formatted' => $dep_date ? date('D, d M', strtotime($dep_date)) : '—',
+                'arrive_date' => $arr_date,
+                'arrive_time' => $r['arrive_time'] ?? null,
+                'arrive_date_formatted' => $arr_date ? date('D, d M', strtotime($arr_date)) : '—',
+                'cabin_class' => $r['cabin_class'] ?? 'economy',
+                'baggage_cabin_kg' => isset($r['baggage_cabin_kg']) ? (int) $r['baggage_cabin_kg'] : null,
+                'baggage_checkin_kg' => isset($r['baggage_checkin_kg']) ? (int) $r['baggage_checkin_kg'] : null,
+                'cabin_baggage_display' => isset($r['baggage_cabin_kg']) && $r['baggage_cabin_kg'] !== '' && $r['baggage_cabin_kg'] !== null ? ((int) $r['baggage_cabin_kg']) . ' KGS' : '—',
+                'checkin_baggage_display' => isset($r['baggage_checkin_kg']) && $r['baggage_checkin_kg'] !== '' && $r['baggage_checkin_kg'] !== null ? ((int) $r['baggage_checkin_kg']) . ' KGS' : '—',
+                'is_tentative' => !empty($r['is_tentative']),
+                'notes' => $r['notes'] ?? null,
+                'airline_name' => $airlines_exist ? ($r['airline_name'] ?? '') : '',
+            ];
+            $out[ $ft ] = $row;
+        }
+        return $out;
     }
 
     /**
@@ -367,6 +441,20 @@ class AJTB_Laravel_Repository {
                 $d['notes'] = (string) $d['notes'];
             }
             unset($d);
+
+            // Attach flights: outbound => day 1, inbound => last day
+            $flights_by_type = $this->get_tour_flights_for_days();
+            $last_day_number = count($days_array) > 0 ? (int) $days_array[ count($days_array) - 1 ]['day'] : 0;
+            foreach ($days_array as &$day) {
+                $day['flight'] = null;
+                $dn = (int) ($day['day'] ?? 0);
+                if ($dn === 1 && !empty($flights_by_type['outbound'])) {
+                    $day['flight'] = $flights_by_type['outbound'];
+                } elseif ($last_day_number > 0 && $dn === $last_day_number && !empty($flights_by_type['inbound'])) {
+                    $day['flight'] = $flights_by_type['inbound'];
+                }
+            }
+            unset($day);
 
             return $days_array;
         } catch (Exception $e) {

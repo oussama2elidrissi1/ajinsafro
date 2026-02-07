@@ -90,59 +90,12 @@ $current_season = $pricing['current_season'] ?? null;
         </div>
     </div>
 
-    <!-- Booking Form -->
+    <!-- Booking Form (date + voyageurs pilotés par la barre de recherche au-dessus) -->
     <form class="booking-form" id="ajtb-booking-form">
         <input type="hidden" name="tour_id" value="<?php echo esc_attr($tour['id']); ?>">
-        
-        <!-- Date -->
-        <div class="form-group">
-            <label for="booking-date">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                Date de départ
-            </label>
-            <input type="date" 
-                   id="booking-date" 
-                   name="date" 
-                   min="<?php echo date('Y-m-d'); ?>" 
-                   required>
-        </div>
-
-        <!-- Travelers -->
-        <div class="form-group travelers">
-            <label>Voyageurs</label>
-            <div class="travelers-selector">
-                <div class="traveler-row">
-                    <span class="traveler-type">
-                        Adultes
-                        <small>13+ ans</small>
-                    </span>
-                    <div class="qty-control">
-                        <button type="button" class="qty-btn minus" data-target="adults">−</button>
-                        <input type="number" name="adults" id="adults" value="2" min="1" max="<?php echo $tour['max_people'] ?: 20; ?>" readonly>
-                        <button type="button" class="qty-btn plus" data-target="adults">+</button>
-                    </div>
-                </div>
-
-                <?php if (($pricing['child'] ?? 0) > 0): ?>
-                    <div class="traveler-row">
-                        <span class="traveler-type">
-                            Enfants
-                            <small>2-12 ans</small>
-                        </span>
-                        <div class="qty-control">
-                            <button type="button" class="qty-btn minus" data-target="children">−</button>
-                            <input type="number" name="children" id="children" value="0" min="0" max="10" readonly>
-                            <button type="button" class="qty-btn plus" data-target="children">+</button>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
+        <input type="hidden" name="date" id="booking-date" value="">
+        <input type="hidden" name="adults" id="adults" value="2">
+        <input type="hidden" name="children" id="children" value="0">
 
         <!-- Total -->
         <div class="booking-total">

@@ -868,12 +868,12 @@
                 </div>
             </div>
 
-            {{-- TAB VOLS — Flight cards (card view + edit mode) --}}
+            {{-- TAB VOLS — Vol Aller (Jour 1) + Vol Retour (Dernier jour) --}}
             @php
                 $voyageFlights = $voyageFlights ?? collect();
-                $f0 = $voyageFlights->get(0);
-                $f1 = $voyageFlights->get(1);
-                $hasSecondFlight = $f1 !== null || old('flights.1.airline_id') || old('flights.1.cabin_class');
+                $fOutbound = $voyageFlights->get('outbound');
+                $fInbound = $voyageFlights->get('inbound');
+                $lastDayNumber = max(1, (int)($meta['duration_day'] ?? 1));
                 $flightDash = '—';
                 $fmtDate = function($d) { return $d ? (\Carbon\Carbon::parse($d)->format('D, d M')) : null; };
             @endphp
@@ -902,225 +902,179 @@
                 .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 </style>
 
-                <input type="hidden" name="remove_flight_2" id="remove_flight_2" value="0">
-
-                {{-- Vol 1 --}}
-                <div class="flight-block" data-flight-index="0">
-                    <div class="flight-card-view" id="flight-0-card-view">
+                {{-- Vol Aller (Jour 1) --}}
+                <div class="flight-block" data-flight-type="outbound">
+                    <div class="flight-card-view" id="flight-outbound-card-view">
                         <div class="flight-card-admin" style="min-width: 320px;">
                             <div class="flight-card-header">
-                                <span class="flight-card-title">✈ FLIGHT • <span id="flight-0-dep-label">{{ old('flights.0.depart_airport', optional($f0)->depart_label ?? '') ?: $flightDash }}</span> to <span id="flight-0-arr-label">{{ old('flights.0.arrive_airport', optional($f0)->arrive_label ?? '') ?: $flightDash }}</span></span>
-                                <button type="button" class="flight-remove-btn flight-reset-btn" data-index="0" title="Réinitialiser les champs">REMOVE</button>
+                                <span class="flight-card-title">✈ Vol Aller — Jour 1 • <span id="flight-outbound-dep-label">{{ old('flights.outbound.from_city', optional($fOutbound)->from_label ?? '') ?: $flightDash }}</span> → <span id="flight-outbound-arr-label">{{ old('flights.outbound.to_city', optional($fOutbound)->to_label ?? '') ?: $flightDash }}</span></span>
+                                <button type="button" class="flight-remove-btn flight-reset-btn" data-flight-type="outbound" title="Vider les champs">REMOVE</button>
                             </div>
                             <div class="flight-card-body">
                                 <div class="flight-card-col"><div class="flight-icon-circle"><i class="bx bx-trip"></i></div></div>
                                 <div class="flight-card-col flight-card-center">
-                                    <div class="flight-dep"><div class="flight-date" id="flight-0-dep-date">{{ $f0 ? $fmtDate($f0->depart_date) : $flightDash }}</div><div class="flight-place" id="flight-0-dep-place">{{ old('flights.0.depart_airport', $f0->depart_label ?? '') ?: $flightDash }}</div></div>
+                                    <div class="flight-dep"><div class="flight-date" id="flight-outbound-dep-date">{{ $fOutbound ? $fmtDate($fOutbound->depart_date) : $flightDash }}</div><div class="flight-place" id="flight-outbound-dep-place">{{ old('flights.outbound.from_city', optional($fOutbound)->from_label ?? '') ?: $flightDash }}</div></div>
                                     <div class="flight-arrow">→</div>
-                                    <div class="flight-arr"><div class="flight-date" id="flight-0-arr-date">{{ $f0 ? $fmtDate($f0->arrive_date) : $flightDash }}</div><div class="flight-place" id="flight-0-arr-place">{{ old('flights.0.arrive_airport', $f0->arrive_label ?? '') ?: $flightDash }}</div></div>
+                                    <div class="flight-arr"><div class="flight-date" id="flight-outbound-arr-date">{{ $fOutbound ? $fmtDate($fOutbound->arrive_date) : $flightDash }}</div><div class="flight-place" id="flight-outbound-arr-place">{{ old('flights.outbound.to_city', optional($fOutbound)->to_label ?? '') ?: $flightDash }}</div></div>
                                 </div>
                                 <div class="flight-card-col flight-card-baggage">
-                                    <div>Cabin: <span id="flight-0-cabin-bag">{{ $f0 ? $f0->cabin_baggage_display : (old('flights.0.cabin_baggage') ?: $flightDash) }}</span></div>
-                                    <div>Check-in: <span id="flight-0-checkin-bag">{{ $f0 ? $f0->checkin_baggage_display : (old('flights.0.checkin_baggage') ?: $flightDash) }}</span></div>
+                                    <div>Cabin: <span id="flight-outbound-cabin-bag">{{ $fOutbound ? $fOutbound->baggage_cabin_display : (old('flights.outbound.baggage_cabin_kg') !== null ? old('flights.outbound.baggage_cabin_kg') . ' KGS' : $flightDash) }}</span></div>
+                                    <div>Check-in: <span id="flight-outbound-checkin-bag">{{ $fOutbound ? $fOutbound->baggage_checkin_display : (old('flights.outbound.baggage_checkin_kg') !== null ? old('flights.outbound.baggage_checkin_kg') . ' KGS' : $flightDash) }}</span></div>
                                 </div>
                             </div>
                             <div class="flight-card-badge-wrap">
-                                @php $t0 = old('flights.0.is_tentative', optional($f0)->is_tentative ?? false); @endphp
-                                <span class="flight-badge-tentative" id="flight-0-tentative-badge" style="display:{{ $t0 ? 'inline-block' : 'none' }}">Tentative Flight</span>
+                                @php $tOut = old('flights.outbound.is_tentative', optional($fOutbound)->is_tentative ?? true); @endphp
+                                <span class="flight-badge-tentative" id="flight-outbound-tentative-badge" style="display:{{ $tOut ? 'inline-block' : 'none' }}">Tentative Flight</span>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary flight-edit-btn" data-index="0">Edit</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary flight-edit-btn" data-flight-type="outbound">Modifier</button>
                     </div>
-                    <div class="flight-card-edit" id="flight-0-edit" style="display:none;">
+                    <div class="flight-card-edit" id="flight-outbound-edit" style="display:none;">
+                        <h6 class="mb-3">Vol Aller (Jour 1)</h6>
                         <div class="row g-3">
                             <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
-                                <select class="form-select" name="flights[0][airline_id]"> <option value="">— Choisir —</option>
+                                <select class="form-select" name="flights[outbound][airline_id]"><option value="">— Choisir —</option>
                                     @foreach($airlines ?? [] as $airline)
-                                        <option value="{{ $airline->id }}" {{ old('flights.0.airline_id', optional($f0)->airline_id ?? '') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->iata_code)({{ $airline->iata_code }})@endif</option>
+                                        <option value="{{ $airline->id }}" {{ old('flights.outbound.airline_id', optional($fOutbound)->airline_id ?? '') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->iata_code)({{ $airline->iata_code }})@endif</option>
                                     @endforeach
                                 </select></div>
                             <div class="col-md-6"><label class="form-label">Type de cabine</label>
-                                <select class="form-select" name="flights[0][cabin_class]">
+                                <select class="form-select" name="flights[outbound][cabin_class]">
                                     @foreach(\App\Models\TourFlight::cabinOptions() as $value => $label)
-                                        <option value="{{ $value }}" {{ old('flights.0.cabin_class', optional($f0)->cabin_class ?? 'economy') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        <option value="{{ $value }}" {{ old('flights.outbound.cabin_class', optional($fOutbound)->cabin_class ?? 'economy') == $value ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
                                 </select></div>
-                            <div class="col-md-4"><label class="form-label">Numéro de vol</label><input type="text" class="form-control" name="flights[0][flight_number]" value="{{ old('flights.0.flight_number', optional($f0)->flight_number ?? '') }}" placeholder="ex. AF1234"></div>
-                            <div class="col-md-4"><label class="form-label">Ville départ</label><input type="text" class="form-control" name="flights[0][depart_city]" value="{{ old('flights.0.depart_city', optional($f0)->depart_city ?? '') }}" placeholder="ex. Casablanca"></div>
-                            <div class="col-md-4"><label class="form-label">Aéroport départ</label><input type="text" class="form-control" name="flights[0][depart_airport]" value="{{ old('flights.0.depart_airport', optional($f0)->depart_airport ?? '') }}" placeholder="ex. CMN"></div>
-                            <div class="col-md-4"><label class="form-label">Ville arrivée</label><input type="text" class="form-control" name="flights[0][arrive_city]" value="{{ old('flights.0.arrive_city', optional($f0)->arrive_city ?? '') }}" placeholder="ex. Paris"></div>
-                            <div class="col-md-4"><label class="form-label">Aéroport arrivée</label><input type="text" class="form-control" name="flights[0][arrive_airport]" value="{{ old('flights.0.arrive_airport', optional($f0)->arrive_airport ?? '') }}" placeholder="ex. CDG"></div>
-                            <div class="col-md-6"><label class="form-label">Date départ</label><input type="date" class="form-control" name="flights[0][depart_date]" value="{{ old('flights.0.depart_date', $f0 && $f0->depart_date ? $f0->depart_date->format('Y-m-d') : '') }}"></div>
-                            <div class="col-md-6"><label class="form-label">Date arrivée</label><input type="date" class="form-control" name="flights[0][arrive_date]" value="{{ old('flights.0.arrive_date', $f0 && $f0->arrive_date ? $f0->arrive_date->format('Y-m-d') : '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">Cabin (ex. 7 KGS)</label><input type="text" class="form-control" name="flights[0][cabin_baggage]" value="{{ old('flights.0.cabin_baggage', optional($f0)->cabin_baggage ?? '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">Check-in (ex. 20 KGS)</label><input type="text" class="form-control" name="flights[0][checkin_baggage]" value="{{ old('flights.0.checkin_baggage', optional($f0)->checkin_baggage ?? '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">&nbsp;</label><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="flights[0][is_tentative]" value="1" id="flights_0_is_tentative" {{ old('flights.0.is_tentative', optional($f0)->is_tentative ?? false) ? 'checked' : '' }}><label class="form-check-label" for="flights_0_is_tentative">Vol tentative</label></div></div>
-                            <div class="col-12"><div class="form-check"><input class="form-check-input flight-default-radio" type="radio" name="flights_default_radio" id="flights_default_0" value="0" {{ ($hasSecondFlight && (old('flights.0.is_default', $f0->is_default ?? true))) ? 'checked' : '' }}><label class="form-check-label" for="flights_default_0">Vol par défaut</label></div><input type="hidden" name="flights[0][is_default]" id="flights_0_is_default" value="{{ $hasSecondFlight ? (old('flights.0.is_default', optional($f0)->is_default ?? true) ? '1' : '0') : '1' }}"></div>
-                            <div class="col-12"><button type="button" class="btn btn-sm btn-primary flight-save-btn me-2" data-index="0">Save flight</button><button type="button" class="btn btn-sm btn-secondary flight-cancel-btn" data-index="0">Cancel</button></div>
+                            <div class="col-md-6"><label class="form-label">From (ville)</label><input type="text" class="form-control" name="flights[outbound][from_city]" value="{{ old('flights.outbound.from_city', optional($fOutbound)->from_city ?? '') }}" placeholder="ex. Casablanca"></div>
+                            <div class="col-md-6"><label class="form-label">To (ville)</label><input type="text" class="form-control" name="flights[outbound][to_city]" value="{{ old('flights.outbound.to_city', optional($fOutbound)->to_city ?? '') }}" placeholder="ex. Paris"></div>
+                            <div class="col-md-6"><label class="form-label">Date départ</label><input type="date" class="form-control" name="flights[outbound][depart_date]" value="{{ old('flights.outbound.depart_date', $fOutbound && $fOutbound->depart_date ? $fOutbound->depart_date->format('Y-m-d') : '') }}"></div>
+                            <div class="col-md-6"><label class="form-label">Heure départ</label><input type="time" class="form-control" name="flights[outbound][depart_time]" value="{{ old('flights.outbound.depart_time', $fOutbound && $fOutbound->depart_time ? (is_string($fOutbound->depart_time) ? substr($fOutbound->depart_time, 0, 5) : \Carbon\Carbon::parse($fOutbound->depart_time)->format('H:i')) : '') }}"></div>
+                            <div class="col-md-6"><label class="form-label">Date arrivée</label><input type="date" class="form-control" name="flights[outbound][arrive_date]" value="{{ old('flights.outbound.arrive_date', $fOutbound && $fOutbound->arrive_date ? $fOutbound->arrive_date->format('Y-m-d') : '') }}"></div>
+                            <div class="col-md-6"><label class="form-label">Heure arrivée</label><input type="time" class="form-control" name="flights[outbound][arrive_time]" value="{{ old('flights.outbound.arrive_time', $fOutbound && $fOutbound->arrive_time ? (is_string($fOutbound->arrive_time) ? substr($fOutbound->arrive_time, 0, 5) : \Carbon\Carbon::parse($fOutbound->arrive_time)->format('H:i')) : '') }}"></div>
+                            <div class="col-md-4"><label class="form-label">Cabine (kg)</label><input type="number" class="form-control" name="flights[outbound][baggage_cabin_kg]" value="{{ old('flights.outbound.baggage_cabin_kg', optional($fOutbound)->baggage_cabin_kg ?? '') }}" min="0" placeholder="7"></div>
+                            <div class="col-md-4"><label class="form-label">Check-in (kg)</label><input type="number" class="form-control" name="flights[outbound][baggage_checkin_kg]" value="{{ old('flights.outbound.baggage_checkin_kg', optional($fOutbound)->baggage_checkin_kg ?? '') }}" min="0" placeholder="20"></div>
+                            <div class="col-md-4"><label class="form-label">&nbsp;</label><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="flights[outbound][is_tentative]" value="1" id="flights_outbound_is_tentative" {{ old('flights.outbound.is_tentative', optional($fOutbound)->is_tentative ?? true) ? 'checked' : '' }}><label class="form-check-label" for="flights_outbound_is_tentative">Vol tentative</label></div></div>
+                            <div class="col-12"><label class="form-label">Notes</label><textarea class="form-control" name="flights[outbound][notes]" rows="2">{{ old('flights.outbound.notes', optional($fOutbound)->notes ?? '') }}</textarea></div>
+                            <div class="col-12"><button type="button" class="btn btn-sm btn-primary flight-save-btn me-2" data-flight-type="outbound">Enregistrer</button><button type="button" class="btn btn-sm btn-secondary flight-cancel-btn" data-flight-type="outbound">Annuler</button></div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Vol 2 (optionnel) --}}
-                <div class="flight-block" id="flight-2-block" style="{{ $hasSecondFlight ? '' : 'display:none;' }}">
-                    <div class="flight-card-view" id="flight-1-card-view">
+                {{-- Vol Retour (Dernier jour) --}}
+                <div class="flight-block" data-flight-type="inbound">
+                    <div class="flight-card-view" id="flight-inbound-card-view">
                         <div class="flight-card-admin" style="min-width: 320px;">
                             <div class="flight-card-header">
-                                <span class="flight-card-title">✈ FLIGHT • <span id="flight-1-dep-label">{{ old('flights.1.depart_airport', optional($f1)->depart_label ?? '') ?: $flightDash }}</span> to <span id="flight-1-arr-label">{{ old('flights.1.arrive_airport', optional($f1)->arrive_label ?? '') ?: $flightDash }}</span></span>
-                                <button type="button" class="flight-remove-btn flight-remove-vol2-btn" title="Supprimer le 2ème vol">REMOVE</button>
+                                <span class="flight-card-title">✈ Vol Retour — Jour {{ $lastDayNumber }} • <span id="flight-inbound-dep-label">{{ old('flights.inbound.from_city', optional($fInbound)->from_label ?? '') ?: $flightDash }}</span> → <span id="flight-inbound-arr-label">{{ old('flights.inbound.to_city', optional($fInbound)->to_label ?? '') ?: $flightDash }}</span></span>
+                                <button type="button" class="flight-remove-btn flight-reset-btn" data-flight-type="inbound" title="Vider les champs">REMOVE</button>
                             </div>
                             <div class="flight-card-body">
                                 <div class="flight-card-col"><div class="flight-icon-circle"><i class="bx bx-trip"></i></div></div>
                                 <div class="flight-card-col flight-card-center">
-                                    <div class="flight-dep"><div class="flight-date" id="flight-1-dep-date">{{ $f1 ? $fmtDate($f1->depart_date) : $flightDash }}</div><div class="flight-place" id="flight-1-dep-place">{{ old('flights.1.depart_airport', optional($f1)->depart_label ?? '') ?: $flightDash }}</div></div>
+                                    <div class="flight-dep"><div class="flight-date" id="flight-inbound-dep-date">{{ $fInbound ? $fmtDate($fInbound->depart_date) : $flightDash }}</div><div class="flight-place" id="flight-inbound-dep-place">{{ old('flights.inbound.from_city', optional($fInbound)->from_label ?? '') ?: $flightDash }}</div></div>
                                     <div class="flight-arrow">→</div>
-                                    <div class="flight-arr"><div class="flight-date" id="flight-1-arr-date">{{ $f1 ? $fmtDate($f1->arrive_date) : $flightDash }}</div><div class="flight-place" id="flight-1-arr-place">{{ old('flights.1.arrive_airport', optional($f1)->arrive_label ?? '') ?: $flightDash }}</div></div>
+                                    <div class="flight-arr"><div class="flight-date" id="flight-inbound-arr-date">{{ $fInbound ? $fmtDate($fInbound->arrive_date) : $flightDash }}</div><div class="flight-place" id="flight-inbound-arr-place">{{ old('flights.inbound.to_city', optional($fInbound)->to_label ?? '') ?: $flightDash }}</div></div>
                                 </div>
                                 <div class="flight-card-col flight-card-baggage">
-                                    <div>Cabin: <span id="flight-1-cabin-bag">{{ $f1 ? optional($f1)->cabin_baggage_display : (old('flights.1.cabin_baggage') ?: $flightDash) }}</span></div>
-                                    <div>Check-in: <span id="flight-1-checkin-bag">{{ $f1 ? optional($f1)->checkin_baggage_display : (old('flights.1.checkin_baggage') ?: $flightDash) }}</span></div>
+                                    <div>Cabin: <span id="flight-inbound-cabin-bag">{{ $fInbound ? $fInbound->baggage_cabin_display : (old('flights.inbound.baggage_cabin_kg') !== null ? old('flights.inbound.baggage_cabin_kg') . ' KGS' : $flightDash) }}</span></div>
+                                    <div>Check-in: <span id="flight-inbound-checkin-bag">{{ $fInbound ? $fInbound->baggage_checkin_display : (old('flights.inbound.baggage_checkin_kg') !== null ? old('flights.inbound.baggage_checkin_kg') . ' KGS' : $flightDash) }}</span></div>
                                 </div>
                             </div>
                             <div class="flight-card-badge-wrap">
-                                @php $t1 = old('flights.1.is_tentative', optional($f1)->is_tentative ?? false); @endphp
-                                <span class="flight-badge-tentative" id="flight-1-tentative-badge" style="display:{{ $t1 ? 'inline-block' : 'none' }}">Tentative Flight</span>
+                                @php $tIn = old('flights.inbound.is_tentative', optional($fInbound)->is_tentative ?? true); @endphp
+                                <span class="flight-badge-tentative" id="flight-inbound-tentative-badge" style="display:{{ $tIn ? 'inline-block' : 'none' }}">Tentative Flight</span>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary flight-edit-btn" data-index="1">Edit</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary flight-edit-btn" data-flight-type="inbound">Modifier</button>
                     </div>
-                    <div class="flight-card-edit" id="flight-1-edit" style="display:none;">
+                    <div class="flight-card-edit" id="flight-inbound-edit" style="display:none;">
+                        <h6 class="mb-3">Vol Retour (Jour {{ $lastDayNumber }})</h6>
                         <div class="row g-3">
                             <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
-                                <select class="form-select" name="flights[1][airline_id]"> <option value="">— Choisir —</option>
+                                <select class="form-select" name="flights[inbound][airline_id]"><option value="">— Choisir —</option>
                                     @foreach($airlines ?? [] as $airline)
-                                        <option value="{{ $airline->id }}" {{ old('flights.1.airline_id', optional($f1)->airline_id ?? '') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->iata_code)({{ $airline->iata_code }})@endif</option>
+                                        <option value="{{ $airline->id }}" {{ old('flights.inbound.airline_id', optional($fInbound)->airline_id ?? '') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->iata_code)({{ $airline->iata_code }})@endif</option>
                                     @endforeach
                                 </select></div>
                             <div class="col-md-6"><label class="form-label">Type de cabine</label>
-                                <select class="form-select" name="flights[1][cabin_class]">
+                                <select class="form-select" name="flights[inbound][cabin_class]">
                                     @foreach(\App\Models\TourFlight::cabinOptions() as $value => $label)
-                                        <option value="{{ $value }}" {{ old('flights.1.cabin_class', optional($f1)->cabin_class ?? 'economy') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        <option value="{{ $value }}" {{ old('flights.inbound.cabin_class', optional($fInbound)->cabin_class ?? 'economy') == $value ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
                                 </select></div>
-                            <div class="col-md-4"><label class="form-label">Numéro de vol</label><input type="text" class="form-control" name="flights[1][flight_number]" value="{{ old('flights.1.flight_number', optional($f1)->flight_number ?? '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">Ville départ</label><input type="text" class="form-control" name="flights[1][depart_city]" value="{{ old('flights.1.depart_city', optional($f1)->depart_city ?? '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">Aéroport départ</label><input type="text" class="form-control" name="flights[1][depart_airport]" value="{{ old('flights.1.depart_airport', optional($f1)->depart_airport ?? '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">Ville arrivée</label><input type="text" class="form-control" name="flights[1][arrive_city]" value="{{ old('flights.1.arrive_city', optional($f1)->arrive_city ?? '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">Aéroport arrivée</label><input type="text" class="form-control" name="flights[1][arrive_airport]" value="{{ old('flights.1.arrive_airport', optional($f1)->arrive_airport ?? '') }}"></div>
-                            <div class="col-md-6"><label class="form-label">Date départ</label><input type="date" class="form-control" name="flights[1][depart_date]" value="{{ old('flights.1.depart_date', $f1 && $f1->depart_date ? $f1->depart_date->format('Y-m-d') : '') }}"></div>
-                            <div class="col-md-6"><label class="form-label">Date arrivée</label><input type="date" class="form-control" name="flights[1][arrive_date]" value="{{ old('flights.1.arrive_date', $f1 && $f1->arrive_date ? $f1->arrive_date->format('Y-m-d') : '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">Cabin (ex. 7 KGS)</label><input type="text" class="form-control" name="flights[1][cabin_baggage]" value="{{ old('flights.1.cabin_baggage', optional($f1)->cabin_baggage ?? '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">Check-in (ex. 20 KGS)</label><input type="text" class="form-control" name="flights[1][checkin_baggage]" value="{{ old('flights.1.checkin_baggage', optional($f1)->checkin_baggage ?? '') }}"></div>
-                            <div class="col-md-4"><label class="form-label">&nbsp;</label><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="flights[1][is_tentative]" value="1" id="flights_1_is_tentative" {{ old('flights.1.is_tentative', optional($f1)->is_tentative ?? false) ? 'checked' : '' }}><label class="form-check-label" for="flights_1_is_tentative">Vol tentative</label></div></div>
-                            <div class="col-12"><div class="form-check"><input class="form-check-input flight-default-radio" type="radio" name="flights_default_radio" id="flights_default_1" value="1" {{ ($hasSecondFlight && (old('flights.1.is_default', optional($f1)->is_default ?? false))) ? 'checked' : '' }}><label class="form-check-label" for="flights_default_1">Vol par défaut</label></div><input type="hidden" name="flights[1][is_default]" id="flights_1_is_default" value="{{ $hasSecondFlight ? (old('flights.1.is_default', optional($f1)->is_default ?? false) ? '1' : '0') : '0' }}"></div>
-                            <div class="col-12"><button type="button" class="btn btn-sm btn-primary flight-save-btn me-2" data-index="1">Save flight</button><button type="button" class="btn btn-sm btn-secondary flight-cancel-btn" data-index="1">Cancel</button></div>
+                            <div class="col-md-6"><label class="form-label">From (ville)</label><input type="text" class="form-control" name="flights[inbound][from_city]" value="{{ old('flights.inbound.from_city', optional($fInbound)->from_city ?? '') }}" placeholder="ex. Paris"></div>
+                            <div class="col-md-6"><label class="form-label">To (ville)</label><input type="text" class="form-control" name="flights[inbound][to_city]" value="{{ old('flights.inbound.to_city', optional($fInbound)->to_city ?? '') }}" placeholder="ex. Casablanca"></div>
+                            <div class="col-md-6"><label class="form-label">Date départ</label><input type="date" class="form-control" name="flights[inbound][depart_date]" value="{{ old('flights.inbound.depart_date', $fInbound && $fInbound->depart_date ? $fInbound->depart_date->format('Y-m-d') : '') }}"></div>
+                            <div class="col-md-6"><label class="form-label">Heure départ</label><input type="time" class="form-control" name="flights[inbound][depart_time]" value="{{ old('flights.inbound.depart_time', $fInbound && $fInbound->depart_time ? (is_string($fInbound->depart_time) ? substr($fInbound->depart_time, 0, 5) : \Carbon\Carbon::parse($fInbound->depart_time)->format('H:i')) : '') }}"></div>
+                            <div class="col-md-6"><label class="form-label">Date arrivée</label><input type="date" class="form-control" name="flights[inbound][arrive_date]" value="{{ old('flights.inbound.arrive_date', $fInbound && $fInbound->arrive_date ? $fInbound->arrive_date->format('Y-m-d') : '') }}"></div>
+                            <div class="col-md-6"><label class="form-label">Heure arrivée</label><input type="time" class="form-control" name="flights[inbound][arrive_time]" value="{{ old('flights.inbound.arrive_time', $fInbound && $fInbound->arrive_time ? (is_string($fInbound->arrive_time) ? substr($fInbound->arrive_time, 0, 5) : \Carbon\Carbon::parse($fInbound->arrive_time)->format('H:i')) : '') }}"></div>
+                            <div class="col-md-4"><label class="form-label">Cabine (kg)</label><input type="number" class="form-control" name="flights[inbound][baggage_cabin_kg]" value="{{ old('flights.inbound.baggage_cabin_kg', optional($fInbound)->baggage_cabin_kg ?? '') }}" min="0" placeholder="7"></div>
+                            <div class="col-md-4"><label class="form-label">Check-in (kg)</label><input type="number" class="form-control" name="flights[inbound][baggage_checkin_kg]" value="{{ old('flights.inbound.baggage_checkin_kg', optional($fInbound)->baggage_checkin_kg ?? '') }}" min="0" placeholder="20"></div>
+                            <div class="col-md-4"><label class="form-label">&nbsp;</label><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="flights[inbound][is_tentative]" value="1" id="flights_inbound_is_tentative" {{ old('flights.inbound.is_tentative', optional($fInbound)->is_tentative ?? true) ? 'checked' : '' }}><label class="form-check-label" for="flights_inbound_is_tentative">Vol tentative</label></div></div>
+                            <div class="col-12"><label class="form-label">Notes</label><textarea class="form-control" name="flights[inbound][notes]" rows="2">{{ old('flights.inbound.notes', optional($fInbound)->notes ?? '') }}</textarea></div>
+                            <div class="col-12"><button type="button" class="btn btn-sm btn-primary flight-save-btn me-2" data-flight-type="inbound">Enregistrer</button><button type="button" class="btn btn-sm btn-secondary flight-cancel-btn" data-flight-type="inbound">Annuler</button></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mb-3" id="flight2-add-wrap" style="{{ $hasSecondFlight ? 'display:none;' : '' }}">
-                    <button type="button" class="btn btn-outline-primary" id="flight2-add-btn"><i class="bx bx-plus"></i> Ajouter un 2ème vol</button>
-                </div>
-                <p class="text-muted small">Un seul vol peut être « Vol par défaut ». Edit sur une carte pour modifier, puis enregistrer le voyage.</p>
+                <p class="text-muted small mt-3">Vol Aller = Jour 1, Vol Retour = Dernier jour ({{ $lastDayNumber }}). REMOVE vide les champs sans supprimer le voyage. Enregistrez le voyage pour sauvegarder.</p>
             </div>
 
             <script>
             (function() {
                 var dash = '—';
-                function parseDateTimeLocal(val) {
-                    if (!val) return null;
-                    var d = new Date(val);
-                    return isNaN(d.getTime()) ? null : d;
-                }
-                function formatCardDate(d) {
-                    if (!d) return dash;
+                function formatCardDate(dStr) {
+                    if (!dStr) return dash;
+                    var d = new Date(dStr + 'T12:00:00');
+                    if (isNaN(d.getTime())) return dash;
                     var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
                     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                     return days[d.getDay()] + ', ' + (d.getDate() < 10 ? '0' : '') + d.getDate() + ' ' + months[d.getMonth()];
                 }
-                function updateCardFromForm(index) {
-                    var block = document.querySelector('.flight-block[data-flight-index="' + index + '"]');
+                function updateCard(type) {
+                    var block = document.querySelector('.flight-block[data-flight-type="' + type + '"]');
                     if (!block) return;
-                    var depCity = (block.querySelector('input[name="flights[' + index + '][depart_city]"]') || {}).value;
-                    var depAir = (block.querySelector('input[name="flights[' + index + '][depart_airport]"]') || {}).value;
-                    var arrCity = (block.querySelector('input[name="flights[' + index + '][arrive_city]"]') || {}).value;
-                    var arrAir = (block.querySelector('input[name="flights[' + index + '][arrive_airport]"]') || {}).value;
-                    var depDate = (block.querySelector('input[name="flights[' + index + '][depart_date]"]') || {}).value;
-                    var arrDate = (block.querySelector('input[name="flights[' + index + '][arrive_date]"]') || {}).value;
-                    var cabinBag = (block.querySelector('input[name="flights[' + index + '][cabin_baggage]"]') || {}).value;
-                    var checkinBag = (block.querySelector('input[name="flights[' + index + '][checkin_baggage]"]') || {}).value;
-                    var tentative = (block.querySelector('input[name="flights[' + index + '][is_tentative]"]') || {}).checked;
-                    var depLabel = depCity || depAir || dash;
-                    var arrLabel = arrCity || arrAir || dash;
-                    document.getElementById('flight-' + index + '-dep-label').textContent = depLabel;
-                    document.getElementById('flight-' + index + '-arr-label').textContent = arrLabel;
-                    document.getElementById('flight-' + index + '-dep-date').textContent = depDate ? formatCardDate(new Date(depDate + 'T12:00:00')) : dash;
-                    document.getElementById('flight-' + index + '-arr-date').textContent = arrDate ? formatCardDate(new Date(arrDate + 'T12:00:00')) : dash;
-                    document.getElementById('flight-' + index + '-dep-place').textContent = depLabel;
-                    document.getElementById('flight-' + index + '-arr-place').textContent = arrLabel;
-                    document.getElementById('flight-' + index + '-cabin-bag').textContent = cabinBag || dash;
-                    document.getElementById('flight-' + index + '-checkin-bag').textContent = checkinBag || dash;
-                    document.getElementById('flight-' + index + '-tentative-badge').style.display = tentative ? 'inline-block' : 'none';
-                }
-                function showEdit(index) {
-                    document.getElementById('flight-' + index + '-card-view').style.display = 'none';
-                    document.getElementById('flight-' + index + '-edit').style.display = 'block';
-                }
-                function showCard(index) {
-                    document.getElementById('flight-' + index + '-edit').style.display = 'none';
-                    document.getElementById('flight-' + index + '-card-view').style.display = 'flex';
-                    updateCardFromForm(index);
+                    var from = (block.querySelector('input[name="flights[' + type + '][from_city]"]') || {}).value;
+                    var to = (block.querySelector('input[name="flights[' + type + '][to_city]"]') || {}).value;
+                    var depDate = (block.querySelector('input[name="flights[' + type + '][depart_date]"]') || {}).value;
+                    var arrDate = (block.querySelector('input[name="flights[' + type + '][arrive_date]"]') || {}).value;
+                    var cabinKg = (block.querySelector('input[name="flights[' + type + '][baggage_cabin_kg]"]') || {}).value;
+                    var checkinKg = (block.querySelector('input[name="flights[' + type + '][baggage_checkin_kg]"]') || {}).value;
+                    var tentative = (block.querySelector('input[name="flights[' + type + '][is_tentative]"]') || {}).checked;
+                    document.getElementById('flight-' + type + '-dep-label').textContent = from || dash;
+                    document.getElementById('flight-' + type + '-arr-label').textContent = to || dash;
+                    document.getElementById('flight-' + type + '-dep-place').textContent = from || dash;
+                    document.getElementById('flight-' + type + '-arr-place').textContent = to || dash;
+                    document.getElementById('flight-' + type + '-dep-date').textContent = depDate ? formatCardDate(depDate) : dash;
+                    document.getElementById('flight-' + type + '-arr-date').textContent = arrDate ? formatCardDate(arrDate) : dash;
+                    document.getElementById('flight-' + type + '-cabin-bag').textContent = cabinKg ? cabinKg + ' KGS' : dash;
+                    document.getElementById('flight-' + type + '-checkin-bag').textContent = checkinKg ? checkinKg + ' KGS' : dash;
+                    document.getElementById('flight-' + type + '-tentative-badge').style.display = tentative ? 'inline-block' : 'none';
                 }
                 document.querySelectorAll('.flight-edit-btn').forEach(function(btn) {
-                    btn.addEventListener('click', function() { showEdit(parseInt(this.getAttribute('data-index'), 10)); });
+                    btn.addEventListener('click', function() {
+                        var t = this.getAttribute('data-flight-type');
+                        document.getElementById('flight-' + t + '-card-view').style.display = 'none';
+                        document.getElementById('flight-' + t + '-edit').style.display = 'block';
+                    });
                 });
                 document.querySelectorAll('.flight-save-btn, .flight-cancel-btn').forEach(function(btn) {
                     btn.addEventListener('click', function() {
-                        var i = parseInt(this.getAttribute('data-index'), 10);
-                        showCard(i);
+                        var t = this.getAttribute('data-flight-type');
+                        document.getElementById('flight-' + t + '-edit').style.display = 'none';
+                        document.getElementById('flight-' + t + '-card-view').style.display = 'flex';
+                        if (this.classList.contains('flight-save-btn')) updateCard(t);
                     });
                 });
                 document.querySelectorAll('.flight-reset-btn').forEach(function(btn) {
                     btn.addEventListener('click', function() {
-                        var block = document.querySelector('.flight-block[data-flight-index="0"]');
-                        block.querySelectorAll('input, select').forEach(function(el) {
-                            if (el.name && el.name.indexOf('flights[0]') !== -1) {
-                                if (el.type === 'checkbox') el.checked = false; else el.value = '';
+                        var t = this.getAttribute('data-flight-type');
+                        var block = document.querySelector('.flight-block[data-flight-type="' + t + '"]');
+                        block.querySelectorAll('input, select, textarea').forEach(function(el) {
+                            if (el.name && el.name.indexOf('flights[' + t + ']') !== -1) {
+                                if (el.type === 'checkbox') el.checked = true; else if (el.type !== 'submit') el.value = '';
                             }
                         });
-                        document.getElementById('flights_0_is_default').value = '1';
-                        updateCardFromForm(0);
-                    });
-                });
-                var removeVol2Btn = document.querySelector('.flight-remove-vol2-btn');
-                var flight2Block = document.getElementById('flight-2-block');
-                var addWrap = document.getElementById('flight2-add-wrap');
-                if (removeVol2Btn && flight2Block) {
-                    removeVol2Btn.addEventListener('click', function() {
-                        flight2Block.style.display = 'none';
-                        addWrap.style.display = '';
-                        document.getElementById('remove_flight_2').value = '1';
-                        flight2Block.querySelectorAll('input, select').forEach(function(el) {
-                            if (el.name && el.name.indexOf('flights[1]') !== -1) { if (el.type === 'checkbox') el.checked = false; else el.value = ''; }
-                        });
-                        document.getElementById('flights_1_is_default').value = '0';
-                        document.getElementById('flights_default_0').checked = true;
-                        document.getElementById('flights_0_is_default').value = '1';
-                    });
-                }
-                var addBtn = document.getElementById('flight2-add-btn');
-                if (addBtn && flight2Block && addWrap) {
-                    addBtn.addEventListener('click', function() {
-                        flight2Block.style.display = 'block';
-                        addWrap.style.display = 'none';
-                        document.getElementById('remove_flight_2').value = '0';
-                        showEdit(1);
-                    });
-                }
-                document.querySelectorAll('.flight-default-radio').forEach(function(radio) {
-                    radio.addEventListener('change', function() {
-                        document.getElementById('flights_0_is_default').value = this.value === '0' ? '1' : '0';
-                        document.getElementById('flights_1_is_default').value = this.value === '1' ? '1' : '0';
+                        updateCard(t);
                     });
                 });
             })();

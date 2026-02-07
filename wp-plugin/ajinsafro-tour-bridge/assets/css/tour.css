@@ -265,74 +265,89 @@
 }
 
 /* ===================================
-   Search Bar (MakeMyTrip style)
+   Search Bar - 3 cartes horizontales sur fond bleu (design maquette)
    =================================== */
 .aj-searchbar {
-    background: linear-gradient(135deg, #0d3b66 0%, #1a5f8a 100%);
-    border-radius: var(--ajtb-radius-lg);
-    padding: 16px 20px;
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    border-radius: 12px;
+    padding: 14px 16px;
     margin-bottom: 24px;
-    box-shadow: var(--ajtb-shadow-lg);
+    box-shadow: 0 4px 20px rgba(13, 71, 161, 0.25);
 }
 
-.aj-searchbar__inner {
+.aj-searchbar__row {
     display: flex;
-    flex-wrap: wrap;
     align-items: stretch;
-    gap: 24px;
+    flex-wrap: nowrap;
+    gap: 12px;
 }
 
-.aj-searchbar__item {
+.aj-searchitem {
     flex: 1;
-    min-width: 140px;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
+    padding: 14px 16px;
+    background: var(--ajtb-bg);
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.aj-searchbar__label {
-    font-size: 11px;
+.aj-search-label {
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: rgba(255, 255, 255, 0.75);
-}
-
-.aj-searchbar__value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-}
-
-.aj-searchbar__value-wrap {
-    display: block;
-    cursor: pointer;
-}
-
-.aj-searchbar__input {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    color: #fff;
-    padding: 8px 12px;
-    font-size: 14px;
+    letter-spacing: 0.08em;
+    color: var(--ajtb-primary);
     font-weight: 600;
-    width: 100%;
 }
 
-.aj-searchbar__input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+.aj-search-value-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 2.2em;
 }
 
-.aj-searchbar__input-date {
+.aj-search-icon {
+    flex-shrink: 0;
+    color: var(--ajtb-primary);
+}
+
+.aj-search-value,
+.aj-search-select {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+}
+
+.aj-search-select {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 28px 8px 0;
+    background: transparent;
+    border: none;
     cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23008cff' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
 }
 
-.aj-searchbar__date-wrap {
+.aj-search-select:focus {
+    outline: none;
+}
+
+.aj-search-date-wrap {
     position: relative;
-    min-height: 2em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 2.2em;
 }
 
-.aj-searchbar__input-date {
+.aj-search-date-input {
     position: absolute;
     left: 0;
     top: 0;
@@ -340,48 +355,118 @@
     height: 100%;
     opacity: 0;
     cursor: pointer;
-    min-height: 2em;
 }
 
-.aj-searchbar__value-date {
-    display: block;
-    min-height: 1.4em;
+.aj-search-value {
     pointer-events: none;
 }
 
-.aj-searchbar__guests-inner {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
+.aj-searchitem--guests {
+    position: relative;
 }
 
-.aj-searchbar__guest-row {
+.aj-guest-trigger {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: var(--ajtb-transition);
 }
 
-.aj-searchbar__guest-label {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.9);
-    min-width: 60px;
+.aj-guest-trigger:hover {
+    color: var(--ajtb-primary);
 }
 
-.aj-searchbar__qty {
+.aj-guest-trigger[aria-expanded="true"] {
+    color: var(--ajtb-primary);
+}
+
+.aj-guest-summary {
+    flex: 1;
+    min-width: 0;
+}
+
+.aj-guest-chevron {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.aj-guest-trigger[aria-expanded="true"] .aj-guest-chevron {
+    transform: rotate(180deg);
+}
+
+/* Guests panel */
+.aj-guests-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    padding: 16px;
+    background: var(--ajtb-bg);
+    border: 1px solid var(--ajtb-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 100;
+}
+
+.aj-guests-panel[hidden] {
+    display: none !important;
+}
+
+.aj-guests-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.aj-guests-row:last-of-type {
+    margin-bottom: 16px;
+}
+
+.aj-guests-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.aj-guests-label span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+}
+
+.aj-guests-label small {
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+}
+
+.aj-counter {
     display: flex;
     align-items: center;
     gap: 4px;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--ajtb-bg-light);
+    border: 1px solid var(--ajtb-border);
     border-radius: 6px;
     padding: 2px;
 }
 
-.aj-searchbar__btn {
-    width: 28px;
-    height: 28px;
+.aj-counter-btn {
+    width: 32px;
+    height: 32px;
     border: none;
-    background: rgba(255, 255, 255, 0.25);
-    color: #fff;
+    background: var(--ajtb-bg);
+    color: var(--ajtb-primary);
     border-radius: 4px;
     font-size: 18px;
     line-height: 1;
@@ -392,34 +477,56 @@
     transition: var(--ajtb-transition);
 }
 
-.aj-searchbar__btn:hover {
-    background: rgba(255, 255, 255, 0.4);
+.aj-counter-btn:hover {
+    background: var(--ajtb-primary-light);
 }
 
-.aj-searchbar__btn:disabled {
-    opacity: 0.5;
+.aj-counter-btn:disabled {
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
-.aj-searchbar__num {
+.aj-counter-num {
     font-size: 15px;
     font-weight: 700;
-    color: #fff;
-    min-width: 24px;
+    color: var(--ajtb-text);
+    min-width: 28px;
     text-align: center;
 }
 
-@media (max-width: 768px) {
-    .aj-searchbar__inner {
+.aj-guests-apply {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ajtb-primary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--ajtb-transition);
+}
+
+.aj-guests-apply:hover {
+    background: var(--ajtb-primary-hover, var(--ajtb-primary));
+    opacity: 0.95;
+}
+
+/* Responsive: 3 cartes en colonne sous 992px */
+@media (max-width: 992px) {
+    .aj-searchbar__row {
         flex-direction: column;
+        gap: 10px;
     }
 
-    .aj-searchbar__item {
-        min-width: 100%;
+    .aj-searchitem {
+        padding: 14px 16px;
     }
 
-    .aj-searchbar__guests-inner {
-        flex-direction: column;
+    .aj-guests-panel {
+        left: 0;
+        right: 0;
     }
 }
 
@@ -710,6 +817,230 @@
 
 .ajtb-gallery-grid .gallery-item:hover img {
     transform: scale(1.05);
+}
+
+/* ===================================
+   Day Plan (left nav + right content)
+   =================================== */
+.ajtb-day-plan {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.aj-day-plan-nav {
+    flex-shrink: 0;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.aj-day-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 14px;
+    color: var(--ajtb-text);
+    background: var(--ajtb-bg);
+    border: 1px solid var(--ajtb-border);
+    border-radius: var(--ajtb-radius);
+    cursor: pointer;
+    transition: var(--ajtb-transition);
+}
+
+.aj-day-link:hover {
+    border-color: var(--ajtb-primary);
+    background: var(--ajtb-primary-light);
+}
+
+.aj-day-link.active {
+    border-color: var(--ajtb-primary);
+    background: var(--ajtb-primary-light);
+    font-weight: 600;
+    color: var(--ajtb-primary);
+}
+
+.aj-day-link-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ajtb-border);
+    color: var(--ajtb-text);
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.aj-day-link.active .aj-day-link-num {
+    background: var(--ajtb-primary);
+    color: #fff;
+}
+
+.aj-day-link-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aj-day-plan-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.aj-day-panel {
+    display: none;
+}
+
+.aj-day-panel.active {
+    display: flex;
+}
+
+.aj-day-flight-wrap {
+    margin-bottom: 20px;
+}
+
+/* Flight card (in day content) */
+.aj-flight-card {
+    background: var(--ajtb-bg);
+    border-radius: var(--ajtb-radius);
+    border: 1px solid var(--ajtb-border);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.aj-flight-card--removed {
+    display: none !important;
+}
+
+.aj-flight-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--ajtb-bg-light);
+    border-bottom: 1px solid var(--ajtb-border);
+}
+
+.aj-flight-card__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+}
+
+.aj-flight-card__remove {
+    background: none;
+    border: none;
+    color: var(--ajtb-danger);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.aj-flight-card__remove:hover {
+    text-decoration: underline;
+}
+
+.aj-flight-card__body {
+    display: flex;
+    align-items: stretch;
+    padding: 16px;
+    gap: 16px;
+}
+
+.aj-flight-card__col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.aj-flight-card__icon-inner {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ajtb-primary-light);
+    color: var(--ajtb-primary);
+    border-radius: 50%;
+    font-size: 20px;
+}
+
+.aj-flight-card__route {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.aj-flight-card__dep,
+.aj-flight-card__arr {
+    text-align: center;
+}
+
+.aj-flight-card__date {
+    display: block;
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+    margin-bottom: 2px;
+}
+
+.aj-flight-card__place {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+}
+
+.aj-flight-card__arrow {
+    color: var(--ajtb-border);
+    font-size: 18px;
+}
+
+.aj-flight-card__baggage {
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+}
+
+.aj-flight-card__baggage div {
+    margin-bottom: 4px;
+}
+
+.aj-flight-card__badge-wrap {
+    padding: 0 16px 12px;
+}
+
+.aj-flight-card__badge--tentative {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #f5e6d3;
+    color: #856404;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .ajtb-day-plan {
+        flex-direction: column;
+    }
+    .aj-day-plan-nav {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .aj-day-link-title {
+        white-space: normal;
+    }
 }
 
 /* ===================================

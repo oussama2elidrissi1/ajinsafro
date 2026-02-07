@@ -60,13 +60,17 @@
                 this.config.currency = ajtbData.currencySymbol || 'DH';
             }
 
-            // Extract prices from booking box
+            // Extract prices from booking box (adult + child; child = 0 if not present)
             var $priceBreakdown = $('.booking-price-breakdown');
             if ($priceBreakdown.length) {
-                var adultPriceText = $priceBreakdown.find('.price-row').first().find('.value').text();
+                var $rows = $priceBreakdown.find('.price-row');
+                var adultPriceText = $rows.first().find('.value').text();
                 this.config.prices.adult = this.parsePrice(adultPriceText);
+                if ($rows.length > 1) {
+                    var childPriceText = $rows.eq(1).find('.value').text();
+                    this.config.prices.child = this.parsePrice(childPriceText);
+                }
             } else {
-                // Fallback from header
                 var headerPrice = $('.price-current').first().text();
                 this.config.prices.adult = this.parsePrice(headerPrice);
             }
@@ -152,8 +156,8 @@
             var adults = parseInt($('#adults').val(), 10) || 0;
             var children = parseInt($('#children').val(), 10) || 0;
 
-            var adultPrice = this.config.prices.adult;
-            var childPrice = adultPrice * 0.7; // 70% for children
+            var adultPrice = this.config.prices.adult || 0;
+            var childPrice = this.config.prices.child !== undefined && this.config.prices.child !== null ? this.config.prices.child : 0;
 
             var total = (adults * adultPrice) + (children * childPrice);
 
@@ -693,85 +697,156 @@
         },
 
         /**
-         * Search bar (MakeMyTrip style): cookie persistence + sync with booking form
-         * Event delegation so it works with dynamic content.
+         * Search bar: 3 blocks, localStorage (start_from, travel_date, adults, children), guests panel with Apply, sync total
          */
         initSearchbar: function() {
             var self = this;
+            var storageKey = 'aj_tb_search';
             var cookieName = 'aj_tb_search';
             var cookieDays = 30;
 
-            function getCookie() {
+            function getStored() {
+                try {
+                    var tourId = $('#aj-searchbar').data('tour-id');
+                    var key = tourId ? storageKey + '_' + tourId : storageKey;
+                    var raw = localStorage.getItem(key);
+                    if (raw) {
+                        var parsed = JSON.parse(raw);
+                        if (parsed && typeof parsed === 'object') {
+                            return {
+                                start_from: parsed.start_from !== undefined ? parsed.start_from : parsed.starting_from,
+                                travel_date: parsed.travel_date !== undefined ? parsed.travel_date : parsed.travelling_on,
+                                adults: parsed.adults,
+                                children: parsed.children
+                            };
+                        }
+                    }
+                } catch (e) {}
                 var match = document.cookie.match(new RegExp('(^| )' + cookieName + '=([^;]+)'));
                 if (match) {
                     try {
-                        return JSON.parse(decodeURIComponent(match[2]));
+                        var parsed = JSON.parse(decodeURIComponent(match[2]));
+                        if (parsed && typeof parsed === 'object') {
+                            return {
+                                start_from: parsed.start_from !== undefined ? parsed.start_from : parsed.starting_from,
+                                travel_date: parsed.travel_date !== undefined ? parsed.travel_date : parsed.travelling_on,
+                                adults: parsed.adults,
+                                children: parsed.children
+                            };
+                        }
                     } catch (e) {}
                 }
                 return {};
             }
 
-            function setCookie(data) {
+            function setStored(data) {
+                var payload = {
+                    start_from: data.start_from !== undefined ? data.start_from : '',
+                    travel_date: data.travel_date !== undefined ? data.travel_date : '',
+                    adults: typeof data.adults === 'number' ? data.adults : 2,
+                    children: typeof data.children === 'number' ? data.children : 0
+                };
+                try {
+                    var tourId = $('#aj-searchbar').data('tour-id');
+                    var key = tourId ? storageKey + '_' + tourId : storageKey;
+                    localStorage.setItem(key, JSON.stringify(payload));
+                } catch (e) {}
                 var d = new Date();
                 d.setTime(d.getTime() + cookieDays * 24 * 60 * 60 * 1000);
-                document.cookie = cookieName + '=' + encodeURIComponent(JSON.stringify(data)) + ';path=/;expires=' + d.toUTCString() + ';SameSite=Lax';
+                document.cookie = cookieName + '=' + encodeURIComponent(JSON.stringify(payload)) + ';path=/;expires=' + d.toUTCString() + ';SameSite=Lax';
             }
 
             function getSearchbarState() {
                 var $bar = $('#aj-searchbar');
                 if (!$bar.length) return {};
-                var dateVal = ($bar.find('#aj-searchbar-date').val() || '').trim();
-                var adults = parseInt($bar.find('#aj-searchbar-adults').text(), 10) || 0;
-                var children = parseInt($bar.find('#aj-searchbar-children').text(), 10) || 0;
-                var from = ($bar.find('#aj-searchbar-from').text() || '').trim();
-                if (from === '—') from = '';
-                return { starting_from: from, travelling_on: dateVal, adults: adults, children: children };
+                var dateVal = ($bar.find('#aj-search-date').val() || '').trim();
+                var adults = parseInt($bar.find('#aj-panel-adults').text(), 10) || 0;
+                var children = parseInt($bar.find('#aj-panel-children').text(), 10) || 0;
+                var from = ($bar.find('#aj-search-from').val() || '').trim();
+                return { start_from: from, travel_date: dateVal, adults: adults, children: children };
             }
 
             function setSearchbarDisplay(state) {
                 var $bar = $('#aj-searchbar');
                 if (!$bar.length) return;
-                var $dateInput = $bar.find('#aj-searchbar-date');
-                var $dateDisplay = $bar.find('#aj-searchbar-date-display');
-                var $adults = $bar.find('#aj-searchbar-adults');
-                var $children = $bar.find('#aj-searchbar-children');
-                if (state.travelling_on) {
-                    $dateInput.val(state.travelling_on);
-                    var parts = state.travelling_on.split('-');
-                    if (parts.length === 3) {
-                        $dateDisplay.text(parts[2] + '/' + parts[1] + '/' + parts[0]);
-                    } else {
-                        $dateDisplay.text(state.travelling_on);
-                    }
+                var $from = $bar.find('#aj-search-from');
+                var $dateInput = $bar.find('#aj-search-date');
+                var $dateDisplay = $bar.find('#aj-search-date-display');
+                var $panelAdults = $bar.find('#aj-panel-adults');
+                var $panelChildren = $bar.find('#aj-panel-children');
+                if (state.start_from !== undefined && $from.length) $from.val(state.start_from);
+                if (state.travel_date) {
+                    $dateInput.val(state.travel_date);
+                    var parts = state.travel_date.split('-');
+                    if (parts.length === 3) $dateDisplay.text(parts[2] + '/' + parts[1] + '/' + parts[0]);
+                    else $dateDisplay.text(state.travel_date);
                 } else {
                     $dateInput.val('');
                     $dateDisplay.text($dateDisplay.attr('data-placeholder') || '');
                 }
-                if (typeof state.adults === 'number') $adults.text(state.adults);
-                if (typeof state.children === 'number') $children.text(state.children);
-                var $av = $bar.find('#aj-searchbar-adults-val');
-                var $cv = $bar.find('#aj-searchbar-children-val');
-                if ($av.length) $av.val(state.adults);
-                if ($cv.length) $cv.val(state.children);
+                if (typeof state.adults === 'number') { $panelAdults.text(state.adults); }
+                if (typeof state.children === 'number') { $panelChildren.text(state.children); }
+                updateGuestsSummary();
+            }
+
+            function updateGuestsSummary() {
+                var a = parseInt($('#aj-panel-adults').text(), 10) || 0;
+                var c = parseInt($('#aj-panel-children').text(), 10) || 0;
+                var $s = $('#aj-guest-summary');
+                if (!$s.length) return;
+                var adultLabel = a === 1 ? 'Adulte' : 'Adultes';
+                var text = a + ' ' + adultLabel;
+                if (c > 0) text += ', ' + c + ' ' + (c === 1 ? 'Enfant' : 'Enfants');
+                $s.text(text);
             }
 
             function syncToBookingForm(state) {
                 var $date = $('#booking-date');
                 var $adults = $('#adults');
                 var $children = $('#children');
-                if ($date.length && state.travelling_on) $date.val(state.travelling_on);
+                if ($date.length && state.travel_date) $date.val(state.travel_date);
                 if ($adults.length && typeof state.adults === 'number') $adults.val(state.adults);
                 if ($children.length && typeof state.children === 'number') $children.val(state.children);
                 if (typeof self.calculateTotal === 'function') self.calculateTotal();
             }
 
-            // Date change (event delegation)
-            $(document).on('change', '#aj-searchbar-date', function() {
+            function closeGuestsPanel() {
+                var trigger = document.getElementById('aj-guest-trigger');
+                var panel = document.getElementById('aj-guests-panel');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+                if (panel) panel.setAttribute('hidden', '');
+            }
+
+            // Guests trigger: open/close (data-aj-search="guests-trigger")
+            $(document).on('click', '#aj-searchbar [data-aj-search="guests-trigger"]', function(e) {
+                e.stopPropagation();
+                var trigger = this;
+                var panel = document.getElementById('aj-guests-panel');
+                var open = trigger.getAttribute('aria-expanded') === 'true';
+                trigger.setAttribute('aria-expanded', open ? 'false' : 'true');
+                if (panel) {
+                    if (open) panel.setAttribute('hidden', '');
+                    else panel.removeAttribute('hidden');
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#aj-searchbar').length) closeGuestsPanel();
+            });
+
+            // Starting from (data-aj-search="from")
+            $(document).on('change', '#aj-searchbar [data-aj-search="from"]', function() {
+                var state = getSearchbarState();
+                setStored(state);
+            });
+
+            // Date (data-aj-search="date")
+            $(document).on('change', '#aj-searchbar [data-aj-search="date"]', function() {
                 var val = $(this).val() || '';
                 var state = getSearchbarState();
-                state.travelling_on = val;
-                setCookie(state);
-                var $display = $('#aj-searchbar-date-display');
+                state.travel_date = val;
+                setStored(state);
+                var $display = $('#aj-search-date-display');
                 if (val) {
                     var parts = val.split('-');
                     if (parts.length === 3) $display.text(parts[2] + '/' + parts[1] + '/' + parts[0]);
@@ -782,39 +857,47 @@
                 syncToBookingForm(state);
             });
 
-            // Guest +/- (event delegation on searchbar only)
-            $(document).on('click', '#aj-searchbar .aj-searchbar__btn-plus, #aj-searchbar .aj-searchbar__btn-minus', function(e) {
-                var btn = e.currentTarget;
-                var target = $(btn).data('target');
+            // Panel +/- (data-aj-search="counter" / "plus" / "minus")
+            $(document).on('click', '#aj-searchbar [data-aj-search="plus"], #aj-searchbar [data-aj-search="minus"]', function(e) {
+                e.stopPropagation();
+                var $counter = $(this).closest('[data-aj-search="counter"]');
+                if (!$counter.length) return;
+                var target = $counter.data('target');
                 if (target !== 'adults' && target !== 'children') return;
-                var $num = $('#aj-searchbar-' + target);
-                var $val = $('#aj-searchbar-' + target + '-val');
-                if (!$num.length) return;
-                var max = 99;
-                if ($val.length) max = parseInt($val.attr('data-max'), 10) || 99;
+                var $num = $counter.find('.aj-counter-num');
+                var max = parseInt($counter.data('max'), 10) || 99;
+                var min = parseInt($counter.data('min'), 10);
+                if (target === 'children') min = 0;
+                else if (target === 'adults') min = 1;
                 var current = parseInt($num.text(), 10) || 0;
-                var min = target === 'children' ? 0 : 1;
-                if ($(btn).hasClass('aj-searchbar__btn-plus')) {
+                if ($(this).data('aj-search') === 'plus') {
                     if (current < max) current++;
                 } else {
                     if (current > min) current--;
                 }
                 $num.text(current);
-                if ($val.length) $val.val(current);
-                var state = getSearchbarState();
-                setCookie(state);
-                syncToBookingForm(state);
             });
 
-            // On load: apply cookie to searchbar and booking form
-            var saved = getCookie();
-            if ($('#aj-searchbar').length) {
+            // Apply: copy panel to state, close, persist, sync total (data-aj-search="guests-apply")
+            $(document).on('click', '#aj-searchbar [data-aj-search="guests-apply"]', function(e) {
+                e.stopPropagation();
                 var state = getSearchbarState();
-                if (saved.travelling_on) state.travelling_on = saved.travelling_on;
+                setSearchbarDisplay(state);
+                setStored(state);
+                syncToBookingForm(state);
+                closeGuestsPanel();
+            });
+
+            // On load: restore from localStorage, then update UI and total
+            if ($('#aj-searchbar').length) {
+                var saved = getStored();
+                var state = getSearchbarState();
+                if (saved.start_from !== undefined) state.start_from = saved.start_from;
+                if (saved.travel_date) state.travel_date = saved.travel_date;
                 if (typeof saved.adults === 'number') state.adults = saved.adults;
                 if (typeof saved.children === 'number') state.children = saved.children;
                 setSearchbarDisplay(state);
-                setCookie(state);
+                setStored(state);
                 syncToBookingForm(state);
             }
         }

@@ -72,6 +72,22 @@ if (empty($itinerary)) {
         <span class="section-badge"><?php echo count($itinerary); ?> jour<?php echo count($itinerary) > 1 ? 's' : ''; ?></span>
     </h2>
 
+    <div class="ajtb-day-plan">
+        <nav class="aj-day-plan-nav" aria-label="<?php esc_attr_e('Day Plan', 'ajinsafro-tour-bridge'); ?>">
+            <?php foreach ($itinerary as $index => $day): 
+                $day_num = $day['day'] ?? ($index + 1);
+                $day_title_short = !empty($day['day_title']) ? $day['day_title'] : ('Jour ' . $day_num);
+                if (strlen($day_title_short) > 28) {
+                    $day_title_short = wp_trim_words($day_title_short, 4);
+                }
+            ?>
+                <button type="button" class="aj-day-link <?php echo $index === 0 ? 'active' : ''; ?>" data-day-index="<?php echo $index; ?>" data-day="<?php echo $day_num; ?>">
+                    <span class="aj-day-link-num"><?php echo $day_num; ?></span>
+                    <span class="aj-day-link-title"><?php echo esc_html($day_title_short); ?></span>
+                </button>
+            <?php endforeach; ?>
+        </nav>
+        <div class="aj-day-plan-content">
     <div class="ajtb-itinerary-timeline">
         <?php foreach ($itinerary as $index => $day): 
             $day_number = $day['day'] ?? ($index + 1);
@@ -230,6 +246,8 @@ if (empty($itinerary)) {
                 </div>
             </div>
         <?php endforeach; ?>
+    </div>
+        </div>
     </div>
 
     <!-- Print/Download Itinerary (Laravel timeline only) -->

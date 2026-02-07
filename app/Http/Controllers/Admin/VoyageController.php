@@ -389,11 +389,7 @@ class VoyageController extends Controller
 
             if ($request->has('flights')) {
                 try {
-                    $flights = $request->input('flights', []);
-                    if ($request->input('remove_flight_2')) {
-                        unset($flights[1]);
-                    }
-                    $this->tourFlightsService->syncFlights($id, $flights);
+                    $this->tourFlightsService->syncFlights($id, $request->input('flights', []));
                 } catch (\Throwable $e) {
                     \Log::error('VoyageController@update syncFlights failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
                     throw $e;

@@ -352,6 +352,13 @@ class Ajinsafro_Tour_Bridge {
             AJTB_VERSION,
             true
         );
+        wp_enqueue_script(
+            'ajtb-day-plan-js',
+            AJTB_PLUGIN_URL . 'assets/js/day-plan.js',
+            ['jquery'],
+            AJTB_VERSION,
+            true
+        );
 
         // Pass data to JS (ajax_url + nonces for activities and flights)
         $post_id = get_the_ID();
