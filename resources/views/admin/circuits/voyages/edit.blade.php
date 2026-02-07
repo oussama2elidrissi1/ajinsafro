@@ -741,30 +741,37 @@
                         }
                     });
                 }
-                document.querySelectorAll('.ajtb-logistique-media-btn').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        window.logistiqueMediaTarget = {
-                            inputId: this.getAttribute('data-input'),
-                            previewId: this.getAttribute('data-preview'),
-                            previewWrapId: this.getAttribute('data-preview-wrap')
-                        };
-                        if (mediaModal && window.bootstrap) {
-                            var m = new bootstrap.Modal(mediaModal);
-                            m.show();
-                            loadMediaSearch(1);
-                        }
+                function bindLogistiqueMediaButtons() {
+                    document.querySelectorAll('.ajtb-logistique-media-btn').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            window.logistiqueMediaTarget = {
+                                inputId: this.getAttribute('data-input'),
+                                previewId: this.getAttribute('data-preview'),
+                                previewWrapId: this.getAttribute('data-preview-wrap')
+                            };
+                            if (mediaModal && window.bootstrap) {
+                                var m = new bootstrap.Modal(mediaModal);
+                                m.show();
+                                loadMediaSearch(1);
+                            }
+                        });
                     });
-                });
-                document.querySelectorAll('.ajtb-logistique-media-remove').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        var inp = document.getElementById(this.getAttribute('data-input'));
-                        var prev = document.getElementById(this.getAttribute('data-preview'));
-                        var wrap = document.getElementById(this.getAttribute('data-preview-wrap'));
-                        if (inp) inp.value = '';
-                        if (prev) prev.src = '';
-                        if (wrap) wrap.style.display = 'none';
+                    document.querySelectorAll('.ajtb-logistique-media-remove').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            var inp = document.getElementById(this.getAttribute('data-input'));
+                            var prev = document.getElementById(this.getAttribute('data-preview'));
+                            var wrap = document.getElementById(this.getAttribute('data-preview-wrap'));
+                            if (inp) inp.value = '';
+                            if (prev) prev.src = '';
+                            if (wrap) wrap.style.display = 'none';
+                        });
                     });
-                });
+                }
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', bindLogistiqueMediaButtons);
+                } else {
+                    bindLogistiqueMediaButtons();
+                }
                 if (mediaSearch) {
                     mediaSearch.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); loadMediaSearch(1); } });
                 }
