@@ -938,6 +938,7 @@
                 .flight-block .flight-card-view .flight-edit-btn { margin-top: 8px; }
                 .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 </style>
+                <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> Dans cet onglet : <strong>Vol Aller</strong>, <strong>Vol Retour</strong>, <strong>Hôtel</strong> et <strong>Transferts</strong>. Vous pouvez ajouter une <strong>image</strong> pour l'hôtel et pour chaque transfert (bouton « Choisir image ») ; elles s'affichent sur la fiche circuit.</p>
 
                 @if(Route::has('admin.circuits.airlines.index'))
                 <div class="mb-3">
@@ -1106,6 +1107,7 @@
                     </div>
                 </div>
 
+                <p class="text-muted small mb-2">Vous pouvez ajouter une <strong>image</strong> pour l'hôtel et pour chaque transfert ci‑dessous ; elles s'affichent sur la fiche circuit (site WordPress).</p>
                 <h5 class="mb-3"><i class="bx bx-car"></i> Transferts (remplis automatiquement depuis le vol et l'hôtel si vides)</h5>
                 <div class="row">
                     <div class="col-lg-6">
@@ -1147,7 +1149,7 @@
                                         <div id="transfer-arrival-image-preview-wrap" class="border rounded overflow-hidden bg-light" style="width: 80px; height: 56px; display: {{ ($transferArrivalImageUrl ?? '') ? 'flex' : 'none' }};">
                                             <img id="transfer-arrival-image-preview" src="{{ $transferArrivalImageUrl ?? '' }}" alt="" style="max-width:100%; max-height:100%; object-fit: cover;">
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="transfer_arrival" data-input="tour_transfer_arrival_image_id" data-preview="transfer-arrival-image-preview" data-preview-wrap="transfer-arrival-image-preview-wrap"><i class="bx bx-image"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="transfer_arrival" data-input="tour_transfer_arrival_image_id" data-preview="transfer-arrival-image-preview" data-preview-wrap="transfer-arrival-image-preview-wrap"><i class="bx bx-image"></i> Choisir image</button>
                                         <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="tour_transfer_arrival_image_id" data-preview="transfer-arrival-image-preview" data-preview-wrap="transfer-arrival-image-preview-wrap">×</button>
                                     </div>
                                 </div>
@@ -1193,7 +1195,7 @@
                                         <div id="transfer-departure-image-preview-wrap" class="border rounded overflow-hidden bg-light" style="width: 80px; height: 56px; display: {{ ($transferDepartureImageUrl ?? '') ? 'flex' : 'none' }};">
                                             <img id="transfer-departure-image-preview" src="{{ $transferDepartureImageUrl ?? '' }}" alt="" style="max-width:100%; max-height:100%; object-fit: cover;">
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="transfer_departure" data-input="tour_transfer_departure_image_id" data-preview="transfer-departure-image-preview" data-preview-wrap="transfer-departure-image-preview-wrap"><i class="bx bx-image"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="transfer_departure" data-input="tour_transfer_departure_image_id" data-preview="transfer-departure-image-preview" data-preview-wrap="transfer-departure-image-preview-wrap"><i class="bx bx-image"></i> Choisir image</button>
                                         <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="tour_transfer_departure_image_id" data-preview="transfer-departure-image-preview" data-preview-wrap="transfer-departure-image-preview-wrap">×</button>
                                     </div>
                                 </div>
