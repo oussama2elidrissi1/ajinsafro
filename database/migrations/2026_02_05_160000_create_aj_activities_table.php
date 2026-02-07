@@ -6,13 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /** Table name without prefix (connexion wp ajoute le préfixe automatiquement). */
+    private const TABLE = 'aj_activities';
+
     /**
      * Run the migrations.
-     * Table: {wp_prefix}aj_activities (catalogue of activities)
+     * Table: {wp_prefix}aj_activities (catalogue of activities).
+     * Idempotent: ne crée pas si la table existe déjà (préfixe WP géré par la connexion).
      */
     public function up(): void
     {
-        Schema::connection('wp')->create('aj_activities', function (Blueprint $table) {
+        $schema = Schema::connection('wp');
+
+        if ($schema->hasTable(self::TABLE)) {
+            return;
+        }
+
+        $schema->create(self::TABLE, function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->string('slug')->unique();
@@ -26,9 +36,10 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
+     * dropIfExists utilise le préfixe de la connexion wp.
      */
     public function down(): void
     {
-        Schema::connection('wp')->dropIfExists('aj_activities');
+        Schema::connection('wp')->dropIfExists(self::TABLE);
     }
 };
