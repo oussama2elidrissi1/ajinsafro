@@ -25,6 +25,13 @@
         </div>
     @endif
 
+    @if (!empty($wpConnectionFailed))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Connexion WordPress indisponible.</strong> Vérifiez dans <code>.env</code> que <code>WP_DB_DATABASE</code> (et éventuellement <code>WP_DB_HOST</code>, <code>WP_DB_USERNAME</code>, <code>WP_DB_PASSWORD</code>) pointent vers une base existante. Erreur typique : <code>Unknown database 'ajinsafronet_wp_tkrpc'</code>.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-12">
             <div class="card">

@@ -38,21 +38,32 @@ class VoyageController extends Controller
      */
     public function index(): View
     {
-        // Récupérer les tours WordPress avec pagination
-        $tours = WpPost::tours()
-            ->orderByDesc('ID')
-            ->paginate(20);
+        $wpConnectionFailed = false;
+        try {
+            $tours = WpPost::tours()
+                ->orderByDesc('ID')
+                ->paginate(20);
 
-        // Charger les metas pour affichage
-        $tours->getCollection()->transform(function ($tour) {
-            $tour->adult_price = $tour->getMeta('adult_price');
-            $tour->duration_day = $tour->getMeta('duration_day');
-            $tour->address = $tour->getMeta('address');
-            $tour->child_price = $tour->getMeta('child_price');
-            return $tour;
-        });
+            $tours->getCollection()->transform(function ($tour) {
+                $tour->adult_price = $tour->getMeta('adult_price');
+                $tour->duration_day = $tour->getMeta('duration_day');
+                $tour->address = $tour->getMeta('address');
+                $tour->child_price = $tour->getMeta('child_price');
+                return $tour;
+            });
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageController@index: WP connection failed', ['error' => $e->getMessage()]);
+            $wpConnectionFailed = true;
+            $tours = new \Illuminate\Pagination\LengthAwarePaginator(
+                [],
+                0,
+                20,
+                \Illuminate\Pagination\Paginator::resolveCurrentPage(),
+                ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+            );
+        }
 
-        return view('admin.circuits.voyages.index', compact('tours'));
+        return view('admin.circuits.voyages.index', compact('tours', 'wpConnectionFailed'));
     }
 
     /**
@@ -414,7 +425,7 @@ class VoyageController extends Controller
                 try {
                     $laravelVoyage = Voyage::firstOrCreate(
                         ['wp_post_id' => $id],
-                        ['name' => $this->repository->getPost($id)->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
+                        ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
                     );
                     $this->voyageFlightService->syncFlights($laravelVoyage->id, $request->input('flights', []));
                 } catch (\Throwable $e) {

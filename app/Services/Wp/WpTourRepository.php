@@ -22,6 +22,17 @@ class WpTourRepository
     }
 
     /**
+     * Get tour post by ID (null if not found).
+     *
+     * @param int $id Post ID
+     * @return WpPost|null
+     */
+    public function getPost(int $id): ?WpPost
+    {
+        return WpPost::tours()->find($id);
+    }
+
+    /**
      * Find tour by ID.
      *
      * @param int $id
