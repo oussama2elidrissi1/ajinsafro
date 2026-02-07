@@ -73,7 +73,7 @@ return [
             'unix_socket' => env('WP_DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => 'cFdgeZ_',
+            'prefix' => env('WP_TABLE_PREFIX', 'cFdgeZ_'),
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
