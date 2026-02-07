@@ -533,6 +533,7 @@
                                         </button>
                                     </div>
                                     <small class="text-muted d-block">JPG, PNG ou WebP — max 5 Mo.</small>
+                                    <div id="hero-upload-error" class="alert alert-danger mt-2 mb-0 d-none" role="alert"></div>
                                 </div>
                             </div>
                         </div>
@@ -594,7 +595,7 @@
                 var heroSelectUrl = "{{ route('admin.circuits.voyages.hero-image.select', ['id' => $voyage->ID]) }}";
                 var heroRemoveUrl = "{{ route('admin.circuits.voyages.hero-image.remove', ['id' => $voyage->ID]) }}";
                 var wpMediaSearchUrl = "{{ url('admin/wp-media/search') }}";
-                var csrfToken = document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                var csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
                 var heroPreview = document.getElementById('hero-image-preview');
                 var heroPreviewWrap = document.getElementById('hero-image-preview-wrap');
                 var heroInput = document.getElementById('hero_image_id');
@@ -612,22 +613,43 @@
                 if (heroFileInput) {
                     heroFileInput.addEventListener('change', function() {
                         if (!this.files || !this.files[0]) return;
-                        var fd = new FormData();
-                        fd.append('hero_image', this.files[0]);
-                        if (csrfToken) fd.append('_token', csrfToken);
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('POST', heroUploadUrl);
-                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                        xhr.setRequestHeader('Accept', 'application/json');
-                        if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
-                        xhr.onload = function() {
-                            var r = JSON.parse(xhr.responseText || '{}');
-                            if (r.success) { setHeroPreview(r.url, r.attachment_id); }
-                            else { alert(r.message || 'Erreur upload'); }
+                        var file = this.files[0];
+                        var errEl = document.getElementById('hero-upload-error');
+                        function showError(msg) {
+                            if (errEl) { errEl.textContent = msg || 'Erreur lors de l\'upload.'; errEl.classList.remove('d-none'); }
+                            else { alert(msg || 'Erreur lors de l\'upload.'); }
+                        }
+                        function hideError() { if (errEl) { errEl.textContent = ''; errEl.classList.add('d-none'); } }
+                        if (!csrfToken) { showError('Token de sécurité manquant. Rechargez la page.'); heroFileInput.value = ''; return; }
+                        hideError();
+                        var formData = new FormData();
+                        formData.append('hero_image', file);
+                        formData.append('_token', csrfToken);
+                        fetch(heroUploadUrl, {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            }
+                        }).then(function(res) {
+                            return res.json().then(function(r) { return { ok: res.ok, status: res.status, data: r }; }).catch(function() {
+                                return { ok: false, status: res.status, data: { message: res.status === 419 ? 'Session expirée. Rechargez la page puis réessayez.' : 'Réponse serveur invalide.' } };
+                            });
+                        }).then(function(result) {
                             heroFileInput.value = '';
-                        };
-                        xhr.onerror = function() { alert('Erreur réseau'); heroFileInput.value = ''; };
-                        xhr.send(fd);
+                            if (result.ok && result.data && result.data.success) {
+                                setHeroPreview(result.data.url, result.data.attachment_id);
+                            } else {
+                                var msg = (result.data && result.data.message) || (result.data && result.data.errors && result.data.errors.hero_image && result.data.errors.hero_image[0]) || 'Erreur lors de l\'upload.';
+                                showError(msg);
+                            }
+                        }).catch(function() {
+                            heroFileInput.value = '';
+                            showError('Erreur réseau ou serveur. Vérifiez votre connexion.');
+                        });
                     });
                 }
 
@@ -636,16 +658,12 @@
                         if (!confirm('Retirer l\'image principale ?')) return;
                         var fd = new FormData();
                         if (csrfToken) fd.append('_token', csrfToken);
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('POST', heroRemoveUrl);
-                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                        xhr.setRequestHeader('Accept', 'application/json');
-                        if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
-                        xhr.onload = function() {
-                            var r = JSON.parse(xhr.responseText || '{}');
-                            if (r.success) setHeroPreview('', '');
-                        };
-                        xhr.send(fd);
+                        fetch(heroRemoveUrl, {
+                            method: 'POST',
+                            body: fd,
+                            credentials: 'same-origin',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' }
+                        }).then(function(r) { return r.json(); }).then(function(r) { if (r.success) setHeroPreview('', ''); });
                     });
                 }
 
@@ -663,7 +681,7 @@
                     if (mediaResults) mediaResults.innerHTML = '';
                     var url = wpMediaSearchUrl + '?page=' + page + '&per_page=24';
                     if (q) url += '&q=' + encodeURIComponent(q);
-                    fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                    fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                         .then(function(res) { return res.json(); })
                         .then(function(data) {
                             if (mediaLoading) mediaLoading.classList.add('d-none');

@@ -43,6 +43,11 @@ class HeroImageController
                 (int) $tour->ID
             );
         } catch (\Throwable $e) {
+            \Log::error('HeroImageController@upload failed', [
+                'tour_id' => $id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
