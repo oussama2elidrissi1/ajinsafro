@@ -14,10 +14,9 @@ class StoreAirlineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:airlines,name',
             'iata_code' => 'nullable|string|max:10',
             'logo_url' => 'nullable|string|max:500',
-            'slug' => 'nullable|string|max:255|unique:wp.aj_airlines,slug',
             'is_active' => 'nullable|boolean',
         ];
     }

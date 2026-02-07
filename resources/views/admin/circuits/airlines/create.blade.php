@@ -41,10 +41,6 @@
                             <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="slug" class="form-label">Slug (unique)</label>
-                            <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug') }}" placeholder="Laissez vide pour générer depuis le nom">
-                        </div>
-                        <div class="mb-3">
                             <label for="iata_code" class="form-label">Code IATA</label>
                             <input type="text" class="form-control" id="iata_code" name="iata_code" value="{{ old('iata_code') }}" placeholder="Ex: AF, BA" maxlength="10">
                         </div>
