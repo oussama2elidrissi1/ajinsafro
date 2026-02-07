@@ -34,8 +34,8 @@ get_header();
     <!-- Hero Section -->
     <?php ajtb_get_partial('hero', ['tour' => $tour]); ?>
 
-    <!-- Main Content -->
-    <div class="ajtb-container">
+    <!-- Main Content: wide container (MakeMyTrip-style) + 2-col grid, sidebar sticky -->
+    <div class="aj-wide-container">
         <div class="ajtb-tour-layout">
             <!-- Left Column: Content -->
             <main class="ajtb-tour-main">
