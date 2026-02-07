@@ -283,8 +283,9 @@ class VoyageController extends Controller
         $airlines = AjAirline::active()->orderBy('name')->get();
         $voyageFlights = $this->tourFlightsService->getFlightsForTour($id);
         $heroImageUrl = null;
-        if (!empty($meta['hero_image_id'])) {
-            $heroImageUrl = WpHeroImageService::getAttachmentUrl((int) $meta['hero_image_id']);
+        $heroId = !empty($meta['hero_image_id']) ? (int) $meta['hero_image_id'] : (!empty($meta['thumbnail_id']) ? (int) $meta['thumbnail_id'] : null);
+        if ($heroId) {
+            $heroImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
         }
 
         return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'voyageFlights', 'heroImageUrl'));

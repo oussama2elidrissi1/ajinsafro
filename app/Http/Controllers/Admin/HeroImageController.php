@@ -38,10 +38,12 @@ class HeroImageController
         $tour = $this->tourRepository->findTour($id);
 
         try {
-            $attachmentId = $this->heroImageService->storeUploadAndCreateAttachment(
+            $result = $this->heroImageService->storeUploadAndCreateAttachment(
                 $request->file('hero_image'),
                 (int) $tour->ID
             );
+            $attachmentId = $result['attachment_id'];
+            $relativePath = $result['relative_path'];
         } catch (\Throwable $e) {
             \Log::error('HeroImageController@upload failed', [
                 'tour_id' => $id,
@@ -54,8 +56,18 @@ class HeroImageController
             ], 422);
         }
 
+        // Lier l'attachment au tour : image principale (custom) + image à la une WP (_thumbnail_id)
         $tour->setMeta('_tour_hero_image_id', (string) $attachmentId);
+        $tour->setMeta('_thumbnail_id', (string) $attachmentId);
+
         $url = WpHeroImageService::getAttachmentUrl($attachmentId);
+
+        \Log::info('HeroImageController@upload success', [
+            'tour_id' => $id,
+            'uploads_relative_path' => $relativePath,
+            'attachment_id' => $attachmentId,
+            'thumbnail_id' => $attachmentId,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -86,6 +98,7 @@ class HeroImageController
         }
 
         $tour->setMeta('_tour_hero_image_id', (string) $attachmentId);
+        $tour->setMeta('_thumbnail_id', (string) $attachmentId);
         $url = WpHeroImageService::getAttachmentUrl($attachmentId);
 
         return response()->json([
@@ -103,6 +116,7 @@ class HeroImageController
     {
         $tour = $this->tourRepository->findTour($id);
         $tour->deleteMeta('_tour_hero_image_id');
+        $tour->deleteMeta('_thumbnail_id');
 
         return response()->json([
             'success' => true,

@@ -264,7 +264,28 @@ class AJTB_Tour_Repository {
             'alt' => '',
         ];
 
-        // 1) Image principale du voyage (Hero / Cover) – priorité
+        // 1) Image à la une WordPress (_thumbnail_id) – priorité (upload Laravel ou WP définit ça)
+        $thumbnail_id = get_post_thumbnail_id($this->post_id);
+        if ($thumbnail_id) {
+            $url = get_the_post_thumbnail_url($this->post_id, 'full');
+            if (empty($url)) {
+                $attachment_post = get_post($thumbnail_id);
+                if ($attachment_post && $attachment_post->post_type === 'attachment' && !empty($attachment_post->guid)) {
+                    $url = $attachment_post->guid;
+                }
+            }
+            if (!empty($url)) {
+                return [
+                    'id' => $thumbnail_id,
+                    'url' => $url,
+                    'large' => wp_get_attachment_image_url($thumbnail_id, 'large') ?: $url,
+                    'medium' => wp_get_attachment_image_url($thumbnail_id, 'medium') ?: $url,
+                    'alt' => get_post_meta($thumbnail_id, '_wp_attachment_image_alt', true),
+                ];
+            }
+        }
+
+        // 2) Image principale custom (_tour_hero_image_id) – fallback
         $hero_id = isset($meta['_tour_hero_image_id']) ? (int) $meta['_tour_hero_image_id'] : 0;
         if ($hero_id > 0) {
             $url = wp_get_attachment_image_url($hero_id, 'full');
@@ -281,21 +302,6 @@ class AJTB_Tour_Repository {
                     'large' => wp_get_attachment_image_url($hero_id, 'large') ?: $url,
                     'medium' => wp_get_attachment_image_url($hero_id, 'medium') ?: $url,
                     'alt' => get_post_meta($hero_id, '_wp_attachment_image_alt', true),
-                ];
-            }
-        }
-
-        // 2) Featured image WordPress
-        $thumbnail_id = get_post_thumbnail_id($this->post_id);
-        if ($thumbnail_id) {
-            $url = get_the_post_thumbnail_url($this->post_id, 'full');
-            if ($url) {
-                return [
-                    'id' => $thumbnail_id,
-                    'url' => $url,
-                    'large' => get_the_post_thumbnail_url($this->post_id, 'large') ?: $url,
-                    'medium' => get_the_post_thumbnail_url($this->post_id, 'medium') ?: $url,
-                    'alt' => get_post_meta($thumbnail_id, '_wp_attachment_image_alt', true),
                 ];
             }
         }
