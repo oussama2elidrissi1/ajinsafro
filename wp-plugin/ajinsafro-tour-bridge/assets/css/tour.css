@@ -1352,8 +1352,7 @@
 
 .day-body {
     padding: 0 20px 20px;
-    max-height: 70vh;
-    overflow-y: auto;
+    /* Pas de scroll : tout le contenu du jour s'affiche */
 }
 
 .day-body .day-image {
@@ -1374,6 +1373,11 @@
     line-height: 1.7;
     color: var(--ajtb-text-light);
     margin-bottom: 16px;
+}
+
+/* Description en premier dans chaque jour */
+.aj-day-programme-block--first {
+    margin-bottom: 20px;
 }
 
 /* Compact: limit height of long notes (Traveler-style accordion) */

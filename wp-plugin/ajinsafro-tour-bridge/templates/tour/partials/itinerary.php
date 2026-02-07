@@ -199,6 +199,33 @@ if (empty($itinerary)) {
                     </div>
 
                     <div class="day-body" id="day-content-<?php echo $index; ?>" <?php echo !$is_first ? 'style="display:none;"' : ''; ?>>
+                        <?php
+                        // —— Description du jour en premier (toujours affichée en tête)
+                        $day_notes = trim((string) ($day['notes'] ?? ''));
+                        if ($day_notes === '' && isset($day['description'])) {
+                            $day_notes = trim((string) $day['description']);
+                        }
+                        if ($day_notes === '' && isset($day['content'])) {
+                            $day_notes = trim((string) $day['content']);
+                        }
+                        ?>
+                        <div id="aj-day-notes-<?php echo $day_id; ?>" class="aj-day-programme-block aj-day-programme-block--first">
+                        <?php
+                        if ($day_notes !== ''):
+                            $notes_html = wp_kses_post(nl2br($day_notes));
+                            $is_long = strlen(strip_tags($day_notes)) > 300;
+                        ?>
+                            <div class="aj-day-notes-wrap <?php echo $is_long ? 'aj-day-notes-collapsed' : ''; ?>">
+                                <div class="aj-day-notes-content"><?php echo $notes_html; ?></div>
+                                <?php if ($is_long): ?>
+                                    <button type="button" class="aj-day-notes-read-more" aria-expanded="false"><?php esc_html_e('Lire plus', 'ajinsafro-tour-bridge'); ?></button>
+                                <?php endif; ?>
+                            </div>
+                        <?php elseif ($mode === 'free'): ?>
+                            <p class="aj-day-notes day-notes day-description aj-day-free-label"><?php esc_html_e('Jour libre', 'ajinsafro-tour-bridge'); ?></p>
+                        <?php endif; ?>
+                        </div>
+
                         <?php if (!empty($day['image'])): ?>
                         <div class="ajtb-day-banner">
                             <img src="<?php echo esc_url($day['image']); ?>" alt="Jour <?php echo $day_number; ?>" loading="lazy">
@@ -327,31 +354,6 @@ if (empty($itinerary)) {
                                 </div>
                             </details>
                         <?php endif; ?>
-
-                        <!-- Programme du jour: une seule description (notes) ou "Jour libre" -->
-                        <div id="aj-day-notes-<?php echo $day_id; ?>" class="aj-day-programme-block">
-                        <?php 
-                        $day_notes = trim((string) ($day['notes'] ?? ''));
-                        if ($day_notes === '' && isset($day['description'])) {
-                            $day_notes = trim((string) $day['description']);
-                        }
-                        if ($day_notes === '' && isset($day['content'])) {
-                            $day_notes = trim((string) $day['content']);
-                        }
-                        if ($day_notes !== ''): 
-                            $notes_html = wp_kses_post(nl2br($day_notes));
-                            $is_long = strlen(strip_tags($day_notes)) > 300;
-                        ?>
-                            <div class="aj-day-notes-wrap <?php echo $is_long ? 'aj-day-notes-collapsed' : ''; ?>">
-                                <div class="aj-day-notes-content"><?php echo $notes_html; ?></div>
-                                <?php if ($is_long): ?>
-                                    <button type="button" class="aj-day-notes-read-more" aria-expanded="false"><?php esc_html_e('Lire plus', 'ajinsafro-tour-bridge'); ?></button>
-                                <?php endif; ?>
-                            </div>
-                        <?php elseif ($mode === 'free'): ?>
-                            <p class="aj-day-notes day-notes day-description aj-day-free-label"><?php esc_html_e('Jour libre', 'ajinsafro-tour-bridge'); ?></p>
-                        <?php endif; ?>
-                        </div>
 
                         <!-- Activities container (id stable: JS replaces innerHTML after AJAX) -->
                         <div id="aj-day-activities-<?php echo $day_id; ?>">
