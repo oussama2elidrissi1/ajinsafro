@@ -54,7 +54,7 @@
                                     <tr>
                                         <td>{{ $airline->id }}</td>
                                         <td>{{ $airline->name }}</td>
-                                        <td>{{ $airline->code_iata ?? '—' }}</td>
+                                        <td>{{ $airline->iata_code ?? '—' }}</td>
                                         <td>
                                             @if($airline->is_active)
                                                 <span class="badge bg-success">Active</span>

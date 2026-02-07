@@ -83,6 +83,9 @@ get_header();
                 <!-- Navigation Tabs -->
                 <nav class="ajtb-tabs-nav">
                     <a href="#overview" class="tab-link active">Aperçu</a>
+                    <?php if (!empty($tour['flights']) || !empty($tour['all_flights'])): ?>
+                        <a href="#flights" class="tab-link">Vols</a>
+                    <?php endif; ?>
                     <?php if (!empty($tour['itinerary']) || !empty($tour['wp_program']['items'])): ?>
                         <a href="#itinerary" class="tab-link">Itinéraire</a>
                     <?php endif; ?>
@@ -118,6 +121,11 @@ get_header();
                             <?php endforeach; ?>
                         </div>
                     </section>
+                <?php endif; ?>
+
+                <!-- Flights: Laravel aj_tour_flights + session add/remove -->
+                <?php if (!empty($tour['flights']) || !empty($tour['all_flights'])): ?>
+                    <?php ajtb_get_partial('flights', ['tour' => $tour]); ?>
                 <?php endif; ?>
 
                 <!-- Itinerary: Laravel days (notes + activities) or fallback WP tours_program -->

@@ -102,6 +102,7 @@ class AJTB_Template_Loader {
         $laravel_repo = new AJTB_Laravel_Repository($post_id);
         $session_token = (new AJTB_Activity_Selections())->get_session_token();
         $laravel_data = $laravel_repo->get_all_data($session_token);
+        $laravel_data['all_flights'] = $laravel_repo->get_raw_flights();
 
         // Merge data with priority to Laravel if available
         $merged = self::merge_tour_data($wp_data, $laravel_data);
@@ -219,6 +220,9 @@ class AJTB_Template_Loader {
             'activities_catalog' => $laravel_data['activities_catalog'] ?? [],
             // WP Programme (tours_program_style + tours_program). Priority over Laravel when items non-empty.
             'wp_program' => $wp_data['wp_program'] ?? ['style' => 'style1', 'items' => []],
+            // Flights (displayed after session selections) and all flights (for "Add this flight" links)
+            'flights' => $laravel_data['flights'] ?? [],
+            'all_flights' => $laravel_data['all_flights'] ?? [],
         ];
     }
 }

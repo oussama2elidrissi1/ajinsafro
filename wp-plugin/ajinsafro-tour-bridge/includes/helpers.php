@@ -357,6 +357,81 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
 }
 
 /**
+ * Render HTML for flights block (Flight Cards + Add/Remove). Used on initial load and AJAX response.
+ *
+ * @param int $tour_id
+ * @param array $flights Displayed flights (after session selections)
+ * @param array $all_flights All flights for tour (for "Add this flight" links)
+ * @param string $session_token
+ * @return string HTML fragment for #ajtb-flights-container
+ */
+function ajtb_render_flights_html($tour_id, $flights, $all_flights = [], $session_token = '') {
+    $tour_id = (int) $tour_id;
+    $can_toggle = $tour_id > 0 && $session_token !== '';
+    $displayed_ids = array_column($flights, 'id');
+
+    $html = '<div class="ajtb-flights-list" data-tour-id="' . esc_attr($tour_id) . '">';
+    foreach ($flights as $f) {
+        $dep_label = isset($f['depart_label']) ? $f['depart_label'] : '—';
+        $arr_label = isset($f['arrive_label']) ? $f['arrive_label'] : '—';
+        $dep_date = isset($f['depart_date_formatted']) ? $f['depart_date_formatted'] : '—';
+        $arr_date = isset($f['arrive_date_formatted']) ? $f['arrive_date_formatted'] : '—';
+        $dep_place = $dep_label;
+        $arr_place = $arr_label;
+        $cabin_bag = isset($f['cabin_baggage']) ? $f['cabin_baggage'] : '—';
+        $checkin_bag = isset($f['checkin_baggage']) ? $f['checkin_baggage'] : '—';
+        $tentative = !empty($f['is_tentative']);
+        $flight_id = isset($f['id']) ? (int) $f['id'] : 0;
+
+        $html .= '<div class="aj-flight-card" data-flight-id="' . esc_attr($flight_id) . '">';
+        $html .= '<div class="aj-flight-header">';
+        $html .= '<span class="aj-flight-title">✈ FLIGHT • ' . esc_html($dep_label) . ' to ' . esc_html($arr_label) . '</span>';
+        if ($can_toggle) {
+            $html .= ' <button type="button" class="ajtb-btn-remove-flight aj-flight-remove-btn" data-tour-id="' . esc_attr($tour_id) . '" data-flight-id="' . esc_attr($flight_id) . '" data-toggle-action="removed">' . esc_html__('Retirer', 'ajinsafro-tour-bridge') . '</button>';
+        }
+        $html .= '</div>';
+        $html .= '<div class="aj-flight-body">';
+        $html .= '<div class="aj-flight-col"><div class="aj-flight-icon"><span aria-hidden="true">✈</span></div></div>';
+        $html .= '<div class="aj-flight-col aj-flight-center">';
+        $html .= '<div class="aj-flight-dep"><div class="aj-flight-date">' . esc_html($dep_date) . '</div><div class="aj-flight-place">' . esc_html($dep_place) . '</div></div>';
+        $html .= '<div class="aj-flight-arrow">→</div>';
+        $html .= '<div class="aj-flight-arr"><div class="aj-flight-date">' . esc_html($arr_date) . '</div><div class="aj-flight-place">' . esc_html($arr_place) . '</div></div>';
+        $html .= '</div>';
+        $html .= '<div class="aj-flight-col aj-flight-baggage">';
+        $html .= '<div>Cabin: ' . esc_html($cabin_bag) . '</div>';
+        $html .= '<div>Check-in: ' . esc_html($checkin_bag) . '</div>';
+        $html .= '</div>';
+        $html .= '</div>';
+        $html .= '<div class="aj-flight-badge-wrap">';
+        if ($tentative) {
+            $html .= '<span class="aj-flight-badge">' . esc_html__('Tentative Flight', 'ajinsafro-tour-bridge') . '</span>';
+        }
+        $html .= '</div>';
+        $html .= '</div>';
+    }
+
+    if ($can_toggle && !empty($all_flights)) {
+        $addable = array_filter($all_flights, function ($f) use ($displayed_ids) {
+            $id = isset($f['id']) ? (int) $f['id'] : 0;
+            return $id && !in_array($id, $displayed_ids, true);
+        });
+        if (!empty($addable)) {
+            $html .= '<div class="ajtb-flights-add">';
+            $html .= '<span class="ajtb-flights-add-label">' . esc_html__('Ajouter un vol', 'ajinsafro-tour-bridge') . ':</span> ';
+            foreach ($addable as $f) {
+                $fid = (int) $f['id'];
+                $dep = isset($f['depart_label']) ? $f['depart_label'] : '—';
+                $arr = isset($f['arrive_label']) ? $f['arrive_label'] : '—';
+                $html .= '<button type="button" class="ajtb-btn-add-flight" data-tour-id="' . esc_attr($tour_id) . '" data-flight-id="' . esc_attr($fid) . '" data-toggle-action="added">' . esc_html($dep) . ' → ' . esc_html($arr) . '</button>';
+            }
+            $html .= '</div>';
+        }
+    }
+    $html .= '</div>';
+    return $html;
+}
+
+/**
  * Debug helper - only outputs in WP_DEBUG mode
  *
  * @param mixed $data Data to dump

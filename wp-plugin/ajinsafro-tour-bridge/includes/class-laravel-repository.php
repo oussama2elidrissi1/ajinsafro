@@ -73,8 +73,160 @@ class AJTB_Laravel_Repository {
             'sections' => $this->get_sections(),
             'pricing_rules' => $this->get_pricing_rules(),
             'activities_catalog' => $this->get_activities_catalog(),
+            'flights' => $this->get_flights($session_token),
             'has_data' => $this->has_any_data(),
         ];
+    }
+
+    /**
+     * Get flights for this tour from aj_tour_flights + aj_airlines.
+     * If $session_token is set, apply client selections (aj_tour_flight_selections): default show only is_default=1,
+     * then apply added/removed per session.
+     *
+     * @param string|null $session_token Optional; apply add/remove flight selections
+     * @return array List of flight rows with airline_name, formatted dates, labels, etc.
+     */
+    public function get_flights($session_token = null) {
+        $flights = $this->get_flights_internal();
+        if (empty($flights)) {
+            return [];
+        }
+        if (!empty($session_token)) {
+            $flights = $this->apply_flight_selections($flights, $session_token);
+        } else {
+            $flights = array_values(array_filter($flights, function ($f) {
+                return !empty($f['is_default']);
+            }));
+        }
+        return $flights;
+    }
+
+    /**
+     * Internal: fetch all flights for this tour (no session filter).
+     *
+     * @return array List of flight rows with airline_name, formatted dates, labels, etc.
+     */
+    private function get_flights_internal() {
+        $table_flights = $this->table('tour_flights');
+        $table_airlines = $this->table('airlines');
+
+        if (!$this->table_exists($table_flights)) {
+            return [];
+        }
+
+        $airlines_exist = $this->table_exists($table_airlines);
+
+        $sql = "SELECT f.*";
+        if ($airlines_exist) {
+            $sql .= ", a.name AS airline_name, a.iata_code AS airline_iata";
+        }
+        $sql .= " FROM {$table_flights} f";
+        if ($airlines_exist) {
+            $sql .= " LEFT JOIN {$table_airlines} a ON a.id = f.airline_id";
+        }
+        $sql .= " WHERE f.tour_id = %d ORDER BY f.segment_number ASC";
+        $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $this->tour_id), ARRAY_A);
+        if (!$rows) {
+            return [];
+        }
+
+        $flights = [];
+        foreach ($rows as $r) {
+            $dep_date = !empty($r['depart_date']) ? $r['depart_date'] : null;
+            $arr_date = !empty($r['arrive_date']) ? $r['arrive_date'] : null;
+            $flights[] = [
+                'id' => (int) $r['id'],
+                'tour_id' => (int) $r['tour_id'],
+                'segment_number' => (int) $r['segment_number'],
+                'airline_id' => isset($r['airline_id']) ? (int) $r['airline_id'] : null,
+                'airline_name' => $airlines_exist ? ($r['airline_name'] ?? '') : '',
+                'airline_iata' => $airlines_exist ? ($r['airline_iata'] ?? '') : '',
+                'cabin_class' => $r['cabin_class'] ?? 'economy',
+                'flight_number' => $r['flight_number'] ?? '',
+                'depart_date' => $dep_date,
+                'depart_date_formatted' => $dep_date ? date('D, d M', strtotime($dep_date)) : '—',
+                'depart_city' => $r['depart_city'] ?? '',
+                'depart_airport' => $r['depart_airport'] ?? '',
+                'depart_label' => !empty($r['depart_city']) ? $r['depart_city'] : (!empty($r['depart_airport']) ? $r['depart_airport'] : '—'),
+                'arrive_date' => $arr_date,
+                'arrive_date_formatted' => $arr_date ? date('D, d M', strtotime($arr_date)) : '—',
+                'arrive_city' => $r['arrive_city'] ?? '',
+                'arrive_airport' => $r['arrive_airport'] ?? '',
+                'arrive_label' => !empty($r['arrive_city']) ? $r['arrive_city'] : (!empty($r['arrive_airport']) ? $r['arrive_airport'] : '—'),
+                'cabin_baggage' => !empty($r['cabin_baggage']) ? $r['cabin_baggage'] : '—',
+                'checkin_baggage' => !empty($r['checkin_baggage']) ? $r['checkin_baggage'] : '—',
+                'is_tentative' => !empty($r['is_tentative']),
+                'is_default' => !empty($r['is_default']),
+            ];
+        }
+        return $flights;
+    }
+
+    /**
+     * Get all flights for this tour (no session filter). Used on front to show "Add this flight" for non-displayed segments.
+     *
+     * @return array Same structure as get_flights()
+     */
+    public function get_raw_flights() {
+        return $this->get_flights_internal();
+    }
+
+    /**
+     * Apply aj_tour_flight_selections to the flights list for a session.
+     * Default: show only is_default=1. Then: added => include that flight; removed => exclude that flight.
+     *
+     * @param array $flights Full list from get_flights (before selection filter)
+     * @param string $session_token
+     * @return array Filtered list for display
+     */
+    private function apply_flight_selections(array $flights, $session_token) {
+        $table_sel = $this->table('tour_flight_selections');
+        if (!$this->table_exists($table_sel)) {
+            return array_values(array_filter($flights, function ($f) {
+                return !empty($f['is_default']);
+            }));
+        }
+
+        $ids = array_column($flights, 'id');
+        if (empty($ids)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+        $sel = $this->wpdb->get_results($this->wpdb->prepare(
+            "SELECT flight_id, action FROM {$table_sel} WHERE tour_id = %d AND session_token = %s AND flight_id IN ($placeholders) ORDER BY created_at DESC",
+            array_merge([$this->tour_id, $session_token], $ids)
+        ), ARRAY_A);
+
+        $by_flight = [];
+        foreach ($sel as $row) {
+            $fid = (int) $row['flight_id'];
+            if (!isset($by_flight[$fid])) {
+                $by_flight[$fid] = $row['action'];
+            }
+        }
+
+        $default_id = null;
+        foreach ($flights as $f) {
+            if (!empty($f['is_default'])) {
+                $default_id = $f['id'];
+                break;
+            }
+        }
+
+        $out = [];
+        foreach ($flights as $f) {
+            $action = isset($by_flight[$f['id']]) ? $by_flight[$f['id']] : null;
+            if ($f['id'] == $default_id) {
+                if ($action !== 'removed') {
+                    $out[] = $f;
+                }
+            } else {
+                if ($action === 'added') {
+                    $out[] = $f;
+                }
+            }
+        }
+        return $out;
     }
 
     /**

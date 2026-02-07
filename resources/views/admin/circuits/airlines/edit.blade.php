@@ -42,12 +42,16 @@
                             <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $airline->name) }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="code_iata" class="form-label">Code IATA</label>
-                            <input type="text" class="form-control" id="code_iata" name="code_iata" value="{{ old('code_iata', $airline->code_iata) }}" maxlength="10">
+                            <label for="slug" class="form-label">Slug (unique)</label>
+                            <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug', $airline->slug) }}">
                         </div>
                         <div class="mb-3">
-                            <label for="logo_path" class="form-label">Chemin du logo</label>
-                            <input type="text" class="form-control" id="logo_path" name="logo_path" value="{{ old('logo_path', $airline->logo_path) }}">
+                            <label for="iata_code" class="form-label">Code IATA</label>
+                            <input type="text" class="form-control" id="iata_code" name="iata_code" value="{{ old('iata_code', $airline->iata_code) }}" maxlength="10">
+                        </div>
+                        <div class="mb-3">
+                            <label for="logo_url" class="form-label">URL du logo</label>
+                            <input type="text" class="form-control" id="logo_url" name="logo_url" value="{{ old('logo_url', $airline->logo_url) }}">
                         </div>
                     </div>
                 </div>

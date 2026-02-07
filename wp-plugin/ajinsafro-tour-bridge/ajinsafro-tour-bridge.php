@@ -97,6 +97,7 @@ class Ajinsafro_Tour_Bridge {
     public function init() {
         // Ensure selections table exists (e.g. if plugin was installed without activation, or table dropped)
         $this->ensure_selections_table();
+        $this->ensure_flight_selections_table();
 
         // Initialize template loader
         $this->template_loader = new AJTB_Template_Loader();
@@ -107,6 +108,10 @@ class Ajinsafro_Tour_Bridge {
         // AJAX: client toggle optional activities (add/remove)
         add_action('wp_ajax_aj_toggle_activity', [$this, 'ajax_toggle_activity']);
         add_action('wp_ajax_nopriv_aj_toggle_activity', [$this, 'ajax_toggle_activity']);
+
+        // AJAX: client toggle flight (add/remove) for display
+        add_action('wp_ajax_ajtb_toggle_flight', [$this, 'ajax_toggle_flight']);
+        add_action('wp_ajax_nopriv_ajtb_toggle_flight', [$this, 'ajax_toggle_flight']);
 
         // Admin notice if Traveler not active
         add_action('admin_notices', [$this, 'admin_notices']);
@@ -140,6 +145,31 @@ class Ajinsafro_Tour_Bridge {
             KEY user_id (user_id),
             KEY tour_day_session (tour_id, day_id, session_token),
             UNIQUE KEY tour_day_activity_session (tour_id, day_id, activity_id, session_token)
+        ) $charset_collate;";
+        dbDelta($sql);
+    }
+
+    /**
+     * Ensure aj_tour_flight_selections table exists (uses {$wpdb->prefix}aj_tour_flight_selections).
+     */
+    public function ensure_flight_selections_table() {
+        global $wpdb;
+        $table = ajtb_table('aj_tour_flight_selections');
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) === $table) {
+            return;
+        }
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        $charset_collate = $wpdb->get_charset_collate();
+        $sql = "CREATE TABLE $table (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            tour_id bigint(20) UNSIGNED NOT NULL,
+            flight_id bigint(20) UNSIGNED NOT NULL,
+            session_token varchar(64) NOT NULL,
+            action varchar(20) NOT NULL DEFAULT 'added',
+            created_at timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY session_token (session_token),
+            UNIQUE KEY tour_flight_session (tour_id, flight_id, session_token)
         ) $charset_collate;";
         dbDelta($sql);
     }
@@ -225,6 +255,57 @@ class Ajinsafro_Tour_Bridge {
     }
 
     /**
+     * AJAX: toggle flight (added/removed) for client display. Never modifies aj_tour_flights.
+     * Params: tour_id, flight_id, toggle_action (added|removed), nonce, session_token.
+     * Returns: html (fragment of flight cards), count.
+     */
+    public function ajax_toggle_flight() {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'ajtb_tour_flight')) {
+            wp_send_json_error(['message' => __('Sécurité invalide.', 'ajinsafro-tour-bridge')]);
+        }
+        $tour_id = isset($_POST['tour_id']) ? (int) $_POST['tour_id'] : 0;
+        $flight_id = isset($_POST['flight_id']) ? (int) $_POST['flight_id'] : 0;
+        $toggle_action = isset($_POST['toggle_action']) ? sanitize_text_field($_POST['toggle_action']) : '';
+        $session_token = isset($_POST['session_token']) ? sanitize_text_field($_POST['session_token']) : '';
+
+        if (!in_array($toggle_action, ['added', 'removed'], true)) {
+            wp_send_json_error(['message' => __('Action invalide.', 'ajinsafro-tour-bridge')]);
+        }
+        if ($tour_id <= 0 || $flight_id <= 0 || $session_token === '') {
+            wp_send_json_error(['message' => __('Paramètres manquants.', 'ajinsafro-tour-bridge')]);
+        }
+
+        global $wpdb;
+        $table = ajtb_table('aj_tour_flight_selections');
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) !== $table) {
+            $this->ensure_flight_selections_table();
+        }
+
+        $wpdb->replace(
+            $table,
+            [
+                'tour_id' => $tour_id,
+                'flight_id' => $flight_id,
+                'session_token' => $session_token,
+                'action' => $toggle_action,
+                'created_at' => current_time('mysql'),
+            ],
+            ['%d', '%d', '%s', '%s', '%s']
+        );
+
+        $repo = new AJTB_Laravel_Repository($tour_id);
+        $flights = $repo->get_flights($session_token);
+        $all_flights = $repo->get_raw_flights();
+        $html = ajtb_render_flights_html($tour_id, $flights, $all_flights, $session_token);
+        $count = count($flights);
+
+        wp_send_json_success([
+            'html' => $html,
+            'count' => $count,
+        ]);
+    }
+
+    /**
      * Enqueue CSS and JS only on single st_tours
      */
     public function enqueue_assets() {
@@ -250,12 +331,15 @@ class Ajinsafro_Tour_Bridge {
             true
         );
 
-        // Pass data to JS (ajax_url + nonce for aj_toggle_activity)
+        // Pass data to JS (ajax_url + nonces for activities and flights)
         $post_id = get_the_ID();
+        $session_token = (new AJTB_Activity_Selections())->get_session_token();
         wp_localize_script('ajtb-tour-js', 'ajtbData', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('aj_tour_activity'),
+            'flight_nonce' => wp_create_nonce('ajtb_tour_flight'),
+            'session_token' => $session_token,
             'postId' => $post_id,
             'tour_id' => $post_id,
             'currency' => get_option('st_currency', 'MAD'),

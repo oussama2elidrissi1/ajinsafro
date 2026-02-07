@@ -8,8 +8,8 @@ use App\Http\Requests\UpdateWpTourRequest;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\Activity;
 use App\Models\Wp\TourDayActivity;
-use App\Models\Airline;
-use App\Services\VoyageFlightService;
+use App\Models\AjAirline;
+use App\Services\TourFlightsService;
 use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpTourRepository;
 use Illuminate\Http\RedirectResponse;
@@ -22,13 +22,13 @@ class VoyageController extends Controller
 
     protected TourProgramService $programService;
 
-    protected VoyageFlightService $flightService;
+    protected TourFlightsService $tourFlightsService;
 
-    public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $flightService)
+    public function __construct(WpTourRepository $repository, TourProgramService $programService, TourFlightsService $tourFlightsService)
     {
         $this->repository = $repository;
         $this->programService = $programService;
-        $this->flightService = $flightService;
+        $this->tourFlightsService = $tourFlightsService;
     }
 
     /**
@@ -102,7 +102,7 @@ class VoyageController extends Controller
         
         // Programme vide pour création
         $tourProgram = ['style' => 'style1', 'items' => []];
-        $airlines = Airline::active()->orderBy('name')->get();
+        $airlines = AjAirline::active()->orderBy('name')->get();
 
         return view('admin.circuits.voyages.create', compact('locationsTree', 'selectedLocationIds', 'tourProgram', 'airlines'));
     }
@@ -136,7 +136,7 @@ class VoyageController extends Controller
 
             if ($request->has('flights')) {
                 try {
-                    $this->flightService->syncFlights($tour->ID, $request->input('flights', []));
+                    $this->tourFlightsService->syncFlights($tour->ID, $request->input('flights', []));
                 } catch (\Throwable $e) {
                     \Log::error('VoyageController@store syncFlights failed', ['tour_id' => $tour->ID, 'message' => $e->getMessage()]);
                 }
@@ -277,8 +277,8 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: could not load program days', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        $airlines = Airline::active()->orderBy('name')->get();
-        $voyageFlights = $this->flightService->getFlightsForVoyage($id);
+        $airlines = AjAirline::active()->orderBy('name')->get();
+        $voyageFlights = $this->tourFlightsService->getFlightsForTour($id);
 
         return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'voyageFlights'));
     }
@@ -380,7 +380,7 @@ class VoyageController extends Controller
                     if ($request->input('remove_flight_2')) {
                         unset($flights[1]);
                     }
-                    $this->flightService->syncFlights($id, $flights);
+                    $this->tourFlightsService->syncFlights($id, $flights);
                 } catch (\Throwable $e) {
                     \Log::error('VoyageController@update syncFlights failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
                     throw $e;

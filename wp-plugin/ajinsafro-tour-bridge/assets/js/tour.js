@@ -42,6 +42,7 @@
             this.initPriceCalculation();
             this.initItineraryAccordion();
             this.initActivityToggle();
+            this.initFlightToggle();
             this.initFAQAccordion();
             this.initGallery();
             this.initShareButton();
@@ -274,6 +275,55 @@
                     }
                 }).fail(function(xhr, status, err) {
                     console.warn('AJ TB request failed', status, err);
+                    AJTB.showToast('Erreur réseau');
+                }).always(function() {
+                    btn.disabled = false;
+                });
+            });
+        },
+
+        /**
+         * Flight toggle (add/remove) — event delegation, replace #ajtb-flights-container with response HTML
+         */
+        initFlightToggle: function() {
+            var ajtbData = typeof window.ajtbData !== 'undefined' ? window.ajtbData : {};
+            var ajaxUrl = ajtbData.ajax_url || ajtbData.ajaxUrl || '';
+            var flightNonce = ajtbData.flight_nonce || '';
+            var sessionToken = ajtbData.session_token || '';
+            var tourId = ajtbData.tour_id || ajtbData.postId || 0;
+
+            if (!ajaxUrl || !flightNonce) return;
+
+            document.addEventListener('click', function(e) {
+                var btn = e.target && e.target.closest ? (e.target.closest('.ajtb-btn-remove-flight') || e.target.closest('.ajtb-btn-add-flight')) : null;
+                if (!btn) return;
+
+                var tourIdVal = parseInt(btn.getAttribute('data-tour-id'), 10) || tourId;
+                var flightIdVal = parseInt(btn.getAttribute('data-flight-id'), 10);
+                var toggleAction = btn.getAttribute('data-toggle-action');
+                if (!flightIdVal || !toggleAction) return;
+
+                if (btn.disabled) return;
+                btn.disabled = true;
+
+                $.post(ajaxUrl, {
+                    action: 'ajtb_toggle_flight',
+                    nonce: flightNonce,
+                    tour_id: tourIdVal,
+                    flight_id: flightIdVal,
+                    toggle_action: toggleAction,
+                    session_token: sessionToken
+                }).done(function(resp) {
+                    if (resp.success && resp.data && resp.data.html !== undefined) {
+                        var container = document.getElementById('ajtb-flights-container');
+                        if (container) {
+                            container.innerHTML = resp.data.html;
+                        }
+                        AJTB.showToast(toggleAction === 'removed' ? 'Vol retiré' : 'Vol ajouté');
+                    } else {
+                        AJTB.showToast((resp.data && resp.data.message) ? resp.data.message : 'Erreur');
+                    }
+                }).fail(function() {
                     AJTB.showToast('Erreur réseau');
                 }).always(function() {
                     btn.disabled = false;
