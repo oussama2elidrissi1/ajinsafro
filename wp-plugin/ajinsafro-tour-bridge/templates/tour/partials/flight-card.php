@@ -1,7 +1,7 @@
 <?php
 /**
  * Flight Card partial – One flight block (FLIGHT • From → To).
- * Used inside Day Plan: Jour 1 = outbound, Dernier jour = inbound.
+ * Compatible Laravel (voyage_flights toDisplayArray) et ancien format WP (depart_label, cabin_baggage, etc.).
  *
  * @var array $flight Flight row (from_city, to_city, depart_date_formatted, arrive_date_formatted, cabin_baggage_display, checkin_baggage_display, is_tentative, etc.)
  * @var bool  $show_remove Optional; show REMOVE button (e.g. when tentative or client choice)
@@ -16,14 +16,20 @@ if (empty($flight) || !is_array($flight)) {
     return;
 }
 
-$from = isset($flight['from_city']) ? $flight['from_city'] : ($flight['depart_label'] ?? '');
-$to = isset($flight['to_city']) ? $flight['to_city'] : ($flight['arrive_label'] ?? '');
-$from = $from !== '' ? $from : '—';
-$to = $to !== '' ? $to : '—';
-$dep_date = $flight['depart_date_formatted'] ?? '—';
-$arr_date = $flight['arrive_date_formatted'] ?? '—';
-$cabin_display = $flight['cabin_baggage_display'] ?? ($flight['cabin_baggage'] ?? '—');
-$checkin_display = $flight['checkin_baggage_display'] ?? ($flight['checkin_baggage'] ?? '—');
+$dash = '—';
+$from = isset($flight['from_city']) ? (string) $flight['from_city'] : (string) ($flight['depart_label'] ?? '');
+$to = isset($flight['to_city']) ? (string) $flight['to_city'] : (string) ($flight['arrive_label'] ?? '');
+$from = trim($from) !== '' ? $from : $dash;
+$to = trim($to) !== '' ? $to : $dash;
+$dep_date = isset($flight['depart_date_formatted']) && trim((string) $flight['depart_date_formatted']) !== '' ? (string) $flight['depart_date_formatted'] : $dash;
+$arr_date = isset($flight['arrive_date_formatted']) && trim((string) $flight['arrive_date_formatted']) !== '' ? (string) $flight['arrive_date_formatted'] : $dep_date;
+if ($arr_date === $dash && $dep_date !== $dash) {
+    $arr_date = $dep_date;
+}
+$cabin_display = isset($flight['cabin_baggage_display']) ? (string) $flight['cabin_baggage_display'] : (string) ($flight['cabin_baggage'] ?? $dash);
+$checkin_display = isset($flight['checkin_baggage_display']) ? (string) $flight['checkin_baggage_display'] : (string) ($flight['checkin_baggage'] ?? $dash);
+if (trim($cabin_display) === '') { $cabin_display = $dash; }
+if (trim($checkin_display) === '') { $checkin_display = $dash; }
 $is_tentative = !empty($flight['is_tentative']);
 $show_remove = isset($show_remove) ? (bool) $show_remove : $is_tentative;
 ?>

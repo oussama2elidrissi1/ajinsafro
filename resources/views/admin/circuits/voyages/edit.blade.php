@@ -901,9 +901,12 @@
                 .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 </style>
 
-                @if(($airlines ?? collect())->isEmpty() && Route::has('admin.circuits.airlines.create'))
-                <div class="alert alert-info mb-3">
-                    Aucune compagnie aérienne. <a href="{{ route('admin.circuits.airlines.create') }}">Créer une compagnie</a> pour l’afficher dans la liste « Compagnie aérienne » ci‑dessous. Pensez à exécuter les migrations Laravel (<code>php artisan migrate</code>) si la table <code>airlines</code> n’existe pas encore.
+                @if(Route::has('admin.circuits.airlines.index'))
+                <div class="mb-3">
+                    <a href="{{ route('admin.circuits.airlines.index') }}" class="btn btn-sm btn-outline-secondary" target="_blank"><i class="bx bx-list-ul me-1"></i> Gérer les compagnies aériennes</a>
+                    @if(($airlines ?? collect())->isEmpty())
+                    <span class="text-muted ms-2">— Aucune compagnie. <a href="{{ route('admin.circuits.airlines.create') }}">Créer une compagnie</a></span>
+                    @endif
                 </div>
                 @endif
 
@@ -938,6 +941,7 @@
                         <h6 class="mb-3">Vol Aller (Jour 1)</h6>
                         <div class="row g-3">
                             <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
+                                @if(Route::has('admin.circuits.airlines.create'))<a href="{{ route('admin.circuits.airlines.create') }}" class="float-end small" target="_blank">+ Ajouter</a>@endif
                                 <select class="form-select" name="flights[outbound][airline_id]"><option value="">— Choisir —</option>
                                     @foreach($airlines ?? [] as $airline)
                                         <option value="{{ $airline->id }}" {{ old('flights.outbound.airline_id', optional($fOutbound)->airline_id ?? '') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->code_iata)({{ $airline->code_iata }})@endif</option>
@@ -992,6 +996,7 @@
                         <h6 class="mb-3">Vol Retour (Jour {{ $lastDayNumber }})</h6>
                         <div class="row g-3">
                             <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
+                                @if(Route::has('admin.circuits.airlines.create'))<a href="{{ route('admin.circuits.airlines.create') }}" class="float-end small" target="_blank">+ Ajouter</a>@endif
                                 <select class="form-select" name="flights[inbound][airline_id]"><option value="">— Choisir —</option>
                                     @foreach($airlines ?? [] as $airline)
                                         <option value="{{ $airline->id }}" {{ old('flights.inbound.airline_id', optional($fInbound)->airline_id ?? '') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->code_iata)({{ $airline->code_iata }})@endif</option>

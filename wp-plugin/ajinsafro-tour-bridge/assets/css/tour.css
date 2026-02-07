@@ -1100,6 +1100,21 @@
     border: 1px solid var(--ajtb-border-light);
 }
 
+/* Vol Aller (Jour 1) / Vol Retour (dernier jour) dans le contenu du jour */
+.ajtb-day-flight-block {
+    margin-bottom: 16px;
+}
+.ajtb-day-flight-block:last-of-type {
+    margin-bottom: 20px;
+}
+.ajtb-day-flight-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ajtb-primary);
+    margin: 0 0 8px 0;
+    padding: 0;
+}
+
 .day-header {
     display: flex;
     align-items: center;
@@ -2207,6 +2222,20 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+.ajtb-flight-group {
+    margin-bottom: 20px;
+}
+.ajtb-flight-group:last-child {
+    margin-bottom: 0;
+}
+.ajtb-flight-group-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ajtb-primary);
+    margin: 0 0 10px 0;
+    padding: 0;
 }
 
 .aj-flight-card {

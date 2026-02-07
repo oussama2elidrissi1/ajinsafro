@@ -131,18 +131,28 @@ if (empty($itinerary)) {
                     </div>
 
                     <div class="day-body" id="day-content-<?php echo $index; ?>" <?php echo !$is_first ? 'style="display:none;"' : ''; ?>>
-                        <?php // Vol Aller (Jour 1) — Laravel voyage_flights ?>
-                        <?php if ($is_first && !empty($outboundFlight)): 
-                            $flight = $outboundFlight;
-                            $show_remove = false;
-                            include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
-                        endif; ?>
-                        <?php // Vol Retour (Dernier jour) — Laravel voyage_flights ?>
-                        <?php if ($is_last && !empty($inboundFlight)): 
-                            $flight = $inboundFlight;
-                            $show_remove = false;
-                            include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
-                        endif; ?>
+                        <?php // Vol Aller — affiché uniquement au premier jour (Jour 1) ?>
+                        <?php if ($is_first && !empty($outboundFlight)): ?>
+                            <div class="ajtb-day-flight-block ajtb-day-flight-outbound">
+                                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> (Jour 1)</h4>
+                                <?php
+                                $flight = $outboundFlight;
+                                $show_remove = false;
+                                include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
+                                ?>
+                            </div>
+                        <?php endif; ?>
+                        <?php // Vol Retour — affiché uniquement au dernier jour ?>
+                        <?php if ($is_last && !empty($inboundFlight)): ?>
+                            <div class="ajtb-day-flight-block ajtb-day-flight-inbound">
+                                <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?> (Jour <?php echo $total_days; ?>)</h4>
+                                <?php
+                                $flight = $inboundFlight;
+                                $show_remove = false;
+                                include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
+                                ?>
+                            </div>
+                        <?php endif; ?>
                         <!-- Day Image (if available) -->
                         <?php if (!empty($day['image'])): ?>
                             <div class="day-image">

@@ -85,7 +85,7 @@ get_header();
                 <!-- Navigation Tabs -->
                 <nav class="ajtb-tabs-nav">
                     <a href="#overview" class="tab-link active">Aperçu</a>
-                    <?php if (!empty($tour['flights']) || !empty($tour['all_flights'])): ?>
+                    <?php if (!empty($tour['flights']) || !empty($tour['all_flights']) || !empty($tour['outboundFlight']) || !empty($tour['inboundFlight'])): ?>
                         <a href="#flights" class="tab-link">Vols</a>
                     <?php endif; ?>
                     <?php if (!empty($tour['itinerary']) || !empty($tour['wp_program']['items'])): ?>
