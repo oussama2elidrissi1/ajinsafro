@@ -78,11 +78,11 @@
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="{{ route('admin.circuits.voyages.index') }}">Voyages</a></li>
-                        @if(Route::has('admin.circuits.activities.index'))
-                        <li><a href="{{ route('admin.circuits.activities.index') }}">Activités</a></li>
-                        @endif
                         @if(Route::has('admin.circuits.airlines.index'))
                         <li><a href="{{ route('admin.circuits.airlines.index') }}">Compagnies aériennes</a></li>
+                        @endif
+                        @if(Route::has('admin.circuits.activities.index'))
+                        <li><a href="{{ route('admin.circuits.activities.index') }}">Activités</a></li>
                         @endif
                         <li><a href="{{ route('admin.circuits.circuits') }}">Circuits</a></li>
                         <li><a href="{{ route('admin.circuits.itineraires') }}">Itinéraires</a></li>

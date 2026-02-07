@@ -46,9 +46,12 @@ class VoyageFlightService
                 'departure_at' => $this->parseDateTime($payload['departure_at'] ?? null),
                 'arrival_at' => $this->parseDateTime($payload['arrival_at'] ?? null),
                 'baggage' => $payload['baggage'] ?? null,
+                'cabin_baggage' => $payload['cabin_baggage'] ?? null,
+                'checkin_baggage' => $payload['checkin_baggage'] ?? null,
                 'price' => isset($payload['price']) && $payload['price'] !== '' ? (float) $payload['price'] : null,
                 'currency' => !empty($payload['currency']) ? substr($payload['currency'], 0, 3) : 'MAD',
                 'is_default' => $isDefault,
+                'is_tentative' => !empty($payload['is_tentative']) && (string) $payload['is_tentative'] === '1',
                 'sort_order' => $sortOrder,
             ];
 

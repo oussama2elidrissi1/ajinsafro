@@ -185,9 +185,12 @@ class UpdateWpTourRequest extends FormRequest
             'flights.0.departure_at' => 'nullable|string',
             'flights.0.arrival_at' => 'nullable|string',
             'flights.0.baggage' => 'nullable|string|max:50',
+            'flights.0.cabin_baggage' => 'nullable|string|max:30',
+            'flights.0.checkin_baggage' => 'nullable|string|max:30',
             'flights.0.price' => 'nullable|numeric|min:0',
             'flights.0.currency' => 'nullable|string|max:3',
             'flights.0.is_default' => 'nullable',
+            'flights.0.is_tentative' => 'nullable',
             'flights.1.airline_id' => 'nullable|integer|exists:airlines,id',
             'flights.1.cabin_class' => 'nullable|string|in:economy,premium_economy,business,first',
             'flights.1.flight_number' => 'nullable|string|max:50',
@@ -196,9 +199,12 @@ class UpdateWpTourRequest extends FormRequest
             'flights.1.departure_at' => 'nullable|string',
             'flights.1.arrival_at' => 'nullable|string',
             'flights.1.baggage' => 'nullable|string|max:50',
+            'flights.1.cabin_baggage' => 'nullable|string|max:30',
+            'flights.1.checkin_baggage' => 'nullable|string|max:30',
             'flights.1.price' => 'nullable|numeric|min:0',
             'flights.1.currency' => 'nullable|string|max:3',
             'flights.1.is_default' => 'nullable',
+            'flights.1.is_tentative' => 'nullable',
         ];
     }
 
