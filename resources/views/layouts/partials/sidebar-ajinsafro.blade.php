@@ -78,6 +78,8 @@
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="{{ route('admin.circuits.voyages.index') }}">Voyages</a></li>
+                        <li><a href="{{ route('admin.circuits.tour-hotels.index') }}">Hôtels (circuit)</a></li>
+                        <li><a href="{{ route('admin.circuits.tour-transfers.index') }}">Transferts</a></li>
                         @if(Route::has('admin.circuits.airlines.index'))
                         <li><a href="{{ route('admin.circuits.airlines.index') }}">Compagnies aériennes</a></li>
                         @endif

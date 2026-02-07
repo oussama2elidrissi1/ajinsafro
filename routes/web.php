@@ -21,6 +21,8 @@ use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
+use App\Http\Controllers\Admin\TourHotelController;
+use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Auth\LockScreenController;
@@ -114,6 +116,14 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::get('circuits/airlines/{airline}/edit', [AirlineController::class, 'edit'])->name('circuits.airlines.edit');
     Route::match(['put', 'patch'], 'circuits/airlines/{airline}', [AirlineController::class, 'update'])->name('circuits.airlines.update');
     Route::delete('circuits/airlines/{airline}', [AirlineController::class, 'destroy'])->name('circuits.airlines.destroy');
+
+    Route::get('circuits/tour-hotels', [TourHotelController::class, 'index'])->name('circuits.tour-hotels.index');
+    Route::get('circuits/tour-hotels/{tourId}/edit', [TourHotelController::class, 'edit'])->name('circuits.tour-hotels.edit')->whereNumber('tourId');
+    Route::match(['put', 'patch'], 'circuits/tour-hotels/{tourId}', [TourHotelController::class, 'update'])->name('circuits.tour-hotels.update')->whereNumber('tourId');
+
+    Route::get('circuits/tour-transfers', [TourTransferController::class, 'index'])->name('circuits.tour-transfers.index');
+    Route::get('circuits/tour-transfers/{tourId}/edit', [TourTransferController::class, 'edit'])->name('circuits.tour-transfers.edit')->whereNumber('tourId');
+    Route::match(['put', 'patch'], 'circuits/tour-transfers/{tourId}', [TourTransferController::class, 'update'])->name('circuits.tour-transfers.update')->whereNumber('tourId');
 
     Route::get('circuits/voyages', [VoyageController::class, 'index'])->name('circuits.voyages.index');
     Route::get('circuits/voyages/create', [VoyageController::class, 'create'])->name('circuits.voyages.create');
