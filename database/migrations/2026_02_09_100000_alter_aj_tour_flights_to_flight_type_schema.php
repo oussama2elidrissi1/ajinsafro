@@ -14,8 +14,10 @@ return new class extends Migration
     public function up(): void
     {
         $connection = 'wp';
-        if (!Schema::connection($connection)->hasTable('aj_tour_flights')) {
-            Schema::connection($connection)->create('aj_tour_flights', function (Blueprint $table) {
+        $schema = Schema::connection($connection);
+
+        if (!$schema->hasTable('aj_tour_flights')) {
+            $schema->create('aj_tour_flights', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('tour_id')->comment('wp_posts.ID');
                 $table->enum('flight_type', ['outbound', 'inbound']);
@@ -38,11 +40,17 @@ return new class extends Migration
             return;
         }
 
-        $schema = Schema::connection($connection);
-        $tableName = 'aj_tour_flights';
+        $prefix = DB::connection($connection)->getTablePrefix();
+        $tableName = $prefix . 'aj_tour_flights';
+        // Skip alter if table not reachable (e.g. missing on this connection)
+        try {
+            DB::connection($connection)->selectOne("SELECT 1 FROM {$tableName} LIMIT 1");
+        } catch (\Throwable $e) {
+            return;
+        }
 
-        if (!$schema->hasColumn($tableName, 'flight_type')) {
-            $schema->table($tableName, function (Blueprint $table) {
+        if (!$schema->hasColumn('aj_tour_flights', 'flight_type')) {
+            $schema->table('aj_tour_flights', function (Blueprint $table) {
                 $table->enum('flight_type', ['outbound', 'inbound'])->nullable()->after('tour_id');
             });
             DB::connection($connection)->statement(
@@ -53,48 +61,48 @@ return new class extends Migration
             );
         }
 
-        if (!$schema->hasColumn($tableName, 'from_city')) {
-            $schema->table($tableName, function (Blueprint $table) {
+        if (!$schema->hasColumn('aj_tour_flights', 'from_city')) {
+            $schema->table('aj_tour_flights', function (Blueprint $table) {
                 $table->string('from_city')->nullable()->after('cabin_class');
             });
             DB::connection($connection)->statement(
                 "UPDATE {$tableName} SET from_city = depart_city WHERE from_city IS NULL AND depart_city IS NOT NULL"
             );
         }
-        if (!$schema->hasColumn($tableName, 'to_city')) {
-            $schema->table($tableName, function (Blueprint $table) {
+        if (!$schema->hasColumn('aj_tour_flights', 'to_city')) {
+            $schema->table('aj_tour_flights', function (Blueprint $table) {
                 $table->string('to_city')->nullable()->after('from_city');
             });
             DB::connection($connection)->statement(
                 "UPDATE {$tableName} SET to_city = arrive_city WHERE to_city IS NULL AND arrive_city IS NOT NULL"
             );
         }
-        if (!$schema->hasColumn($tableName, 'depart_time')) {
-            $schema->table($tableName, function (Blueprint $table) {
+        if (!$schema->hasColumn('aj_tour_flights', 'depart_time')) {
+            $schema->table('aj_tour_flights', function (Blueprint $table) {
                 $table->time('depart_time')->nullable()->after('depart_date');
                 $table->time('arrive_time')->nullable()->after('arrive_date');
             });
         }
-        if (!$schema->hasColumn($tableName, 'baggage_cabin_kg')) {
-            $schema->table($tableName, function (Blueprint $table) {
+        if (!$schema->hasColumn('aj_tour_flights', 'baggage_cabin_kg')) {
+            $schema->table('aj_tour_flights', function (Blueprint $table) {
                 $table->unsignedSmallInteger('baggage_cabin_kg')->nullable()->after('arrive_time');
                 $table->unsignedSmallInteger('baggage_checkin_kg')->nullable()->after('baggage_cabin_kg');
             });
         }
-        if (!$schema->hasColumn($tableName, 'notes')) {
-            $schema->table($tableName, function (Blueprint $table) {
+        if (!$schema->hasColumn('aj_tour_flights', 'notes')) {
+            $schema->table('aj_tour_flights', function (Blueprint $table) {
                 $table->text('notes')->nullable()->after('is_tentative');
             });
         }
-        if ($schema->hasColumn($tableName, 'is_tentative')) {
+        if ($schema->hasColumn('aj_tour_flights', 'is_tentative')) {
             DB::connection($connection)->statement(
-                "ALTER TABLE " . DB::connection($connection)->getTablePrefix() . "aj_tour_flights MODIFY is_tentative TINYINT(1) NOT NULL DEFAULT 1"
+                "ALTER TABLE {$tableName} MODIFY is_tentative TINYINT(1) NOT NULL DEFAULT 1"
             );
         }
 
-        if ($schema->hasColumn($tableName, 'segment_number')) {
+        if ($schema->hasColumn('aj_tour_flights', 'segment_number')) {
             try {
-                $schema->table($tableName, function (Blueprint $table) {
+                $schema->table('aj_tour_flights', function (Blueprint $table) {
                     $table->dropUnique(['tour_id', 'segment_number']);
                 });
             } catch (\Throwable $e) {
@@ -104,15 +112,15 @@ return new class extends Migration
 
         $colsToDrop = ['segment_number', 'flight_number', 'depart_city', 'arrive_city', 'depart_airport', 'arrive_airport', 'cabin_baggage', 'checkin_baggage', 'is_default', 'sort_order'];
         foreach ($colsToDrop as $col) {
-            if ($schema->hasColumn($tableName, $col)) {
-                $schema->table($tableName, function (Blueprint $table) use ($col) {
+            if ($schema->hasColumn('aj_tour_flights', $col)) {
+                $schema->table('aj_tour_flights', function (Blueprint $table) use ($col) {
                     $table->dropColumn($col);
                 });
             }
         }
 
         try {
-            $schema->table($tableName, function (Blueprint $table) {
+            $schema->table('aj_tour_flights', function (Blueprint $table) {
                 $table->unique(['tour_id', 'flight_type']);
             });
         } catch (\Throwable $e) {
