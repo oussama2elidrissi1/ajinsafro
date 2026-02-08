@@ -124,6 +124,42 @@ if (empty($itinerary)) {
 }
 ?>
 
+<?php
+// Helper: compute "INCLUS : N Vol + N Hôtel + ..." for one day
+$ajtb_day_inclus = function ($day, $index, $total_days) {
+    $n = (int) ($day['day'] ?? $index + 1);
+    $last = $total_days > 0 && $n === (int) $total_days;
+    $parts = [];
+    if (!empty($day['flight']) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day['flight'])) {
+        $parts[] = '1 ' . __('Vol', 'ajinsafro-tour-bridge');
+    }
+    if (!empty($day['flight_return']) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day['flight_return'])) {
+        $parts[] = '1 ' . __('Vol', 'ajinsafro-tour-bridge');
+    }
+    if (!empty($day['transfer'])) {
+        $parts[] = '1 ' . __('Transfert', 'ajinsafro-tour-bridge');
+    }
+    if (!empty($day['transfer_return'])) {
+        $parts[] = '1 ' . __('Transfert', 'ajinsafro-tour-bridge');
+    }
+    if (!empty($day['hotel'])) {
+        $parts[] = '1 ' . __('Hôtel', 'ajinsafro-tour-bridge');
+    }
+    $act_count = 0;
+    if (!empty($day['activities'])) {
+        foreach ($day['activities'] as $a) {
+            if (!empty($a['is_included'])) $act_count++;
+        }
+    }
+    if ($act_count > 0) {
+        $parts[] = $act_count . ' ' . _n('Activité', 'Activités', $act_count, 'ajinsafro-tour-bridge');
+    }
+    if (!empty(trim((string) ($day['meals'] ?? '')))) {
+        $parts[] = '1 ' . __('Repas', 'ajinsafro-tour-bridge');
+    }
+    return implode(' + ', $parts);
+};
+?>
 <section class="ajtb-section" id="itinerary" data-tour-id="<?php echo $tour_id; ?>" data-session-token="<?php echo esc_attr($session_token); ?>" data-activities-catalog="<?php echo esc_attr(wp_json_encode($activities_catalog)); ?>">
     <h2 class="ajtb-section-title">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
@@ -140,8 +176,10 @@ if (empty($itinerary)) {
         <span class="section-badge"><?php echo count($itinerary); ?> jour<?php echo count($itinerary) > 1 ? 's' : ''; ?></span>
     </h2>
 
-    <div class="ajtb-day-plan">
-        <nav class="aj-day-plan-nav" aria-label="<?php esc_attr_e('Day Plan', 'ajinsafro-tour-bridge'); ?>">
+    <!-- Layout MakeMyTrip : 3 colonnes (jours sticky | contenu du jour | sidebar prix déjà en page) -->
+    <div class="ajtb-programme-mmt programme-container">
+        <nav class="ajtb-programme-days aj-day-plan-nav" aria-label="<?php esc_attr_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?>">
+            <div class="ajtb-programme-days-title"><?php esc_html_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?></div>
             <?php foreach ($itinerary as $index => $day): 
                 $day_num = $day['day'] ?? ($index + 1);
                 $day_mode = isset($day['mode']) ? $day['mode'] : 'program';
@@ -158,8 +196,8 @@ if (empty($itinerary)) {
                 </button>
             <?php endforeach; ?>
         </nav>
-        <div class="aj-day-plan-content">
-    <div class="ajtb-itinerary-timeline">
+        <div class="ajtb-programme-center aj-day-plan-content">
+            <div class="ajtb-day-panels">
         <?php foreach ($itinerary as $index => $day): 
             $day_number = $day['day'] ?? ($index + 1);
             $is_first = ($index === 0);
@@ -169,36 +207,21 @@ if (empty($itinerary)) {
             $activities = isset($day['activities']) ? $day['activities'] : [];
             $day_id = (int) ($day['id'] ?? 0);
             $day_activity_ids = array_map(function ($a) { return (int) ($a['activity_id'] ?? 0); }, $activities);
+            $inclus_line = $ajtb_day_inclus($day, $index, $total_days);
         ?>
-            <div class="itinerary-day aj-day-panel <?php echo $is_first ? 'first' : ''; ?> <?php echo $is_last ? 'last' : ''; ?> itinerary-day-mode-<?php echo esc_attr($mode); ?>" id="aj-day-panel-<?php echo $day_number; ?>" data-aj-day-panel="<?php echo $day_number; ?>" data-day="<?php echo $day_number; ?>" data-day-index="<?php echo $index; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>">
-                <!-- Timeline Marker -->
-                <div class="day-marker">
-                    <span class="day-number"><?php echo $day_number; ?></span>
-                    <?php if (!$is_last): ?>
-                        <div class="marker-line"></div>
+            <div class="ajtb-day-content-panel day-card <?php echo $index === 0 ? 'is-selected' : ''; ?>" id="aj-day-panel-<?php echo $day_number; ?>" data-aj-day-panel="<?php echo $day_number; ?>" data-day="<?php echo $day_number; ?>" data-day-index="<?php echo $index; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>" role="tabpanel" aria-labelledby="aj-day-nav-<?php echo $day_number; ?>" <?php echo $index !== 0 ? 'hidden' : ''; ?>>
+                <!-- Header du jour (badge + titre + INCLUS) -->
+                <div class="ajtb-day-header-mmt">
+                    <span class="ajtb-day-badge">Jour <?php echo $day_number; ?></span>
+                    <?php if ($mode === 'free'): ?>
+                        <span class="badge badge-free-day"><?php esc_html_e('Jour libre', 'ajinsafro-tour-bridge'); ?></span>
+                    <?php endif; ?>
+                    <h3 class="ajtb-day-title-mmt"><?php echo esc_html($day_title_display); ?></h3>
+                    <?php if ($inclus_line !== ''): ?>
+                        <p class="ajtb-day-inclus">INCLUS : <?php echo esc_html($inclus_line); ?></p>
                     <?php endif; ?>
                 </div>
-
-                <!-- Day Content -->
-                <div class="day-card">
-                    <div class="day-header" data-toggle="day-content-<?php echo $index; ?>" data-aj-day-toggle="<?php echo $day_number; ?>">
-                        <div class="day-header-content">
-                            <span class="day-label">Jour <?php echo $day_number; ?></span>
-                            <?php if ($mode === 'free'): ?>
-                                <span class="badge badge-free-day">Jour libre</span>
-                            <?php endif; ?>
-                            <h3 class="day-title">
-                                <?php echo esc_html($day_title_display); ?>
-                            </h3>
-                        </div>
-                        <button class="day-toggle" aria-expanded="<?php echo $is_first ? 'true' : 'false'; ?>">
-                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
-                                <polyline points="6,9 12,15 18,9"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="day-body" id="day-content-<?php echo $index; ?>" <?php echo !$is_first ? 'style="display:none;"' : ''; ?>>
+                <div class="day-body">
                         <?php
                         // —— Description du jour en premier (toujours affichée en tête)
                         $day_notes = trim((string) ($day['notes'] ?? ''));
@@ -213,13 +236,9 @@ if (empty($itinerary)) {
                         <?php
                         if ($day_notes !== ''):
                             $notes_html = wp_kses_post(nl2br($day_notes));
-                            $is_long = strlen(strip_tags($day_notes)) > 300;
                         ?>
-                            <div class="aj-day-notes-wrap <?php echo $is_long ? 'aj-day-notes-collapsed' : ''; ?>">
+                            <div class="aj-day-notes-wrap">
                                 <div class="aj-day-notes-content"><?php echo $notes_html; ?></div>
-                                <?php if ($is_long): ?>
-                                    <button type="button" class="aj-day-notes-read-more" aria-expanded="false"><?php esc_html_e('Lire plus', 'ajinsafro-tour-bridge'); ?></button>
-                                <?php endif; ?>
                             </div>
                         <?php elseif ($mode === 'free'): ?>
                             <p class="aj-day-notes day-notes day-description aj-day-free-label"><?php esc_html_e('Jour libre', 'ajinsafro-tour-bridge'); ?></p>
@@ -232,127 +251,80 @@ if (empty($itinerary)) {
                         </div>
                         <?php endif; ?>
                         <?php
-                        // —— Jour 1 : + Vol Aller (repliable) → + Transfert Aéroport→Hôtel (repliable, 2 cartes côte à côte)
+                        // —— Blocs inline (pas de sections repliables) : Vol, Transfert, Hôtel dans le contenu du jour
                         if ($is_first):
                             $day_flight = $day['flight'] ?? null;
                             $day_transfer = $day['transfer'] ?? null;
                             $day_hotel = $day['hotel'] ?? null;
                             $show_outbound = !empty($day_flight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day_flight);
                         ?>
-                            <div class="ajtb-collapse-section ajtb-section-flight" data-aj-collapse="vol-aller">
-                                <button type="button" class="ajtb-collapse-trigger" aria-expanded="true" data-bs-toggle="collapse" data-bs-target="#ajtb-collapse-vol-aller-<?php echo $index; ?>" aria-controls="ajtb-collapse-vol-aller-<?php echo $index; ?>">
-                                    <span class="ajtb-collapse-icon" aria-hidden="true">+</span>
-                                    <span class="ajtb-collapse-title"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?></span>
-                                </button>
-                                <div class="collapse show" id="ajtb-collapse-vol-aller-<?php echo $index; ?>">
-                                    <div class="ajtb-day-flight-block ajtb-day-flight-outbound ajtb-card-wrap" data-aj-day-flight="outbound" data-aj-day-number="1">
-                                        <?php if ($show_outbound): 
-                                            $fo_from = trim((string) ($day_flight['from_city'] ?? $day_flight['depart_label'] ?? ''));
-                                            $fo_to   = trim((string) ($day_flight['to_city'] ?? $day_flight['arrive_label'] ?? ''));
-                                            $fo_from = $fo_from !== '' ? $fo_from : '—';
-                                            $fo_to   = $fo_to !== '' ? $fo_to : '—';
-                                        ?>
-                                            <?php $flight = $day_flight; $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
-                                        <?php else: ?>
-                                            <?php $label = __('Vol Aller non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; ?>
-                                        <?php endif; ?>
+                            <div class="ajtb-block-mmt ajtb-block-flight">
+                                <h4 class="ajtb-block-title"><span class="ajtb-block-icon">✈</span> <?php esc_html_e('Vol', 'ajinsafro-tour-bridge'); ?></h4>
+                                <div class="ajtb-day-flight-block ajtb-day-flight-outbound ajtb-card-wrap" data-aj-day-flight="outbound" data-aj-day-number="1">
+                                    <?php if ($show_outbound): $flight = $day_flight; $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
+                                    <?php else: $label = __('Vol Aller non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; endif; ?>
+                                </div>
+                            </div>
+                            <?php if (!empty($day_transfer)): ?>
+                            <div class="ajtb-block-mmt ajtb-block-transfer">
+                                <h4 class="ajtb-block-title"><?php esc_html_e('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); ?></h4>
+                                <div class="ajtb-day-flight-block ajtb-card-wrap">
+                                    <div class="ajtb-card-with-image ajtb-card-full-width">
+                                        <div class="ajtb-card-image ajtb-card-image--transfer"<?php if (!empty($day_transfer['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer['image_url']) . ')"'; } ?>></div>
+                                        <div class="ajtb-card-inner"><?php $transfer = $day_transfer; $label = __('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?></div>
                                     </div>
                                 </div>
                             </div>
-                            <?php if (!empty($day_transfer) || !empty($day_hotel)): ?>
-                            <div class="ajtb-collapse-section ajtb-section-transfer-hotel" data-aj-collapse="transfert-hotel">
-                                <button type="button" class="ajtb-collapse-trigger" aria-expanded="true" data-bs-toggle="collapse" data-bs-target="#ajtb-collapse-transfer-hotel-<?php echo $index; ?>" aria-controls="ajtb-collapse-transfer-hotel-<?php echo $index; ?>">
-                                    <span class="ajtb-collapse-icon" aria-hidden="true">+</span>
-                                    <span class="ajtb-collapse-title"><?php esc_html_e('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); ?></span>
-                                </button>
-                                <div class="collapse show" id="ajtb-collapse-transfer-hotel-<?php echo $index; ?>">
-                                    <div class="ajtb-transfer-hotel-row">
-                                        <?php if (!empty($day_transfer)): ?>
-                                        <div class="ajtb-transfer-hotel-col">
-                                            <div class="ajtb-card-with-image">
-                                                <div class="ajtb-card-image ajtb-card-image--transfer"<?php if (!empty($day_transfer['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer['image_url']) . ')"'; } ?>></div>
-                                                <div class="ajtb-card-inner">
-                                                    <?php $transfer = $day_transfer; $label = __('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <?php endif; ?>
-                                        <?php if (!empty($day_hotel)): ?>
-                                        <div class="ajtb-transfer-hotel-col">
-                                            <div class="ajtb-card-with-image">
-                                                <div class="ajtb-card-image ajtb-card-image--hotel"<?php if (!empty($day_hotel['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel['image_url']) . ')"'; } ?>></div>
-                                                <div class="ajtb-card-inner">
-                                                    <?php $hotel = $day_hotel; $is_checkout = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <?php endif; ?>
+                            <?php endif; ?>
+                            <?php if (!empty($day_hotel)): ?>
+                            <div class="ajtb-block-mmt ajtb-block-hotel">
+                                <h4 class="ajtb-block-title"><?php esc_html_e('Hôtel', 'ajinsafro-tour-bridge'); ?></h4>
+                                <div class="ajtb-day-flight-block ajtb-card-wrap">
+                                    <div class="ajtb-card-with-image ajtb-card-full-width">
+                                        <div class="ajtb-card-image ajtb-card-image--hotel"<?php if (!empty($day_hotel['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel['image_url']) . ')"'; } ?>></div>
+                                        <div class="ajtb-card-inner"><?php $hotel = $day_hotel; $is_checkout = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?></div>
                                     </div>
                                 </div>
                             </div>
                             <?php endif; ?>
                         <?php endif; ?>
 
-                        <?php
-                        // —— Dernier jour : Hôtel (check-out) → Transfert Hôtel→Aéroport → + Vol Retour (repliable)
-                        if ($is_last):
+                        <?php if ($is_last):
                             $day_flight_return = $day['flight_return'] ?? null;
                             $day_transfer_return = $day['transfer_return'] ?? null;
                             $day_hotel_last = $day['hotel'] ?? null;
                             $hotel_checkout = !empty($day['hotel_checkout']);
                             $show_inbound = !empty($day_flight_return) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day_flight_return);
                         ?>
-                            <?php if ((!empty($day_hotel_last) && $hotel_checkout) || !empty($day_transfer_return)): ?>
-                            <details class="ajtb-collapse-section ajtb-section-transfer-hotel" data-aj-collapse="transfert-retour" open>
-                                <summary class="ajtb-collapse-trigger">
-                                    <span class="ajtb-collapse-icon" aria-hidden="true"></span>
-                                    <span class="ajtb-collapse-title"><?php esc_html_e('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); ?></span>
-                                </summary>
-                                <div class="ajtb-collapse-body">
-                                    <div class="ajtb-transfer-hotel-row">
-                                        <?php if (!empty($day_hotel_last) && $hotel_checkout): ?>
-                                        <div class="ajtb-transfer-hotel-col">
-                                            <div class="ajtb-card-with-image">
-                                                <div class="ajtb-card-image ajtb-card-image--hotel"<?php if (!empty($day_hotel_last['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel_last['image_url']) . ')"'; } ?>></div>
-                                                <div class="ajtb-card-inner">
-                                                    <?php $hotel = $day_hotel_last; $is_checkout = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <?php endif; ?>
-                                        <?php if (!empty($day_transfer_return)): ?>
-                                        <div class="ajtb-transfer-hotel-col">
-                                            <div class="ajtb-card-with-image">
-                                                <div class="ajtb-card-image ajtb-card-image--transfer"<?php if (!empty($day_transfer_return['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer_return['image_url']) . ')"'; } ?>></div>
-                                                <div class="ajtb-card-inner">
-                                                    <?php $transfer = $day_transfer_return; $label = __('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <?php endif; ?>
+                            <?php if (!empty($day_hotel_last) && $hotel_checkout): ?>
+                            <div class="ajtb-block-mmt ajtb-block-hotel">
+                                <h4 class="ajtb-block-title"><?php esc_html_e('Hôtel (check-out)', 'ajinsafro-tour-bridge'); ?></h4>
+                                <div class="ajtb-day-flight-block ajtb-card-wrap">
+                                    <div class="ajtb-card-with-image ajtb-card-full-width">
+                                        <div class="ajtb-card-image ajtb-card-image--hotel"<?php if (!empty($day_hotel_last['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel_last['image_url']) . ')"'; } ?>></div>
+                                        <div class="ajtb-card-inner"><?php $hotel = $day_hotel_last; $is_checkout = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?></div>
                                     </div>
                                 </div>
-                            </details>
+                            </div>
                             <?php endif; ?>
-                            <details class="ajtb-collapse-section ajtb-section-flight" data-aj-collapse="vol-retour" open>
-                                <summary class="ajtb-collapse-trigger">
-                                    <span class="ajtb-collapse-icon" aria-hidden="true"></span>
-                                    <span class="ajtb-collapse-title"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?></span>
-                                </summary>
-                                <div class="ajtb-collapse-body">
-                                    <div class="ajtb-day-flight-block ajtb-day-flight-inbound ajtb-card-wrap" data-aj-day-flight="inbound" data-aj-day-number="<?php echo $total_days; ?>">
-                                        <?php if ($show_inbound): 
-                                            $fi_from = trim((string) ($day_flight_return['from_city'] ?? $day_flight_return['depart_label'] ?? ''));
-                                            $fi_to   = trim((string) ($day_flight_return['to_city'] ?? $day_flight_return['arrive_label'] ?? ''));
-                                            $fi_from = $fi_from !== '' ? $fi_from : '—';
-                                            $fi_to   = $fi_to !== '' ? $fi_to : '—';
-                                            $flight = $day_flight_return; $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
-                                        else: ?>
-                                            <?php $label = __('Vol Retour non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; ?>
-                                        <?php endif; ?>
+                            <?php if (!empty($day_transfer_return)): ?>
+                            <div class="ajtb-block-mmt ajtb-block-transfer">
+                                <h4 class="ajtb-block-title"><?php esc_html_e('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); ?></h4>
+                                <div class="ajtb-day-flight-block ajtb-card-wrap">
+                                    <div class="ajtb-card-with-image ajtb-card-full-width">
+                                        <div class="ajtb-card-image ajtb-card-image--transfer"<?php if (!empty($day_transfer_return['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer_return['image_url']) . ')"'; } ?>></div>
+                                        <div class="ajtb-card-inner"><?php $transfer = $day_transfer_return; $label = __('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?></div>
                                     </div>
                                 </div>
-                            </details>
+                            </div>
+                            <?php endif; ?>
+                            <div class="ajtb-block-mmt ajtb-block-flight">
+                                <h4 class="ajtb-block-title"><span class="ajtb-block-icon">✈</span> <?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?></h4>
+                                <div class="ajtb-day-flight-block ajtb-day-flight-inbound ajtb-card-wrap" data-aj-day-flight="inbound" data-aj-day-number="<?php echo $total_days; ?>">
+                                    <?php if ($show_inbound): $flight = $day_flight_return; $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
+                                    <?php else: $label = __('Vol Retour non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
 
                         <!-- Activities container (id stable: JS replaces innerHTML after AJAX) -->
@@ -435,15 +407,14 @@ if (empty($itinerary)) {
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
-                    </div>
                 </div>
             </div>
         <?php endforeach; ?>
-    </div>
+            </div>
         </div>
     </div>
 
-    <!-- Print/Download Itinerary (Laravel timeline only) -->
+    <!-- Print/Download Itinerary -->
     <div class="itinerary-actions">
         <button type="button" class="btn-outline" onclick="window.print();">
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">

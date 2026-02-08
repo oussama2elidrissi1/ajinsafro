@@ -63,6 +63,84 @@
 }
 
 /* ===================================
+   Page single tour – Layout MakeMyTrip (contenu large, sidebar fixe)
+   Breathing space horizontal : max-width + padding gauche/droite (ne touche pas aux colonnes).
+   =================================== */
+.ajtb-tour-page {
+    --ajtb-sidebar-width: 320px;
+    --ajtb-layout-gap: 32px;
+}
+
+/* Container principal : .aj-wide-container (barre search, aperçu, programme, sidebar prix) */
+.ajtb-tour-page .aj-wide-container {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+/* Desktop ≥1400px : max-width 1360px, padding 32px (breathing space type MakeMyTrip/Booking) */
+@media (min-width: 1400px) {
+    .ajtb-tour-page .aj-wide-container {
+        max-width: 1360px;
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+}
+
+/* Desktop 1200–1399px : max-width 1280px, padding 28px */
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .ajtb-tour-page .aj-wide-container {
+        max-width: 1280px;
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+}
+
+/* 992–1199px : layout 2 colonnes conservé, padding horizontal pour lisibilité */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .ajtb-tour-page .aj-wide-container {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+
+.ajtb-tour-page .ajtb-tour-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--ajtb-sidebar-width);
+    gap: var(--ajtb-layout-gap);
+    align-items: start;
+    padding: 28px 0;
+}
+
+.ajtb-tour-page .ajtb-tour-main {
+    min-width: 0;
+    width: 100%;
+}
+
+.ajtb-tour-page .ajtb-tour-sidebar {
+    min-width: 0;
+    width: var(--ajtb-sidebar-width);
+    position: sticky;
+    top: 90px;
+    align-self: start;
+}
+
+/* Programme du Circuit : occupe toute la largeur de la colonne gauche (pas de double contrainte) */
+.ajtb-tour-page #itinerary.ajtb-section {
+    max-width: none;
+    width: 100%;
+}
+
+.ajtb-tour-page .ajtb-day-plan.programme-container,
+.ajtb-tour-page .ajtb-programme-mmt.programme-container {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* ===================================
    Hero Section
    =================================== */
 .ajtb-hero {
@@ -830,8 +908,263 @@
 }
 
 /* ===================================
-   Day Plan (left nav + right content)
+   Programme MakeMyTrip : 3 colonnes (jours sticky | contenu 1 jour | sidebar prix en page)
    =================================== */
+.ajtb-programme-mmt.programme-container {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    column-gap: 24px;
+    align-items: start;
+    margin-top: 20px;
+    max-width: none;
+    padding: 0;
+}
+
+.ajtb-programme-days {
+    position: sticky;
+    top: 90px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ajtb-programme-days-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ajtb-text-muted);
+    margin-bottom: 8px;
+}
+
+.ajtb-programme-center {
+    min-width: 0;
+}
+
+.ajtb-day-content-panel {
+    display: none;
+    min-width: 0;
+}
+
+.ajtb-day-content-panel.is-selected,
+.ajtb-day-content-panel[data-day]:not([hidden]) {
+    display: block;
+}
+
+.ajtb-day-content-panel[hidden] {
+    display: none !important;
+}
+
+.ajtb-day-header-mmt {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--ajtb-border);
+}
+
+.ajtb-day-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: var(--ajtb-primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.ajtb-day-title-mmt {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ajtb-text);
+    margin: 0 0 8px 0;
+}
+
+.ajtb-day-inclus {
+    font-size: 13px;
+    color: var(--ajtb-text-muted);
+    margin: 0;
+}
+
+.ajtb-block-mmt {
+    margin-bottom: 24px;
+}
+
+.ajtb-block-mmt:last-child {
+    margin-bottom: 0;
+}
+
+.ajtb-block-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ajtb-block-icon {
+    font-size: 16px;
+}
+
+.ajtb-programme-mmt .day-body {
+    padding: 0;
+    min-width: 0;
+}
+
+/* Liste des jours : style timeline (cercle + état actif) */
+.ajtb-programme-days .aj-day-link {
+    position: relative;
+    padding-left: 44px;
+    border-radius: 8px;
+}
+
+.ajtb-programme-days .aj-day-link-num {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+}
+
+.ajtb-programme-days .aj-day-link.active,
+.ajtb-programme-days .aj-day-link.is-active {
+    background: var(--ajtb-primary);
+    color: #fff;
+    border-color: var(--ajtb-primary);
+}
+
+.ajtb-programme-days .aj-day-link.active .aj-day-link-num,
+.ajtb-programme-days .aj-day-link.is-active .aj-day-link-num {
+    background: #fff;
+    color: var(--ajtb-primary);
+}
+
+/* Cartes blanches pour le contenu du jour (centre) */
+.ajtb-programme-mmt .ajtb-day-content-panel {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    padding: 24px;
+    border: 1px solid var(--ajtb-border);
+}
+
+.ajtb-programme-mmt .ajtb-block-mmt .ajtb-card-wrap,
+.ajtb-programme-mmt .ajtb-block-mmt .ajtb-card-with-image {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--ajtb-border);
+}
+
+/* Responsive : stack jours au-dessus du contenu, sticky optionnel */
+@media (max-width: 1199px) {
+    .ajtb-programme-mmt.programme-container {
+        grid-template-columns: 1fr;
+        row-gap: 16px;
+    }
+
+    .ajtb-programme-days {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ajtb-programme-days-title {
+        width: 100%;
+    }
+
+    .ajtb-programme-days .aj-day-link {
+        padding-left: 14px;
+    }
+
+    .ajtb-programme-days .aj-day-link-num {
+        position: static;
+        transform: none;
+    }
+}
+
+/* ===================================
+   Day Plan (legacy: left nav + timeline + content)
+   =================================== */
+.ajtb-day-plan.programme-container {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 32px;
+    padding-right: 32px;
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 220px 56px minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: start;
+}
+
+/* Col 1 : liste des jours */
+.ajtb-day-plan.programme-container .aj-day-plan-nav {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    width: 100%;
+    max-width: 220px;
+    margin-right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Col 2+3 : zone timeline + contenu (une seule cellule grid, sous-grille à l’intérieur) */
+.ajtb-day-plan.programme-container .aj-day-plan-content {
+    grid-column: 2 / -1;
+    min-width: 0;
+    width: 100%;
+}
+
+/* Sous-grille : timeline 56px | contenu 1fr, pas de margin qui crée le vide */
+.ajtb-day-plan.programme-container .ajtb-itinerary-timeline {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    column-gap: 16px;
+    row-gap: 20px;
+    margin: 0;
+    align-items: start;
+}
+
+/* Chaque ligne = marker + card comme cellules de la grille (display: contents) */
+.ajtb-day-plan.programme-container .itinerary-day {
+    display: contents;
+}
+
+.ajtb-day-plan.programme-container .day-marker {
+    width: 100%;
+    min-width: 0;
+    justify-self: center;
+}
+
+/* Col contenu : pas de push, prend toute la largeur dispo */
+.ajtb-day-plan.programme-container .day-card {
+    min-width: 0;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.ajtb-day-plan.programme-container .day-card {
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.ajtb-day-plan.programme-container .day-header {
+    padding: 24px 28px 16px;
+}
+
+.ajtb-day-plan.programme-container .day-body {
+    padding: 0 28px 24px;
+    min-width: 0;
+}
+
+/* Fallback si .programme-container absent (rétrocompat) */
 .ajtb-day-plan {
     display: flex;
     gap: 24px;
@@ -905,6 +1238,7 @@
     color: #fff;
 }
 
+/* Titre du jour : ellipsis pour ne pas agrandir la colonne */
 .aj-day-link-title {
     flex: 1;
     min-width: 0;
@@ -1161,6 +1495,13 @@
 .ajtb-transfer-hotel-col {
     min-width: 0;
 }
+
+/* Transfert / Hôtel en section à part (comme les vols) : carte pleine largeur */
+.ajtb-card-full-width {
+    width: 100%;
+    max-width: 100%;
+}
+
 .ajtb-card-with-image {
     background: var(--ajtb-bg);
     border-radius: var(--ajtb-radius);
@@ -1204,14 +1545,64 @@
     box-shadow: none;
 }
 
-@media (max-width: 768px) {
-    .ajtb-day-plan {
-        flex-direction: column;
+/* Tablet 992–1199px : grille 200px | 48px | 1fr */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .ajtb-day-plan.programme-container {
+        grid-template-columns: 200px 48px minmax(0, 1fr);
+        column-gap: 16px;
     }
-    .aj-day-plan-nav {
+    .ajtb-day-plan.programme-container .aj-day-plan-nav {
+        max-width: 200px;
+    }
+    .ajtb-day-plan.programme-container .ajtb-itinerary-timeline {
+        grid-template-columns: 48px minmax(0, 1fr);
+    }
+}
+
+/* <992px : stack (jours en haut, contenu en dessous), annuler la grille */
+@media (max-width: 991px) {
+    .ajtb-day-plan,
+    .ajtb-day-plan.programme-container {
+        display: flex;
+        flex-direction: column;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .aj-day-plan-nav,
+    .ajtb-day-plan.programme-container .aj-day-plan-nav {
         width: 100%;
+        max-width: none;
+        grid-column: auto;
+        grid-row: auto;
         flex-direction: row;
         flex-wrap: wrap;
+    }
+    .ajtb-day-plan.programme-container .aj-day-plan-content {
+        grid-column: auto;
+        width: 100%;
+    }
+    .ajtb-day-plan.programme-container .ajtb-itinerary-timeline {
+        display: block;
+        grid-template-columns: none;
+        margin: 0;
+    }
+    .ajtb-day-plan.programme-container .itinerary-day {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .ajtb-day-plan.programme-container .itinerary-day.last {
+        margin-bottom: 0;
+    }
+    .ajtb-day-plan.programme-container .day-marker {
+        width: 56px;
+        min-width: 56px;
+        justify-self: auto;
+        flex-shrink: 0;
+    }
+    .ajtb-day-plan.programme-container .day-card {
+        flex: 1;
+        min-width: 0;
     }
     .aj-day-link-title {
         white-space: normal;
@@ -1230,7 +1621,7 @@
 
 .itinerary-day {
     display: flex;
-    gap: 16px;
+    gap: 24px;
     margin-bottom: 20px;
 }
 
@@ -1276,6 +1667,10 @@
     border-radius: var(--ajtb-radius);
     overflow: hidden;
     border: 1px solid var(--ajtb-border-light);
+}
+
+.ajtb-day-plan.programme-container .day-card {
+    border-radius: 12px;
 }
 
 /* Vol Aller (Jour 1) / Vol Retour (dernier jour) dans le contenu du jour */
@@ -1395,7 +1790,13 @@
     font-style: italic;
 }
 
-/* Long notes: excerpt + Lire plus (collapse) */
+/* Description du jour : affichage complet (pas de "Lire plus") */
+.aj-day-programme-block .aj-day-notes-wrap .aj-day-notes-content {
+    max-height: none;
+    overflow: visible;
+}
+
+/* Long notes: excerpt + Lire plus (collapse) - conservé si utilisé ailleurs */
 .aj-day-notes-wrap.aj-day-notes-collapsed .aj-day-notes-content {
     max-height: 5.5em;
     overflow: hidden;
@@ -2313,11 +2714,13 @@
    Responsive
    =================================== */
 @media (max-width: 1199px) {
-    .ajtb-tour-layout {
+    .ajtb-tour-layout,
+    .ajtb-tour-page .ajtb-tour-layout {
         grid-template-columns: 1fr;
     }
 
-    .ajtb-tour-sidebar {
+    .ajtb-tour-sidebar,
+    .ajtb-tour-page .ajtb-tour-sidebar {
         width: 100%;
         max-width: 100%;
         position: static;
@@ -2339,7 +2742,8 @@
         padding: 0 16px;
     }
 
-    .aj-wide-container {
+    .aj-wide-container,
+    .ajtb-tour-page .aj-wide-container {
         padding-left: 16px;
         padding-right: 16px;
     }
