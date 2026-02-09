@@ -128,6 +128,7 @@ class StoreWpTourRequest extends FormRequest
             // Media
             'thumbnail_id' => 'nullable|integer',
             'hero_image_id' => 'nullable|integer',
+            'hero_gallery_ids' => 'nullable|string', // 5 images pour la galerie hero (IDs séparés par des virgules)
             'gallery_ids' => 'nullable|string',
             'video' => 'nullable|string',
             
@@ -207,6 +208,7 @@ class StoreWpTourRequest extends FormRequest
             'min_people' => 'nombre minimum de personnes',
             'thumbnail_id' => 'image à la une',
             'hero_image_id' => 'image principale (hero)',
+            'hero_gallery_ids' => 'galerie hero (5 images)',
             'gallery_ids' => 'galerie',
             'post_status' => 'statut',
         ];

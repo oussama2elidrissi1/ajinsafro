@@ -148,6 +148,61 @@
                             <small class="text-muted">ID de l'attachment. Utilisée en priorité pour hero, cartes et partage. Une seule image.</small>
                         </div>
 
+                        {{-- Galerie Hero (5 images) --}}
+                        <div class="mb-4 p-3 border rounded bg-light">
+                            <h5 class="mb-2" style="font-size: 14px; font-weight: 600;">Galerie Hero (5 images)</h5>
+                            <p class="text-muted small mb-3">Sélectionnez exactement 5 images pour la galerie hero (1 principale + 4 secondaires).</p>
+                            @php
+                                $hero_gallery_ids = old('hero_gallery_ids', []);
+                                if (is_string($hero_gallery_ids)) {
+                                    $hero_gallery_ids = explode(',', $hero_gallery_ids);
+                                }
+                                $hero_gallery_ids = array_filter(array_map('trim', $hero_gallery_ids));
+                                $hero_gallery_ids = array_slice($hero_gallery_ids, 0, 5);
+                                while (count($hero_gallery_ids) < 5) {
+                                    $hero_gallery_ids[] = '';
+                                }
+                            @endphp
+                            <input type="hidden" name="hero_gallery_ids" id="hero_gallery_ids" value="{{ implode(',', array_filter($hero_gallery_ids)) }}">
+                            <div id="hero-gallery-container" class="row g-2">
+                                @for($i = 0; $i < 5; $i++)
+                                    @php
+                                        $img_id = $hero_gallery_ids[$i] ?? '';
+                                        $img_url = $img_id ? (function_exists('wp_get_attachment_image_url') ? wp_get_attachment_image_url($img_id, 'thumbnail') : '') : '';
+                                    @endphp
+                                    <div class="col-6 col-md-4">
+                                        <div class="hero-gallery-item border rounded p-2 bg-white" data-index="{{ $i }}" style="font-size: 12px;">
+                                            <label class="form-label small mb-1 d-block">
+                                                Image {{ $i === 0 ? 'Principale' : ($i + 1) }}
+                                            </label>
+                                            <div class="hero-gallery-preview-wrap mb-2" style="width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f8f9fa; display: {{ $img_url ? 'block' : 'none' }};">
+                                                <img src="{{ $img_url }}" alt="Preview {{ $i + 1 }}" class="hero-gallery-preview" style="width: 100%; height: 100%; object-fit: cover;">
+                                            </div>
+                                            <div class="hero-gallery-placeholder mb-2" style="width: 100%; height: 100px; border: 2px dashed #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; {{ $img_url ? 'display: none;' : '' }}">
+                                                <span class="text-muted" style="font-size: 11px;">Aucune image</span>
+                                            </div>
+                                            <div class="d-flex gap-1 flex-wrap">
+                                                <button type="button" class="btn btn-outline-primary btn-sm hero-gallery-upload-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;">
+                                                    <i class="bx bx-upload"></i> Upload
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm hero-gallery-choose-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;">
+                                                    <i class="bx bx-images"></i> Choisir
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm hero-gallery-remove-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;" {{ !$img_id ? 'disabled' : '' }}>
+                                                    <i class="bx bx-trash"></i>
+                                                </button>
+                                            </div>
+                                            <input type="hidden" class="hero-gallery-id-input" data-index="{{ $i }}" value="{{ $img_id }}">
+                                        </div>
+                                    </div>
+                                @endfor
+                            </div>
+                            <small class="text-muted d-block mt-2" style="font-size: 11px;">
+                                <i class="bx bx-info-circle"></i> 
+                                L'image principale sera affichée en grand à gauche, les 4 autres en grille 2x2 à droite.
+                            </small>
+                        </div>
+
                         <div class="mb-3">
                             <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
                             <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id') }}" placeholder="14434">
@@ -155,9 +210,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie (images secondaires)</label>
+                            <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids') }}" placeholder="14435,14436,14437">
-                            <small class="text-muted">IDs séparés par des virgules</small>
+                            <small class="text-muted">IDs séparés par des virgules. Images supplémentaires pour la section galerie complète (optionnel).</small>
                         </div>
                         
                         <div class="form-check mb-3">
@@ -603,5 +658,92 @@
                 }
             });
         });
+
+        // Hero Gallery (5 images) management for create form
+        var heroGalleryCurrentIndex = null;
+        var heroGalleryUploadUrl = "{{ route('admin.circuits.voyages.hero-image.upload', ['id' => 0]) }}"; // Will be updated after tour creation
+
+        function updateHeroGalleryHidden() {
+            var ids = [];
+            document.querySelectorAll('.hero-gallery-id-input').forEach(function(input) {
+                var val = input.value.trim();
+                if (val) ids.push(val);
+            });
+            var hiddenInput = document.getElementById('hero_gallery_ids');
+            if (hiddenInput) hiddenInput.value = ids.join(',');
+        }
+
+        function setHeroGalleryPreview(index, url, id) {
+            var item = document.querySelector('.hero-gallery-item[data-index="' + index + '"]');
+            if (!item) return;
+            var input = item.querySelector('.hero-gallery-id-input');
+            var preview = item.querySelector('.hero-gallery-preview');
+            var previewWrap = item.querySelector('.hero-gallery-preview-wrap');
+            var placeholder = item.querySelector('.hero-gallery-placeholder');
+            var removeBtn = item.querySelector('.hero-gallery-remove-btn');
+            if (input) input.value = id || '';
+            if (preview && url) preview.src = url;
+            if (previewWrap) previewWrap.style.display = (url ? 'block' : 'none');
+            if (placeholder) placeholder.style.display = (url ? 'none' : 'flex');
+            if (removeBtn) removeBtn.disabled = !id;
+            updateHeroGalleryHidden();
+        }
+
+        // Upload buttons (simple file input for create form)
+        document.querySelectorAll('.hero-gallery-upload-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var index = this.getAttribute('data-index');
+                heroGalleryCurrentIndex = index;
+                var fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/jpeg,image/png,image/webp';
+                fileInput.addEventListener('change', function() {
+                    if (!this.files || !this.files[0]) return;
+                    alert('Pour le formulaire de création, veuillez d\'abord créer le tour, puis éditer pour uploader les images via la médiathèque WordPress.');
+                    this.value = '';
+                });
+                fileInput.click();
+            });
+        });
+
+        // Choose buttons (manual ID input for create form)
+        document.querySelectorAll('.hero-gallery-choose-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var index = this.getAttribute('data-index');
+                var id = prompt('Entrez l\'ID de l\'image WordPress (ex: 14434):');
+                if (id && !isNaN(id) && parseInt(id) > 0) {
+                    // Try to get image URL
+                    fetch('{{ url("admin/wp-media/get") }}/' + id, {
+                        credentials: 'same-origin',
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    }).then(function(res) {
+                        return res.json();
+                    }).then(function(data) {
+                        if (data && data.url) {
+                            setHeroGalleryPreview(index, data.url, id);
+                        } else {
+                            // Fallback: set ID anyway, URL will be loaded on edit
+                            setHeroGalleryPreview(index, '', id);
+                        }
+                    }).catch(function() {
+                        // Fallback: set ID anyway
+                        setHeroGalleryPreview(index, '', id);
+                    });
+                }
+            });
+        });
+
+        // Remove buttons
+        document.querySelectorAll('.hero-gallery-remove-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var index = this.getAttribute('data-index');
+                if (confirm('Retirer cette image de la galerie hero ?')) {
+                    setHeroGalleryPreview(index, '', '');
+                }
+            });
+        });
+
+        // Initialize hidden input
+        updateHeroGalleryHidden();
     </script>
 @endpush

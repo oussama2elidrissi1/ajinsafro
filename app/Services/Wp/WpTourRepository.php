@@ -292,6 +292,21 @@ class WpTourRepository
             }
         }
 
+        // Galerie Hero (5 images) : enregistrer ou supprimer la meta
+        if (array_key_exists('hero_gallery_ids', $data)) {
+            if (empty($data['hero_gallery_ids']) || $data['hero_gallery_ids'] === '') {
+                $post->deleteMeta('_tour_hero_gallery_ids');
+            } else {
+                // Convertir CSV en array, nettoyer, limiter à 5, puis reconvertir en CSV
+                $ids = is_array($data['hero_gallery_ids']) 
+                    ? $data['hero_gallery_ids'] 
+                    : explode(',', $data['hero_gallery_ids']);
+                $ids = array_filter(array_map('trim', $ids));
+                $ids = array_slice($ids, 0, 5); // Max 5 images
+                $post->setMeta('_tour_hero_gallery_ids', implode(',', $ids));
+            }
+        }
+
         // Handle multi_location (array of IDs -> WP format "_ID1_,_ID2_,_ID3_")
         // Accept both 'locations' (from form) and 'multi_location' (legacy)
         if (isset($data['locations']) || isset($data['multi_location'])) {

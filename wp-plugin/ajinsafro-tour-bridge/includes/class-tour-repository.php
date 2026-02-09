@@ -64,6 +64,7 @@ class AJTB_Tour_Repository {
         'gallery',
         'st_gallery',
         '_tour_hero_image_id',
+        '_tour_hero_gallery_ids',
         
         // Reviews
         'rate_review',
@@ -104,6 +105,7 @@ class AJTB_Tour_Repository {
         $meta = $this->get_all_meta();
         $gallery = $this->get_gallery($meta);
         $hero_image = $this->get_hero_image($meta, $gallery);
+        $hero_gallery = $this->get_hero_gallery($meta);
 
         return [
             // Basic post data
@@ -119,6 +121,7 @@ class AJTB_Tour_Repository {
             'hero_image' => $hero_image,
             'hero_image_url' => $hero_image['url'] ?? '',
             'gallery' => $gallery,
+            'hero_gallery' => $hero_gallery, // 5 images spécifiques pour la galerie hero
 
             // Location
             'address' => $meta['address'] ?? '',
@@ -347,6 +350,55 @@ class AJTB_Tour_Repository {
     private function get_gallery($meta) {
         $gallery_value = $meta['gallery'] ?? $meta['st_gallery'] ?? '';
         return ajtb_parse_gallery($gallery_value);
+    }
+
+    /**
+     * Get hero gallery (5 images for hero gallery display)
+     *
+     * @param array $meta Meta data
+     * @return array Array of image data (max 5)
+     */
+    private function get_hero_gallery($meta) {
+        $hero_gallery_ids = $meta['_tour_hero_gallery_ids'] ?? '';
+        if (empty($hero_gallery_ids)) {
+            return [];
+        }
+        
+        $ids = is_array($hero_gallery_ids) 
+            ? $hero_gallery_ids 
+            : array_filter(array_map('trim', explode(',', $hero_gallery_ids)));
+        
+        $hero_gallery = [];
+        foreach ($ids as $id) {
+            $id = (int) trim($id);
+            if ($id <= 0) continue;
+            
+            $url = wp_get_attachment_image_url($id, 'full');
+            if (empty($url)) {
+                $attachment_post = get_post($id);
+                if ($attachment_post && $attachment_post->post_type === 'attachment' && !empty($attachment_post->guid)) {
+                    $url = $attachment_post->guid;
+                }
+            }
+            
+            if (!empty($url)) {
+                $hero_gallery[] = [
+                    'id' => $id,
+                    'url' => $url,
+                    'large' => wp_get_attachment_image_url($id, 'large') ?: $url,
+                    'medium' => wp_get_attachment_image_url($id, 'medium') ?: $url,
+                    'thumbnail' => wp_get_attachment_image_url($id, 'thumbnail') ?: $url,
+                    'alt' => get_post_meta($id, '_wp_attachment_image_alt', true) ?: get_the_title($this->post_id),
+                ];
+            }
+            
+            // Max 5 images
+            if (count($hero_gallery) >= 5) {
+                break;
+            }
+        }
+        
+        return $hero_gallery;
     }
 
     /**

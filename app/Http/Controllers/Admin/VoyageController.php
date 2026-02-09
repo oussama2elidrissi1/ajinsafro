@@ -93,6 +93,7 @@ class VoyageController extends Controller
             'min_people' => $wpPost->getMeta('min_people'),
             'thumbnail_id' => $wpPost->getMeta('_thumbnail_id'),
             'hero_image_id' => $wpPost->getMeta('_tour_hero_image_id'),
+            'hero_gallery_ids' => $wpPost->getMeta('_tour_hero_gallery_ids'),
             'gallery' => $wpPost->getMeta('gallery'),
         ];
 
@@ -257,6 +258,7 @@ class VoyageController extends Controller
             // MEDIA
             'thumbnail_id' => $wpPost->getMeta('_thumbnail_id'),
             'hero_image_id' => $wpPost->getMeta('_tour_hero_image_id'),
+            'hero_gallery_ids' => $wpPost->getMeta('_tour_hero_gallery_ids'),
             'gallery' => $wpPost->getMeta('gallery'),
             'video' => $wpPost->getMeta('video'),
             

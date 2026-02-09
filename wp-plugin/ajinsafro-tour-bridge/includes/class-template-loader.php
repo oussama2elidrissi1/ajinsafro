@@ -167,6 +167,7 @@ class AJTB_Template_Loader {
             'featured_image' => $wp_data['featured_image'],
             'hero_image' => $wp_data['hero_image'] ?? $wp_data['featured_image'],
             'gallery' => $wp_data['gallery'],
+            'hero_gallery' => $wp_data['hero_gallery'] ?? [], // 5 images pour la galerie hero (CRUD)
             
             // Location
             'address' => $wp_data['address'],
