@@ -639,7 +639,7 @@ class AJTB_Laravel_Repository {
                             }
                             $image_url = null;
                             if (!empty($ar['activity_image_id'])) {
-                                $image_url = wp_get_attachment_image_url((int) $ar['activity_image_id'], 'thumbnail');
+                                $image_url = wp_get_attachment_image_url((int) $ar['activity_image_id'], 'medium');
                             }
                             $days_by_id[$day_id]['activities'][] = [
                                 'id' => (int) $ar['id'],

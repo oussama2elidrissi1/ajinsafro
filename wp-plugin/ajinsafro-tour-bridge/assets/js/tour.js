@@ -241,8 +241,12 @@
                 if (!dayIdVal) return;
 
                 var activityIdVal = 0;
+                var $activityItem = null;
+                
                 if (action === 'remove') {
                     activityIdVal = parseInt(btn.getAttribute('data-activity-id'), 10);
+                    // Find the parent activity item for instant removal
+                    $activityItem = $(btn).closest('.day-activity-item');
                 } else {
                     var selectId = btn.getAttribute('data-select-id');
                     var selectEl = selectId ? document.getElementById(selectId) : null;
@@ -257,6 +261,24 @@
                 if (btn.disabled) return;
                 btn.disabled = true;
 
+                // INSTANT FEEDBACK: Remove activity item immediately (for "remove" action)
+                var itemHtml = null;
+                var container = document.getElementById('aj-day-activities-' + dayIdVal);
+                var $list = container ? $(container).find('.day-activities-list') : null;
+                
+                if (action === 'remove' && $activityItem && $activityItem.length) {
+                    itemHtml = $activityItem[0].outerHTML; // Store for potential restore
+                    $activityItem.fadeOut(150, function() {
+                        $(this).remove();
+                        // Check if list is now empty
+                        if ($list && $list.find('.day-activity-item:not(.day-no-activities)').length === 0) {
+                            if ($list.find('.day-no-activities').length === 0) {
+                                $list.append('<li class="day-activity-item day-no-activities">Aucune activité</li>');
+                            }
+                        }
+                    });
+                }
+
                 var payload = {
                     action: 'aj_toggle_activity',
                     nonce: nonce,
@@ -268,22 +290,33 @@
                 };
                 console.log('AJ TB payload', payload);
 
+                // AJAX call in background
                 $.post(ajaxUrl, payload).done(function(resp) {
                     console.log('AJ TB response', resp);
                     if (resp.success && resp.data && resp.data.html !== undefined) {
-                        var container = document.getElementById('aj-day-activities-' + dayIdVal);
+                        // Update container with server response (for consistency)
                         if (container) {
                             container.innerHTML = resp.data.html;
                         }
                         AJTB.showToast(resp.data.message || (action === 'remove' ? 'Activité retirée' : 'Activité ajoutée'));
                     } else {
+                        // On error: restore item if it was removed
+                        if (action === 'remove' && itemHtml && $list && $list.length) {
+                            $list.prepend(itemHtml);
+                            $list.find('.day-activity-item').first().hide().fadeIn(150);
+                        }
                         var msg = (resp.data && resp.data.message) ? resp.data.message : 'Erreur';
                         AJTB.showToast(msg);
+                        btn.disabled = false;
                     }
                 }).fail(function(xhr, status, err) {
                     console.warn('AJ TB request failed', status, err);
+                    // On error: restore item if it was removed
+                    if (action === 'remove' && itemHtml && $list && $list.length) {
+                        $list.prepend(itemHtml);
+                        $list.find('.day-activity-item').first().hide().fadeIn(150);
+                    }
                     AJTB.showToast('Erreur réseau');
-                }).always(function() {
                     btn.disabled = false;
                 });
             });

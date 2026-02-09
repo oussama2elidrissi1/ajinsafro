@@ -344,11 +344,15 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             $act_start_time = isset($act['start_time']) ? $act['start_time'] : null;
             $act_end_time = isset($act['end_time']) ? $act['end_time'] : null;
             
-            $html .= '<li class="day-activity-item" data-activity-id="' . esc_attr($act_id) . '" data-day-activity-id="' . esc_attr($day_activity_id) . '" data-is-mandatory="' . ($is_mandatory ? '1' : '0') . '">';
+            $html .= '<li class="day-activity-item day-activity-card-pro" data-activity-id="' . esc_attr($act_id) . '" data-day-activity-id="' . esc_attr($day_activity_id) . '" data-is-mandatory="' . ($is_mandatory ? '1' : '0') . '">';
             $html .= '<div class="day-activity-item-content">';
+            $html .= '<div class="day-activity-image-wrap">';
             if ($act_image_url) {
                 $html .= '<div class="day-activity-image"><img src="' . esc_url($act_image_url) . '" alt="' . esc_attr($title) . '" loading="lazy"></div>';
+            } else {
+                $html .= '<div class="day-activity-image day-activity-image--placeholder"><span class="day-activity-image-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span></div>';
             }
+            $html .= '</div>';
             $html .= '<div class="day-activity-details">';
             $html .= '<div class="day-activity-header">';
             $html .= '<span class="activity-title">' . esc_html($title) . '</span>';
@@ -362,20 +366,20 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             if ($act_start_time || $act_end_time) {
                 $html .= '<div class="activity-time">';
                 if ($act_start_time) $html .= '<span>' . esc_html($act_start_time) . '</span>';
-                if ($act_start_time && $act_end_time) $html .= '<span> - </span>';
+                if ($act_start_time && $act_end_time) $html .= '<span> – </span>';
                 if ($act_end_time) $html .= '<span>' . esc_html($act_end_time) . '</span>';
                 $html .= '</div>';
             }
             if ($desc !== '') {
                 $html .= '<div class="activity-description">' . wp_kses_post($desc) . '</div>';
             }
-            $html .= '</div></div>';
+            $html .= '</div>';
             $html .= '<div class="day-activity-actions">';
             if ($show_remove) {
                 $html .= '<button type="button" class="ajtb-btn-edit-activity" data-day-activity-id="' . esc_attr($day_activity_id) . '" data-tour-id="' . esc_attr($tour_id) . '" data-day-id="' . esc_attr($day_id) . '" data-activity-id="' . esc_attr($act_id) . '" aria-label="' . esc_attr__('Modifier cette activité', 'ajinsafro-tour-bridge') . '">' . esc_html__('Modifier', 'ajinsafro-tour-bridge') . '</button>';
                 $html .= '<button type="button" class="ajtb-btn-remove-activity" data-aj-action="remove" data-tour-id="' . esc_attr($tour_id) . '" data-day-id="' . esc_attr($day_id) . '" data-activity-id="' . esc_attr($act_id) . '" aria-label="' . esc_attr__('Retirer cette activité', 'ajinsafro-tour-bridge') . '">' . esc_html__('Retirer', 'ajinsafro-tour-bridge') . '</button>';
             }
-            $html .= '</div></li>';
+            $html .= '</div></div></li>';
         }
     } else {
         $html .= '<li class="day-activity-item day-no-activities">' . esc_html__('Aucune activité', 'ajinsafro-tour-bridge') . '</li>';

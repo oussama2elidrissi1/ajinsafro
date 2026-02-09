@@ -3013,114 +3013,178 @@
     cursor: not-allowed;
 }
 
-/* Day activity item (enhanced with image, price, time) */
-.day-activity-item {
+/* Day activity item — PRO card design with image */
+.day-activity-item.day-activity-card-pro {
     display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 16px;
-    margin-bottom: 12px;
-    border: 1px solid var(--ajtb-border);
-    border-radius: 12px;
-    background: var(--ajtb-bg);
-    transition: box-shadow 0.2s ease;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    margin-bottom: 16px;
+    border: 1px solid var(--ajtb-border, #e8e8e8);
+    border-radius: 14px;
+    background: var(--ajtb-bg, #fff);
+    overflow: hidden;
+    transition: box-shadow 0.25s ease, border-color 0.2s ease;
 }
 
-.day-activity-item:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.day-activity-item.day-activity-card-pro:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.06);
 }
 
-.day-activity-item-content {
+.day-activity-item.day-activity-card-pro:last-child {
+    margin-bottom: 0;
+}
+
+.day-activity-item.day-activity-card-pro .day-activity-item-content {
     display: flex;
-    gap: 16px;
     flex: 1;
     min-width: 0;
+    gap: 0;
+    align-items: stretch;
 }
 
-.day-activity-image {
+.day-activity-image-wrap {
     flex-shrink: 0;
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--ajtb-bg-gray);
 }
 
-.day-activity-image img {
+.day-activity-item.day-activity-card-pro .day-activity-image {
+    width: 160px;
+    min-height: 120px;
+    height: 100%;
+    min-height: 120px;
+    border-radius: 0;
+    overflow: hidden;
+    background: linear-gradient(145deg, #f0f2f5 0%, #e4e7ec 100%);
+}
+
+.day-activity-item.day-activity-card-pro .day-activity-image img {
     width: 100%;
     height: 100%;
+    min-height: 120px;
     object-fit: cover;
+    display: block;
 }
 
-.day-activity-details {
+.day-activity-image--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #f5f6f8 0%, #eaedf1 100%);
+}
+
+.day-activity-image-icon {
+    color: #b0b8c4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-activity-item.day-activity-card-pro .day-activity-details {
     flex: 1;
     min-width: 0;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.day-activity-header {
+.day-activity-item.day-activity-card-pro .day-activity-header {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
     margin-bottom: 8px;
 }
 
-.day-activity-header .activity-title {
-    font-size: 15px;
+.day-activity-item.day-activity-card-pro .activity-title {
+    font-size: 16px;
     font-weight: 600;
-    color: var(--ajtb-text);
+    color: var(--ajtb-text, #1a1a1a);
     flex: 1;
     min-width: 0;
+    letter-spacing: -0.01em;
 }
 
-.day-activity-header .activity-price {
-    font-size: 16px;
+.day-activity-item.day-activity-card-pro .activity-price {
+    font-size: 15px;
     font-weight: 700;
-    color: var(--ajtb-primary);
+    color: var(--ajtb-primary, #2563eb);
     white-space: nowrap;
 }
 
-.activity-time {
+.day-activity-item.day-activity-card-pro .activity-time {
     font-size: 13px;
-    color: var(--ajtb-text-muted);
+    color: var(--ajtb-text-muted, #64748b);
     margin-bottom: 8px;
 }
 
-.activity-description {
-    font-size: 13px;
-    color: var(--ajtb-text-muted);
-    line-height: 1.5;
+.day-activity-item.day-activity-card-pro .activity-description {
+    font-size: 14px;
+    color: var(--ajtb-text-muted, #64748b);
+    line-height: 1.55;
+    margin-top: 4px;
 }
 
-.day-activity-actions {
+.day-activity-item.day-activity-card-pro .day-activity-actions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     flex-shrink: 0;
+    padding: 16px 20px;
+    align-items: center;
+    border-left: 1px solid var(--ajtb-border, #e8e8e8);
+    background: rgba(0, 0, 0, 0.02);
 }
 
 .ajtb-btn-edit-activity {
-    padding: 6px 12px;
+    padding: 8px 14px;
     font-size: 13px;
     font-weight: 500;
-    background: var(--ajtb-bg);
-    color: var(--ajtb-text);
-    border: 1px solid var(--ajtb-border);
-    border-radius: 6px;
+    background: var(--ajtb-bg, #fff);
+    color: var(--ajtb-text, #1a1a1a);
+    border: 1px solid var(--ajtb-border, #e8e8e8);
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .ajtb-btn-edit-activity:hover {
-    background: var(--ajtb-bg-light);
-    border-color: var(--ajtb-primary);
-    color: var(--ajtb-primary);
+    background: var(--ajtb-bg-light, #f8fafc);
+    border-color: var(--ajtb-primary, #2563eb);
+    color: var(--ajtb-primary, #2563eb);
+}
+
+.day-activity-item .ajtb-btn-remove-activity {
+    margin-left: 0;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #fff;
+    color: #b91c1c;
+    border: 1px solid rgba(185, 28, 28, 0.35);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.day-activity-item .ajtb-btn-remove-activity:hover:not(:disabled) {
+    background: #b91c1c;
+    color: #fff;
+    border-color: #b91c1c;
+}
+
+.day-activity-item .ajtb-btn-remove-activity:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .day-activity-item.day-no-activities {
-    padding: 20px;
+    padding: 24px;
     text-align: center;
-    color: var(--ajtb-text-muted);
+    color: var(--ajtb-text-muted, #64748b);
     font-style: italic;
+    border-radius: 14px;
+    border: 1px dashed var(--ajtb-border, #e8e8e8);
 }
 
 /* Responsive modal */
@@ -3148,22 +3212,30 @@
         grid-template-columns: 1fr;
     }
 
-    .day-activity-item {
+    .day-activity-item.day-activity-card-pro {
         flex-direction: column;
     }
 
-    .day-activity-item-content {
+    .day-activity-item.day-activity-card-pro .day-activity-item-content {
         flex-direction: column;
     }
 
-    .day-activity-image {
+    .day-activity-item.day-activity-card-pro .day-activity-image-wrap,
+    .day-activity-item.day-activity-card-pro .day-activity-image {
         width: 100%;
-        height: 180px;
+        min-height: 200px;
+        height: 200px;
     }
 
-    .day-activity-actions {
+    .day-activity-item.day-activity-card-pro .day-activity-image img {
+        min-height: 200px;
+    }
+
+    .day-activity-item.day-activity-card-pro .day-activity-actions {
         width: 100%;
         justify-content: flex-end;
+        border-left: none;
+        border-top: 1px solid var(--ajtb-border, #e8e8e8);
     }
 }
 
