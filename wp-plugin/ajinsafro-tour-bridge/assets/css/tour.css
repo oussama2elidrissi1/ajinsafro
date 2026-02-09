@@ -918,7 +918,7 @@
 .ajtb-programme-mmt.programme-container {
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
-    column-gap: 24px;
+    column-gap: 14px;
     align-items: start;
     margin-top: 20px;
     max-width: none;
@@ -933,6 +933,8 @@
     gap: 0;
     min-width: 0;
     max-width: 280px;
+    width: 260px;
+    flex: 0 0 260px;
     padding: 4px 0 8px 0;
 }
 
@@ -1023,9 +1025,13 @@
     white-space: nowrap;
 }
 
-.ajtb-programme-center {
+.ajtb-programme-center,
+.itinerary__content {
     min-width: 0;
     width: 100%;
+    padding-left: 0;
+    margin-left: 0;
+    flex: 1;
 }
 
 .ajtb-day-panels {
@@ -1145,7 +1151,7 @@
 @media (min-width: 768px) and (max-width: 1199px) {
     .ajtb-programme-mmt.programme-container {
         grid-template-columns: 220px minmax(0, 1fr);
-        column-gap: 20px;
+        column-gap: 12px;
     }
 
     .ajtb-programme-days {
@@ -1154,6 +1160,8 @@
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         max-width: 220px;
+        width: 220px;
+        flex: 0 0 220px;
     }
 
     .ajtb-programme-days .day-plan__link {

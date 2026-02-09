@@ -10,7 +10,7 @@
     <p class="text-gray-600 rounded-lg bg-gray-100 px-4 py-3">L’itinéraire détaillé sera bientôt disponible.</p>
 @else
 <section id="itinerary" class="itinerary" aria-label="Programme du circuit">
-    <div class="grid grid-cols-1 lg:grid-cols-[minmax(200px,260px)_1fr] gap-6 lg:gap-8 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(200px,260px)_1fr] gap-3 lg:gap-3.5 items-start">
         {{-- Colonne gauche : Plan de séjour (timeline) — mobile: barre horizontale scrollable --}}
         <nav class="itinerary__nav day-plan-nav lg:sticky lg:top-24 flex flex-col lg:max-w-[280px] py-1 min-w-0 max-lg:flex-row max-lg:overflow-x-auto max-lg:gap-2 max-lg:pb-2 max-lg:mb-2" aria-label="Plan de séjour">
             <h3 class="day-plan__title text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3 px-0 max-lg:mb-0 max-lg:shrink-0 max-lg:mr-1">Plan de séjour</h3>
@@ -40,7 +40,7 @@
         </nav>
 
         {{-- Colonne droite : Détails par jour --}}
-        <div class="itinerary__content min-w-0 space-y-4">
+        <div class="itinerary__content min-w-0 flex-1 space-y-4 pl-0 ml-0">
             @foreach($days as $index => $day)
                 @php
                     $dayNum = $day->day_number ?? ($index + 1);
