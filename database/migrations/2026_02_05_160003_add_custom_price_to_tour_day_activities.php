@@ -21,7 +21,7 @@ return new class extends Migration
             return;
         }
 
-        $schema->table(self::TABLE, function (Blueprint $table) {
+        $schema->table(self::TABLE, function (Blueprint $table) use ($schema) {
             if (!$schema->hasColumn(self::TABLE, 'custom_price')) {
                 $table->decimal('custom_price', 10, 2)->nullable()->after('end_time');
             }
@@ -39,7 +39,7 @@ return new class extends Migration
             return;
         }
 
-        $schema->table(self::TABLE, function (Blueprint $table) {
+        $schema->table(self::TABLE, function (Blueprint $table) use ($schema) {
             if ($schema->hasColumn(self::TABLE, 'custom_price')) {
                 $table->dropColumn('custom_price');
             }
