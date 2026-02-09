@@ -47,6 +47,7 @@
             this.initFlightToggle();
             this.initFAQAccordion();
             this.initGallery();
+            this.initHeroGallerySlider();
             this.initShareButton();
             this.initSaveButton();
             this.initSmoothScroll();
@@ -880,6 +881,68 @@
             // Append and show
             $('body').append($lightbox).css('overflow', 'hidden');
             showImage(startIndex);
+        },
+
+        /**
+         * Hero gallery slider (mobile)
+         */
+        initHeroGallerySlider: function() {
+            var $slider = $('.ajtb-hero-gallery-slider');
+            if (!$slider.length) return;
+
+            var $track = $slider.find('.ajtb-hero-gallery-slider-track');
+            var $slides = $track.find('.ajtb-hero-gallery-slide');
+            var total = $slides.length;
+            if (total === 0) return;
+
+            var $dotsContainer = $slider.find('.ajtb-hero-gallery-slider-dots');
+            var i, $dot;
+            for (i = 0; i < total; i++) {
+                $dot = $('<button type="button" class="ajtb-hero-gallery-slider-dot" aria-label="' + (i + 1) + '"></button>');
+                $dotsContainer.append($dot);
+            }
+            var $dots = $dotsContainer.find('.ajtb-hero-gallery-slider-dot');
+            $dots.eq(0).addClass('is-active');
+
+            var current = 0;
+
+            function goTo(index) {
+                if (index < 0) index = total - 1;
+                if (index >= total) index = 0;
+                current = index;
+                $track.css('transform', 'translateX(-' + (current * 100) + '%)');
+                $dots.removeClass('is-active').eq(current).addClass('is-active');
+            }
+
+            $slider.find('.ajtb-hero-gallery-slider-prev').on('click', function() {
+                goTo(current - 1);
+            });
+
+            $slider.find('.ajtb-hero-gallery-slider-next').on('click', function() {
+                goTo(current + 1);
+            });
+
+            $dots.on('click', function() {
+                var idx = $dots.index(this);
+                goTo(idx);
+            });
+
+            // Swipe
+            var startX = 0, startY = 0;
+            $slider.on('touchstart', function(e) {
+                startX = e.originalEvent.touches[0].clientX;
+                startY = e.originalEvent.touches[0].clientY;
+            });
+            $slider.on('touchend', function(e) {
+                var endX = e.originalEvent.changedTouches[0].clientX;
+                var endY = e.originalEvent.changedTouches[0].clientY;
+                var dx = endX - startX;
+                var dy = endY - startY;
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+                    if (dx > 0) goTo(current - 1);
+                    else goTo(current + 1);
+                }
+            });
         },
 
         /**

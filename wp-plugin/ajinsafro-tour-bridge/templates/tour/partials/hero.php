@@ -1,6 +1,8 @@
 <?php
 /**
- * Hero Partial - Tour Header with Background Image
+ * Hero Partial - Gallery multi-images (MakeMyTrip/Booking style)
+ * Replaces single background image with grid: 1 main + 3-5 secondary.
+ * Data: hero_image (main) + gallery (secondary). Lightbox on click.
  *
  * @var array $tour Tour data
  * @package AjinsafroTourBridge
@@ -11,113 +13,169 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Image hero : hero_image (image principale) ou featured_image (même chose en fallback)
-$hero_image = $tour['hero_image']['url'] ?? $tour['featured_image']['url'] ?? '';
+$hero_url = $tour['hero_image']['url'] ?? $tour['featured_image']['url'] ?? '';
 $hero_alt = $tour['hero_image']['alt'] ?? $tour['featured_image']['alt'] ?? $tour['title'];
+$gallery = $tour['gallery'] ?? [];
+
+// Build hero gallery: main first, then gallery (skip duplicate of main), max 6
+$hero_gallery = [];
+if ($hero_url) {
+    $hero_gallery[] = [
+        'url'   => $hero_url,
+        'medium' => $tour['hero_image']['medium'] ?? $hero_url,
+        'alt'   => $hero_alt,
+    ];
+}
+$main_url_normalized = $hero_url ? rtrim($hero_url, '/') : '';
+foreach ($gallery as $img) {
+    if (count($hero_gallery) >= 6) {
+        break;
+    }
+    $u = isset($img['url']) ? rtrim($img['url'], '/') : '';
+    if ($u && $u !== $main_url_normalized) {
+        $hero_gallery[] = [
+            'url'    => $img['url'],
+            'medium' => $img['medium'] ?? $img['thumbnail'] ?? $img['url'],
+            'alt'    => $img['alt'] ?? $tour['title'],
+        ];
+    }
+}
+
+$has_gallery = count($hero_gallery) > 0;
+$total_photos = count($hero_gallery) + (count($gallery) > count($hero_gallery) ? count($gallery) - count($hero_gallery) : 0);
+$all_gallery = $hero_gallery;
+foreach ($gallery as $img) {
+    $u = isset($img['url']) ? $img['url'] : '';
+    if ($u && count($all_gallery) < 20) {
+        $exists = false;
+        foreach ($all_gallery as $a) {
+            if (rtrim($a['url'], '/') === rtrim($u, '/')) {
+                $exists = true;
+                break;
+            }
+        }
+        if (!$exists) {
+            $all_gallery[] = [
+                'url'    => $img['url'],
+                'medium' => $img['medium'] ?? $img['thumbnail'] ?? $img['url'],
+                'alt'    => $img['alt'] ?? $tour['title'],
+            ];
+        }
+    }
+}
 ?>
 
-<section class="ajtb-hero" <?php if ($hero_image): ?>style="background-image: url('<?php echo esc_url($hero_image); ?>');"<?php endif; ?>>
-    <div class="ajtb-hero-overlay"></div>
-    
+<section class="ajtb-hero ajtb-hero-gallery">
+    <?php if ($has_gallery): ?>
+        <!-- Desktop: grid 1 main + secondary -->
+        <div class="ajtb-hero-gallery-grid" role="region" aria-label="<?php esc_attr_e('Galerie du voyage', 'ajinsafro-tour-bridge'); ?>">
+            <?php
+            $main = $hero_gallery[0];
+            $secondary = array_slice($hero_gallery, 1, 5);
+            ?>
+            <div class="ajtb-hero-gallery-main">
+                <a href="<?php echo esc_url($main['url']); ?>" class="ajtb-hero-gallery-item" data-lightbox="tour-hero-gallery" data-index="0">
+                    <img src="<?php echo esc_url($main['medium']); ?>" alt="<?php echo esc_attr($main['alt']); ?>" loading="eager">
+                </a>
+            </div>
+            <div class="ajtb-hero-gallery-secondary">
+                <?php foreach ($secondary as $i => $img): ?>
+                    <a href="<?php echo esc_url($img['url']); ?>" class="ajtb-hero-gallery-item" data-lightbox="tour-hero-gallery" data-index="<?php echo $i + 1; ?>">
+                        <img src="<?php echo esc_url($img['medium']); ?>" alt="<?php echo esc_attr($img['alt']); ?>" loading="lazy">
+                    </a>
+                <?php endforeach; ?>
+                <?php if (count($all_gallery) > 6): ?>
+                    <a href="#gallery" class="ajtb-hero-gallery-item ajtb-hero-gallery-more">
+                        <span class="ajtb-hero-gallery-more-count">+<?php echo count($all_gallery) - 6; ?></span>
+                        <span class="ajtb-hero-gallery-more-label"><?php esc_html_e('Voir toutes les photos', 'ajinsafro-tour-bridge'); ?></span>
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Mobile: slider -->
+        <div class="ajtb-hero-gallery-slider" aria-hidden="true">
+            <div class="ajtb-hero-gallery-slider-track">
+                <?php foreach ($hero_gallery as $i => $img): ?>
+                    <a href="<?php echo esc_url($img['url']); ?>" class="ajtb-hero-gallery-slide" data-lightbox="tour-hero-gallery" data-index="<?php echo $i; ?>">
+                        <img src="<?php echo esc_url($img['medium']); ?>" alt="<?php echo esc_attr($img['alt']); ?>" loading="<?php echo $i === 0 ? 'eager' : 'lazy'; ?>">
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="ajtb-hero-gallery-slider-prev" aria-label="<?php esc_attr_e('Précédent', 'ajinsafro-tour-bridge'); ?>"></button>
+            <button type="button" class="ajtb-hero-gallery-slider-next" aria-label="<?php esc_attr_e('Suivant', 'ajinsafro-tour-bridge'); ?>"></button>
+            <div class="ajtb-hero-gallery-slider-dots"></div>
+        </div>
+
+        <?php if (count($all_gallery) > 6): ?>
+            <a href="#gallery" class="ajtb-hero-gallery-all-btn"><?php esc_html_e('Voir toutes les photos', 'ajinsafro-tour-bridge'); ?></a>
+        <?php endif; ?>
+    <?php else: ?>
+        <div class="ajtb-hero-gallery-placeholder">
+            <span class="ajtb-hero-gallery-placeholder-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="64" height="64" stroke="currentColor" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </span>
+            <span><?php esc_html_e('Aucune image', 'ajinsafro-tour-bridge'); ?></span>
+        </div>
+    <?php endif; ?>
+
+    <!-- Title bar (below gallery) -->
     <div class="ajtb-hero-content">
         <div class="ajtb-container">
-            <!-- Breadcrumbs -->
-            <nav class="ajtb-breadcrumbs" aria-label="Fil d'Ariane">
+            <nav class="ajtb-breadcrumbs" aria-label="<?php esc_attr_e('Fil d\'Ariane', 'ajinsafro-tour-bridge'); ?>">
                 <a href="<?php echo esc_url(home_url('/')); ?>">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                        <polyline points="9,22 9,12 15,12 15,22"></polyline>
-                    </svg>
-                    Accueil
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9,22 9,12 15,12 15,22"></polyline></svg>
+                    <?php esc_html_e('Accueil', 'ajinsafro-tour-bridge'); ?>
                 </a>
                 <span class="sep">/</span>
-                <a href="<?php echo esc_url(get_post_type_archive_link(AJTB_POST_TYPE)); ?>">Circuits</a>
+                <a href="<?php echo esc_url(get_post_type_archive_link(AJTB_POST_TYPE)); ?>"><?php esc_html_e('Circuits', 'ajinsafro-tour-bridge'); ?></a>
                 <?php if (!empty($tour['categories'])): ?>
                     <span class="sep">/</span>
-                    <a href="<?php echo esc_url($tour['categories'][0]['link']); ?>">
-                        <?php echo esc_html($tour['categories'][0]['name']); ?>
-                    </a>
+                    <a href="<?php echo esc_url($tour['categories'][0]['link']); ?>"><?php echo esc_html($tour['categories'][0]['name']); ?></a>
                 <?php endif; ?>
                 <span class="sep">/</span>
                 <span class="current"><?php echo esc_html(ajtb_truncate($tour['title'], 40)); ?></span>
             </nav>
 
-            <!-- Title & Location -->
             <div class="ajtb-hero-title-wrap">
-                <?php if ($tour['is_featured']): ?>
+                <?php if (!empty($tour['is_featured'])): ?>
                     <span class="ajtb-badge featured">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"></polygon>
-                        </svg>
-                        Populaire
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"></polygon></svg>
+                        <?php esc_html_e('Populaire', 'ajinsafro-tour-bridge'); ?>
                     </span>
                 <?php endif; ?>
-
-                <?php if ($tour['pricing']['has_discount']): ?>
-                    <span class="ajtb-badge discount">
-                        -<?php echo (int)$tour['pricing']['discount']; ?>%
-                    </span>
+                <?php if (!empty($tour['pricing']['has_discount'])): ?>
+                    <span class="ajtb-badge discount">-<?php echo (int) $tour['pricing']['discount']; ?>%</span>
                 <?php endif; ?>
-
                 <h1 class="ajtb-hero-title"><?php echo esc_html($tour['title']); ?></h1>
-
                 <?php if (!empty($tour['address'])): ?>
                     <div class="ajtb-hero-location">
-                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                         <span><?php echo esc_html($tour['address']); ?></span>
                     </div>
                 <?php endif; ?>
             </div>
 
-            <!-- Quick Stats -->
             <div class="ajtb-hero-stats">
-                <?php if ($tour['duration_day'] > 0): ?>
+                <?php if (!empty($tour['duration_day'])): ?>
                     <div class="stat-item">
                         <span class="stat-value"><?php echo esc_html($tour['duration_day']); ?></span>
-                        <span class="stat-label">Jour<?php echo $tour['duration_day'] > 1 ? 's' : ''; ?></span>
+                        <span class="stat-label"><?php echo $tour['duration_day'] > 1 ? __('Jours', 'ajinsafro-tour-bridge') : __('Jour', 'ajinsafro-tour-bridge'); ?></span>
                     </div>
                 <?php endif; ?>
-
-                <?php if ($tour['rating'] > 0): ?>
+                <?php if (!empty($tour['rating'])): ?>
                     <div class="stat-item">
                         <span class="stat-value"><?php echo number_format($tour['rating'], 1); ?></span>
-                        <span class="stat-label">Note</span>
+                        <span class="stat-label"><?php esc_html_e('Note', 'ajinsafro-tour-bridge'); ?></span>
                     </div>
                 <?php endif; ?>
-
-                <?php if (!empty($tour['tour_types'])): ?>
+                <?php if (!empty($tour['tour_types'][0]['name'])): ?>
                     <div class="stat-item">
                         <span class="stat-value"><?php echo esc_html($tour['tour_types'][0]['name']); ?></span>
-                        <span class="stat-label">Type</span>
+                        <span class="stat-label"><?php esc_html_e('Type', 'ajinsafro-tour-bridge'); ?></span>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
-    </div>
-
-    <!-- Gallery Thumbnails Preview -->
-    <?php if (!empty($tour['gallery']) && count($tour['gallery']) > 1): ?>
-        <div class="ajtb-hero-gallery-preview">
-            <?php foreach (array_slice($tour['gallery'], 0, 4) as $index => $image): ?>
-                <a href="#gallery" class="preview-thumb" data-index="<?php echo $index; ?>">
-                    <img src="<?php echo esc_url($image['thumbnail']); ?>" 
-                         alt="<?php echo esc_attr($image['alt']); ?>" 
-                         loading="lazy">
-                    <?php if ($index === 3 && count($tour['gallery']) > 4): ?>
-                        <span class="more-count">+<?php echo count($tour['gallery']) - 4; ?></span>
-                    <?php endif; ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-
-    <!-- Scroll Indicator -->
-    <div class="ajtb-hero-scroll">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
-            <path d="M12 5v14M5 12l7 7 7-7"></path>
-        </svg>
     </div>
 </section>

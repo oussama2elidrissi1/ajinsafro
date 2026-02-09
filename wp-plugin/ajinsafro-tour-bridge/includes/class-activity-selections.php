@@ -135,11 +135,15 @@ class AJTB_Activity_Selections {
             }
             if (!empty($added_by_day[$day_id])) {
                 foreach ($added_by_day[$day_id] as $aid) {
+                    $cat = isset($catalog[$aid]) ? $catalog[$aid] : [];
                     $new_activities[] = [
                         'id' => 0,
                         'activity_id' => $aid,
-                        'title' => isset($catalog[$aid]) ? $catalog[$aid]['title'] : '',
-                        'description' => isset($catalog[$aid]) ? $catalog[$aid]['description'] : '',
+                        'title' => isset($cat['title']) ? $cat['title'] : '',
+                        'description' => isset($cat['description']) ? $cat['description'] : '',
+                        'image_url' => isset($cat['image_url']) ? $cat['image_url'] : null,
+                        'activity_image_id' => isset($cat['activity_image_id']) ? $cat['activity_image_id'] : null,
+                        'base_price' => isset($cat['base_price']) ? $cat['base_price'] : null,
                         'is_mandatory' => false,
                         'is_included' => true,
                         'client_added' => true,
@@ -153,10 +157,10 @@ class AJTB_Activity_Selections {
     }
 
     /**
-     * Get activity title/description from catalog by ids.
+     * Get activity data from catalog by ids (title, description, image_url, base_price, etc.).
      *
      * @param int[] $activity_ids
-     * @return array [activity_id => ['title'=>, 'description'=>]]
+     * @return array [activity_id => ['title'=>, 'description'=>, 'image_url'=>?, 'activity_image_id'=>?, 'base_price'=>?]]
      */
     private function get_catalog_activities($activity_ids) {
         if (empty($activity_ids)) {
@@ -169,14 +173,24 @@ class AJTB_Activity_Selections {
         $ids = array_map('intval', $activity_ids);
         $placeholders = implode(',', array_fill(0, count($ids), '%d'));
         $rows = $this->wpdb->get_results(
-            $this->wpdb->prepare("SELECT id, title, description FROM $table WHERE id IN ($placeholders)", $ids),
+            $this->wpdb->prepare("SELECT id, title, description, image_id, base_price FROM $table WHERE id IN ($placeholders)", $ids),
             ARRAY_A
         );
         $out = [];
         foreach ($rows as $r) {
+            $image_url = null;
+            $image_id = isset($r['image_id']) ? (int) $r['image_id'] : 0;
+            if ($image_id && function_exists('ajtb_get_attachment_image_url')) {
+                $image_url = ajtb_get_attachment_image_url($image_id, 'medium');
+            } elseif ($image_id && function_exists('wp_get_attachment_image_url')) {
+                $image_url = wp_get_attachment_image_url($image_id, 'medium');
+            }
             $out[(int) $r['id']] = [
                 'title' => $r['title'] ?? '',
                 'description' => $r['description'] ?? '',
+                'image_url' => $image_url,
+                'activity_image_id' => $image_id ?: null,
+                'base_price' => isset($r['base_price']) && $r['base_price'] !== null ? (float) $r['base_price'] : null,
             ];
         }
         return $out;

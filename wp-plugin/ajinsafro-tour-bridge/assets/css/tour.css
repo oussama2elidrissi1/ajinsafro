@@ -334,6 +334,318 @@
 }
 
 /* ===================================
+   Hero Gallery (MakeMyTrip/Booking style)
+   =================================== */
+.ajtb-hero.ajtb-hero-gallery {
+    min-height: 0;
+    background-image: none;
+    background-color: var(--ajtb-bg-gray, #f1f3f5);
+    align-items: stretch;
+    display: block;
+}
+
+.ajtb-hero-gallery-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    height: 420px;
+    max-height: 50vh;
+    overflow: hidden;
+    border-radius: 0 0 16px 16px;
+}
+
+.ajtb-hero-gallery-main {
+    grid-row: 1 / -1;
+    border-radius: 0 0 0 16px;
+    overflow: hidden;
+}
+
+.ajtb-hero-gallery-main .ajtb-hero-gallery-item {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.ajtb-hero-gallery-main .ajtb-hero-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.ajtb-hero-gallery-main .ajtb-hero-gallery-item:hover img {
+    transform: scale(1.03);
+}
+
+.ajtb-hero-gallery-secondary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    border-radius: 0 0 16px 0;
+    overflow: hidden;
+}
+
+.ajtb-hero-gallery-secondary .ajtb-hero-gallery-item {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.ajtb-hero-gallery-secondary .ajtb-hero-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.ajtb-hero-gallery-secondary .ajtb-hero-gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.ajtb-hero-gallery-item {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.ajtb-hero-gallery-more {
+    background: linear-gradient(135deg, var(--ajtb-primary, #2563eb) 0%, #1d4ed8 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    transition: opacity 0.2s ease;
+}
+
+.ajtb-hero-gallery-more:hover {
+    opacity: 0.95;
+    color: #fff;
+}
+
+.ajtb-hero-gallery-more-count {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.ajtb-hero-gallery-more-label {
+    font-size: 13px;
+    text-align: center;
+    padding: 0 12px;
+}
+
+.ajtb-hero-gallery-all-btn {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.ajtb-hero-gallery-all-btn:hover {
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+}
+
+.ajtb-hero-gallery-placeholder {
+    height: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(145deg, #e9ecef 0%, #dee2e6 100%);
+    color: #6c757d;
+    font-size: 15px;
+}
+
+.ajtb-hero-gallery-placeholder-icon {
+    opacity: 0.5;
+}
+
+/* Hero content bar below gallery */
+.ajtb-hero.ajtb-hero-gallery .ajtb-hero-content {
+    padding: 28px 0 32px;
+    background: #fff;
+    border-bottom: 1px solid var(--ajtb-border, #e9ecef);
+}
+
+.ajtb-hero.ajtb-hero-gallery .ajtb-breadcrumbs,
+.ajtb-hero.ajtb-hero-gallery .ajtb-breadcrumbs a,
+.ajtb-hero.ajtb-hero-gallery .ajtb-breadcrumbs .current {
+    color: #495057;
+}
+
+.ajtb-hero.ajtb-hero-gallery .ajtb-breadcrumbs a:hover {
+    color: var(--ajtb-primary, #2563eb);
+}
+
+.ajtb-hero.ajtb-hero-gallery .ajtb-hero-title {
+    color: #1a1a1a;
+    text-shadow: none;
+    font-size: 28px;
+}
+
+.ajtb-hero.ajtb-hero-gallery .ajtb-hero-location {
+    color: #495057;
+}
+
+.ajtb-hero.ajtb-hero-gallery .ajtb-hero-stats .stat-value {
+    color: #1a1a1a;
+}
+
+.ajtb-hero.ajtb-hero-gallery .ajtb-hero-stats .stat-label {
+    color: #6c757d;
+}
+
+/* Mobile: hide grid, show slider */
+.ajtb-hero-gallery-slider {
+    display: none;
+}
+
+.ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-prev,
+.ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s ease;
+}
+
+.ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-prev {
+    left: 12px;
+}
+
+.ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-next {
+    right: 12px;
+}
+
+.ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-prev::before,
+.ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-next::before {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-left: 2px solid #333;
+    border-bottom: 2px solid #333;
+    top: 50%;
+    margin-top: -5px;
+}
+
+.ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-prev::before {
+    left: 16px;
+    transform: rotate(-45deg);
+}
+
+.ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-next::before {
+    right: 16px;
+    left: auto;
+    border-left: none;
+    border-right: 2px solid #333;
+    border-bottom: 2px solid #333;
+    transform: rotate(45deg);
+}
+
+.ajtb-hero-gallery-slider-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    gap: 8px;
+}
+
+.ajtb-hero-gallery-slider-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.ajtb-hero-gallery-slider-dot.is-active {
+    background: #fff;
+    transform: scale(1.2);
+}
+
+@media (max-width: 767px) {
+    .ajtb-hero-gallery-grid {
+        display: none;
+    }
+
+    .ajtb-hero-gallery-slider {
+        display: block;
+        position: relative;
+        height: 280px;
+        overflow: hidden;
+        border-radius: 0 0 16px 16px;
+    }
+
+    .ajtb-hero-gallery-slider-track {
+        display: flex;
+        height: 100%;
+        transition: transform 0.35s ease-out;
+    }
+
+    .ajtb-hero-gallery-slider-slide,
+    .ajtb-hero-gallery-slider .ajtb-hero-gallery-slide {
+        flex: 0 0 100%;
+        width: 100%;
+        height: 100%;
+    }
+
+    .ajtb-hero-gallery-slider-slide a,
+    .ajtb-hero-gallery-slider .ajtb-hero-gallery-slide a {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .ajtb-hero-gallery-slider-slide img,
+    .ajtb-hero-gallery-slider .ajtb-hero-gallery-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .ajtb-hero-gallery-all-btn {
+        bottom: 12px;
+        left: 12px;
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+}
+
+/* ===================================
    Layout
    =================================== */
 .ajtb-tour-layout {
