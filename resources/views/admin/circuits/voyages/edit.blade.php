@@ -574,7 +574,7 @@
                                 @for($i = 0; $i < 5; $i++)
                                     @php
                                         $img_id = $hero_gallery_ids[$i] ?? '';
-                                        $img_url = $img_id ? wp_get_attachment_image_url($img_id, 'thumbnail') : '';
+                                        $img_url = $img_id ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $img_id) : '';
                                     @endphp
                                     <div class="col-md-6 col-lg-4">
                                         <div class="hero-gallery-item border rounded p-2 bg-white" data-index="{{ $i }}">
