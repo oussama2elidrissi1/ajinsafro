@@ -54,9 +54,9 @@
     padding: 0 20px;
 }
 
-/* Wide container for tour detail (MakeMyTrip-style): max-width 1500px, reduced side padding */
+/* Wide container for tour detail (MakeMyTrip-style): utilisé hors .ajtb-tour-page */
 .aj-wide-container {
-    max-width: 1500px;
+    max-width: 1320px;
     margin: 0 auto;
     padding-left: 16px;
     padding-right: 16px;
@@ -64,32 +64,33 @@
 
 /* ===================================
    Page single tour – Layout MakeMyTrip (contenu large, sidebar fixe)
-   Breathing space horizontal : max-width + padding gauche/droite (ne touche pas aux colonnes).
+   Container centré, max-width 1200–1320px, padding horizontal pour respiration (MakeMyTrip/Booking/Expedia).
    =================================== */
 .ajtb-tour-page {
     --ajtb-sidebar-width: 320px;
-    --ajtb-layout-gap: 32px;
+    --ajtb-layout-gap: 28px; /* min 24px entre contenu principal et sidebar */
 }
 
-/* Container principal : .aj-wide-container (barre search, aperçu, programme, sidebar prix) */
+/* Container principal : centré, max-width clair, padding cohérent */
 .ajtb-tour-page .aj-wide-container {
     margin-left: auto;
     margin-right: auto;
     width: 100%;
+    max-width: 1320px;
     padding-left: 24px;
     padding-right: 24px;
 }
 
-/* Desktop ≥1400px : max-width 1360px, padding 32px (breathing space type MakeMyTrip/Booking) */
+/* Desktop large (≥1400px) : max-width 1320px, padding 32px */
 @media (min-width: 1400px) {
     .ajtb-tour-page .aj-wide-container {
-        max-width: 1360px;
+        max-width: 1320px;
         padding-left: 32px;
         padding-right: 32px;
     }
 }
 
-/* Desktop 1200–1399px : max-width 1280px, padding 28px */
+/* Desktop (1200–1399px) : max-width 1280px, padding 28px */
 @media (min-width: 1200px) and (max-width: 1399px) {
     .ajtb-tour-page .aj-wide-container {
         max-width: 1280px;
@@ -98,14 +99,15 @@
     }
 }
 
-/* 992–1199px : layout 2 colonnes conservé, padding horizontal pour lisibilité */
+/* Tablet (992–1199px) : 2 colonnes, padding ~20px */
 @media (min-width: 992px) and (max-width: 1199px) {
     .ajtb-tour-page .aj-wide-container {
-        padding-left: 24px;
-        padding-right: 24px;
+        padding-left: 20px;
+        padding-right: 20px;
     }
 }
 
+/* Grille contenu | sidebar : gap min 24px, sidebar ne colle pas au bord (padding-right du container) */
 .ajtb-tour-page .ajtb-tour-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--ajtb-sidebar-width);
@@ -908,11 +910,14 @@
 }
 
 /* ===================================
-   Programme MakeMyTrip : 3 colonnes (jours sticky | contenu 1 jour | sidebar prix en page)
+   Programme MakeMyTrip : 2 colonnes (Plan de séjour | Détails) — priorité au contenu
+   Desktop: gauche 260px max, droite 1fr. Tablet: gauche 220px. Mobile: 1 colonne, jours en pills horizontaux.
    =================================== */
+
+/* Desktop ≥1200px : gauche 260px (max 280px), détails = reste ; gap 24px */
 .ajtb-programme-mmt.programme-container {
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: 260px minmax(0, 1fr);
     column-gap: 24px;
     align-items: start;
     margin-top: 20px;
@@ -925,34 +930,112 @@
     top: 90px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
+    min-width: 0;
+    max-width: 280px;
+    padding: 4px 0 8px 0;
 }
 
-.ajtb-programme-days-title {
+.ajtb-programme-days-title,
+.day-plan__title {
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--ajtb-text-muted);
-    margin-bottom: 8px;
+    margin: 0 0 12px 0;
+    padding: 0;
+}
+
+/* ----- Day Plan timeline (ligne verticale + dots + label) ----- */
+.day-plan {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 20px;
+    position: relative;
+    border-left: none;
+}
+
+.day-plan::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--ajtb-border);
+}
+
+.day-plan__item {
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+.day-plan__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px 10px 6px 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    color: var(--ajtb-text);
+    cursor: pointer;
+    border-radius: 999px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.day-plan__link:hover {
+    background: var(--ajtb-bg-light);
+    color: var(--ajtb-text);
+}
+
+.day-plan__link.is-active,
+.day-plan__link.active {
+    background: var(--ajtb-primary);
+    color: #fff;
+}
+
+.day-plan__dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ajtb-border);
+    position: relative;
+    z-index: 1;
+}
+
+.day-plan__link.is-active .day-plan__dot,
+.day-plan__link.active .day-plan__dot {
+    background: #fff;
+}
+
+.day-plan__label {
+    font-size: 13px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ajtb-programme-center {
     min-width: 0;
+    width: 100%;
+}
+
+.ajtb-day-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
 .ajtb-day-content-panel {
-    display: none;
     min-width: 0;
-}
-
-.ajtb-day-content-panel.is-selected,
-.ajtb-day-content-panel[data-day]:not([hidden]) {
-    display: block;
-}
-
-.ajtb-day-content-panel[hidden] {
-    display: none !important;
 }
 
 .ajtb-day-header-mmt {
@@ -1053,13 +1136,38 @@
 
 .ajtb-programme-mmt .ajtb-block-mmt .ajtb-card-wrap,
 .ajtb-programme-mmt .ajtb-block-mmt .ajtb-card-with-image {
-    border-radius: 10px;
+    border-radius: 20px;
     overflow: hidden;
     border: 1px solid var(--ajtb-border);
 }
 
-/* Responsive : stack jours au-dessus du contenu, sticky optionnel */
-@media (max-width: 1199px) {
+/* Laptop / Tablet (768px – 1199px) : gauche 220px, détails priorité ; gauche scrollable si besoin */
+@media (min-width: 768px) and (max-width: 1199px) {
+    .ajtb-programme-mmt.programme-container {
+        grid-template-columns: 220px minmax(0, 1fr);
+        column-gap: 20px;
+    }
+
+    .ajtb-programme-days {
+        max-height: min(70vh, 480px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        max-width: 220px;
+    }
+
+    .ajtb-programme-days .day-plan__link {
+        padding: 5px 8px 5px 0;
+    }
+
+    .ajtb-programme-days .day-plan__dot {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+/* Mobile (< 768px) : 1 colonne, Plan de séjour en barre horizontale scrollable (pills) */
+@media (max-width: 767px) {
     .ajtb-programme-mmt.programme-container {
         grid-template-columns: 1fr;
         row-gap: 16px;
@@ -1068,21 +1176,75 @@
     .ajtb-programme-days {
         position: static;
         flex-direction: row;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 8px;
+        max-width: none;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 0 8px 0;
+        padding-left: 0;
+        margin: 0 -4px 0 0;
     }
 
-    .ajtb-programme-days-title {
-        width: 100%;
+    .ajtb-programme-days::before {
+        display: none;
     }
 
-    .ajtb-programme-days .aj-day-link {
-        padding-left: 14px;
+    .day-plan {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        padding: 0;
+        gap: 8px;
+        flex-shrink: 0;
     }
 
-    .ajtb-programme-days .aj-day-link-num {
-        position: static;
-        transform: none;
+    .day-plan::before {
+        display: none;
+    }
+
+    .ajtb-programme-days::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .day-plan__title {
+        flex-shrink: 0;
+        font-size: 11px;
+        margin: 0 8px 0 0;
+        padding-right: 4px;
+        white-space: nowrap;
+    }
+
+    .day-plan__item {
+        flex-shrink: 0;
+    }
+
+    /* Pills : chaque jour en chip non rétréci */
+    .day-plan__link {
+        flex-shrink: 0;
+        min-width: max-content;
+        padding: 8px 12px;
+    }
+
+    .day-plan__label {
+        white-space: nowrap;
+    }
+
+    /* Détails 100% width, pas d’overflow */
+    .ajtb-programme-center {
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    .ajtb-programme-mmt .ajtb-day-content-panel {
+        padding: 16px;
+    }
+
+    .ajtb-programme-mmt .ajtb-block-mmt .ajtb-card-with-image,
+    .ajtb-programme-mmt .ajtb-block-mmt .ajtb-card-wrap {
+        max-width: 100%;
     }
 }
 
@@ -1264,89 +1426,141 @@
     margin-bottom: 20px;
 }
 
-/* Flight card (in day content) */
+/* Flight card (MakeMyTrip-style) */
 .aj-flight-card {
     background: var(--ajtb-bg);
-    border-radius: var(--ajtb-radius);
+    border-radius: 14px;
     border: 1px solid var(--ajtb-border);
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
 }
 
 .aj-flight-card--removed {
     display: none !important;
 }
 
-.aj-flight-card--unavailable .aj-flight-card__unavailable-msg {
-    color: var(--ajtb-text-muted);
-    font-style: italic;
+.aj-flight-card--unavailable {
+    opacity: 0.75;
 }
 
 .aj-flight-card__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     padding: 12px 16px;
     background: var(--ajtb-bg-light);
     border-bottom: 1px solid var(--ajtb-border);
 }
 
-.aj-flight-card__title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ajtb-text);
-}
-
-.aj-flight-card__remove {
-    background: none;
-    border: none;
-    color: var(--ajtb-danger);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 0 4px;
-}
-
-.aj-flight-card__remove:hover {
-    text-decoration: underline;
-}
-
-.aj-flight-card__body {
+.aj-flight-card__header-left {
     display: flex;
-    align-items: stretch;
-    padding: 16px;
-    gap: 16px;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
 }
 
-.aj-flight-card__col {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.aj-flight-card__icon-inner {
-    width: 48px;
-    height: 48px;
-    display: flex;
+.aj-flight-card__header-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     background: var(--ajtb-primary-light);
     color: var(--ajtb-primary);
-    border-radius: 50%;
-    font-size: 20px;
+    flex: 0 0 auto;
 }
 
-.aj-flight-card__route {
+.aj-flight-card__title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ajtb-text);
+}
+
+.aj-flight-card__title-sep {
+    color: var(--ajtb-text-muted);
+}
+
+.aj-flight-card__title-route {
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.aj-flight-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.aj-flight-card__action {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.aj-flight-card__edit {
+    color: var(--ajtb-primary);
+}
+
+.aj-flight-card__remove {
+    color: var(--ajtb-danger);
+}
+
+.aj-flight-card__body {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+}
+
+.aj-flight-card__left {
+    flex: 0 0 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aj-flight-card__icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f2f6ff;
+    color: var(--ajtb-primary);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.aj-flight-card__center {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
 }
 
-.aj-flight-card__dep,
-.aj-flight-card__arr {
-    text-align: center;
+.aj-flight-card__route {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+}
+
+.aj-flight-card__point {
+    min-width: 110px;
 }
 
 .aj-flight-card__date {
@@ -1356,38 +1570,90 @@
     margin-bottom: 2px;
 }
 
-.aj-flight-card__place {
-    font-size: 14px;
+.aj-flight-card__city {
+    font-size: 15px;
     font-weight: 600;
     color: var(--ajtb-text);
 }
 
 .aj-flight-card__arrow {
-    color: var(--ajtb-border);
-    font-size: 18px;
+    color: var(--ajtb-primary);
+    display: inline-flex;
+    align-items: center;
+}
+
+.aj-flight-card__right {
+    flex: 0 0 150px;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .aj-flight-card__baggage {
     font-size: 12px;
     color: var(--ajtb-text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.aj-flight-card__baggage div {
-    margin-bottom: 4px;
+.aj-flight-card__baggage-label {
+    color: var(--ajtb-text);
+    font-weight: 600;
+    margin-right: 4px;
 }
 
 .aj-flight-card__badge-wrap {
-    padding: 0 16px 12px;
+    padding: 0 16px 14px;
 }
 
 .aj-flight-card__badge--tentative {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 4px 10px;
-    border-radius: 20px;
-    background: #f5e6d3;
-    color: #856404;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #8a5b00;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
+}
+
+.aj-flight-card__badge-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+@media (max-width: 767px) {
+    .aj-flight-card__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .aj-flight-card__actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .aj-flight-card__body {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .aj-flight-card__center {
+        width: 100%;
+    }
+    .aj-flight-card__route {
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .aj-flight-card__point {
+        min-width: 0;
+    }
+    .aj-flight-card__right {
+        width: 100%;
+        justify-content: flex-start;
+        border-top: 1px dashed var(--ajtb-border);
+        padding-top: 8px;
+    }
 }
 
 /* Transfer & Hotel cards: same width/padding as flight card */
@@ -1503,21 +1769,57 @@
 }
 
 .ajtb-card-with-image {
-    background: var(--ajtb-bg);
-    border-radius: var(--ajtb-radius);
+    background: #fff;
+    border-radius: 20px;
     border: 1px solid var(--ajtb-border);
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    box-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
     height: 100%;
     display: flex;
     flex-direction: column;
 }
+.ajtb-card-with-image.ajtb-card--transfer {
+    flex-direction: row;
+}
+.ajtb-card-with-image.ajtb-card--hotel {
+    flex-direction: column;
+}
+.ajtb-card-with-image.ajtb-card--hotel .ajtb-card-image {
+    height: 220px;
+}
 .ajtb-card-image {
     width: 100%;
-    height: 120px;
+    height: 160px;
     background-size: cover;
     background-position: center;
     flex-shrink: 0;
+    position: relative;
+}
+.ajtb-card-with-image.ajtb-card--transfer .ajtb-card-image {
+    width: 220px;
+    min-height: 180px;
+}
+.ajtb-card-image:not(.has-image)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
+}
+.ajtb-card-image:not(.has-image)::before {
+    content: "\2708";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: rgba(0,0,0,0.35);
+}
+.ajtb-card-with-image.ajtb-card--hotel .ajtb-card-image:not(.has-image)::before {
+    content: "\1F3E8";
+}
+.ajtb-card-with-image.ajtb-card--transfer .ajtb-card-image:not(.has-image)::before {
+    content: "\1F697";
 }
 .ajtb-card-image--transfer {
     background-color: #e8f4fc;
@@ -1528,7 +1830,7 @@
     background-image: linear-gradient(135deg, #f5f0e8 0%, #e8dfd0 100%);
 }
 .ajtb-card-inner {
-    padding: 16px;
+    padding: 18px 20px;
     flex: 1;
     min-width: 0;
 }
@@ -1536,6 +1838,229 @@
     margin-bottom: 0;
     box-shadow: none;
     border: none;
+}
+
+/* Transfer + Hotel cards (shared language) */
+.ajtb-transfer-card,
+.ajtb-hotel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--ajtb-text);
+}
+
+.ajtb-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ajtb-card-head-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ajtb-card-head-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--ajtb-primary-light);
+    color: var(--ajtb-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ajtb-card-head-text {
+    min-width: 0;
+}
+
+.ajtb-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ajtb-text);
+}
+
+.ajtb-card-subtitle {
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+}
+
+.ajtb-card-date {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+    background: var(--ajtb-bg-light);
+    border: 1px solid var(--ajtb-border);
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.ajtb-card-divider {
+    height: 1px;
+    background: var(--ajtb-border);
+    opacity: 0.8;
+}
+
+.ajtb-card-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ajtb-card-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ajtb-text);
+}
+
+.ajtb-card-action {
+    background: transparent;
+    border: 0;
+    color: var(--ajtb-primary);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ajtb-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ajtb-card-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ajtb-text);
+}
+
+.ajtb-card-route {
+    font-size: 13px;
+    color: var(--ajtb-text-muted);
+}
+
+.ajtb-card-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+}
+
+.ajtb-card-info-item {
+    display: inline-flex;
+    align-items: center;
+}
+
+.ajtb-card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ajtb-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ajtb-card-notes {
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+    background: var(--ajtb-bg-light);
+    padding: 8px 12px;
+    border-radius: 10px;
+}
+
+.ajtb-card-footer {
+    display: flex;
+    align-items: center;
+}
+
+.ajtb-card-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Hotel specifics */
+.ajtb-hotel-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ajtb-hotel-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ajtb-hotel-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--ajtb-primary-light);
+    color: var(--ajtb-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ajtb-hotel-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ajtb-hotel-name-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ajtb-text);
+}
+
+.ajtb-hotel-stars {
+    color: #f59e0b;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.ajtb-hotel-dates {
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+}
+
+@media (max-width: 991px) {
+    .ajtb-card-with-image.ajtb-card--transfer {
+        flex-direction: column;
+    }
+    .ajtb-card-with-image.ajtb-card--transfer .ajtb-card-image {
+        width: 100%;
+        height: 160px;
+    }
 }
 .ajtb-card-wrap {
     margin-bottom: 0;
@@ -2737,11 +3262,20 @@
     }
 }
 
+/* Tablet étroit / mobile large (769–991px) : padding 20px */
+@media (min-width: 769px) and (max-width: 991px) {
+    .ajtb-tour-page .aj-wide-container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
 @media (max-width: 768px) {
     .ajtb-container {
         padding: 0 16px;
     }
 
+    /* Mobile : padding 16px pour respiration */
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         padding-left: 16px;

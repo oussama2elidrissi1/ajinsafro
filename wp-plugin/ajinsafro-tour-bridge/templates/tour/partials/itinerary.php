@@ -176,27 +176,36 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
         <span class="section-badge"><?php echo count($itinerary); ?> jour<?php echo count($itinerary) > 1 ? 's' : ''; ?></span>
     </h2>
 
-    <!-- Layout MakeMyTrip : 3 colonnes (jours sticky | contenu du jour | sidebar prix déjà en page) -->
-    <div class="ajtb-programme-mmt programme-container">
-        <nav class="ajtb-programme-days aj-day-plan-nav" aria-label="<?php esc_attr_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?>">
-            <div class="ajtb-programme-days-title"><?php esc_html_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?></div>
-            <?php foreach ($itinerary as $index => $day): 
-                $day_num = $day['day'] ?? ($index + 1);
-                $day_mode = isset($day['mode']) ? $day['mode'] : 'program';
-                $day_title_short = !empty($day['day_title']) ? $day['day_title'] : ('Jour ' . $day_num);
-                if ($day_mode === 'free') {
-                    $day_title_short = __('Jour libre', 'ajinsafro-tour-bridge');
-                } elseif (strlen($day_title_short) > 28) {
-                    $day_title_short = wp_trim_words($day_title_short, 4);
-                }
-            ?>
-                <button type="button" class="aj-day-link aj-day-nav-item <?php echo $index === 0 ? 'active is-active' : ''; ?>" data-day-index="<?php echo $index; ?>" data-day="<?php echo $day_num; ?>" data-aj-nav-day="<?php echo $day_num; ?>">
-                    <span class="aj-day-link-num"><?php echo $day_num; ?></span>
-                    <span class="aj-day-link-title"><?php echo esc_html($day_title_short); ?></span>
-                </button>
-            <?php endforeach; ?>
+    <!-- Layout Day Plan : timeline gauche (dot + ligne) + détails droite -->
+    <div class="itinerary ajtb-programme-mmt programme-container">
+        <nav class="itinerary__nav ajtb-programme-days aj-day-plan-nav" aria-label="<?php esc_attr_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?>">
+            <h3 class="day-plan__title"><?php esc_html_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?></h3>
+            <ul class="day-plan">
+                <?php foreach ($itinerary as $index => $day): 
+                    $day_num = $day['day'] ?? ($index + 1);
+                    $day_mode = isset($day['mode']) ? $day['mode'] : 'program';
+                    $day_date = isset($day['date']) ? $day['date'] : '';
+                    if ($day_mode === 'free') {
+                        $day_label = __('Jour libre', 'ajinsafro-tour-bridge');
+                    } elseif (!empty($day_date) && is_string($day_date)) {
+                        $day_label = date_i18n('d M, D', strtotime($day_date));
+                    } elseif (!empty($day['day_title'])) {
+                        $day_label = strlen($day['day_title']) > 24 ? wp_trim_words($day['day_title'], 3) : $day['day_title'];
+                    } else {
+                        $day_label = 'Jour ' . $day_num;
+                    }
+                    $is_active = $index === 0;
+                ?>
+                    <li class="day-plan__item">
+                        <button type="button" class="day-plan__link aj-day-nav-item <?php echo $is_active ? 'active is-active' : ''; ?>" data-day-index="<?php echo $index; ?>" data-day="<?php echo $day_num; ?>" data-aj-nav-day="<?php echo $day_num; ?>" id="aj-day-nav-<?php echo $day_num; ?>">
+                            <span class="day-plan__dot"></span>
+                            <span class="day-plan__label"><?php echo esc_html($day_label); ?></span>
+                        </button>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
         </nav>
-        <div class="ajtb-programme-center aj-day-plan-content">
+        <div class="itinerary__content ajtb-programme-center aj-day-plan-content">
             <div class="ajtb-day-panels">
         <?php foreach ($itinerary as $index => $day): 
             $day_number = $day['day'] ?? ($index + 1);
@@ -209,7 +218,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
             $day_activity_ids = array_map(function ($a) { return (int) ($a['activity_id'] ?? 0); }, $activities);
             $inclus_line = $ajtb_day_inclus($day, $index, $total_days);
         ?>
-            <div class="ajtb-day-content-panel day-card <?php echo $index === 0 ? 'is-selected' : ''; ?>" id="aj-day-panel-<?php echo $day_number; ?>" data-aj-day-panel="<?php echo $day_number; ?>" data-day="<?php echo $day_number; ?>" data-day-index="<?php echo $index; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>" role="tabpanel" aria-labelledby="aj-day-nav-<?php echo $day_number; ?>" <?php echo $index !== 0 ? 'hidden' : ''; ?>>
+            <div class="ajtb-day-content-panel day-card" id="aj-day-panel-<?php echo $day_number; ?>" data-aj-day-panel="<?php echo $day_number; ?>" data-day="<?php echo $day_number; ?>" data-day-index="<?php echo $index; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>" role="tabpanel" aria-labelledby="aj-day-nav-<?php echo $day_number; ?>">
                 <!-- Header du jour (badge + titre + INCLUS) -->
                 <div class="ajtb-day-header-mmt">
                     <span class="ajtb-day-badge">Jour <?php echo $day_number; ?></span>
@@ -269,8 +278,8 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             <div class="ajtb-block-mmt ajtb-block-transfer">
                                 <h4 class="ajtb-block-title"><?php esc_html_e('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
-                                    <div class="ajtb-card-with-image ajtb-card-full-width">
-                                        <div class="ajtb-card-image ajtb-card-image--transfer"<?php if (!empty($day_transfer['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer['image_url']) . ')"'; } ?>></div>
+                                    <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--transfer">
+                                        <div class="ajtb-card-image ajtb-card-image--transfer<?php echo !empty($day_transfer['image_url']) ? ' has-image' : ''; ?>"<?php if (!empty($day_transfer['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer['image_url']) . ')"'; } ?>></div>
                                         <div class="ajtb-card-inner"><?php $transfer = $day_transfer; $label = __('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?></div>
                                     </div>
                                 </div>
@@ -280,8 +289,8 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             <div class="ajtb-block-mmt ajtb-block-hotel">
                                 <h4 class="ajtb-block-title"><?php esc_html_e('Hôtel', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
-                                    <div class="ajtb-card-with-image ajtb-card-full-width">
-                                        <div class="ajtb-card-image ajtb-card-image--hotel"<?php if (!empty($day_hotel['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel['image_url']) . ')"'; } ?>></div>
+                                    <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--hotel">
+                                        <div class="ajtb-card-image ajtb-card-image--hotel<?php echo !empty($day_hotel['image_url']) ? ' has-image' : ''; ?>"<?php if (!empty($day_hotel['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel['image_url']) . ')"'; } ?>></div>
                                         <div class="ajtb-card-inner"><?php $hotel = $day_hotel; $is_checkout = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?></div>
                                     </div>
                                 </div>
@@ -300,8 +309,8 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             <div class="ajtb-block-mmt ajtb-block-hotel">
                                 <h4 class="ajtb-block-title"><?php esc_html_e('Hôtel (check-out)', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
-                                    <div class="ajtb-card-with-image ajtb-card-full-width">
-                                        <div class="ajtb-card-image ajtb-card-image--hotel"<?php if (!empty($day_hotel_last['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel_last['image_url']) . ')"'; } ?>></div>
+                                    <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--hotel">
+                                        <div class="ajtb-card-image ajtb-card-image--hotel<?php echo !empty($day_hotel_last['image_url']) ? ' has-image' : ''; ?>"<?php if (!empty($day_hotel_last['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel_last['image_url']) . ')"'; } ?>></div>
                                         <div class="ajtb-card-inner"><?php $hotel = $day_hotel_last; $is_checkout = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?></div>
                                     </div>
                                 </div>
@@ -311,8 +320,8 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             <div class="ajtb-block-mmt ajtb-block-transfer">
                                 <h4 class="ajtb-block-title"><?php esc_html_e('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
-                                    <div class="ajtb-card-with-image ajtb-card-full-width">
-                                        <div class="ajtb-card-image ajtb-card-image--transfer"<?php if (!empty($day_transfer_return['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer_return['image_url']) . ')"'; } ?>></div>
+                                    <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--transfer">
+                                        <div class="ajtb-card-image ajtb-card-image--transfer<?php echo !empty($day_transfer_return['image_url']) ? ' has-image' : ''; ?>"<?php if (!empty($day_transfer_return['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer_return['image_url']) . ')"'; } ?>></div>
                                         <div class="ajtb-card-inner"><?php $transfer = $day_transfer_return; $label = __('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?></div>
                                     </div>
                                 </div>

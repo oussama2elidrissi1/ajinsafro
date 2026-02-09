@@ -142,18 +142,10 @@
                         </section>
                     @endif
 
-                    {{-- E. Itinerary / Program --}}
+                    {{-- E. Itinerary / Program (Day Plan timeline + détails) --}}
                     <section>
                         <h2 class="text-xl font-bold text-gray-900 mb-4">Programme détaillé</h2>
-                        @if($voyage->programDays->isNotEmpty())
-                            <div class="space-y-3">
-                                @foreach($voyage->programDays as $index => $day)
-                                    <x-front.itinerary-day :day="$day" :isFirst="$index === 0" />
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-gray-600 rounded-lg bg-gray-100 px-4 py-3">L’itinéraire détaillé sera bientôt disponible.</p>
-                        @endif
+                        <x-front.program-day-timeline :days="$voyage->programDays" />
                     </section>
 
                     {{-- F. Notes / Conditions (hidden if empty) --}}

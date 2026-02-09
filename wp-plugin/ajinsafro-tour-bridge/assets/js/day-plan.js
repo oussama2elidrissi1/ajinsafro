@@ -1,6 +1,6 @@
 /**
- * Day Plan – Layout MakeMyTrip: click day → show only that day's content (no scroll).
- * Left: sticky day list. Center: one panel visible at a time. Right: sidebar prix (page level).
+ * Day Plan – Layout MakeMyTrip: tous les jours affichés; clic sur un jour = scroll vers ce jour.
+ * Left: sticky day list. Center: tous les panneaux visibles. Right: sidebar prix (page level).
  *
  * @package AjinsafroTourBridge
  */
@@ -15,16 +15,11 @@
         $nav.find('[data-aj-nav-day="' + dayNum + '"]').addClass('active is-active').attr('aria-selected', 'true');
     }
 
-    function showDay(dayNum) {
+    function scrollToDay(dayNum) {
         dayNum = String(dayNum);
-        var $panels = $('#itinerary .ajtb-day-content-panel');
-        if (!$panels.length) return;
-        $panels.removeClass('is-selected').attr('hidden', 'hidden');
-        var $panel = $panels.filter('[data-day="' + dayNum + '"]');
-        if ($panel.length) {
-            $panel.addClass('is-selected').removeAttr('hidden');
-        }
         setActive(dayNum);
+        var el = document.getElementById('aj-day-panel-' + dayNum);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function initDayPlanNav() {
@@ -36,11 +31,11 @@
         if ($panels.length && $tabs.length) {
             $panels.attr('role', 'tabpanel');
             $tabs.attr('role', 'tab');
-            // Click: show only this day's panel (no scroll)
+            // Click: scroll vers le panneau du jour (tous les jours restent affichés)
             $(document).on('click', '#itinerary [data-aj-nav-day]', function(e) {
                 e.preventDefault();
                 var day = $(this).attr('data-aj-nav-day');
-                if (day) showDay(day);
+                if (day) scrollToDay(day);
             });
             return;
         }
