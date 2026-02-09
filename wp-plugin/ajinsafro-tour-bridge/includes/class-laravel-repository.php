@@ -652,6 +652,7 @@ class AJTB_Laravel_Repository {
                                 'custom_price' => $ar['custom_price'] !== null ? (float) $ar['custom_price'] : null,
                                 'base_price' => $ar['activity_base_price'] !== null ? (float) $ar['activity_base_price'] : null,
                                 'image_url' => $image_url,
+                                'activity_image_id' => !empty($ar['activity_image_id']) ? (int) $ar['activity_image_id'] : null,
                                 'start_time' => $ar['start_time'] ?? null,
                                 'end_time' => $ar['end_time'] ?? null,
                                 'is_mandatory' => !empty($ar['is_mandatory']),
