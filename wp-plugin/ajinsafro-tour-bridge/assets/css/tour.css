@@ -916,10 +916,10 @@
 
 /* Desktop ≥1200px : gauche 260px (max 280px), détails = reste ; gap 24px */
 .ajtb-programme-mmt.programme-container {
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
-    column-gap: 14px;
-    align-items: start;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 12px;
     margin-top: 20px;
     max-width: none;
     padding: 0;
@@ -931,11 +931,11 @@
     display: flex;
     flex-direction: column;
     gap: 0;
-    min-width: 0;
-    max-width: 280px;
-    width: 260px;
-    flex: 0 0 260px;
+    width: 240px;
+    flex: 0 0 240px;
     padding: 4px 0 8px 0;
+    padding-right: 0;
+    margin-right: 0;
 }
 
 .ajtb-programme-days-title,
@@ -1147,11 +1147,10 @@
     border: 1px solid var(--ajtb-border);
 }
 
-/* Laptop / Tablet (768px – 1199px) : gauche 220px, détails priorité ; gauche scrollable si besoin */
+/* Laptop / Tablet (768px – 1199px) : gauche 200px, détails priorité ; gauche scrollable si besoin */
 @media (min-width: 768px) and (max-width: 1199px) {
     .ajtb-programme-mmt.programme-container {
-        grid-template-columns: 220px minmax(0, 1fr);
-        column-gap: 12px;
+        gap: 10px;
     }
 
     .ajtb-programme-days {
@@ -1159,9 +1158,10 @@
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
-        max-width: 220px;
-        width: 220px;
-        flex: 0 0 220px;
+        width: 200px;
+        flex: 0 0 200px;
+        padding-right: 0;
+        margin-right: 0;
     }
 
     .ajtb-programme-days .day-plan__link {
@@ -1177,8 +1177,8 @@
 /* Mobile (< 768px) : 1 colonne, Plan de séjour en barre horizontale scrollable (pills) */
 @media (max-width: 767px) {
     .ajtb-programme-mmt.programme-container {
-        grid-template-columns: 1fr;
-        row-gap: 16px;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .ajtb-programme-days {
