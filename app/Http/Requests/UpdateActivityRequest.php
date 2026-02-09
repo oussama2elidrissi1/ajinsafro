@@ -26,6 +26,8 @@ class UpdateActivityRequest extends FormRequest
             ],
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120', // 5MB max
+            'base_price' => 'nullable|numeric|min:0',
             'default_duration_minutes' => 'nullable|integer|min:0',
             'location_text' => 'nullable|string|max:255',
         ];

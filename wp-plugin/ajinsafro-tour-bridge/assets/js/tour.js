@@ -442,7 +442,7 @@
                 $modal.find('.ajtb-modal-body').scrollTop(0);
             });
 
-            // Add activity from modal
+            // Add activity from modal (INSTANTANEOUS - no reload)
             $(document).on('click', '.ajtb-btn-add-from-modal', function(e) {
                 e.preventDefault();
                 var $btn = $(this);
@@ -451,13 +451,32 @@
                 var dayId = parseInt($btn.attr('data-day-id'), 10);
                 if (!activityId || !tourId || !dayId) return;
 
-                if ($btn.disabled) return;
+                if ($btn.prop('disabled')) return;
+                
+                // Store card HTML before disabling (for instant removal if needed)
+                var $card = $btn.closest('.ajtb-activity-card');
+                var cardHtml = $card[0] ? $card[0].outerHTML : null;
+                
+                // INSTANT FEEDBACK: Remove card immediately from modal
+                $card.fadeOut(150, function() {
+                    $(this).remove();
+                    
+                    // Check if grid is now empty
+                    var $grid = $('#ajtb-activity-grid');
+                    if ($grid.children().length === 0) {
+                        $('#ajtb-activity-empty').show();
+                        $grid.hide();
+                    }
+                });
+                
+                // Disable button
                 $btn.prop('disabled', true).text('Ajout...');
 
                 var ajaxUrl = typeof ajtbData !== 'undefined' && ajtbData.ajax_url ? ajtbData.ajax_url : ajaxurl;
                 var nonce = typeof ajtbData !== 'undefined' && ajtbData.nonce ? ajtbData.nonce : '';
                 var sessionToken = typeof ajtbData !== 'undefined' && ajtbData.session_token ? ajtbData.session_token : '';
 
+                // AJAX call in background
                 $.post(ajaxUrl, {
                     action: 'aj_toggle_activity',
                     nonce: nonce,
@@ -468,20 +487,32 @@
                     session_token: sessionToken
                 }).done(function(resp) {
                     if (resp.success && resp.data && resp.data.html !== undefined) {
+                        // Update day activities list instantly
                         var container = document.getElementById('aj-day-activities-' + dayId);
                         if (container) {
                             container.innerHTML = resp.data.html;
                         }
                         self.showToast(resp.data.message || 'Activité ajoutée');
-                        $modal.attr('aria-hidden', 'true').removeClass('is-open');
-                        // Reload activities to remove added one
-                        self.loadActivitiesModal();
+                        // Close modal after short delay for better UX
+                        setTimeout(function() {
+                            $modal.attr('aria-hidden', 'true').removeClass('is-open');
+                        }, 300);
                     } else {
+                        // On error: restore card
+                        if (cardHtml && $grid.length) {
+                            $grid.prepend(cardHtml);
+                            $grid.find('.ajtb-activity-card').last().hide().fadeIn(150);
+                        }
                         var msg = (resp.data && resp.data.message) ? resp.data.message : 'Erreur';
                         self.showToast(msg);
                         $btn.prop('disabled', false).text('Ajouter');
                     }
                 }).fail(function() {
+                    // On error: restore card
+                    if (cardHtml && $grid.length) {
+                        $grid.prepend(cardHtml);
+                        $grid.find('.ajtb-activity-card').last().hide().fadeIn(150);
+                    }
                     self.showToast('Erreur réseau');
                     $btn.prop('disabled', false).text('Ajouter');
                 });

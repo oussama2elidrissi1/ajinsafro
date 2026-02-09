@@ -43,8 +43,10 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th width="60">ID</th>
+                                        <th width="80">Image</th>
                                         <th>Titre</th>
                                         <th>Slug</th>
+                                        <th>Prix</th>
                                         <th>Durée déf.</th>
                                         <th>Lieu</th>
                                         <th class="text-end">Actions</th>
@@ -52,10 +54,30 @@
                                 </thead>
                                 <tbody>
                                     @foreach($activities as $activity)
+                                        @php
+                                            $imageUrl = null;
+                                            if ($activity->image_id) {
+                                                $attachment = \App\Models\WpPostmeta::where('post_id', $activity->image_id)
+                                                    ->where('meta_key', '_wp_attached_file')
+                                                    ->first();
+                                                if ($attachment && $attachment->meta_value) {
+                                                    $uploadsUrl = config('wordpress.uploads_url', url('/wp-content/uploads'));
+                                                    $imageUrl = rtrim($uploadsUrl, '/') . '/' . $attachment->meta_value;
+                                                }
+                                            }
+                                        @endphp
                                         <tr>
                                             <td><strong>{{ $activity->id }}</strong></td>
+                                            <td>
+                                                @if($imageUrl)
+                                                    <img src="{{ $imageUrl }}" alt="{{ $activity->title }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
                                             <td>{{ $activity->title }}</td>
                                             <td><code>{{ $activity->slug }}</code></td>
+                                            <td>{{ $activity->base_price ? number_format($activity->base_price, 2, ',', ' ') . ' DH' : '-' }}</td>
                                             <td>{{ $activity->default_duration_minutes ? $activity->default_duration_minutes . ' min' : '-' }}</td>
                                             <td>{{ $activity->location_text ?? '-' }}</td>
                                             <td class="text-end">

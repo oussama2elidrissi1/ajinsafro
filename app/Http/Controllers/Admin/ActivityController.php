@@ -6,11 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreActivityRequest;
 use App\Http\Requests\UpdateActivityRequest;
 use App\Models\Wp\Activity;
+use App\Services\WordPressMediaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ActivityController extends Controller
 {
+    public function __construct(
+        protected WordPressMediaService $mediaService
+    ) {}
+
     public function index(): View
     {
         $activities = Activity::query()->orderBy('title')->paginate(20);
@@ -24,7 +29,18 @@ class ActivityController extends Controller
 
     public function store(StoreActivityRequest $request): RedirectResponse
     {
-        Activity::create($request->validated());
+        $data = $request->validated();
+        
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $attachmentId = $this->mediaService->uploadAndCreateAttachment($request->file('image'));
+            $data['image_id'] = $attachmentId;
+        }
+        
+        // Remove 'image' from data as it's not a database column
+        unset($data['image']);
+        
+        Activity::create($data);
         return redirect()
             ->route('admin.circuits.activities.index')
             ->with('success', 'Activité créée avec succès.');
@@ -37,7 +53,18 @@ class ActivityController extends Controller
 
     public function update(UpdateActivityRequest $request, Activity $activity): RedirectResponse
     {
-        $activity->update($request->validated());
+        $data = $request->validated();
+        
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $attachmentId = $this->mediaService->uploadAndCreateAttachment($request->file('image'));
+            $data['image_id'] = $attachmentId;
+        }
+        
+        // Remove 'image' from data as it's not a database column
+        unset($data['image']);
+        
+        $activity->update($data);
         return redirect()
             ->route('admin.circuits.activities.index')
             ->with('success', 'Activité mise à jour.');
