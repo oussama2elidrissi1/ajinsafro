@@ -17,7 +17,7 @@ $hero_url = $tour['hero_image']['url'] ?? $tour['featured_image']['url'] ?? '';
 $hero_alt = $tour['hero_image']['alt'] ?? $tour['featured_image']['alt'] ?? $tour['title'];
 $gallery = $tour['gallery'] ?? [];
 
-// Build hero gallery: main first, then gallery (skip duplicate of main), max 6
+// Build hero gallery: main first, then gallery (skip duplicate of main), exactly 5 images (1 main + 4 secondary)
 $hero_gallery = [];
 if ($hero_url) {
     $hero_gallery[] = [
@@ -28,7 +28,7 @@ if ($hero_url) {
 }
 $main_url_normalized = $hero_url ? rtrim($hero_url, '/') : '';
 foreach ($gallery as $img) {
-    if (count($hero_gallery) >= 6) {
+    if (count($hero_gallery) >= 5) {
         break;
     }
     $u = isset($img['url']) ? rtrim($img['url'], '/') : '';
@@ -67,26 +67,43 @@ foreach ($gallery as $img) {
 
 <section class="ajtb-hero ajtb-hero-gallery">
     <?php if ($has_gallery): ?>
-        <!-- Desktop: grid 1 main + secondary -->
-        <div class="ajtb-hero-gallery-grid" role="region" aria-label="<?php esc_attr_e('Galerie du voyage', 'ajinsafro-tour-bridge'); ?>">
-            <?php
-            $main = $hero_gallery[0];
-            $secondary = array_slice($hero_gallery, 1, 5);
-            ?>
+        <!-- Desktop: grid 1 main + 4 secondary (exactly 5 images) -->
+        <div class="ajtb-container">
+            <div class="ajtb-hero-gallery-grid" role="region" aria-label="<?php esc_attr_e('Galerie du voyage', 'ajinsafro-tour-bridge'); ?>">
+                <?php
+                $main = $hero_gallery[0];
+                $secondary = array_slice($hero_gallery, 1, 4); // Exactly 4 secondary images
+                ?>
             <div class="ajtb-hero-gallery-main">
                 <a href="<?php echo esc_url($main['url']); ?>" class="ajtb-hero-gallery-item" data-lightbox="tour-hero-gallery" data-index="0">
                     <img src="<?php echo esc_url($main['medium']); ?>" alt="<?php echo esc_attr($main['alt']); ?>" loading="eager">
                 </a>
+                <?php if (count($all_gallery) > 5): ?>
+                    <a href="#gallery" class="ajtb-hero-gallery-all-btn"><?php esc_html_e('Voir toutes les photos', 'ajinsafro-tour-bridge'); ?></a>
+                <?php endif; ?>
             </div>
             <div class="ajtb-hero-gallery-secondary">
-                <?php foreach ($secondary as $i => $img): ?>
+                <?php 
+                // Always show exactly 4 secondary images (or less if not available)
+                // If we have more than 5 total images, replace the 4th with "more" cell
+                $show_more = count($all_gallery) > 5;
+                $secondary_to_show = $show_more ? 3 : min(4, count($secondary));
+                
+                foreach ($secondary as $i => $img): 
+                    if ($i < $secondary_to_show):
+                ?>
                     <a href="<?php echo esc_url($img['url']); ?>" class="ajtb-hero-gallery-item" data-lightbox="tour-hero-gallery" data-index="<?php echo $i + 1; ?>">
                         <img src="<?php echo esc_url($img['medium']); ?>" alt="<?php echo esc_attr($img['alt']); ?>" loading="lazy">
                     </a>
-                <?php endforeach; ?>
-                <?php if (count($all_gallery) > 6): ?>
+                <?php 
+                    endif;
+                endforeach; 
+                
+                // Show "more" cell if we have more than 5 images total
+                if ($show_more): 
+                ?>
                     <a href="#gallery" class="ajtb-hero-gallery-item ajtb-hero-gallery-more">
-                        <span class="ajtb-hero-gallery-more-count">+<?php echo count($all_gallery) - 6; ?></span>
+                        <span class="ajtb-hero-gallery-more-count">+<?php echo count($all_gallery) - 5; ?></span>
                         <span class="ajtb-hero-gallery-more-label"><?php esc_html_e('Voir toutes les photos', 'ajinsafro-tour-bridge'); ?></span>
                     </a>
                 <?php endif; ?>
@@ -105,11 +122,10 @@ foreach ($gallery as $img) {
             <button type="button" class="ajtb-hero-gallery-slider-prev" aria-label="<?php esc_attr_e('Précédent', 'ajinsafro-tour-bridge'); ?>"></button>
             <button type="button" class="ajtb-hero-gallery-slider-next" aria-label="<?php esc_attr_e('Suivant', 'ajinsafro-tour-bridge'); ?>"></button>
             <div class="ajtb-hero-gallery-slider-dots"></div>
+            <?php if (count($all_gallery) > 5): ?>
+                <a href="#gallery" class="ajtb-hero-gallery-all-btn"><?php esc_html_e('Voir toutes les photos', 'ajinsafro-tour-bridge'); ?></a>
+            <?php endif; ?>
         </div>
-
-        <?php if (count($all_gallery) > 6): ?>
-            <a href="#gallery" class="ajtb-hero-gallery-all-btn"><?php esc_html_e('Voir toutes les photos', 'ajinsafro-tour-bridge'); ?></a>
-        <?php endif; ?>
     <?php else: ?>
         <div class="ajtb-hero-gallery-placeholder">
             <span class="ajtb-hero-gallery-placeholder-icon" aria-hidden="true">

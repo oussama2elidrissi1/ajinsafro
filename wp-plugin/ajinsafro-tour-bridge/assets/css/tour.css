@@ -344,6 +344,11 @@
     display: block;
 }
 
+.ajtb-hero.ajtb-hero-gallery > .ajtb-container {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 .ajtb-hero-gallery-grid {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
@@ -352,13 +357,16 @@
     height: 420px;
     max-height: 50vh;
     overflow: hidden;
-    border-radius: 0 0 16px 16px;
+    border-radius: 16px;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .ajtb-hero-gallery-main {
     grid-row: 1 / -1;
-    border-radius: 0 0 0 16px;
+    border-radius: 16px 0 0 16px;
     overflow: hidden;
+    position: relative;
 }
 
 .ajtb-hero-gallery-main .ajtb-hero-gallery-item {
@@ -383,7 +391,7 @@
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     gap: 8px;
-    border-radius: 0 0 16px 0;
+    border-radius: 0 16px 16px 0;
     overflow: hidden;
 }
 
@@ -444,7 +452,7 @@
 .ajtb-hero-gallery-all-btn {
     position: absolute;
     bottom: 16px;
-    left: 16px;
+    left: calc(20px + 16px); /* Container padding + offset */
     z-index: 4;
     display: inline-flex;
     align-items: center;
@@ -457,6 +465,24 @@
     font-weight: 600;
     text-decoration: none;
     transition: background 0.2s ease, color 0.2s ease;
+}
+
+@media (min-width: 1400px) {
+    .ajtb-hero-gallery-all-btn {
+        left: calc(32px + 16px);
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .ajtb-hero-gallery-all-btn {
+        left: calc(28px + 16px);
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .ajtb-hero-gallery-all-btn {
+        left: calc(20px + 16px);
+    }
 }
 
 .ajtb-hero-gallery-all-btn:hover {
@@ -607,7 +633,8 @@
         position: relative;
         height: 280px;
         overflow: hidden;
-        border-radius: 0 0 16px 16px;
+        border-radius: 16px;
+        margin: 0 16px;
     }
 
     .ajtb-hero-gallery-slider-track {
@@ -637,9 +664,14 @@
         object-fit: cover;
     }
 
-    .ajtb-hero-gallery-all-btn {
+    .ajtb-hero-gallery-slider {
+        position: relative;
+    }
+
+    .ajtb-hero-gallery-slider .ajtb-hero-gallery-all-btn {
+        position: absolute;
         bottom: 12px;
-        left: 12px;
+        left: 16px;
         padding: 8px 14px;
         font-size: 13px;
     }
