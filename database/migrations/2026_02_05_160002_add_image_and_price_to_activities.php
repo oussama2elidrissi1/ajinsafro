@@ -21,7 +21,7 @@ return new class extends Migration
             return;
         }
 
-        $schema->table(self::TABLE, function (Blueprint $table) {
+        $schema->table(self::TABLE, function (Blueprint $table) use ($schema) {
             if (!$schema->hasColumn(self::TABLE, 'image_id')) {
                 $table->unsignedBigInteger('image_id')->nullable()->after('icon');
             }
@@ -42,7 +42,7 @@ return new class extends Migration
             return;
         }
 
-        $schema->table(self::TABLE, function (Blueprint $table) {
+        $schema->table(self::TABLE, function (Blueprint $table) use ($schema) {
             if ($schema->hasColumn(self::TABLE, 'image_id')) {
                 $table->dropColumn('image_id');
             }
