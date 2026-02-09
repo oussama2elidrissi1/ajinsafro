@@ -158,6 +158,7 @@ class TourProgramService
             'is_editable' => $options['is_editable'] ?? 1,
             'custom_title' => $options['custom_title'] ?? null,
             'custom_description' => $options['custom_description'] ?? null,
+            'custom_price' => $options['custom_price'] ?? null,
             'start_time' => $options['start_time'] ?? null,
             'end_time' => $options['end_time'] ?? null,
         ]);
@@ -170,7 +171,7 @@ class TourProgramService
     public function updateDayActivity(int $dayActivityId, array $data): TourDayActivity
     {
         $da = TourDayActivity::findOrFail($dayActivityId);
-        $fillable = ['sort_order', 'is_included', 'is_mandatory', 'is_editable', 'custom_title', 'custom_description', 'start_time', 'end_time'];
+        $fillable = ['sort_order', 'is_included', 'is_mandatory', 'is_editable', 'custom_title', 'custom_description', 'custom_price', 'start_time', 'end_time'];
         $da->fill(array_intersect_key($data, array_flip($fillable)));
         $da->save();
         return $da->load('activity');

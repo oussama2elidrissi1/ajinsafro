@@ -371,18 +371,13 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                         </ul>
                         <?php if ($can_toggle_activities && $day_id > 0): ?>
                             <div class="day-add-activity" data-day-id="<?php echo $day_id; ?>">
-                                <label for="aj-add-select-<?php echo $day_id; ?>"><?php esc_html_e('Ajouter une activité', 'ajinsafro-tour-bridge'); ?></label>
-                                <select id="aj-add-select-<?php echo $day_id; ?>" class="ajtb-add-activity-select" data-day-id="<?php echo $day_id; ?>">
-                                    <option value="">— <?php esc_html_e('Choisir', 'ajinsafro-tour-bridge'); ?> —</option>
-                                    <?php
-                                    $in_day = $day_activity_ids;
-                                    foreach ($activities_catalog as $c): 
-                                        $cid = (int) ($c['id'] ?? 0);
-                                        if ($cid && !in_array($cid, $in_day, true)): ?>
-                                            <option value="<?php echo $cid; ?>"><?php echo esc_html($c['title'] ?? ''); ?></option>
-                                    <?php endif; endforeach; ?>
-                                </select>
-                                <button type="button" class="ajtb-btn-add-activity" data-aj-action="add" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-select-id="aj-add-select-<?php echo $day_id; ?>"><?php esc_html_e('Ajouter', 'ajinsafro-tour-bridge'); ?></button>
+                                <button type="button" class="ajtb-btn-open-activity-modal" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    <?php esc_html_e('Ajouter une activité', 'ajinsafro-tour-bridge'); ?>
+                                </button>
                             </div>
                         <?php endif; ?>
                         </div>
@@ -444,4 +439,9 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
             Tout déplier
         </button>
     </div>
+
+    <!-- Activity Modal -->
+    <?php if ($can_toggle_activities): ?>
+        <?php ajtb_get_partial('activity-modal', ['tour_id' => $tour_id]); ?>
+    <?php endif; ?>
 </section>

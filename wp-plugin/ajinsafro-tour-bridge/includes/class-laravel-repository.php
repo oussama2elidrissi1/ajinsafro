@@ -403,6 +403,85 @@ class AJTB_Laravel_Repository {
     }
 
     /**
+     * Get activities for modal (with image, price, duration).
+     * Used for modal activity picker.
+     *
+     * @param array $exclude_ids Activity IDs to exclude (already in day)
+     * @param string $search Search term
+     * @param int $page Page number (1-based)
+     * @param int $per_page Items per page
+     * @return array ['items' => [...], 'total' => int, 'page' => int, 'per_page' => int]
+     */
+    public function get_activities_for_modal($exclude_ids = [], $search = '', $page = 1, $per_page = 12) {
+        $table = $this->table('activities');
+        if (!$this->table_exists($table)) {
+            return ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $per_page];
+        }
+
+        $where = [];
+        $params = [];
+
+        if (!empty($exclude_ids) && is_array($exclude_ids)) {
+            $placeholders = implode(',', array_fill(0, count($exclude_ids), '%d'));
+            $where[] = "id NOT IN ($placeholders)";
+            $params = array_merge($params, $exclude_ids);
+        }
+
+        if (!empty($search)) {
+            $where[] = "(title LIKE %s OR description LIKE %s)";
+            $search_like = '%' . $this->wpdb->esc_like($search) . '%';
+            $params[] = $search_like;
+            $params[] = $search_like;
+        }
+
+        $where_sql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        // Count total
+        $count_query = "SELECT COUNT(*) FROM {$table} {$where_sql}";
+        if (!empty($params)) {
+            $count_query = $this->wpdb->prepare($count_query, $params);
+        }
+        $total = (int) $this->wpdb->get_var($count_query);
+
+        // Get items with pagination
+        $offset = ($page - 1) * $per_page;
+        $query = "SELECT id, title, description, image_id, base_price, default_duration_minutes, location_text 
+                  FROM {$table} 
+                  {$where_sql} 
+                  ORDER BY title ASC 
+                  LIMIT %d OFFSET %d";
+        $query_params = array_merge($params, [$per_page, $offset]);
+        $query = $this->wpdb->prepare($query, $query_params);
+        $rows = $this->wpdb->get_results($query, ARRAY_A);
+
+        // Format results with image URLs
+        $items = [];
+        foreach ($rows as $row) {
+            $image_url = null;
+            if (!empty($row['image_id'])) {
+                $image_url = wp_get_attachment_image_url((int) $row['image_id'], 'medium');
+            }
+            $items[] = [
+                'id' => (int) $row['id'],
+                'title' => $row['title'] ?? '',
+                'description' => $row['description'] ?? '',
+                'image_url' => $image_url,
+                'base_price' => $row['base_price'] !== null ? (float) $row['base_price'] : null,
+                'duration_minutes' => $row['default_duration_minutes'] !== null ? (int) $row['default_duration_minutes'] : null,
+                'location_text' => $row['location_text'] ?? '',
+            ];
+        }
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $per_page,
+            'total_pages' => (int) ceil($total / $per_page),
+        ];
+    }
+
+    /**
      * Check if any Laravel data exists for this tour
      *
      * @return bool

@@ -109,6 +109,10 @@ class Ajinsafro_Tour_Bridge {
         add_action('wp_ajax_aj_toggle_activity', [$this, 'ajax_toggle_activity']);
         add_action('wp_ajax_nopriv_aj_toggle_activity', [$this, 'ajax_toggle_activity']);
 
+        // AJAX: get activities for modal (with images, prices)
+        add_action('wp_ajax_aj_get_activities_modal', [$this, 'ajax_get_activities_modal']);
+        add_action('wp_ajax_nopriv_aj_get_activities_modal', [$this, 'ajax_get_activities_modal']);
+
         // AJAX: client toggle flight (add/remove) for display
         add_action('wp_ajax_ajtb_toggle_flight', [$this, 'ajax_toggle_flight']);
         add_action('wp_ajax_nopriv_ajtb_toggle_flight', [$this, 'ajax_toggle_flight']);
@@ -274,6 +278,45 @@ class Ajinsafro_Tour_Bridge {
             'html' => $html,
             'count' => $count,
         ]);
+    }
+
+    /**
+     * AJAX: get activities for modal (with images, prices, duration).
+     * Params: tour_id, day_id (to exclude already added), search, page, per_page.
+     * Returns: JSON with items array, total, pagination info.
+     */
+    public function ajax_get_activities_modal() {
+        $tour_id = isset($_POST['tour_id']) ? (int) $_POST['tour_id'] : 0;
+        $day_id = isset($_POST['day_id']) ? (int) $_POST['day_id'] : 0;
+        $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+        $page = isset($_POST['page']) ? max(1, (int) $_POST['page']) : 1;
+        $per_page = isset($_POST['per_page']) ? max(1, min(50, (int) $_POST['per_page'])) : 12;
+
+        if ($tour_id <= 0) {
+            wp_send_json_error(['message' => __('Tour ID manquant.', 'ajinsafro-tour-bridge')]);
+        }
+
+        $repo = new AJTB_Laravel_Repository($tour_id);
+        
+        // Get already added activity IDs for this day
+        $exclude_ids = [];
+        if ($day_id > 0) {
+            $day_activities = $repo->get_days();
+            foreach ($day_activities as $day) {
+                if ((int) ($day['id'] ?? 0) === $day_id && !empty($day['activities'])) {
+                    foreach ($day['activities'] as $act) {
+                        $act_id = (int) ($act['activity_id'] ?? 0);
+                        if ($act_id > 0) {
+                            $exclude_ids[] = $act_id;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        $result = $repo->get_activities_for_modal($exclude_ids, $search, $page, $per_page);
+        wp_send_json_success($result);
     }
 
     /**

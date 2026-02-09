@@ -15,12 +15,15 @@ class Activity extends Model
         'slug',
         'description',
         'icon',
+        'image_id',
+        'base_price',
         'default_duration_minutes',
         'location_text',
     ];
 
     protected $casts = [
         'default_duration_minutes' => 'integer',
+        'base_price' => 'decimal:2',
     ];
 
     public function dayActivities()

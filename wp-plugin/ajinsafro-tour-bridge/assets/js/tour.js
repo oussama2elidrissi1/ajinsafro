@@ -42,6 +42,7 @@
             this.initPriceCalculation();
             this.initItineraryAccordion();
             this.initActivityToggle();
+            this.initActivityModal();
             this.initFlightToggle();
             this.initFAQAccordion();
             this.initGallery();

@@ -20,6 +20,7 @@ class TourDayActivity extends Model
         'is_editable',
         'custom_title',
         'custom_description',
+        'custom_price',
         'start_time',
         'end_time',
     ];
@@ -29,6 +30,7 @@ class TourDayActivity extends Model
         'is_included' => 'integer',
         'is_mandatory' => 'integer',
         'is_editable' => 'integer',
+        'custom_price' => 'decimal:2',
     ];
 
     public function activity()
