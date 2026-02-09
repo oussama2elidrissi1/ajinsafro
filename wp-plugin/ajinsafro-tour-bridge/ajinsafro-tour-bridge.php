@@ -290,6 +290,10 @@ class Ajinsafro_Tour_Bridge {
      * Returns: JSON with items array, total, pagination info.
      */
     public function ajax_get_activities_modal() {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB ajax_get_activities_modal: POST=' . json_encode($_POST));
+        }
+        
         $tour_id = isset($_POST['tour_id']) ? (int) $_POST['tour_id'] : 0;
         $day_id = isset($_POST['day_id']) ? (int) $_POST['day_id'] : 0;
         $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
@@ -297,6 +301,9 @@ class Ajinsafro_Tour_Bridge {
         $per_page = isset($_POST['per_page']) ? max(1, min(50, (int) $_POST['per_page'])) : 12;
 
         if ($tour_id <= 0) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AJTB ajax_get_activities_modal: Tour ID missing');
+            }
             wp_send_json_error(['message' => __('Tour ID manquant.', 'ajinsafro-tour-bridge')]);
         }
 
@@ -319,7 +326,16 @@ class Ajinsafro_Tour_Bridge {
             }
         }
 
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB ajax_get_activities_modal: exclude_ids=' . json_encode($exclude_ids) . ', search=' . $search);
+        }
+
         $result = $repo->get_activities_for_modal($exclude_ids, $search, $page, $per_page);
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB ajax_get_activities_modal: result=' . json_encode($result));
+        }
+        
         wp_send_json_success($result);
     }
 

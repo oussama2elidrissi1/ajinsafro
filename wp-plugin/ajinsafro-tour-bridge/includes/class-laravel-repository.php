@@ -414,8 +414,16 @@ class AJTB_Laravel_Repository {
      */
     public function get_activities_for_modal($exclude_ids = [], $search = '', $page = 1, $per_page = 12) {
         $table = $this->table('activities');
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB get_activities_for_modal: table=' . $table . ', exists=' . ($this->table_exists($table) ? 'yes' : 'no'));
+        }
+        
         if (!$this->table_exists($table)) {
-            return ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $per_page];
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AJTB get_activities_for_modal: Table does not exist: ' . $table);
+            }
+            return ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $per_page, 'total_pages' => 0];
         }
 
         $where = [];
@@ -437,38 +445,104 @@ class AJTB_Laravel_Repository {
         $where_sql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
         // Count total
-        $count_query = "SELECT COUNT(*) FROM {$table} {$where_sql}";
+        $count_query = "SELECT COUNT(*) FROM {$table}";
+        if (!empty($where_sql)) {
+            $count_query .= " {$where_sql}";
+        }
         if (!empty($params)) {
             $count_query = $this->wpdb->prepare($count_query, $params);
         }
         $total = (int) $this->wpdb->get_var($count_query);
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB get_activities_for_modal: total=' . $total . ', count_query=' . $count_query . ', last_error=' . ($this->wpdb->last_error ?: 'none'));
+        }
+
+        // Check which columns exist (to handle cases where migrations haven't run)
+        $columns_check = $this->wpdb->get_results("SHOW COLUMNS FROM {$table}", ARRAY_A);
+        $available_columns = [];
+        if (is_array($columns_check)) {
+            foreach ($columns_check as $col) {
+                if (isset($col['Field'])) {
+                    $available_columns[] = $col['Field'];
+                }
+            }
+        }
+        
+        // Build SELECT list with only existing columns
+        $select_cols = ['id', 'title', 'description', 'default_duration_minutes', 'location_text'];
+        $optional_cols = ['image_id', 'base_price'];
+        foreach ($optional_cols as $col) {
+            if (in_array($col, $available_columns, true)) {
+                $select_cols[] = $col;
+            }
+        }
+        $select_list = implode(', ', array_map(function($col) {
+            return "`{$col}`";
+        }, $select_cols));
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB get_activities_for_modal: available_columns=' . json_encode($available_columns) . ', select_list=' . $select_list);
+        }
 
         // Get items with pagination
         $offset = ($page - 1) * $per_page;
-        $query = "SELECT id, title, description, image_id, base_price, default_duration_minutes, location_text 
-                  FROM {$table} 
-                  {$where_sql} 
-                  ORDER BY title ASC 
-                  LIMIT %d OFFSET %d";
-        $query_params = array_merge($params, [$per_page, $offset]);
+        $query = "SELECT {$select_list} FROM {$table}";
+        if (!empty($where_sql)) {
+            $query .= " {$where_sql}";
+        }
+        $query .= " ORDER BY title ASC LIMIT %d OFFSET %d";
+        
+        // Always prepare with LIMIT/OFFSET params, merge with WHERE params if any
+        $query_params = !empty($params) ? array_merge($params, [$per_page, $offset]) : [$per_page, $offset];
         $query = $this->wpdb->prepare($query, $query_params);
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB get_activities_for_modal: query=' . $query . ', params=' . print_r($query_params, true));
+        }
+        
         $rows = $this->wpdb->get_results($query, ARRAY_A);
+        
+        if ($this->wpdb->last_error) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AJTB get_activities_for_modal: DB error=' . $this->wpdb->last_error . ', query=' . $query);
+            }
+            // Return empty result on error
+            return ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $per_page, 'total_pages' => 0];
+        }
+        
+        if (!is_array($rows)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AJTB get_activities_for_modal: get_results returned non-array: ' . gettype($rows));
+            }
+            $rows = [];
+        }
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJTB get_activities_for_modal: rows count=' . count($rows));
+        }
 
         // Format results with image URLs
         $items = [];
         foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            
             $image_url = null;
-            if (!empty($row['image_id'])) {
+            // Check if image_id column exists and has a value
+            if (isset($row['image_id']) && !empty($row['image_id'])) {
                 $image_url = wp_get_attachment_image_url((int) $row['image_id'], 'medium');
             }
+            
             $items[] = [
-                'id' => (int) $row['id'],
-                'title' => $row['title'] ?? '',
-                'description' => $row['description'] ?? '',
+                'id' => isset($row['id']) ? (int) $row['id'] : 0,
+                'title' => isset($row['title']) ? (string) $row['title'] : '',
+                'description' => isset($row['description']) ? (string) $row['description'] : '',
                 'image_url' => $image_url,
-                'base_price' => $row['base_price'] !== null ? (float) $row['base_price'] : null,
-                'duration_minutes' => $row['default_duration_minutes'] !== null ? (int) $row['default_duration_minutes'] : null,
-                'location_text' => $row['location_text'] ?? '',
+                'base_price' => isset($row['base_price']) && $row['base_price'] !== null ? (float) $row['base_price'] : null,
+                'duration_minutes' => isset($row['default_duration_minutes']) && $row['default_duration_minutes'] !== null ? (int) $row['default_duration_minutes'] : null,
+                'location_text' => isset($row['location_text']) ? (string) $row['location_text'] : '',
             ];
         }
 
