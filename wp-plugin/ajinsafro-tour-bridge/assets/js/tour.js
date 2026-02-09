@@ -43,6 +43,7 @@
             this.initItineraryAccordion();
             this.initActivityToggle();
             this.initActivityModal();
+            this.initActivityEditModal();
             this.initFlightToggle();
             this.initFAQAccordion();
             this.initGallery();
@@ -284,6 +285,304 @@
                     AJTB.showToast('Erreur réseau');
                 }).always(function() {
                     btn.disabled = false;
+                });
+            });
+        },
+
+        /**
+         * Activity Modal: open modal, search, load activities, add activity
+         */
+        initActivityModal: function() {
+            var self = this;
+            var $modal = $('#ajtb-activity-modal');
+            if (!$modal.length) return;
+
+            var currentTourId = 0;
+            var currentDayId = 0;
+            var currentPage = 1;
+            var currentSearch = '';
+            var searchTimeout = null;
+            var isLoading = false;
+
+            // Open modal
+            $(document).on('click', '.ajtb-btn-open-activity-modal', function(e) {
+                e.preventDefault();
+                currentTourId = parseInt($(this).attr('data-tour-id'), 10) || 0;
+                currentDayId = parseInt($(this).attr('data-day-id'), 10) || 0;
+                if (!currentTourId || !currentDayId) {
+                    self.showToast('Paramètres manquants');
+                    return;
+                }
+                $modal.attr('aria-hidden', 'false').addClass('is-open');
+                currentPage = 1;
+                currentSearch = '';
+                $('#ajtb-activity-search').val('');
+                self.loadActivitiesModal();
+            });
+
+            // Close modal
+            $(document).on('click', '[data-ajtb-modal-close]', function(e) {
+                e.preventDefault();
+                $modal.attr('aria-hidden', 'true').removeClass('is-open');
+            });
+
+            // Search with debounce
+            $('#ajtb-activity-search').on('input', function() {
+                var search = $(this).val().trim();
+                if (searchTimeout) clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    currentSearch = search;
+                    currentPage = 1;
+                    self.loadActivitiesModal();
+                }, 300);
+            });
+
+            // Load activities
+            this.loadActivitiesModal = function() {
+                if (isLoading || !currentTourId || !currentDayId) return;
+                isLoading = true;
+
+                var $grid = $('#ajtb-activity-grid');
+                var $loading = $('#ajtb-activity-loading');
+                var $empty = $('#ajtb-activity-empty');
+                var $pagination = $('#ajtb-activity-pagination');
+
+                $grid.hide();
+                $empty.hide();
+                $pagination.hide();
+                $loading.show();
+
+                var ajaxUrl = typeof ajtbData !== 'undefined' && ajtbData.ajax_url ? ajtbData.ajax_url : ajaxurl;
+                $.post(ajaxUrl, {
+                    action: 'aj_get_activities_modal',
+                    tour_id: currentTourId,
+                    day_id: currentDayId,
+                    search: currentSearch,
+                    page: currentPage,
+                    per_page: 12
+                }).done(function(resp) {
+                    $loading.hide();
+                    if (resp.success && resp.data && resp.data.items) {
+                        var items = resp.data.items;
+                        if (items.length === 0) {
+                            $empty.show();
+                            $grid.hide();
+                        } else {
+                            $empty.hide();
+                            $grid.html(self.renderActivityCards(items)).show();
+                            if (resp.data.total_pages > 1) {
+                                $pagination.html(self.renderActivityPagination(resp.data)).show();
+                            } else {
+                                $pagination.hide();
+                            }
+                        }
+                    } else {
+                        $empty.show();
+                        $grid.hide();
+                    }
+                }).fail(function() {
+                    $loading.hide();
+                    $empty.show();
+                    $grid.hide();
+                    self.showToast('Erreur lors du chargement');
+                }).always(function() {
+                    isLoading = false;
+                });
+            };
+
+            // Render activity cards
+            this.renderActivityCards = function(items) {
+                var html = '';
+                items.forEach(function(item) {
+                    var imageHtml = item.image_url 
+                        ? '<img src="' + self.escapeHtml(item.image_url) + '" alt="' + self.escapeHtml(item.title) + '" loading="lazy">'
+                        : '<div class="ajtb-activity-placeholder"><svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21,15 16,10 5,21"></polyline></svg></div>';
+                    var priceHtml = item.base_price !== null && item.base_price !== undefined
+                        ? '<div class="ajtb-activity-price">' + self.formatPrice(item.base_price) + ' ' + self.config.currency + '</div>'
+                        : '';
+                    var durationHtml = item.duration_minutes
+                        ? '<div class="ajtb-activity-duration"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12,6 12,12 16,14"></polyline></svg> ' + item.duration_minutes + ' min</div>'
+                        : '';
+                    var locationHtml = item.location_text
+                        ? '<div class="ajtb-activity-location">' + self.escapeHtml(item.location_text) + '</div>'
+                        : '';
+                    html += '<div class="ajtb-activity-card" data-activity-id="' + item.id + '">';
+                    html += '<div class="ajtb-activity-card-image">' + imageHtml + '</div>';
+                    html += '<div class="ajtb-activity-card-content">';
+                    html += '<h3 class="ajtb-activity-card-title">' + self.escapeHtml(item.title) + '</h3>';
+                    if (item.description) {
+                        html += '<p class="ajtb-activity-card-desc">' + self.escapeHtml(item.description.length > 100 ? item.description.substring(0, 100) + '...' : item.description) + '</p>';
+                    }
+                    html += '<div class="ajtb-activity-card-meta">' + durationHtml + locationHtml + '</div>';
+                    html += '<div class="ajtb-activity-card-footer">' + priceHtml;
+                    html += '<button type="button" class="ajtb-btn-add-from-modal" data-activity-id="' + item.id + '" data-tour-id="' + currentTourId + '" data-day-id="' + currentDayId + '">' + self.escapeHtml('Ajouter') + '</button>';
+                    html += '</div></div></div>';
+                });
+                return html;
+            };
+
+            // Render pagination
+            this.renderActivityPagination = function(data) {
+                var html = '<div class="ajtb-pagination">';
+                if (data.page > 1) {
+                    html += '<button type="button" class="ajtb-pagination-btn" data-page="' + (data.page - 1) + '">← Précédent</button>';
+                }
+                html += '<span class="ajtb-pagination-info">Page ' + data.page + ' / ' + data.total_pages + '</span>';
+                if (data.page < data.total_pages) {
+                    html += '<button type="button" class="ajtb-pagination-btn" data-page="' + (data.page + 1) + '">Suivant →</button>';
+                }
+                html += '</div>';
+                return html;
+            };
+
+            // Pagination click
+            $(document).on('click', '.ajtb-pagination-btn', function() {
+                currentPage = parseInt($(this).attr('data-page'), 10);
+                self.loadActivitiesModal();
+                $modal.find('.ajtb-modal-body').scrollTop(0);
+            });
+
+            // Add activity from modal
+            $(document).on('click', '.ajtb-btn-add-from-modal', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var activityId = parseInt($btn.attr('data-activity-id'), 10);
+                var tourId = parseInt($btn.attr('data-tour-id'), 10);
+                var dayId = parseInt($btn.attr('data-day-id'), 10);
+                if (!activityId || !tourId || !dayId) return;
+
+                if ($btn.disabled) return;
+                $btn.prop('disabled', true).text('Ajout...');
+
+                var ajaxUrl = typeof ajtbData !== 'undefined' && ajtbData.ajax_url ? ajtbData.ajax_url : ajaxurl;
+                var nonce = typeof ajtbData !== 'undefined' && ajtbData.nonce ? ajtbData.nonce : '';
+                var sessionToken = typeof ajtbData !== 'undefined' && ajtbData.session_token ? ajtbData.session_token : '';
+
+                $.post(ajaxUrl, {
+                    action: 'aj_toggle_activity',
+                    nonce: nonce,
+                    tour_id: tourId,
+                    day_id: dayId,
+                    activity_id: activityId,
+                    toggle_action: 'added',
+                    session_token: sessionToken
+                }).done(function(resp) {
+                    if (resp.success && resp.data && resp.data.html !== undefined) {
+                        var container = document.getElementById('aj-day-activities-' + dayId);
+                        if (container) {
+                            container.innerHTML = resp.data.html;
+                        }
+                        self.showToast(resp.data.message || 'Activité ajoutée');
+                        $modal.attr('aria-hidden', 'true').removeClass('is-open');
+                        // Reload activities to remove added one
+                        self.loadActivitiesModal();
+                    } else {
+                        var msg = (resp.data && resp.data.message) ? resp.data.message : 'Erreur';
+                        self.showToast(msg);
+                        $btn.prop('disabled', false).text('Ajouter');
+                    }
+                }).fail(function() {
+                    self.showToast('Erreur réseau');
+                    $btn.prop('disabled', false).text('Ajouter');
+                });
+            });
+
+            // Escape HTML
+            this.escapeHtml = function(text) {
+                var div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            };
+        },
+
+        /**
+         * Activity Edit Modal: open edit modal, populate form, update activity
+         */
+        initActivityEditModal: function() {
+            var self = this;
+            var $modal = $('#ajtb-activity-edit-modal');
+            if (!$modal.length) return;
+
+            // Open edit modal
+            $(document).on('click', '.ajtb-btn-edit-activity', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var dayActivityId = parseInt($btn.attr('data-day-activity-id'), 10);
+                var tourId = parseInt($btn.attr('data-tour-id'), 10);
+                var dayId = parseInt($btn.attr('data-day-id'), 10);
+                var activityId = parseInt($btn.attr('data-activity-id'), 10);
+
+                if (!dayActivityId || !tourId || !dayId || !activityId) return;
+
+                // Get current activity data from DOM
+                var $item = $btn.closest('.day-activity-item');
+                var currentTitle = $item.find('.activity-title').text().trim();
+                var currentDesc = $item.find('.activity-description').html() || '';
+                var currentPrice = $item.find('.activity-price').text().trim().replace(/[^\d.]/g, '') || '';
+                var startTime = $item.find('.activity-time span').first().text().trim() || '';
+                var endTime = $item.find('.activity-time span').last().text().trim() || '';
+
+                // Populate form
+                $('#ajtb-edit-day-activity-id').val(dayActivityId);
+                $('#ajtb-edit-tour-id').val(tourId);
+                $('#ajtb-edit-day-id').val(dayId);
+                $('#ajtb-edit-activity-id').val(activityId);
+                $('#ajtb-edit-custom-title').val(currentTitle);
+                $('#ajtb-edit-custom-description').val(currentDesc.replace(/<[^>]*>/g, ''));
+                $('#ajtb-edit-custom-price').val(currentPrice);
+                $('#ajtb-edit-start-time').val(startTime);
+                $('#ajtb-edit-end-time').val(endTime);
+
+                // Open modal
+                $modal.attr('aria-hidden', 'false').addClass('is-open');
+            });
+
+            // Close modal
+            $(document).on('click', '#ajtb-activity-edit-modal [data-ajtb-modal-close]', function(e) {
+                e.preventDefault();
+                $modal.attr('aria-hidden', 'true').removeClass('is-open');
+            });
+
+            // Submit form
+            $('#ajtb-activity-edit-form').on('submit', function(e) {
+                e.preventDefault();
+                var $form = $(this);
+                var $submitBtn = $form.find('button[type="submit"]');
+                
+                if ($submitBtn.prop('disabled')) return;
+                $submitBtn.prop('disabled', true).text('Enregistrement...');
+
+                var ajaxUrl = typeof ajtbData !== 'undefined' && ajtbData.ajax_url ? ajtbData.ajax_url : ajaxurl;
+                var sessionToken = typeof ajtbData !== 'undefined' && ajtbData.session_token ? ajtbData.session_token : '';
+
+                $.post(ajaxUrl, {
+                    action: 'aj_update_activity',
+                    day_activity_id: $('#ajtb-edit-day-activity-id').val(),
+                    tour_id: $('#ajtb-edit-tour-id').val(),
+                    day_id: $('#ajtb-edit-day-id').val(),
+                    activity_id: $('#ajtb-edit-activity-id').val(),
+                    custom_title: $('#ajtb-edit-custom-title').val(),
+                    custom_description: $('#ajtb-edit-custom-description').val(),
+                    custom_price: $('#ajtb-edit-custom-price').val(),
+                    start_time: $('#ajtb-edit-start-time').val(),
+                    end_time: $('#ajtb-edit-end-time').val(),
+                    session_token: sessionToken
+                }).done(function(resp) {
+                    if (resp.success && resp.data && resp.data.html !== undefined) {
+                        var container = document.getElementById('aj-day-activities-' + resp.data.day_id);
+                        if (container) {
+                            container.innerHTML = resp.data.html;
+                        }
+                        self.showToast(resp.data.message || 'Activité mise à jour');
+                        $modal.attr('aria-hidden', 'true').removeClass('is-open');
+                    } else {
+                        var msg = (resp.data && resp.data.message) ? resp.data.message : 'Erreur';
+                        self.showToast(msg);
+                        $submitBtn.prop('disabled', false).text('Enregistrer');
+                    }
+                }).fail(function() {
+                    self.showToast('Erreur réseau');
+                    $submitBtn.prop('disabled', false).text('Enregistrer');
                 });
             });
         },

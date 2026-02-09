@@ -548,8 +548,8 @@ class AJTB_Laravel_Repository {
                 if (!empty($day_ids)) {
                     $placeholders = implode(',', array_fill(0, count($day_ids), '%d'));
                     $query = $this->wpdb->prepare(
-                        "SELECT da.id, da.day_id, da.activity_id, da.sort_order, da.is_included, da.is_mandatory, da.custom_title, da.custom_description, " .
-                        "a.title AS activity_title, a.description AS activity_description " .
+                        "SELECT da.id, da.day_id, da.activity_id, da.sort_order, da.is_included, da.is_mandatory, da.custom_title, da.custom_description, da.custom_price, da.start_time, da.end_time, " .
+                        "a.title AS activity_title, a.description AS activity_description, a.image_id AS activity_image_id, a.base_price AS activity_base_price " .
                         "FROM {$table_activities} da " .
                         "INNER JOIN {$table_catalog} a ON a.id = da.activity_id " .
                         "WHERE da.tour_id = %d AND da.day_id IN ($placeholders) " .
@@ -563,11 +563,20 @@ class AJTB_Laravel_Repository {
                             if (!isset($days_by_id[$day_id])) {
                                 continue;
                             }
+                            $image_url = null;
+                            if (!empty($ar['activity_image_id'])) {
+                                $image_url = wp_get_attachment_image_url((int) $ar['activity_image_id'], 'thumbnail');
+                            }
                             $days_by_id[$day_id]['activities'][] = [
                                 'id' => (int) $ar['id'],
                                 'activity_id' => (int) $ar['activity_id'],
                                 'title' => !empty($ar['custom_title']) ? $ar['custom_title'] : ($ar['activity_title'] ?? ''),
                                 'description' => !empty($ar['custom_description']) ? $ar['custom_description'] : ($ar['activity_description'] ?? ''),
+                                'custom_price' => $ar['custom_price'] !== null ? (float) $ar['custom_price'] : null,
+                                'base_price' => $ar['activity_base_price'] !== null ? (float) $ar['activity_base_price'] : null,
+                                'image_url' => $image_url,
+                                'start_time' => $ar['start_time'] ?? null,
+                                'end_time' => $ar['end_time'] ?? null,
                                 'is_mandatory' => !empty($ar['is_mandatory']),
                                 'is_included' => !empty($ar['is_included']),
                             ];

@@ -351,17 +351,59 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                                     $is_mandatory = !empty($act['is_mandatory']);
                                     $show_remove = $can_toggle_activities && !$is_mandatory;
                                 ?>
-                                    <li class="day-activity-item" data-activity-id="<?php echo $act_id; ?>" data-is-mandatory="<?php echo $is_mandatory ? '1' : '0'; ?>">
-                                        <span class="activity-title"><?php echo $act_title !== '' ? esc_html($act_title) : esc_html__('Activité', 'ajinsafro-tour-bridge'); ?></span>
-                                        <?php if ($is_mandatory): ?>
-                                            <span class="badge badge-mandatory">Obligatoire</span>
-                                        <?php endif; ?>
-                                        <?php if ($show_remove): ?>
-                                            <button type="button" class="ajtb-btn-remove-activity" data-aj-action="remove" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" aria-label="<?php esc_attr_e('Retirer cette activité', 'ajinsafro-tour-bridge'); ?>">Retirer</button>
-                                        <?php endif; ?>
-                                        <?php if ($act_desc !== ''): ?>
-                                            <div class="activity-description"><?php echo wp_kses_post($act_desc); ?></div>
-                                        <?php endif; ?>
+                                    <?php
+                                    $act_price = null;
+                                    if (isset($act['custom_price']) && $act['custom_price'] !== null) {
+                                        $act_price = (float) $act['custom_price'];
+                                    } elseif (isset($act['base_price']) && $act['base_price'] !== null) {
+                                        $act_price = (float) $act['base_price'];
+                                    }
+                                    $act_image_url = $act['image_url'] ?? null;
+                                    $act_start_time = $act['start_time'] ?? null;
+                                    $act_end_time = $act['end_time'] ?? null;
+                                    $day_activity_id = (int) ($act['id'] ?? 0);
+                                    ?>
+                                    <li class="day-activity-item" data-activity-id="<?php echo $act_id; ?>" data-day-activity-id="<?php echo $day_activity_id; ?>" data-is-mandatory="<?php echo $is_mandatory ? '1' : '0'; ?>">
+                                        <div class="day-activity-item-content">
+                                            <?php if ($act_image_url): ?>
+                                                <div class="day-activity-image">
+                                                    <img src="<?php echo esc_url($act_image_url); ?>" alt="<?php echo esc_attr($act_title); ?>" loading="lazy">
+                                                </div>
+                                            <?php endif; ?>
+                                            <div class="day-activity-details">
+                                                <div class="day-activity-header">
+                                                    <span class="activity-title"><?php echo $act_title !== '' ? esc_html($act_title) : esc_html__('Activité', 'ajinsafro-tour-bridge'); ?></span>
+                                                    <?php if ($is_mandatory): ?>
+                                                        <span class="badge badge-mandatory">Obligatoire</span>
+                                                    <?php endif; ?>
+                                                    <?php if ($act_price !== null): ?>
+                                                        <span class="activity-price"><?php echo number_format($act_price, 0, ',', ' '); ?> DH</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <?php if ($act_start_time || $act_end_time): ?>
+                                                    <div class="activity-time">
+                                                        <?php if ($act_start_time): ?>
+                                                            <span><?php echo esc_html($act_start_time); ?></span>
+                                                        <?php endif; ?>
+                                                        <?php if ($act_start_time && $act_end_time): ?>
+                                                            <span> - </span>
+                                                        <?php endif; ?>
+                                                        <?php if ($act_end_time): ?>
+                                                            <span><?php echo esc_html($act_end_time); ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if ($act_desc !== ''): ?>
+                                                    <div class="activity-description"><?php echo wp_kses_post($act_desc); ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        <div class="day-activity-actions">
+                                            <?php if ($can_toggle_activities && !$is_mandatory): ?>
+                                                <button type="button" class="ajtb-btn-edit-activity" data-day-activity-id="<?php echo $day_activity_id; ?>" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" aria-label="<?php esc_attr_e('Modifier cette activité', 'ajinsafro-tour-bridge'); ?>">Modifier</button>
+                                                <button type="button" class="ajtb-btn-remove-activity" data-aj-action="remove" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" aria-label="<?php esc_attr_e('Retirer cette activité', 'ajinsafro-tour-bridge'); ?>">Retirer</button>
+                                            <?php endif; ?>
+                                        </div>
                                     </li>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -440,8 +482,9 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
         </button>
     </div>
 
-    <!-- Activity Modal -->
+    <!-- Activity Modals -->
     <?php if ($can_toggle_activities): ?>
         <?php ajtb_get_partial('activity-modal', ['tour_id' => $tour_id]); ?>
+        <?php ajtb_get_partial('activity-edit-modal'); ?>
     <?php endif; ?>
 </section>

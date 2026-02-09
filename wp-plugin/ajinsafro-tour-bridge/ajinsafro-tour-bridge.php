@@ -113,6 +113,10 @@ class Ajinsafro_Tour_Bridge {
         add_action('wp_ajax_aj_get_activities_modal', [$this, 'ajax_get_activities_modal']);
         add_action('wp_ajax_nopriv_aj_get_activities_modal', [$this, 'ajax_get_activities_modal']);
 
+        // AJAX: update activity custom fields
+        add_action('wp_ajax_aj_update_activity', [$this, 'ajax_update_activity']);
+        add_action('wp_ajax_nopriv_aj_update_activity', [$this, 'ajax_update_activity']);
+
         // AJAX: client toggle flight (add/remove) for display
         add_action('wp_ajax_ajtb_toggle_flight', [$this, 'ajax_toggle_flight']);
         add_action('wp_ajax_nopriv_ajtb_toggle_flight', [$this, 'ajax_toggle_flight']);
@@ -317,6 +321,66 @@ class Ajinsafro_Tour_Bridge {
 
         $result = $repo->get_activities_for_modal($exclude_ids, $search, $page, $per_page);
         wp_send_json_success($result);
+    }
+
+    /**
+     * AJAX: update activity custom fields (custom_title, custom_description, custom_price, start_time, end_time).
+     * Params: day_activity_id, tour_id, day_id, activity_id, custom_title?, custom_description?, custom_price?, start_time?, end_time?.
+     * Returns: JSON with updated HTML for the day activities list.
+     */
+    public function ajax_update_activity() {
+        $day_activity_id = isset($_POST['day_activity_id']) ? (int) $_POST['day_activity_id'] : 0;
+        $tour_id = isset($_POST['tour_id']) ? (int) $_POST['tour_id'] : 0;
+        $day_id = isset($_POST['day_id']) ? (int) $_POST['day_id'] : 0;
+
+        if ($day_activity_id <= 0 || $tour_id <= 0 || $day_id <= 0) {
+            wp_send_json_error(['message' => __('Paramètres manquants.', 'ajinsafro-tour-bridge')]);
+        }
+
+        // Get update data
+        $custom_title = isset($_POST['custom_title']) ? sanitize_text_field($_POST['custom_title']) : null;
+        $custom_description = isset($_POST['custom_description']) ? wp_kses_post($_POST['custom_description']) : null;
+        $custom_price = isset($_POST['custom_price']) && $_POST['custom_price'] !== '' ? (float) $_POST['custom_price'] : null;
+        $start_time = isset($_POST['start_time']) && $_POST['start_time'] !== '' ? sanitize_text_field($_POST['start_time']) : null;
+        $end_time = isset($_POST['end_time']) && $_POST['end_time'] !== '' ? sanitize_text_field($_POST['end_time']) : null;
+
+        // Update via Laravel service
+        try {
+            $programService = new \App\Services\Wp\TourProgramService();
+            $programService->updateDayActivity($day_activity_id, [
+                'custom_title' => $custom_title === '' ? null : $custom_title,
+                'custom_description' => $custom_description === '' ? null : $custom_description,
+                'custom_price' => $custom_price,
+                'start_time' => $start_time,
+                'end_time' => $end_time,
+            ]);
+
+            // Re-render HTML
+            $repo = new AJTB_Laravel_Repository($tour_id);
+            $days = $repo->get_days();
+            $day_activities = [];
+            foreach ($days as $d) {
+                if ((int) ($d['id'] ?? 0) === $day_id) {
+                    $day_activities = $d['activities'] ?? [];
+                    break;
+                }
+            }
+            $activities_catalog = $repo->get_activities_catalog();
+            $session_token = isset($_POST['session_token']) ? sanitize_text_field($_POST['session_token']) : '';
+            if ($session_token === '') {
+                $selections = new AJTB_Activity_Selections();
+                $session_token = $selections->get_session_token();
+            }
+            $html = ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $session_token, $activities_catalog);
+
+            wp_send_json_success([
+                'message' => __('Activité mise à jour.', 'ajinsafro-tour-bridge'),
+                'day_id' => $day_id,
+                'html' => $html,
+            ]);
+        } catch (\Exception $e) {
+            wp_send_json_error(['message' => __('Erreur lors de la mise à jour.', 'ajinsafro-tour-bridge')]);
+        }
     }
 
     /**
