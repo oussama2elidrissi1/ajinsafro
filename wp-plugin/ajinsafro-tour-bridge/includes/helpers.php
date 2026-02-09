@@ -81,6 +81,73 @@ function ajtb_format_price($price, $with_symbol = true) {
 }
 
 /**
+ * Get WordPress attachment image URL reliably (using _wp_attached_file meta, not guid).
+ * Works even if attachment was created by Laravel with inconsistent guid.
+ *
+ * @param int $attachment_id WordPress attachment post ID
+ * @param string $size Image size (thumbnail, medium, large, full)
+ * @return string|null Image URL or null if not found
+ */
+function ajtb_get_attachment_image_url($attachment_id, $size = 'medium') {
+    if (empty($attachment_id)) {
+        return null;
+    }
+    
+    $attachment_id = (int) $attachment_id;
+    
+    // Try WordPress function first (works for standard WP uploads)
+    if (function_exists('wp_get_attachment_image_url')) {
+        $url = wp_get_attachment_image_url($attachment_id, $size);
+        if ($url && filter_var($url, FILTER_VALIDATE_URL)) {
+            return $url;
+        }
+    }
+    
+    // Fallback: build URL from _wp_attached_file meta (reliable for Laravel uploads)
+    global $wpdb;
+    $attached_file = $wpdb->get_var($wpdb->prepare(
+        "SELECT meta_value FROM {$wpdb->postmeta} 
+         WHERE post_id = %d AND meta_key = '_wp_attached_file' 
+         LIMIT 1",
+        $attachment_id
+    ));
+    
+    if (!$attached_file) {
+        return null;
+    }
+    
+    // Get uploads base URL
+    $uploads_data = function_exists('wp_upload_dir') ? wp_upload_dir() : null;
+    $uploads_url = $uploads_data && isset($uploads_data['baseurl']) ? $uploads_data['baseurl'] : '';
+    
+    if (!$uploads_url) {
+        // Fallback to config if wp_upload_dir fails
+        $uploads_url = defined('WP_UPLOADS_URL') ? WP_UPLOADS_URL : '';
+    }
+    
+    if (!$uploads_url) {
+        return null;
+    }
+    
+    // Try to get size-specific file if not 'full'
+    if ($size !== 'full' && function_exists('image_get_intermediate_size')) {
+        $size_info = image_get_intermediate_size($attachment_id, $size);
+        if ($size_info && isset($size_info['file']) && !empty($size_info['file'])) {
+            $file_path = dirname($attached_file) . '/' . $size_info['file'];
+            $full_url = rtrim($uploads_url, '/') . '/' . ltrim($file_path, '/');
+            // Verify URL is valid
+            if (filter_var($full_url, FILTER_VALIDATE_URL)) {
+                return $full_url;
+            }
+        }
+    }
+    
+    // Return full size image
+    $full_url = rtrim($uploads_url, '/') . '/' . ltrim($attached_file, '/');
+    return filter_var($full_url, FILTER_VALIDATE_URL) ? $full_url : null;
+}
+
+/**
  * Get tour thumbnail URL
  *
  * @param int $post_id Post ID
@@ -91,7 +158,7 @@ function ajtb_get_tour_thumbnail($post_id, $size = 'large') {
     $thumbnail_id = get_post_thumbnail_id($post_id);
     
     if ($thumbnail_id) {
-        $image = wp_get_attachment_image_url($thumbnail_id, $size);
+        $image = ajtb_get_attachment_image_url($thumbnail_id, $size);
         if ($image) {
             return $image;
         }

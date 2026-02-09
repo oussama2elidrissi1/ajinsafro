@@ -532,7 +532,10 @@ class AJTB_Laravel_Repository {
             $image_url = null;
             // Check if image_id column exists and has a value
             if (isset($row['image_id']) && !empty($row['image_id'])) {
-                $image_url = wp_get_attachment_image_url((int) $row['image_id'], 'medium');
+                // Use reliable helper function that works with Laravel-uploaded images
+                $image_url = function_exists('ajtb_get_attachment_image_url') 
+                    ? ajtb_get_attachment_image_url((int) $row['image_id'], 'medium')
+                    : wp_get_attachment_image_url((int) $row['image_id'], 'medium');
             }
             
             $items[] = [
