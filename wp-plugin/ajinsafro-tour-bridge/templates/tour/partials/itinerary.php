@@ -22,20 +22,38 @@ $can_toggle_activities = ($source === 'laravel' && !empty($session_token) && $to
 $outboundFlight = $tour['outboundFlight'] ?? null;
 $inboundFlight = $tour['inboundFlight'] ?? null;
 // Normalize to arrays for multi-vol support (outbound/inbound can be single row or array of rows)
-$outboundFlightsList = is_array($outboundFlight) && isset($outboundFlight[0]) && is_array($outboundFlight[0]) ? $outboundFlight : ($outboundFlight ? [$outboundFlight] : []);
-$inboundFlightsList = is_array($inboundFlight) && isset($inboundFlight[0]) && is_array($inboundFlight[0]) ? $inboundFlight : ($inboundFlight ? [$inboundFlight] : []);
+$outboundFlightsList = [];
+if (is_array($outboundFlight) && isset($outboundFlight[0]) && is_array($outboundFlight[0])) {
+    $outboundFlightsList = $outboundFlight;
+} elseif (is_array($outboundFlight) && !empty($outboundFlight) && (isset($outboundFlight['id']) || isset($outboundFlight['flight_type']))) {
+    $outboundFlightsList = [$outboundFlight];
+}
+$inboundFlightsList = [];
+if (is_array($inboundFlight) && isset($inboundFlight[0]) && is_array($inboundFlight[0])) {
+    $inboundFlightsList = $inboundFlight;
+} elseif (is_array($inboundFlight) && !empty($inboundFlight) && (isset($inboundFlight['id']) || isset($inboundFlight['flight_type']))) {
+    $inboundFlightsList = [$inboundFlight];
+}
 $total_days = count($itinerary);
 $duration_day = max(1, (int) ($tour['duration_day'] ?? 1));
 
-// No Laravel days: show flights in programme when present, then WP programme or "non disponible"
+// Diagnostic (visible in View Source): table name, counts. Si total_rows=0 => sync Laravel→WP ou préfixe table.
+$flights_debug = $tour['_flights_debug'] ?? null;
+if ($flights_debug !== null && (defined('WP_DEBUG') && WP_DEBUG || !empty($_GET['ajtb_flights_debug']))) {
+    $d = $flights_debug;
+    echo '<!-- AJTB flights | table=' . esc_attr($d['table'] ?? '') . ' | exists=' . (isset($d['table_exists']) && $d['table_exists'] ? '1' : '0') . ' | tour_id=' . (int) ($d['tour_id'] ?? 0) . ' | total_rows=' . (int) ($d['total_rows'] ?? 0) . ' | outbound=' . (int) ($d['outbound'] ?? 0) . ' | inbound=' . (int) ($d['inbound'] ?? 0) . ' | segments=' . esc_attr(implode(',', isset($d['segments_keys']) ? $d['segments_keys'] : [])) . ' -->' . "\n";
+}
+
+// No Laravel days: show flights in programme when present. Fallback "non disponible" only when list is empty.
 if (empty($itinerary)) {
-    $show_out = function_exists('ajtb_flights_have_content') && ajtb_flights_have_content($outboundFlightsList);
-    $show_in = function_exists('ajtb_flights_have_content') && ajtb_flights_have_content($inboundFlightsList);
+    $outbound_count = is_array($outboundFlightsList) ? count($outboundFlightsList) : 0;
+    $inbound_count = is_array($inboundFlightsList) ? count($inboundFlightsList) : 0;
+    $show_out = $outbound_count > 0;
+    $show_in = $inbound_count > 0;
     $has_flights_in_program = $show_out || $show_in;
     $last_day_num = $duration_day;
 
     if ($has_flights_in_program) {
-        // Programme avec uniquement les vols (Jour 1 + dernier jour) quand pas de jours Laravel — toujours les deux blocs (vol ou non disponible)
         ?>
     <section class="ajtb-section" id="itinerary" data-tour-id="<?php echo $tour_id; ?>">
         <h2 class="ajtb-section-title">Programme du Circuit</h2>
@@ -49,7 +67,7 @@ if (empty($itinerary)) {
                     $fo_to   = $fo_to !== '' ? $fo_to : '—';
                 ?>
                     <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> — Jour 1 • <?php echo esc_html($fo_from); ?> → <?php echo esc_html($fo_to); ?></h4>
-                    <?php foreach ($outboundFlightsList as $flight): if (function_exists('ajtb_flight_has_content') && !ajtb_flight_has_content($flight)) { continue; } $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
+                    <?php foreach ($outboundFlightsList as $flight): $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
                 <?php else: ?>
                     <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> — Jour 1</h4>
                     <?php $label = __('Vol Aller non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; ?>
@@ -64,7 +82,7 @@ if (empty($itinerary)) {
                     $fi_to   = $fi_to !== '' ? $fi_to : '—';
                 ?>
                     <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?> — Jour <?php echo $last_day_num; ?> • <?php echo esc_html($fi_from); ?> → <?php echo esc_html($fi_to); ?></h4>
-                    <?php foreach ($inboundFlightsList as $flight): if (function_exists('ajtb_flight_has_content') && !ajtb_flight_has_content($flight)) { continue; } $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
+                    <?php foreach ($inboundFlightsList as $flight): $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
                 <?php else: ?>
                     <h4 class="ajtb-day-flight-label"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?> — Jour <?php echo $last_day_num; ?></h4>
                     <?php $label = __('Vol Retour non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; ?>
@@ -376,15 +394,18 @@ foreach ($itinerary as $index => $day) {
                         </div>
 
                         <?php
-                        // —— Blocs inline (pas de sections repliables) : Vol, Transfert, Hôtel dans le contenu du jour
+                        // —— Blocs inline : Vol(s) par jour (source: aj_tour_flights). Fallback "non disponible" uniquement si liste vide.
                         $day_transfer = $day['transfer'] ?? null;
                         $day_hotel = $day['hotel'] ?? null;
-                        $show_day_flights = function_exists('ajtb_flights_have_content') && ajtb_flights_have_content($day_flights);
-                        if ($is_first && $show_day_flights): ?>
+                        $day_flights_count = is_array($day_flights) ? count($day_flights) : 0;
+                        $day_flights_return_count = is_array($day_flights_return) ? count($day_flights_return) : 0;
+                        $has_day_flights = $day_flights_count > 0;
+                        $has_day_flights_return = $day_flights_return_count > 0;
+                        if ($is_first && $has_day_flights): ?>
                             <div class="ajtb-block-mmt ajtb-block-flight ajtb-tab-block" data-ajtb-tab="flights">
                                 <h4 class="ajtb-block-title"><span class="ajtb-block-icon">✈</span> <?php esc_html_e('Vol', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-day-flight-outbound ajtb-card-wrap" data-aj-day-flight="outbound" data-aj-day-number="1">
-                                    <?php foreach ($day_flights as $flight): if (function_exists('ajtb_flight_has_content') && !ajtb_flight_has_content($flight)) { continue; } $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
+                                    <?php foreach ($day_flights as $flight): $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
                                 </div>
                             </div>
                         <?php elseif ($is_first): ?>
@@ -394,11 +415,11 @@ foreach ($itinerary as $index => $day) {
                                     <?php $label = __('Vol Aller non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; ?>
                                 </div>
                             </div>
-                        <?php elseif ($show_day_flights): ?>
+                        <?php elseif ($has_day_flights): ?>
                             <div class="ajtb-block-mmt ajtb-block-flight ajtb-tab-block" data-ajtb-tab="flights">
                                 <h4 class="ajtb-block-title"><span class="ajtb-block-icon">✈</span> <?php esc_html_e('Vol(s)', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap" data-aj-day-flight="segment" data-aj-day-number="<?php echo (int) $day_number; ?>">
-                                    <?php foreach ($day_flights as $flight): if (function_exists('ajtb_flight_has_content') && !ajtb_flight_has_content($flight)) { continue; } $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
+                                    <?php foreach ($day_flights as $flight): $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -429,7 +450,7 @@ foreach ($itinerary as $index => $day) {
                             $day_transfer_return = $day['transfer_return'] ?? null;
                             $day_hotel_last = $day['hotel'] ?? null;
                             $hotel_checkout = !empty($day['hotel_checkout']);
-                            $show_inbound = function_exists('ajtb_flights_have_content') && ajtb_flights_have_content($day_flights_return);
+                            $show_inbound = $has_day_flights_return;
                         ?>
                             <?php if (!empty($day_hotel_last) && $hotel_checkout): ?>
                             <div class="ajtb-block-mmt ajtb-block-hotel ajtb-tab-block" data-ajtb-tab="hotels">
@@ -456,7 +477,7 @@ foreach ($itinerary as $index => $day) {
                             <div class="ajtb-block-mmt ajtb-block-flight ajtb-tab-block" data-ajtb-tab="flights">
                                 <h4 class="ajtb-block-title"><span class="ajtb-block-icon">✈</span> <?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-day-flight-inbound ajtb-card-wrap" data-aj-day-flight="inbound" data-aj-day-number="<?php echo $total_days; ?>">
-                                    <?php if ($show_inbound): foreach ($day_flights_return as $flight): if (function_exists('ajtb_flight_has_content') && !ajtb_flight_has_content($flight)) { continue; } $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
+                                    <?php if ($show_inbound): foreach ($day_flights_return as $flight): $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
                                     <?php else: $label = __('Vol Retour non disponible', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card-unavailable.php'; endif; ?>
                                 </div>
                             </div>

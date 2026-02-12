@@ -40,6 +40,22 @@ function ajtb_table($suffix) {
 }
 
 /**
+ * Table name for flights (aj_tour_flights). Override if Laravel uses a different prefix.
+ * In wp-config.php: define('AJTB_FLIGHTS_TABLE', 'cFdgeZ_aj_tour_flights');
+ * Or: add_filter('ajtb_flights_table', function($t) { return 'your_prefix_aj_tour_flights'; }, 10, 2);
+ *
+ * @param int $tour_id Optional; passed to filter.
+ * @return string Full table name.
+ */
+function ajtb_flights_table($tour_id = 0) {
+    $default = ajtb_table('aj_tour_flights');
+    if (defined('AJTB_FLIGHTS_TABLE') && AJTB_FLIGHTS_TABLE !== '') {
+        return AJTB_FLIGHTS_TABLE;
+    }
+    return (string) apply_filters('ajtb_flights_table', $default, $tour_id);
+}
+
+/**
  * Get currency symbol based on currency code
  *
  * @param string|null $currency Currency code (MAD, EUR, USD, etc.)
@@ -478,14 +494,17 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
 
 /**
  * Whether a flight array has any displayable content (from, to, or dates).
- * Used to hide the card when vol is "empty" (e.g. after REMOVE).
+ * Any row from aj_tour_flights (has id or flight_type) is considered "has content" so we never hide saved flights.
  *
- * @param array|null $flight Flight row (from_city, to_city, depart_date_formatted, etc.)
+ * @param array|null $flight Flight row (from_city, to_city, depart_date_formatted, id, flight_type, etc.)
  * @return bool
  */
 function ajtb_flight_has_content($flight) {
     if (empty($flight) || !is_array($flight)) {
         return false;
+    }
+    if (!empty($flight['id']) || (isset($flight['flight_type']) && (string) $flight['flight_type'] !== '')) {
+        return true;
     }
     $from = isset($flight['from_city']) ? trim((string) $flight['from_city']) : trim((string) ($flight['depart_label'] ?? ''));
     $to = isset($flight['to_city']) ? trim((string) $flight['to_city']) : trim((string) ($flight['arrive_label'] ?? ''));
@@ -514,6 +533,27 @@ function ajtb_flights_have_content($flights) {
         }
     }
     return false;
+}
+
+/**
+ * Get flights grouped by day for Programme du Circuit. Reads from aj_tour_flights only.
+ * Use this to ensure the front displays exactly what is in the Laravel CRUD (synced to WP).
+ *
+ * @param int $tour_id   WP post ID (tour).
+ * @param int $last_day_number Last day of the tour (inbound shown on this day).
+ * @return array ['dayFlights' => [1=>[rows], 2=>[rows], ...], 'outbound'=>[], 'inbound'=>[], 'segments_by_day'=>[], '_debug'=>[]]
+ */
+function ajinsafro_get_flights_for_program($tour_id, $last_day_number = 0) {
+    $tour_id = (int) $tour_id;
+    $last_day_number = (int) $last_day_number;
+    if ($tour_id <= 0) {
+        return ['dayFlights' => [], 'outbound' => [], 'inbound' => [], 'segments_by_day' => [], '_debug' => ['tour_id' => $tour_id]];
+    }
+    if (!class_exists('AJTB_Laravel_Repository')) {
+        return ['dayFlights' => [], 'outbound' => [], 'inbound' => [], 'segments_by_day' => [], '_debug' => ['error' => 'AJTB_Laravel_Repository not loaded']];
+    }
+    $repo = new AJTB_Laravel_Repository($tour_id);
+    return $repo->get_flights_for_program($last_day_number);
 }
 
 /**

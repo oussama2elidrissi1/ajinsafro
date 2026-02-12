@@ -122,7 +122,7 @@ class AJTB_Laravel_Repository {
      * @return array List of flight rows with airline_name, formatted dates, labels, etc.
      */
     private function get_flights_internal() {
-        $table_flights = $this->table('tour_flights');
+        $table_flights = function_exists('ajtb_flights_table') ? ajtb_flights_table($this->tour_id) : $this->table('tour_flights');
         $table_airlines = $this->table('airlines');
 
         if (!$this->table_exists($table_flights)) {
@@ -198,10 +198,13 @@ class AJTB_Laravel_Repository {
      * @return array ['outbound' => [rows], 'inbound' => [rows], 'segments_by_day' => [day => [rows]]]
      */
     private function get_flights_grouped_for_days() {
-        $table_flights = $this->table('tour_flights');
+        $table_flights = function_exists('ajtb_flights_table') ? ajtb_flights_table($this->tour_id) : $this->table('tour_flights');
         $table_airlines = $this->table('airlines');
         $out = ['outbound' => [], 'inbound' => [], 'segments_by_day' => []];
         if (!$this->table_exists($table_flights)) {
+            if (function_exists('error_log')) {
+                error_log('[AJTB flights] Table does not exist: ' . $table_flights . ' (tour_id=' . $this->tour_id . ')');
+            }
             return $out;
         }
         $airlines_exist = $this->table_exists($table_airlines);
@@ -233,6 +236,10 @@ class AJTB_Laravel_Repository {
         }
         $sql .= " WHERE f.tour_id = %d ORDER BY " . $order_by;
         $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $this->tour_id), ARRAY_A);
+        $total_rows = is_array($rows) ? count($rows) : 0;
+        if (function_exists('error_log')) {
+            error_log('[AJTB flights] tour_id=' . $this->tour_id . ' table=' . $table_flights . ' total_rows=' . $total_rows);
+        }
         if (!$rows) {
             return $out;
         }
@@ -263,6 +270,8 @@ class AJTB_Laravel_Repository {
                 'day_number' => $day_num,
                 'from_city' => $from_city,
                 'to_city' => $to_city,
+                'depart_label' => $from_city !== '' ? $from_city : '—',
+                'arrive_label' => $to_city !== '' ? $to_city : '—',
                 'depart_date' => $dep_date,
                 'depart_time' => $r['depart_time'] ?? null,
                 'depart_date_formatted' => $dep_date ? date('D, d M', strtotime($dep_date)) : '—',
@@ -293,8 +302,8 @@ class AJTB_Laravel_Repository {
             }
         }
 
-        if (defined('WP_DEBUG') && WP_DEBUG && function_exists('error_log')) {
-            error_log('[AJTB flights grouped] tour_id=' . $this->tour_id . ' outbound=' . count($out['outbound']) . ' inbound=' . count($out['inbound']) . ' segments_by_day keys=' . implode(',', array_keys($out['segments_by_day'])));
+        if (function_exists('error_log')) {
+            error_log('[AJTB flights grouped] tour_id=' . $this->tour_id . ' total_raw=' . $total_rows . ' outbound=' . count($out['outbound']) . ' inbound=' . count($out['inbound']) . ' segments_by_day keys=' . implode(',', array_keys($out['segments_by_day'])));
         }
         return $out;
     }
@@ -307,6 +316,94 @@ class AJTB_Laravel_Repository {
      */
     private function get_tour_flights_for_days() {
         return $this->get_flights_grouped_for_days();
+    }
+
+    /**
+     * Public API: get flights grouped by day for Programme du Circuit.
+     * Reads from aj_tour_flights only. Returns structure: dayFlights[day] = list of flight rows.
+     *
+     * @param int $last_day_number Last day of the tour (inbound attached to this day).
+     * @return array ['dayFlights' => [1=>[], 2=>[], ...], 'outbound'=>[], 'inbound'=>[], 'segments_by_day'=>[], '_debug'=>[]]
+     */
+    public function get_flights_for_program($last_day_number = 0) {
+        $last_day_number = (int) $last_day_number;
+        $grouped = $this->get_flights_grouped_for_days();
+        $outbound = $grouped['outbound'] ?? [];
+        $inbound = $grouped['inbound'] ?? [];
+        $segments_by_day = $grouped['segments_by_day'] ?? [];
+        $dayFlights = [];
+        if ($last_day_number >= 1) {
+            for ($d = 1; $d <= $last_day_number; $d++) {
+                $dayFlights[$d] = [];
+            }
+        }
+        foreach ($outbound as $row) {
+            $day = 1;
+            if (!isset($dayFlights[$day])) {
+                $dayFlights[$day] = [];
+            }
+            $dayFlights[$day][] = $row;
+        }
+        foreach ($segments_by_day as $day => $rows) {
+            if (!isset($dayFlights[$day])) {
+                $dayFlights[$day] = [];
+            }
+            foreach ($rows as $row) {
+                $dayFlights[$day][] = $row;
+            }
+        }
+        if ($last_day_number > 0) {
+            foreach ($inbound as $row) {
+                $day = $last_day_number;
+                if (!isset($dayFlights[$day])) {
+                    $dayFlights[$day] = [];
+                }
+                $dayFlights[$day][] = $row;
+            }
+        }
+        $debug = [
+            'tour_id' => $this->tour_id,
+            'total_outbound' => count($outbound),
+            'total_inbound' => count($inbound),
+            'segments_by_day_keys' => array_keys($segments_by_day),
+            'dayFlights_keys' => array_keys($dayFlights),
+        ];
+        return [
+            'dayFlights' => $dayFlights,
+            'outbound' => $outbound,
+            'inbound' => $inbound,
+            'segments_by_day' => $segments_by_day,
+            '_debug' => $debug,
+        ];
+    }
+
+    /**
+     * Debug: table name, existence, and flight counts for this tour. Use in template to diagnose "vols non affichés".
+     *
+     * @return array { table, table_exists, tour_id, total_rows, outbound, inbound, segments_keys }
+     */
+    public function get_flights_debug_info() {
+        $table = function_exists('ajtb_flights_table') ? ajtb_flights_table($this->tour_id) : $this->table('tour_flights');
+        $exists = $this->table_exists($table);
+        $info = [
+            'table' => $table,
+            'table_exists' => $exists,
+            'tour_id' => $this->tour_id,
+        ];
+        if (!$exists) {
+            $info['total_rows'] = 0;
+            $info['outbound'] = 0;
+            $info['inbound'] = 0;
+            $info['segments_keys'] = [];
+            return $info;
+        }
+        $total = (int) $this->wpdb->get_var($this->wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE tour_id = %d", $this->tour_id));
+        $grouped = $this->get_flights_grouped_for_days();
+        $info['total_rows'] = $total;
+        $info['outbound'] = count($grouped['outbound'] ?? []);
+        $info['inbound'] = count($grouped['inbound'] ?? []);
+        $info['segments_keys'] = array_keys($grouped['segments_by_day'] ?? []);
+        return $info;
     }
 
     /**

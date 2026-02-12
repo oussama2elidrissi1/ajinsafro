@@ -107,6 +107,8 @@ class AJTB_Template_Loader {
         // Merge data with priority to Laravel if available
         $merged = self::merge_tour_data($wp_data, $laravel_data);
         $merged['_session_token'] = $session_token;
+        // Diagnostic: always attach so template can show in HTML comment when WP_DEBUG or ?ajtb_flights_debug=1
+        $merged['_flights_debug'] = $laravel_repo->get_flights_debug_info();
         return $merged;
     }
 
