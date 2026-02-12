@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
+use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Auth\LockScreenController;
@@ -136,6 +137,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::post('circuits/voyages/{id}/hero-image/select', [HeroImageController::class, 'select'])->name('circuits.voyages.hero-image.select')->whereNumber('id');
     Route::post('circuits/voyages/{id}/hero-image/remove', [HeroImageController::class, 'remove'])->name('circuits.voyages.hero-image.remove')->whereNumber('id');
     Route::get('wp-media/search', [WpMediaController::class, 'search'])->name('wp-media.search');
+    Route::get('circuits/voyages/{id}/program', [ProgramApiController::class, 'show'])->name('circuits.voyages.program.show')->whereNumber('id');
+    Route::post('circuits/voyages/{id}/program', [ProgramApiController::class, 'save'])->name('circuits.voyages.program.save')->whereNumber('id');
     Route::post('circuits/voyages/{id}/program/day', [VoyageController::class, 'addProgramDay'])->name('circuits.voyages.program.addDay')->whereNumber('id');
     Route::post('circuits/voyages/{id}/program/day/{dayId}', [VoyageController::class, 'deleteProgramDay'])->name('circuits.voyages.program.deleteDay')->whereNumber(['id', 'dayId']);
     Route::delete('circuits/voyages/{voyage}/images/{voyageImage}', [VoyageController::class, 'destroyImage'])->name('circuits.voyages.images.destroy');

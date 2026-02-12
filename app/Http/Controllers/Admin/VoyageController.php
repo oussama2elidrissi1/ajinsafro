@@ -13,6 +13,7 @@ use App\Models\Airline;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Services\VoyageFlightService;
+use App\Services\Wp\ProgramJsonService;
 use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
@@ -28,11 +29,14 @@ class VoyageController extends Controller
 
     protected VoyageFlightService $voyageFlightService;
 
-    public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $voyageFlightService)
+    protected ProgramJsonService $programJsonService;
+
+    public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $voyageFlightService, ProgramJsonService $programJsonService)
     {
         $this->repository = $repository;
         $this->programService = $programService;
         $this->voyageFlightService = $voyageFlightService;
+        $this->programJsonService = $programJsonService;
     }
 
     /**
@@ -349,7 +353,15 @@ class VoyageController extends Controller
         $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
         $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'heroImageUrl', 'tourHotel', 'transferArrival', 'transferDeparture', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl'));
+        $programJson = [];
+        $programApiUrl = route('admin.circuits.voyages.program.save', ['id' => $id]);
+        try {
+            $programJson = $this->programJsonService->getProgram($id);
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
+        }
+
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'heroImageUrl', 'tourHotel', 'transferArrival', 'transferDeparture', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
     }
     
     /**

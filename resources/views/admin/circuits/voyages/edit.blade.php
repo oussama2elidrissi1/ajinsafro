@@ -1531,12 +1531,17 @@
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
 
-                                    <h6 class="mt-3 mb-2">Activités incluses</h6>
+                                    <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
+                                        INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activités' : 'Activité' }}
+                                    </p>
+
+                                    <h6 class="mt-3 mb-2">Éléments du jour</h6>
                                     <div class="programme-activities-list mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
                                         @foreach($activities as $actIndex => $da)
-                                            <div class="programme-activity-row card mb-2" data-day-activity-id="{{ $da->id }}">
+                                            <div class="programme-activity-row card mb-2" data-day-activity-id="{{ $da->id }}" draggable="true">
                                                 <div class="card-body py-2">
                                                     <div class="d-flex flex-wrap align-items-start gap-2">
+                                                        <span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][day_activity_id]" value="{{ $da->id }}">
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][activity_id]" value="{{ $da->activity_id }}">
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][sort_order]" value="{{ $actIndex }}">
@@ -1566,10 +1571,13 @@
                                             </div>
                                         @endforeach
                                     </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <label class="form-label mb-0">Ajouter une activité:</label>
-                                        <select class="form-select form-select-sm add-activity-select" style="max-width:280px" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
-                                            <option value="">-- Choisir --</option>
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}" data-bs-toggle="modal" data-bs-target="#programme-add-element-modal">
+                                            <i class="bx bx-plus"></i> Ajouter un élément
+                                        </button>
+                                        <span class="small text-muted">ou</span>
+                                        <select class="form-select form-select-sm add-activity-select" style="max-width:240px" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
+                                            <option value="">-- Activité rapide --</option>
                                             @foreach($activitiesCatalog as $act)
                                                 <option value="{{ $act->id }}">{{ $act->title }}</option>
                                             @endforeach
@@ -1585,6 +1593,49 @@
                                 <button type="button" class="btn btn-sm btn-success" id="btn-add-program-day-empty"><i class="bx bx-plus"></i> Ajouter un jour</button>
                             </div>
                         @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal Ajouter un élément (Vols / Transferts / Hôtels / Activités) --}}
+            <div class="modal fade" id="programme-add-element-modal" tabindex="-1" aria-labelledby="programme-add-element-modal-label" aria-hidden="true" data-day-index="" data-day-id="">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="programme-add-element-modal-label">Ajouter un élément au jour</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul class="nav nav-tabs mb-3" role="tablist">
+                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-activities" type="button">Activités</button></li>
+                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-flights" type="button">Vols</button></li>
+                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-transfers" type="button">Transferts</button></li>
+                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-hotels" type="button">Hôtels</button></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="tab-activities">
+                                    <div class="row g-3" id="programme-modal-activities">
+                                        @foreach($activitiesCatalog as $act)
+                                            <div class="col-md-6 col-lg-4">
+                                                <div class="card h-100 programme-catalog-card">
+                                                    <div class="card-body d-flex flex-column">
+                                                        <h6 class="card-title">{{ $act->title }}</h6>
+                                                        <p class="card-text small text-muted flex-grow-1">{{ \Illuminate\Support\Str::limit($act->description ?? '', 80) }}</p>
+                                                        <button type="button" class="btn btn-sm btn-primary programme-modal-add-activity" data-activity-id="{{ $act->id }}" data-activity-title="{{ e($act->title) }}">Ajouter au jour</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                        @if($activitiesCatalog->isEmpty())
+                                            <div class="col-12 text-muted">Aucune activité dans le catalogue.</div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="tab-flights"><p class="text-muted">Vols : à configurer (vol aller Jour 1, retour dernier jour).</p></div>
+                                <div class="tab-pane fade" id="tab-transfers"><p class="text-muted">Transferts : à configurer.</p></div>
+                                <div class="tab-pane fade" id="tab-hotels"><p class="text-muted">Hôtels : à configurer.</p></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1698,6 +1749,8 @@
         });
         
         window.PROGRAMME_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(fn($a) => ['id' => $a->id, 'title' => $a->title])->values()->all());
+        window.PROGRAM_API_URL = @json($programApiUrl ?? '');
+        window.PROGRAM_VOYAGE_ID = @json($voyage->ID ?? 0);
 
         (function programmeDaysManager() {
             var accordion = document.getElementById('accordionProgrammeDays');
@@ -1740,6 +1793,7 @@
                 });
                 updateBadge();
                 updateDuration();
+                if (window.autosaveProgram) window.autosaveProgram();
             }
             function newDayHtml(index) {
                 var collapseId = 'collapse-day-new-' + index + '-' + Date.now();
@@ -1765,12 +1819,14 @@
                     '<textarea class="form-control" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes ou description du jour"></textarea></div>' +
                     '<input type="hidden" name="programme_days[' + index + '][title]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][description]" value="">' +
-                    '<h6 class="mt-3 mb-2">Activités incluses</h6>' +
+                    '<p class="small text-muted mb-2 programme-day-inclus" data-day-index="' + index + '">INCLUS : 0 Activité</p>' +
+                    '<h6 class="mt-3 mb-2">Éléments du jour</h6>' +
                     '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
-                    '<div class="d-flex align-items-center gap-2">' +
-                    '<label class="form-label mb-0">Ajouter une activité:</label>' +
-                    '<select class="form-select form-select-sm add-activity-select" style="max-width:280px" data-day-index="' + index + '" data-day-id="">' +
-                    '<option value="">-- Choisir --</option>' + actOpts + '</select>' +
+                    '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+                    '<button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="' + index + '" data-day-id="" data-bs-toggle="modal" data-bs-target="#programme-add-element-modal"><i class="bx bx-plus"></i> Ajouter un élément</button>' +
+                    '<span class="small text-muted">ou</span>' +
+                    '<select class="form-select form-select-sm add-activity-select" style="max-width:240px" data-day-index="' + index + '" data-day-id="">' +
+                    '<option value="">-- Activité rapide --</option>' + actOpts + '</select>' +
                     '<button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="' + index + '" data-day-id=""><i class="bx bx-plus"></i> Ajouter</button></div>' +
                     '</div></div></div>';
             }
@@ -1859,6 +1915,143 @@
             }
         })();
 
+        window.buildProgramFromForm = function() {
+            var accordion = document.getElementById('accordionProgrammeDays');
+            if (!accordion) return null;
+            var cards = accordion.querySelectorAll('.programme-day-card');
+            var program_days = [];
+            cards.forEach(function(card, i) {
+                var dayId = card.getAttribute('data-day-id') || '';
+                var dayUid = dayId ? ('day-' + dayId) : ('new-' + i + '-' + Date.now());
+                var titleInput = card.querySelector('input[name$="[day_title]"]');
+                var notesInput = card.querySelector('textarea[name$="[notes]"]');
+                var modeSelect = card.querySelector('select[name$="[mode]"]');
+                var title = titleInput ? titleInput.value.trim() : '';
+                var notes = notesInput ? notesInput.value.trim() : '';
+                var mode = (modeSelect && modeSelect.value === 'free') ? 'free' : 'program';
+                var items = [];
+                card.querySelectorAll('.programme-activity-row').forEach(function(row, k) {
+                    var actId = row.querySelector('input[name$="[activity_id]"]');
+                    if (actId && actId.value) items.push({ uid: 'act-' + k, type: 'activity', ref_id: parseInt(actId.value, 10), sort: k });
+                });
+                program_days.push({ day_uid: dayUid, day_number: i + 1, title: title, notes: notes, mode: mode, items: items });
+            });
+            return { program_days: program_days };
+        };
+
+        window.autosaveProgram = function() {
+            if (!window.PROGRAM_API_URL) return;
+            var payload = window.buildProgramFromForm && window.buildProgramFromForm();
+            if (!payload) return;
+            var token = document.querySelector('input[name="_token"]') && document.querySelector('input[name="_token"]').value;
+            fetch(window.PROGRAM_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                if (data.success) {
+                    var toast = document.createElement('div');
+                    toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                    toast.style.cssText = 'top:16px;right:16px;z-index:9999;min-width:200px;';
+                    toast.innerHTML = (data.message || 'Enregistré') + ' <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                    document.body.appendChild(toast);
+                    setTimeout(function() { toast.remove(); }, 3000);
+                }
+            }).catch(function() {});
+        };
+
+        (function programmeModalAndAutosave() {
+            var modal = document.getElementById('programme-add-element-modal');
+            if (!modal) return;
+            modal.addEventListener('show.bs.modal', function(e) {
+                var btn = e.relatedTarget;
+                if (btn && btn.classList && btn.classList.contains('btn-add-element-to-day')) {
+                    modal.setAttribute('data-day-index', btn.getAttribute('data-day-index') || '');
+                    modal.setAttribute('data-day-id', btn.getAttribute('data-day-id') || '');
+                }
+            });
+            modal.addEventListener('click', function(e) {
+                var addBtn = e.target.closest('.programme-modal-add-activity');
+                if (!addBtn) return;
+                e.preventDefault();
+                var dayIndex = modal.getAttribute('data-day-index');
+                var dayId = modal.getAttribute('data-day-id');
+                var activityId = addBtn.getAttribute('data-activity-id');
+                var activityTitle = addBtn.getAttribute('data-activity-title') || 'Activité';
+                if (!dayIndex || !activityId) return;
+                var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+                var list = card && card.querySelector('.programme-activities-list');
+                if (!list) return;
+                var k = list.querySelectorAll('.programme-activity-row').length;
+                var prefix = 'programme_days[' + dayIndex + '][activities][' + k + ']';
+                var row = document.createElement('div');
+                row.className = 'programme-activity-row card mb-2';
+                row.setAttribute('data-day-activity-id', '0');
+                row.setAttribute('draggable', 'true');
+                row.innerHTML = '<div class="card-body py-2"><div class="d-flex flex-wrap align-items-start gap-2">' +
+                    '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                    '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
+                    '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
+                    '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
+                    '<span class="fw-medium">' + (activityTitle || 'Activité').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
+                    '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
+                    '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
+                    '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
+                    '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description"></textarea>' +
+                    '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button></div></div>';
+                list.appendChild(row);
+                var inclusEl = card.querySelector('.programme-day-inclus');
+                if (inclusEl) { var n = list.querySelectorAll('.programme-activity-row').length; inclusEl.textContent = 'INCLUS : ' + n + (n > 1 ? ' Activités' : ' Activité'); }
+                if (window.bootstrap && bootstrap.Modal) { var m = bootstrap.Modal.getInstance(modal); if (m) m.hide(); }
+                if (window.autosaveProgram) window.autosaveProgram();
+            });
+        })();
+
+        (function programmeActivityDragDrop() {
+            var draggedActivityRow = null;
+            document.addEventListener('dragstart', function(e) {
+                var row = e.target.closest('.programme-activity-row');
+                if (!row || e.target.closest('.remove-programme-activity')) return;
+                draggedActivityRow = row;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', '');
+                row.classList.add('opacity-50');
+            });
+            document.addEventListener('dragend', function(e) {
+                if (draggedActivityRow) draggedActivityRow.classList.remove('opacity-50');
+                draggedActivityRow = null;
+            });
+            document.addEventListener('dragover', function(e) {
+                var list = e.target.closest('.programme-activities-list');
+                if (list && draggedActivityRow && list.contains(draggedActivityRow)) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                }
+            });
+            document.addEventListener('drop', function(e) {
+                var list = e.target.closest('.programme-activities-list');
+                if (!list || !draggedActivityRow || !list.contains(draggedActivityRow)) return;
+                e.preventDefault();
+                var targetRow = e.target.closest('.programme-activity-row');
+                if (targetRow === draggedActivityRow) { draggedActivityRow = null; return; }
+                var card = list.closest('.programme-day-card');
+                if (targetRow) {
+                    if (targetRow.compareDocumentPosition(draggedActivityRow) === 4) list.insertBefore(draggedActivityRow, targetRow);
+                    else list.insertBefore(draggedActivityRow, targetRow.nextSibling);
+                } else {
+                    list.appendChild(draggedActivityRow);
+                }
+                var rows = list.querySelectorAll('.programme-activity-row');
+                rows.forEach(function(r, i) {
+                    r.querySelectorAll('[name^="programme_days["]').forEach(function(el) {
+                        el.name = el.name.replace(/\]\[activities\]\[\d+\]/, '][activities][' + i + ']');
+                    });
+                });
+                if (window.autosaveProgram) window.autosaveProgram();
+                draggedActivityRow = null;
+            });
+        })();
+
         // Programme (Jours): Add activity to day (délégation pour les jours ajoutés dynamiquement)
         document.addEventListener('click', function(e) {
             if (e.target.closest('.add-activity-to-day')) {
@@ -1876,8 +2069,10 @@
                 var row = document.createElement('div');
                 row.className = 'programme-activity-row card mb-2';
                 row.setAttribute('data-day-activity-id', '0');
+                row.setAttribute('draggable', 'true');
                 row.innerHTML = '<div class="card-body py-2">' +
                     '<div class="d-flex flex-wrap align-items-start gap-2">' +
+                    '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
                     '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
                     '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
                     '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
@@ -1890,10 +2085,18 @@
                     '</div></div>';
                 list.appendChild(row);
                 select.value = '';
+                if (window.autosaveProgram) window.autosaveProgram();
             }
             if (e.target.closest('.remove-programme-activity')) {
                 var row = e.target.closest('.programme-activity-row');
-                if (row && confirm('Retirer cette activité du jour ?')) row.remove();
+                if (row && confirm('Retirer cette activité du jour ?')) {
+                    var card = row.closest('.programme-day-card');
+                    row.remove();
+                    var inclus = card && card.querySelector('.programme-day-inclus');
+                    var list = card && card.querySelector('.programme-activities-list');
+                    if (inclus && list) { var n = list.querySelectorAll('.programme-activity-row').length; inclus.textContent = 'INCLUS : ' + n + (n > 1 ? ' Activités' : ' Activité'); }
+                    if (window.autosaveProgram) window.autosaveProgram();
+                }
             }
         });
     </script>
