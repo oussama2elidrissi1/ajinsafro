@@ -40,9 +40,10 @@ function ajtb_table($suffix) {
 }
 
 /**
- * Table name for flights (aj_tour_flights). Override if Laravel uses a different prefix.
- * In wp-config.php: define('AJTB_FLIGHTS_TABLE', 'cFdgeZ_aj_tour_flights');
- * Or: add_filter('ajtb_flights_table', function($t) { return 'your_prefix_aj_tour_flights'; }, 10, 2);
+ * Table name for flights (aj_tour_flights). Laravel may use a different prefix (e.g. cFdgeZ_).
+ * In wp-config.php use one of:
+ *   define('AJTB_FLIGHTS_TABLE', 'cFdgeZ_aj_tour_flights');
+ *   define('AJTB_FLIGHTS_TABLE_PREFIX', 'cFdgeZ_');  // then table = cFdgeZ_aj_tour_flights
  *
  * @param int $tour_id Optional; passed to filter.
  * @return string Full table name.
@@ -51,6 +52,14 @@ function ajtb_flights_table($tour_id = 0) {
     $default = ajtb_table('aj_tour_flights');
     if (defined('AJTB_FLIGHTS_TABLE') && AJTB_FLIGHTS_TABLE !== '') {
         return AJTB_FLIGHTS_TABLE;
+    }
+    if (defined('AJTB_FLIGHTS_TABLE_PREFIX') && AJTB_FLIGHTS_TABLE_PREFIX !== '') {
+        $prefix = rtrim((string) AJTB_FLIGHTS_TABLE_PREFIX, '_');
+        return $prefix . '_aj_tour_flights';
+    }
+    $from_option = get_option('ajtb_flights_table', '');
+    if (is_string($from_option) && $from_option !== '') {
+        return $from_option;
     }
     return (string) apply_filters('ajtb_flights_table', $default, $tour_id);
 }

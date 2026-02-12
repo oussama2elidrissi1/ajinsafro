@@ -284,7 +284,7 @@ class AJTB_Laravel_Repository {
                 'cabin_baggage_display' => isset($r['baggage_cabin_kg']) && $r['baggage_cabin_kg'] !== '' && $r['baggage_cabin_kg'] !== null ? ((int) $r['baggage_cabin_kg']) . ' KGS' : '—',
                 'checkin_baggage_display' => isset($r['baggage_checkin_kg']) && $r['baggage_checkin_kg'] !== '' && $r['baggage_checkin_kg'] !== null ? ((int) $r['baggage_checkin_kg']) . ' KGS' : '—',
                 'is_tentative' => !empty($r['is_tentative']),
-                'is_optional' => !empty($r['is_optional']),
+                'is_optional' => isset($r['is_optional']) ? !empty($r['is_optional']) : false,
                 'laravel_option_id' => isset($r['laravel_option_id']) ? (int) $r['laravel_option_id'] : null,
                 'notes' => $r['notes'] ?? null,
                 'airline_name' => $airlines_exist ? ($r['airline_name'] ?? '') : '',

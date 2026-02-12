@@ -621,6 +621,22 @@ class VoyageController extends Controller
                 }
             }
 
+            // Toujours synchroniser les vols Laravel → WP après chaque enregistrement (pour que le plugin affiche les vols)
+            if ($laravelVoyage && $laravelVoyage->wp_post_id) {
+                try {
+                    $this->voyageFlightOptionService->syncOptionsToWp(
+                        $laravelVoyage->id,
+                        (int) $laravelVoyage->wp_post_id,
+                        $lastDayNumber ?? max(1, (int) ($validated['duration_day'] ?? 1))
+                    );
+                } catch (\Throwable $e) {
+                    \Log::warning('VoyageController@update: syncOptionsToWp after save failed', [
+                        'tour_id' => $id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
                 ->with('success', 'Tour mis à jour avec succès dans WordPress ! Modifications visibles immédiatement.');

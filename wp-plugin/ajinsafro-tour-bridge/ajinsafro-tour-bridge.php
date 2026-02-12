@@ -34,6 +34,15 @@ define('AJTB_POST_TYPE', 'st_tours');
 define('AJTB_LARAVEL_PREFIX', 'aj_');
 
 /**
+ * Flights table: if Laravel uses a different DB prefix (e.g. cFdgeZ_), set in wp-config.php:
+ *   define('AJTB_FLIGHTS_TABLE_PREFIX', 'cFdgeZ_');
+ * Or create this file in the plugin folder with: <?php define('AJTB_FLIGHTS_TABLE_PREFIX', 'cFdgeZ_');
+ */
+if (file_exists(AJTB_PLUGIN_DIR . 'wp-config-ajtb.php')) {
+    require_once AJTB_PLUGIN_DIR . 'wp-config-ajtb.php';
+}
+
+/**
  * Load required files
  */
 require_once AJTB_PLUGIN_DIR . 'includes/helpers.php';
