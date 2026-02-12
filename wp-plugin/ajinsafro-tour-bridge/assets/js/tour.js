@@ -271,12 +271,6 @@
                     itemHtml = $activityItem[0].outerHTML; // Store for potential restore
                     $activityItem.fadeOut(150, function() {
                         $(this).remove();
-                        // Check if list is now empty
-                        if ($list && $list.find('.day-activity-item:not(.day-no-activities)').length === 0) {
-                            if ($list.find('.day-no-activities').length === 0) {
-                                $list.append('<li class="day-activity-item day-no-activities">Aucune activité</li>');
-                            }
-                        }
                     });
                 }
 
@@ -295,7 +289,6 @@
                 $.post(ajaxUrl, payload).done(function(resp) {
                     console.log('AJ TB response', resp);
                     if (resp.success && resp.data && resp.data.html !== undefined) {
-                        // Update container with server response (for consistency)
                         if (container) {
                             container.innerHTML = resp.data.html;
                         }
@@ -521,18 +514,16 @@
                     session_token: sessionToken
                 }).done(function(resp) {
                     if (resp.success && resp.data && resp.data.html !== undefined) {
-                        // Update day activities list instantly
                         var container = document.getElementById('aj-day-activities-' + dayId);
                         if (container) {
                             container.innerHTML = resp.data.html;
                         }
                         self.showToast(resp.data.message || 'Activité ajoutée');
-                        // Close modal after short delay for better UX
                         setTimeout(function() {
                             $modal.attr('aria-hidden', 'true').removeClass('is-open');
                         }, 300);
                     } else {
-                        // On error: restore card
+                        var $grid = $('#ajtb-activity-grid');
                         if (cardHtml && $grid.length) {
                             $grid.prepend(cardHtml);
                             $grid.find('.ajtb-activity-card').last().hide().fadeIn(150);
@@ -542,7 +533,7 @@
                         $btn.prop('disabled', false).text('Ajouter');
                     }
                 }).fail(function() {
-                    // On error: restore card
+                    var $grid = $('#ajtb-activity-grid');
                     if (cardHtml && $grid.length) {
                         $grid.prepend(cardHtml);
                         $grid.find('.ajtb-activity-card').last().hide().fadeIn(150);

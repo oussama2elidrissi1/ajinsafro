@@ -159,8 +159,53 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
     }
     return implode(' + ', $parts);
 };
+
+// Structured includes per day for Top Bar (flights, transfers, hotels, activities counts)
+$ajtb_day_includes_raw = function ($day, $index, $total_days) {
+    $n = (int) ($day['day'] ?? $index + 1);
+    $last = $total_days > 0 && $n === (int) $total_days;
+    $flights = 0;
+    if (!empty($day['flight']) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day['flight'])) $flights++;
+    if (!empty($day['flight_return']) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day['flight_return'])) $flights++;
+    $transfers = 0;
+    if (!empty($day['transfer'])) $transfers++;
+    if (!empty($day['transfer_return'])) $transfers++;
+    $hotels = !empty($day['hotel']) ? 1 : 0;
+    $act_count = 0;
+    if (!empty($day['activities'])) {
+        foreach ($day['activities'] as $a) { if (!empty($a['is_included'])) $act_count++; }
+    }
+    $meals = !empty(trim((string) ($day['meals'] ?? ''))) ? 1 : 0;
+    return ['flights' => $flights, 'transfers' => $transfers, 'hotels' => $hotels, 'activities' => $act_count, 'meals' => $meals];
+};
+$day_includes_for_js = [];
+foreach ($itinerary as $index => $day) {
+    $day_num = $day['day'] ?? ($index + 1);
+    $day_includes_for_js[(string) $day_num] = $ajtb_day_includes_raw($day, $index, $total_days);
+}
+
+// Calculate global totals (all days combined)
+$global_totals = [
+    'days' => $total_days,
+    'flights' => 0,
+    'transfers' => 0,
+    'hotels' => 0,
+    'activities' => 0,
+    'meals' => 0,
+];
+foreach ($itinerary as $index => $day) {
+    $day_includes = $ajtb_day_includes_raw($day, $index, $total_days);
+    $global_totals['flights'] += $day_includes['flights'];
+    $global_totals['transfers'] += $day_includes['transfers'];
+    $global_totals['hotels'] += $day_includes['hotels'];
+    $global_totals['activities'] += $day_includes['activities'];
+    // Count meals
+    if (!empty(trim((string) ($day['meals'] ?? '')))) {
+        $global_totals['meals']++;
+    }
+}
 ?>
-<section class="ajtb-section" id="itinerary" data-tour-id="<?php echo $tour_id; ?>" data-session-token="<?php echo esc_attr($session_token); ?>" data-activities-catalog="<?php echo esc_attr(wp_json_encode($activities_catalog)); ?>">
+<section class="ajtb-section" id="itinerary" data-tour-id="<?php echo $tour_id; ?>" data-session-token="<?php echo esc_attr($session_token); ?>" data-activities-catalog="<?php echo esc_attr(wp_json_encode($activities_catalog)); ?>" data-day-includes="<?php echo esc_attr(wp_json_encode($day_includes_for_js)); ?>">
     <h2 class="ajtb-section-title">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
             <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"></path>
@@ -176,10 +221,47 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
         <span class="section-badge"><?php echo count($itinerary); ?> jour<?php echo count($itinerary) > 1 ? 's' : ''; ?></span>
     </h2>
 
+    <!-- Global Summary Bar (always visible, above day list) -->
+    <div class="ajtb-global-summary-bar" id="ajtb-global-summary-bar" data-ajtb-mode="global">
+        <nav class="ajtb-global-summary-nav" aria-label="<?php esc_attr_e('Résumé du séjour', 'ajinsafro-tour-bridge'); ?>">
+            <button type="button" class="ajtb-global-pill active" data-ajtb-global-tab="programme" aria-pressed="true">
+                <span class="ajtb-global-pill-label"><?php echo esc_html($global_totals['days']); ?> DAY PLAN</span>
+            </button>
+            <?php if ($global_totals['flights'] > 0 || $global_totals['transfers'] > 0): ?>
+                <button type="button" class="ajtb-global-pill" data-ajtb-global-tab="flights-transfers" aria-pressed="false">
+                    <span class="ajtb-global-pill-label">
+                        <?php 
+                        $parts = [];
+                        if ($global_totals['flights'] > 0) $parts[] = $global_totals['flights'] . ' ' . ($global_totals['flights'] > 1 ? __('FLIGHTS', 'ajinsafro-tour-bridge') : __('FLIGHT', 'ajinsafro-tour-bridge'));
+                        if ($global_totals['transfers'] > 0) $parts[] = $global_totals['transfers'] . ' ' . ($global_totals['transfers'] > 1 ? __('TRANSFERS', 'ajinsafro-tour-bridge') : __('TRANSFER', 'ajinsafro-tour-bridge'));
+                        echo esc_html(implode(' & ', $parts));
+                        ?>
+                    </span>
+                </button>
+            <?php endif; ?>
+            <?php if ($global_totals['hotels'] > 0): ?>
+                <button type="button" class="ajtb-global-pill" data-ajtb-global-tab="hotels" aria-pressed="false">
+                    <span class="ajtb-global-pill-label"><?php echo esc_html($global_totals['hotels']); ?> <?php echo $global_totals['hotels'] > 1 ? __('HOTELS', 'ajinsafro-tour-bridge') : __('HOTEL', 'ajinsafro-tour-bridge'); ?></span>
+                </button>
+            <?php endif; ?>
+            <?php if ($global_totals['activities'] > 0): ?>
+                <button type="button" class="ajtb-global-pill" data-ajtb-global-tab="activities" aria-pressed="false">
+                    <span class="ajtb-global-pill-label"><?php echo esc_html($global_totals['activities']); ?> <?php echo $global_totals['activities'] > 1 ? __('ACTIVITIES', 'ajinsafro-tour-bridge') : __('ACTIVITY', 'ajinsafro-tour-bridge'); ?></span>
+                </button>
+            <?php endif; ?>
+            <?php if ($global_totals['meals'] > 0): ?>
+                <button type="button" class="ajtb-global-pill" data-ajtb-global-tab="meals" aria-pressed="false">
+                    <span class="ajtb-global-pill-label"><?php echo esc_html($global_totals['meals']); ?> <?php echo $global_totals['meals'] > 1 ? __('MEALS', 'ajinsafro-tour-bridge') : __('MEAL', 'ajinsafro-tour-bridge'); ?></span>
+                </button>
+            <?php endif; ?>
+        </nav>
+    </div>
+
     <!-- Layout Day Plan : timeline gauche (dot + ligne) + détails droite -->
     <div class="itinerary ajtb-programme-mmt programme-container">
         <nav class="itinerary__nav ajtb-programme-days aj-day-plan-nav" aria-label="<?php esc_attr_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?>">
-            <h3 class="day-plan__title"><?php esc_html_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?></h3>
+        <h3 class="day-plan__title"></h3>
+        <h3 class="day-plan__title"><?php esc_html_e('Plan de séjour', 'ajinsafro-tour-bridge'); ?></h3>
             <ul class="day-plan">
                 <?php foreach ($itinerary as $index => $day): 
                     $day_num = $day['day'] ?? ($index + 1);
@@ -206,6 +288,19 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
             </ul>
         </nav>
         <div class="itinerary__content ajtb-programme-center aj-day-plan-content">
+            <!-- Day Details Bar (sticky) : Jour X à gauche + un seul set d'onglets à droite (sans duplication) -->
+            <div class="ajtb-day-details-bar aj-program-stickybar" id="ajtb-day-details-bar" data-ajtb-bar>
+                <div class="ajtb-day-details-bar__left">
+                    <span class="ajtb-day-details-bar__day" id="ajtb-day-details-day-label">Jour 1</span>
+                </div>
+                <nav class="ajtb-day-details-bar__tabs" aria-label="<?php esc_attr_e('Filtrer le programme', 'ajinsafro-tour-bridge'); ?>">
+                    <button type="button" class="ajtb-tab-pill active" data-ajtb-tab="programme" aria-pressed="true"><?php esc_html_e('Programme', 'ajinsafro-tour-bridge'); ?></button>
+                    <button type="button" class="ajtb-tab-pill" data-ajtb-tab="flights" aria-pressed="false"><?php esc_html_e('Vols', 'ajinsafro-tour-bridge'); ?></button>
+                    <button type="button" class="ajtb-tab-pill" data-ajtb-tab="transfers" aria-pressed="false"><?php esc_html_e('Transferts', 'ajinsafro-tour-bridge'); ?></button>
+                    <button type="button" class="ajtb-tab-pill" data-ajtb-tab="hotels" aria-pressed="false"><?php esc_html_e('Hôtels', 'ajinsafro-tour-bridge'); ?></button>
+                    <button type="button" class="ajtb-tab-pill" data-ajtb-tab="activities" aria-pressed="false"><?php esc_html_e('Activités', 'ajinsafro-tour-bridge'); ?></button>
+                </nav>
+            </div>
             <div class="ajtb-day-panels">
         <?php foreach ($itinerary as $index => $day): 
             $day_number = $day['day'] ?? ($index + 1);
@@ -218,21 +313,18 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
             $day_activity_ids = array_map(function ($a) { return (int) ($a['activity_id'] ?? 0); }, $activities);
             $inclus_line = $ajtb_day_inclus($day, $index, $total_days);
         ?>
-            <div class="ajtb-day-content-panel day-card" id="aj-day-panel-<?php echo $day_number; ?>" data-aj-day-panel="<?php echo $day_number; ?>" data-day="<?php echo $day_number; ?>" data-day-index="<?php echo $index; ?>" data-day-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>" role="tabpanel" aria-labelledby="aj-day-nav-<?php echo $day_number; ?>">
-                <!-- Header du jour (badge + titre + INCLUS) -->
+            <div class="ajtb-day-content-panel day-card" id="aj-day-panel-<?php echo $day_number; ?>" data-aj-day-panel="<?php echo $day_number; ?>" data-day="<?php echo $day_number; ?>" data-day-id="<?php echo $day_number; ?>" data-day-title="<?php echo esc_attr('Jour ' . $day_number); ?>" data-day-index="<?php echo $index; ?>" data-day-db-id="<?php echo $day_id; ?>" data-day-activity-ids="<?php echo esc_attr(implode(',', $day_activity_ids)); ?>" role="tabpanel" aria-labelledby="aj-day-nav-<?php echo $day_number; ?>">
+                <span id="aj-day-<?php echo $day_number; ?>" class="aj-day-anchor" aria-hidden="true"></span>
+                <!-- Header du jour (titre uniquement, badge et INCLUS supprimés car dans la barre) -->
                 <div class="ajtb-day-header-mmt">
-                    <span class="ajtb-day-badge">Jour <?php echo $day_number; ?></span>
                     <?php if ($mode === 'free'): ?>
                         <span class="badge badge-free-day"><?php esc_html_e('Jour libre', 'ajinsafro-tour-bridge'); ?></span>
                     <?php endif; ?>
                     <h3 class="ajtb-day-title-mmt"><?php echo esc_html($day_title_display); ?></h3>
-                    <?php if ($inclus_line !== ''): ?>
-                        <p class="ajtb-day-inclus">INCLUS : <?php echo esc_html($inclus_line); ?></p>
-                    <?php endif; ?>
                 </div>
                 <div class="day-body">
                         <?php
-                        // —— Description du jour en premier (toujours affichée en tête)
+                        // —— Programme (notes + bannière) : filtre "Programme"
                         $day_notes = trim((string) ($day['notes'] ?? ''));
                         if ($day_notes === '' && isset($day['description'])) {
                             $day_notes = trim((string) $day['description']);
@@ -241,6 +333,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             $day_notes = trim((string) $day['content']);
                         }
                         ?>
+                        <div class="ajtb-tab-block" data-ajtb-tab="programme">
                         <div id="aj-day-notes-<?php echo $day_id; ?>" class="aj-day-programme-block aj-day-programme-block--first">
                         <?php
                         if ($day_notes !== ''):
@@ -259,6 +352,8 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             <img src="<?php echo esc_url($day['image']); ?>" alt="Jour <?php echo $day_number; ?>" loading="lazy">
                         </div>
                         <?php endif; ?>
+                        </div>
+
                         <?php
                         // —— Blocs inline (pas de sections repliables) : Vol, Transfert, Hôtel dans le contenu du jour
                         if ($is_first):
@@ -267,7 +362,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             $day_hotel = $day['hotel'] ?? null;
                             $show_outbound = !empty($day_flight) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day_flight);
                         ?>
-                            <div class="ajtb-block-mmt ajtb-block-flight">
+                            <div class="ajtb-block-mmt ajtb-block-flight ajtb-tab-block" data-ajtb-tab="flights">
                                 <h4 class="ajtb-block-title"><span class="ajtb-block-icon">✈</span> <?php esc_html_e('Vol', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-day-flight-outbound ajtb-card-wrap" data-aj-day-flight="outbound" data-aj-day-number="1">
                                     <?php if ($show_outbound): $flight = $day_flight; $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
@@ -275,7 +370,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                                 </div>
                             </div>
                             <?php if (!empty($day_transfer)): ?>
-                            <div class="ajtb-block-mmt ajtb-block-transfer">
+                            <div class="ajtb-block-mmt ajtb-block-transfer ajtb-tab-block" data-ajtb-tab="transfers">
                                 <h4 class="ajtb-block-title"><?php esc_html_e('Transfert Aéroport → Hôtel', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
                                     <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--transfer">
@@ -286,7 +381,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             </div>
                             <?php endif; ?>
                             <?php if (!empty($day_hotel)): ?>
-                            <div class="ajtb-block-mmt ajtb-block-hotel">
+                            <div class="ajtb-block-mmt ajtb-block-hotel ajtb-tab-block" data-ajtb-tab="hotels">
                                 <h4 class="ajtb-block-title"><?php esc_html_e('Hôtel', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
                                     <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--hotel">
@@ -306,7 +401,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             $show_inbound = !empty($day_flight_return) && function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($day_flight_return);
                         ?>
                             <?php if (!empty($day_hotel_last) && $hotel_checkout): ?>
-                            <div class="ajtb-block-mmt ajtb-block-hotel">
+                            <div class="ajtb-block-mmt ajtb-block-hotel ajtb-tab-block" data-ajtb-tab="hotels">
                                 <h4 class="ajtb-block-title"><?php esc_html_e('Hôtel (check-out)', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
                                     <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--hotel">
@@ -317,7 +412,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                             </div>
                             <?php endif; ?>
                             <?php if (!empty($day_transfer_return)): ?>
-                            <div class="ajtb-block-mmt ajtb-block-transfer">
+                            <div class="ajtb-block-mmt ajtb-block-transfer ajtb-tab-block" data-ajtb-tab="transfers">
                                 <h4 class="ajtb-block-title"><?php esc_html_e('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
                                     <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--transfer">
@@ -327,7 +422,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                                 </div>
                             </div>
                             <?php endif; ?>
-                            <div class="ajtb-block-mmt ajtb-block-flight">
+                            <div class="ajtb-block-mmt ajtb-block-flight ajtb-tab-block" data-ajtb-tab="flights">
                                 <h4 class="ajtb-block-title"><span class="ajtb-block-icon">✈</span> <?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-day-flight-inbound ajtb-card-wrap" data-aj-day-flight="inbound" data-aj-day-number="<?php echo $total_days; ?>">
                                     <?php if ($show_inbound): $flight = $day_flight_return; $show_remove = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; ?>
@@ -337,7 +432,7 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                         <?php endif; ?>
 
                         <!-- Activities container (id stable: JS replaces innerHTML after AJAX) -->
-                        <div id="aj-day-activities-<?php echo $day_id; ?>">
+                        <div id="aj-day-activities-<?php echo $day_id; ?>" class="ajtb-tab-block" data-ajtb-tab="activities">
                         <ul class="day-activities-list" data-day-id="<?php echo $day_id; ?>">
                             <?php 
                             $included_count = 0;
@@ -406,26 +501,37 @@ $ajtb_day_inclus = function ($day, $index, $total_days) {
                                     </li>
                                 <?php endforeach; ?>
                             <?php endif; ?>
-                            <?php if ($included_count === 0): ?>
+                            <?php if ($included_count === 0 && !$can_toggle_activities): ?>
                                 <li class="day-activity-item day-no-activities"><?php esc_html_e('Aucune activité', 'ajinsafro-tour-bridge'); ?></li>
                             <?php endif; ?>
+                            <?php /* CTA "Add to day" : toujours visible quand les activités sont modifiables */ ?>
+                            <?php if ($can_toggle_activities && $day_id > 0): ?>
+                                <li class="day-activity-item day-activity-empty-card">
+                                    <div class="day-activity-empty-card-content">
+                                        <div class="day-activity-empty-icon">
+                                            <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" fill="none" stroke-width="1.5">
+                                                <path d="M12 2v20M2 12h20"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        </div>
+                                        <div class="day-activity-empty-text">
+                                            <h3 class="day-activity-empty-title"><?php esc_html_e('Add Activities to your day', 'ajinsafro-tour-bridge'); ?></h3>
+                                            <p class="day-activity-empty-subtitle"><?php esc_html_e('Spend the day at leisure or add an activity to your day', 'ajinsafro-tour-bridge'); ?></p>
+                                        </div>
+                                        <div class="day-activity-empty-action">
+                                            <button type="button" class="ajtb-btn-open-activity-modal ajtb-btn-add-to-day" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>">
+                                                <?php esc_html_e('ADD TO DAY', 'ajinsafro-tour-bridge'); ?>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                            <?php endif; ?>
                         </ul>
-                        <?php if ($can_toggle_activities && $day_id > 0): ?>
-                            <div class="day-add-activity" data-day-id="<?php echo $day_id; ?>">
-                                <button type="button" class="ajtb-btn-open-activity-modal" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>">
-                                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
-                                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    </svg>
-                                    <?php esc_html_e('Ajouter une activité', 'ajinsafro-tour-bridge'); ?>
-                                </button>
-                            </div>
-                        <?php endif; ?>
                         </div>
 
-                        <!-- Day Details (Laravel: meals, accommodation) -->
+                        <!-- Day Details (Laravel: meals, accommodation) - visible in Programme tab -->
                         <?php if ($source === 'laravel'): ?>
-                            <div class="day-details">
+                            <div class="day-details ajtb-tab-block" data-ajtb-tab="programme">
                                 <?php if (!empty($day['meals'])): ?>
                                     <div class="detail-item">
                                         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">

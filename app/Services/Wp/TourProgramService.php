@@ -103,6 +103,36 @@ class TourProgramService
     }
 
     /**
+     * Set day_number for a single day (used after reorder).
+     *
+     * @param int $dayId aj_tour_days.id
+     * @param int $dayNumber 1-based
+     */
+    public function setDayNumber(int $dayId, int $dayNumber): void
+    {
+        TourDay::where('id', $dayId)->update(['day_number' => $dayNumber]);
+    }
+
+    /**
+     * Renumber days to 1..N according to the given order. Deletes any tour day not in the list.
+     *
+     * @param int $tourId wp_posts.ID
+     * @param int[] $orderedDayIds [day_id, ...] in display order
+     */
+    public function reorderAndRenumberDays(int $tourId, array $orderedDayIds): void
+    {
+        $orderedDayIds = array_values(array_filter(array_map('intval', $orderedDayIds)));
+        $existingIds = TourDay::where('tour_id', $tourId)->pluck('id')->toArray();
+        $toDelete = array_diff($existingIds, $orderedDayIds);
+        foreach ($toDelete as $dayId) {
+            $this->deleteDay($tourId, (int) $dayId);
+        }
+        foreach ($orderedDayIds as $index => $dayId) {
+            $this->setDayNumber($dayId, $index + 1);
+        }
+    }
+
+    /**
      * Update day mode (free|program) and optional fields.
      */
     public function saveDayMode(int $dayId, string $mode, array $data = []): TourDay

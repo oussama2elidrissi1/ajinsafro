@@ -13,7 +13,7 @@
     <div class="flex flex-col lg:flex-row items-start justify-start gap-3 lg:gap-2.5">
         {{-- Colonne gauche : Plan de séjour (timeline) — mobile: barre horizontale scrollable --}}
         <nav class="itinerary__nav day-plan-nav lg:sticky lg:top-24 flex flex-col lg:w-fit lg:max-w-[180px] lg:flex-none lg:shrink-0 py-1 pr-0 mr-0 min-w-0 max-lg:flex-row max-lg:overflow-x-auto max-lg:gap-2 max-lg:pb-2 max-lg:mb-2" aria-label="Plan de séjour">
-            <h3 class="day-plan__title text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3 px-0 max-lg:mb-0 max-lg:shrink-0 max-lg:mr-1">Plan de séjour</h3>
+        <h3 class="day-plan__title text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3 px-0 max-lg:mb-0 max-lg:shrink-0 max-lg:mr-1">Plan de séjour</h3>
             <ul class="day-plan list-none m-0 p-0 pl-5 relative before:content-[''] before:absolute before:left-[5px] before:top-2 before:bottom-2 before:w-px before:bg-gray-200 max-lg:flex max-lg:flex-row max-lg:flex-nowrap max-lg:p-0 max-lg:before:hidden max-lg:shrink-0 max-lg:gap-2">
                 @foreach($days as $index => $day)
                     @php

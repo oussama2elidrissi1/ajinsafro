@@ -149,7 +149,7 @@
 
                                 <div class="mb-3">
                                     <label for="duration_day" class="form-label">Durée (jours)</label>
-                                    <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1">
+                                    <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly tabindex="-1" title="Calculé automatiquement depuis le Programme (onglet Programme)">
                                 </div>
 
                                 <div class="mb-3">
@@ -1480,9 +1480,12 @@
                                 <h4 class="card-title mb-1">Programme</h4>
                                 <p class="text-muted mb-0 small">Chaque jour : mode, titre, notes, activités. @if(Route::has('admin.circuits.activities.index'))<a href="{{ route('admin.circuits.activities.index') }}" target="_blank">Catalogue d’activités</a>.@endif</p>
                             </div>
-                            <button type="submit" form="program-add-day-form" class="btn btn-success">
-                                <i class="bx bx-plus"></i> Ajouter un jour
-                            </button>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-primary fs-6" id="program-days-badge">0 jours</span>
+                                <button type="button" class="btn btn-success" id="btn-add-program-day">
+                                    <i class="bx bx-plus"></i> Ajouter un jour
+                                </button>
+                            </div>
                         </div>
 
                         <div class="accordion" id="accordionProgrammeDays">
@@ -1494,16 +1497,15 @@
                                 $isFirst = ($dayIndex === 0);
                                 $dayTitleDisplay = $day->day_title ?? $day->title ?? ('Jour ' . $day->day_number);
                             @endphp
-                            <div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}">
+                            <div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}" data-day-index="{{ $dayIndex }}">
                                 <h2 class="accordion-header d-flex align-items-center">
-                                    <button class="accordion-button {{ $isFirst ? '' : 'collapsed' }} flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
-                                        JOUR {{ $day->day_number }} – {{ $dayTitleDisplay }}
+                                    <span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer" aria-hidden="true"><i class="bx bx-dots-vertical-rounded"></i></span>
+                                    <button class="accordion-button flex-grow-1 {{ $isFirst ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
+                                        <span class="programme-day-label">JOUR {{ $day->day_number }} – {{ $dayTitleDisplay }}</span>
                                     </button>
-                                    @if($programDays->count() > 1)
-                                    <button type="submit" form="program-delete-day-{{ $day->id }}" class="btn btn-sm btn-outline-danger me-2" title="Supprimer ce jour" onclick="return confirm('Supprimer ce jour ? Les activités du jour seront supprimées.');">
+                                    <button type="button" class="btn btn-sm btn-outline-danger me-2 btn-remove-program-day" title="Supprimer ce jour" data-day-id="{{ $day->id }}">
                                         <i class="bx bx-trash"></i>
                                     </button>
-                                    @endif
                                 </h2>
                                 <div id="{{ $collapseId }}" class="accordion-collapse collapse {{ $isFirst ? 'show' : '' }}" data-bs-parent="#accordionProgrammeDays">
                                     <div class="accordion-body" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
@@ -1578,9 +1580,9 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <span><i class="bx bx-info-circle"></i> Aucun jour. Ajoutez un jour pour définir le programme.</span>
-                                <button type="submit" form="program-add-day-form" class="btn btn-sm btn-success"><i class="bx bx-plus"></i> Ajouter un jour</button>
+                            <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2" id="program-no-days-alert">
+                                <span><i class="bx bx-info-circle"></i> Aucun jour. Cliquez sur « Ajouter un jour » pour définir le programme.</span>
+                                <button type="button" class="btn btn-sm btn-success" id="btn-add-program-day-empty"><i class="bx bx-plus"></i> Ajouter un jour</button>
                             </div>
                         @endforelse
                         </div>
@@ -1609,15 +1611,7 @@
         </div>
     </form>
 
-    {{-- Formulaires hors du form principal (évite form imbriqué) — Ajouter / Supprimer jour --}}
-    <form id="program-add-day-form" action="{{ route('admin.circuits.voyages.program.addDay', $voyage->ID) }}" method="POST" class="d-none">
-        @csrf
-    </form>
-    @foreach($programDays as $entry)
-    <form id="program-delete-day-{{ $entry['day']->id }}" action="{{ route('admin.circuits.voyages.program.deleteDay', [$voyage->ID, $entry['day']->id]) }}" method="POST" class="d-none">
-        @csrf
-    </form>
-    @endforeach
+    {{-- Plus de formulaire séparé pour ajout/suppression de jour : tout est géré en JS, sauvegardé au submit du formulaire principal --}}
 
     {{-- DELETE ZONE --}}
     <div class="row mt-3">
@@ -1703,51 +1697,204 @@
             });
         });
         
-        // Programme (Jours): Add activity to day — names: programme_days[i][activities][k][...]; accordion-body = card content
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.add-activity-to-day').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var dayIndex = this.getAttribute('data-day-index');
-                    var dayId = this.getAttribute('data-day-id');
-                    var card = this.closest('.programme-day-card') || this.closest('.accordion-item');
-                    var select = card ? card.querySelector('.add-activity-select') : null;
-                    var activityId = select && select.value;
-                    var activityTitle = select && select.options[select.selectedIndex] && select.options[select.selectedIndex].text;
-                    if (!activityId || dayIndex === null) {
-                        return;
-                    }
-                    var list = card ? card.querySelector('.programme-activities-list') : null;
-                    if (!list) return;
-                    var k = list.querySelectorAll('.programme-activity-row').length;
-                    var prefix = 'programme_days[' + dayIndex + '][activities][' + k + ']';
-                    var row = document.createElement('div');
-                    row.className = 'programme-activity-row card mb-2';
-                    row.setAttribute('data-day-activity-id', '0');
-                    row.innerHTML = '<div class="card-body py-2">' +
-                        '<div class="d-flex flex-wrap align-items-start gap-2">' +
-                        '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
-                        '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
-                        '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
-                        '<span class="fw-medium">' + (activityTitle || 'Activité') + '</span>' +
-                        '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
-                        '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
-                        '<input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre personnalisé">' +
-                        '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description personnalisée"></textarea>' +
-                        '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>' +
-                        '</div></div>';
-                    list.appendChild(row);
-                    select.value = '';
-                });
-            });
+        window.PROGRAMME_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(fn($a) => ['id' => $a->id, 'title' => $a->title])->values()->all());
 
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.remove-programme-activity')) {
-                    var row = e.target.closest('.programme-activity-row');
-                    if (row && confirm('Retirer cette activité du jour ?')) {
-                        row.remove();
-                    }
+        (function programmeDaysManager() {
+            var accordion = document.getElementById('accordionProgrammeDays');
+            var badge = document.getElementById('program-days-badge');
+            var durationInput = document.getElementById('duration_day');
+            var noDaysAlert = document.getElementById('program-no-days-alert');
+
+            function count() {
+                return (accordion ? accordion.querySelectorAll('.programme-day-card').length : 0);
+            }
+            function updateBadge() {
+                if (badge) {
+                    var n = count();
+                    badge.textContent = n === 1 ? '1 jour' : n + ' jours';
                 }
+            }
+            function updateDuration() {
+                if (durationInput) {
+                    var n = count();
+                    durationInput.value = n > 0 ? n : (durationInput.value || 1);
+                }
+            }
+            function renumber() {
+                if (!accordion) return;
+                var cards = accordion.querySelectorAll('.programme-day-card');
+                cards.forEach(function(card, i) {
+                    card.setAttribute('data-day-index', i);
+                    var prefixOld = 'programme_days[' + (card.getAttribute('data-day-index') || i) + ']';
+                    var prefixNew = 'programme_days[' + i + ']';
+                    card.querySelectorAll('[name^="programme_days["]').forEach(function(el) {
+                        el.name = el.name.replace(/^programme_days\[\d+\]/, 'programme_days[' + i + ']');
+                    });
+                    card.querySelectorAll('[data-day-index]').forEach(function(el) { el.setAttribute('data-day-index', i); });
+                    card.querySelectorAll('.add-activity-select, .add-activity-to-day').forEach(function(el) { el.setAttribute('data-day-index', i); });
+                    var label = card.querySelector('.programme-day-label');
+                    var titleInput = card.querySelector('input[name$="[day_title]"]');
+                    var dayNum = i + 1;
+                    var title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : ('Jour ' + dayNum);
+                    if (label) label.textContent = 'JOUR ' + dayNum + ' – ' + title;
+                });
+                updateBadge();
+                updateDuration();
+            }
+            function newDayHtml(index) {
+                var collapseId = 'collapse-day-new-' + index + '-' + Date.now();
+                var actOpts = (window.PROGRAMME_ACTIVITIES_CATALOG || []).map(function(a) {
+                    return '<option value="' + a.id + '">' + (a.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</option>';
+                }).join('');
+                return '<div class="accordion-item programme-day-card" data-day-id="" data-day-index="' + index + '">' +
+                    '<h2 class="accordion-header d-flex align-items-center">' +
+                    '<span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                    '<button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#' + collapseId + '" aria-expanded="false" aria-controls="' + collapseId + '">' +
+                    '<span class="programme-day-label">JOUR ' + (index + 1) + ' – Jour ' + (index + 1) + '</span></button>' +
+                    '<button type="button" class="btn btn-sm btn-outline-danger me-2 btn-remove-program-day" title="Supprimer ce jour"><i class="bx bx-trash"></i></button></h2>' +
+                    '<div id="' + collapseId + '" class="accordion-collapse collapse" data-bs-parent="#accordionProgrammeDays">' +
+                    '<div class="accordion-body" data-day-index="' + index + '" data-day-id="">' +
+                    '<input type="hidden" name="programme_days[' + index + '][id]" value="">' +
+                    '<input type="hidden" name="programme_days[' + index + '][day_id]" value="">' +
+                    '<div class="row mb-3"><div class="col-md-6"><label class="form-label">Mode</label>' +
+                    '<select name="programme_days[' + index + '][mode]" class="form-select programme-day-mode">' +
+                    '<option value="program" selected>Programme</option><option value="free">Libre</option></select></div>' +
+                    '<div class="col-md-6"><label class="form-label">Titre du jour</label>' +
+                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex: Jour ' + (index + 1) + ' - Arrivée"></div></div>' +
+                    '<div class="mb-3"><label class="form-label">Description / Notes</label>' +
+                    '<textarea class="form-control" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes ou description du jour"></textarea></div>' +
+                    '<input type="hidden" name="programme_days[' + index + '][title]" value="">' +
+                    '<input type="hidden" name="programme_days[' + index + '][description]" value="">' +
+                    '<h6 class="mt-3 mb-2">Activités incluses</h6>' +
+                    '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                    '<label class="form-label mb-0">Ajouter une activité:</label>' +
+                    '<select class="form-select form-select-sm add-activity-select" style="max-width:280px" data-day-index="' + index + '" data-day-id="">' +
+                    '<option value="">-- Choisir --</option>' + actOpts + '</select>' +
+                    '<button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="' + index + '" data-day-id=""><i class="bx bx-plus"></i> Ajouter</button></div>' +
+                    '</div></div></div>';
+            }
+            function addDay() {
+                if (!accordion) return;
+                if (noDaysAlert) noDaysAlert.style.display = 'none';
+                var n = count();
+                var div = document.createElement('div');
+                div.innerHTML = newDayHtml(n).trim();
+                accordion.appendChild(div.firstChild);
+                renumber();
+                var lastCard = accordion.querySelector('.programme-day-card:last-child');
+                if (lastCard && window.bootstrap && bootstrap.Collapse) {
+                    var collapseEl = lastCard.querySelector('.accordion-collapse');
+                    if (collapseEl) new bootstrap.Collapse(collapseEl, { toggle: true });
+                }
+                attachDragToCards();
+            }
+            function removeDay(btn) {
+                var card = btn.closest('.programme-day-card');
+                if (!card || !accordion) return;
+                if (count() <= 1) {
+                    alert('Il doit rester au moins un jour.');
+                    return;
+                }
+                if (!confirm('Supprimer ce jour ? Les activités du jour seront supprimées. La sauvegarde sera effective au clic sur « Enregistrer ».')) return;
+                card.remove();
+                if (count() === 0 && noDaysAlert) noDaysAlert.style.display = '';
+                renumber();
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                updateBadge();
+                updateDuration();
+                document.getElementById('btn-add-program-day') && document.getElementById('btn-add-program-day').addEventListener('click', addDay);
+                document.getElementById('btn-add-program-day-empty') && document.getElementById('btn-add-program-day-empty').addEventListener('click', function() { addDay(); });
+                accordion && accordion.addEventListener('click', function(e) {
+                    if (e.target.closest('.btn-remove-program-day')) {
+                        e.preventDefault();
+                        removeDay(e.target.closest('.btn-remove-program-day'));
+                    }
+                });
+                accordion && accordion.addEventListener('input', function(e) {
+                    if (e.target.matches('input[name$="[day_title]"]')) {
+                        var card = e.target.closest('.programme-day-card');
+                        var i = parseInt(card.getAttribute('data-day-index'), 10);
+                        var label = card.querySelector('.programme-day-label');
+                        if (label) label.textContent = 'JOUR ' + (i + 1) + ' – ' + (e.target.value.trim() || ('Jour ' + (i + 1)));
+                    }
+                });
+                document.getElementById('edit-voyage-form') && document.getElementById('edit-voyage-form').addEventListener('submit', function() {
+                    if (durationInput) durationInput.value = count() || 1;
+                });
+                attachDragToCards();
             });
+            function attachDragToCards() {
+                if (!accordion) return;
+                var cards = accordion.querySelectorAll('.programme-day-card');
+                var dragged = null;
+                cards.forEach(function(card) {
+                    card.draggable = true;
+                    card.ondragstart = function(e) {
+                        dragged = card;
+                        e.dataTransfer.setData('text/plain', '');
+                        e.dataTransfer.effectAllowed = 'move';
+                        card.classList.add('opacity-50');
+                    };
+                    card.ondragend = function() {
+                        card.classList.remove('opacity-50');
+                        dragged = null;
+                    };
+                    card.ondragover = function(e) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        if (dragged && dragged !== card) card.classList.add('border-primary');
+                    };
+                    card.ondragleave = function() { card.classList.remove('border-primary'); };
+                    card.ondrop = function(e) {
+                        e.preventDefault();
+                        card.classList.remove('border-primary');
+                        if (!dragged || dragged === card) return;
+                        var next = card.nextElementSibling;
+                        accordion.insertBefore(dragged, next);
+                        renumber();
+                    };
+                });
+            }
+        })();
+
+        // Programme (Jours): Add activity to day (délégation pour les jours ajoutés dynamiquement)
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.add-activity-to-day')) {
+                var btn = e.target.closest('.add-activity-to-day');
+                var dayIndex = btn.getAttribute('data-day-index');
+                var card = btn.closest('.programme-day-card') || btn.closest('.accordion-item');
+                var select = card ? card.querySelector('.add-activity-select') : null;
+                var activityId = select && select.value;
+                var activityTitle = select && select.options[select.selectedIndex] && select.options[select.selectedIndex].text;
+                if (!activityId || dayIndex === null) return;
+                var list = card ? card.querySelector('.programme-activities-list') : null;
+                if (!list) return;
+                var k = list.querySelectorAll('.programme-activity-row').length;
+                var prefix = 'programme_days[' + dayIndex + '][activities][' + k + ']';
+                var row = document.createElement('div');
+                row.className = 'programme-activity-row card mb-2';
+                row.setAttribute('data-day-activity-id', '0');
+                row.innerHTML = '<div class="card-body py-2">' +
+                    '<div class="d-flex flex-wrap align-items-start gap-2">' +
+                    '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
+                    '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
+                    '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
+                    '<span class="fw-medium">' + (activityTitle || 'Activité').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
+                    '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
+                    '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
+                    '<input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre personnalisé">' +
+                    '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description personnalisée"></textarea>' +
+                    '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>' +
+                    '</div></div>';
+                list.appendChild(row);
+                select.value = '';
+            }
+            if (e.target.closest('.remove-programme-activity')) {
+                var row = e.target.closest('.programme-activity-row');
+                if (row && confirm('Retirer cette activité du jour ?')) row.remove();
+            }
         });
     </script>
 @endpush

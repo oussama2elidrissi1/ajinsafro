@@ -449,16 +449,30 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             $html .= '</div></div></li>';
         }
     } else {
-        $html .= '<li class="day-activity-item day-no-activities">' . esc_html__('Aucune activité', 'ajinsafro-tour-bridge') . '</li>';
+        if (!$can_toggle) {
+            $html .= '<li class="day-activity-item day-no-activities">' . esc_html__('Aucune activité', 'ajinsafro-tour-bridge') . '</li>';
+        }
+    }
+    /* CTA card "Add to day" : toujours affichée quand les activités sont modifiables (même si des activités sont déjà ajoutées) */
+    if ($can_toggle) {
+        $html .= '<li class="day-activity-item day-activity-empty-card">';
+        $html .= '<div class="day-activity-empty-card-content">';
+        $html .= '<div class="day-activity-empty-icon">';
+        $html .= '<svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" fill="none" stroke-width="1.5"><path d="M12 2v20M2 12h20"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        $html .= '</div>';
+        $html .= '<div class="day-activity-empty-text">';
+        $html .= '<h3 class="day-activity-empty-title">' . esc_html__('Add Activities to your day', 'ajinsafro-tour-bridge') . '</h3>';
+        $html .= '<p class="day-activity-empty-subtitle">' . esc_html__('Spend the day at leisure or add an activity to your day', 'ajinsafro-tour-bridge') . '</p>';
+        $html .= '</div>';
+        $html .= '<div class="day-activity-empty-action">';
+        $html .= '<button type="button" class="ajtb-btn-open-activity-modal ajtb-btn-add-to-day" data-tour-id="' . esc_attr($tour_id) . '" data-day-id="' . esc_attr($day_id) . '">';
+        $html .= esc_html__('ADD TO DAY', 'ajinsafro-tour-bridge');
+        $html .= '</button>';
+        $html .= '</div>';
+        $html .= '</div>';
+        $html .= '</li>';
     }
     $html .= '</ul>';
-    if ($can_toggle) {
-        $html .= '<div class="day-add-activity" data-day-id="' . esc_attr($day_id) . '">';
-        $html .= '<button type="button" class="ajtb-btn-open-activity-modal" data-tour-id="' . esc_attr($tour_id) . '" data-day-id="' . esc_attr($day_id) . '">';
-        $html .= '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
-        $html .= esc_html__('Ajouter une activité', 'ajinsafro-tour-bridge');
-        $html .= '</button></div>';
-    }
     return $html;
 }
 

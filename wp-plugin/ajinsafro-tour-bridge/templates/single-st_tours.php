@@ -109,29 +109,6 @@ get_header();
                     <?php ajtb_get_partial('flights', ['tour' => $tour]); ?>
                 <?php endif; ?>
 
-                <!-- Gallery Section -->
-                <?php if (!empty($tour['gallery'])): ?>
-                    <section class="ajtb-section" id="gallery">
-                        <h2 class="ajtb-section-title">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                <polyline points="21,15 16,10 5,21"></polyline>
-                            </svg>
-                            Galerie Photos
-                        </h2>
-                        <div class="ajtb-gallery-grid">
-                            <?php foreach (array_slice($tour['gallery'], 0, 6) as $image): ?>
-                                <a href="<?php echo esc_url($image['url']); ?>" class="gallery-item" data-lightbox="tour-gallery">
-                                    <img src="<?php echo esc_url($image['medium'] ?? $image['url']); ?>" 
-                                         alt="<?php echo esc_attr($image['alt']); ?>" 
-                                         loading="lazy">
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </section>
-                <?php endif; ?>
-
                 <!-- Itinerary (Programme du Circuit): Laravel days or fallback WP tours_program -->
                 <?php if (!empty($tour['itinerary']) || !empty($tour['wp_program']['items'])): ?>
                     <?php ajtb_get_partial('itinerary', ['tour' => $tour]); ?>
@@ -145,6 +122,46 @@ get_header();
                 <!-- FAQ Section -->
                 <?php if (!empty($tour['faqs'])): ?>
                     <?php ajtb_get_partial('faq', ['tour' => $tour]); ?>
+                <?php endif; ?>
+
+                <!-- Gallery Section (hero_gallery + galerie générale) – avant la section Vidéo -->
+                <?php
+                $hero_gallery = !empty($tour['hero_gallery']) && is_array($tour['hero_gallery']) ? $tour['hero_gallery'] : [];
+                $gallery = $tour['gallery'] ?? [];
+                $gallery_ids_seen = [];
+                $section_gallery = [];
+                foreach ($hero_gallery as $img) {
+                    $section_gallery[] = $img;
+                    if (isset($img['url'])) $gallery_ids_seen[] = rtrim($img['url'], '/');
+                }
+                foreach ($gallery as $img) {
+                    $u = isset($img['url']) ? rtrim($img['url'], '/') : '';
+                    if ($u && !in_array($u, $gallery_ids_seen, true)) {
+                        $section_gallery[] = $img;
+                        $gallery_ids_seen[] = $u;
+                    }
+                }
+                ?>
+                <?php if (!empty($section_gallery)): ?>
+                    <section class="ajtb-section" id="gallery">
+                        <h2 class="ajtb-section-title">
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21,15 16,10 5,21"></polyline>
+                            </svg>
+                            Galerie Photos
+                        </h2>
+                        <div class="ajtb-gallery-grid">
+                            <?php foreach ($section_gallery as $image): ?>
+                                <a href="<?php echo esc_url($image['url'] ?? '#'); ?>" class="gallery-item" data-lightbox="tour-gallery">
+                                    <img src="<?php echo esc_url($image['medium'] ?? $image['thumbnail'] ?? $image['url'] ?? ''); ?>" 
+                                         alt="<?php echo esc_attr($image['alt'] ?? ''); ?>" 
+                                         loading="lazy">
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
                 <?php endif; ?>
 
                 <!-- Video Section -->

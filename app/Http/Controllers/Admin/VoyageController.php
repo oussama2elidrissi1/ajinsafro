@@ -547,12 +547,10 @@ class VoyageController extends Controller
 
     /**
      * Sync programme days and day-activities from request.
-     * Tables (connexion wp, préfixe cFdgeZ_) :
-     * - cFdgeZ_aj_tour_days (tour_id, day_number, mode, day_title, notes, ...)
-     * - cFdgeZ_aj_tour_day_activities (tour_id, day_id, activity_id, sort_order, is_included, is_mandatory, ...)
-     * Vérification manuelle en DB :
-     *   SELECT * FROM cFdgeZ_aj_tour_days WHERE tour_id = <ID> ORDER BY day_number;
-     *   SELECT * FROM cFdgeZ_aj_tour_day_activities WHERE tour_id = <ID> ORDER BY day_id, sort_order;
+     * - Accepts new days (empty id/day_id): creates them then renumbers.
+     * - Deletes days not in the submitted list.
+     * - Renumbers day_number 1..N according to submitted order.
+     * Tables: aj_tour_days, aj_tour_day_activities.
      */
     protected function syncProgrammeDaysAndActivities(int $tourId, UpdateWpTourRequest $request): void
     {
@@ -561,10 +559,23 @@ class VoyageController extends Controller
             return;
         }
 
-        $submittedDayActivityIds = [];
-
+        $orderedDayIds = [];
         foreach ($programmeDays as $dayRow) {
             $dayId = (int) ($dayRow['id'] ?? $dayRow['day_id'] ?? 0);
+            if ($dayId <= 0) {
+                $newDay = $this->programService->addDay($tourId);
+                $dayId = $newDay->id;
+            }
+            $orderedDayIds[] = $dayId;
+        }
+
+        if (!empty($orderedDayIds)) {
+            $this->programService->reorderAndRenumberDays($tourId, $orderedDayIds);
+        }
+
+        $submittedDayActivityIds = [];
+        foreach ($programmeDays as $i => $dayRow) {
+            $dayId = (int) ($orderedDayIds[$i] ?? 0);
             if ($dayId <= 0) {
                 continue;
             }
