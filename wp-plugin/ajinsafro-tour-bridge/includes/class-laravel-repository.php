@@ -192,19 +192,37 @@ class AJTB_Laravel_Repository {
     }
 
     /**
-     * Get flights keyed by flight_type (outbound, inbound) for attaching to days.
-     * Outbound => Jour 1, Inbound => Dernier jour.
+     * Get all flights for this tour grouped by type (multi-vols: outbound, inbound, segment).
+     * Compat: maps flight_type 'return' => 'inbound'. Segments use day_number (fallback 1 if null/0).
      *
-     * @return array ['outbound' => flight row or null, 'inbound' => flight row or null]
+     * @return array ['outbound' => [rows], 'inbound' => [rows], 'segments_by_day' => [day => [rows]]]
      */
-    private function get_tour_flights_for_days() {
+    private function get_flights_grouped_for_days() {
         $table_flights = $this->table('tour_flights');
         $table_airlines = $this->table('airlines');
+        $out = ['outbound' => [], 'inbound' => [], 'segments_by_day' => []];
         if (!$this->table_exists($table_flights)) {
-            return ['outbound' => null, 'inbound' => null];
+            return $out;
         }
         $airlines_exist = $this->table_exists($table_airlines);
         $has_flight_type = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'flight_type'", $table_flights));
+        $has_day_number = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'day_number'", $table_flights));
+        $has_sort_order = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'sort_order'", $table_flights));
+        $order_parts = [];
+        if ($has_flight_type) {
+            $order_parts[] = "CASE WHEN LOWER(TRIM(COALESCE(f.flight_type,''))) = 'return' THEN 'inbound' ELSE LOWER(TRIM(COALESCE(f.flight_type,'outbound'))) END ASC";
+        } else {
+            $order_parts[] = "f.segment_number ASC";
+        }
+        if ($has_day_number) {
+            $order_parts[] = "COALESCE(NULLIF(f.day_number, 0), 1) ASC";
+        }
+        if ($has_sort_order) {
+            $order_parts[] = "f.sort_order ASC";
+        }
+        $order_parts[] = "f.id ASC";
+        $order_by = implode(', ', $order_parts);
+
         $sql = "SELECT f.*";
         if ($airlines_exist) {
             $sql .= ", a.name AS airline_name, a.iata_code AS airline_iata";
@@ -213,20 +231,28 @@ class AJTB_Laravel_Repository {
         if ($airlines_exist) {
             $sql .= " LEFT JOIN {$table_airlines} a ON a.id = f.airline_id";
         }
-        $sql .= " WHERE f.tour_id = %d ORDER BY " . ($has_flight_type ? "f.flight_type ASC" : "f.segment_number ASC");
+        $sql .= " WHERE f.tour_id = %d ORDER BY " . $order_by;
         $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $this->tour_id), ARRAY_A);
-        $out = ['outbound' => null, 'inbound' => null];
         if (!$rows) {
             return $out;
         }
+
         foreach ($rows as $r) {
             $ft = isset($r['flight_type']) ? trim(strtolower((string) $r['flight_type'])) : '';
+            if ($ft === 'return') {
+                $ft = 'inbound';
+            }
             if ($ft === '') {
                 $ft = (int) ($r['segment_number'] ?? 0) === 1 ? 'outbound' : 'inbound';
             }
-            if ($ft !== 'outbound' && $ft !== 'inbound') {
-                continue;
+            $day_num = $has_day_number && isset($r['day_number']) ? (int) $r['day_number'] : 0;
+            if ($ft === 'segment') {
+                $day_num = $day_num > 0 ? $day_num : 1;
+                if (!isset($out['segments_by_day'][$day_num])) {
+                    $out['segments_by_day'][$day_num] = [];
+                }
             }
+
             $dep_date = !empty($r['depart_date']) ? $r['depart_date'] : null;
             $arr_date = !empty($r['arrive_date']) ? $r['arrive_date'] : null;
             $from_city = isset($r['from_city']) ? ($r['from_city'] ?? '') : ($r['depart_city'] ?? '');
@@ -234,6 +260,7 @@ class AJTB_Laravel_Repository {
             $row = [
                 'id' => (int) $r['id'],
                 'flight_type' => $ft,
+                'day_number' => $day_num,
                 'from_city' => $from_city,
                 'to_city' => $to_city,
                 'depart_date' => $dep_date,
@@ -248,12 +275,38 @@ class AJTB_Laravel_Repository {
                 'cabin_baggage_display' => isset($r['baggage_cabin_kg']) && $r['baggage_cabin_kg'] !== '' && $r['baggage_cabin_kg'] !== null ? ((int) $r['baggage_cabin_kg']) . ' KGS' : '—',
                 'checkin_baggage_display' => isset($r['baggage_checkin_kg']) && $r['baggage_checkin_kg'] !== '' && $r['baggage_checkin_kg'] !== null ? ((int) $r['baggage_checkin_kg']) . ' KGS' : '—',
                 'is_tentative' => !empty($r['is_tentative']),
+                'is_optional' => !empty($r['is_optional']),
+                'laravel_option_id' => isset($r['laravel_option_id']) ? (int) $r['laravel_option_id'] : null,
                 'notes' => $r['notes'] ?? null,
                 'airline_name' => $airlines_exist ? ($r['airline_name'] ?? '') : '',
             ];
-            $out[ $ft ] = $row;
+            if ($ft === 'outbound') {
+                $out['outbound'][] = $row;
+            } elseif ($ft === 'inbound') {
+                $out['inbound'][] = $row;
+            } else {
+                $dn = ($ft === 'segment' ? $day_num : ($day_num > 0 ? $day_num : 1));
+                if (!isset($out['segments_by_day'][$dn])) {
+                    $out['segments_by_day'][$dn] = [];
+                }
+                $out['segments_by_day'][$dn][] = $row;
+            }
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG && function_exists('error_log')) {
+            error_log('[AJTB flights grouped] tour_id=' . $this->tour_id . ' outbound=' . count($out['outbound']) . ' inbound=' . count($out['inbound']) . ' segments_by_day keys=' . implode(',', array_keys($out['segments_by_day'])));
         }
         return $out;
+    }
+
+    /**
+     * Get flights grouped for attaching to days (outbound / inbound / segments).
+     * Returns arrays so template can loop over multiple vols. Used by get_voyage_flights_from_db and get_days.
+     *
+     * @return array ['outbound' => [rows], 'inbound' => [rows], 'segments_by_day' => [day => [rows]]]
+     */
+    private function get_tour_flights_for_days() {
+        return $this->get_flights_grouped_for_days();
     }
 
     /**
@@ -681,35 +734,39 @@ class AJTB_Laravel_Repository {
             }
             unset($d);
 
-            // Attach flights: outbound => day 1, inbound => last day
-            $flights_by_type = $this->get_tour_flights_for_days();
+            // Attach flights: outbound => day 1, inbound => last day, segments by day_number
+            $flights_grouped = $this->get_tour_flights_for_days();
             $last_day_number = count($days_array) > 0 ? (int) $days_array[ count($days_array) - 1 ]['day'] : 0;
+            $outbound = $flights_grouped['outbound'] ?? [];
+            $inbound = $flights_grouped['inbound'] ?? [];
+            $segments_by_day = $flights_grouped['segments_by_day'] ?? [];
 
             $transfers = $this->get_tour_transfers();
             $hotel = $this->get_tour_hotel();
 
             foreach ($days_array as &$day) {
-                $day['flight'] = null;
-                $day['flight_return'] = null;
+                $day['flight'] = [];
+                $day['flight_return'] = [];
                 $day['transfer'] = null;
                 $day['transfer_return'] = null;
                 $day['hotel'] = null;
                 $day['hotel_checkout'] = false;
                 $dn = (int) ($day['day'] ?? 0);
-                // Jour 1 : vol aller, transfert arrivée, hôtel (check-in)
+                $segments_this_day = isset($segments_by_day[$dn]) ? $segments_by_day[$dn] : [];
+
+                // Jour 1 : vols aller + segments du jour 1
                 if ($dn === 1) {
-                    if (!empty($flights_by_type['outbound'])) {
-                        $day['flight'] = $flights_by_type['outbound'];
-                    }
+                    $day['flight'] = array_merge($outbound, $segments_this_day);
                     if (!empty($transfers['arrival'])) {
                         $day['transfer'] = $transfers['arrival'];
                     }
                     if (!empty($hotel)) {
                         $day['hotel'] = $hotel;
                     }
-                }
-                // Dernier jour : hôtel (check-out), transfert retour, vol retour (peut être le même jour que J1)
-                if ($last_day_number > 0 && $dn === $last_day_number) {
+                } elseif ($last_day_number > 0 && $dn === $last_day_number) {
+                    // Dernier jour : segments du jour + vols retour
+                    $day['flight'] = $segments_this_day;
+                    $day['flight_return'] = $inbound;
                     if (!empty($transfers['departure'])) {
                         $day['transfer_return'] = $transfers['departure'];
                     }
@@ -719,9 +776,8 @@ class AJTB_Laravel_Repository {
                         }
                         $day['hotel_checkout'] = true;
                     }
-                    if (!empty($flights_by_type['inbound'])) {
-                        $day['flight_return'] = $flights_by_type['inbound'];
-                    }
+                } else {
+                    $day['flight'] = $segments_this_day;
                 }
             }
             unset($day);

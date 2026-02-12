@@ -495,6 +495,28 @@ function ajtb_flight_has_content($flight) {
 }
 
 /**
+ * Whether a list of flights (single row or array of rows) has at least one with content.
+ * Use for multi-vol display (outbound/inbound/segments).
+ *
+ * @param array|null $flights Single flight row or array of flight rows
+ * @return bool
+ */
+function ajtb_flights_have_content($flights) {
+    if (empty($flights)) {
+        return false;
+    }
+    $first = reset($flights);
+    $is_list = is_array($first) && (isset($first['from_city']) || isset($first['flight_type']) || isset($first['depart_label']));
+    $list = $is_list ? $flights : [$flights];
+    foreach ($list as $f) {
+        if (ajtb_flight_has_content($f)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Render HTML for flights block (Flight Cards + Add/Remove). Used on initial load and AJAX response.
  *
  * @param int $tour_id

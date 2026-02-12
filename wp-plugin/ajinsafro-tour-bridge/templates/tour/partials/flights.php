@@ -17,8 +17,11 @@ $flights = isset($tour['flights']) ? $tour['flights'] : [];
 $all_flights = isset($tour['all_flights']) ? $tour['all_flights'] : [];
 $outboundFlight = $tour['outboundFlight'] ?? null;
 $inboundFlight = $tour['inboundFlight'] ?? null;
+// Multi-vol: outbound/inbound can be arrays of rows
+$outboundList = is_array($outboundFlight) && isset($outboundFlight[0]) && is_array($outboundFlight[0]) ? $outboundFlight : ($outboundFlight ? [$outboundFlight] : []);
+$inboundList = is_array($inboundFlight) && isset($inboundFlight[0]) && is_array($inboundFlight[0]) ? $inboundFlight : ($inboundFlight ? [$inboundFlight] : []);
 $session_token = isset($tour['_session_token']) ? $tour['_session_token'] : '';
-$has_laravel_flights = !empty($outboundFlight) || !empty($inboundFlight);
+$has_laravel_flights = (function_exists('ajtb_flights_have_content') && ajtb_flights_have_content($outboundList)) || (function_exists('ajtb_flights_have_content') && ajtb_flights_have_content($inboundList));
 $has_wp_flights = !empty($flights) || !empty($all_flights);
 
 if (!$has_laravel_flights && !$has_wp_flights) {
@@ -35,24 +38,16 @@ if (!$has_laravel_flights && !$has_wp_flights) {
     <div id="ajtb-flights-container" class="ajtb-flights-container">
         <?php if ($has_laravel_flights): ?>
             <div class="ajtb-flights-list ajtb-flights-laravel" data-tour-id="<?php echo esc_attr($tour_id); ?>">
-                <?php if (!empty($outboundFlight)): ?>
+                <?php if (function_exists('ajtb_flights_have_content') && ajtb_flights_have_content($outboundList)): ?>
                     <div class="ajtb-flight-group ajtb-flight-outbound">
                         <h3 class="ajtb-flight-group-title"><?php esc_html_e('Vol Aller', 'ajinsafro-tour-bridge'); ?> (Jour 1)</h3>
-                        <?php
-                        $flight = $outboundFlight;
-                        $show_remove = false;
-                        include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
-                        ?>
+                        <?php foreach ($outboundList as $flight): if (function_exists('ajtb_flight_has_content') && !ajtb_flight_has_content($flight)) { continue; } $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
                     </div>
                 <?php endif; ?>
-                <?php if (!empty($inboundFlight)): ?>
+                <?php if (function_exists('ajtb_flights_have_content') && ajtb_flights_have_content($inboundList)): ?>
                     <div class="ajtb-flight-group ajtb-flight-inbound">
                         <h3 class="ajtb-flight-group-title"><?php esc_html_e('Vol Retour', 'ajinsafro-tour-bridge'); ?></h3>
-                        <?php
-                        $flight = $inboundFlight;
-                        $show_remove = false;
-                        include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php';
-                        ?>
+                        <?php foreach ($inboundList as $flight): if (function_exists('ajtb_flight_has_content') && !ajtb_flight_has_content($flight)) { continue; } $show_remove = false; include AJTB_PLUGIN_DIR . 'templates/tour/partials/flight-card.php'; endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
