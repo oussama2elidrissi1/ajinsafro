@@ -1122,8 +1122,7 @@
                 .flight-block .flight-card-view .flight-edit-btn { margin-top: 8px; }
                 .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 </style>
-                <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> Dans cet onglet : <strong>Vol Aller</strong>, <strong>Vol Retour</strong>, <strong>Hôtel</strong> et <strong>Transferts</strong>. Vous pouvez ajouter une <strong>image</strong> pour l'hôtel et pour chaque transfert (bouton « Choisir image ») ; elles s'affichent sur la fiche circuit.</p>
-
+                <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> <strong>Vols Aller / Retour / Segments</strong> (plusieurs options possibles). <strong>Hôtel</strong> et <strong>Transferts</strong> ci-dessous.</p>
                 @if(Route::has('admin.circuits.airlines.index'))
                 <div class="mb-3">
                     <a href="{{ route('admin.circuits.airlines.index') }}" class="btn btn-sm btn-outline-secondary" target="_blank"><i class="bx bx-list-ul me-1"></i> Gérer les compagnies aériennes</a>
@@ -1132,9 +1131,12 @@
                     @endif
                 </div>
                 @endif
-
+                @php $lastDayNumber = $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1); @endphp
+                @include('admin.circuits.voyages.partials._flight_options_sections', ['flightOptionsWithIndex' => $flightOptionsWithIndex ?? [], 'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0, 'lastDayNumber' => $lastDayNumber, 'airlines' => $airlines ?? collect()])
+                <p class="text-muted small mt-2">Enregistrez le voyage pour sauvegarder les vols.</p>
+                {{-- Legacy single outbound/inbound blocks kept below for fallback; remove when fully migrated
                 {{-- Vol Aller (Jour 1) --}}
-                <div class="flight-block" data-flight-type="outbound">
+                <div class="flight-block d-none" data-flight-type="outbound" style="display:none !important;">
                     <div class="flight-card-view" id="flight-outbound-card-view">
                         <div class="flight-card-admin" style="min-width: 320px;">
                             <div class="flight-card-header">
@@ -1439,7 +1441,7 @@
                     btn.addEventListener('click', function() {
                         var t = this.getAttribute('data-flight-type');
                         var block = document.querySelector('.flight-block[data-flight-type="' + t + '"]');
-                        block.querySelectorAll('input, select, textarea').forEach(function(el) {
+                        if (block) block.querySelectorAll('input, select, textarea').forEach(function(el) {
                             if (el.name && el.name.indexOf('flights[' + t + ']') !== -1) {
                                 if (el.type === 'checkbox') el.checked = false; else if (el.type !== 'submit') el.value = '';
                             }
@@ -1447,6 +1449,76 @@
                         updateCard(t);
                     });
                 });
+
+                // Flight options (multi): Add / Remove / Edit / Save / Cancel
+                (function() {
+                    var nextEl = document.getElementById('flight-opt-next-index');
+                    var templatesEl = document.getElementById('flight-opt-templates');
+                    if (!nextEl || !templatesEl) return;
+                    function nextIndex() {
+                        var n = parseInt(nextEl.value, 10) || 0;
+                        nextEl.value = n + 1;
+                        return n;
+                    }
+                    document.querySelectorAll('.btn-add-flight-opt').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            var type = this.getAttribute('data-type');
+                            var tpl = templatesEl.querySelector('[data-flight-tpl="' + type + '"]');
+                            if (!tpl) return;
+                            var clone = tpl.querySelector('.flight-opt-card').cloneNode(true);
+                            var idx = nextIndex();
+                            clone.setAttribute('data-flight-opt-index', idx);
+                            clone.querySelectorAll('[name^="flight_options[-1]"]').forEach(function(el) {
+                                el.name = el.name.replace('flight_options[-1]', 'flight_options[' + idx + ']');
+                                el.removeAttribute('disabled');
+                            });
+                            var container = document.querySelector('.flight-opt-cards-' + type);
+                            if (container) container.appendChild(clone);
+                        });
+                    });
+                    document.getElementById('flights').addEventListener('click', function(e) {
+                        if (e.target.closest('.flight-opt-remove')) {
+                            var card = e.target.closest('.flight-opt-card');
+                            if (card && confirm('Supprimer ce vol du formulaire ?')) card.remove();
+                        }
+                        if (e.target.closest('.flight-opt-edit-btn')) {
+                            var card = e.target.closest('.flight-opt-card');
+                            if (card) {
+                                card.querySelector('.flight-opt-view').style.display = 'none';
+                                card.querySelector('.flight-opt-edit').style.display = 'block';
+                            }
+                        }
+                        if (e.target.closest('.flight-opt-cancel-btn')) {
+                            var card = e.target.closest('.flight-opt-card');
+                            if (card) {
+                                card.querySelector('.flight-opt-edit').style.display = 'none';
+                                card.querySelector('.flight-opt-view').style.display = '';
+                            }
+                        }
+                        if (e.target.closest('.flight-opt-save-btn')) {
+                            var card = e.target.closest('.flight-opt-card');
+                            if (!card) return;
+                            var from = card.querySelector('input[name*="[from_city]"]');
+                            var to = card.querySelector('input[name*="[to_city]"]');
+                            var dep = card.querySelector('input[name*="[departure_date]"]');
+                            var cabin = card.querySelector('input[name*="[baggage_cabin_kg]"]');
+                            var checkin = card.querySelector('input[name*="[baggage_checkin_kg]"]');
+                            var dash = '—';
+                            card.querySelector('.flight-opt-route').textContent = (from && from.value ? from.value.trim() : dash) + ' → ' + (to && to.value ? to.value.trim() : dash);
+                            card.querySelector('.flight-opt-from').textContent = from && from.value ? from.value.trim() : dash;
+                            card.querySelector('.flight-opt-to').textContent = to && to.value ? to.value.trim() : dash;
+                            if (dep && dep.value) {
+                                var d = new Date(dep.value);
+                                card.querySelector('.flight-opt-dep-date').textContent = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+                                card.querySelector('.flight-opt-arr-date').textContent = card.querySelector('.flight-opt-dep-date').textContent;
+                            }
+                            card.querySelector('.flight-opt-cabin-bag').textContent = cabin && cabin.value ? cabin.value + ' KGS' : dash;
+                            card.querySelector('.flight-opt-checkin-bag').textContent = checkin && checkin.value ? checkin.value + ' KGS' : dash;
+                            card.querySelector('.flight-opt-edit').style.display = 'none';
+                            card.querySelector('.flight-opt-view').style.display = '';
+                        }
+                    });
+                })();
 
                 // Remplir automatiquement les transferts depuis vol + hôtel (si champs vides ou non modifiés)
                 var hotelNameEl = document.getElementById('tour_hotel_name');

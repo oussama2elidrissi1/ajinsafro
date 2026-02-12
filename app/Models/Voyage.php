@@ -104,6 +104,12 @@ class Voyage extends Model
         return $this->hasOne(VoyageFlight::class)->where('direction', 'inbound');
     }
 
+    /** Options de vols multiples (aller / retour / segments par jour). */
+    public function flightOptions()
+    {
+        return $this->hasMany(VoyageFlightOption::class)->orderBy('type')->orderBy('sort_order')->orderBy('id');
+    }
+
     /**
      * Public URL for the featured image (public disk).
      * Falls back to first gallery image if featured_image is null.

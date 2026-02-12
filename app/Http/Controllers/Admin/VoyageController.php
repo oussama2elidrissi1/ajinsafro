@@ -13,6 +13,7 @@ use App\Models\Airline;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Services\VoyageFlightService;
+use App\Services\VoyageFlightOptionService;
 use App\Services\Wp\ProgramJsonService;
 use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpHeroImageService;
@@ -29,13 +30,16 @@ class VoyageController extends Controller
 
     protected VoyageFlightService $voyageFlightService;
 
+    protected VoyageFlightOptionService $voyageFlightOptionService;
+
     protected ProgramJsonService $programJsonService;
 
-    public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $voyageFlightService, ProgramJsonService $programJsonService)
+    public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $voyageFlightService, VoyageFlightOptionService $voyageFlightOptionService, ProgramJsonService $programJsonService)
     {
         $this->repository = $repository;
         $this->programService = $programService;
         $this->voyageFlightService = $voyageFlightService;
+        $this->voyageFlightOptionService = $voyageFlightOptionService;
         $this->programJsonService = $programJsonService;
     }
 
@@ -318,12 +322,24 @@ class VoyageController extends Controller
         }
         $outboundFlight = $laravelVoyage->outboundFlight;
         $inboundFlight = $laravelVoyage->inboundFlight;
-        // Sync voyage_flights → aj_tour_flights (WP) so the front always reflects CRUD when edit page is opened
+        $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int) ($meta['duration_day'] ?? 1));
+        $flightOptionsByType = $this->voyageFlightOptionService->getOptionsForVoyage($laravelVoyage->id);
+        if ($flightOptionsByType['outbound']->isEmpty() && $flightOptionsByType['return']->isEmpty() && ($outboundFlight || $inboundFlight)) {
+            $this->ensureFlightOptionsFromLegacy($laravelVoyage->id, $lastDayNumber);
+            $flightOptionsByType = $this->voyageFlightOptionService->getOptionsForVoyage($laravelVoyage->id);
+        }
+        $nextFlightOptionIndex = 0;
+        $flightOptionsWithIndex = [];
+        foreach (['outbound', 'return', 'segment'] as $t) {
+            foreach ($flightOptionsByType[$t] as $opt) {
+                $flightOptionsWithIndex[] = ['index' => $nextFlightOptionIndex++, 'option' => $opt, 'type' => $t];
+            }
+        }
         if ($laravelVoyage->wp_post_id) {
             try {
-                $this->voyageFlightService->syncFlightsToWp($laravelVoyage->id, (int) $laravelVoyage->wp_post_id);
+                $this->voyageFlightOptionService->syncOptionsToWp($laravelVoyage->id, (int) $laravelVoyage->wp_post_id, $lastDayNumber);
             } catch (\Throwable $e) {
-                \Log::warning('VoyageController@edit: syncFlightsToWp failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
+                \Log::warning('VoyageController@edit: syncOptionsToWp failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
             }
         }
         try {
@@ -361,7 +377,47 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'heroImageUrl', 'tourHotel', 'transferArrival', 'transferDeparture', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'transferArrival', 'transferDeparture', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
+    }
+
+    private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
+    {
+        $out = \App\Models\VoyageFlight::where('voyage_id', $voyageId)->where('direction', 'outbound')->first();
+        $in = \App\Models\VoyageFlight::where('voyage_id', $voyageId)->where('direction', 'inbound')->first();
+        $items = [];
+        if ($out) {
+            $items[] = [
+                'type' => 'outbound',
+                'day_number' => 1,
+                'from_city' => $out->from_city,
+                'to_city' => $out->to_city,
+                'departure_date' => $out->departure_date?->format('Y-m-d'),
+                'airline_id' => $out->airline_id,
+                'flight_number' => $out->flight_number,
+                'cabin' => $out->cabin ?? 'economy',
+                'baggage_cabin_kg' => $out->baggage_cabin_kg,
+                'baggage_checkin_kg' => $out->baggage_checkin_kg,
+                'is_tentative' => $out->is_tentative,
+            ];
+        }
+        if ($in) {
+            $items[] = [
+                'type' => 'return',
+                'day_number' => $lastDayNumber,
+                'from_city' => $in->from_city,
+                'to_city' => $in->to_city,
+                'departure_date' => $in->departure_date?->format('Y-m-d'),
+                'airline_id' => $in->airline_id,
+                'flight_number' => $in->flight_number,
+                'cabin' => $in->cabin ?? 'economy',
+                'baggage_cabin_kg' => $in->baggage_cabin_kg,
+                'baggage_checkin_kg' => $in->baggage_checkin_kg,
+                'is_tentative' => $in->is_tentative,
+            ];
+        }
+        if (!empty($items)) {
+            $this->voyageFlightOptionService->syncOptions($voyageId, $items, $lastDayNumber);
+        }
     }
     
     /**
@@ -460,13 +516,31 @@ class VoyageController extends Controller
                 }
             }
 
-            if ($request->has('flights')) {
+            $laravelVoyage = Voyage::firstOrCreate(
+                ['wp_post_id' => $id],
+                ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
+            );
+            $lastDayNumber = 1;
+            try {
+                $program = $this->programJsonService->getProgram($id);
+                $lastDayNumber = max(1, count($program['program_days'] ?? []));
+            } catch (\Throwable $e) {
+                // keep 1
+            }
+            if ($request->has('flight_options') && is_array($request->input('flight_options'))) {
                 try {
-                    $laravelVoyage = Voyage::firstOrCreate(
-                        ['wp_post_id' => $id],
-                        ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
-                    );
+                    $this->voyageFlightOptionService->syncOptions($laravelVoyage->id, $request->input('flight_options'), $lastDayNumber);
+                } catch (\Throwable $e) {
+                    \Log::error('VoyageController@update flight options failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
+                    throw $e;
+                }
+            } elseif ($request->has('flights')) {
+                try {
                     $this->voyageFlightService->syncFlights($laravelVoyage->id, $request->input('flights', []));
+                    $this->ensureFlightOptionsFromLegacy($laravelVoyage->id, $lastDayNumber);
+                    if ($laravelVoyage->wp_post_id) {
+                        $this->voyageFlightOptionService->syncOptionsToWp($laravelVoyage->id, (int) $laravelVoyage->wp_post_id, $lastDayNumber);
+                    }
                 } catch (\Throwable $e) {
                     \Log::error('VoyageController@update voyage flights failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
                     throw $e;
