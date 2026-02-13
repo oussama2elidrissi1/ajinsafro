@@ -129,46 +129,65 @@ class VoyageFlightOptionService
                 ->orderByRaw("CASE type WHEN 'outbound' THEN 1 WHEN 'return' THEN 2 ELSE 3 END")
                 ->orderBy('sort_order')->orderBy('id')->get();
 
+            \Log::info('VoyageFlightOptionService::syncOptionsToWp', [
+                'voyage_id' => $voyageId,
+                'wp_post_id' => $wpPostId,
+                'options_count' => $options->count(),
+                'types' => $options->pluck('type')->toArray(),
+            ]);
+
             $wp->table($table)->where('tour_id', $wpPostId)->delete();
 
             foreach ($options as $opt) {
-                $ft = $opt->type === VoyageFlightOption::TYPE_RETURN ? 'inbound' : ($opt->type === VoyageFlightOption::TYPE_SEGMENT ? 'segment' : 'outbound');
-                $depAt = $opt->depart_at ? $opt->depart_at->format('Y-m-d H:i:s') : null;
-                $arrAt = $opt->arrive_at ? $opt->arrive_at->format('Y-m-d H:i:s') : null;
+                try {
+                    $ft = $opt->type === VoyageFlightOption::TYPE_RETURN ? 'inbound' : ($opt->type === VoyageFlightOption::TYPE_SEGMENT ? 'segment' : 'outbound');
+                    $depAt = $opt->depart_at ? $opt->depart_at->format('Y-m-d H:i:s') : null;
+                    $arrAt = $opt->arrive_at ? $opt->arrive_at->format('Y-m-d H:i:s') : null;
 
-                $row = [
-                    'tour_id' => $wpPostId,
-                    'flight_type' => $ft,
-                    'airline_id' => $opt->airline_id,
-                    'cabin_class' => $opt->cabin ?? 'economy',
-                    'from_city' => $opt->from_city,
-                    'to_city' => $opt->to_city,
-                    'depart_date' => $depAt ? substr($depAt, 0, 10) : null,
-                    'depart_time' => $depAt ? substr($depAt, 11, 8) : null,
-                    'arrive_date' => $arrAt ? substr($arrAt, 0, 10) : null,
-                    'arrive_time' => $arrAt ? substr($arrAt, 11, 8) : null,
-                    'baggage_cabin_kg' => $opt->baggage_cabin_kg,
-                    'baggage_checkin_kg' => $opt->baggage_checkin_kg,
-                    'is_tentative' => (bool) $opt->is_tentative,
-                    'notes' => $opt->notes,
-                    'updated_at' => now(),
-                    'created_at' => now(),
-                ];
+                    $row = [
+                        'tour_id' => $wpPostId,
+                        'flight_type' => $ft,
+                        'airline_id' => $opt->airline_id,
+                        'cabin_class' => $opt->cabin ?? 'economy',
+                        'from_city' => $opt->from_city,
+                        'to_city' => $opt->to_city,
+                        'depart_date' => $depAt ? substr($depAt, 0, 10) : null,
+                        'depart_time' => $depAt ? substr($depAt, 11, 8) : null,
+                        'arrive_date' => $arrAt ? substr($arrAt, 0, 10) : null,
+                        'arrive_time' => $arrAt ? substr($arrAt, 11, 8) : null,
+                        'baggage_cabin_kg' => $opt->baggage_cabin_kg,
+                        'baggage_checkin_kg' => $opt->baggage_checkin_kg,
+                        'is_tentative' => (bool) $opt->is_tentative,
+                        'notes' => $opt->notes,
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ];
 
-                if ($this->wpTableHasColumn($wp, $fullTable, 'sort_order')) {
-                    $row['sort_order'] = $opt->sort_order ?? 0;
-                }
-                if ($this->wpTableHasColumn($wp, $fullTable, 'day_number')) {
-                    $row['day_number'] = $opt->day_number;
-                }
-                if ($this->wpTableHasColumn($wp, $fullTable, 'is_optional')) {
-                    $row['is_optional'] = (bool) $opt->is_optional;
-                }
-                if ($this->wpTableHasColumn($wp, $fullTable, 'laravel_option_id')) {
-                    $row['laravel_option_id'] = $opt->id;
-                }
+                    if ($this->wpTableHasColumn($wp, $fullTable, 'sort_order')) {
+                        $row['sort_order'] = $opt->sort_order ?? 0;
+                    }
+                    if ($this->wpTableHasColumn($wp, $fullTable, 'day_number')) {
+                        $row['day_number'] = $opt->day_number;
+                    }
+                    if ($this->wpTableHasColumn($wp, $fullTable, 'is_optional')) {
+                        $row['is_optional'] = (bool) $opt->is_optional;
+                    }
+                    if ($this->wpTableHasColumn($wp, $fullTable, 'laravel_option_id')) {
+                        $row['laravel_option_id'] = $opt->id;
+                    }
 
-                $wp->table($table)->insert($row);
+                    $wp->table($table)->insert($row);
+                } catch (\Throwable $e) {
+                    \Log::warning('VoyageFlightOptionService::syncOptionsToWp row insert failed', [
+                        'voyage_id' => $voyageId,
+                        'wp_post_id' => $wpPostId,
+                        'option_id' => $opt->id,
+                        'type' => $opt->type,
+                        'from_city' => $opt->from_city,
+                        'to_city' => $opt->to_city,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
             }
         } catch (\Throwable $e) {
             \Log::warning('VoyageFlightOptionService::syncOptionsToWp failed', [
