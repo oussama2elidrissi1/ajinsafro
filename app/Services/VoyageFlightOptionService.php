@@ -112,12 +112,18 @@ class VoyageFlightOptionService
 
     /**
      * Sync all voyage_flight_options to WP aj_tour_flights (multi-row).
+     * Allows multiple outbound/inbound/segment per tour (drops UNIQUE if present).
      */
     public function syncOptionsToWp(int $voyageId, int $wpPostId, int $lastDayNumber = 1): void
     {
         try {
             $wp = DB::connection('wp');
+            $prefix = $wp->getTablePrefix();
             $table = 'aj_tour_flights';
+            $fullTable = $prefix . $table;
+
+            // Supprimer la contrainte UNIQUE(tour_id, flight_type) si elle existe pour autoriser plusieurs vols par type
+            $this->dropUniqueTourFlightTypeIfExists($wp, $fullTable);
 
             $options = VoyageFlightOption::where('voyage_id', $voyageId)
                 ->orderByRaw("CASE type WHEN 'outbound' THEN 1 WHEN 'return' THEN 2 ELSE 3 END")
@@ -143,15 +149,25 @@ class VoyageFlightOptionService
                     'arrive_time' => $arrAt ? substr($arrAt, 11, 8) : null,
                     'baggage_cabin_kg' => $opt->baggage_cabin_kg,
                     'baggage_checkin_kg' => $opt->baggage_checkin_kg,
-                    'is_tentative' => $opt->is_tentative,
+                    'is_tentative' => (bool) $opt->is_tentative,
                     'notes' => $opt->notes,
-                    'sort_order' => $opt->sort_order,
-                    'day_number' => $opt->day_number,
-                    'is_optional' => $opt->is_optional,
-                    'laravel_option_id' => $opt->id,
                     'updated_at' => now(),
                     'created_at' => now(),
                 ];
+
+                if ($this->wpTableHasColumn($wp, $fullTable, 'sort_order')) {
+                    $row['sort_order'] = $opt->sort_order ?? 0;
+                }
+                if ($this->wpTableHasColumn($wp, $fullTable, 'day_number')) {
+                    $row['day_number'] = $opt->day_number;
+                }
+                if ($this->wpTableHasColumn($wp, $fullTable, 'is_optional')) {
+                    $row['is_optional'] = (bool) $opt->is_optional;
+                }
+                if ($this->wpTableHasColumn($wp, $fullTable, 'laravel_option_id')) {
+                    $row['laravel_option_id'] = $opt->id;
+                }
+
                 $wp->table($table)->insert($row);
             }
         } catch (\Throwable $e) {
@@ -160,6 +176,49 @@ class VoyageFlightOptionService
                 'wp_post_id' => $wpPostId,
                 'message' => $e->getMessage(),
             ]);
+        }
+    }
+
+    private function dropUniqueTourFlightTypeIfExists($wp, string $fullTable): void
+    {
+        try {
+            $indexes = $wp->select("SHOW INDEX FROM `{$fullTable}` WHERE Column_name IN ('tour_id','flight_type')");
+            $byKey = [];
+            foreach ($indexes as $idx) {
+                $keyName = $idx->Key_name ?? null;
+                if (!$keyName) {
+                    continue;
+                }
+                if (!isset($byKey[$keyName])) {
+                    $byKey[$keyName] = ['non_unique' => (int) ($idx->Non_unique ?? 1), 'columns' => []];
+                }
+                $col = $idx->Column_name ?? null;
+                if ($col && !in_array($col, $byKey[$keyName]['columns'], true)) {
+                    $byKey[$keyName]['columns'][] = $col;
+                }
+            }
+            foreach ($byKey as $keyName => $info) {
+                if (($info['non_unique'] ?? 1) === 0
+                    && in_array('tour_id', $info['columns'], true)
+                    && in_array('flight_type', $info['columns'], true)) {
+                    $wp->statement("ALTER TABLE `{$fullTable}` DROP INDEX `{$keyName}`");
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+    }
+
+    private function wpTableHasColumn($wp, string $fullTable, string $column): bool
+    {
+        try {
+            $r = $wp->selectOne(
+                "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?",
+                [$fullTable, $column]
+            );
+            return $r !== null;
+        } catch (\Throwable $e) {
+            return false;
         }
     }
 
