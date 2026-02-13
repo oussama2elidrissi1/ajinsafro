@@ -354,11 +354,14 @@ class VoyageController extends Controller
             $heroImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
         }
 
-        // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — intégrés au CRUD voyage
-        $tourHotel = TourHotel::getForTour($id);
+        // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row support
+        $tourHotels = TourHotel::getAllForTour($id);
+        $tourHotel = $tourHotels->first();
         $transfers = TourTransfer::getForTour($id);
-        $transferArrival = $transfers['arrival'];
-        $transferDeparture = $transfers['departure'];
+        $transferArrivals = $transfers['arrival'];
+        $transferDepartures = $transfers['departure'];
+        $transferArrival = $transferArrivals->first();
+        $transferDeparture = $transferDepartures->first();
         // Valeurs suggérées : transfert aller = aéroport d'arrivée (vol aller to_city) → hôtel ; transfert retour = hôtel → aéroport de départ (vol retour from_city)
         $suggestedArrivalFrom = $outboundFlight ? trim($outboundFlight->to_city ?? $outboundFlight->to_label ?? '') : '';
         $suggestedArrivalTo = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
@@ -377,7 +380,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'transferArrival', 'transferDeparture', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -419,7 +422,113 @@ class VoyageController extends Controller
             $this->voyageFlightOptionService->syncOptions($voyageId, $items, $lastDayNumber);
         }
     }
-    
+
+    /**
+     * Sync hotels for tour: replace all by request data (tour_hotels array or single tour_hotel).
+     */
+    private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): void
+    {
+        $items = [];
+        if ($request->has('tour_hotels') && is_array($request->input('tour_hotels'))) {
+            foreach ($request->input('tour_hotels') as $raw) {
+                if (!is_array($raw)) {
+                    continue;
+                }
+                $items[] = [
+                    'hotel_name' => $raw['hotel_name'] ?? null,
+                    'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
+                    'address' => $raw['address'] ?? null,
+                    'room_type' => $raw['room_type'] ?? null,
+                    'meal_plan' => $raw['meal_plan'] ?? null,
+                    'notes' => $raw['notes'] ?? null,
+                    'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
+                ];
+            }
+        } elseif ($request->has('tour_hotel')) {
+            $raw = $request->input('tour_hotel', []);
+            $items[] = [
+                'hotel_name' => $raw['hotel_name'] ?? null,
+                'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
+                'address' => $raw['address'] ?? null,
+                'room_type' => $raw['room_type'] ?? null,
+                'meal_plan' => $raw['meal_plan'] ?? null,
+                'notes' => $raw['notes'] ?? null,
+                'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
+            ];
+        }
+        TourHotel::where('tour_id', $tourId)->delete();
+        $sortOrder = 0;
+        foreach ($items as $data) {
+            if (array_filter($data, fn ($v) => $v !== null && $v !== '')) {
+                TourHotel::create(array_merge($data, ['tour_id' => $tourId, 'sort_order' => $sortOrder++]));
+            }
+        }
+    }
+
+    /**
+     * Sync transfers for tour: replace all by request (tour_transfer_arrivals / tour_transfer_departures or single tour_transfer_arrival / tour_transfer_departure).
+     */
+    private function syncTourTransfers(int $tourId, \Illuminate\Http\Request $request): void
+    {
+        $arrivals = [];
+        if ($request->has('tour_transfer_arrivals') && is_array($request->input('tour_transfer_arrivals'))) {
+            foreach ($request->input('tour_transfer_arrivals') as $arr) {
+                if (is_array($arr)) {
+                    $arrivals[] = $arr;
+                }
+            }
+        } elseif ($request->has('tour_transfer_arrival')) {
+            $arr = $request->input('tour_transfer_arrival', []);
+            if (is_array($arr) && (isset($arr['from_label']) || isset($arr['to_label']) || isset($arr['pickup_time']))) {
+                $arrivals[] = $arr;
+            }
+        }
+        $departures = [];
+        if ($request->has('tour_transfer_departures') && is_array($request->input('tour_transfer_departures'))) {
+            foreach ($request->input('tour_transfer_departures') as $dep) {
+                if (is_array($dep)) {
+                    $departures[] = $dep;
+                }
+            }
+        } elseif ($request->has('tour_transfer_departure')) {
+            $dep = $request->input('tour_transfer_departure', []);
+            if (is_array($dep) && (isset($dep['from_label']) || isset($dep['to_label']) || isset($dep['pickup_time']))) {
+                $departures[] = $dep;
+            }
+        }
+        TourTransfer::where('tour_id', $tourId)->delete();
+        $sortOrder = 0;
+        foreach ($arrivals as $arr) {
+            TourTransfer::create([
+                'tour_id' => $tourId,
+                'direction' => TourTransfer::DIRECTION_ARRIVAL,
+                'sort_order' => $sortOrder++,
+                'from_label' => $arr['from_label'] ?? null,
+                'to_label' => $arr['to_label'] ?? null,
+                'pickup_time' => $arr['pickup_time'] ?? null,
+                'dropoff_time' => $arr['dropoff_time'] ?? null,
+                'vehicle_type' => $arr['vehicle_type'] ?? null,
+                'notes' => $arr['notes'] ?? null,
+                'image_id' => isset($arr['image_id']) && $arr['image_id'] !== '' ? (int) $arr['image_id'] : null,
+            ]);
+        }
+        $sortOrder = 0;
+        foreach ($departures as $dep) {
+            TourTransfer::create([
+                'tour_id' => $tourId,
+                'direction' => TourTransfer::DIRECTION_DEPARTURE,
+                'sort_order' => $sortOrder++,
+                'from_label' => $dep['from_label'] ?? null,
+                'to_label' => $dep['to_label'] ?? null,
+                'pickup_time' => $dep['pickup_time'] ?? null,
+                'dropoff_time' => $dep['dropoff_time'] ?? null,
+                'vehicle_type' => $dep['vehicle_type'] ?? null,
+                'notes' => $dep['notes'] ?? null,
+                'image_id' => isset($dep['image_id']) && $dep['image_id'] !== '' ? (int) $dep['image_id'] : null,
+            ]);
+        }
+    }
+
     /**
      * Get available taxonomies for tours.
      */
@@ -547,79 +656,9 @@ class VoyageController extends Controller
                 }
             }
 
-            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers)
-            if ($request->has('tour_hotel')) {
-                $raw = $request->input('tour_hotel', []);
-                $hotelData = [
-                    'hotel_name' => $raw['hotel_name'] ?? null,
-                    'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
-                    'address' => $raw['address'] ?? null,
-                    'room_type' => $raw['room_type'] ?? null,
-                    'meal_plan' => $raw['meal_plan'] ?? null,
-                    'notes' => $raw['notes'] ?? null,
-                    'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
-                ];
-                $tourHotel = TourHotel::getForTour($id);
-                if ($tourHotel) {
-                    $tourHotel->update($hotelData);
-                } elseif (array_filter($hotelData, fn ($v) => $v !== null && $v !== '')) {
-                    TourHotel::create(array_merge($hotelData, ['tour_id' => $id]));
-                }
-            }
-            if ($request->has('tour_transfer_arrival')) {
-                $arr = $request->input('tour_transfer_arrival', []);
-                $existing = TourTransfer::where('tour_id', $id)->where('direction', TourTransfer::DIRECTION_ARRIVAL)->first();
-                if ($existing) {
-                    $existing->update([
-                        'from_label' => $arr['from_label'] ?? null,
-                        'to_label' => $arr['to_label'] ?? null,
-                        'pickup_time' => $arr['pickup_time'] ?? null,
-                        'dropoff_time' => $arr['dropoff_time'] ?? null,
-                        'vehicle_type' => $arr['vehicle_type'] ?? null,
-                        'notes' => $arr['notes'] ?? null,
-                        'image_id' => isset($arr['image_id']) && $arr['image_id'] !== '' ? (int) $arr['image_id'] : null,
-                    ]);
-                } else {
-                    TourTransfer::create([
-                        'tour_id' => $id,
-                        'direction' => TourTransfer::DIRECTION_ARRIVAL,
-                        'from_label' => $arr['from_label'] ?? null,
-                        'to_label' => $arr['to_label'] ?? null,
-                        'pickup_time' => $arr['pickup_time'] ?? null,
-                        'dropoff_time' => $arr['dropoff_time'] ?? null,
-                        'vehicle_type' => $arr['vehicle_type'] ?? null,
-                        'notes' => $arr['notes'] ?? null,
-                        'image_id' => isset($arr['image_id']) && $arr['image_id'] !== '' ? (int) $arr['image_id'] : null,
-                    ]);
-                }
-            }
-            if ($request->has('tour_transfer_departure')) {
-                $dep = $request->input('tour_transfer_departure', []);
-                $existing = TourTransfer::where('tour_id', $id)->where('direction', TourTransfer::DIRECTION_DEPARTURE)->first();
-                if ($existing) {
-                    $existing->update([
-                        'from_label' => $dep['from_label'] ?? null,
-                        'to_label' => $dep['to_label'] ?? null,
-                        'pickup_time' => $dep['pickup_time'] ?? null,
-                        'dropoff_time' => $dep['dropoff_time'] ?? null,
-                        'vehicle_type' => $dep['vehicle_type'] ?? null,
-                        'notes' => $dep['notes'] ?? null,
-                        'image_id' => isset($dep['image_id']) && $dep['image_id'] !== '' ? (int) $dep['image_id'] : null,
-                    ]);
-                } else {
-                    TourTransfer::create([
-                        'tour_id' => $id,
-                        'direction' => TourTransfer::DIRECTION_DEPARTURE,
-                        'from_label' => $dep['from_label'] ?? null,
-                        'to_label' => $dep['to_label'] ?? null,
-                        'pickup_time' => $dep['pickup_time'] ?? null,
-                        'dropoff_time' => $dep['dropoff_time'] ?? null,
-                        'vehicle_type' => $dep['vehicle_type'] ?? null,
-                        'notes' => $dep['notes'] ?? null,
-                        'image_id' => isset($dep['image_id']) && $dep['image_id'] !== '' ? (int) $dep['image_id'] : null,
-                    ]);
-                }
-            }
+            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row: replace all for this tour
+            $this->syncTourHotels($id, $request);
+            $this->syncTourTransfers($id, $request);
 
             // Toujours synchroniser les vols Laravel → WP après chaque enregistrement (pour que le plugin affiche les vols)
             if ($laravelVoyage && $laravelVoyage->wp_post_id) {

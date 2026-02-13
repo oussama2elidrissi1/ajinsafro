@@ -171,14 +171,15 @@ $ajtb_day_inclus = function ($day, $index, $total_days) use ($ajtb_day_flights_l
         $cnt = count(array_filter($ajtb_day_flights_list($day['flight_return'] ?? []), function ($f) { return function_exists('ajtb_flight_has_content') && ajtb_flight_has_content($f); }));
         $parts[] = $cnt . ' ' . _n('Vol', 'Vols', $cnt, 'ajinsafro-tour-bridge');
     }
-    if (!empty($day['transfer'])) {
-        $parts[] = '1 ' . __('Transfert', 'ajinsafro-tour-bridge');
+    $tr_arr = isset($day['transfer']) && is_array($day['transfer']) ? $day['transfer'] : [];
+    $tr_dep = isset($day['transfer_return']) && is_array($day['transfer_return']) ? $day['transfer_return'] : [];
+    if (count($tr_arr) + count($tr_dep) > 0) {
+        $cnt = count($tr_arr) + count($tr_dep);
+        $parts[] = $cnt . ' ' . _n('Transfert', 'Transferts', $cnt, 'ajinsafro-tour-bridge');
     }
-    if (!empty($day['transfer_return'])) {
-        $parts[] = '1 ' . __('Transfert', 'ajinsafro-tour-bridge');
-    }
-    if (!empty($day['hotel'])) {
-        $parts[] = '1 ' . __('Hôtel', 'ajinsafro-tour-bridge');
+    $hotels_list = isset($day['hotels']) && is_array($day['hotels']) ? $day['hotels'] : (!empty($day['hotel']) ? [$day['hotel']] : []);
+    if (count($hotels_list) > 0) {
+        $parts[] = count($hotels_list) . ' ' . _n('Hôtel', 'Hôtels', count($hotels_list), 'ajinsafro-tour-bridge');
     }
     $act_count = 0;
     if (!empty($day['activities'])) {
@@ -394,9 +395,11 @@ foreach ($itinerary as $index => $day) {
                         </div>
 
                         <?php
-                        // —— Blocs inline : Vol(s) par jour (source: aj_tour_flights). Fallback "non disponible" uniquement si liste vide.
-                        $day_transfer = $day['transfer'] ?? null;
-                        $day_hotel = $day['hotel'] ?? null;
+                        // —— Blocs inline : Vol(s), transferts, hôtels (multi-row support).
+                        $day_transfer_list = isset($day['transfer']) && is_array($day['transfer']) ? $day['transfer'] : (!empty($day['transfer']) ? [$day['transfer']] : []);
+                        $day_transfer_return_list = isset($day['transfer_return']) && is_array($day['transfer_return']) ? $day['transfer_return'] : (!empty($day['transfer_return']) ? [$day['transfer_return']] : []);
+                        $day_hotels_list = isset($day['hotels']) && is_array($day['hotels']) ? $day['hotels'] : (!empty($day['hotel']) ? [$day['hotel']] : []);
+                        $day_hotel = isset($day_hotels_list[0]) ? $day_hotels_list[0] : null;
                         $day_flights_count = is_array($day_flights) ? count($day_flights) : 0;
                         $day_flights_return_count = is_array($day_flights_return) ? count($day_flights_return) : 0;
                         $has_day_flights = $day_flights_count > 0;
@@ -447,30 +450,32 @@ foreach ($itinerary as $index => $day) {
                         <?php endif; ?>
 
                         <?php if ($is_last):
-                            $day_transfer_return = $day['transfer_return'] ?? null;
-                            $day_hotel_last = $day['hotel'] ?? null;
                             $hotel_checkout = !empty($day['hotel_checkout']);
                             $show_inbound = $has_day_flights_return;
                         ?>
-                            <?php if (!empty($day_hotel_last) && $hotel_checkout): ?>
+                            <?php if (!empty($day_hotels_list) && $hotel_checkout): ?>
                             <div class="ajtb-block-mmt ajtb-block-hotel ajtb-tab-block" data-ajtb-tab="hotels">
-                                <h4 class="ajtb-block-title"><?php esc_html_e('Hôtel (check-out)', 'ajinsafro-tour-bridge'); ?></h4>
+                                <h4 class="ajtb-block-title"><?php echo count($day_hotels_list) > 1 ? esc_html__('Hôtels (check-out)', 'ajinsafro-tour-bridge') : esc_html__('Hôtel (check-out)', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
+                                    <?php foreach ($day_hotels_list as $day_hotel_last): ?>
                                     <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--hotel">
                                         <div class="ajtb-card-image ajtb-card-image--hotel<?php echo !empty($day_hotel_last['image_url']) ? ' has-image' : ''; ?>"<?php if (!empty($day_hotel_last['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_hotel_last['image_url']) . ')"'; } ?>></div>
                                         <div class="ajtb-card-inner"><?php $hotel = $day_hotel_last; $is_checkout = true; include AJTB_PLUGIN_DIR . 'templates/tour/partials/hotel-card.php'; ?></div>
                                     </div>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                             <?php endif; ?>
-                            <?php if (!empty($day_transfer_return)): ?>
+                            <?php if (!empty($day_transfer_return_list)): ?>
                             <div class="ajtb-block-mmt ajtb-block-transfer ajtb-tab-block" data-ajtb-tab="transfers">
-                                <h4 class="ajtb-block-title"><?php esc_html_e('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); ?></h4>
+                                <h4 class="ajtb-block-title"><?php echo count($day_transfer_return_list) > 1 ? esc_html__('Transferts Hôtel → Aéroport', 'ajinsafro-tour-bridge') : esc_html__('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); ?></h4>
                                 <div class="ajtb-day-flight-block ajtb-card-wrap">
+                                    <?php foreach ($day_transfer_return_list as $day_transfer_return): ?>
                                     <div class="ajtb-card-with-image ajtb-card-full-width ajtb-card--transfer">
                                         <div class="ajtb-card-image ajtb-card-image--transfer<?php echo !empty($day_transfer_return['image_url']) ? ' has-image' : ''; ?>"<?php if (!empty($day_transfer_return['image_url'])) { echo ' style="background-image: url(' . esc_attr($day_transfer_return['image_url']) . ')"'; } ?>></div>
                                         <div class="ajtb-card-inner"><?php $transfer = $day_transfer_return; $label = __('Transfert Hôtel → Aéroport', 'ajinsafro-tour-bridge'); include AJTB_PLUGIN_DIR . 'templates/tour/partials/transfer-card.php'; ?></div>
                                     </div>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                             <?php endif; ?>

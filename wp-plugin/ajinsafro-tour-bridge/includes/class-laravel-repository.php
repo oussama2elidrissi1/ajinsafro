@@ -408,19 +408,22 @@ class AJTB_Laravel_Repository {
 
     /**
      * Get transfers for this tour: arrival (day 1) and departure (last day).
+     * Multi-row: returns arrays so templates can loop.
      *
-     * @return array ['arrival' => array|null, 'departure' => array|null]
+     * @return array ['arrival' => array[], 'departure' => array[]]
      */
     private function get_tour_transfers() {
         $t = $this->table('tour_transfers');
         if (!$this->table_exists($t)) {
-            return ['arrival' => null, 'departure' => null];
+            return ['arrival' => [], 'departure' => []];
         }
+        $has_sort = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'sort_order'", $t));
+        $order = $has_sort ? " ORDER BY sort_order ASC, id ASC" : " ORDER BY id ASC";
         $rows = $this->wpdb->get_results($this->wpdb->prepare(
-            "SELECT * FROM {$t} WHERE tour_id = %d",
+            "SELECT * FROM {$t} WHERE tour_id = %d" . $order,
             $this->tour_id
         ), ARRAY_A);
-        $out = ['arrival' => null, 'departure' => null];
+        $out = ['arrival' => [], 'departure' => []];
         if (!$rows) {
             return $out;
         }
@@ -432,36 +435,50 @@ class AJTB_Laravel_Repository {
                 $r['image_url'] = '';
             }
             if ($dir === 'arrival') {
-                $out['arrival'] = $r;
+                $out['arrival'][] = $r;
             } elseif ($dir === 'departure') {
-                $out['departure'] = $r;
+                $out['departure'][] = $r;
             }
         }
         return $out;
     }
 
     /**
-     * Get the main hotel for this tour (one per tour).
+     * Get the main hotel for this tour (first; backward compat).
      *
      * @return array|null
      */
     private function get_tour_hotel() {
+        $hotels = $this->get_tour_hotels();
+        return isset($hotels[0]) ? $hotels[0] : null;
+    }
+
+    /**
+     * Get all hotels for this tour (multi-row).
+     *
+     * @return array list of hotel rows (each with image_url)
+     */
+    private function get_tour_hotels() {
         $t = $this->table('tour_hotels');
         if (!$this->table_exists($t)) {
-            return null;
+            return [];
         }
-        $row = $this->wpdb->get_row($this->wpdb->prepare(
-            "SELECT * FROM {$t} WHERE tour_id = %d LIMIT 1",
+        $has_sort = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'sort_order'", $t));
+        $order = $has_sort ? " ORDER BY sort_order ASC, id ASC" : " ORDER BY id ASC";
+        $rows = $this->wpdb->get_results($this->wpdb->prepare(
+            "SELECT * FROM {$t} WHERE tour_id = %d" . $order,
             $this->tour_id
         ), ARRAY_A);
-        if ($row && isset($row['image_id']) && $row['image_id'] && function_exists('wp_get_attachment_image_url')) {
-            $row['image_url'] = wp_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
-        } else {
-            if ($row) {
+        $out = [];
+        foreach ($rows ?: [] as $row) {
+            if (isset($row['image_id']) && $row['image_id'] && function_exists('wp_get_attachment_image_url')) {
+                $row['image_url'] = wp_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
+            } else {
                 $row['image_url'] = '';
             }
+            $out[] = $row;
         }
-        return $row ?: null;
+        return $out;
     }
 
     /**
@@ -839,14 +856,16 @@ class AJTB_Laravel_Repository {
             $segments_by_day = $flights_grouped['segments_by_day'] ?? [];
 
             $transfers = $this->get_tour_transfers();
-            $hotel = $this->get_tour_hotel();
+            $hotels = $this->get_tour_hotels();
+            $hotel = isset($hotels[0]) ? $hotels[0] : null;
 
             foreach ($days_array as &$day) {
                 $day['flight'] = [];
                 $day['flight_return'] = [];
-                $day['transfer'] = null;
-                $day['transfer_return'] = null;
+                $day['transfer'] = [];
+                $day['transfer_return'] = [];
                 $day['hotel'] = null;
+                $day['hotels'] = [];
                 $day['hotel_checkout'] = false;
                 $dn = (int) ($day['day'] ?? 0);
                 $segments_this_day = isset($segments_by_day[$dn]) ? $segments_by_day[$dn] : [];
@@ -857,7 +876,8 @@ class AJTB_Laravel_Repository {
                     if (!empty($transfers['arrival'])) {
                         $day['transfer'] = $transfers['arrival'];
                     }
-                    if (!empty($hotel)) {
+                    if (!empty($hotels)) {
+                        $day['hotels'] = $hotels;
                         $day['hotel'] = $hotel;
                     }
                 } elseif ($last_day_number > 0 && $dn === $last_day_number) {
@@ -867,7 +887,8 @@ class AJTB_Laravel_Repository {
                     if (!empty($transfers['departure'])) {
                         $day['transfer_return'] = $transfers['departure'];
                     }
-                    if (!empty($hotel)) {
+                    if (!empty($hotels)) {
+                        $day['hotels'] = $hotels;
                         if (empty($day['hotel'])) {
                             $day['hotel'] = $hotel;
                         }

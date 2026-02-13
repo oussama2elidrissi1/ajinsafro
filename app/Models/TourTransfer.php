@@ -16,6 +16,7 @@ class TourTransfer extends Model
     protected $fillable = [
         'tour_id',
         'direction',
+        'sort_order',
         'from_label',
         'to_label',
         'pickup_time',
@@ -51,13 +52,21 @@ class TourTransfer extends Model
         return $this->dropoff_time->format('H:i');
     }
 
+    /**
+     * Get all transfers for a tour, grouped by direction (multi-row support).
+     *
+     * @return array{arrival: \Illuminate\Support\Collection, departure: \Illuminate\Support\Collection}
+     */
     public static function getForTour(int $tourId): array
     {
-        $arrival = self::where('tour_id', $tourId)->where('direction', self::DIRECTION_ARRIVAL)->first();
-        $departure = self::where('tour_id', $tourId)->where('direction', self::DIRECTION_DEPARTURE)->first();
+        $rows = self::where('tour_id', $tourId)
+            ->orderByRaw("CASE direction WHEN 'arrival' THEN 1 ELSE 2 END")
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
         return [
-            'arrival' => $arrival,
-            'departure' => $departure,
+            'arrival' => $rows->where('direction', self::DIRECTION_ARRIVAL)->values(),
+            'departure' => $rows->where('direction', self::DIRECTION_DEPARTURE)->values(),
         ];
     }
 }

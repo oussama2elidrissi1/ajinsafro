@@ -173,7 +173,7 @@ class UpdateWpTourRequest extends FormRequest
             'flights.inbound.baggage_checkin_kg' => 'nullable|integer|min:0',
             'flights.inbound.is_tentative' => 'nullable',
 
-            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — intégrés au CRUD voyage
+            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row support
             'tour_hotel' => 'nullable|array',
             'tour_hotel.hotel_name' => 'nullable|string|max:255',
             'tour_hotel.stars' => 'nullable|integer|min:0|max:5',
@@ -182,6 +182,14 @@ class UpdateWpTourRequest extends FormRequest
             'tour_hotel.meal_plan' => 'nullable|string|max:255',
             'tour_hotel.notes' => 'nullable|string|max:2000',
             'tour_hotel.image_id' => 'nullable|integer|min:0',
+            'tour_hotels' => 'nullable|array',
+            'tour_hotels.*.hotel_name' => 'nullable|string|max:255',
+            'tour_hotels.*.stars' => 'nullable|integer|min:0|max:5',
+            'tour_hotels.*.address' => 'nullable|string|max:500',
+            'tour_hotels.*.room_type' => 'nullable|string|max:255',
+            'tour_hotels.*.meal_plan' => 'nullable|string|max:255',
+            'tour_hotels.*.notes' => 'nullable|string|max:2000',
+            'tour_hotels.*.image_id' => 'nullable|integer|min:0',
             'tour_transfer_arrival' => 'nullable|array',
             'tour_transfer_arrival.from_label' => 'nullable|string|max:255',
             'tour_transfer_arrival.to_label' => 'nullable|string|max:255',
@@ -190,6 +198,14 @@ class UpdateWpTourRequest extends FormRequest
             'tour_transfer_arrival.vehicle_type' => 'nullable|string|max:255',
             'tour_transfer_arrival.notes' => 'nullable|string|max:2000',
             'tour_transfer_arrival.image_id' => 'nullable|integer|min:0',
+            'tour_transfer_arrivals' => 'nullable|array',
+            'tour_transfer_arrivals.*.from_label' => 'nullable|string|max:255',
+            'tour_transfer_arrivals.*.to_label' => 'nullable|string|max:255',
+            'tour_transfer_arrivals.*.pickup_time' => 'nullable|string|max:20',
+            'tour_transfer_arrivals.*.dropoff_time' => 'nullable|string|max:20',
+            'tour_transfer_arrivals.*.vehicle_type' => 'nullable|string|max:255',
+            'tour_transfer_arrivals.*.notes' => 'nullable|string|max:2000',
+            'tour_transfer_arrivals.*.image_id' => 'nullable|integer|min:0',
             'tour_transfer_departure' => 'nullable|array',
             'tour_transfer_departure.from_label' => 'nullable|string|max:255',
             'tour_transfer_departure.to_label' => 'nullable|string|max:255',
@@ -198,6 +214,14 @@ class UpdateWpTourRequest extends FormRequest
             'tour_transfer_departure.vehicle_type' => 'nullable|string|max:255',
             'tour_transfer_departure.notes' => 'nullable|string|max:2000',
             'tour_transfer_departure.image_id' => 'nullable|integer|min:0',
+            'tour_transfer_departures' => 'nullable|array',
+            'tour_transfer_departures.*.from_label' => 'nullable|string|max:255',
+            'tour_transfer_departures.*.to_label' => 'nullable|string|max:255',
+            'tour_transfer_departures.*.pickup_time' => 'nullable|string|max:20',
+            'tour_transfer_departures.*.dropoff_time' => 'nullable|string|max:20',
+            'tour_transfer_departures.*.vehicle_type' => 'nullable|string|max:255',
+            'tour_transfer_departures.*.notes' => 'nullable|string|max:2000',
+            'tour_transfer_departures.*.image_id' => 'nullable|integer|min:0',
         ];
     }
 
