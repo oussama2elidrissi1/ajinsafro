@@ -250,6 +250,14 @@
                 .destination-tree-title mark { background: #fff3cd; padding: 0 0.1em; border-radius: 2px; }
                 .destination-tree-item.indeterminate > .destination-tree-row .location-checkbox { opacity: 0.85; }
                 .destination-tree-item.destination-search-path .destination-tree-title[data-path]::after { content: ' › ' attr(data-path); font-size: 0.7rem; color: #6c757d; margin-left: 0.35rem; display: inline; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+                .destination-country-cities .destination-country-select { max-width: 320px; }
+                .destination-cities-panel { border: 1px solid #dee2e6; border-radius: 6px; background: #fafafa; padding: 0.75rem 1rem; margin-top: 0.5rem; max-height: 320px; overflow-y: auto; }
+                .destination-cities-panel-header { margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid #dee2e6; }
+                .destination-cities-panel-title { font-size: 0.875rem; font-weight: 600; color: #495057; }
+                .destination-cities-list { display: flex; flex-direction: column; gap: 0.25rem; }
+                .destination-country-checkbox-label, .destination-city-checkbox-label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; margin: 0; font-size: 0.875rem; }
+                .destination-country-checkbox-label input, .destination-city-checkbox-label input { margin: 0; }
+                .destination-country-checkbox-label { font-weight: 500; color: #0d6efd; }
                 </style>
                 <div class="card destination-ux-card">
                     <div class="card-body destination-ux-body">
@@ -270,27 +278,12 @@
                             <button type="button" class="btn btn-sm btn-outline-secondary destination-ux-chips-clear" id="locationChipsClear" style="display: none;">Effacer tout</button>
                         </div>
 
-                        {{-- Recherche --}}
-                        <div class="destination-ux-search-wrap">
-                            <input type="text" id="locationSearch" class="form-control form-control-sm destination-ux-search" placeholder="Rechercher (ex : San, California…)">
-                        </div>
-
-                        {{-- Actions rapides --}}
-                        <div class="destination-ux-actions">
-                            <button type="button" class="btn btn-sm btn-outline-primary destination-ux-btn" id="locationSelectAll">Tout sélectionner</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary destination-ux-btn" id="locationDeselectAll">Tout désélectionner</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary destination-ux-btn" id="locationExpandAll">Déplier tout</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary destination-ux-btn" id="locationCollapseAll">Replier tout</button>
-                            <button type="button" class="btn btn-sm btn-outline-info destination-ux-btn" id="locationSelectFiltered" style="display: none;">Sélectionner uniquement les résultats filtrés</button>
-                        </div>
-
-                        {{-- Arbre --}}
-                        <div class="wp-location-box destination-ux-tree-wrap" id="locationTreeContainer">
+                        {{-- Pays (select) + Villes par pays --}}
+                        <div id="locationTreeContainer">
                             @if(!empty($locationsTree))
-                                @include('admin.circuits.voyages.partials.location-tree', [
-                                    'locations' => $locationsTree,
-                                    'selectedIds' => $selectedLocationIds ?? [],
-                                    'path' => []
+                                @include('admin.circuits.voyages.partials.location-country-cities', [
+                                    'locationsTree' => $locationsTree,
+                                    'selectedLocationIds' => $selectedLocationIds ?? []
                                 ])
                             @else
                                 <p class="text-muted mb-0 small">Aucune destination disponible. Créez des locations dans WordPress d’abord.</p>
@@ -2079,6 +2072,28 @@
 
             updateChips();
             updateIndeterminate();
+
+            // Pays (select) : afficher le panneau des villes du pays choisi
+            var countrySelect = document.getElementById('locationCountrySelect');
+            if (countrySelect) {
+                function showCitiesPanel(countryId) {
+                    document.querySelectorAll('.destination-cities-panel').forEach(function(panel) {
+                        panel.style.display = (panel.getAttribute('data-country-id') === String(countryId)) ? 'block' : 'none';
+                    });
+                }
+                countrySelect.addEventListener('change', function() {
+                    showCitiesPanel(this.value || '');
+                });
+                // Présélectionner le premier pays ayant une sélection
+                var firstSelected = Array.from(getCheckboxes()).find(function(cb) { return cb.checked; });
+                if (firstSelected) {
+                    var panel = firstSelected.closest('.destination-cities-panel');
+                    if (panel) {
+                        var cid = panel.getAttribute('data-country-id');
+                        if (cid) { countrySelect.value = cid; showCitiesPanel(cid); }
+                    }
+                }
+            }
         })();
         
         window.PROGRAMME_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(fn($a) => ['id' => $a->id, 'title' => $a->title])->values()->all());
