@@ -12,7 +12,9 @@ class TourHotel extends Model
 
     protected $fillable = [
         'tour_id',
+        'day_number',
         'sort_order',
+        'is_optional',
         'hotel_name',
         'stars',
         'address',
@@ -25,6 +27,8 @@ class TourHotel extends Model
     protected $casts = [
         'stars' => 'integer',
         'image_id' => 'integer',
+        'day_number' => 'integer',
+        'is_optional' => 'boolean',
     ];
 
     /** One hotel (backward compat). */
@@ -33,9 +37,13 @@ class TourHotel extends Model
         return self::where('tour_id', $tourId)->orderBy('sort_order')->orderBy('id')->first();
     }
 
-    /** All hotels for tour (multi-row support). */
+    /** All hotels for tour (multi-row support), ordered by day_number then sort_order. */
     public static function getAllForTour(int $tourId): \Illuminate\Support\Collection
     {
-        return self::where('tour_id', $tourId)->orderBy('sort_order')->orderBy('id')->get();
+        return self::where('tour_id', $tourId)
+            ->orderByRaw('COALESCE(day_number, 1) ASC')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
     }
 }

@@ -183,6 +183,8 @@ class UpdateWpTourRequest extends FormRequest
             'tour_hotel.notes' => 'nullable|string|max:2000',
             'tour_hotel.image_id' => 'nullable|integer|min:0',
             'tour_hotels' => 'nullable|array',
+            'tour_hotels.*.day_number' => 'nullable|integer|min:1',
+            'tour_hotels.*.is_optional' => 'nullable|boolean',
             'tour_hotels.*.hotel_name' => 'nullable|string|max:255',
             'tour_hotels.*.stars' => 'nullable|integer|min:0|max:5',
             'tour_hotels.*.address' => 'nullable|string|max:500',

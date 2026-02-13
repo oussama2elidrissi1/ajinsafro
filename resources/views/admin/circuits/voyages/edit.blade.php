@@ -1260,6 +1260,20 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
+                                <div class="col-md-2">
+                                    <label class="form-label">Jour</label>
+                                    <select class="form-select" name="tour_hotels[{{ $hi }}][day_number]">
+                                        @for($d = 1; $d <= $lastDayNumber; $d++)
+                                            <option value="{{ $d }}" {{ old("tour_hotels.{$hi}.day_number", optional($h)->day_number ?? 1) == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end pb-2">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][is_optional]" value="1" {{ old("tour_hotels.{$hi}.is_optional", optional($h)->is_optional ?? false) ? 'checked' : '' }}>
+                                        <label class="form-check-label">Option client</label>
+                                    </div>
+                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Nom de l'hôtel</label>
                                     <input type="text" class="form-control" name="tour_hotels[{{ $hi }}][hotel_name]" value="{{ old("tour_hotels.{$hi}.hotel_name", optional($h)->hotel_name ?? '') }}" placeholder="Ex. Hôtel Les Almoravides">
@@ -1319,6 +1333,8 @@
                         clone.querySelectorAll('[name]').forEach(function(inp){
                             if (inp.name && inp.name.indexOf('tour_hotels[') === 0)
                                 inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + nextIndex + ']');
+                            if (inp.name && inp.name.indexOf('[day_number]') !== -1) { inp.value = '1'; return; }
+                            if (inp.name && inp.name.indexOf('[is_optional]') !== -1) { inp.checked = false; return; }
                             if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
                             if (inp.tagName === 'TEXTAREA') inp.value = '';
                         });

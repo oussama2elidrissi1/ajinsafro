@@ -566,6 +566,36 @@ function ajinsafro_get_flights_for_program($tour_id, $last_day_number = 0) {
 }
 
 /**
+ * Get hotels grouped by day_number for Programme du Circuit.
+ *
+ * @param int $tour_id WP post ID (tour).
+ * @return array ['by_day' => [1=>[row, row], 2=>[...], ...], 'all' => [...]]
+ */
+function ajinsafro_get_hotels_grouped($tour_id) {
+    $tour_id = (int) $tour_id;
+    if ($tour_id <= 0 || !class_exists('AJTB_Laravel_Repository')) {
+        return ['by_day' => [], 'all' => []];
+    }
+    $repo = new AJTB_Laravel_Repository($tour_id);
+    return $repo->get_tour_hotels_grouped();
+}
+
+/**
+ * Get transfers grouped by day_number and direction for Programme du Circuit.
+ *
+ * @param int $tour_id WP post ID (tour).
+ * @return array ['by_day_direction' => [1=>['arrival'=>[], 'departure'=>[]], ...]]
+ */
+function ajinsafro_get_transfers_grouped($tour_id) {
+    $tour_id = (int) $tour_id;
+    if ($tour_id <= 0 || !class_exists('AJTB_Laravel_Repository')) {
+        return ['by_day_direction' => []];
+    }
+    $repo = new AJTB_Laravel_Repository($tour_id);
+    return $repo->get_tour_transfers_grouped();
+}
+
+/**
  * Render HTML for flights block (Flight Cards + Add/Remove). Used on initial load and AJAX response.
  *
  * @param int $tour_id

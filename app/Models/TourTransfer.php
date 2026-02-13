@@ -16,7 +16,9 @@ class TourTransfer extends Model
     protected $fillable = [
         'tour_id',
         'direction',
+        'day_number',
         'sort_order',
+        'is_optional',
         'from_label',
         'to_label',
         'pickup_time',
@@ -28,6 +30,8 @@ class TourTransfer extends Model
 
     protected $casts = [
         'image_id' => 'integer',
+        'day_number' => 'integer',
+        'is_optional' => 'boolean',
     ];
 
     public function getPickupTimeFormattedAttribute(): string
@@ -60,6 +64,7 @@ class TourTransfer extends Model
     public static function getForTour(int $tourId): array
     {
         $rows = self::where('tour_id', $tourId)
+            ->orderByRaw('COALESCE(day_number, 1) ASC')
             ->orderByRaw("CASE direction WHEN 'arrival' THEN 1 ELSE 2 END")
             ->orderBy('sort_order')
             ->orderBy('id')

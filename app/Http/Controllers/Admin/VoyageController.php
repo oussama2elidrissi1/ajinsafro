@@ -425,6 +425,7 @@ class VoyageController extends Controller
 
     /**
      * Sync hotels for tour: replace all by request data (tour_hotels array or single tour_hotel).
+     * Writes day_number, is_optional, sort_order for multi-day circuits.
      */
     private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): void
     {
@@ -435,6 +436,8 @@ class VoyageController extends Controller
                     continue;
                 }
                 $items[] = [
+                    'day_number' => isset($raw['day_number']) && $raw['day_number'] !== '' ? max(1, (int) $raw['day_number']) : 1,
+                    'is_optional' => !empty($raw['is_optional']) ? 1 : 0,
                     'hotel_name' => $raw['hotel_name'] ?? null,
                     'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
                     'address' => $raw['address'] ?? null,
@@ -447,6 +450,8 @@ class VoyageController extends Controller
         } elseif ($request->has('tour_hotel')) {
             $raw = $request->input('tour_hotel', []);
             $items[] = [
+                'day_number' => 1,
+                'is_optional' => 0,
                 'hotel_name' => $raw['hotel_name'] ?? null,
                 'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
                 'address' => $raw['address'] ?? null,
@@ -458,17 +463,20 @@ class VoyageController extends Controller
         }
         TourHotel::where('tour_id', $tourId)->delete();
         $sortOrder = 0;
+        $contentKeys = ['hotel_name', 'stars', 'address', 'room_type', 'meal_plan', 'notes', 'image_id'];
         foreach ($items as $data) {
-            if (array_filter($data, fn ($v) => $v !== null && $v !== '')) {
+            $content = array_intersect_key($data, array_flip($contentKeys));
+            if (array_filter($content, fn ($v) => $v !== null && $v !== '')) {
                 TourHotel::create(array_merge($data, ['tour_id' => $tourId, 'sort_order' => $sortOrder++]));
             }
         }
     }
 
     /**
-     * Sync transfers for tour: replace all by request (tour_transfer_arrivals / tour_transfer_departures or single tour_transfer_arrival / tour_transfer_departure).
+     * Sync transfers for tour: replace all by request (tour_transfer_arrivals / tour_transfer_departures or single).
+     * Writes day_number, is_optional, sort_order. Default: arrival = day 1, departure = lastDayNumber.
      */
-    private function syncTourTransfers(int $tourId, \Illuminate\Http\Request $request): void
+    private function syncTourTransfers(int $tourId, \Illuminate\Http\Request $request, int $lastDayNumber = 1): void
     {
         $arrivals = [];
         if ($request->has('tour_transfer_arrivals') && is_array($request->input('tour_transfer_arrivals'))) {
@@ -499,10 +507,13 @@ class VoyageController extends Controller
         TourTransfer::where('tour_id', $tourId)->delete();
         $sortOrder = 0;
         foreach ($arrivals as $arr) {
+            $dayNumber = isset($arr['day_number']) && $arr['day_number'] !== '' ? max(1, (int) $arr['day_number']) : 1;
             TourTransfer::create([
                 'tour_id' => $tourId,
                 'direction' => TourTransfer::DIRECTION_ARRIVAL,
+                'day_number' => $dayNumber,
                 'sort_order' => $sortOrder++,
+                'is_optional' => !empty($arr['is_optional']) ? 1 : 0,
                 'from_label' => $arr['from_label'] ?? null,
                 'to_label' => $arr['to_label'] ?? null,
                 'pickup_time' => $arr['pickup_time'] ?? null,
@@ -514,10 +525,13 @@ class VoyageController extends Controller
         }
         $sortOrder = 0;
         foreach ($departures as $dep) {
+            $dayNumber = isset($dep['day_number']) && $dep['day_number'] !== '' ? max(1, min((int) $dep['day_number'], $lastDayNumber)) : $lastDayNumber;
             TourTransfer::create([
                 'tour_id' => $tourId,
                 'direction' => TourTransfer::DIRECTION_DEPARTURE,
+                'day_number' => $dayNumber,
                 'sort_order' => $sortOrder++,
+                'is_optional' => !empty($dep['is_optional']) ? 1 : 0,
                 'from_label' => $dep['from_label'] ?? null,
                 'to_label' => $dep['to_label'] ?? null,
                 'pickup_time' => $dep['pickup_time'] ?? null,
@@ -656,9 +670,9 @@ class VoyageController extends Controller
                 }
             }
 
-            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row: replace all for this tour
+            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row par jour
             $this->syncTourHotels($id, $request);
-            $this->syncTourTransfers($id, $request);
+            $this->syncTourTransfers($id, $request, $lastDayNumber);
 
             // Toujours synchroniser les vols Laravel → WP après chaque enregistrement (pour que le plugin affiche les vols)
             if ($laravelVoyage && $laravelVoyage->wp_post_id) {
