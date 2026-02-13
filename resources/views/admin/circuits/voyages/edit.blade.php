@@ -1252,7 +1252,7 @@
                 <div id="tour-hotels-container">
                     @php $hotelsList = $tourHotels->isEmpty() ? [null] : $tourHotels->all(); @endphp
                     @foreach($hotelsList as $hi => $h)
-                    @php $hid = 'tour_hotel_image_id_' . $hi; $himg = optional($h)->image_id; $himgUrl = $himg ? \App\Services\WpHeroImageService::getAttachmentUrl((int)$himg) : ''; @endphp
+                    @php $hid = 'tour_hotel_image_id_' . $hi; $himg = optional($h)->image_id; $himgUrl = $himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$himg) : ''; @endphp
                     <div class="card mb-3 tour-hotel-row" data-index="{{ $hi }}">
                         <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                             <strong>Hôtel {{ $hi + 1 }}</strong>
