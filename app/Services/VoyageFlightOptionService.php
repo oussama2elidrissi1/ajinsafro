@@ -167,7 +167,8 @@ class VoyageFlightOptionService
                         $row['sort_order'] = $opt->sort_order ?? 0;
                     }
                     if ($this->wpTableHasColumn($wp, $fullTable, 'day_number')) {
-                        $row['day_number'] = $opt->day_number;
+                        // Segment sans jour → jour 1 pour affichage dans le programme
+                        $row['day_number'] = $opt->day_number ?? ($opt->type === VoyageFlightOption::TYPE_SEGMENT ? 1 : null);
                     }
                     if ($this->wpTableHasColumn($wp, $fullTable, 'is_optional')) {
                         $row['is_optional'] = (bool) $opt->is_optional;
