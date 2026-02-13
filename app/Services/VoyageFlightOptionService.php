@@ -122,8 +122,9 @@ class VoyageFlightOptionService
             $table = 'aj_tour_flights';
             $fullTable = $prefix . $table;
 
-            // Supprimer la contrainte UNIQUE(tour_id, flight_type) si elle existe pour autoriser plusieurs vols par type
+            // Forcer la suppression de l'index UNIQUE(tour_id, flight_type) pour autoriser plusieurs vols par type
             $this->dropUniqueTourFlightTypeIfExists($wp, $fullTable);
+            $this->dropUniqueByCommonNames($wp, $fullTable);
 
             $options = VoyageFlightOption::where('voyage_id', $voyageId)
                 ->orderByRaw("CASE type WHEN 'outbound' THEN 1 WHEN 'return' THEN 2 ELSE 3 END")
@@ -138,56 +139,72 @@ class VoyageFlightOptionService
 
             $wp->table($table)->where('tour_id', $wpPostId)->delete();
 
+            $rows = [];
+            $now = now();
             foreach ($options as $opt) {
+                $ft = $opt->type === VoyageFlightOption::TYPE_RETURN ? 'inbound' : ($opt->type === VoyageFlightOption::TYPE_SEGMENT ? 'segment' : 'outbound');
+                $depAt = $opt->depart_at ? $opt->depart_at->format('Y-m-d H:i:s') : null;
+                $arrAt = $opt->arrive_at ? $opt->arrive_at->format('Y-m-d H:i:s') : null;
+
+                $row = [
+                    'tour_id' => $wpPostId,
+                    'flight_type' => $ft,
+                    'airline_id' => $opt->airline_id,
+                    'cabin_class' => $opt->cabin ?? 'economy',
+                    'from_city' => $opt->from_city,
+                    'to_city' => $opt->to_city,
+                    'depart_date' => $depAt ? substr($depAt, 0, 10) : null,
+                    'depart_time' => $depAt ? substr($depAt, 11, 8) : null,
+                    'arrive_date' => $arrAt ? substr($arrAt, 0, 10) : null,
+                    'arrive_time' => $arrAt ? substr($arrAt, 11, 8) : null,
+                    'baggage_cabin_kg' => $opt->baggage_cabin_kg,
+                    'baggage_checkin_kg' => $opt->baggage_checkin_kg,
+                    'is_tentative' => (bool) $opt->is_tentative,
+                    'notes' => $opt->notes,
+                    'updated_at' => $now,
+                    'created_at' => $now,
+                ];
+
+                if ($this->wpTableHasColumn($wp, $fullTable, 'sort_order')) {
+                    $row['sort_order'] = $opt->sort_order ?? 0;
+                }
+                if ($this->wpTableHasColumn($wp, $fullTable, 'day_number')) {
+                    $row['day_number'] = $opt->day_number ?? ($opt->type === VoyageFlightOption::TYPE_SEGMENT ? 1 : null);
+                }
+                if ($this->wpTableHasColumn($wp, $fullTable, 'is_optional')) {
+                    $row['is_optional'] = (bool) $opt->is_optional;
+                }
+                if ($this->wpTableHasColumn($wp, $fullTable, 'laravel_option_id')) {
+                    $row['laravel_option_id'] = $opt->id;
+                }
+
+                $rows[] = $row;
+            }
+
+            if ($rows !== []) {
                 try {
-                    $ft = $opt->type === VoyageFlightOption::TYPE_RETURN ? 'inbound' : ($opt->type === VoyageFlightOption::TYPE_SEGMENT ? 'segment' : 'outbound');
-                    $depAt = $opt->depart_at ? $opt->depart_at->format('Y-m-d H:i:s') : null;
-                    $arrAt = $opt->arrive_at ? $opt->arrive_at->format('Y-m-d H:i:s') : null;
-
-                    $row = [
-                        'tour_id' => $wpPostId,
-                        'flight_type' => $ft,
-                        'airline_id' => $opt->airline_id,
-                        'cabin_class' => $opt->cabin ?? 'economy',
-                        'from_city' => $opt->from_city,
-                        'to_city' => $opt->to_city,
-                        'depart_date' => $depAt ? substr($depAt, 0, 10) : null,
-                        'depart_time' => $depAt ? substr($depAt, 11, 8) : null,
-                        'arrive_date' => $arrAt ? substr($arrAt, 0, 10) : null,
-                        'arrive_time' => $arrAt ? substr($arrAt, 11, 8) : null,
-                        'baggage_cabin_kg' => $opt->baggage_cabin_kg,
-                        'baggage_checkin_kg' => $opt->baggage_checkin_kg,
-                        'is_tentative' => (bool) $opt->is_tentative,
-                        'notes' => $opt->notes,
-                        'updated_at' => now(),
-                        'created_at' => now(),
-                    ];
-
-                    if ($this->wpTableHasColumn($wp, $fullTable, 'sort_order')) {
-                        $row['sort_order'] = $opt->sort_order ?? 0;
-                    }
-                    if ($this->wpTableHasColumn($wp, $fullTable, 'day_number')) {
-                        // Segment sans jour → jour 1 pour affichage dans le programme
-                        $row['day_number'] = $opt->day_number ?? ($opt->type === VoyageFlightOption::TYPE_SEGMENT ? 1 : null);
-                    }
-                    if ($this->wpTableHasColumn($wp, $fullTable, 'is_optional')) {
-                        $row['is_optional'] = (bool) $opt->is_optional;
-                    }
-                    if ($this->wpTableHasColumn($wp, $fullTable, 'laravel_option_id')) {
-                        $row['laravel_option_id'] = $opt->id;
-                    }
-
-                    $wp->table($table)->insert($row);
+                    $wp->table($table)->insert($rows);
+                    \Log::info('VoyageFlightOptionService::syncOptionsToWp inserted', ['count' => count($rows)]);
                 } catch (\Throwable $e) {
-                    \Log::warning('VoyageFlightOptionService::syncOptionsToWp row insert failed', [
+                    \Log::warning('VoyageFlightOptionService::syncOptionsToWp batch insert failed', [
                         'voyage_id' => $voyageId,
                         'wp_post_id' => $wpPostId,
-                        'option_id' => $opt->id,
-                        'type' => $opt->type,
-                        'from_city' => $opt->from_city,
-                        'to_city' => $opt->to_city,
                         'message' => $e->getMessage(),
                     ]);
+                    // Fallback: insert one by one (e.g. if batch fails for column mismatch)
+                    foreach ($rows as $i => $row) {
+                        try {
+                            $wp->table($table)->insert($row);
+                        } catch (\Throwable $e2) {
+                            \Log::warning('VoyageFlightOptionService::syncOptionsToWp row insert failed', [
+                                'index' => $i,
+                                'flight_type' => $row['flight_type'] ?? '',
+                                'from_city' => $row['from_city'] ?? '',
+                                'to_city' => $row['to_city'] ?? '',
+                                'message' => $e2->getMessage(),
+                            ]);
+                        }
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -196,6 +213,29 @@ class VoyageFlightOptionService
                 'wp_post_id' => $wpPostId,
                 'message' => $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Drop UNIQUE(tour_id, flight_type) by common Laravel-generated index names.
+     */
+    private function dropUniqueByCommonNames($wp, string $fullTable): void
+    {
+        $possibleNames = [
+            'aj_tour_flights_tour_id_flight_type_unique',
+            'tour_id_flight_type_unique',
+        ];
+        $prefixed = $wp->getTablePrefix() . 'aj_tour_flights_tour_id_flight_type_unique';
+        if ($prefixed !== 'aj_tour_flights_tour_id_flight_type_unique') {
+            $possibleNames[] = $prefixed;
+        }
+        foreach ($possibleNames as $indexName) {
+            try {
+                $wp->statement("ALTER TABLE `{$fullTable}` DROP INDEX `{$indexName}`");
+                \Log::info('VoyageFlightOptionService::dropUniqueByCommonNames dropped', ['index' => $indexName]);
+            } catch (\Throwable $e) {
+                // index may not exist
+            }
         }
     }
 
