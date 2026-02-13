@@ -149,11 +149,95 @@
          * Calculate and display total price
          */
         initPriceCalculation: function() {
+            // Calculate total (which also updates cart)
             this.calculateTotal();
         },
 
         /**
-         * Calculate total from quantities
+         * Get activities added by client (client_added=true AND price > 0)
+         * Returns array of {title, price, day_id, activity_id}
+         */
+        getAddedActivities: function() {
+            var activities = [];
+            // Find all activities marked as client_added (added by user)
+            $('.day-activity-item[data-client-added="true"]').each(function() {
+                var $item = $(this);
+                var title = $item.find('.activity-title').text().trim() || '';
+                var priceText = $item.find('.activity-price').text().trim();
+                var price = 0;
+                if (priceText) {
+                    price = parseFloat(priceText.replace(/[^\d.]/g, '')) || 0;
+                }
+                // Only include if price > 0 (activities with price)
+                // Activities without price or price=0 are considered "included" and don't affect total
+                if (price > 0) {
+                    activities.push({
+                        title: title,
+                        price: price,
+                        day_id: $item.data('day-id') || 0,
+                        activity_id: $item.data('activity-id') || 0
+                    });
+                }
+            });
+            return activities;
+        },
+
+        /**
+         * Update cart display with base + activities
+         */
+        updateCart: function() {
+            var adults = parseInt($('#adults').val(), 10) || 0;
+            var children = parseInt($('#children').val(), 10) || 0;
+            var adultPrice = this.config.prices.adult || 0;
+            var childPrice = this.config.prices.child !== undefined && this.config.prices.child !== null ? this.config.prices.child : 0;
+
+            // Update base labels
+            $('#cart-adults-count').text(adults);
+            if ($('#cart-children-count').length) {
+                $('#cart-children-count').text(children);
+            }
+
+            // Update base values
+            var baseAdultTotal = adults * adultPrice;
+            $('#cart-base-value').text(this.formatPrice(baseAdultTotal) + ' ' + this.config.currency);
+            if ($('#cart-child-value').length) {
+                var baseChildTotal = children * childPrice;
+                $('#cart-child-value').text(this.formatPrice(baseChildTotal) + ' ' + this.config.currency);
+            }
+
+            // Get and display activities
+            var activities = this.getAddedActivities();
+            var $activitiesList = $('#cart-activities-list');
+            $activitiesList.empty();
+
+            if (activities.length > 0) {
+                var totalActivities = 0;
+                activities.forEach(function(act) {
+                    totalActivities += act.price;
+                    var $item = $('<div class="cart-item cart-item-activity"></div>');
+                    $item.append('<span class="cart-label">Activité: ' + this.escapeHtml(act.title) + '</span>');
+                    $item.append('<span class="cart-value">' + this.formatPrice(act.price) + ' ' + this.config.currency + '</span>');
+                    $activitiesList.append($item);
+                }.bind(this));
+            }
+        },
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        escapeHtml: function(text) {
+            var map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        },
+
+        /**
+         * Calculate total from quantities + activities
          */
         calculateTotal: function() {
             var adults = parseInt($('#adults').val(), 10) || 0;
@@ -162,8 +246,21 @@
             var adultPrice = this.config.prices.adult || 0;
             var childPrice = this.config.prices.child !== undefined && this.config.prices.child !== null ? this.config.prices.child : 0;
 
-            var total = (adults * adultPrice) + (children * childPrice);
+            var baseTotal = (adults * adultPrice) + (children * childPrice);
 
+            // Add activities prices (only non-included, client-added)
+            var activities = this.getAddedActivities();
+            var activitiesTotal = 0;
+            activities.forEach(function(act) {
+                activitiesTotal += act.price;
+            });
+
+            var total = baseTotal + activitiesTotal;
+
+            // Update cart display
+            this.updateCart();
+
+            // Update total
             $('#booking-total').text(this.formatPrice(total) + ' ' + this.config.currency);
         },
 
@@ -293,6 +390,10 @@
                             container.innerHTML = resp.data.html;
                         }
                         AJTB.showToast(resp.data.message || (action === 'remove' ? 'Activité retirée' : 'Activité ajoutée'));
+                        // Recalculate total with activities
+                        if (typeof AJTB.calculateTotal === 'function') {
+                            AJTB.calculateTotal();
+                        }
                     } else {
                         // On error: restore item if it was removed
                         if (action === 'remove' && itemHtml && $list && $list.length) {
@@ -519,6 +620,10 @@
                             container.innerHTML = resp.data.html;
                         }
                         self.showToast(resp.data.message || 'Activité ajoutée');
+                        // Recalculate total with activities
+                        if (typeof self.calculateTotal === 'function') {
+                            self.calculateTotal();
+                        }
                         setTimeout(function() {
                             $modal.attr('aria-hidden', 'true').removeClass('is-open');
                         }, 300);

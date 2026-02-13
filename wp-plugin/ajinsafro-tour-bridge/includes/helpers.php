@@ -436,7 +436,9 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             $act_start_time = isset($act['start_time']) ? $act['start_time'] : null;
             $act_end_time = isset($act['end_time']) ? $act['end_time'] : null;
             
-            $html .= '<li class="day-activity-item day-activity-card-pro" data-activity-id="' . esc_attr($act_id) . '" data-day-activity-id="' . esc_attr($day_activity_id) . '" data-is-mandatory="' . ($is_mandatory ? '1' : '0') . '">';
+            $client_added = !empty($act['client_added']) ? 'true' : 'false';
+            $is_included_val = !empty($act['is_included']) ? '1' : '0';
+            $html .= '<li class="day-activity-item day-activity-card-pro" data-activity-id="' . esc_attr($act_id) . '" data-day-activity-id="' . esc_attr($day_activity_id) . '" data-day-id="' . esc_attr($day_id) . '" data-is-mandatory="' . ($is_mandatory ? '1' : '0') . '" data-client-added="' . esc_attr($client_added) . '" data-is-included="' . esc_attr($is_included_val) . '">';
             $html .= '<div class="day-activity-item-content">';
             $html .= '<div class="day-activity-image-wrap">';
             if ($act_image_url) {

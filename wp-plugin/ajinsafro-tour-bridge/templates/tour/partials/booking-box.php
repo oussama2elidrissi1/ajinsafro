@@ -97,6 +97,27 @@ $current_season = $pricing['current_season'] ?? null;
         <input type="hidden" name="adults" id="adults" value="2">
         <input type="hidden" name="children" id="children" value="0">
 
+        <!-- Cart Summary -->
+        <div class="booking-cart" id="booking-cart">
+            <div class="cart-item cart-item-base">
+                <span class="cart-label" id="cart-base-label">Base (Adulte x <span id="cart-adults-count">2</span>)</span>
+                <span class="cart-value" id="cart-base-value">
+                    <?php echo number_format($display_price * 2, 0, ',', ' '); ?> <?php echo esc_html($currency_symbol); ?>
+                </span>
+            </div>
+            <?php if (($pricing['child'] ?? 0) > 0): ?>
+            <div class="cart-item cart-item-base">
+                <span class="cart-label" id="cart-child-label">Base (Enfant x <span id="cart-children-count">0</span>)</span>
+                <span class="cart-value" id="cart-child-value">
+                    0 <?php echo esc_html($currency_symbol); ?>
+                </span>
+            </div>
+            <?php endif; ?>
+            <div class="cart-activities" id="cart-activities-list">
+                <!-- Activities will be added here dynamically -->
+            </div>
+        </div>
+
         <!-- Total -->
         <div class="booking-total">
             <span class="total-label">Total estimé</span>
@@ -126,13 +147,6 @@ $current_season = $pricing['current_season'] ?? null;
                 </svg>
             </button>
         <?php endif; ?>
-
-        <button type="button" class="btn-secondary btn-inquiry">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-            </svg>
-            Demander un devis
-        </button>
     </form>
 
     <!-- Trust Badges -->
