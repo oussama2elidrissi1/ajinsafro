@@ -212,39 +212,90 @@
                 </div>
             </div>
 
-            {{-- TAB 2: LOCATION --}}
+            {{-- TAB 2: LOCATION — Destination UX (search, tree, chips, actions) --}}
             <div class="tab-pane" id="location" role="tabpanel">
-                {{-- Tour location (WordPress Traveler style) --}}
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="mb-2" style="font-size: 18px; font-weight: 600; color: #23282d;">Tour location</h4>
-                        <p class="text-muted mb-3" style="font-size: 13px;">Select one or more location for your tour</p>
-                        
-                        <div class="mb-3">
-                            <input 
-                                type="text" 
-                                id="locationSearch" 
-                                class="form-control" 
-                                placeholder="Type to search"
-                                style="font-size: 14px; padding: 6px 12px; border: 1px solid #ddd; border-radius: 3px;"
-                            >
+                <style>
+                .destination-ux-card { border: 1px solid #dee2e6; border-radius: 6px; }
+                .destination-ux-body { padding: 1rem 1.25rem; }
+                .destination-ux-header { margin-bottom: 1rem; }
+                .destination-ux-title { font-size: 1.1rem; font-weight: 600; color: #212529; margin: 0 0 0.25rem 0; }
+                .destination-ux-helper { font-size: 0.8125rem; color: #6c757d; margin: 0 0 0.5rem 0; }
+                .destination-ux-badge-wrap { margin-top: 0.5rem; }
+                .destination-ux-badge { font-size: 0.75rem; font-weight: 500; }
+                .destination-ux-chips-section { margin-bottom: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
+                .destination-ux-chips-label { font-size: 0.75rem; font-weight: 600; color: #495057; margin-bottom: 0.35rem; }
+                .destination-ux-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; min-height: 1.5rem; }
+                .destination-ux-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #e7f1ff; color: #0d6efd; border-radius: 4px; border: 1px solid #b6d4fe; }
+                .destination-ux-chip-remove { background: none; border: none; padding: 0 0.15rem; cursor: pointer; color: #0d6efd; font-size: 1rem; line-height: 1; opacity: 0.8; }
+                .destination-ux-chip-remove:hover { opacity: 1; color: #0a58ca; }
+                .destination-ux-chips-clear { margin-top: 0.35rem; }
+                .destination-ux-search-wrap { margin-bottom: 0.5rem; }
+                .destination-ux-search { max-width: 320px; }
+                .destination-ux-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem; }
+                .destination-ux-btn { font-size: 0.75rem; }
+                .destination-ux-tree-wrap { border: 1px solid #dee2e6; background: #fff; padding: 0.75rem 1rem; max-height: 320px; overflow-y: auto; border-radius: 6px; }
+                .destination-tree-list { padding-left: 0; }
+                .destination-tree-item { margin: 0; padding: 0; list-style: none; }
+                .destination-tree-row { display: flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0; min-height: 1.6rem; }
+                .destination-tree-toggle { width: 1rem; height: 1rem; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #6c757d; font-size: 0.7rem; user-select: none; flex-shrink: 0; }
+                .destination-tree-toggle--empty { cursor: default; opacity: 0; }
+                .destination-tree-toggle::before { content: '\25BC'; }
+                .destination-tree-item.has-children.collapsed > .destination-tree-row .destination-tree-toggle::before { transform: rotate(-90deg); }
+                .destination-tree-item.collapsed > .destination-tree-list { display: none; }
+                .destination-tree-item.has-children.collapsed > .destination-tree-toggle::before { transform: rotate(-90deg); }
+                .destination-tree-item.has-children > .destination-tree-list { margin-left: 0.5rem; }
+                .destination-tree-label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; margin: 0; font-size: 0.875rem; flex: 1; min-width: 0; }
+                .destination-tree-label input[type=checkbox] { margin: 0; flex-shrink: 0; cursor: pointer; }
+                .destination-tree-title { flex: 1; min-width: 0; }
+                .destination-tree-title mark { background: #fff3cd; padding: 0 0.1em; border-radius: 2px; }
+                .destination-tree-item.indeterminate > .destination-tree-row .location-checkbox { opacity: 0.85; }
+                .destination-tree-item.destination-search-path .destination-tree-title[data-path]::after { content: ' › ' attr(data-path); font-size: 0.7rem; color: #6c757d; margin-left: 0.35rem; display: inline; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+                </style>
+                <div class="card destination-ux-card">
+                    <div class="card-body destination-ux-body">
+                        <div class="destination-ux-header">
+                            <h4 class="destination-ux-title">Tour location</h4>
+                            <p class="destination-ux-helper">Sélectionnez une ou plusieurs destinations pour ce circuit.</p>
+                            <div class="destination-ux-badge-wrap">
+                                <span class="badge bg-primary destination-ux-badge" id="locationCountBadge">
+                                    <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} destination(s) sélectionnée(s)</span>
+                                </span>
+                            </div>
                         </div>
-                        
-                        <div class="wp-location-box" id="locationTreeContainer" style="border: 1px solid #ccd0d4; background: #fff; padding: 12px; max-height: 360px; overflow-y: auto; border-radius: 3px;">
+
+                        {{-- Sélections actuelles (chips) --}}
+                        <div class="destination-ux-chips-section">
+                            <div class="destination-ux-chips-label">Sélections actuelles</div>
+                            <div class="destination-ux-chips" id="locationChipsContainer"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary destination-ux-chips-clear" id="locationChipsClear" style="display: none;">Effacer tout</button>
+                        </div>
+
+                        {{-- Recherche --}}
+                        <div class="destination-ux-search-wrap">
+                            <input type="text" id="locationSearch" class="form-control form-control-sm destination-ux-search" placeholder="Rechercher (ex : San, California…)">
+                        </div>
+
+                        {{-- Actions rapides --}}
+                        <div class="destination-ux-actions">
+                            <button type="button" class="btn btn-sm btn-outline-primary destination-ux-btn" id="locationSelectAll">Tout sélectionner</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary destination-ux-btn" id="locationDeselectAll">Tout désélectionner</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary destination-ux-btn" id="locationExpandAll">Déplier tout</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary destination-ux-btn" id="locationCollapseAll">Replier tout</button>
+                            <button type="button" class="btn btn-sm btn-outline-info destination-ux-btn" id="locationSelectFiltered" style="display: none;">Sélectionner uniquement les résultats filtrés</button>
+                        </div>
+
+                        {{-- Arbre --}}
+                        <div class="wp-location-box destination-ux-tree-wrap" id="locationTreeContainer">
                             @if(!empty($locationsTree))
                                 @include('admin.circuits.voyages.partials.location-tree', [
-                                    'locations' => $locationsTree, 
-                                    'selectedIds' => $selectedLocationIds ?? []
+                                    'locations' => $locationsTree,
+                                    'selectedIds' => $selectedLocationIds ?? [],
+                                    'path' => []
                                 ])
                             @else
-                                <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible. Créez des locations dans WordPress d'abord.</p>
+                                <p class="text-muted mb-0 small">Aucune destination disponible. Créez des locations dans WordPress d’abord.</p>
                             @endif
                         </div>
-                        
-                        <small class="text-muted d-block mt-2" id="locationCount" style="font-size: 12px; color: #646970;">
-                            <i class="bx bx-info-circle"></i> 
-                            <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} location(s) sélectionnée(s)</span>
-                        </small>
                     </div>
                 </div>
                 
@@ -1851,55 +1902,184 @@
                 }
             }
         });
-        // Location search filter (WordPress Traveler behavior)
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('locationSearch');
-            const locationItems = document.querySelectorAll('.wp-location-item');
-            
-            if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    const searchTerm = this.value.toLowerCase().trim();
-                    
-                    if (searchTerm === '') {
-                        // Show all
-                        locationItems.forEach(function(item) {
-                            item.style.display = '';
-                        });
-                    } else {
-                        // Filter: show item if title matches OR if any descendant matches
-                        locationItems.forEach(function(item) {
-                            const title = item.getAttribute('data-title');
-                            
-                            // Check if this item or any child matches
-                            const selfMatches = title.includes(searchTerm);
-                            const childMatches = Array.from(item.querySelectorAll('.wp-location-item')).some(function(child) {
-                                return child.getAttribute('data-title').includes(searchTerm);
-                            });
-                            
-                            if (selfMatches || childMatches) {
-                                item.style.display = '';
-                            } else {
-                                item.style.display = 'none';
-                            }
-                        });
+        // Destination UX: location tree (search, chips, actions, hierarchy, indeterminate)
+        (function destinationUx() {
+            var container = document.getElementById('locationTreeContainer');
+            var searchInput = document.getElementById('locationSearch');
+            var countText = document.getElementById('locationCountText');
+            var chipsContainer = document.getElementById('locationChipsContainer');
+            var chipsClearBtn = document.getElementById('locationChipsClear');
+            var selectAllBtn = document.getElementById('locationSelectAll');
+            var deselectAllBtn = document.getElementById('locationDeselectAll');
+            var expandAllBtn = document.getElementById('locationExpandAll');
+            var collapseAllBtn = document.getElementById('locationCollapseAll');
+            var selectFilteredBtn = document.getElementById('locationSelectFiltered');
+
+            function getCheckboxes() { return container ? container.querySelectorAll('.location-checkbox') : []; }
+            function getVisibleItems() { return container ? container.querySelectorAll('.wp-location-item:not([style*="display: none"])') : []; }
+
+            function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+            function highlightMatch(text, term) {
+                if (!term) return escapeHtml(text);
+                var r = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                return escapeHtml(text).replace(r, '<mark>$1</mark>');
+            }
+
+            function updateCount() {
+                var n = document.querySelectorAll('.location-checkbox:checked').length;
+                if (countText) countText.textContent = n + ' destination(s) sélectionnée(s)';
+            }
+
+            function updateChips() {
+                if (!chipsContainer) return;
+                var boxes = Array.from(getCheckboxes()).filter(function(cb) { return cb.checked; });
+                chipsContainer.innerHTML = '';
+                boxes.forEach(function(cb) {
+                    var id = cb.value;
+                    var title = cb.getAttribute('data-loc-title') || id;
+                    var chip = document.createElement('span');
+                    chip.className = 'destination-ux-chip';
+                    chip.innerHTML = escapeHtml(title) + ' <button type="button" class="destination-ux-chip-remove" data-loc-id="' + escapeHtml(id) + '" aria-label="Retirer">×</button>';
+                    chipsContainer.appendChild(chip);
+                });
+                if (chipsClearBtn) chipsClearBtn.style.display = boxes.length ? '' : 'none';
+            }
+
+            function syncChipsAndCount() {
+                updateCount();
+                updateChips();
+                updateIndeterminate();
+            }
+
+            function updateIndeterminate() {
+                container.querySelectorAll('.wp-location-item.has-children').forEach(function(item) {
+                    var cb = item.querySelector(':scope > .destination-tree-row .location-checkbox');
+                    if (!cb) return;
+                    var childCbs = item.querySelectorAll('.destination-tree-list .location-checkbox');
+                    var checked = Array.from(childCbs).filter(function(c) { return c.checked; }).length;
+                    cb.indeterminate = checked > 0 && checked < childCbs.length;
+                    item.classList.toggle('indeterminate', cb.indeterminate);
+                });
+            }
+
+            function applySearch(term) {
+                term = (term || '').toLowerCase().trim();
+                var items = container ? container.querySelectorAll('.wp-location-item') : [];
+                var hasFilter = term.length > 0;
+                if (selectFilteredBtn) selectFilteredBtn.style.display = hasFilter ? '' : 'none';
+
+                items.forEach(function(item) {
+                    var title = item.getAttribute('data-title') || '';
+                    var path = item.getAttribute('data-path') || '';
+                    var pathLower = path.toLowerCase();
+                    var selfMatch = title.indexOf(term) !== -1;
+                    var pathMatch = term && pathLower.indexOf(term) !== -1;
+                    var childMatch = Array.from(item.querySelectorAll('.wp-location-item')).some(function(c) {
+                        return (c.getAttribute('data-title') || '').indexOf(term) !== -1;
+                    });
+                    var show = !term || selfMatch || pathMatch || childMatch;
+                    item.style.display = show ? '' : 'none';
+
+                    var titleEl = item.querySelector('.destination-tree-title');
+                    if (titleEl) {
+                        var rawTitle = item.querySelector('.location-checkbox').getAttribute('data-loc-title') || item.getAttribute('data-title') || '';
+                        if (term && show)
+                            titleEl.innerHTML = highlightMatch(rawTitle, term);
+                        else
+                            titleEl.textContent = rawTitle;
+                    }
+                    if (item.classList) item.classList.toggle('destination-search-path', !!term && show && path);
+                    var t = item.querySelector('.destination-tree-title');
+                    if (t) {
+                        if (term && show && path) t.setAttribute('data-path', path);
+                        else t.removeAttribute('data-path');
                     }
                 });
             }
-            
-            // Update selected count
-            const checkboxes = document.querySelectorAll('.location-checkbox');
-            const updateCount = function() {
-                const checked = document.querySelectorAll('.location-checkbox:checked').length;
-                const countText = document.getElementById('locationCountText');
-                if (countText) {
-                    countText.textContent = checked + ' location(s) sélectionnée(s)';
+
+            function expandAll() {
+                container.querySelectorAll('.wp-location-item.has-children').forEach(function(item) {
+                    item.classList.remove('collapsed');
+                    item.querySelector('.destination-tree-toggle').setAttribute('aria-expanded', 'true');
+                });
+            }
+            function collapseAll() {
+                container.querySelectorAll('.wp-location-item.has-children').forEach(function(item) {
+                    item.classList.add('collapsed');
+                    item.querySelector('.destination-tree-toggle').setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            function selectAll() {
+                getCheckboxes().forEach(function(cb) { cb.checked = true; });
+                syncChipsAndCount();
+            }
+            function deselectAll() {
+                getCheckboxes().forEach(function(cb) { cb.checked = false; });
+                syncChipsAndCount();
+            }
+            function selectFilteredOnly() {
+                getCheckboxes().forEach(function(cb) { cb.checked = false; });
+                getVisibleItems().forEach(function(item) {
+                    var cb = item.querySelector(':scope > .destination-tree-row .location-checkbox');
+                    if (cb) cb.checked = true;
+                });
+                syncChipsAndCount();
+            }
+
+            function cascadeParent(checkbox) {
+                var item = checkbox.closest('.wp-location-item');
+                if (!item || !item.classList.contains('has-children')) return;
+                var childCbs = item.querySelectorAll('.destination-tree-list .location-checkbox');
+                var target = checkbox.checked;
+                if (childCbs.length > 12 && !window.confirm('Appliquer à ' + childCbs.length + ' sous-destinations ?')) return;
+                childCbs.forEach(function(c) { c.checked = target; });
+                syncChipsAndCount();
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() { applySearch(this.value); });
+            }
+            if (chipsContainer) {
+                chipsContainer.addEventListener('click', function(e) {
+                    var rm = e.target.closest('.destination-ux-chip-remove');
+                    if (rm) {
+                        e.preventDefault();
+                        var id = rm.getAttribute('data-loc-id');
+                        var cb = container && container.querySelector('.location-checkbox[value="' + id.replace(/"/g, '\\"') + '"]');
+                        if (cb) { cb.checked = false; syncChipsAndCount(); }
+                    }
+                });
+            }
+            if (chipsClearBtn) chipsClearBtn.addEventListener('click', function() { deselectAll(); });
+
+            if (selectAllBtn) selectAllBtn.addEventListener('click', selectAll);
+            if (deselectAllBtn) deselectAllBtn.addEventListener('click', deselectAll);
+            if (expandAllBtn) expandAllBtn.addEventListener('click', expandAll);
+            if (collapseAllBtn) collapseAllBtn.addEventListener('click', collapseAll);
+            if (selectFilteredBtn) selectFilteredBtn.addEventListener('click', selectFilteredOnly);
+
+            container && container.addEventListener('change', function(e) {
+                if (e.target.classList && e.target.classList.contains('location-checkbox')) {
+                    syncChipsAndCount();
+                    cascadeParent(e.target);
                 }
-            };
-            
-            checkboxes.forEach(function(checkbox) {
-                checkbox.addEventListener('change', updateCount);
             });
-        });
+
+            container && container.addEventListener('click', function(e) {
+                var toggle = e.target.closest('.destination-tree-toggle');
+                if (toggle && !toggle.classList.contains('destination-tree-toggle--empty')) {
+                    var item = toggle.closest('.wp-location-item.has-children');
+                    if (item) {
+                        item.classList.toggle('collapsed');
+                        toggle.setAttribute('aria-expanded', item.classList.contains('collapsed') ? 'false' : 'true');
+                    }
+                }
+            });
+
+            updateChips();
+            updateIndeterminate();
+        })();
         
         window.PROGRAMME_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(fn($a) => ['id' => $a->id, 'title' => $a->title])->values()->all());
         window.PROGRAM_API_URL = @json($programApiUrl ?? '');

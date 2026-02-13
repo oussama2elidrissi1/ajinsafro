@@ -1,26 +1,42 @@
-{{-- Location Tree Component (recursive) - WordPress Traveler style --}}
-@props(['locations', 'level' => 0, 'selectedIds' => []])
+{{-- Location Tree (Destination UX) - recursive, path + toggle + indeterminate support --}}
+@props(['locations', 'level' => 0, 'selectedIds' => [], 'path' => []])
 
-<ul class="wp-location-list" style="padding-left: {{ $level > 0 ? '20px' : '0' }}; margin: 0; list-style: none;">
+<ul class="wp-location-list destination-tree-list" data-level="{{ $level }}" style="padding-left: {{ $level > 0 ? '1.25rem' : '0' }}; margin: 0; list-style: none;">
     @foreach($locations as $location)
-        <li class="wp-location-item" data-title="{{ strtolower($location['title']) }}" style="margin: 0; padding: 2px 0;">
-            <label class="wp-loc-label" style="display: flex; align-items: center; cursor: pointer; font-size: 14px; line-height: 1.8; margin: 0;">
-                <input 
-                    type="checkbox" 
-                    name="locations[]" 
-                    value="{{ $location['id'] }}" 
-                    class="location-checkbox"
-                    style="margin: 0 8px 0 0; cursor: pointer;"
-                    {{ in_array($location['id'], $selectedIds) ? 'checked' : '' }}
-                >
-                <span>{{ $location['title'] }}</span>
-            </label>
-            
-            @if(!empty($location['children']))
+        @php
+            $locPath = array_merge($path, [$location['title']]);
+            $pathStr = implode(' › ', $locPath);
+            $hasChildren = !empty($location['children']);
+            $isSelected = in_array($location['id'], $selectedIds);
+        @endphp
+        <li class="wp-location-item destination-tree-item {{ $hasChildren ? 'has-children' : '' }}"
+            data-id="{{ $location['id'] }}"
+            data-title="{{ strtolower($location['title']) }}"
+            data-path="{{ $pathStr }}"
+            data-has-children="{{ $hasChildren ? '1' : '0' }}">
+            <div class="destination-tree-row">
+                @if($hasChildren)
+                    <span class="destination-tree-toggle" role="button" aria-expanded="true" title="Replier / Déplier"></span>
+                @else
+                    <span class="destination-tree-toggle destination-tree-toggle--empty"></span>
+                @endif
+                <label class="destination-tree-label">
+                    <input type="checkbox"
+                           name="locations[]"
+                           value="{{ $location['id'] }}"
+                           class="location-checkbox destination-checkbox"
+                           {{ $isSelected ? 'checked' : '' }}
+                           data-loc-id="{{ $location['id'] }}"
+                           data-loc-title="{{ e($location['title']) }}">
+                    <span class="destination-tree-title">{{ $location['title'] }}</span>
+                </label>
+            </div>
+            @if($hasChildren)
                 @include('admin.circuits.voyages.partials.location-tree', [
-                    'locations' => $location['children'], 
+                    'locations' => $location['children'],
                     'level' => $level + 1,
-                    'selectedIds' => $selectedIds
+                    'selectedIds' => $selectedIds,
+                    'path' => $locPath,
                 ])
             @endif
         </li>
