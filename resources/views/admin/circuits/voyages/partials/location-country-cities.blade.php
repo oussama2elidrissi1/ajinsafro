@@ -1,4 +1,4 @@
-{{-- Tous les pays + catalogue villes (world_cities + WP). Recherche, Tout sélectionner/désélectionner, création WP à la volée. --}}
+{{-- Choix multiple de pays + catalogue villes (world_cities + WP). Recherche pays et villes, Tout sélectionner/désélectionner. --}}
 @php
     $selectedIds = $selectedLocationIds ?? [];
     $worldCountries = $worldCountries ?? [];
@@ -9,13 +9,22 @@
 
 <div class="destination-country-cities">
     <div class="mb-3">
-        <label for="locationCountrySelect" class="form-label fw-medium">Pays</label>
-        <select id="locationCountrySelect" class="form-select destination-country-select">
-            <option value="">— Choisir un pays —</option>
-            @foreach($worldCountries as $code => $name)
-                <option value="{{ $code }}">{{ $name }}</option>
-            @endforeach
-        </select>
+        <label class="form-label fw-medium">Pays (choix multiple)</label>
+        <div class="destination-country-multi-wrap">
+            <input type="text" class="form-control form-control-sm destination-country-search mb-2" id="destinationCountrySearch" placeholder="Rechercher un pays…" autocomplete="off">
+            <div class="destination-country-multi-actions mb-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCountries">Tout sélectionner</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCountries">Tout désélectionner</button>
+            </div>
+            <div class="destination-country-list" id="destinationCountryList">
+                @foreach($worldCountries as $code => $name)
+                    <label class="destination-country-option-label">
+                        <input type="checkbox" class="destination-country-option" value="{{ $code }}" data-country-name="{{ e($name) }}">
+                        <span>{{ $name }}</span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
     </div>
 
     <div class="destination-cities-panel destination-cities-panel-dynamic" id="destination-cities-panel-dynamic" style="display: none;">

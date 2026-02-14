@@ -251,6 +251,14 @@
                 .destination-tree-item.indeterminate > .destination-tree-row .location-checkbox { opacity: 0.85; }
                 .destination-tree-item.destination-search-path .destination-tree-title[data-path]::after { content: ' › ' attr(data-path); font-size: 0.7rem; color: #6c757d; margin-left: 0.35rem; display: inline; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
                 .destination-country-cities .destination-country-select { max-width: 100%; min-width: 280px; }
+                .destination-country-multi-wrap { border: 1px solid #dee2e6; border-radius: 6px; padding: 0.75rem; background: #fafafa; }
+                .destination-country-list { max-height: 220px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem 1rem; }
+                @media (max-width: 768px) { .destination-country-list { grid-template-columns: 1fr; } }
+                .destination-country-option-label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; margin: 0; font-size: 0.8125rem; }
+                .destination-country-option-label input { margin: 0; flex-shrink: 0; }
+                .destination-country-option-label:hover { color: #0d6efd; }
+                .destination-country-block { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #eee; }
+                .destination-country-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
                 .destination-cities-panel { border: 1px solid #dee2e6; border-radius: 8px; background: #f8f9fa; padding: 1rem; margin-top: 0.75rem; max-height: 380px; overflow-y: auto; }
                 .destination-cities-panel.destination-cities-panel-dynamic { max-height: 420px; }
                 .destination-cities-panel-header { margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid #dee2e6; }
@@ -2084,8 +2092,7 @@
             updateChips();
             updateIndeterminate();
 
-            // Pays + catalogue villes (merged) : recherche, Tout sélectionner/désélectionner, ensureLocation à la volée
-            var countrySelect = document.getElementById('locationCountrySelect');
+            // Pays (choix multiple) + catalogue villes : recherche, Tout sélectionner/désélectionner, ensureLocation à la volée
             var panelDynamic = document.getElementById('destination-cities-panel-dynamic');
             var panelTitle = document.getElementById('destination-cities-panel-title');
             var panelList = document.getElementById('destination-cities-list');
@@ -2113,11 +2120,19 @@
             }
 
             function updateCountryIndeterminate() {
-                var countryCb = panelList ? panelList.querySelector('.destination-country-checkbox-label input.location-checkbox') : null;
-                if (!countryCb) return;
-                var cityCbs = panelList ? panelList.querySelectorAll('.destination-city-checkbox-label input.location-checkbox') : [];
-                var checked = Array.from(cityCbs).filter(function(c) { return c.checked; }).length;
-                countryCb.indeterminate = checked > 0 && checked < cityCbs.length;
+                if (!panelList) return;
+                panelList.querySelectorAll('.destination-country-block').forEach(function(block) {
+                    var countryCb = block.querySelector('.destination-country-checkbox-label input.location-checkbox');
+                    if (!countryCb) return;
+                    var cityCbs = block.querySelectorAll('.destination-city-checkbox-label input.location-checkbox');
+                    var checked = Array.from(cityCbs).filter(function(c) { return c.checked; }).length;
+                    countryCb.indeterminate = checked > 0 && checked < cityCbs.length;
+                });
+            }
+
+            function getSelectedCountryCodes() {
+                var opts = document.querySelectorAll('#destinationCountryList .destination-country-option:checked');
+                return Array.from(opts).map(function(o) { return o.value; }).filter(Boolean);
             }
 
             function onCheckboxChange() {
@@ -2126,54 +2141,62 @@
                 updateCountryIndeterminate();
             }
 
-            function fillCitiesPanel(code) {
+            function fillCitiesPanel(selectedCodes) {
                 if (!panelList) return;
                 panelList.innerHTML = '';
-                if (!code) {
+                if (!selectedCodes || selectedCodes.length === 0) {
                     if (panelDynamic) panelDynamic.style.display = 'none';
                     if (citySearchInput) citySearchInput.value = '';
                     return;
                 }
-                var cities = mergedCities[code] || [];
-                var data = countryCitiesData[code];
-                var countryName = (data && data.title) ? data.title : (worldCountries[code] || code);
                 if (panelDynamic) panelDynamic.style.display = 'block';
-                panelTitle.textContent = 'Villes — ' + countryName;
-                panelTitle.setAttribute('data-country-path', countryName);
+                panelTitle.textContent = 'Villes (' + selectedCodes.length + ' pays)';
 
-                // Checkbox "Inclure le pays entier"
-                var countryId = data && data.id ? data.id : null;
-                var countryNeedsCreate = !countryId;
-                var countryChecked = countryId && selectedIds.indexOf(countryId) !== -1;
-                var countryLabel = document.createElement('label');
-                countryLabel.className = 'destination-country-checkbox-label';
-                if (countryId) {
-                    countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="' + countryId + '" class="location-checkbox destination-checkbox destination-country-whole" ' + (countryChecked ? 'checked' : '') + ' data-loc-id="' + countryId + '" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier (' + escapeHtml(countryName) + ')</span>';
-                } else {
-                    countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox destination-country-whole" data-country-code="' + escapeAttr(code) + '" data-needs-create="1" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier (' + escapeHtml(countryName) + ')</span>';
-                }
-                panelList.appendChild(countryLabel);
+                selectedCodes.forEach(function(code) {
+                    var cities = mergedCities[code] || [];
+                    var data = countryCitiesData[code];
+                    var countryName = (data && data.title) ? data.title : (worldCountries[code] || code);
 
-                if (cities.length === 0) {
-                    panelList.innerHTML += '<p class="text-muted small mb-0 mt-2">Aucune ville dans le catalogue pour ce pays. Vous pouvez ajouter des villes dans <code>config/world_cities.php</code>.</p>';
-                } else {
-                    cities.forEach(function(city) {
-                        var lid = city.id;
-                        var title = city.title || '';
-                        var needsCreate = !!city.needsCreate;
-                        var checked = lid && selectedIds.indexOf(lid) !== -1;
-                        var label = document.createElement('label');
-                        label.className = 'destination-city-checkbox-label destination-city-row';
-                        label.setAttribute('data-city-title', title.toLowerCase());
-                        label.setAttribute('data-path', countryName + ' › ' + title);
-                        if (lid) {
-                            label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' › ' + escapeHtml(title) + '</span>';
-                        } else {
-                            label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' › ' + escapeHtml(title) + '</span>';
-                        }
-                        panelList.appendChild(label);
-                    });
-                }
+                    var block = document.createElement('div');
+                    block.className = 'destination-country-block';
+                    block.setAttribute('data-country-code', code);
+
+                    var countryId = data && data.id ? data.id : null;
+                    var countryChecked = countryId && selectedIds.indexOf(countryId) !== -1;
+                    var countryLabel = document.createElement('label');
+                    countryLabel.className = 'destination-country-checkbox-label';
+                    if (countryId) {
+                        countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="' + countryId + '" class="location-checkbox destination-checkbox destination-country-whole" ' + (countryChecked ? 'checked' : '') + ' data-loc-id="' + countryId + '" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier (' + escapeHtml(countryName) + ')</span>';
+                    } else {
+                        countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox destination-country-whole" data-country-code="' + escapeAttr(code) + '" data-needs-create="1" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier (' + escapeHtml(countryName) + ')</span>';
+                    }
+                    block.appendChild(countryLabel);
+
+                    if (cities.length === 0) {
+                        var p = document.createElement('p');
+                        p.className = 'text-muted small mb-0 mt-1';
+                        p.textContent = 'Aucune ville dans le catalogue pour ce pays.';
+                        block.appendChild(p);
+                    } else {
+                        cities.forEach(function(city) {
+                            var lid = city.id;
+                            var title = city.title || '';
+                            var checked = lid && selectedIds.indexOf(lid) !== -1;
+                            var label = document.createElement('label');
+                            label.className = 'destination-city-checkbox-label destination-city-row';
+                            label.setAttribute('data-city-title', title.toLowerCase());
+                            label.setAttribute('data-path', countryName + ' › ' + title);
+                            label.setAttribute('data-country-code', code);
+                            if (lid) {
+                                label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' › ' + escapeHtml(title) + '</span>';
+                            } else {
+                                label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' › ' + escapeHtml(title) + '</span>';
+                            }
+                            block.appendChild(label);
+                        });
+                    }
+                    panelList.appendChild(block);
+                });
 
                 panelList.querySelectorAll('.location-checkbox').forEach(function(cb) {
                     cb.addEventListener('change', function() {
@@ -2233,30 +2256,71 @@
                 });
             }
 
-            if (countrySelect) {
-                countrySelect.addEventListener('change', function() { fillCitiesPanel(this.value || ''); });
-                var firstId = selectedIds[0];
-                if (firstId) {
+            var countryListEl = document.getElementById('destinationCountryList');
+            var countrySearchInput = document.getElementById('destinationCountrySearch');
+            var selectAllCountriesBtn = document.getElementById('destinationSelectAllCountries');
+            var deselectAllCountriesBtn = document.getElementById('destinationDeselectAllCountries');
+
+            function filterCountrySearch(term) {
+                term = (term || '').toLowerCase().trim();
+                if (!countryListEl) return;
+                countryListEl.querySelectorAll('.destination-country-option-label').forEach(function(label) {
+                    var opt = label.querySelector('.destination-country-option');
+                    var name = (opt ? opt.getAttribute('data-country-name') : '') || (label.textContent || '').toLowerCase();
+                    if (typeof name !== 'string') name = '';
+                    name = name.toLowerCase();
+                    var show = !term || name.indexOf(term) !== -1;
+                    label.style.display = show ? '' : 'none';
+                });
+            }
+
+            if (countryListEl) {
+                countryListEl.querySelectorAll('.destination-country-option').forEach(function(opt) {
+                    opt.addEventListener('change', function() { fillCitiesPanel(getSelectedCountryCodes()); });
+                });
+            }
+            if (countrySearchInput) {
+                countrySearchInput.addEventListener('input', function() { filterCountrySearch(this.value); });
+            }
+            if (selectAllCountriesBtn && countryListEl) {
+                selectAllCountriesBtn.addEventListener('click', function() {
+                    countryListEl.querySelectorAll('.destination-country-option-label:not([style*="display: none"]) .destination-country-option').forEach(function(o) { o.checked = true; });
+                    fillCitiesPanel(getSelectedCountryCodes());
+                });
+            }
+            if (deselectAllCountriesBtn && countryListEl) {
+                deselectAllCountriesBtn.addEventListener('click', function() {
+                    countryListEl.querySelectorAll('.destination-country-option').forEach(function(o) { o.checked = false; });
+                    fillCitiesPanel([]);
+                });
+            }
+
+            (function preselectCountries() {
+                var codesToSelect = [];
+                selectedIds.forEach(function(id) {
                     for (var code in countryCitiesData) {
                         var d = countryCitiesData[code];
-                        if (d && (d.id == firstId || (d.cities && d.cities.some(function(c) { return c.id == firstId; })))) {
-                            countrySelect.value = code;
-                            fillCitiesPanel(code);
+                        if (d && (d.id == id || (d.cities && d.cities.some(function(c) { return c.id == id; })))) {
+                            if (codesToSelect.indexOf(code) === -1) codesToSelect.push(code);
                             break;
                         }
                     }
-                    if (!countrySelect.value) {
+                    if (codesToSelect.length === 0) {
                         for (var code in mergedCities) {
-                            if ((mergedCities[code] || []).some(function(c) { return c.id == firstId; })) {
-                                countrySelect.value = code;
-                                fillCitiesPanel(code);
+                            if ((mergedCities[code] || []).some(function(c) { return c.id == id; })) {
+                                if (codesToSelect.indexOf(code) === -1) codesToSelect.push(code);
                                 break;
                             }
                         }
                     }
-                }
-                if (!countrySelect.value && panelDynamic) panelDynamic.style.display = 'none';
-            }
+                });
+                codesToSelect.forEach(function(code) {
+                    var opt = countryListEl && countryListEl.querySelector('.destination-country-option[value="' + code + '"]');
+                    if (opt) opt.checked = true;
+                });
+                if (codesToSelect.length) fillCitiesPanel(codesToSelect);
+                else if (panelDynamic) panelDynamic.style.display = 'none';
+            })();
 
             if (citySearchInput) {
                 citySearchInput.addEventListener('input', function() { filterCitySearch(this.value); });
