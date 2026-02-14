@@ -1,7 +1,8 @@
-{{-- Pays (select) + Villes par pays (checkboxes) — compatible locations[] / multi_location --}}
+{{-- Tous les pays du monde (select) + panneau dynamique Villes (WP) — compatible locations[] / multi_location --}}
 @php
     $selectedIds = $selectedLocationIds ?? [];
-    $countries = $locationsTree ?? [];
+    $worldCountries = $worldCountries ?? [];
+    $countryCitiesData = $countryCitiesData ?? [];
 @endphp
 
 <div class="destination-country-cities">
@@ -9,37 +10,25 @@
         <label for="locationCountrySelect" class="form-label fw-medium">Pays</label>
         <select id="locationCountrySelect" class="form-select destination-country-select">
             <option value="">— Choisir un pays —</option>
-            @foreach($countries as $country)
-                <option value="{{ $country['id'] }}">{{ $country['title'] }}</option>
+            @foreach($worldCountries as $code => $name)
+                <option value="{{ $code }}">{{ $name }}</option>
             @endforeach
         </select>
     </div>
 
-    @foreach($countries as $country)
-        @php
-            $children = $country['children'] ?? [];
-            $countrySelected = in_array($country['id'], $selectedIds);
-        @endphp
-        <div class="destination-cities-panel" id="cities-panel-{{ $country['id'] }}" data-country-id="{{ $country['id'] }}" style="display: none;">
-            <div class="destination-cities-panel-header">
-                <span class="destination-cities-panel-title">Villes — {{ $country['title'] }}</span>
-            </div>
-            <div class="destination-cities-list">
-                <label class="destination-country-checkbox-label">
-                    <input type="checkbox" name="locations[]" value="{{ $country['id'] }}" class="location-checkbox destination-checkbox" {{ $countrySelected ? 'checked' : '' }} data-loc-id="{{ $country['id'] }}" data-loc-title="{{ e($country['title']) }}">
-                    <span>Inclure le pays entier ({{ $country['title'] }})</span>
-                </label>
-                @foreach($children as $city)
-                    @php $citySelected = in_array($city['id'], $selectedIds); @endphp
-                    <label class="destination-city-checkbox-label">
-                        <input type="checkbox" name="locations[]" value="{{ $city['id'] }}" class="location-checkbox destination-checkbox" {{ $citySelected ? 'checked' : '' }} data-loc-id="{{ $city['id'] }}" data-loc-title="{{ e($city['title']) }}">
-                        <span>{{ $city['title'] }}</span>
-                    </label>
-                @endforeach
-                @if(empty($children))
-                    <p class="text-muted small mb-0 mt-1">Aucune ville enregistrée pour ce pays.</p>
-                @endif
-            </div>
+    <div class="destination-cities-panel destination-cities-panel-dynamic" id="destination-cities-panel-dynamic" style="display: none;">
+        <div class="destination-cities-panel-header">
+            <span class="destination-cities-panel-title" id="destination-cities-panel-title">Villes</span>
         </div>
-    @endforeach
+        <div class="destination-cities-list" id="destination-cities-list">
+            {{-- Rempli par JS à partir de countryCitiesData --}}
+        </div>
+    </div>
 </div>
+
+<script>
+(function() {
+    window.DESTINATION_COUNTRY_CITIES_DATA = @json($countryCitiesData);
+    window.DESTINATION_SELECTED_IDS = @json($selectedIds);
+})();
+</script>

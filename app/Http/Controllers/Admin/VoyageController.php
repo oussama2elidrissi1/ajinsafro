@@ -301,6 +301,10 @@ class VoyageController extends Controller
         // Parser multi_location actuel
         $multiLocationValue = $wpPost->getMeta('multi_location');
         $selectedLocationIds = $this->repository->parseMultiLocation($multiLocationValue);
+
+        // Tous les pays du monde (config) + correspondance avec les locations WP
+        $worldCountries = config('countries', []);
+        $countryCitiesData = $this->buildCountryCitiesData($worldCountries, $locationsTree);
         
         // Programme par jours (Laravel: aj_tour_days + activités). Nombre de jours = réel en base.
         $programDays = collect();
@@ -380,7 +384,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -421,6 +425,46 @@ class VoyageController extends Controller
         if (!empty($items)) {
             $this->voyageFlightOptionService->syncOptions($voyageId, $items, $lastDayNumber);
         }
+    }
+
+    /**
+     * Associer les pays du monde (config) aux locations WP (arbre) et produire les données pour le select + villes.
+     *
+     * @param array $worldCountries [ code => nom ]
+     * @param array $locationsTree  [ [ 'id', 'title', 'children' => [...] ], ... ]
+     * @return array [ code => [ 'id' => wpId, 'title' => nom, 'cities' => [ [ 'id', 'title' ], ... ] ], ... ]
+     */
+    private function buildCountryCitiesData(array $worldCountries, array $locationsTree): array
+    {
+        $normalize = function (string $s): string {
+            $s = mb_strtolower($s, 'UTF-8');
+            $accents = ['à'=>'a','á'=>'a','â'=>'a','ã'=>'a','ä'=>'a','å'=>'a','æ'=>'ae','ç'=>'c','è'=>'e','é'=>'e','ê'=>'e','ë'=>'e','ì'=>'i','í'=>'i','î'=>'i','ï'=>'i','ñ'=>'n','ò'=>'o','ó'=>'o','ô'=>'o','õ'=>'o','ö'=>'o','ù'=>'u','ú'=>'u','û'=>'u','ü'=>'u','ý'=>'y','ÿ'=>'y','œ'=>'oe'];
+            return strtr($s, $accents);
+        };
+        $nameToCode = [];
+        foreach ($worldCountries as $code => $name) {
+            $key = $normalize($name);
+            $nameToCode[$key] = $code;
+        }
+        $out = [];
+        foreach ($locationsTree as $node) {
+            $title = $node['title'] ?? '';
+            $key = $normalize($title);
+            $code = $nameToCode[$key] ?? null;
+            if ($code !== null) {
+                $children = $node['children'] ?? [];
+                $cities = [];
+                foreach ($children as $child) {
+                    $cities[] = ['id' => $child['id'], 'title' => $child['title'] ?? ''];
+                }
+                $out[$code] = [
+                    'id' => $node['id'],
+                    'title' => $title,
+                    'cities' => $cities,
+                ];
+            }
+        }
+        return $out;
     }
 
     /**
