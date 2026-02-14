@@ -544,6 +544,119 @@ class WpTourRepository
         
         return implode(',', $formatted);
     }
+
+    /**
+     * Normalize string for location matching (lowercase, remove accents).
+     */
+    protected function normalizeLocationTitle(string $s): string
+    {
+        $s = mb_strtolower($s, 'UTF-8');
+        $accents = ['à'=>'a','á'=>'a','â'=>'a','ã'=>'a','ä'=>'a','å'=>'a','æ'=>'ae','ç'=>'c','è'=>'e','é'=>'e','ê'=>'e','ë'=>'e','ì'=>'i','í'=>'i','î'=>'i','ï'=>'i','ñ'=>'n','ò'=>'o','ó'=>'o','ô'=>'o','õ'=>'o','ö'=>'o','ù'=>'u','ú'=>'u','û'=>'u','ü'=>'u','ý'=>'y','ÿ'=>'y','œ'=>'oe'];
+        return strtr($s, $accents);
+    }
+
+    /**
+     * Create a location post in WordPress (Traveler location).
+     *
+     * @param int $parentId post_parent (0 for country)
+     * @param string $title post_title
+     * @return WpPost
+     */
+    public function createLocation(int $parentId, string $title): WpPost
+    {
+        $slug = Str::slug($title);
+        $existing = \DB::connection('wp')->table('posts')
+            ->where('post_type', 'location')
+            ->where('post_name', $slug)
+            ->exists();
+        if ($existing) {
+            $slug = $slug . '-' . substr(uniqid(), -4);
+        }
+        $now = now();
+        $nowGmt = now('UTC');
+        $post = WpPost::create([
+            'post_author' => 1,
+            'post_date' => $now,
+            'post_date_gmt' => $nowGmt,
+            'post_content' => '',
+            'post_title' => $title,
+            'post_excerpt' => '',
+            'post_status' => 'publish',
+            'comment_status' => 'closed',
+            'ping_status' => 'closed',
+            'post_name' => $slug,
+            'post_modified' => $now,
+            'post_modified_gmt' => $nowGmt,
+            'post_parent' => $parentId,
+            'guid' => '',
+            'menu_order' => 0,
+            'post_type' => 'location',
+            'post_mime_type' => '',
+            'comment_count' => 0,
+        ]);
+        $post->update(['guid' => config('app.url', '') . '/?post_type=location&p=' . $post->ID]);
+        return $post->fresh();
+    }
+
+    /**
+     * Find a location by parent and title (normalized match).
+     *
+     * @param int $parentId
+     * @param string $title
+     * @return object|null { ID, post_title } or null
+     */
+    public function findLocationByParentAndTitle(int $parentId, string $title): ?object
+    {
+        $locations = \DB::connection('wp')->table('posts')
+            ->where('post_type', 'location')
+            ->where('post_status', 'publish')
+            ->where('post_parent', $parentId)
+            ->select('ID', 'post_title')
+            ->get();
+        $key = $this->normalizeLocationTitle($title);
+        foreach ($locations as $loc) {
+            if ($this->normalizeLocationTitle($loc->post_title) === $key) {
+                return $loc;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Ensure country location exists in WP; return its ID.
+     *
+     * @param string $countryCode ISO 3166-1 alpha-2 (e.g. FR, MA)
+     * @return int WP post ID
+     */
+    public function ensureCountryLocation(string $countryCode): int
+    {
+        $countries = config('countries', []);
+        $name = $countries[$countryCode] ?? $countryCode;
+        $existing = $this->findLocationByParentAndTitle(0, $name);
+        if ($existing) {
+            return (int) $existing->ID;
+        }
+        $post = $this->createLocation(0, $name);
+        return (int) $post->ID;
+    }
+
+    /**
+     * Ensure city location exists in WP (under country); return its ID.
+     *
+     * @param string $countryCode ISO 3166-1 alpha-2
+     * @param string $cityName
+     * @return int WP post ID (city)
+     */
+    public function ensureCityLocation(string $countryCode, string $cityName): int
+    {
+        $countryId = $this->ensureCountryLocation($countryCode);
+        $existing = $this->findLocationByParentAndTitle($countryId, $cityName);
+        if ($existing) {
+            return (int) $existing->ID;
+        }
+        $post = $this->createLocation($countryId, $cityName);
+        return (int) $post->ID;
+    }
     
     /**
      * Safely decode WordPress PHP serialized data.

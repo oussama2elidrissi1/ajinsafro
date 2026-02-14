@@ -18,7 +18,9 @@ use App\Services\Wp\ProgramJsonService;
 use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -305,7 +307,9 @@ class VoyageController extends Controller
         // Tous les pays du monde (config) + correspondance avec les locations WP
         $worldCountries = config('countries', []);
         $countryCitiesData = $this->buildCountryCitiesData($worldCountries, $locationsTree);
-        
+        $worldCities = config('world_cities', []);
+        $mergedCitiesByCode = $this->buildMergedCitiesByCode($worldCountries, $worldCities, $countryCitiesData);
+
         // Programme par jours (Laravel: aj_tour_days + activités). Nombre de jours = réel en base.
         $programDays = collect();
         $activitiesCatalog = collect();
@@ -384,7 +388,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -465,6 +469,86 @@ class VoyageController extends Controller
             }
         }
         return $out;
+    }
+
+    /**
+     * Construire la liste fusionnée Pays → Villes (catalogue + WP) pour l’UI.
+     * Chaque ville a : id (WP ou null), title, needsCreate (true si pas encore en WP).
+     *
+     * @param array $worldCountries [ code => nom ]
+     * @param array $worldCities    [ code => [ 'Ville1', 'Ville2', ... ] ]
+     * @param array $countryCitiesData [ code => [ 'id', 'title', 'cities' => [ [ 'id', 'title' ], ... ] ] ]
+     * @return array [ code => [ [ 'id' => int|null, 'title' => string, 'needsCreate' => bool ], ... ] ]
+     */
+    private function buildMergedCitiesByCode(array $worldCountries, array $worldCities, array $countryCitiesData): array
+    {
+        $normalize = function (string $s): string {
+            $s = mb_strtolower($s, 'UTF-8');
+            $accents = ['à'=>'a','á'=>'a','â'=>'a','ã'=>'a','ä'=>'a','å'=>'a','æ'=>'ae','ç'=>'c','è'=>'e','é'=>'e','ê'=>'e','ë'=>'e','ì'=>'i','í'=>'i','î'=>'i','ï'=>'i','ñ'=>'n','ò'=>'o','ó'=>'o','ô'=>'o','õ'=>'o','ö'=>'o','ù'=>'u','ú'=>'u','û'=>'u','ü'=>'u','ý'=>'y','ÿ'=>'y','œ'=>'oe'];
+            return strtr($s, $accents);
+        };
+
+        $merged = [];
+        $codes = array_unique(array_merge(array_keys($worldCities), array_keys($countryCitiesData)));
+
+        foreach ($codes as $code) {
+            $wpCities = $countryCitiesData[$code]['cities'] ?? [];
+            $wpByNorm = [];
+            foreach ($wpCities as $c) {
+                $wpByNorm[$normalize($c['title'])] = ['id' => $c['id'], 'title' => $c['title']];
+            }
+            $list = [];
+            $seenNorm = [];
+
+            // D’abord les villes du catalogue world_cities
+            foreach ($worldCities[$code] ?? [] as $title) {
+                $norm = $normalize($title);
+                $seenNorm[$norm] = true;
+                $wp = $wpByNorm[$norm] ?? null;
+                $list[] = [
+                    'id' => $wp ? $wp['id'] : null,
+                    'title' => $title,
+                    'needsCreate' => $wp === null,
+                ];
+            }
+            // Puis les villes WP qui ne sont pas dans le catalogue
+            foreach ($wpCities as $c) {
+                $norm = $normalize($c['title']);
+                if (!isset($seenNorm[$norm])) {
+                    $list[] = ['id' => $c['id'], 'title' => $c['title'], 'needsCreate' => false];
+                }
+            }
+
+            $merged[$code] = $list;
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Ensure a location exists in WP (country and optionally city). Used when user selects a city from the catalogue that is not yet in WordPress.
+     *
+     * POST country_code (required), city_name (optional).
+     * Returns JSON { id, title }.
+     */
+    public function ensureLocation(Request $request): JsonResponse
+    {
+        $request->validate([
+            'country_code' => 'required|string|size:2',
+            'city_name' => 'nullable|string|max:255',
+        ]);
+        $countryCode = strtoupper($request->input('country_code'));
+        $cityName = $request->input('city_name');
+
+        if (empty($cityName) || !trim($cityName)) {
+            $id = $this->repository->ensureCountryLocation($countryCode);
+            $countries = config('countries', []);
+            $title = $countries[$countryCode] ?? $countryCode;
+            return response()->json(['id' => $id, 'title' => $title]);
+        }
+
+        $id = $this->repository->ensureCityLocation($countryCode, trim($cityName));
+        return response()->json(['id' => $id, 'title' => trim($cityName)]);
     }
 
     /**

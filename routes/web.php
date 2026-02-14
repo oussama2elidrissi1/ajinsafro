@@ -133,6 +133,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::get('circuits/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('circuits.voyages.edit')->whereNumber('id');
     Route::match(['put', 'patch'], 'circuits/voyages/{id}', [VoyageController::class, 'update'])->name('circuits.voyages.update')->whereNumber('id');
     Route::delete('circuits/voyages/{id}', [VoyageController::class, 'destroy'])->name('circuits.voyages.destroy')->whereNumber('id');
+    Route::post('circuits/voyages/ensure-location', [VoyageController::class, 'ensureLocation'])->name('circuits.voyages.ensure-location');
     Route::post('circuits/voyages/{id}/hero-image', [HeroImageController::class, 'upload'])->name('circuits.voyages.hero-image.upload')->whereNumber('id');
     Route::post('circuits/voyages/{id}/hero-image/select', [HeroImageController::class, 'select'])->name('circuits.voyages.hero-image.select')->whereNumber('id');
     Route::post('circuits/voyages/{id}/hero-image/remove', [HeroImageController::class, 'remove'])->name('circuits.voyages.hero-image.remove')->whereNumber('id');

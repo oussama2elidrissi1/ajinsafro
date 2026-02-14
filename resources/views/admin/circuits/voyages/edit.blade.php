@@ -282,11 +282,12 @@
                             <button type="button" class="btn btn-sm btn-outline-secondary destination-ux-chips-clear" id="locationChipsClear" style="display: none;">Effacer tout</button>
                         </div>
 
-                        {{-- Tous les pays du monde + Villes (WP) par pays --}}
+                        {{-- Tous les pays du monde + catalogue villes (world_cities + WP, création à la volée) --}}
                         <div id="locationTreeContainer">
                             @include('admin.circuits.voyages.partials.location-country-cities', [
                                 'worldCountries' => $worldCountries ?? [],
                                 'countryCitiesData' => $countryCitiesData ?? [],
+                                'mergedCitiesByCode' => $mergedCitiesByCode ?? [],
                                 'selectedLocationIds' => $selectedLocationIds ?? []
                             ])
                         </div>
@@ -1954,6 +1955,15 @@
                     cb.indeterminate = checked > 0 && checked < childCbs.length;
                     item.classList.toggle('indeterminate', cb.indeterminate);
                 });
+                var panelList = document.getElementById('destination-cities-list');
+                if (panelList) {
+                    var countryCb = panelList.querySelector('.destination-country-checkbox-label input.location-checkbox');
+                    if (countryCb) {
+                        var cityCbs = panelList.querySelectorAll('.destination-city-checkbox-label input.location-checkbox');
+                        var checked = Array.from(cityCbs).filter(function(c) { return c.checked; }).length;
+                        countryCb.indeterminate = checked > 0 && checked < cityCbs.length;
+                    }
+                }
             }
 
             function applySearch(term) {
@@ -2074,48 +2084,155 @@
             updateChips();
             updateIndeterminate();
 
-            // Pays (select) : panneau dynamique des villes (tous les pays du monde, villes WP)
+            // Pays + catalogue villes (merged) : recherche, Tout sélectionner/désélectionner, ensureLocation à la volée
             var countrySelect = document.getElementById('locationCountrySelect');
             var panelDynamic = document.getElementById('destination-cities-panel-dynamic');
             var panelTitle = document.getElementById('destination-cities-panel-title');
             var panelList = document.getElementById('destination-cities-list');
+            var citySearchInput = document.getElementById('destinationCitySearch');
+            var selectAllCitiesBtn = document.getElementById('destinationSelectAllCities');
+            var deselectAllCitiesBtn = document.getElementById('destinationDeselectAllCities');
             var countryCitiesData = window.DESTINATION_COUNTRY_CITIES_DATA || {};
+            var mergedCities = window.DESTINATION_MERGED_CITIES || {};
+            var worldCountries = window.DESTINATION_WORLD_COUNTRIES || {};
+            var ensureLocationUrl = window.DESTINATION_ENSURE_LOCATION_URL || '';
             var selectedIds = window.DESTINATION_SELECTED_IDS || [];
+
+            function escapeAttr(s) { return (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+            function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+            function ensureLocation(countryCode, cityName, cb) {
+                var formData = new FormData();
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+                formData.append('country_code', countryCode);
+                if (cityName) formData.append('city_name', cityName);
+                fetch(ensureLocationUrl, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) { if (cb) cb(null, data); })
+                    .catch(function(err) { if (cb) cb(err); });
+            }
+
+            function updateCountryIndeterminate() {
+                var countryCb = panelList ? panelList.querySelector('.destination-country-checkbox-label input.location-checkbox') : null;
+                if (!countryCb) return;
+                var cityCbs = panelList ? panelList.querySelectorAll('.destination-city-checkbox-label input.location-checkbox') : [];
+                var checked = Array.from(cityCbs).filter(function(c) { return c.checked; }).length;
+                countryCb.indeterminate = checked > 0 && checked < cityCbs.length;
+            }
+
+            function onCheckboxChange() {
+                updateChips();
+                updateCount();
+                updateCountryIndeterminate();
+            }
+
             function fillCitiesPanel(code) {
                 if (!panelList) return;
                 panelList.innerHTML = '';
                 if (!code) {
                     if (panelDynamic) panelDynamic.style.display = 'none';
+                    if (citySearchInput) citySearchInput.value = '';
                     return;
                 }
+                var cities = mergedCities[code] || [];
                 var data = countryCitiesData[code];
+                var countryName = (data && data.title) ? data.title : (worldCountries[code] || code);
                 if (panelDynamic) panelDynamic.style.display = 'block';
-                if (!data) {
-                    panelTitle.textContent = 'Villes';
-                    panelList.innerHTML = '<p class="text-muted small mb-0">Aucune ville enregistrée pour ce pays. Les destinations disponibles proviennent des locations WordPress.</p>';
-                    return;
-                }
-                panelTitle.textContent = 'Villes — ' + (data.title || '');
-                var countryId = data.id;
-                var countryTitle = (data.title || '').replace(/"/g, '&quot;');
-                var countryChecked = selectedIds.indexOf(countryId) !== -1;
+                panelTitle.textContent = 'Villes — ' + countryName;
+                panelTitle.setAttribute('data-country-path', countryName);
+
+                // Checkbox "Inclure le pays entier"
+                var countryId = data && data.id ? data.id : null;
+                var countryNeedsCreate = !countryId;
+                var countryChecked = countryId && selectedIds.indexOf(countryId) !== -1;
                 var countryLabel = document.createElement('label');
                 countryLabel.className = 'destination-country-checkbox-label';
-                countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="' + countryId + '" class="location-checkbox destination-checkbox" ' + (countryChecked ? 'checked' : '') + ' data-loc-id="' + countryId + '" data-loc-title="' + countryTitle + '"> <span>Inclure le pays entier (' + (data.title || '') + ')</span>';
+                if (countryId) {
+                    countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="' + countryId + '" class="location-checkbox destination-checkbox destination-country-whole" ' + (countryChecked ? 'checked' : '') + ' data-loc-id="' + countryId + '" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier (' + escapeHtml(countryName) + ')</span>';
+                } else {
+                    countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox destination-country-whole" data-country-code="' + escapeAttr(code) + '" data-needs-create="1" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier (' + escapeHtml(countryName) + ')</span>';
+                }
                 panelList.appendChild(countryLabel);
-                (data.cities || []).forEach(function(city) {
-                    var lid = city.id;
-                    var ltitle = (city.title || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    var checked = selectedIds.indexOf(lid) !== -1;
-                    var label = document.createElement('label');
-                    label.className = 'destination-city-checkbox-label';
-                    label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + ltitle + '"> <span>' + (city.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
-                    panelList.appendChild(label);
+
+                if (cities.length === 0) {
+                    panelList.innerHTML += '<p class="text-muted small mb-0 mt-2">Aucune ville dans le catalogue pour ce pays. Vous pouvez ajouter des villes dans <code>config/world_cities.php</code>.</p>';
+                } else {
+                    cities.forEach(function(city) {
+                        var lid = city.id;
+                        var title = city.title || '';
+                        var needsCreate = !!city.needsCreate;
+                        var checked = lid && selectedIds.indexOf(lid) !== -1;
+                        var label = document.createElement('label');
+                        label.className = 'destination-city-checkbox-label destination-city-row';
+                        label.setAttribute('data-city-title', title.toLowerCase());
+                        label.setAttribute('data-path', countryName + ' › ' + title);
+                        if (lid) {
+                            label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' › ' + escapeHtml(title) + '</span>';
+                        } else {
+                            label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' › ' + escapeHtml(title) + '</span>';
+                        }
+                        panelList.appendChild(label);
+                    });
+                }
+
+                panelList.querySelectorAll('.location-checkbox').forEach(function(cb) {
+                    cb.addEventListener('change', function() {
+                        if (this.classList.contains('destination-country-whole') && this.getAttribute('data-needs-create') === '1' && this.checked) {
+                            var ccode = this.getAttribute('data-country-code');
+                            if (!ccode) return;
+                            this.disabled = true;
+                            ensureLocation(ccode, null, function(err, res) {
+                                this.disabled = false;
+                                if (err || !res || !res.id) { this.checked = false; return; }
+                                this.value = res.id;
+                                this.setAttribute('data-loc-id', res.id);
+                                this.removeAttribute('data-needs-create');
+                                this.removeAttribute('data-country-code');
+                                onCheckboxChange();
+                            }.bind(this));
+                            return;
+                        }
+                        if (this.getAttribute('data-needs-create') === '1' && this.checked) {
+                            var ccode = this.getAttribute('data-country-code');
+                            var cname = this.getAttribute('data-city-name');
+                            if (!ccode || !cname) return;
+                            this.disabled = true;
+                            ensureLocation(ccode, cname, function(err, res) {
+                                this.disabled = false;
+                                if (err || !res || !res.id) { this.checked = false; return; }
+                                this.value = res.id;
+                                this.setAttribute('data-loc-id', res.id);
+                                this.setAttribute('data-loc-title', res.title || cname);
+                                this.removeAttribute('data-needs-create');
+                                this.removeAttribute('data-country-code');
+                                this.removeAttribute('data-city-name');
+                                onCheckboxChange();
+                            }.bind(this));
+                            return;
+                        }
+                        onCheckboxChange();
+                    });
                 });
-                getCheckboxes().forEach(function(cb) { cb.addEventListener('change', function() { updateChips(); updateCount(); }); });
+
+                if (citySearchInput) {
+                    citySearchInput.value = '';
+                    citySearchInput.dispatchEvent(new Event('input'));
+                }
+                updateCountryIndeterminate();
                 updateChips();
                 updateCount();
             }
+
+            function filterCitySearch(term) {
+                term = (term || '').toLowerCase().trim();
+                panelList.querySelectorAll('.destination-city-row').forEach(function(row) {
+                    var title = row.getAttribute('data-city-title') || '';
+                    var path = (row.getAttribute('data-path') || '').toLowerCase();
+                    var show = !term || title.indexOf(term) !== -1 || path.indexOf(term) !== -1;
+                    row.style.display = show ? '' : 'none';
+                });
+            }
+
             if (countrySelect) {
                 countrySelect.addEventListener('change', function() { fillCitiesPanel(this.value || ''); });
                 var firstId = selectedIds[0];
@@ -2128,8 +2245,62 @@
                             break;
                         }
                     }
+                    if (!countrySelect.value) {
+                        for (var code in mergedCities) {
+                            if ((mergedCities[code] || []).some(function(c) { return c.id == firstId; })) {
+                                countrySelect.value = code;
+                                fillCitiesPanel(code);
+                                break;
+                            }
+                        }
+                    }
                 }
                 if (!countrySelect.value && panelDynamic) panelDynamic.style.display = 'none';
+            }
+
+            if (citySearchInput) {
+                citySearchInput.addEventListener('input', function() { filterCitySearch(this.value); });
+            }
+            if (selectAllCitiesBtn) {
+                selectAllCitiesBtn.addEventListener('click', function() {
+                    var rows = panelList.querySelectorAll('.destination-city-row');
+                    var toCreate = [];
+                    rows.forEach(function(row) {
+                        if (row.style.display === 'none') return;
+                        var cb = row.querySelector('input.location-checkbox');
+                        if (!cb) return;
+                        if (cb.checked) return;
+                        if (cb.getAttribute('data-needs-create') === '1') toCreate.push(cb);
+                        else { cb.checked = true; onCheckboxChange(); }
+                    });
+                    function runNext(i) {
+                        if (i >= toCreate.length) { updateCountryIndeterminate(); return; }
+                        var cb = toCreate[i];
+                        var ccode = cb.getAttribute('data-country-code');
+                        var cname = cb.getAttribute('data-city-name');
+                        cb.disabled = true;
+                        ensureLocation(ccode, cname, function(err, res) {
+                            cb.disabled = false;
+                            if (!err && res && res.id) {
+                                cb.value = res.id;
+                                cb.setAttribute('data-loc-id', res.id);
+                                cb.removeAttribute('data-needs-create');
+                                cb.removeAttribute('data-country-code');
+                                cb.removeAttribute('data-city-name');
+                                cb.checked = true;
+                            }
+                            onCheckboxChange();
+                            runNext(i + 1);
+                        });
+                    }
+                    runNext(0);
+                });
+            }
+            if (deselectAllCitiesBtn) {
+                deselectAllCitiesBtn.addEventListener('click', function() {
+                    panelList.querySelectorAll('.destination-city-checkbox-label input.location-checkbox').forEach(function(cb) { cb.checked = false; });
+                    onCheckboxChange();
+                });
             }
         })();
         
