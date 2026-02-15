@@ -257,6 +257,12 @@
                 .destination-country-option-label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; margin: 0; font-size: 0.8125rem; }
                 .destination-country-option-label input { margin: 0; flex-shrink: 0; }
                 .destination-country-option-label:hover { color: #0d6efd; }
+                .destination-country-add-wrap { display: inline-block; }
+                .destination-country-autocomplete-dropdown { position: absolute; left: 0; right: 0; top: 100%; z-index: 1050; max-height: 260px; overflow-y: auto; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 2px; display: none; }
+                .destination-country-autocomplete-dropdown.is-open { display: block; }
+                .destination-country-autocomplete-item { padding: 0.4rem 0.75rem; cursor: pointer; font-size: 0.875rem; border-bottom: 1px solid #f0f0f0; }
+                .destination-country-autocomplete-item:hover { background: #e7f1ff; }
+                .destination-country-autocomplete-item:last-child { border-bottom: none; }
                 .destination-country-block { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #eee; }
                 .destination-country-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
                 .destination-city-autocomplete-wrap { display: inline-block; }
@@ -2301,6 +2307,63 @@
                 });
             }
 
+            var countryAddSearchInput = document.getElementById('destinationCountryAddSearch');
+            var countryAutocompleteDropdown = document.getElementById('destinationCountryAutocompleteDropdown');
+            function buildCountryAutocompleteSuggestions(term) {
+                var selectedCodes = getSelectedCountryCodes();
+                var list = [];
+                term = (term || '').toLowerCase().trim();
+                for (var code in worldCountries) {
+                    var name = (worldCountries[code] || '').toLowerCase();
+                    if (selectedCodes.indexOf(code) !== -1) continue;
+                    if (term && name.indexOf(term) === -1) continue;
+                    list.push({ code: code, name: worldCountries[code] });
+                }
+                return list;
+            }
+            function openCountryAutocomplete() {
+                var term = countryAddSearchInput ? countryAddSearchInput.value : '';
+                var list = buildCountryAutocompleteSuggestions(term);
+                if (!countryAutocompleteDropdown) return;
+                countryAutocompleteDropdown.classList.toggle('is-open', list.length > 0);
+                countryAutocompleteDropdown.innerHTML = '';
+                list.slice(0, 60).forEach(function(item) {
+                    var div = document.createElement('div');
+                    div.className = 'destination-country-autocomplete-item';
+                    div.textContent = item.name;
+                    div.setAttribute('data-country-code', item.code);
+                    countryAutocompleteDropdown.appendChild(div);
+                });
+                if (list.length === 0) countryAutocompleteDropdown.classList.remove('is-open');
+            }
+            function closeCountryAutocomplete() {
+                if (countryAutocompleteDropdown) countryAutocompleteDropdown.classList.remove('is-open');
+            }
+            function addCountryFromSuggestion(code) {
+                if (!code || !countryListEl) return;
+                var opt = countryListEl.querySelector('.destination-country-option[value="' + code + '"]');
+                if (opt && !opt.checked) {
+                    opt.checked = true;
+                    fillCitiesPanel(getSelectedCountryCodes());
+                }
+                openCountryAutocomplete();
+            }
+            if (countryAddSearchInput) {
+                countryAddSearchInput.addEventListener('input', openCountryAutocomplete);
+                countryAddSearchInput.addEventListener('focus', openCountryAutocomplete);
+            }
+            if (countryAutocompleteDropdown) {
+                countryAutocompleteDropdown.addEventListener('click', function(e) {
+                    var item = e.target.closest('.destination-country-autocomplete-item');
+                    if (!item) return;
+                    addCountryFromSuggestion(item.getAttribute('data-country-code'));
+                });
+            }
+            document.addEventListener('click', function(e) {
+                if (countryAutocompleteDropdown && countryAddSearchInput && !countryAutocompleteDropdown.contains(e.target) && !countryAddSearchInput.contains(e.target)) closeCountryAutocomplete();
+                if (cityAutocompleteDropdown && cityAddSearchInput && !cityAutocompleteDropdown.contains(e.target) && !cityAddSearchInput.contains(e.target)) closeCityAutocomplete();
+            });
+
             (function preselectCountries() {
                 var codesToSelect = [];
                 selectedIds.forEach(function(id) {
@@ -2334,9 +2397,19 @@
 
             var cityAddSearchInput = document.getElementById('destinationCityAddSearch');
             var cityAutocompleteDropdown = document.getElementById('destinationCityAutocompleteDropdown');
+            function getSelectedCityPathsInPanel() {
+                var paths = [];
+                if (!panelList) return paths;
+                panelList.querySelectorAll('.destination-city-row input.location-checkbox:checked').forEach(function(cb) {
+                    var row = cb.closest('.destination-city-row');
+                    if (row) { var p = row.getAttribute('data-path'); if (p) paths.push(p); }
+                });
+                return paths;
+            }
             function buildCityAutocompleteSuggestions(term) {
                 var codes = getSelectedCountryCodes();
                 if (!codes.length) return [];
+                var selectedPaths = getSelectedCityPathsInPanel();
                 var list = [];
                 term = (term || '').toLowerCase().trim();
                 codes.forEach(function(code) {
@@ -2344,6 +2417,7 @@
                     (mergedCities[code] || []).forEach(function(city) {
                         var title = city.title || '';
                         var path = countryName + ' › ' + title;
+                        if (selectedPaths.indexOf(path) !== -1) return;
                         if (term && path.toLowerCase().indexOf(term) === -1 && title.toLowerCase().indexOf(term) === -1) return;
                         list.push({ code: code, countryName: countryName, path: path, city: city });
                     });
@@ -2377,7 +2451,7 @@
                 if (!row) return;
                 var cb = row.querySelector('input.location-checkbox');
                 if (!cb) return;
-                if (cb.checked) { closeCityAutocomplete(); return; }
+                if (cb.checked) { openCityAutocomplete(); return; }
                 cb.checked = true;
                 if (cb.getAttribute('data-needs-create') === '1') {
                     cb.disabled = true;
@@ -2391,10 +2465,13 @@
                             cb.removeAttribute('data-city-name');
                         } else cb.checked = false;
                         onCheckboxChange();
+                        openCityAutocomplete();
                     });
-                } else cb.dispatchEvent(new Event('change', { bubbles: true }));
-                onCheckboxChange();
-                closeCityAutocomplete();
+                } else {
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                    onCheckboxChange();
+                    openCityAutocomplete();
+                }
             }
             if (cityAddSearchInput) {
                 cityAddSearchInput.addEventListener('input', openCityAutocomplete);
@@ -2410,10 +2487,6 @@
                     addCityFromSuggestion(path, code, cityName, item.getAttribute('data-loc-id'));
                 });
             }
-            document.addEventListener('click', function(e) {
-                if (cityAutocompleteDropdown && cityAddSearchInput && !cityAutocompleteDropdown.contains(e.target) && !cityAddSearchInput.contains(e.target)) closeCityAutocomplete();
-            });
-
             if (selectAllCitiesBtn) {
                 selectAllCitiesBtn.addEventListener('click', function() {
                     var rows = panelList.querySelectorAll('.destination-city-row');

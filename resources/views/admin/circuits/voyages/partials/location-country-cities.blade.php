@@ -11,7 +11,11 @@
     <div class="mb-3">
         <label class="form-label fw-medium">Pays (choix multiple)</label>
         <div class="destination-country-multi-wrap">
-            <input type="text" class="form-control form-control-sm destination-country-search mb-2" id="destinationCountrySearch" placeholder="Rechercher un pays…" autocomplete="off">
+            <div class="destination-country-add-wrap position-relative mb-2">
+                <input type="text" class="form-control form-control-sm destination-country-add-search" id="destinationCountryAddSearch" placeholder="Rechercher et ajouter des pays…" autocomplete="off">
+                <div class="destination-country-autocomplete-dropdown" id="destinationCountryAutocompleteDropdown"></div>
+            </div>
+            <input type="text" class="form-control form-control-sm destination-country-search mb-2" id="destinationCountrySearch" placeholder="Filtrer la liste des pays…" autocomplete="off">
             <div class="destination-country-multi-actions mb-2">
                 <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCountries">Tout sélectionner</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCountries">Tout désélectionner</button>
