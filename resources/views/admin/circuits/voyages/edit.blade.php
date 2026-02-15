@@ -259,6 +259,12 @@
                 .destination-country-option-label:hover { color: #0d6efd; }
                 .destination-country-block { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #eee; }
                 .destination-country-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+                .destination-city-autocomplete-wrap { display: inline-block; }
+                .destination-city-autocomplete-dropdown { position: absolute; left: 0; right: 0; top: 100%; z-index: 1050; max-height: 280px; overflow-y: auto; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 2px; display: none; }
+                .destination-city-autocomplete-dropdown.is-open { display: block; }
+                .destination-city-autocomplete-item { padding: 0.4rem 0.75rem; cursor: pointer; font-size: 0.875rem; border-bottom: 1px solid #f0f0f0; }
+                .destination-city-autocomplete-item:hover { background: #e7f1ff; }
+                .destination-city-autocomplete-item:last-child { border-bottom: none; }
                 .destination-cities-panel { border: 1px solid #dee2e6; border-radius: 8px; background: #f8f9fa; padding: 1rem; margin-top: 0.75rem; max-height: 380px; overflow-y: auto; }
                 .destination-cities-panel.destination-cities-panel-dynamic { max-height: 420px; }
                 .destination-cities-panel-header { margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid #dee2e6; }
@@ -2325,6 +2331,89 @@
             if (citySearchInput) {
                 citySearchInput.addEventListener('input', function() { filterCitySearch(this.value); });
             }
+
+            var cityAddSearchInput = document.getElementById('destinationCityAddSearch');
+            var cityAutocompleteDropdown = document.getElementById('destinationCityAutocompleteDropdown');
+            function buildCityAutocompleteSuggestions(term) {
+                var codes = getSelectedCountryCodes();
+                if (!codes.length) return [];
+                var list = [];
+                term = (term || '').toLowerCase().trim();
+                codes.forEach(function(code) {
+                    var countryName = (countryCitiesData[code] && countryCitiesData[code].title) ? countryCitiesData[code].title : (worldCountries[code] || code);
+                    (mergedCities[code] || []).forEach(function(city) {
+                        var title = city.title || '';
+                        var path = countryName + ' › ' + title;
+                        if (term && path.toLowerCase().indexOf(term) === -1 && title.toLowerCase().indexOf(term) === -1) return;
+                        list.push({ code: code, countryName: countryName, path: path, city: city });
+                    });
+                });
+                return list;
+            }
+            function openCityAutocomplete() {
+                var term = cityAddSearchInput ? cityAddSearchInput.value : '';
+                var list = buildCityAutocompleteSuggestions(term);
+                if (!cityAutocompleteDropdown) return;
+                cityAutocompleteDropdown.classList.toggle('is-open', list.length > 0);
+                cityAutocompleteDropdown.innerHTML = '';
+                list.slice(0, 50).forEach(function(item) {
+                    var div = document.createElement('div');
+                    div.className = 'destination-city-autocomplete-item';
+                    div.textContent = item.path;
+                    div.setAttribute('data-path', item.path);
+                    div.setAttribute('data-country-code', item.code);
+                    div.setAttribute('data-city-name', item.city.title || '');
+                    if (item.city.id) div.setAttribute('data-loc-id', item.city.id);
+                    cityAutocompleteDropdown.appendChild(div);
+                });
+                if (list.length === 0) cityAutocompleteDropdown.classList.remove('is-open');
+            }
+            function closeCityAutocomplete() {
+                if (cityAutocompleteDropdown) cityAutocompleteDropdown.classList.remove('is-open');
+            }
+            function addCityFromSuggestion(path, code, cityName, locId) {
+                if (!path) return;
+                var row = Array.from(panelList.querySelectorAll('.destination-city-row')).find(function(r) { return r.getAttribute('data-path') === path; });
+                if (!row) return;
+                var cb = row.querySelector('input.location-checkbox');
+                if (!cb) return;
+                if (cb.checked) { closeCityAutocomplete(); return; }
+                cb.checked = true;
+                if (cb.getAttribute('data-needs-create') === '1') {
+                    cb.disabled = true;
+                    ensureLocation(code, cityName, function(err, res) {
+                        cb.disabled = false;
+                        if (!err && res && res.id) {
+                            cb.value = res.id;
+                            cb.setAttribute('data-loc-id', res.id);
+                            cb.removeAttribute('data-needs-create');
+                            cb.removeAttribute('data-country-code');
+                            cb.removeAttribute('data-city-name');
+                        } else cb.checked = false;
+                        onCheckboxChange();
+                    });
+                } else cb.dispatchEvent(new Event('change', { bubbles: true }));
+                onCheckboxChange();
+                closeCityAutocomplete();
+            }
+            if (cityAddSearchInput) {
+                cityAddSearchInput.addEventListener('input', openCityAutocomplete);
+                cityAddSearchInput.addEventListener('focus', function() { openCityAutocomplete(); });
+            }
+            if (cityAutocompleteDropdown) {
+                cityAutocompleteDropdown.addEventListener('click', function(e) {
+                    var item = e.target.closest('.destination-city-autocomplete-item');
+                    if (!item) return;
+                    var path = item.getAttribute('data-path');
+                    var code = item.getAttribute('data-country-code');
+                    var cityName = item.getAttribute('data-city-name');
+                    addCityFromSuggestion(path, code, cityName, item.getAttribute('data-loc-id'));
+                });
+            }
+            document.addEventListener('click', function(e) {
+                if (cityAutocompleteDropdown && cityAddSearchInput && !cityAutocompleteDropdown.contains(e.target) && !cityAddSearchInput.contains(e.target)) closeCityAutocomplete();
+            });
+
             if (selectAllCitiesBtn) {
                 selectAllCitiesBtn.addEventListener('click', function() {
                     var rows = panelList.querySelectorAll('.destination-city-row');

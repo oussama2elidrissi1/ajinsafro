@@ -29,9 +29,13 @@
 
     <div class="destination-cities-panel destination-cities-panel-dynamic" id="destination-cities-panel-dynamic" style="display: none;">
         <div class="destination-cities-panel-header d-flex flex-wrap align-items-center gap-2 mb-2">
-            <span class="destination-cities-panel-title" id="destination-cities-panel-title">Villes</span>
+            <span class="destination-cities-panel-title" id="destination-cities-panel-title">Villes (choix multiple)</span>
             <div class="destination-cities-panel-actions ms-auto d-flex flex-wrap align-items-center gap-2">
-                <input type="text" class="form-control form-control-sm destination-city-search" id="destinationCitySearch" placeholder="Rechercher une ville…" style="max-width: 200px;" autocomplete="off">
+                <div class="destination-city-autocomplete-wrap position-relative">
+                    <input type="text" class="form-control form-control-sm destination-city-add-search" id="destinationCityAddSearch" placeholder="Rechercher et ajouter des villes…" style="min-width: 220px;" autocomplete="off">
+                    <div class="destination-city-autocomplete-dropdown" id="destinationCityAutocompleteDropdown"></div>
+                </div>
+                <input type="text" class="form-control form-control-sm destination-city-search" id="destinationCitySearch" placeholder="Filtrer la liste…" style="max-width: 160px;" autocomplete="off">
                 <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCities">Tout sélectionner</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCities">Tout désélectionner</button>
             </div>
