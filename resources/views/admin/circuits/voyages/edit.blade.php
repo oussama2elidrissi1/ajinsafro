@@ -2199,8 +2199,26 @@
                 });
             }
 
+            function getCurrentSelectedLocationIds() {
+                var ids = [];
+                if (!panelList) return ids;
+                panelList.querySelectorAll('.location-checkbox:checked').forEach(function(cb) {
+                    var v = cb.value;
+                    if (v && String(v).trim() !== '') {
+                        var id = parseInt(v, 10);
+                        if (!isNaN(id) && ids.indexOf(id) === -1) ids.push(id);
+                    }
+                });
+                return ids;
+            }
+
             function fillCitiesPanel(selectedCodes) {
                 if (!panelList) return;
+                var selectedIdsForBuild = selectedIds.slice();
+                if (panelList.querySelectorAll('.location-checkbox').length > 0) {
+                    selectedIdsForBuild = getCurrentSelectedLocationIds();
+                    if (selectedIdsForBuild.length === 0) selectedIdsForBuild = selectedIds.slice();
+                }
                 panelList.innerHTML = '';
                 if (!selectedCodes || selectedCodes.length === 0) {
                     if (panelDynamic) panelDynamic.style.display = 'none';
@@ -2220,7 +2238,7 @@
                     block.setAttribute('data-country-code', code);
 
                     var countryId = data && data.id ? data.id : null;
-                    var countryChecked = countryId && selectedIds.indexOf(countryId) !== -1;
+                    var countryChecked = countryId && selectedIdsForBuild.indexOf(countryId) !== -1;
                     var countryLabel = document.createElement('label');
                     countryLabel.className = 'destination-country-checkbox-label';
                     if (countryId) {
@@ -2239,7 +2257,7 @@
                         cities.forEach(function(city) {
                             var lid = city.id;
                             var title = city.title || '';
-                            var checked = lid && selectedIds.indexOf(lid) !== -1;
+                            var checked = lid && selectedIdsForBuild.indexOf(lid) !== -1;
                             var label = document.createElement('label');
                             label.className = 'destination-city-checkbox-label destination-city-row';
                             label.setAttribute('data-city-title', title.toLowerCase());
