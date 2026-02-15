@@ -533,22 +533,40 @@ class VoyageController extends Controller
      */
     public function ensureLocation(Request $request): JsonResponse
     {
-        $request->validate([
-            'country_code' => 'required|string|size:2',
-            'city_name' => 'nullable|string|max:255',
-        ]);
-        $countryCode = strtoupper($request->input('country_code'));
-        $cityName = $request->input('city_name');
+        try {
+            $request->validate([
+                'country_code' => 'required|string|max:2',
+                'city_name' => 'nullable|string|max:255',
+            ]);
+            $countryCode = strtoupper(trim((string) $request->input('country_code')));
+            if (strlen($countryCode) !== 2) {
+                return response()->json(['error' => 'country_code must be 2 characters'], 422);
+            }
+            $cityName = $request->input('city_name');
 
-        if (empty($cityName) || !trim($cityName)) {
-            $id = $this->repository->ensureCountryLocation($countryCode);
-            $countries = config('countries', []);
-            $title = $countries[$countryCode] ?? $countryCode;
-            return response()->json(['id' => $id, 'title' => $title]);
+            if (empty($cityName) || trim((string) $cityName) === '') {
+                $id = $this->repository->ensureCountryLocation($countryCode);
+                $countries = config('countries', []);
+                $title = $countries[$countryCode] ?? $countryCode;
+                return response()->json(['id' => $id, 'title' => $title]);
+            }
+
+            $id = $this->repository->ensureCityLocation($countryCode, trim((string) $cityName));
+            return response()->json(['id' => $id, 'title' => trim((string) $cityName)]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Log::error('VoyageController@ensureLocation failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'country_code' => $request->input('country_code'),
+                'city_name' => $request->input('city_name'),
+            ]);
+            return response()->json([
+                'error' => 'Impossible de créer la destination.',
+                'message' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
-
-        $id = $this->repository->ensureCityLocation($countryCode, trim($cityName));
-        return response()->json(['id' => $id, 'title' => trim($cityName)]);
     }
 
     /**
