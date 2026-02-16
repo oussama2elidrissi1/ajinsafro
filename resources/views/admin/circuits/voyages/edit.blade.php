@@ -1697,6 +1697,9 @@
                                     <button type="button" class="btn btn-sm btn-outline-danger remove-departure-place" aria-label="Supprimer">×</button>
                                 </div>
                                 <div class="card-body">
+                                    @if(isset($place->id))
+                                    <input type="hidden" name="departure_places[{{ $pi }}][id]" value="{{ $place->id }}">
+                                    @endif
                                     <div class="row g-3 mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Nom du lieu <span class="text-danger">*</span></label>
@@ -1720,6 +1723,9 @@
                                         @forelse($flightsList as $fi => $flight)
                                         <div class="card mb-2 bg-light departure-flight-row" data-flight-index="{{ $fi }}">
                                             <div class="card-body py-2">
+                                                @if(isset($flight->id))
+                                                <input type="hidden" name="departure_places[{{ $pi }}][flights][{{ $fi }}][id]" value="{{ $flight->id }}">
+                                                @endif
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                                     <strong class="text-muted small">Vol {{ $fi + 1 }}</strong>
                                                     @if($fi > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-flight" aria-label="Supprimer">×</button>@endif
@@ -1951,6 +1957,9 @@
                             @forelse($datesList as $di => $dateItem)
                             <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
                                 <div class="card-body py-2">
+                                    @if(isset($dateItem->id))
+                                    <input type="hidden" name="travel_dates[{{ $di }}][id]" value="{{ $dateItem->id }}">
+                                    @endif
                                     <div class="row g-2 align-items-center">
                                         <div class="col-md-3">
                                             <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>

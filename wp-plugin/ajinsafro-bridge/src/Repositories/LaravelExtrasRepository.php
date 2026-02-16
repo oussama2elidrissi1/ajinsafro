@@ -433,26 +433,34 @@ class LaravelExtrasRepository
         $flightsTable = $this->table('travel_departure_flights');
 
         if (!$this->tableExists($placesTable) || !$this->tableExists($flightsTable)) {
-            error_log("LaravelExtrasRepository: Tables do not exist - places: {$placesTable}, flights: {$flightsTable}");
+            // Debug logging
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[AJTB LaravelExtrasRepository] Tables do not exist: ' . $placesTable . ' or ' . $flightsTable);
+            }
             return [];
         }
 
         try {
             // Get active departure places for this tour
-            $query = $this->wpdb->prepare(
-                "SELECT * FROM {$placesTable} 
-                 WHERE travel_id = %d 
-                 AND is_active = 1 
-                 ORDER BY sort_order ASC, id ASC",
-                $postId
+            // Only return places that have at least one flight
+            $places = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT p.* FROM {$placesTable} p
+                     INNER JOIN {$flightsTable} f ON f.departure_place_id = p.id
+                     WHERE p.travel_id = %d 
+                     AND p.is_active = 1 
+                     GROUP BY p.id
+                     ORDER BY p.sort_order ASC, p.id ASC",
+                    $postId
+                ),
+                ARRAY_A
             );
-            error_log("LaravelExtrasRepository: getDeparturePlaces query - {$query}");
-            
-            $places = $this->wpdb->get_results($query, ARRAY_A);
-            
-            error_log("LaravelExtrasRepository: getDeparturePlaces found " . ($places ? count($places) : 0) . " places for tour ID {$postId}");
 
             if (!$places) {
+                // Debug logging
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('[AJTB LaravelExtrasRepository] No departure places found for travel_id: ' . $postId);
+                }
                 return [];
             }
 
@@ -469,12 +477,19 @@ class LaravelExtrasRepository
                 );
 
                 $place['flights'] = $flights ?: [];
-                error_log("LaravelExtrasRepository: Place {$place['id']} has " . count($place['flights']) . " flights");
+            }
+
+            // Debug logging
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[AJTB LaravelExtrasRepository] Found ' . count($places) . ' departure places with flights for travel_id: ' . $postId);
             }
 
             return $places;
         } catch (\Exception $e) {
             $this->logError('getDeparturePlaces', $e);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[AJTB LaravelExtrasRepository] Error in getDeparturePlaces: ' . $e->getMessage());
+            }
             return [];
         }
     }
@@ -490,23 +505,20 @@ class LaravelExtrasRepository
         $table = $this->table('travel_dates');
 
         if (!$this->tableExists($table)) {
-            error_log("LaravelExtrasRepository: Table does not exist - {$table}");
             return [];
         }
 
         try {
-            $query = $this->wpdb->prepare(
-                "SELECT * FROM {$table} 
-                 WHERE travel_id = %d 
-                 AND is_active = 1 
-                 ORDER BY date ASC",
-                $postId
+            $results = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT * FROM {$table} 
+                     WHERE travel_id = %d 
+                     AND is_active = 1 
+                     ORDER BY date ASC",
+                    $postId
+                ),
+                ARRAY_A
             );
-            error_log("LaravelExtrasRepository: getTravelDates query - {$query}");
-            
-            $results = $this->wpdb->get_results($query, ARRAY_A);
-            
-            error_log("LaravelExtrasRepository: getTravelDates found " . ($results ? count($results) : 0) . " dates for tour ID {$postId}");
 
             return !empty($results) ? $results : [];
         } catch (\Exception $e) {

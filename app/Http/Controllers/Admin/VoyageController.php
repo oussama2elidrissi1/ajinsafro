@@ -383,11 +383,19 @@ class VoyageController extends Controller
         $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
         $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
 
-        // Charger les lieux de départ et leurs vols
-        $departurePlaces = TravelDeparturePlace::getActivePlacesForTour($id);
+        // Charger les lieux de départ et leurs vols (tous, pas seulement actifs, pour l'édition)
+        $departurePlaces = TravelDeparturePlace::where('travel_id', $id)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->with(['flights' => function ($query) {
+                $query->orderBy('sort_order')->orderBy('id');
+            }])
+            ->get();
         
-        // Charger les dates disponibles
-        $travelDates = TravelDate::getActiveDatesForTour($id);
+        // Charger les dates disponibles (toutes, pas seulement actives, pour l'édition)
+        $travelDates = TravelDate::where('travel_id', $id)
+            ->orderBy('date')
+            ->get();
 
         $programJson = [];
         $programApiUrl = route('admin.circuits.voyages.program.save', ['id' => $id]);
@@ -701,23 +709,24 @@ class VoyageController extends Controller
     /**
      * Sync departure places and their flights for tour.
      * Les lieux sans vols ne seront pas sauvegardés.
+     * Utilise un vrai sync (upsert) au lieu de delete/create.
      */
     private function syncDeparturePlaces(int $tourId, \Illuminate\Http\Request $request): void
     {
+        // Debug logging (temporaire)
+        \Log::info('VoyageController@syncDeparturePlaces', [
+            'tour_id' => $tourId,
+            'request_data' => $request->input('departure_places', [])
+        ]);
+
         $places = $request->input('departure_places', []);
         if (!is_array($places)) {
-            \Log::info("syncDeparturePlaces: departure_places is not array for tour {$tourId}");
             return;
         }
 
-        \Log::info("syncDeparturePlaces: Processing " . count($places) . " places for tour {$tourId}", ['places' => $places]);
-
-        // Supprimer les anciens lieux et leurs vols
-        $oldPlaceIds = TravelDeparturePlace::where('travel_id', $tourId)->pluck('id');
-        if ($oldPlaceIds->isNotEmpty()) {
-            TravelDepartureFlight::whereIn('departure_place_id', $oldPlaceIds)->delete();
-        }
-        TravelDeparturePlace::where('travel_id', $tourId)->delete();
+        // Récupérer les IDs des places et flights envoyés
+        $submittedPlaceIds = [];
+        $submittedFlightIds = [];
 
         $sortOrder = 0;
         foreach ($places as $placeData) {
@@ -728,7 +737,6 @@ class VoyageController extends Controller
             // Vérifier qu'il y a au moins un vol pour ce lieu
             $flights = $placeData['flights'] ?? [];
             if (!is_array($flights) || empty($flights)) {
-                \Log::info("syncDeparturePlaces: Skipping place without flights", ['place' => $placeData]);
                 continue; // Ignorer les lieux sans vols
             }
 
@@ -742,82 +750,245 @@ class VoyageController extends Controller
             }
 
             if (!$hasValidFlight) {
-                \Log::info("syncDeparturePlaces: Skipping place without valid flights", ['place' => $placeData]);
                 continue; // Ignorer si aucun vol valide
             }
 
-            // Créer le lieu
-            $place = TravelDeparturePlace::create([
-                'travel_id' => $tourId,
-                'name' => $placeData['name'] ?? '',
-                'code' => $placeData['code'] ?? null,
-                'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
-                'sort_order' => $sortOrder++,
-            ]);
+            // Upsert le lieu
+            $placeId = isset($placeData['id']) && $placeData['id'] ? (int) $placeData['id'] : null;
+            if ($placeId) {
+                $place = TravelDeparturePlace::where('travel_id', $tourId)->where('id', $placeId)->first();
+                if ($place) {
+                    $place->update([
+                        'name' => $placeData['name'] ?? '',
+                        'code' => $placeData['code'] ?? null,
+                        'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
+                        'sort_order' => $sortOrder++,
+                    ]);
+                    $submittedPlaceIds[] = $place->id;
+                } else {
+                    // ID invalide, créer nouveau
+                    $place = TravelDeparturePlace::create([
+                        'travel_id' => $tourId,
+                        'name' => $placeData['name'] ?? '',
+                        'code' => $placeData['code'] ?? null,
+                        'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
+                        'sort_order' => $sortOrder++,
+                    ]);
+                    $submittedPlaceIds[] = $place->id;
+                }
+            } else {
+                // Nouveau lieu
+                $place = TravelDeparturePlace::create([
+                    'travel_id' => $tourId,
+                    'name' => $placeData['name'] ?? '',
+                    'code' => $placeData['code'] ?? null,
+                    'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
+                    'sort_order' => $sortOrder++,
+                ]);
+                $submittedPlaceIds[] = $place->id;
+            }
 
-            \Log::info("syncDeparturePlaces: Created place", ['place_id' => $place->id, 'name' => $place->name]);
-
-            // Créer les vols pour ce lieu
+            // Sync des vols pour ce lieu
             $flightSortOrder = 0;
             foreach ($flights as $flightData) {
                 if (!is_array($flightData)) {
                     continue;
                 }
 
-                $flight = TravelDepartureFlight::create([
-                    'departure_place_id' => $place->id,
-                    'airline' => $flightData['airline'] ?? null,
-                    'flight_number' => $flightData['flight_number'] ?? null,
-                    'from_airport' => $flightData['from_airport'] ?? null,
-                    'to_airport' => $flightData['to_airport'] ?? null,
-                    'depart_time' => $flightData['depart_time'] ?? null,
-                    'arrive_time' => $flightData['arrive_time'] ?? null,
-                    'notes' => $flightData['notes'] ?? null,
-                    'sort_order' => $flightSortOrder++,
-                ]);
-                
-                \Log::info("syncDeparturePlaces: Created flight", ['flight_id' => $flight->id, 'airline' => $flight->airline]);
+                $flightId = isset($flightData['id']) && $flightData['id'] ? (int) $flightData['id'] : null;
+                if ($flightId) {
+                    $flight = TravelDepartureFlight::where('departure_place_id', $place->id)->where('id', $flightId)->first();
+                    if ($flight) {
+                        $flight->update([
+                            'airline' => $flightData['airline'] ?? null,
+                            'flight_number' => $flightData['flight_number'] ?? null,
+                            'from_airport' => $flightData['from_airport'] ?? null,
+                            'to_airport' => $flightData['to_airport'] ?? null,
+                            'depart_time' => $flightData['depart_time'] ?? null,
+                            'arrive_time' => $flightData['arrive_time'] ?? null,
+                            'notes' => $flightData['notes'] ?? null,
+                            'sort_order' => $flightSortOrder++,
+                        ]);
+                        $submittedFlightIds[] = $flight->id;
+                    } else {
+                        // ID invalide, créer nouveau
+                        $flight = TravelDepartureFlight::create([
+                            'departure_place_id' => $place->id,
+                            'airline' => $flightData['airline'] ?? null,
+                            'flight_number' => $flightData['flight_number'] ?? null,
+                            'from_airport' => $flightData['from_airport'] ?? null,
+                            'to_airport' => $flightData['to_airport'] ?? null,
+                            'depart_time' => $flightData['depart_time'] ?? null,
+                            'arrive_time' => $flightData['arrive_time'] ?? null,
+                            'notes' => $flightData['notes'] ?? null,
+                            'sort_order' => $flightSortOrder++,
+                        ]);
+                        $submittedFlightIds[] = $flight->id;
+                    }
+                } else {
+                    // Nouveau vol
+                    $flight = TravelDepartureFlight::create([
+                        'departure_place_id' => $place->id,
+                        'airline' => $flightData['airline'] ?? null,
+                        'flight_number' => $flightData['flight_number'] ?? null,
+                        'from_airport' => $flightData['from_airport'] ?? null,
+                        'to_airport' => $flightData['to_airport'] ?? null,
+                        'depart_time' => $flightData['depart_time'] ?? null,
+                        'arrive_time' => $flightData['arrive_time'] ?? null,
+                        'notes' => $flightData['notes'] ?? null,
+                        'sort_order' => $flightSortOrder++,
+                    ]);
+                    $submittedFlightIds[] = $flight->id;
+                }
+            }
+        }
+
+        // Supprimer les places qui ne sont plus dans la requête
+        if (!empty($submittedPlaceIds)) {
+            // Récupérer les IDs des places à supprimer
+            $placesToDelete = TravelDeparturePlace::where('travel_id', $tourId)
+                ->whereNotIn('id', $submittedPlaceIds)
+                ->pluck('id');
+            
+            // Supprimer les flights des places supprimées
+            if ($placesToDelete->isNotEmpty()) {
+                TravelDepartureFlight::whereIn('departure_place_id', $placesToDelete)->delete();
+            }
+            
+            // Supprimer les places
+            TravelDeparturePlace::where('travel_id', $tourId)
+                ->whereNotIn('id', $submittedPlaceIds)
+                ->delete();
+        } else {
+            // Aucune place envoyée, supprimer tout
+            $oldPlaceIds = TravelDeparturePlace::where('travel_id', $tourId)->pluck('id');
+            if ($oldPlaceIds->isNotEmpty()) {
+                TravelDepartureFlight::whereIn('departure_place_id', $oldPlaceIds)->delete();
+            }
+            TravelDeparturePlace::where('travel_id', $tourId)->delete();
+        }
+
+        // Supprimer les flights qui ne sont plus dans la requête (pour chaque place conservée)
+        foreach ($submittedPlaceIds as $placeId) {
+            $placeFlightIds = [];
+            // Trouver les flights IDs pour cette place dans la requête
+            foreach ($places as $placeData) {
+                if (isset($placeData['id']) && (int) $placeData['id'] === $placeId) {
+                    $flights = $placeData['flights'] ?? [];
+                    foreach ($flights as $flightData) {
+                        if (isset($flightData['id']) && $flightData['id']) {
+                            $placeFlightIds[] = (int) $flightData['id'];
+                        }
+                    }
+                    break;
+                }
+            }
+            // Supprimer les flights de cette place qui ne sont plus dans la requête
+            if (!empty($placeFlightIds)) {
+                TravelDepartureFlight::where('departure_place_id', $placeId)
+                    ->whereNotIn('id', $placeFlightIds)
+                    ->delete();
+            } else {
+                // Si aucun flight ID n'a été envoyé pour cette place, supprimer tous ses flights
+                // (mais normalement ça ne devrait pas arriver car on vérifie qu'il y a au moins un vol)
+                TravelDepartureFlight::where('departure_place_id', $placeId)->delete();
             }
         }
     }
 
     /**
      * Sync travel dates for tour.
+     * Utilise un vrai sync (upsert) au lieu de delete/create.
      */
     private function syncTravelDates(int $tourId, \Illuminate\Http\Request $request): void
     {
+        // Debug logging (temporaire)
+        \Log::info('VoyageController@syncTravelDates', [
+            'tour_id' => $tourId,
+            'request_data' => $request->input('travel_dates', [])
+        ]);
+
         $dates = $request->input('travel_dates', []);
         if (!is_array($dates)) {
-            \Log::info("syncTravelDates: travel_dates is not array for tour {$tourId}");
             return;
         }
 
-        \Log::info("syncTravelDates: Processing " . count($dates) . " dates for tour {$tourId}", ['dates' => $dates]);
-
-        // Supprimer les anciennes dates
-        TravelDate::where('travel_id', $tourId)->delete();
-
-        // Créer les nouvelles dates
+        // Normaliser les dates (accepter aussi un array simple de strings YYYY-MM-DD)
+        $normalizedDates = [];
         foreach ($dates as $dateData) {
+            if (is_string($dateData)) {
+                // Format simple: travel_dates[] = "2024-01-01"
+                $normalizedDates[] = ['date' => $dateData];
+            } elseif (is_array($dateData)) {
+                $normalizedDates[] = $dateData;
+            }
+        }
+
+        $submittedDateIds = [];
+
+        foreach ($normalizedDates as $dateData) {
             if (!is_array($dateData)) {
                 continue;
             }
 
             $date = $dateData['date'] ?? null;
             if (empty($date)) {
-                \Log::info("syncTravelDates: Skipping empty date", ['dateData' => $dateData]);
                 continue; // Ignorer si pas de date
             }
 
-            $travelDate = TravelDate::create([
-                'travel_id' => $tourId,
-                'date' => $date,
-                'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
-                'seats' => isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : null,
-                'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? $dateData['price_override'] : null,
-            ]);
-            
-            \Log::info("syncTravelDates: Created date", ['id' => $travelDate->id, 'date' => $travelDate->date]);
+            // Normaliser le format de date en YYYY-MM-DD
+            try {
+                $dateObj = \Carbon\Carbon::parse($date);
+                $date = $dateObj->format('Y-m-d');
+            } catch (\Exception $e) {
+                \Log::warning('VoyageController@syncTravelDates: invalid date format', ['date' => $date]);
+                continue;
+            }
+
+            // Upsert la date
+            $dateId = isset($dateData['id']) && $dateData['id'] ? (int) $dateData['id'] : null;
+            if ($dateId) {
+                $travelDate = TravelDate::where('travel_id', $tourId)->where('id', $dateId)->first();
+                if ($travelDate) {
+                    $travelDate->update([
+                        'date' => $date,
+                        'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
+                        'seats' => isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : null,
+                        'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? (float) $dateData['price_override'] : null,
+                    ]);
+                    $submittedDateIds[] = $travelDate->id;
+                } else {
+                    // ID invalide, créer nouveau
+                    $travelDate = TravelDate::create([
+                        'travel_id' => $tourId,
+                        'date' => $date,
+                        'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
+                        'seats' => isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : null,
+                        'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? (float) $dateData['price_override'] : null,
+                    ]);
+                    $submittedDateIds[] = $travelDate->id;
+                }
+            } else {
+                // Nouvelle date
+                $travelDate = TravelDate::create([
+                    'travel_id' => $tourId,
+                    'date' => $date,
+                    'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
+                    'seats' => isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : null,
+                    'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? (float) $dateData['price_override'] : null,
+                ]);
+                $submittedDateIds[] = $travelDate->id;
+            }
+        }
+
+        // Supprimer les dates qui ne sont plus dans la requête
+        if (!empty($submittedDateIds)) {
+            TravelDate::where('travel_id', $tourId)
+                ->whereNotIn('id', $submittedDateIds)
+                ->delete();
+        } else {
+            // Aucune date envoyée, supprimer tout
+            TravelDate::where('travel_id', $tourId)->delete();
         }
     }
 

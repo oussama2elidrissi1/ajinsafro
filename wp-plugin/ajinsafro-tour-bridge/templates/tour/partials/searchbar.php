@@ -12,31 +12,41 @@ if (!defined('ABSPATH')) {
 }
 
 // Get departure places and available dates from Laravel DB
-// Use WordPress post ID directly (travel_id in Laravel tables = WordPress post ID)
-$tour_id = get_the_ID();
+// Note: travel_id in Laravel tables = WordPress post ID (not Laravel voyage ID)
+$wp_post_id = get_the_ID();
+$laravel_id = get_post_meta($wp_post_id, 'aj_laravel_id', true) ?: get_post_meta($wp_post_id, 'laravel_id', true);
 $departure_places = [];
 $available_dates = [];
 
-if ($tour_id) {
-    // Get service instances
-    $extras_repo = new \AjinsafroBridge\Repositories\LaravelExtrasRepository();
+// Debug logging (temporaire, désactivable)
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    error_log('[AJTB Searchbar] WP Post ID: ' . $wp_post_id);
+    error_log('[AJTB Searchbar] Laravel ID meta: ' . ($laravel_id ?: 'empty'));
+}
+
+// Use WordPress post ID directly (travel_id = wp_post_id in Laravel tables)
+$extras_repo = new \AjinsafroBridge\Repositories\LaravelExtrasRepository();
+
+// Get departure places with flights
+$places_data = $extras_repo->getDeparturePlaces((int) $wp_post_id);
+if (!empty($places_data)) {
+    $departure_places = $places_data;
     
-    // Get departure places with flights
-    $places_data = $extras_repo->getDeparturePlaces((int) $tour_id);
-    if (!empty($places_data)) {
-        $departure_places = $places_data;
-        error_log('Departure places loaded: ' . count($departure_places) . ' places for tour ID ' . $tour_id);
-    } else {
-        error_log('No departure places found for tour ID ' . $tour_id);
+    // Debug logging
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('[AJTB Searchbar] Found ' . count($departure_places) . ' departure places');
     }
+}
+
+// Get available travel dates
+$dates_data = $extras_repo->getAvailableDatesArray((int) $wp_post_id);
+if (!empty($dates_data)) {
+    $available_dates = $dates_data;
     
-    // Get available travel dates
-    $dates_data = $extras_repo->getAvailableDatesArray((int) $tour_id);
-    if (!empty($dates_data)) {
-        $available_dates = $dates_data;
-        error_log('Available dates loaded: ' . count($available_dates) . ' dates for tour ID ' . $tour_id);
-    } else {
-        error_log('No available dates found for tour ID ' . $tour_id);
+    // Debug logging
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('[AJTB Searchbar] Found ' . count($available_dates) . ' available dates');
+        error_log('[AJTB Searchbar] Available dates: ' . implode(', ', $available_dates));
     }
 }
 
@@ -312,15 +322,28 @@ $available_dates_json = wp_json_encode($available_dates);
     
     // Handle date selection - restrict to available dates
     if (dateInput && availableDatesData.length > 0) {
+        // Debug logging
+        console.log('[AJTB Searchbar] Available dates:', availableDatesData);
+        
         // Sync with booking form
         dateInput.addEventListener('change', function() {
+            var selectedDate = this.value;
+            console.log('[AJTB Searchbar] Date selected:', selectedDate);
+            
+            // Validate selected date
+            if (selectedDate && availableDatesData.indexOf(selectedDate) === -1) {
+                alert('Cette date n\'est pas disponible pour ce voyage. Veuillez choisir parmi les dates disponibles.');
+                this.value = '';
+                return;
+            }
+            
             var bookingDateInput = document.getElementById('booking-date');
             if (bookingDateInput) {
-                bookingDateInput.value = this.value;
+                bookingDateInput.value = selectedDate;
             }
         });
         
-        // Disable dates not in available list
+        // Disable dates not in available list (native HTML5 date input)
         dateInput.addEventListener('input', function() {
             var selectedDate = this.value;
             
@@ -330,19 +353,48 @@ $available_dates_json = wp_json_encode($available_dates);
             }
         });
         
-        // For better UX, could integrate with a datepicker library that supports disabling specific dates
-        // Example with beforeShowDay callback for jQuery UI datepicker (if available)
+        // Set min date to today
+        var today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+        
+        // For better UX with jQuery UI datepicker (if available)
         if (typeof jQuery !== 'undefined' && jQuery.fn.datepicker) {
+            // Destroy existing datepicker if any
+            if (jQuery(dateInput).data('datepicker')) {
+                jQuery(dateInput).datepicker('destroy');
+            }
+            
             jQuery(dateInput).datepicker({
                 dateFormat: 'yy-mm-dd',
                 minDate: 0,
                 beforeShowDay: function(date) {
                     var dateString = jQuery.datepicker.formatDate('yy-mm-dd', date);
                     var isAvailable = availableDatesData.indexOf(dateString) !== -1;
-                    return [isAvailable, isAvailable ? 'available-date' : 'unavailable-date', ''];
+                    return [isAvailable, isAvailable ? 'available-date' : 'unavailable-date', isAvailable ? '' : 'Date non disponible'];
+                },
+                onSelect: function(dateText) {
+                    console.log('[AJTB Searchbar] Datepicker date selected:', dateText);
+                    // Sync with booking form
+                    var bookingDateInput = document.getElementById('booking-date');
+                    if (bookingDateInput) {
+                        bookingDateInput.value = dateText;
+                    }
+                }
+            });
+        } else {
+            // Fallback: validate on blur for native date input
+            dateInput.addEventListener('blur', function() {
+                var selectedDate = this.value;
+                if (selectedDate && availableDatesData.indexOf(selectedDate) === -1) {
+                    alert('Cette date n\'est pas disponible pour ce voyage. Veuillez choisir parmi les dates disponibles.');
+                    this.value = '';
                 }
             });
         }
+    } else if (dateInput && availableDatesData.length === 0) {
+        // No dates available - disable input
+        dateInput.disabled = true;
+        console.log('[AJTB Searchbar] No dates available, date input disabled');
     }
     
     // Helper function to escape HTML
