@@ -173,6 +173,9 @@ class AJTB_Template_Loader {
             
             // Location
             'address' => $wp_data['address'],
+            'location_id' => $wp_data['location_id'] ?? 0,
+            'location_ids' => $wp_data['location_ids'] ?? [],
+            'locations' => $wp_data['locations'] ?? [],
             'map' => $wp_data['map'],
             
             // Pricing (merged)

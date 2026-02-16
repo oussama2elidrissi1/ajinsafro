@@ -34,6 +34,9 @@ class AJTB_Tour_Repository {
         // Location
         'address',
         'st_location_id',
+        'location_id',
+        'id_location',
+        'multi_location',
         'map_lat',
         'map_lng',
         'map_zoom',
@@ -106,6 +109,8 @@ class AJTB_Tour_Repository {
         $gallery = $this->get_gallery($meta);
         $hero_image = $this->get_hero_image($meta, $gallery);
         $hero_gallery = $this->get_hero_gallery($meta);
+        $location_ids = $this->extract_location_ids($meta);
+        $locations = $this->resolve_locations($location_ids);
 
         return [
             // Basic post data
@@ -125,7 +130,9 @@ class AJTB_Tour_Repository {
 
             // Location
             'address' => $meta['address'] ?? '',
-            'location_id' => (int) ($meta['st_location_id'] ?? 0),
+            'location_id' => !empty($location_ids) ? (int) $location_ids[0] : 0,
+            'location_ids' => $location_ids,
+            'locations' => $locations,
             'map' => [
                 'lat' => $meta['map_lat'] ?? '',
                 'lng' => $meta['map_lng'] ?? '',
@@ -554,5 +561,164 @@ class AJTB_Tour_Repository {
     public function get_meta($key, $default = '') {
         $meta = $this->get_all_meta();
         return isset($meta[$key]) ? $meta[$key] : $default;
+    }
+
+    /**
+     * Extract location IDs from Traveler location metas.
+     *
+     * @param array $meta
+     * @return array
+     */
+    private function extract_location_ids($meta) {
+        $ids = [];
+
+        foreach (['st_location_id', 'location_id', 'id_location'] as $key) {
+            if (!isset($meta[$key])) {
+                continue;
+            }
+            $id = (int) $meta[$key];
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        if (!empty($meta['multi_location'])) {
+            $multi_ids = $this->parse_multi_location_ids($meta['multi_location']);
+            foreach ($multi_ids as $id) {
+                $ids[] = $id;
+            }
+        }
+
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, function ($id) {
+            return $id > 0;
+        });
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Parse multi_location value from Traveler format: "_12_,_15_" or CSV.
+     *
+     * @param string $value
+     * @return array
+     */
+    private function parse_multi_location_ids($value) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return [];
+        }
+
+        $ids = [];
+        if (preg_match_all('/_(\d+)_/', $value, $matches) && !empty($matches[1])) {
+            foreach ($matches[1] as $id) {
+                $ids[] = (int) $id;
+            }
+            return $ids;
+        }
+
+        foreach (explode(',', $value) as $raw) {
+            $id = (int) trim($raw);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Resolve location IDs to displayable paths (Country > City).
+     *
+     * @param array $location_ids
+     * @return array
+     */
+    private function resolve_locations($location_ids) {
+        $location_ids = array_values(array_unique(array_map('intval', (array) $location_ids)));
+        if (empty($location_ids)) {
+            return [];
+        }
+
+        $posts = get_posts([
+            'post_type' => 'location',
+            'post__in' => $location_ids,
+            'orderby' => 'post__in',
+            'post_status' => ['publish', 'private', 'draft', 'pending', 'future'],
+            'posts_per_page' => count($location_ids),
+        ]);
+
+        if (empty($posts)) {
+            return [];
+        }
+
+        $by_id = [];
+        foreach ($posts as $post) {
+            $by_id[(int) $post->ID] = $post;
+        }
+
+        $resolved = [];
+        $path_cache = [];
+        foreach ($location_ids as $location_id) {
+            if (empty($by_id[$location_id])) {
+                continue;
+            }
+
+            $post = $by_id[$location_id];
+            $parts = $this->get_location_path_parts((int) $post->ID, $path_cache);
+            if (empty($parts)) {
+                $parts = [(string) $post->post_title];
+            }
+
+            $country = $parts[0];
+            $city = count($parts) > 1 ? $parts[count($parts) - 1] : '';
+            $resolved[] = [
+                'id' => (int) $post->ID,
+                'name' => (string) $post->post_title,
+                'parent_id' => (int) $post->post_parent,
+                'country' => $country,
+                'city' => $city,
+                'path_parts' => $parts,
+                'path' => implode(' > ', $parts),
+            ];
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Build full location hierarchy path for one location.
+     *
+     * @param int $location_id
+     * @param array $cache
+     * @param int $depth
+     * @return array
+     */
+    private function get_location_path_parts($location_id, &$cache, $depth = 0) {
+        $location_id = (int) $location_id;
+        if ($location_id <= 0 || $depth > 10) {
+            return [];
+        }
+
+        if (isset($cache[$location_id])) {
+            return $cache[$location_id];
+        }
+
+        $post = get_post($location_id);
+        if (!$post || $post->post_type !== 'location') {
+            $cache[$location_id] = [];
+            return [];
+        }
+
+        $parts = [(string) $post->post_title];
+        $parent_id = (int) $post->post_parent;
+        if ($parent_id > 0) {
+            $parent_parts = $this->get_location_path_parts($parent_id, $cache, $depth + 1);
+            if (!empty($parent_parts)) {
+                $parts = array_merge($parent_parts, $parts);
+            }
+        }
+
+        $cache[$location_id] = $parts;
+        return $parts;
     }
 }

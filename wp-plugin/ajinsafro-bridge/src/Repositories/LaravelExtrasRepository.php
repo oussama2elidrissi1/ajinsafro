@@ -420,4 +420,110 @@ class LaravelExtrasRepository
             ));
         }
     }
+
+    /**
+     * Get departure places with their flights (Starting from)
+     *
+     * @param int $postId WordPress post ID (tour ID)
+     * @return array Array of departure places with flights
+     */
+    public function getDeparturePlaces(int $postId): array
+    {
+        $placesTable = $this->table('travel_departure_places');
+        $flightsTable = $this->table('travel_departure_flights');
+
+        if (!$this->tableExists($placesTable) || !$this->tableExists($flightsTable)) {
+            return [];
+        }
+
+        try {
+            // Get active departure places for this tour
+            $places = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT * FROM {$placesTable} 
+                     WHERE travel_id = %d 
+                     AND is_active = 1 
+                     ORDER BY sort_order ASC, id ASC",
+                    $postId
+                ),
+                ARRAY_A
+            );
+
+            if (!$places) {
+                return [];
+            }
+
+            // For each place, get its flights
+            foreach ($places as &$place) {
+                $flights = $this->wpdb->get_results(
+                    $this->wpdb->prepare(
+                        "SELECT * FROM {$flightsTable} 
+                         WHERE departure_place_id = %d 
+                         ORDER BY sort_order ASC, id ASC",
+                        $place['id']
+                    ),
+                    ARRAY_A
+                );
+
+                $place['flights'] = $flights ?: [];
+            }
+
+            return $places;
+        } catch (\Exception $e) {
+            $this->logError('getDeparturePlaces', $e);
+            return [];
+        }
+    }
+
+    /**
+     * Get available travel dates (Travelling on)
+     *
+     * @param int $postId WordPress post ID (tour ID)
+     * @return array Array of available dates
+     */
+    public function getTravelDates(int $postId): array
+    {
+        $table = $this->table('travel_dates');
+
+        if (!$this->tableExists($table)) {
+            return [];
+        }
+
+        try {
+            $results = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT * FROM {$table} 
+                     WHERE travel_id = %d 
+                     AND is_active = 1 
+                     ORDER BY date ASC",
+                    $postId
+                ),
+                ARRAY_A
+            );
+
+            return !empty($results) ? $results : [];
+        } catch (\Exception $e) {
+            $this->logError('getTravelDates', $e);
+            return [];
+        }
+    }
+
+    /**
+     * Get available dates as simple array (for calendar/datepicker)
+     *
+     * @param int $postId WordPress post ID (tour ID)
+     * @return array Array of date strings (Y-m-d format)
+     */
+    public function getAvailableDatesArray(int $postId): array
+    {
+        $dates = $this->getTravelDates($postId);
+        
+        if (empty($dates)) {
+            return [];
+        }
+
+        return array_map(function($dateRow) {
+            return $dateRow['date'];
+        }, $dates);
+    }
 }

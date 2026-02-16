@@ -104,6 +104,16 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#departure-places" role="tab">
+                    <i class="bx bx-map-pin"></i> Lieux de départ
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#travel-dates" role="tab">
+                    <i class="bx bx-calendar-check"></i> Dates disponibles
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#activities" role="tab">
                     <i class="bx bx-list-check"></i> Activités
                 </a>
@@ -1663,6 +1673,371 @@
                 </script>
 
                 <p class="text-muted small">Les champs « De / À » sont préremplis avec l'aéroport du vol et l'hôtel. Vous pouvez ajouter plusieurs transferts (arrivée et départ) et les associer à un jour.</p>
+            </div>
+
+            {{-- TAB LIEUX DE DÉPART — "Starting from" avec vols aller --}}
+            <div class="tab-pane" id="departure-places" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-3"><i class="bx bx-map-pin"></i> Lieux de départ (Starting from)</h4>
+                        <p class="alert alert-info py-2 mb-3 small">
+                            <i class="bx bx-info-circle"></i> <strong>Configuration des lieux de départ</strong> — 
+                            Ajoutez les lieux de départ disponibles pour ce voyage. Chaque lieu doit avoir au moins un vol aller. 
+                            Les clients pourront choisir leur lieu de départ sur la page du tour.
+                        </p>
+
+                        <div id="departure-places-container">
+                            @php 
+                                $placesList = $departurePlaces->isEmpty() ? [] : $departurePlaces->all(); 
+                            @endphp
+                            @forelse($placesList as $pi => $place)
+                            <div class="card mb-3 departure-place-row" data-index="{{ $pi }}">
+                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                    <strong>Lieu de départ {{ $pi + 1 }}</strong>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-departure-place" aria-label="Supprimer">×</button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Nom du lieu <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="departure_places[{{ $pi }}][name]" value="{{ old("departure_places.{$pi}.name", $place->name ?? '') }}" placeholder="Ex. Casablanca" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Code (IATA)</label>
+                                            <input type="text" class="form-control" name="departure_places[{{ $pi }}][code]" value="{{ old("departure_places.{$pi}.code", $place->code ?? '') }}" placeholder="Ex. CMN">
+                                        </div>
+                                        <div class="col-md-3 d-flex align-items-end pb-2">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="departure_places[{{ $pi }}][is_active]" value="1" {{ old("departure_places.{$pi}.is_active", $place->is_active ?? true) ? 'checked' : '' }}>
+                                                <label class="form-check-label">Actif</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="mb-3">Vols aller depuis ce lieu <span class="text-danger">*</span></h6>
+                                    <div class="departure-flights-container" data-place-index="{{ $pi }}">
+                                        @php $flightsList = $place->flights ?? collect(); @endphp
+                                        @forelse($flightsList as $fi => $flight)
+                                        <div class="card mb-2 bg-light departure-flight-row" data-flight-index="{{ $fi }}">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <strong class="text-muted small">Vol {{ $fi + 1 }}</strong>
+                                                    @if($fi > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-flight" aria-label="Supprimer">×</button>@endif
+                                                </div>
+                                                <div class="row g-2">
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][{{ $fi }}][airline]" value="{{ old("departure_places.{$pi}.flights.{$fi}.airline", $flight->airline ?? '') }}" placeholder="Compagnie">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][{{ $fi }}][flight_number]" value="{{ old("departure_places.{$pi}.flights.{$fi}.flight_number", $flight->flight_number ?? '') }}" placeholder="N° vol">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][{{ $fi }}][from_airport]" value="{{ old("departure_places.{$pi}.flights.{$fi}.from_airport", $flight->from_airport ?? '') }}" placeholder="Départ">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][{{ $fi }}][to_airport]" value="{{ old("departure_places.{$pi}.flights.{$fi}.to_airport", $flight->to_airport ?? '') }}" placeholder="Arrivée">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <input type="time" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][{{ $fi }}][depart_time]" value="{{ old("departure_places.{$pi}.flights.{$fi}.depart_time", $flight->depart_time ?? '') }}">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <input type="time" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][{{ $fi }}][arrive_time]" value="{{ old("departure_places.{$pi}.flights.{$fi}.arrive_time", $flight->arrive_time ?? '') }}">
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][{{ $fi }}][notes]" value="{{ old("departure_places.{$pi}.flights.{$fi}.notes", $flight->notes ?? '') }}" placeholder="Notes">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @empty
+                                        <div class="card mb-2 bg-light departure-flight-row" data-flight-index="0">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <strong class="text-muted small">Vol 1</strong>
+                                                </div>
+                                                <div class="row g-2">
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][0][airline]" placeholder="Compagnie">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][0][flight_number]" placeholder="N° vol">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][0][from_airport]" placeholder="Départ">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][0][to_airport]" placeholder="Arrivée">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <input type="time" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][0][depart_time]">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <input type="time" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][0][arrive_time]">
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][flights][0][notes]" placeholder="Notes">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforelse
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-soft-secondary mt-2 add-flight" data-place-index="{{ $pi }}">
+                                        <i class="bx bx-plus"></i> Ajouter un vol
+                                    </button>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="alert alert-warning">
+                                Aucun lieu de départ configuré. Cliquez sur "Ajouter un lieu de départ" pour commencer.
+                            </div>
+                            @endforelse
+                        </div>
+                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-departure-place">
+                            <i class="bx bx-plus"></i> Ajouter un lieu de départ
+                        </button>
+
+                        <script>
+                        (function(){
+                            var container = document.getElementById('departure-places-container');
+                            var addPlaceBtn = document.getElementById('add-departure-place');
+                            if (!container || !addPlaceBtn) return;
+                            if (container.dataset.initialized === 'true') return;
+                            container.dataset.initialized = 'true';
+
+                            // Ajouter un lieu de départ
+                            addPlaceBtn.addEventListener('click', function(){
+                                var rows = container.querySelectorAll('.departure-place-row');
+                                var nextIndex = rows.length;
+                                var html = `
+                                <div class="card mb-3 departure-place-row" data-index="${nextIndex}">
+                                    <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                        <strong>Lieu de départ ${nextIndex + 1}</strong>
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-departure-place" aria-label="Supprimer">×</button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Nom du lieu <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="departure_places[${nextIndex}][name]" placeholder="Ex. Casablanca" required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Code (IATA)</label>
+                                                <input type="text" class="form-control" name="departure_places[${nextIndex}][code]" placeholder="Ex. CMN">
+                                            </div>
+                                            <div class="col-md-3 d-flex align-items-end pb-2">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" name="departure_places[${nextIndex}][is_active]" value="1" checked>
+                                                    <label class="form-check-label">Actif</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <h6 class="mb-3">Vols aller depuis ce lieu <span class="text-danger">*</span></h6>
+                                        <div class="departure-flights-container" data-place-index="${nextIndex}">
+                                            <div class="card mb-2 bg-light departure-flight-row" data-flight-index="0">
+                                                <div class="card-body py-2">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <strong class="text-muted small">Vol 1</strong>
+                                                    </div>
+                                                    <div class="row g-2">
+                                                        <div class="col-md-3">
+                                                            <input type="text" class="form-control form-control-sm" name="departure_places[${nextIndex}][flights][0][airline]" placeholder="Compagnie">
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control form-control-sm" name="departure_places[${nextIndex}][flights][0][flight_number]" placeholder="N° vol">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <input type="text" class="form-control form-control-sm" name="departure_places[${nextIndex}][flights][0][from_airport]" placeholder="Départ">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <input type="text" class="form-control form-control-sm" name="departure_places[${nextIndex}][flights][0][to_airport]" placeholder="Arrivée">
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <input type="time" class="form-control form-control-sm" name="departure_places[${nextIndex}][flights][0][depart_time]">
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <input type="time" class="form-control form-control-sm" name="departure_places[${nextIndex}][flights][0][arrive_time]">
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control form-control-sm" name="departure_places[${nextIndex}][flights][0][notes]" placeholder="Notes">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-soft-secondary mt-2 add-flight" data-place-index="${nextIndex}">
+                                            <i class="bx bx-plus"></i> Ajouter un vol
+                                        </button>
+                                    </div>
+                                </div>`;
+                                container.insertAdjacentHTML('beforeend', html);
+                            });
+
+                            // Supprimer un lieu de départ
+                            container.addEventListener('click', function(e){
+                                if (e.target.classList.contains('remove-departure-place')) {
+                                    var row = e.target.closest('.departure-place-row');
+                                    if (row) row.remove();
+                                }
+
+                                // Ajouter un vol
+                                if (e.target.classList.contains('add-flight') || e.target.closest('.add-flight')) {
+                                    var btn = e.target.classList.contains('add-flight') ? e.target : e.target.closest('.add-flight');
+                                    var placeIndex = btn.getAttribute('data-place-index');
+                                    var flightsContainer = container.querySelector('.departure-flights-container[data-place-index="' + placeIndex + '"]');
+                                    if (!flightsContainer) return;
+                                    var flights = flightsContainer.querySelectorAll('.departure-flight-row');
+                                    var nextFlightIndex = flights.length;
+                                    var html = `
+                                    <div class="card mb-2 bg-light departure-flight-row" data-flight-index="${nextFlightIndex}">
+                                        <div class="card-body py-2">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <strong class="text-muted small">Vol ${nextFlightIndex + 1}</strong>
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-flight" aria-label="Supprimer">×</button>
+                                            </div>
+                                            <div class="row g-2">
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control form-control-sm" name="departure_places[${placeIndex}][flights][${nextFlightIndex}][airline]" placeholder="Compagnie">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <input type="text" class="form-control form-control-sm" name="departure_places[${placeIndex}][flights][${nextFlightIndex}][flight_number]" placeholder="N° vol">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control form-control-sm" name="departure_places[${placeIndex}][flights][${nextFlightIndex}][from_airport]" placeholder="Départ">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input type="text" class="form-control form-control-sm" name="departure_places[${placeIndex}][flights][${nextFlightIndex}][to_airport]" placeholder="Arrivée">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <input type="time" class="form-control form-control-sm" name="departure_places[${placeIndex}][flights][${nextFlightIndex}][depart_time]">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <input type="time" class="form-control form-control-sm" name="departure_places[${placeIndex}][flights][${nextFlightIndex}][arrive_time]">
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <input type="text" class="form-control form-control-sm" name="departure_places[${placeIndex}][flights][${nextFlightIndex}][notes]" placeholder="Notes">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                    flightsContainer.insertAdjacentHTML('beforeend', html);
+                                }
+
+                                // Supprimer un vol
+                                if (e.target.classList.contains('remove-flight')) {
+                                    var flightRow = e.target.closest('.departure-flight-row');
+                                    if (flightRow) flightRow.remove();
+                                }
+                            });
+                        })();
+                        </script>
+                    </div>
+                </div>
+            </div>
+
+            {{-- TAB DATES DISPONIBLES — "Travelling on" --}}
+            <div class="tab-pane" id="travel-dates" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-3"><i class="bx bx-calendar-check"></i> Dates disponibles (Travelling on)</h4>
+                        <p class="alert alert-info py-2 mb-3 small">
+                            <i class="bx bx-info-circle"></i> <strong>Configuration des dates</strong> — 
+                            Ajoutez les dates disponibles pour ce voyage. Seules ces dates seront sélectionnables dans le calendrier sur la page du tour. 
+                            Si aucune date n'est configurée, un message "No dates available" sera affiché.
+                        </p>
+
+                        <div id="travel-dates-container">
+                            @php $datesList = $travelDates ?? collect(); @endphp
+                            @forelse($datesList as $di => $dateItem)
+                            <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
+                                <div class="card-body py-2">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-3">
+                                            <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small mb-1">Places</label>
+                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small mb-1">Prix spécifique</label>
+                                            <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="Prix">
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end pb-2">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
+                                                <label class="form-check-label small">Actif</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end pb-2">
+                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>@endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="alert alert-warning">
+                                Aucune date disponible configurée. Cliquez sur "Ajouter une date" pour commencer.
+                            </div>
+                            @endforelse
+                        </div>
+                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-travel-date">
+                            <i class="bx bx-plus"></i> Ajouter une date
+                        </button>
+
+                        <script>
+                        (function(){
+                            var container = document.getElementById('travel-dates-container');
+                            var addBtn = document.getElementById('add-travel-date');
+                            if (!container || !addBtn) return;
+                            if (container.dataset.initialized === 'true') return;
+                            container.dataset.initialized = 'true';
+
+                            addBtn.addEventListener('click', function(){
+                                var rows = container.querySelectorAll('.travel-date-row');
+                                var nextIndex = rows.length;
+                                var html = `
+                                <div class="card mb-2 bg-light travel-date-row" data-index="${nextIndex}">
+                                    <div class="card-body py-2">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-md-3">
+                                                <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                                <input type="date" class="form-control form-control-sm" name="travel_dates[${nextIndex}][date]" required>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small mb-1">Places</label>
+                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small mb-1">Prix spécifique</label>
+                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="Prix">
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end pb-2">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" name="travel_dates[${nextIndex}][is_active]" value="1" checked>
+                                                    <label class="form-check-label small">Actif</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-1 d-flex align-items-end pb-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                                container.insertAdjacentHTML('beforeend', html);
+                            });
+
+                            container.addEventListener('click', function(e){
+                                if (e.target.classList.contains('remove-travel-date')) {
+                                    var row = e.target.closest('.travel-date-row');
+                                    if (row) row.remove();
+                                }
+                            });
+                        })();
+                        </script>
+                    </div>
+                </div>
             </div>
 
             {{-- TAB ACTIVITÉS — Gestion du catalogue d'activités --}}

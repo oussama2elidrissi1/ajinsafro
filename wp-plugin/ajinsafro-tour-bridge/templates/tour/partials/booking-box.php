@@ -94,6 +94,7 @@ $current_season = $pricing['current_season'] ?? null;
     <form class="booking-form" id="ajtb-booking-form">
         <input type="hidden" name="tour_id" value="<?php echo esc_attr($tour['id']); ?>">
         <input type="hidden" name="date" id="booking-date" value="">
+        <input type="hidden" name="departure_place_id" id="booking-departure-place" value="">
         <input type="hidden" name="adults" id="adults" value="2">
         <input type="hidden" name="children" id="children" value="0">
 

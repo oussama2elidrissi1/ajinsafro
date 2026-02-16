@@ -5374,6 +5374,104 @@
 }
 
 /* ===================================
+   Destinations
+   =================================== */
+.ajtb-destination-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ajtb-destinations-intro {
+    margin: -4px 0 14px;
+    color: var(--ajtb-text-muted);
+    font-size: 13px;
+}
+
+.ajtb-destination-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--ajtb-border);
+    background: var(--ajtb-bg-light);
+    color: var(--ajtb-text);
+    border-radius: 999px;
+    font-size: 13px;
+    line-height: 1.35;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.ajtb-destination-country {
+    font-weight: 600;
+    color: var(--ajtb-text);
+}
+
+.ajtb-destination-sep {
+    color: var(--ajtb-text-muted);
+    font-size: 14px;
+}
+
+.ajtb-destination-city {
+    color: var(--ajtb-text);
+}
+
+.ajtb-destination-chip-more {
+    background: var(--ajtb-primary-light);
+    color: var(--ajtb-primary);
+    border-color: rgba(0, 101, 209, 0.25);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ajtb-destination-more {
+    position: relative;
+}
+
+.ajtb-destination-more > summary {
+    list-style: none;
+}
+
+.ajtb-destination-more > summary::-webkit-details-marker {
+    display: none;
+}
+
+.ajtb-destination-more-list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 20;
+    min-width: 220px;
+    max-width: 320px;
+    background: #fff;
+    border: 1px solid var(--ajtb-border);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    padding: 10px;
+    display: grid;
+    gap: 8px;
+}
+
+.ajtb-destination-more-item {
+    display: block;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--ajtb-text);
+}
+
+@media (max-width: 767px) {
+    .ajtb-destination-chip {
+        white-space: normal;
+    }
+
+    .ajtb-destination-more-list {
+        left: auto;
+        right: 0;
+        max-width: 260px;
+    }
+}
+
+/* ===================================
    Print Styles
    =================================== */
 @media print {

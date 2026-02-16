@@ -12,6 +12,9 @@ use App\Models\Voyage;
 use App\Models\Airline;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
+use App\Models\TravelDeparturePlace;
+use App\Models\TravelDepartureFlight;
+use App\Models\TravelDate;
 use App\Services\VoyageFlightService;
 use App\Services\VoyageFlightOptionService;
 use App\Services\Wp\ProgramJsonService;
@@ -380,6 +383,12 @@ class VoyageController extends Controller
         $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
         $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
 
+        // Charger les lieux de départ et leurs vols
+        $departurePlaces = TravelDeparturePlace::getActivePlacesForTour($id);
+        
+        // Charger les dates disponibles
+        $travelDates = TravelDate::getActiveDatesForTour($id);
+
         $programJson = [];
         $programApiUrl = route('admin.circuits.voyages.program.save', ['id' => $id]);
         try {
@@ -388,7 +397,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'programJson', 'programApiUrl'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'travelDates', 'programJson', 'programApiUrl'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -690,6 +699,114 @@ class VoyageController extends Controller
     }
 
     /**
+     * Sync departure places and their flights for tour.
+     * Les lieux sans vols ne seront pas sauvegardés.
+     */
+    private function syncDeparturePlaces(int $tourId, \Illuminate\Http\Request $request): void
+    {
+        $places = $request->input('departure_places', []);
+        if (!is_array($places)) {
+            return;
+        }
+
+        // Supprimer les anciens lieux et leurs vols
+        $oldPlaceIds = TravelDeparturePlace::where('travel_id', $tourId)->pluck('id');
+        if ($oldPlaceIds->isNotEmpty()) {
+            TravelDepartureFlight::whereIn('departure_place_id', $oldPlaceIds)->delete();
+        }
+        TravelDeparturePlace::where('travel_id', $tourId)->delete();
+
+        $sortOrder = 0;
+        foreach ($places as $placeData) {
+            if (!is_array($placeData)) {
+                continue;
+            }
+
+            // Vérifier qu'il y a au moins un vol pour ce lieu
+            $flights = $placeData['flights'] ?? [];
+            if (!is_array($flights) || empty($flights)) {
+                continue; // Ignorer les lieux sans vols
+            }
+
+            // Vérifier qu'il y a au moins un vol avec des données
+            $hasValidFlight = false;
+            foreach ($flights as $flight) {
+                if (is_array($flight) && (!empty($flight['airline']) || !empty($flight['flight_number']) || !empty($flight['from_airport']))) {
+                    $hasValidFlight = true;
+                    break;
+                }
+            }
+
+            if (!$hasValidFlight) {
+                continue; // Ignorer si aucun vol valide
+            }
+
+            // Créer le lieu
+            $place = TravelDeparturePlace::create([
+                'travel_id' => $tourId,
+                'name' => $placeData['name'] ?? '',
+                'code' => $placeData['code'] ?? null,
+                'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
+                'sort_order' => $sortOrder++,
+            ]);
+
+            // Créer les vols pour ce lieu
+            $flightSortOrder = 0;
+            foreach ($flights as $flightData) {
+                if (!is_array($flightData)) {
+                    continue;
+                }
+
+                TravelDepartureFlight::create([
+                    'departure_place_id' => $place->id,
+                    'airline' => $flightData['airline'] ?? null,
+                    'flight_number' => $flightData['flight_number'] ?? null,
+                    'from_airport' => $flightData['from_airport'] ?? null,
+                    'to_airport' => $flightData['to_airport'] ?? null,
+                    'depart_time' => $flightData['depart_time'] ?? null,
+                    'arrive_time' => $flightData['arrive_time'] ?? null,
+                    'notes' => $flightData['notes'] ?? null,
+                    'sort_order' => $flightSortOrder++,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Sync travel dates for tour.
+     */
+    private function syncTravelDates(int $tourId, \Illuminate\Http\Request $request): void
+    {
+        $dates = $request->input('travel_dates', []);
+        if (!is_array($dates)) {
+            return;
+        }
+
+        // Supprimer les anciennes dates
+        TravelDate::where('travel_id', $tourId)->delete();
+
+        // Créer les nouvelles dates
+        foreach ($dates as $dateData) {
+            if (!is_array($dateData)) {
+                continue;
+            }
+
+            $date = $dateData['date'] ?? null;
+            if (empty($date)) {
+                continue; // Ignorer si pas de date
+            }
+
+            TravelDate::create([
+                'travel_id' => $tourId,
+                'date' => $date,
+                'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
+                'seats' => isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : null,
+                'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? $dateData['price_override'] : null,
+            ]);
+        }
+    }
+
+    /**
      * Get available taxonomies for tours.
      */
     protected function getAvailableTaxonomies(): array
@@ -819,6 +936,10 @@ class VoyageController extends Controller
             // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row par jour
             $this->syncTourHotels($id, $request);
             $this->syncTourTransfers($id, $request, $lastDayNumber);
+
+            // Synchroniser les lieux de départ et les dates disponibles
+            $this->syncDeparturePlaces($id, $request);
+            $this->syncTravelDates($id, $request);
 
             // Toujours synchroniser les vols Laravel → WP après chaque enregistrement (pour que le plugin affiche les vols)
             if ($laravelVoyage && $laravelVoyage->wp_post_id) {

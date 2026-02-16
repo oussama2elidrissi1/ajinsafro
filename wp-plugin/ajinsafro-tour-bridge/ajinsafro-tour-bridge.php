@@ -49,6 +49,7 @@ require_once AJTB_PLUGIN_DIR . 'includes/helpers.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-tour-repository.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-laravel-repository.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-activity-selections.php';
+require_once AJTB_PLUGIN_DIR . 'includes/class-location-service.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-template-loader.php';
 
 /**
@@ -130,11 +131,145 @@ class Ajinsafro_Tour_Bridge {
         add_action('wp_ajax_ajtb_toggle_flight', [$this, 'ajax_toggle_flight']);
         add_action('wp_ajax_nopriv_ajtb_toggle_flight', [$this, 'ajax_toggle_flight']);
 
+        // REST API: ensure Traveler location (country + city)
+        add_action('rest_api_init', [$this, 'register_rest_routes']);
+
         // Admin notice if Traveler not active
         add_action('admin_notices', [$this, 'admin_notices']);
 
         // SEO: og:image on single tour (image principale > featured > gallery)
         add_action('wp_head', [$this, 'output_tour_og_image'], 5);
+    }
+
+    /**
+     * Register REST routes.
+     */
+    public function register_rest_routes() {
+        register_rest_route('ajinsafro/v1', '/ensure-location', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [$this, 'rest_ensure_location'],
+            'permission_callback' => [$this, 'rest_ensure_location_permission'],
+            'args' => [
+                'country_code' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => function ($value) {
+                        return strtoupper(trim((string) $value));
+                    },
+                ],
+                'city_name' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * REST permission callback for ensure-location.
+     * Accepts either:
+     * - X-WP-Nonce (wp_rest) for authenticated requests
+     * - Authorization: Bearer <shared-token>
+     *
+     * @param WP_REST_Request $request
+     * @return true|WP_Error
+     */
+    public function rest_ensure_location_permission($request) {
+        $nonce = (string) $request->get_header('x_wp_nonce');
+        if ($nonce === '') {
+            $nonce = (string) $request->get_param('_wpnonce');
+        }
+        if ($nonce !== '' && is_user_logged_in() && wp_verify_nonce($nonce, 'wp_rest')) {
+            return true;
+        }
+
+        $provided_token = $this->get_bearer_token($request);
+        $shared_token = defined('AJTB_REST_BEARER_TOKEN') && AJTB_REST_BEARER_TOKEN !== ''
+            ? AJTB_REST_BEARER_TOKEN
+            : get_option('ajsync_webhook_secret', get_option('ajtb_rest_bearer_token', ''));
+        $shared_token = (string) apply_filters('ajtb_rest_bearer_token', $shared_token);
+
+        if ($shared_token !== '' && $provided_token !== '' && hash_equals($shared_token, $provided_token)) {
+            return true;
+        }
+
+        return new WP_Error(
+            'ajtb_rest_forbidden',
+            __('Unauthorized request for ensure-location.', 'ajinsafro-tour-bridge'),
+            ['status' => 401]
+        );
+    }
+
+    /**
+     * REST callback: ensure country + city location in WP.
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response
+     */
+    public function rest_ensure_location($request) {
+        $country_code = strtoupper(trim((string) $request->get_param('country_code')));
+        $city_name = trim((string) $request->get_param('city_name'));
+        $service = new AJTB_Location_Service();
+
+        if ($country_code === '' || $city_name === '') {
+            return new WP_REST_Response([
+                'error' => 'country_code and city_name are required.',
+            ], 400);
+        }
+
+        if (!preg_match('/^[A-Z]{2}$/', $country_code)) {
+            return new WP_REST_Response([
+                'error' => 'country_code must be 2 letters.',
+            ], 422);
+        }
+
+        if (mb_strlen($city_name, 'UTF-8') > 255) {
+            return new WP_REST_Response([
+                'error' => 'city_name is too long (max: 255).',
+            ], 422);
+        }
+
+        try {
+            $result = $service->ensure_location($country_code, $city_name);
+            return new WP_REST_Response($result, 200);
+        } catch (InvalidArgumentException $e) {
+            return new WP_REST_Response([
+                'error' => $e->getMessage(),
+            ], 422);
+        } catch (Throwable $e) {
+            $service->log('error', 'REST ensure-location failed', [
+                'country_code' => $country_code,
+                'city_name' => $city_name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return new WP_REST_Response([
+                'error' => 'Unable to ensure location.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Extract Bearer token from Authorization header.
+     *
+     * @param WP_REST_Request $request
+     * @return string
+     */
+    private function get_bearer_token($request) {
+        $authorization = (string) $request->get_header('authorization');
+        if ($authorization === '' && isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authorization = (string) $_SERVER['HTTP_AUTHORIZATION'];
+        }
+        if ($authorization === '' && isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $authorization = (string) $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+
+        if (stripos($authorization, 'Bearer ') === 0) {
+            return trim(substr($authorization, 7));
+        }
+
+        return '';
     }
 
     /**

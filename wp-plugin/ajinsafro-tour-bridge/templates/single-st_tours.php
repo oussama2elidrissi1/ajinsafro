@@ -85,6 +85,9 @@ get_header();
                 <!-- Navigation Tabs -->
                 <nav class="ajtb-tabs-nav">
                     <a href="#overview" class="tab-link active">Aperçu</a>
+                    <?php if (!empty($tour['locations'])): ?>
+                        <a href="#destinations" class="tab-link">Destinations</a>
+                    <?php endif; ?>
                     <?php
                     $has_flights_section = (empty($tour['outboundFlight']) && empty($tour['inboundFlight'])) && (!empty($tour['flights']) || !empty($tour['all_flights']));
                     if ($has_flights_section): ?>
@@ -100,6 +103,11 @@ get_header();
                         <a href="#faq" class="tab-link">FAQ</a>
                     <?php endif; ?>
                 </nav>
+
+                <!-- Destinations Section -->
+                <?php if (!empty($tour['locations'])): ?>
+                    <?php ajtb_get_partial('destinations', ['tour' => $tour]); ?>
+                <?php endif; ?>
 
                 <!-- Overview Section (Aperçu du Circuit) -->
                 <?php ajtb_get_partial('overview', ['tour' => $tour]); ?>

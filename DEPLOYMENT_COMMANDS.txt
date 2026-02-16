@@ -1,0 +1,216 @@
+# COMMANDES DE DÉPLOIEMENT - Lieux de Départ et Dates Disponibles
+
+## 1. EXÉCUTER LES MIGRATIONS
+
+```powershell
+# Naviguer vers le dossier Admin
+cd "C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin"
+
+# Exécuter les migrations
+php artisan migrate
+
+# Vérifier que les tables ont été créées
+php artisan db:table wp_aj_travel_departure_places
+php artisan db:table wp_aj_travel_departure_flights
+php artisan db:table wp_aj_travel_dates
+```
+
+## 2. VÉRIFICATION MANUELLE DB
+
+Si vous voulez vérifier manuellement dans MySQL/MariaDB :
+
+```sql
+-- Se connecter à la base de données
+USE votre_base_wordpress;
+
+-- Vérifier les tables créées
+SHOW TABLES LIKE 'wp_aj_travel_%';
+
+-- Voir la structure
+DESCRIBE wp_aj_travel_departure_places;
+DESCRIBE wp_aj_travel_departure_flights;
+DESCRIBE wp_aj_travel_dates;
+```
+
+## 3. TESTER UN VOYAGE
+
+### Étape 1 : Configurer un Lieu de Départ
+1. Aller dans Admin Laravel → Circuits → Tours
+2. Sélectionner un voyage existant
+3. Onglet "Lieux de départ"
+4. Ajouter un lieu (ex: Casablanca, CMN)
+5. Ajouter un vol pour ce lieu
+6. Enregistrer
+
+### Étape 2 : Configurer des Dates
+1. Même voyage, onglet "Dates disponibles"
+2. Ajouter plusieurs dates (ex: 2026-03-15, 2026-03-20, 2026-03-25)
+3. Enregistrer
+
+### Étape 3 : Vérifier sur WordPress
+1. Aller sur la page du tour sur le site WP
+2. Vérifier que le select "Starting from" affiche Casablanca
+3. Sélectionner Casablanca → Les vols doivent s'afficher
+4. Vérifier que le champ date n'accepte que les dates configurées
+
+## 4. ROLLBACK (Si Problème)
+
+Si vous devez annuler les migrations :
+
+```powershell
+# Rollback de la dernière batch de migrations
+php artisan migrate:rollback
+
+# Ou rollback spécifique (3 migrations)
+php artisan migrate:rollback --step=3
+```
+
+## 5. COMMANDES UTILES
+
+```powershell
+# Voir l'état des migrations
+php artisan migrate:status
+
+# Rafraîchir toutes les migrations (!! ATTENTION: SUPPRIME DONNÉES !!)
+php artisan migrate:fresh
+
+# Voir les requêtes SQL sans les exécuter
+php artisan migrate --pretend
+
+# Clear cache si besoin
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
+```
+
+## 6. VÉRIFICATION WORDPRESS
+
+```php
+// Vérifier que le repository fonctionne (dans un fichier de test WP)
+<?php
+$extras_repo = new \AjinsafroBridge\Repositories\LaravelExtrasRepository();
+
+// Tester avec un tour ID (ex: 123)
+$tour_id = 123;
+
+// Récupérer lieux de départ
+$places = $extras_repo->getDeparturePlaces($tour_id);
+var_dump($places);
+
+// Récupérer dates
+$dates = $extras_repo->getTravelDates($tour_id);
+var_dump($dates);
+?>
+```
+
+## 7. DÉPLOIEMENT EN PRODUCTION
+
+### Option A : Git (Recommandé)
+```bash
+# Commit des changements
+git add .
+git commit -m "feat: Add departure places and travel dates functionality"
+
+# Push vers production
+git push origin main
+
+# Sur le serveur de production
+git pull origin main
+php artisan migrate --force
+```
+
+### Option B : FTP
+1. Uploader les nouveaux fichiers :
+   - app/Models/TravelDeparturePlace.php
+   - app/Models/TravelDepartureFlight.php
+   - app/Models/TravelDate.php
+   - app/Http/Controllers/Admin/VoyageController.php (modifié)
+   - resources/views/admin/circuits/voyages/edit.blade.php (modifié)
+   - database/migrations/2026_02_16_*.php (3 fichiers)
+   - wp-plugin/ajinsafro-bridge/src/Repositories/LaravelExtrasRepository.php (modifié)
+   - wp-plugin/ajinsafro-tour-bridge/templates/tour/partials/searchbar.php (modifié)
+   - wp-plugin/ajinsafro-tour-bridge/templates/tour/partials/booking-box.php (modifié)
+
+2. Se connecter au serveur et exécuter :
+```bash
+cd /chemin/vers/admin
+php artisan migrate --force
+```
+
+## 8. TESTS DE VÉRIFICATION
+
+### Test 1 : Admin Laravel
+- [ ] Les onglets "Lieux de départ" et "Dates disponibles" apparaissent
+- [ ] Peut ajouter un lieu avec au moins 1 vol
+- [ ] Peut ajouter plusieurs dates
+- [ ] Les données sont sauvegardées correctement
+
+### Test 2 : Front WordPress
+- [ ] Le select "Starting from" affiche les lieux configurés
+- [ ] Quand un lieu est sélectionné, les vols s'affichent
+- [ ] Le champ date n'accepte que les dates configurées
+- [ ] Les sélections sont conservées dans le formulaire de booking
+
+### Test 3 : Booking
+- [ ] Les champs cachés sont remplis :
+  - departure_place_id
+  - date
+  - adults
+  - children
+- [ ] Le formulaire peut être soumis avec ces données
+
+## 9. PROBLÈMES COURANTS
+
+### "Table already exists"
+```powershell
+# Vérifier si les tables existent déjà
+php artisan db:table wp_aj_travel_departure_places
+
+# Si oui, pas besoin de migrer à nouveau
+# Sinon, réessayer la migration
+```
+
+### "Class not found"
+```powershell
+# Regénérer l'autoload
+composer dump-autoload
+```
+
+### Données ne s'affichent pas sur WP
+1. Vérifier que le tour a un `laravel_id` ou `aj_laravel_id` dans wp_postmeta
+2. Vérifier que les données existent dans les tables
+3. Vérifier les logs : storage/logs/laravel.log
+
+### JavaScript ne fonctionne pas
+1. Ouvrir la console du navigateur (F12)
+2. Vérifier les erreurs JavaScript
+3. Vérifier que les attributs data-* sont présents sur #aj-searchbar
+
+---
+
+## RÉSUMÉ DES FICHIERS MODIFIÉS/CRÉÉS
+
+### Nouveaux fichiers Laravel :
+- database/migrations/2026_02_16_100000_create_travel_departure_places_table.php
+- database/migrations/2026_02_16_100001_create_travel_departure_flights_table.php
+- database/migrations/2026_02_16_100002_create_travel_dates_table.php
+- app/Models/TravelDeparturePlace.php
+- app/Models/TravelDepartureFlight.php
+- app/Models/TravelDate.php
+
+### Fichiers Laravel modifiés :
+- app/Http/Controllers/Admin/VoyageController.php
+- resources/views/admin/circuits/voyages/edit.blade.php
+
+### Fichiers WordPress Plugin modifiés :
+- wp-plugin/ajinsafro-bridge/src/Repositories/LaravelExtrasRepository.php
+- wp-plugin/ajinsafro-tour-bridge/templates/tour/partials/searchbar.php
+- wp-plugin/ajinsafro-tour-bridge/templates/tour/partials/booking-box.php
+
+### Documentation :
+- DEPARTURE_PLACES_DATES_README.md
+- DEPLOYMENT_COMMANDS.txt (ce fichier)
+
+---
+
+**Prêt à déployer** ✓
