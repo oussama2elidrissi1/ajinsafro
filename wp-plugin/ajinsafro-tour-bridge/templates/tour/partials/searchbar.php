@@ -14,40 +14,66 @@ if (!defined('ABSPATH')) {
 // Get departure places and available dates from Laravel DB
 // Note: travel_id in Laravel tables = WordPress post ID (not Laravel voyage ID)
 $wp_post_id = get_the_ID();
-$laravel_id = get_post_meta($wp_post_id, 'aj_laravel_id', true) ?: get_post_meta($wp_post_id, 'laravel_id', true);
 $departure_places = [];
 $available_dates = [];
 
-// Debug logging (temporaire, désactivable)
-if (defined('WP_DEBUG') && WP_DEBUG) {
-    error_log('[AJTB Searchbar] WP Post ID: ' . $wp_post_id);
-    error_log('[AJTB Searchbar] Laravel ID meta: ' . ($laravel_id ?: 'empty'));
-}
+// Direct database queries (no repository needed)
+global $wpdb;
 
-// Use WordPress post ID directly (travel_id = wp_post_id in Laravel tables)
-$extras_repo = new \AjinsafroBridge\Repositories\LaravelExtrasRepository();
+// Get table names (Laravel tables: wp_prefix + aj_ + table_name)
+// Example: cFdgeZ_aj_travel_departure_places
+$places_table = $wpdb->prefix . 'aj_travel_departure_places';
+$flights_table = $wpdb->prefix . 'aj_travel_departure_flights';
+$dates_table = $wpdb->prefix . 'aj_travel_dates';
 
-// Get departure places with flights
-$places_data = $extras_repo->getDeparturePlaces((int) $wp_post_id);
-if (!empty($places_data)) {
-    $departure_places = $places_data;
+try {
+    // Get departure places with flights
+    $places = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM {$places_table} 
+         WHERE travel_id = %d 
+         AND is_active = 1 
+         ORDER BY sort_order ASC, id ASC",
+        $wp_post_id
+    ), ARRAY_A);
     
-    // Debug logging
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log('[AJTB Searchbar] Found ' . count($departure_places) . ' departure places');
+    if ($places) {
+        foreach ($places as &$place) {
+            $flights = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$flights_table} 
+                 WHERE departure_place_id = %d 
+                 ORDER BY sort_order ASC, id ASC",
+                $place['id']
+            ), ARRAY_A);
+            
+            // Only include places that have at least one flight
+            if (!empty($flights)) {
+                $place['flights'] = $flights;
+                $departure_places[] = $place;
+            }
+        }
     }
-}
-
-// Get available travel dates
-$dates_data = $extras_repo->getAvailableDatesArray((int) $wp_post_id);
-if (!empty($dates_data)) {
-    $available_dates = $dates_data;
     
-    // Debug logging
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log('[AJTB Searchbar] Found ' . count($available_dates) . ' available dates');
-        error_log('[AJTB Searchbar] Available dates: ' . implode(', ', $available_dates));
+    // Get available travel dates
+    $dates = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM {$dates_table} 
+         WHERE travel_id = %d 
+         AND is_active = 1 
+         ORDER BY date ASC",
+        $wp_post_id
+    ), ARRAY_A);
+    
+    if ($dates) {
+        $available_dates = array_map(function($dateRow) {
+            return $dateRow['date'];
+        }, $dates);
     }
+} catch (\Exception $e) {
+    // Silently fail if tables don't exist
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('[AJTB Searchbar] Error loading departure places/dates: ' . $e->getMessage());
+    }
+    $departure_places = [];
+    $available_dates = [];
 }
 
 $storage_key = 'aj_tb_search';
@@ -322,28 +348,15 @@ $available_dates_json = wp_json_encode($available_dates);
     
     // Handle date selection - restrict to available dates
     if (dateInput && availableDatesData.length > 0) {
-        // Debug logging
-        console.log('[AJTB Searchbar] Available dates:', availableDatesData);
-        
         // Sync with booking form
         dateInput.addEventListener('change', function() {
-            var selectedDate = this.value;
-            console.log('[AJTB Searchbar] Date selected:', selectedDate);
-            
-            // Validate selected date
-            if (selectedDate && availableDatesData.indexOf(selectedDate) === -1) {
-                alert('Cette date n\'est pas disponible pour ce voyage. Veuillez choisir parmi les dates disponibles.');
-                this.value = '';
-                return;
-            }
-            
             var bookingDateInput = document.getElementById('booking-date');
             if (bookingDateInput) {
-                bookingDateInput.value = selectedDate;
+                bookingDateInput.value = this.value;
             }
         });
         
-        // Disable dates not in available list (native HTML5 date input)
+        // Disable dates not in available list
         dateInput.addEventListener('input', function() {
             var selectedDate = this.value;
             
@@ -353,48 +366,19 @@ $available_dates_json = wp_json_encode($available_dates);
             }
         });
         
-        // Set min date to today
-        var today = new Date().toISOString().split('T')[0];
-        dateInput.setAttribute('min', today);
-        
-        // For better UX with jQuery UI datepicker (if available)
+        // For better UX, could integrate with a datepicker library that supports disabling specific dates
+        // Example with beforeShowDay callback for jQuery UI datepicker (if available)
         if (typeof jQuery !== 'undefined' && jQuery.fn.datepicker) {
-            // Destroy existing datepicker if any
-            if (jQuery(dateInput).data('datepicker')) {
-                jQuery(dateInput).datepicker('destroy');
-            }
-            
             jQuery(dateInput).datepicker({
                 dateFormat: 'yy-mm-dd',
                 minDate: 0,
                 beforeShowDay: function(date) {
                     var dateString = jQuery.datepicker.formatDate('yy-mm-dd', date);
                     var isAvailable = availableDatesData.indexOf(dateString) !== -1;
-                    return [isAvailable, isAvailable ? 'available-date' : 'unavailable-date', isAvailable ? '' : 'Date non disponible'];
-                },
-                onSelect: function(dateText) {
-                    console.log('[AJTB Searchbar] Datepicker date selected:', dateText);
-                    // Sync with booking form
-                    var bookingDateInput = document.getElementById('booking-date');
-                    if (bookingDateInput) {
-                        bookingDateInput.value = dateText;
-                    }
-                }
-            });
-        } else {
-            // Fallback: validate on blur for native date input
-            dateInput.addEventListener('blur', function() {
-                var selectedDate = this.value;
-                if (selectedDate && availableDatesData.indexOf(selectedDate) === -1) {
-                    alert('Cette date n\'est pas disponible pour ce voyage. Veuillez choisir parmi les dates disponibles.');
-                    this.value = '';
+                    return [isAvailable, isAvailable ? 'available-date' : 'unavailable-date', ''];
                 }
             });
         }
-    } else if (dateInput && availableDatesData.length === 0) {
-        // No dates available - disable input
-        dateInput.disabled = true;
-        console.log('[AJTB Searchbar] No dates available, date input disabled');
     }
     
     // Helper function to escape HTML

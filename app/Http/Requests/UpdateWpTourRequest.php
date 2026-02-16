@@ -228,6 +228,30 @@ class UpdateWpTourRequest extends FormRequest
             'tour_transfer_departures.*.vehicle_type' => 'nullable|string|max:255',
             'tour_transfer_departures.*.notes' => 'nullable|string|max:2000',
             'tour_transfer_departures.*.image_id' => 'nullable|integer|min:0',
+
+            // Lieux de départ (Starting from)
+            'departure_places' => 'nullable|array',
+            'departure_places.*.id' => 'nullable|integer',
+            'departure_places.*.name' => 'nullable|string|max:255',
+            'departure_places.*.code' => 'nullable|string|max:50',
+            'departure_places.*.is_active' => 'nullable|boolean',
+            'departure_places.*.flights' => 'nullable|array',
+            'departure_places.*.flights.*.id' => 'nullable|integer',
+            'departure_places.*.flights.*.airline' => 'nullable|string|max:255',
+            'departure_places.*.flights.*.flight_number' => 'nullable|string|max:50',
+            'departure_places.*.flights.*.from_airport' => 'nullable|string|max:255',
+            'departure_places.*.flights.*.to_airport' => 'nullable|string|max:255',
+            'departure_places.*.flights.*.depart_time' => 'nullable|string|max:20',
+            'departure_places.*.flights.*.arrive_time' => 'nullable|string|max:20',
+            'departure_places.*.flights.*.notes' => 'nullable|string|max:2000',
+
+            // Dates disponibles (Travelling on)
+            'travel_dates' => 'nullable|array',
+            'travel_dates.*.id' => 'nullable|integer',
+            'travel_dates.*.date' => 'nullable|date',
+            'travel_dates.*.is_active' => 'nullable|boolean',
+            'travel_dates.*.seats' => 'nullable|integer|min:0',
+            'travel_dates.*.price_override' => 'nullable|numeric|min:0',
         ];
     }
 
