@@ -109,6 +109,11 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#departure-and-flight" role="tab">
+                    <i class="bx bx-trip"></i> Départ & Vol
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#travel-dates" role="tab">
                     <i class="bx bx-calendar-check"></i> Dates disponibles
                 </a>
@@ -1945,6 +1950,89 @@
                             });
                         })();
                         </script>
+                    </div>
+                </div>
+            </div>
+
+            {{-- TAB DÉPART & VOL — Lieu de départ, date/heure de départ, vol (nouvelle logique) --}}
+            <div class="tab-pane" id="departure-and-flight" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-3"><i class="bx bx-trip"></i> Départ & Vol</h4>
+                        <p class="alert alert-info py-2 mb-3 small">
+                            <i class="bx bx-info-circle"></i> <strong>Départ et vol associé</strong> — Lieu de départ, date/heure de départ et vol (optionnel : laisser vide pour « Vol à confirmer »).
+                        </p>
+
+                        @php
+                            $depPlaceIdVal = old('departure_place_id');
+                            if ($depPlaceIdVal === null || $depPlaceIdVal === '') {
+                                $depPlaceIdVal = $voyage->departure_place_id ?? $meta['departure_place_id'] ?? '';
+                            }
+                            $depDateVal = old('departure_date');
+                            if ($depDateVal === null || $depDateVal === '') {
+                                $rawDepDate = $voyage->departure_date ?? $meta['departure_date'] ?? $meta['start_date'] ?? '';
+                                $depDateVal = '';
+                                if ($rawDepDate !== '' && $rawDepDate !== null) {
+                                    try {
+                                        $depDateVal = \Carbon\Carbon::parse($rawDepDate)->format('Y-m-d\TH:i');
+                                    } catch (\Exception $e) {
+                                        $depDateVal = '';
+                                    }
+                                }
+                            }
+                            $flightIdVal = old('flight_id');
+                            if ($flightIdVal === null || $flightIdVal === '') {
+                                $flightIdVal = $voyage->flight_id ?? $meta['flight_id'] ?? '';
+                            }
+                            $departurePlacesForSelect = $departurePlaces ?? collect();
+                        @endphp
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="departure_place_id" class="form-label">Lieu de départ</label>
+                                <select class="form-select @error('departure_place_id') is-invalid @enderror" id="departure_place_id" name="departure_place_id" aria-describedby="departure_place_id_help">
+                                    <option value="">— Sélectionner —</option>
+                                    @foreach($departurePlacesForSelect as $place)
+                                        <option value="{{ $place->id ?? '' }}" {{ (string)($place->id ?? '') === (string)$depPlaceIdVal ? 'selected' : '' }}>
+                                            {{ $place->name ?? '' }}{{ isset($place->code) && $place->code !== '' ? ' (' . $place->code . ')' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small id="departure_place_id_help" class="form-text text-muted">Aéroport / ville de départ.</small>
+                                @error('departure_place_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="departure_date" class="form-label">Date et heure de départ</label>
+                                <input type="datetime-local" class="form-control @error('departure_date') is-invalid @enderror" id="departure_date" name="departure_date" value="{{ $depDateVal }}" aria-describedby="departure_date_help">
+                                <small id="departure_date_help" class="form-text text-muted">Format date et heure.</small>
+                                @error('departure_date')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="flight_id" class="form-label">Vol</label>
+                                <select class="form-select @error('flight_id') is-invalid @enderror" id="flight_id" name="flight_id" aria-describedby="flight_id_help">
+                                    <option value="">— Sélectionner —</option>
+                                    @foreach($departurePlacesForSelect as $place)
+                                        @foreach($place->flights ?? [] as $fl)
+                                            @if(isset($fl->id))
+                                                <option value="{{ $fl->id }}" {{ (string)$fl->id === (string)$flightIdVal ? 'selected' : '' }}>
+                                                    {{ $place->name ?? '' }} — {{ $fl->airline ?? '' }} {{ $fl->flight_number ?? '' }}{{ isset($fl->from_airport) || isset($fl->to_airport) ? ' (' . ($fl->from_airport ?? '') . ' → ' . ($fl->to_airport ?? '') . ')' : '' }}
+                                                </option>
+                                            @endif
+                                        @endforeach
+                                    @endforeach
+                                </select>
+                                <small id="flight_id_help" class="form-text text-muted">Vol associé au départ. Laisser vide pour « Vol à confirmer ».</small>
+                                @error('flight_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
