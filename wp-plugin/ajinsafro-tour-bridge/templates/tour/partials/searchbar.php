@@ -180,8 +180,9 @@ $available_dates_json = wp_json_encode($available_dates);
             <div class="aj-search-value-wrap aj-search-date-wrap">
                 <svg class="aj-search-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <?php if (!empty($available_dates)): ?>
-                    <input type="date" id="aj-search-date" class="aj-search-date-input" value="<?php echo esc_attr($travel_date); ?>" min="<?php echo esc_attr(date('Y-m-d')); ?>" data-aj-search="date" aria-label="<?php esc_attr_e('Date', 'ajinsafro-tour-bridge'); ?>">
-                    <span class="aj-search-value" id="aj-search-date-display" data-placeholder="<?php echo esc_attr($travel_date_placeholder); ?>"><?php echo $travel_date_display ? esc_html($travel_date_display) : esc_html($travel_date_placeholder); ?></span>
+                    <input type="hidden" id="aj-search-date" class="aj-search-date-input" value="<?php echo esc_attr($travel_date); ?>" data-aj-search="date">
+                    <span class="aj-search-value aj-search-date-trigger aj-search-date-value" id="aj-search-date-display" data-placeholder="<?php echo esc_attr($travel_date_placeholder); ?>"><?php echo $travel_date_display ? esc_html($travel_date_display) : esc_html($travel_date_placeholder); ?></span>
+                    <svg class="aj-search-date-chevron" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" aria-hidden="true"><polyline points="6,9 12,15 18,9"></polyline></svg>
                 <?php else: ?>
                     <span class="aj-search-value aj-search-value--disabled"><?php esc_html_e('No dates available', 'ajinsafro-tour-bridge'); ?></span>
                 <?php endif; ?>
@@ -241,15 +242,50 @@ $available_dates_json = wp_json_encode($available_dates);
 </div>
 
 <script>
-(function() {
+jQuery(document).ready(function($) {
     'use strict';
+    
+    // Empêcher le scroll automatique au chargement de la page
+    var initialScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+    var initialScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    
+    // Restaurer la position de scroll si elle change automatiquement
+    function preventAutoScroll() {
+        var currentScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+        var currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        // Si le scroll a changé sans action utilisateur, le restaurer
+        if (Math.abs(currentScrollX - initialScrollX) > 5 || Math.abs(currentScrollY - initialScrollY) > 5) {
+            window.scrollTo(initialScrollX, initialScrollY);
+        }
+    }
+    
+    // Surveiller le scroll pendant les premières secondes après le chargement
+    var scrollCheckInterval = setInterval(function() {
+        preventAutoScroll();
+    }, 100);
+    
+    setTimeout(function() {
+        clearInterval(scrollCheckInterval);
+    }, 2000);
+    
+    // Empêcher le focus automatique sur les inputs cachés
+    $(document).on('focus', 'input[type="hidden"], input[style*="display: none"], input[style*="opacity: 0"]', function(e) {
+        e.preventDefault();
+        this.blur();
+        return false;
+    });
     
     // Get data from attributes
     var searchbar = document.getElementById('aj-searchbar');
-    if (!searchbar) return;
+    if (!searchbar) {
+        console.log('[AJTB] Searchbar element not found');
+        return;
+    }
     
     var departurePlacesData = JSON.parse(searchbar.getAttribute('data-departure-places') || '[]');
     var availableDatesData = JSON.parse(searchbar.getAttribute('data-available-dates') || '[]');
+    
+    console.log('[AJTB] Available dates:', availableDatesData);
     
     var fromSelect = document.getElementById('aj-search-from');
     var dateInput = document.getElementById('aj-search-date');
@@ -346,39 +382,409 @@ $available_dates_json = wp_json_encode($available_dates);
         });
     }
     
-    // Handle date selection - restrict to available dates
-    if (dateInput && availableDatesData.length > 0) {
-        // Sync with booking form
-        dateInput.addEventListener('change', function() {
-            var bookingDateInput = document.getElementById('booking-date');
-            if (bookingDateInput) {
-                bookingDateInput.value = this.value;
+    // Handle date selection - restrict to available dates with calendar picker
+    var dateDisplay = document.getElementById('aj-search-date-display');
+    if (dateDisplay && availableDatesData.length > 0) {
+        console.log('[AJTB] Initializing datepicker with', availableDatesData.length, 'available dates');
+        console.log('[AJTB] Available dates:', availableDatesData);
+        
+        // Test: make sure click event works (native event listener as backup)
+        dateDisplay.addEventListener('click', function(e) {
+            console.log('[AJTB] Date display clicked (native listener test)');
+            // If jQuery handler doesn't work, try to trigger it manually
+            if (window.ajtbOpenDatepicker) {
+                console.log('[AJTB] Calling global openDatepicker function');
+                window.ajtbOpenDatepicker();
             }
         });
         
-        // Disable dates not in available list
-        dateInput.addEventListener('input', function() {
-            var selectedDate = this.value;
-            
-            if (selectedDate && availableDatesData.indexOf(selectedDate) === -1) {
-                alert('Cette date n\'est pas disponible pour ce voyage. Veuillez choisir parmi les dates disponibles.');
-                this.value = '';
-            }
-        });
-        
-        // For better UX, could integrate with a datepicker library that supports disabling specific dates
-        // Example with beforeShowDay callback for jQuery UI datepicker (if available)
-        if (typeof jQuery !== 'undefined' && jQuery.fn.datepicker) {
-            jQuery(dateInput).datepicker({
-                dateFormat: 'yy-mm-dd',
-                minDate: 0,
-                beforeShowDay: function(date) {
-                    var dateString = jQuery.datepicker.formatDate('yy-mm-dd', date);
-                    var isAvailable = availableDatesData.indexOf(dateString) !== -1;
-                    return [isAvailable, isAvailable ? 'available-date' : 'unavailable-date', ''];
-                }
-            });
+        // Create a hidden input for the datepicker
+        var hiddenDateInput = document.getElementById('aj-search-date');
+        if (!hiddenDateInput) {
+            hiddenDateInput = document.createElement('input');
+            hiddenDateInput.type = 'hidden';
+            hiddenDateInput.id = 'aj-search-date';
+            hiddenDateInput.setAttribute('data-aj-search', 'date');
+            dateDisplay.parentElement.appendChild(hiddenDateInput);
         }
+        
+        // Create a temporary input for datepicker (will be positioned absolutely)
+        var tempInput = document.createElement('input');
+        tempInput.type = 'text';
+        tempInput.id = 'aj-datepicker-temp';
+        tempInput.tabIndex = -1; // Empêcher le focus clavier
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-9999px';
+        tempInput.style.opacity = '0';
+        tempInput.style.width = '1px';
+        tempInput.style.height = '1px';
+        tempInput.style.pointerEvents = 'none'; // Empêcher les interactions
+        document.body.appendChild(tempInput);
+        
+        // Empêcher le focus automatique sur cet input
+        tempInput.addEventListener('focus', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.blur();
+            return false;
+        }, true);
+        
+        // Function to initialize datepicker
+        function initDatepicker() {
+            console.log('[AJTB] Checking for jQuery UI datepicker...');
+            console.log('[AJTB] jQuery available:', typeof $ !== 'undefined');
+            console.log('[AJTB] $.fn available:', typeof $ !== 'undefined' && typeof $.fn !== 'undefined');
+            console.log('[AJTB] $.fn.datepicker available:', typeof $ !== 'undefined' && typeof $.fn !== 'undefined' && typeof $.fn.datepicker !== 'undefined');
+            
+            // Check if jQuery UI datepicker is available
+            var hasDatepicker = typeof $ !== 'undefined' && typeof $.fn !== 'undefined' && typeof $.fn.datepicker === 'function';
+            
+            if (hasDatepicker) {
+                console.log('[AJTB] jQuery UI datepicker found, initializing...');
+                
+                // Libellés français pour l'agenda
+                var mois = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                var moisCourt = ['Janv.','Févr.','Mars','Avr.','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
+                var jours = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
+                
+                // Initialize datepicker : un mois à la fois, navigation Précédent / Suivant
+                $(tempInput).datepicker({
+                    dateFormat: 'yy-mm-dd',
+                    minDate: 0,
+                    firstDay: 1,
+                    showOtherMonths: true,
+                    monthNames: mois,
+                    monthNamesShort: moisCourt,
+                    dayNamesMin: jours,
+                    prevText: '‹ Préc.',
+                    nextText: 'Suiv. ›',
+                    showMonthAfterYear: false,
+                    beforeShowDay: function(date) {
+                        var dateString = $.datepicker.formatDate('yy-mm-dd', date);
+                        var isAvailable = availableDatesData.indexOf(dateString) !== -1;
+                        return [isAvailable, isAvailable ? 'aj-available-date' : 'aj-unavailable-date', isAvailable ? '' : 'Date non disponible'];
+                    },
+                    onSelect: function(dateText, inst) {
+                        hiddenDateInput.value = dateText;
+                        var dateObj = new Date(dateText + 'T00:00:00');
+                        var formattedDate = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        dateDisplay.textContent = formattedDate;
+                        var bookingDateInput = document.getElementById('booking-date');
+                        if (bookingDateInput) bookingDateInput.value = dateText;
+                        $(tempInput).datepicker('hide');
+                    },
+                    onChangeMonthYear: function(year, month, inst) {
+                        var self = this;
+                        // Sauvegarder le scroll avant le changement de mois
+                        var savedScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+                        var savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+                        setTimeout(function() { 
+                            $(self).datepicker('refresh');
+                            // Restaurer le scroll après le refresh
+                            window.scrollTo(savedScrollX, savedScrollY);
+                        }, 1);
+                    },
+                    beforeShow: function(input, inst) {
+                        inst.dpDiv.appendTo('body');
+                        var rect = dateDisplay.getBoundingClientRect();
+                        var spaceBelow = window.innerHeight - rect.bottom;
+                        var pickerHeight = 260;
+                        var pickerWidth = 300;
+                        var leftPx = Math.max(10, Math.min(rect.left, window.innerWidth - pickerWidth));
+                        if (spaceBelow < pickerHeight && rect.top > pickerHeight) {
+                            inst.dpDiv.css({ position: 'fixed', top: (rect.top - pickerHeight - 5) + 'px', left: leftPx + 'px', zIndex: 2147483647 });
+                        } else {
+                            inst.dpDiv.css({ position: 'fixed', top: (rect.bottom + 5) + 'px', left: leftPx + 'px', zIndex: 2147483647 });
+                        }
+                    }
+                });
+                
+                // Fonction pour restaurer le scroll (appelée plusieurs fois pour être sûr)
+                function restoreScroll(scrollX, scrollY) {
+                    window.scrollTo(scrollX, scrollY);
+                    document.documentElement.scrollLeft = scrollX;
+                    document.documentElement.scrollTop = scrollY;
+                    if (document.body) {
+                        document.body.scrollLeft = scrollX;
+                        document.body.scrollTop = scrollY;
+                    }
+                }
+                
+                // Open datepicker when clicking on the display or the wrap
+                function openDatepicker() {
+                    try {
+                        // Sauvegarder la position de scroll AVANT toute action
+                        var scrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+                        var scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+                        
+                        // Empêcher le focus sur l'input temporaire
+                        if (document.activeElement === tempInput) {
+                            tempInput.blur();
+                        }
+                        
+                        // Set current date if available
+                        if (hiddenDateInput.value && availableDatesData.indexOf(hiddenDateInput.value) !== -1) {
+                            $(tempInput).datepicker('setDate', hiddenDateInput.value);
+                        } else if (availableDatesData.length > 0) {
+                            $(tempInput).datepicker('setDate', availableDatesData[0]);
+                        }
+                        
+                        // Restaurer le scroll immédiatement avant show()
+                        restoreScroll(scrollX, scrollY);
+                        
+                        $(tempInput).datepicker('show');
+                        
+                        // Empêcher le focus après show()
+                        setTimeout(function() {
+                            if (document.activeElement === tempInput) {
+                                tempInput.blur();
+                            }
+                            restoreScroll(scrollX, scrollY);
+                        }, 0);
+                        
+                        // Reposition after showing + restaurer le scroll plusieurs fois
+                        setTimeout(function() {
+                            var dpDiv = $('.ui-datepicker');
+                            if (dpDiv.length > 0) {
+                                var rect = dateDisplay.getBoundingClientRect();
+                                var spaceBelow = window.innerHeight - rect.bottom;
+                                var pickerHeight = 260;
+                                var pickerWidth = 300;
+                                var topPx, leftPx;
+                                if (spaceBelow < pickerHeight && rect.top > pickerHeight) {
+                                    topPx = (rect.top - pickerHeight - 5) + 'px';
+                                } else {
+                                    topPx = (rect.bottom + 5) + 'px';
+                                }
+                                leftPx = Math.max(10, Math.min(rect.left, window.innerWidth - pickerWidth)) + 'px';
+                                dpDiv.css({
+                                    position: 'fixed',
+                                    top: topPx,
+                                    left: leftPx,
+                                    zIndex: 2147483647,
+                                    display: 'block',
+                                    visibility: 'visible',
+                                    opacity: '1'
+                                });
+                                dpDiv.appendTo('body');
+                                
+                                // Mettre à jour les boutons Précédent/Suivant
+                                var prevBtn = dpDiv.find('.ui-datepicker-prev');
+                                var nextBtn = dpDiv.find('.ui-datepicker-next');
+                                prevBtn.empty().html('<span>‹ Préc.</span>').attr('title', 'Mois précédent');
+                                nextBtn.empty().html('<span>Suiv. ›</span>').attr('title', 'Mois suivant');
+                                
+                                // Empêcher le scroll quand on clique sur Précédent/Suivant
+                                // IMPORTANT: stopPropagation pour éviter que le calendrier se ferme
+                                prevBtn.off('click.scrollfix').on('click.scrollfix', function(e) {
+                                    e.stopPropagation(); // Empêcher la propagation vers le handler "click outside"
+                                    var savedScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+                                    var savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+                                    setTimeout(function() {
+                                        restoreScroll(savedScrollX, savedScrollY);
+                                    }, 0);
+                                    setTimeout(function() {
+                                        restoreScroll(savedScrollX, savedScrollY);
+                                    }, 50);
+                                    setTimeout(function() {
+                                        restoreScroll(savedScrollX, savedScrollY);
+                                    }, 100);
+                                });
+                                
+                                nextBtn.off('click.scrollfix').on('click.scrollfix', function(e) {
+                                    e.stopPropagation(); // Empêcher la propagation vers le handler "click outside"
+                                    var savedScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+                                    var savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+                                    setTimeout(function() {
+                                        restoreScroll(savedScrollX, savedScrollY);
+                                    }, 0);
+                                    setTimeout(function() {
+                                        restoreScroll(savedScrollX, savedScrollY);
+                                    }, 50);
+                                    setTimeout(function() {
+                                        restoreScroll(savedScrollX, savedScrollY);
+                                    }, 100);
+                                });
+                            }
+                            restoreScroll(scrollX, scrollY);
+                        }, 50);
+                        
+                        // Restaurer plusieurs fois pour être sûr
+                        requestAnimationFrame(function() {
+                            restoreScroll(scrollX, scrollY);
+                        });
+                        setTimeout(function() {
+                            restoreScroll(scrollX, scrollY);
+                        }, 100);
+                        setTimeout(function() {
+                            restoreScroll(scrollX, scrollY);
+                        }, 200);
+                    } catch (error) {
+                        console.error('[AJTB] Error showing datepicker:', error);
+                        alert('Erreur lors de l\'ouverture du calendrier: ' + error.message);
+                    }
+                }
+                
+                // Attach click handler to display
+                $(dateDisplay).css({
+                    'cursor': 'pointer',
+                    'user-select': 'none'
+                });
+                
+                $(dateDisplay).on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[AJTB] Date display clicked');
+                    openDatepicker();
+                    return false;
+                });
+                
+                // Also make the whole date wrap clickable
+                var dateWrap = dateDisplay.closest('.aj-search-date-wrap');
+                if (dateWrap) {
+                    $(dateWrap).css('cursor', 'pointer');
+                    $(dateWrap).on('click', function(e) {
+                        // Don't trigger if clicking on SVG icon
+                        if ($(e.target).closest('svg').length) {
+                            return;
+                        }
+                        if (e.target !== dateDisplay && !dateDisplay.contains(e.target)) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('[AJTB] Date wrap clicked');
+                            openDatepicker();
+                            return false;
+                        }
+                    });
+                }
+                
+                // Debug: test click
+                console.log('[AJTB] Datepicker click handlers attached to:', dateDisplay);
+                console.log('[AJTB] Date wrap:', dateWrap);
+                
+                // Empêcher le scroll lors des clics sur Précédent/Suivant (handler global)
+                // IMPORTANT: stopPropagation pour éviter que le handler "click outside" ferme le calendrier
+                $(document).on('click', '.ui-datepicker-prev, .ui-datepicker-next', function(e) {
+                    e.stopPropagation(); // Empêcher la propagation vers le handler "click outside"
+                    var savedScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+                    var savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+                    
+                    // Restaurer immédiatement et plusieurs fois après
+                    setTimeout(function() {
+                        window.scrollTo(savedScrollX, savedScrollY);
+                    }, 0);
+                    setTimeout(function() {
+                        window.scrollTo(savedScrollX, savedScrollY);
+                    }, 50);
+                    setTimeout(function() {
+                        window.scrollTo(savedScrollX, savedScrollY);
+                    }, 100);
+                    setTimeout(function() {
+                        window.scrollTo(savedScrollX, savedScrollY);
+                    }, 200);
+                });
+                
+                // Empêcher la fermeture du calendrier lors des clics à l'intérieur
+                $(document).on('click', '.ui-datepicker', function(e) {
+                    e.stopPropagation(); // Empêcher que le clic remonte au document
+                });
+                
+                // Close datepicker when clicking outside
+                // IMPORTANT: exclure explicitement les boutons Précédent/Suivant et tout le datepicker
+                $(document).on('click', function(e) {
+                    // Ne pas fermer si on clique sur le datepicker ou ses éléments (y compris Précédent/Suivant)
+                    var isDatepicker = $(e.target).closest('.ui-datepicker').length > 0;
+                    // Ne pas fermer si on clique sur les boutons Précédent/Suivant (double vérification)
+                    var isNavButton = $(e.target).is('.ui-datepicker-prev, .ui-datepicker-next') || 
+                                      $(e.target).closest('.ui-datepicker-prev, .ui-datepicker-next').length > 0;
+                    // Ne pas fermer si on clique sur le trigger de date
+                    var isDateTrigger = $(e.target).closest('.aj-search-date-trigger, .aj-search-date-wrap, .aj-search-date-value, .aj-search-date-chevron').length > 0;
+                    
+                    // Ne fermer que si on clique vraiment en dehors de tout
+                    if (!isDatepicker && !isNavButton && !isDateTrigger) {
+                        $(tempInput).datepicker('hide');
+                    }
+                });
+                
+                // Store global reference for debugging
+                window.ajtbTempDateInput = tempInput;
+                window.ajtbOpenDatepicker = openDatepicker;
+                window.ajtbDateDisplay = dateDisplay;
+                
+                console.log('[AJTB] Datepicker initialized successfully');
+                console.log('[AJTB] You can test by calling: window.ajtbOpenDatepicker()');
+            } else {
+                console.log('[AJTB] jQuery UI datepicker not found, using fallback');
+                // Fallback: use native date input
+                var nativeInput = document.createElement('input');
+                nativeInput.type = 'date';
+                nativeInput.id = 'aj-search-date-native';
+                nativeInput.style.position = 'absolute';
+                nativeInput.style.left = '-9999px';
+                nativeInput.min = new Date().toISOString().split('T')[0];
+                document.body.appendChild(nativeInput);
+                
+                $(dateDisplay).on('click', function(e) {
+                    e.preventDefault();
+                    console.log('[AJTB] Opening native date picker');
+                    if (nativeInput.showPicker) {
+                        nativeInput.showPicker();
+                    } else {
+                        nativeInput.focus();
+                        nativeInput.click();
+                    }
+                });
+                
+                nativeInput.addEventListener('change', function() {
+                    var selectedDate = this.value;
+                    if (availableDatesData.indexOf(selectedDate) !== -1) {
+                        hiddenDateInput.value = selectedDate;
+                        var dateObj = new Date(selectedDate + 'T00:00:00');
+                        var formattedDate = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        dateDisplay.textContent = formattedDate;
+                        
+                        var bookingDateInput = document.getElementById('booking-date');
+                        if (bookingDateInput) {
+                            bookingDateInput.value = selectedDate;
+                        }
+                    } else {
+                        alert('Cette date n\'est pas disponible pour ce voyage. Veuillez choisir parmi les dates disponibles.');
+                        this.value = '';
+                    }
+                });
+            }
+        }
+        
+        // Initialize datepicker (wait for jQuery UI to be fully loaded)
+        // Try multiple times if jQuery UI is not ready yet
+        var initAttempts = 0;
+        var maxAttempts = 10;
+        
+        function tryInitDatepicker() {
+            initAttempts++;
+            console.log('[AJTB] Attempt', initAttempts, 'to initialize datepicker');
+            
+            if (typeof $ !== 'undefined' && typeof $.fn !== 'undefined' && typeof $.fn.datepicker === 'function') {
+                console.log('[AJTB] jQuery UI datepicker is ready, initializing...');
+                initDatepicker();
+            } else if (initAttempts < maxAttempts) {
+                console.log('[AJTB] jQuery UI datepicker not ready yet, retrying in 200ms...');
+                setTimeout(tryInitDatepicker, 200);
+            } else {
+                console.error('[AJTB] jQuery UI datepicker not available after', maxAttempts, 'attempts, using fallback');
+                initDatepicker(); // Will use fallback
+            }
+        }
+        
+        // Start trying to initialize
+        setTimeout(tryInitDatepicker, 100);
+    } else if (dateDisplay && availableDatesData.length === 0) {
+        // No dates available - disable interaction
+        dateDisplay.style.cursor = 'not-allowed';
+        dateDisplay.style.opacity = '0.6';
+        console.log('[AJTB] No dates available');
+    } else {
+        console.log('[AJTB] Date display element not found or no dates');
     }
     
     // Helper function to escape HTML
@@ -392,10 +798,34 @@ $available_dates_json = wp_json_encode($available_dates);
         };
         return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
     }
-})();
+});
 </script>
 
 <style>
+/* Empêcher le scroll automatique sur l'input temporaire du datepicker */
+#aj-datepicker-temp {
+    position: absolute !important;
+    left: -9999px !important;
+    top: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    tab-index: -1 !important;
+}
+
+#aj-datepicker-temp:focus {
+    outline: none !important;
+    border: none !important;
+}
+
+/* Empêcher le scroll lors de l'ouverture du datepicker */
+.ui-datepicker {
+    scroll-margin: 0 !important;
+}
+
+.ui-datepicker * {
+    scroll-margin: 0 !important;
+}
+
 .aj-flight-details {
     margin-top: 2rem;
     padding: 1.5rem;
@@ -467,6 +897,304 @@ $available_dates_json = wp_json_encode($available_dates);
 .aj-search-value--disabled {
     color: #6c757d;
     font-style: italic;
+}
+
+.aj-search-date-wrap {
+    cursor: pointer;
+}
+
+.aj-search-date-value {
+    flex: 1;
+    min-width: 0;
+    pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
+}
+
+.aj-search-date-value:hover {
+    color: var(--ajtb-primary, #0066cc);
+}
+
+.aj-search-date-chevron {
+    flex-shrink: 0;
+    color: var(--ajtb-primary, #0066cc);
+}
+
+.aj-search-date-trigger {
+    cursor: pointer;
+    user-select: none;
+}
+
+.aj-search-date-trigger:hover {
+    opacity: 0.8;
+}
+
+/* ========== Agenda / Datepicker – style moderne ========== */
+.ui-datepicker {
+    font-family: inherit;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(13, 71, 161, 0.15);
+    background: #fff;
+    padding: 0;
+    overflow: hidden;
+    z-index: 2147483647 !important;
+    position: fixed !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-width: 320px;
+}
+
+/* En-tête : mois + Précédent / Suivant – boutons toujours bien visibles */
+.ui-datepicker .ui-datepicker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    color: #fff;
+    border: none;
+    padding: 14px 16px;
+    margin: 0;
+    min-height: 52px;
+    flex-wrap: nowrap;
+    border-radius: 12px 12px 0 0;
+}
+
+.ui-datepicker .ui-datepicker-title {
+    flex: 1;
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    text-align: center;
+    order: 1;
+}
+
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+    position: static !important;
+    float: none !important;
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.95) !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    min-width: auto;
+}
+
+.ui-datepicker .ui-datepicker-prev {
+    order: 0;
+}
+
+.ui-datepicker .ui-datepicker-next {
+    order: 2;
+}
+
+.ui-datepicker .ui-datepicker-prev:hover,
+.ui-datepicker .ui-datepicker-next:hover {
+    background: rgba(255,255,255,0.25);
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.ui-datepicker .ui-datepicker-prev:active,
+.ui-datepicker .ui-datepicker-next:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ui-datepicker .ui-datepicker-prev .ui-icon,
+.ui-datepicker .ui-datepicker-next .ui-icon {
+    display: none;
+}
+
+.ui-datepicker .ui-datepicker-prev span,
+.ui-datepicker .ui-datepicker-next span {
+    display: inline-block;
+    margin: 0;
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: 1;
+}
+
+/* Zone calendrier */
+.ui-datepicker .ui-datepicker-calendar {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 5px;
+    padding: 14px;
+    background: #fafbfc;
+}
+
+.ui-datepicker .ui-datepicker-calendar td {
+    padding: 0;
+}
+
+.ui-datepicker .ui-datepicker-calendar td a {
+    text-align: center;
+    padding: 11px 0;
+    display: block;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: 2px solid transparent !important;
+    box-sizing: border-box;
+}
+
+/* Jours de la semaine */
+.ui-datepicker .ui-datepicker-calendar thead th {
+    padding: 10px 0;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5c6b7a;
+    background: transparent;
+}
+
+/* Dates d’autres mois (gris léger) */
+.ui-datepicker .ui-datepicker-calendar td.ui-datepicker-other-month .ui-state-default {
+    color: #b0bec5 !important;
+    background: transparent !important;
+}
+
+/* Dates non disponibles – grisées, non cliquables */
+.ui-datepicker .aj-unavailable-date,
+.ui-datepicker .aj-unavailable-date a {
+    color: #b0bec5 !important;
+    background: #f1f3f5 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+    text-decoration: none !important;
+    border-color: transparent !important;
+}
+
+.ui-datepicker .aj-unavailable-date:hover,
+.ui-datepicker .aj-unavailable-date:hover a {
+    background: #f1f3f5 !important;
+    color: #b0bec5 !important;
+    border-color: transparent !important;
+}
+
+/* Dates disponibles – style par défaut */
+.ui-datepicker .aj-available-date,
+.ui-datepicker .aj-available-date a {
+    color: #1e3a5f !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+    font-weight: 500;
+    border-color: transparent !important;
+}
+
+.ui-datepicker .aj-available-date:hover,
+.ui-datepicker .aj-available-date:hover a {
+    background: #e3f2fd !important;
+    color: #1565c0 !important;
+    border-color: transparent !important;
+    transform: scale(1.05);
+}
+
+/* Date sélectionnée – un seul style (bleu, pas de bordure jaune/blanche) */
+.ui-datepicker .ui-state-active.aj-available-date,
+.ui-datepicker .ui-state-active.aj-available-date a,
+.ui-datepicker .aj-available-date.ui-state-active,
+.ui-datepicker .aj-available-date.ui-state-active a {
+    background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    border: 2px solid transparent !important;
+    box-shadow: 0 3px 12px rgba(21, 101, 192, 0.4);
+    transform: scale(1.05);
+}
+
+/* Désactiver tout style de focus/active par défaut (bordures jaunes etc.) */
+.ui-datepicker .ui-state-active,
+.ui-datepicker .ui-state-active:hover,
+.ui-datepicker .ui-state-active a,
+.ui-datepicker .ui-state-active a:hover {
+    border-color: transparent !important;
+    outline: none !important;
+}
+
+/* Jours désactivés (passés) */
+.ui-datepicker .ui-datepicker-calendar .ui-state-disabled {
+    color: #cfd8dc !important;
+    opacity: 0.5;
+    cursor: not-allowed !important;
+}
+
+.ui-datepicker .ui-datepicker-calendar .ui-state-disabled a {
+    background: transparent !important;
+    border-color: transparent !important;
+}
+
+/* === FIX NAV BUTTONS (Préc / Suiv) === */
+.ui-datepicker .ui-datepicker-header {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+    overflow: visible !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+}
+
+/* === FIX CLIPPING Préc/Suiv (force real button width) === */
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+    position: static !important;      /* kill absolute positioning */
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+
+    width: auto !important;           /* kill fixed square size */
+    max-width: none !important;
+    min-width: 72px !important;       /* empêche la coupe du texte */
+    height: auto !important;
+
+    overflow: visible !important;      /* stop clipping */
+    box-sizing: border-box !important;
+    clip: auto !important;
+
+    margin: 0 !important;
+    padding: 8px 14px !important;
+    line-height: 1 !important;
+
+    display: inline-flex !important;  /* stable alignment */
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+
+    text-indent: 0 !important;        /* certains thèmes cachent le texte */
+}
+
+.ui-datepicker .ui-datepicker-prev span,
+.ui-datepicker .ui-datepicker-next span {
+    position: static !important;
+    overflow: visible !important;
+    text-indent: 0 !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+}
+
+.ui-datepicker .ui-datepicker-title {
+    flex: 1 1 auto !important;
+    text-align: center !important;
+    margin: 0 12px !important;
 }
 </style>
 <?php endif; ?>

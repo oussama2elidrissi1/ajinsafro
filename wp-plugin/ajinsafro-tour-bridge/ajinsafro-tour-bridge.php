@@ -611,11 +611,15 @@ class Ajinsafro_Tour_Bridge {
             AJTB_VERSION
         );
 
+        // jQuery UI Datepicker (for travel dates calendar)
+        wp_enqueue_script('jquery-ui-datepicker', false, ['jquery', 'jquery-ui-core'], false, true);
+        wp_enqueue_style('jquery-ui-css', 'https://code.jquery.com/ui/1.13.2/themes/ui-lightness/jquery-ui.css', [], '1.13.2');
+
         // Main JS
         wp_enqueue_script(
             'ajtb-tour-js',
             AJTB_PLUGIN_URL . 'assets/js/tour.js',
-            ['jquery'],
+            ['jquery', 'jquery-ui-datepicker'],
             AJTB_VERSION,
             true
         );

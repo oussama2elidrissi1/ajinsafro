@@ -1536,15 +1536,15 @@
                 <script>
                 (function(){
                     var lastDayNum = {{ (int) $lastDayNumber }};
+                    
+                    // === TRANSFERTS ARRIVÉE ===
                     var arrContainer = document.getElementById('tour-transfer-arrivals-container');
                     var addArrBtn = document.getElementById('tour-add-transfer-arrival');
-                    if (!arrContainer || !addArrBtn) return;
                     
-                    // Éviter les duplications d'event listeners - check unique pour tout le script
-                    if (arrContainer.dataset.initialized === 'true') return;
-                    arrContainer.dataset.initialized = 'true';
-                    
-                    addArrBtn.addEventListener('click', function(){
+                    if (arrContainer && addArrBtn && arrContainer.dataset.initialized !== 'true') {
+                        arrContainer.dataset.initialized = 'true';
+                        
+                        addArrBtn.addEventListener('click', function(){
                             var rows = arrContainer.querySelectorAll('.tour-transfer-arrival-row');
                             var last = rows[rows.length - 1];
                             if (!last) return;
@@ -1552,23 +1552,44 @@
                             var clone = last.cloneNode(true);
                             clone.setAttribute('data-index', nextIdx);
                             clone.querySelector('.card-header strong').textContent = 'Transfert arrivée ' + (nextIdx + 1);
+                            
+                            // Ajouter le bouton de suppression si absent
                             if (!clone.querySelector('.tour-remove-transfer-arrival')) {
                                 var btn = document.createElement('button');
-                                btn.type = 'button'; btn.className = 'btn btn-sm btn-outline-danger tour-remove-transfer-arrival'; btn.setAttribute('aria-label', 'Supprimer'); btn.textContent = '×';
+                                btn.type = 'button';
+                                btn.className = 'btn btn-sm btn-outline-danger tour-remove-transfer-arrival';
+                                btn.setAttribute('aria-label', 'Supprimer');
+                                btn.textContent = '×';
                                 clone.querySelector('.card-header').appendChild(btn);
                             }
+                            
+                            // Réinitialiser les champs
                             clone.querySelectorAll('[name^="tour_transfer_arrivals["]').forEach(function(inp){
                                 inp.name = inp.name.replace(/tour_transfer_arrivals\[\d+\]/, 'tour_transfer_arrivals[' + nextIdx + ']');
                                 if (inp.name.indexOf('[day_number]') !== -1) inp.value = '1';
                                 if (inp.name.indexOf('[is_optional]') !== -1) inp.checked = false;
+                                // Reset image_id hidden input
+                                if (inp.name.indexOf('[image_id]') !== -1) inp.value = '';
                                 if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
                                 if (inp.tagName === 'TEXTAREA') inp.value = '';
                             });
+                            
+                            // Reset image preview
+                            var imgIdInput = clone.querySelector('[id^="tour_transfer_arrival_image_id_"]:not([id*="_preview"])');
+                            if (imgIdInput) imgIdInput.value = '';
+                            
                             clone.querySelectorAll('[id^="tour_transfer_arrival_image_id_"]').forEach(function(el){
                                 var newId = el.id.replace(/tour_transfer_arrival_image_id_\d+/, 'tour_transfer_arrival_image_id_' + nextIdx);
                                 el.id = newId;
-                                if (el.id.indexOf('_preview_wrap') !== -1) el.style.display = 'none';
+                                if (el.id.indexOf('_preview_wrap') !== -1) {
+                                    el.style.display = 'none';
+                                }
+                                if (el.id.indexOf('_preview') !== -1 && el.tagName === 'IMG') {
+                                    el.src = '';
+                                }
                             });
+                            
+                            // Update data attributes
                             clone.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
                                 var inp = btn.getAttribute('data-input');
                                 if (inp && inp.indexOf('tour_transfer_arrival_image_id_') === 0) {
@@ -1577,7 +1598,13 @@
                                     btn.setAttribute('data-preview-wrap', 'tour_transfer_arrival_image_id_' + nextIdx + '_preview_wrap');
                                 }
                             });
+                            
                             arrContainer.appendChild(clone);
+                            
+                            // Rebind media buttons if function exists
+                            if (typeof window.bindLogistiqueMediaButtons === 'function') {
+                                window.bindLogistiqueMediaButtons();
+                            }
                         });
                         
                         arrContainer.addEventListener('click', function(e){
@@ -1585,11 +1612,23 @@
                                 var row = e.target.closest('.tour-transfer-arrival-row');
                                 if (row && arrContainer.querySelectorAll('.tour-transfer-arrival-row').length > 1) {
                                     row.remove();
+                                    
+                                    // Re-index all rows
                                     arrContainer.querySelectorAll('.tour-transfer-arrival-row').forEach(function(r, i){
                                         r.setAttribute('data-index', i);
                                         r.querySelector('.card-header strong').textContent = 'Transfert arrivée ' + (i + 1);
-                                        r.querySelectorAll('[name^="tour_transfer_arrivals["]').forEach(function(inp){ inp.name = inp.name.replace(/tour_transfer_arrivals\[\d+\]/, 'tour_transfer_arrivals[' + i + ']'); });
-                                        r.querySelectorAll('[id^="tour_transfer_arrival_image_id_"]').forEach(function(el){ el.id = el.id.replace(/tour_transfer_arrival_image_id_\d+/, 'tour_transfer_arrival_image_id_' + i); });
+                                        
+                                        // Update name attributes
+                                        r.querySelectorAll('[name^="tour_transfer_arrivals["]').forEach(function(inp){
+                                            inp.name = inp.name.replace(/tour_transfer_arrivals\[\d+\]/, 'tour_transfer_arrivals[' + i + ']');
+                                        });
+                                        
+                                        // Update image IDs
+                                        r.querySelectorAll('[id^="tour_transfer_arrival_image_id_"]').forEach(function(el){
+                                            el.id = el.id.replace(/tour_transfer_arrival_image_id_\d+/, 'tour_transfer_arrival_image_id_' + i);
+                                        });
+                                        
+                                        // Update data attributes
                                         r.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
                                             var inp = btn.getAttribute('data-input');
                                             if (inp && inp.indexOf('tour_transfer_arrival_image_id_') === 0) {
@@ -1603,72 +1642,112 @@
                             }
                         });
                     }
+                    
+                    // === TRANSFERTS DÉPART ===
                     var depContainer = document.getElementById('tour-transfer-departures-container');
                     var addDepBtn = document.getElementById('tour-add-transfer-departure');
-                    if (!depContainer || !addDepBtn) return;
                     
-                    // Éviter les duplications d'event listeners - check unique pour tout le script
-                    if (depContainer.dataset.initialized === 'true') return;
-                    depContainer.dataset.initialized = 'true';
-                    
-                    addDepBtn.addEventListener('click', function(){
-                        var rows = depContainer.querySelectorAll('.tour-transfer-departure-row');
-                        var last = rows[rows.length - 1];
-                        if (!last) return;
-                        var nextIdx = parseInt(last.getAttribute('data-index'), 10) + 1;
-                        var clone = last.cloneNode(true);
-                        clone.setAttribute('data-index', nextIdx);
-                        clone.querySelector('.card-header strong').textContent = 'Transfert départ ' + (nextIdx + 1);
-                        if (!clone.querySelector('.tour-remove-transfer-departure')) {
-                            var btn = document.createElement('button');
-                            btn.type = 'button'; btn.className = 'btn btn-sm btn-outline-danger tour-remove-transfer-departure'; btn.setAttribute('aria-label', 'Supprimer'); btn.textContent = '×';
-                            clone.querySelector('.card-header').appendChild(btn);
-                        }
-                        clone.querySelectorAll('[name^="tour_transfer_departures["]').forEach(function(inp){
-                            inp.name = inp.name.replace(/tour_transfer_departures\[\d+\]/, 'tour_transfer_departures[' + nextIdx + ']');
-                            if (inp.name.indexOf('[day_number]') !== -1) inp.value = String(lastDayNum);
-                            if (inp.name.indexOf('[is_optional]') !== -1) inp.checked = false;
-                            if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
-                            if (inp.tagName === 'TEXTAREA') inp.value = '';
-                        });
-                        clone.querySelectorAll('[id^="tour_transfer_departure_image_id_"]').forEach(function(el){
-                            el.id = el.id.replace(/tour_transfer_departure_image_id_\d+/, 'tour_transfer_departure_image_id_' + nextIdx);
-                            if (el.id.indexOf('_preview_wrap') !== -1) el.style.display = 'none';
-                        });
-                        clone.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
-                            var inp = btn.getAttribute('data-input');
-                            if (inp && inp.indexOf('tour_transfer_departure_image_id_') === 0) {
-                                btn.setAttribute('data-input', 'tour_transfer_departure_image_id_' + nextIdx);
-                                btn.setAttribute('data-preview', 'tour_transfer_departure_image_id_' + nextIdx + '_preview');
-                                btn.setAttribute('data-preview-wrap', 'tour_transfer_departure_image_id_' + nextIdx + '_preview_wrap');
+                    if (depContainer && addDepBtn && depContainer.dataset.initialized !== 'true') {
+                        depContainer.dataset.initialized = 'true';
+                        
+                        addDepBtn.addEventListener('click', function(){
+                            var rows = depContainer.querySelectorAll('.tour-transfer-departure-row');
+                            var last = rows[rows.length - 1];
+                            if (!last) return;
+                            var nextIdx = parseInt(last.getAttribute('data-index'), 10) + 1;
+                            var clone = last.cloneNode(true);
+                            clone.setAttribute('data-index', nextIdx);
+                            clone.querySelector('.card-header strong').textContent = 'Transfert départ ' + (nextIdx + 1);
+                            
+                            // Ajouter le bouton de suppression si absent
+                            if (!clone.querySelector('.tour-remove-transfer-departure')) {
+                                var btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.className = 'btn btn-sm btn-outline-danger tour-remove-transfer-departure';
+                                btn.setAttribute('aria-label', 'Supprimer');
+                                btn.textContent = '×';
+                                clone.querySelector('.card-header').appendChild(btn);
+                            }
+                            
+                            // Réinitialiser les champs
+                            clone.querySelectorAll('[name^="tour_transfer_departures["]').forEach(function(inp){
+                                inp.name = inp.name.replace(/tour_transfer_departures\[\d+\]/, 'tour_transfer_departures[' + nextIdx + ']');
+                                if (inp.name.indexOf('[day_number]') !== -1) inp.value = String(lastDayNum);
+                                if (inp.name.indexOf('[is_optional]') !== -1) inp.checked = false;
+                                // Reset image_id hidden input
+                                if (inp.name.indexOf('[image_id]') !== -1) inp.value = '';
+                                if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
+                                if (inp.tagName === 'TEXTAREA') inp.value = '';
+                            });
+                            
+                            // Reset image preview
+                            var imgIdInput = clone.querySelector('[id^="tour_transfer_departure_image_id_"]:not([id*="_preview"])');
+                            if (imgIdInput) imgIdInput.value = '';
+                            
+                            clone.querySelectorAll('[id^="tour_transfer_departure_image_id_"]').forEach(function(el){
+                                var newId = el.id.replace(/tour_transfer_departure_image_id_\d+/, 'tour_transfer_departure_image_id_' + nextIdx);
+                                el.id = newId;
+                                if (el.id.indexOf('_preview_wrap') !== -1) {
+                                    el.style.display = 'none';
+                                }
+                                if (el.id.indexOf('_preview') !== -1 && el.tagName === 'IMG') {
+                                    el.src = '';
+                                }
+                            });
+                            
+                            // Update data attributes
+                            clone.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
+                                var inp = btn.getAttribute('data-input');
+                                if (inp && inp.indexOf('tour_transfer_departure_image_id_') === 0) {
+                                    btn.setAttribute('data-input', 'tour_transfer_departure_image_id_' + nextIdx);
+                                    btn.setAttribute('data-preview', 'tour_transfer_departure_image_id_' + nextIdx + '_preview');
+                                    btn.setAttribute('data-preview-wrap', 'tour_transfer_departure_image_id_' + nextIdx + '_preview_wrap');
+                                }
+                            });
+                            
+                            depContainer.appendChild(clone);
+                            
+                            // Rebind media buttons if function exists
+                            if (typeof window.bindLogistiqueMediaButtons === 'function') {
+                                window.bindLogistiqueMediaButtons();
                             }
                         });
-                        depContainer.appendChild(clone);
-                    });
-                    
-                    depContainer.addEventListener('click', function(e){
-                        if (e.target.classList.contains('tour-remove-transfer-departure')) {
-                            var row = e.target.closest('.tour-transfer-departure-row');
-                            if (row && depContainer.querySelectorAll('.tour-transfer-departure-row').length > 1) {
-                                row.remove();
-                                depContainer.querySelectorAll('.tour-transfer-departure-row').forEach(function(r, i){
-                                    r.setAttribute('data-index', i);
-                                    r.querySelector('.card-header strong').textContent = 'Transfert départ ' + (i + 1);
-                                    r.querySelectorAll('[name^="tour_transfer_departures["]').forEach(function(inp){ inp.name = inp.name.replace(/tour_transfer_departures\[\d+\]/, 'tour_transfer_departures[' + i + ']'); });
-                                    r.querySelectorAll('[id^="tour_transfer_departure_image_id_"]').forEach(function(el){ el.id = el.id.replace(/tour_transfer_departure_image_id_\d+/, 'tour_transfer_departure_image_id_' + i); });
-                                    r.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
-                                        var inp = btn.getAttribute('data-input');
-                                        if (inp && inp.indexOf('tour_transfer_departure_image_id_') === 0) {
-                                            btn.setAttribute('data-input', 'tour_transfer_departure_image_id_' + i);
-                                            btn.setAttribute('data-preview', 'tour_transfer_departure_image_id_' + i + '_preview');
-                                            btn.setAttribute('data-preview-wrap', 'tour_transfer_departure_image_id_' + i + '_preview_wrap');
-                                        }
+                        
+                        depContainer.addEventListener('click', function(e){
+                            if (e.target.classList.contains('tour-remove-transfer-departure')) {
+                                var row = e.target.closest('.tour-transfer-departure-row');
+                                if (row && depContainer.querySelectorAll('.tour-transfer-departure-row').length > 1) {
+                                    row.remove();
+                                    
+                                    // Re-index all rows
+                                    depContainer.querySelectorAll('.tour-transfer-departure-row').forEach(function(r, i){
+                                        r.setAttribute('data-index', i);
+                                        r.querySelector('.card-header strong').textContent = 'Transfert départ ' + (i + 1);
+                                        
+                                        // Update name attributes
+                                        r.querySelectorAll('[name^="tour_transfer_departures["]').forEach(function(inp){
+                                            inp.name = inp.name.replace(/tour_transfer_departures\[\d+\]/, 'tour_transfer_departures[' + i + ']');
+                                        });
+                                        
+                                        // Update image IDs
+                                        r.querySelectorAll('[id^="tour_transfer_departure_image_id_"]').forEach(function(el){
+                                            el.id = el.id.replace(/tour_transfer_departure_image_id_\d+/, 'tour_transfer_departure_image_id_' + i);
+                                        });
+                                        
+                                        // Update data attributes
+                                        r.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
+                                            var inp = btn.getAttribute('data-input');
+                                            if (inp && inp.indexOf('tour_transfer_departure_image_id_') === 0) {
+                                                btn.setAttribute('data-input', 'tour_transfer_departure_image_id_' + i);
+                                                btn.setAttribute('data-preview', 'tour_transfer_departure_image_id_' + i + '_preview');
+                                                btn.setAttribute('data-preview-wrap', 'tour_transfer_departure_image_id_' + i + '_preview_wrap');
+                                            }
+                                        });
                                     });
-                                });
+                                }
                             }
-                        }
-                    });
-                }
+                        });
+                    }
                 })();
                 </script>
 
@@ -3297,3 +3376,4 @@
         });
     </script>
 @endpush
+
