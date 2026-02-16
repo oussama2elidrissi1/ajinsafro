@@ -12,24 +12,31 @@ if (!defined('ABSPATH')) {
 }
 
 // Get departure places and available dates from Laravel DB
-$laravel_id = get_post_meta(get_the_ID(), 'aj_laravel_id', true) ?: get_post_meta(get_the_ID(), 'laravel_id', true);
+// Use WordPress post ID directly (travel_id in Laravel tables = WordPress post ID)
+$tour_id = get_the_ID();
 $departure_places = [];
 $available_dates = [];
 
-if ($laravel_id) {
+if ($tour_id) {
     // Get service instances
     $extras_repo = new \AjinsafroBridge\Repositories\LaravelExtrasRepository();
     
     // Get departure places with flights
-    $places_data = $extras_repo->getDeparturePlaces((int) $laravel_id);
+    $places_data = $extras_repo->getDeparturePlaces((int) $tour_id);
     if (!empty($places_data)) {
         $departure_places = $places_data;
+        error_log('Departure places loaded: ' . count($departure_places) . ' places for tour ID ' . $tour_id);
+    } else {
+        error_log('No departure places found for tour ID ' . $tour_id);
     }
     
     // Get available travel dates
-    $dates_data = $extras_repo->getAvailableDatesArray((int) $laravel_id);
+    $dates_data = $extras_repo->getAvailableDatesArray((int) $tour_id);
     if (!empty($dates_data)) {
         $available_dates = $dates_data;
+        error_log('Available dates loaded: ' . count($available_dates) . ' dates for tour ID ' . $tour_id);
+    } else {
+        error_log('No available dates found for tour ID ' . $tour_id);
     }
 }
 

@@ -706,8 +706,11 @@ class VoyageController extends Controller
     {
         $places = $request->input('departure_places', []);
         if (!is_array($places)) {
+            \Log::info("syncDeparturePlaces: departure_places is not array for tour {$tourId}");
             return;
         }
+
+        \Log::info("syncDeparturePlaces: Processing " . count($places) . " places for tour {$tourId}", ['places' => $places]);
 
         // Supprimer les anciens lieux et leurs vols
         $oldPlaceIds = TravelDeparturePlace::where('travel_id', $tourId)->pluck('id');
@@ -725,6 +728,7 @@ class VoyageController extends Controller
             // Vérifier qu'il y a au moins un vol pour ce lieu
             $flights = $placeData['flights'] ?? [];
             if (!is_array($flights) || empty($flights)) {
+                \Log::info("syncDeparturePlaces: Skipping place without flights", ['place' => $placeData]);
                 continue; // Ignorer les lieux sans vols
             }
 
@@ -738,6 +742,7 @@ class VoyageController extends Controller
             }
 
             if (!$hasValidFlight) {
+                \Log::info("syncDeparturePlaces: Skipping place without valid flights", ['place' => $placeData]);
                 continue; // Ignorer si aucun vol valide
             }
 
@@ -750,6 +755,8 @@ class VoyageController extends Controller
                 'sort_order' => $sortOrder++,
             ]);
 
+            \Log::info("syncDeparturePlaces: Created place", ['place_id' => $place->id, 'name' => $place->name]);
+
             // Créer les vols pour ce lieu
             $flightSortOrder = 0;
             foreach ($flights as $flightData) {
@@ -757,7 +764,7 @@ class VoyageController extends Controller
                     continue;
                 }
 
-                TravelDepartureFlight::create([
+                $flight = TravelDepartureFlight::create([
                     'departure_place_id' => $place->id,
                     'airline' => $flightData['airline'] ?? null,
                     'flight_number' => $flightData['flight_number'] ?? null,
@@ -768,6 +775,8 @@ class VoyageController extends Controller
                     'notes' => $flightData['notes'] ?? null,
                     'sort_order' => $flightSortOrder++,
                 ]);
+                
+                \Log::info("syncDeparturePlaces: Created flight", ['flight_id' => $flight->id, 'airline' => $flight->airline]);
             }
         }
     }
@@ -779,8 +788,11 @@ class VoyageController extends Controller
     {
         $dates = $request->input('travel_dates', []);
         if (!is_array($dates)) {
+            \Log::info("syncTravelDates: travel_dates is not array for tour {$tourId}");
             return;
         }
+
+        \Log::info("syncTravelDates: Processing " . count($dates) . " dates for tour {$tourId}", ['dates' => $dates]);
 
         // Supprimer les anciennes dates
         TravelDate::where('travel_id', $tourId)->delete();
@@ -793,16 +805,19 @@ class VoyageController extends Controller
 
             $date = $dateData['date'] ?? null;
             if (empty($date)) {
+                \Log::info("syncTravelDates: Skipping empty date", ['dateData' => $dateData]);
                 continue; // Ignorer si pas de date
             }
 
-            TravelDate::create([
+            $travelDate = TravelDate::create([
                 'travel_id' => $tourId,
                 'date' => $date,
                 'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
                 'seats' => isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : null,
                 'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? $dateData['price_override'] : null,
             ]);
+            
+            \Log::info("syncTravelDates: Created date", ['id' => $travelDate->id, 'date' => $travelDate->date]);
         }
     }
 

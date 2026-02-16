@@ -433,21 +433,24 @@ class LaravelExtrasRepository
         $flightsTable = $this->table('travel_departure_flights');
 
         if (!$this->tableExists($placesTable) || !$this->tableExists($flightsTable)) {
+            error_log("LaravelExtrasRepository: Tables do not exist - places: {$placesTable}, flights: {$flightsTable}");
             return [];
         }
 
         try {
             // Get active departure places for this tour
-            $places = $this->wpdb->get_results(
-                $this->wpdb->prepare(
-                    "SELECT * FROM {$placesTable} 
-                     WHERE travel_id = %d 
-                     AND is_active = 1 
-                     ORDER BY sort_order ASC, id ASC",
-                    $postId
-                ),
-                ARRAY_A
+            $query = $this->wpdb->prepare(
+                "SELECT * FROM {$placesTable} 
+                 WHERE travel_id = %d 
+                 AND is_active = 1 
+                 ORDER BY sort_order ASC, id ASC",
+                $postId
             );
+            error_log("LaravelExtrasRepository: getDeparturePlaces query - {$query}");
+            
+            $places = $this->wpdb->get_results($query, ARRAY_A);
+            
+            error_log("LaravelExtrasRepository: getDeparturePlaces found " . ($places ? count($places) : 0) . " places for tour ID {$postId}");
 
             if (!$places) {
                 return [];
@@ -466,6 +469,7 @@ class LaravelExtrasRepository
                 );
 
                 $place['flights'] = $flights ?: [];
+                error_log("LaravelExtrasRepository: Place {$place['id']} has " . count($place['flights']) . " flights");
             }
 
             return $places;
@@ -486,20 +490,23 @@ class LaravelExtrasRepository
         $table = $this->table('travel_dates');
 
         if (!$this->tableExists($table)) {
+            error_log("LaravelExtrasRepository: Table does not exist - {$table}");
             return [];
         }
 
         try {
-            $results = $this->wpdb->get_results(
-                $this->wpdb->prepare(
-                    "SELECT * FROM {$table} 
-                     WHERE travel_id = %d 
-                     AND is_active = 1 
-                     ORDER BY date ASC",
-                    $postId
-                ),
-                ARRAY_A
+            $query = $this->wpdb->prepare(
+                "SELECT * FROM {$table} 
+                 WHERE travel_id = %d 
+                 AND is_active = 1 
+                 ORDER BY date ASC",
+                $postId
             );
+            error_log("LaravelExtrasRepository: getTravelDates query - {$query}");
+            
+            $results = $this->wpdb->get_results($query, ARRAY_A);
+            
+            error_log("LaravelExtrasRepository: getTravelDates found " . ($results ? count($results) : 0) . " dates for tour ID {$postId}");
 
             return !empty($results) ? $results : [];
         } catch (\Exception $e) {
