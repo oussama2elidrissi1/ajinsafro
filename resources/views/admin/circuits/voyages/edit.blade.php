@@ -49,43 +49,83 @@
         {{-- NAVIGATION TABS --}}
         <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#basique" role="tab">
+                <a class="nav-link active" data-bs-toggle="tab" href="#basic" role="tab">
                     <i class="bx bx-edit-alt"></i> Basique
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#localisation" role="tab">
-                    <i class="bx bx-map"></i> Localisation
+                <a class="nav-link" data-bs-toggle="tab" href="#location" role="tab">
+                    <i class="bx bx-map"></i> Location
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tarification" role="tab">
-                    <i class="bx bx-dollar-circle"></i> Tarification
+                <a class="nav-link" data-bs-toggle="tab" href="#price" role="tab">
+                    <i class="bx bx-dollar"></i> Prix
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#disponibilite" role="tab">
-                    <i class="bx bx-calendar-check"></i> Disponibilité
+                <a class="nav-link" data-bs-toggle="tab" href="#information" role="tab">
+                    <i class="bx bx-info-circle"></i> Information
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#departs-vols-dates" role="tab">
-                    <i class="bx bx-trip"></i> Départs • Vols • Dates
+                <a class="nav-link" data-bs-toggle="tab" href="#availability" role="tab">
+                    <i class="bx bx-calendar"></i> Disponibilité
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#logistique" role="tab">
-                    <i class="bx bx-package"></i> Logistique
+                <a class="nav-link" data-bs-toggle="tab" href="#media" role="tab">
+                    <i class="bx bx-image"></i> Médias
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#programme" role="tab">
+                <a class="nav-link" data-bs-toggle="tab" href="#payment" role="tab">
+                    <i class="bx bx-credit-card"></i> Paiement
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#taxonomies" role="tab">
+                    <i class="bx bx-category"></i> Catégories
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#flights" role="tab">
+                    <i class="bx bx-trip"></i> Vols
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#hotels" role="tab">
+                    <i class="bx bx-hotel"></i> Hôtels
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#transfers" role="tab">
+                    <i class="bx bx-car"></i> Transferts
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#departure-places" role="tab">
+                    <i class="bx bx-map-pin"></i> Lieux de départ
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#departure-and-flight" role="tab">
+                    <i class="bx bx-trip"></i> Départ & Vol
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#travel-dates" role="tab">
+                    <i class="bx bx-calendar-check"></i> Dates disponibles
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#activities" role="tab">
+                    <i class="bx bx-list-check"></i> Activités
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#program-days" role="tab">
                     <i class="bx bx-calendar-week"></i> Programme
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#draft-ancien-contenu" role="tab">
-                    <i class="bx bx-archive"></i> Draft (ancien contenu)
                 </a>
             </li>
         </ul>
@@ -187,8 +227,8 @@
                 </div>
             </div>
 
-            {{-- TAB 2: LOCALISATION — Destination UX + Coordonnées --}}
-            <div class="tab-pane" id="localisation" role="tabpanel">
+            {{-- TAB 2: LOCATION — Destination UX (search, tree, chips, actions) --}}
+            <div class="tab-pane" id="location" role="tabpanel">
                 <style>
                 .destination-ux-card { border: 1px solid #dee2e6; border-radius: 6px; }
                 .destination-ux-body { padding: 1rem 1.25rem; }
@@ -378,8 +418,8 @@
                 </div>
             </div>
 
-            {{-- TAB 3: TARIFICATION — Prix et catégories --}}
-            <div class="tab-pane" id="tarification" role="tabpanel">
+            {{-- TAB 3: PRICE --}}
+            <div class="tab-pane" id="price" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Paramètres de prix</h4>
@@ -445,73 +485,12 @@
                                 </div>
                             </div>
                         </div>
-
-                        <h4 class="card-title mb-4 mt-5">Catégories & Taxonomies</h4>
-                        <p class="text-muted">Ces catégories sont synchronisées avec WordPress</p>
-                        
-                        <div class="row">
-                            @if(isset($availableTaxonomies['st_tour_type']) && $availableTaxonomies['st_tour_type']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Type de tour</h5>
-                                @foreach($availableTaxonomies['st_tour_type'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="st_tour_type[]" value="{{ $term->term_id }}" id="st_tour_type_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['st_tour_type'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="st_tour_type_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['durations']) && $availableTaxonomies['durations']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Durée</h5>
-                                @foreach($availableTaxonomies['durations'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="durations[]" value="{{ $term->term_id }}" id="durations_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['durations'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="durations_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['language']) && $availableTaxonomies['language']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Langue (language)</h5>
-                                @foreach($availableTaxonomies['language'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="language[]" value="{{ $term->term_id }}" id="language_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['language'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="language_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['languages']) && $availableTaxonomies['languages']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Langues (languages)</h5>
-                                @foreach($availableTaxonomies['languages'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="languages[]" value="{{ $term->term_id }}" id="languages_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['languages'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="languages_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                        </div>
                     </div>
                 </div>
             </div>
 
-            {{-- TAB 4: DISPONIBILITÉ — Contenu & Réservation --}}
-            <div class="tab-pane" id="disponibilite" role="tabpanel">
+            {{-- TAB 4: INFORMATION --}}
+            <div class="tab-pane" id="information" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Contenu du tour</h4>
@@ -549,8 +528,15 @@
                                 <option value="list" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'list' ? 'selected' : '' }}>Liste</option>
                             </select>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <h4 class="card-title mb-4 mt-5">Disponibilité & Réservation</h4>
+            {{-- TAB 5: AVAILABILITY --}}
+            <div class="tab-pane" id="availability" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Disponibilité & Réservation</h4>
                         
                         <div class="mb-3">
                             <label for="tours_booking_period" class="form-label">Période de réservation</label>
@@ -614,744 +600,10 @@
                 </div>
             </div>
 
-            {{-- TAB 5: DÉPARTS•VOLS•DATES — Consolidated logistics --}}
-            <div class="tab-pane" id="departs-vols-dates" role="tabpanel">
+            {{-- TAB 6: MEDIA --}}
+            <div class="tab-pane" id="media" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4"><i class="bx bx-trip"></i> Configuration des départs, vols et dates</h4>
-                        
-                        {{-- Section 1: Dates disponibles --}}
-                        <h5 class="mb-3"><i class="bx bx-calendar-check"></i> Dates disponibles (Travelling on)</h5>
-                        <p class="alert alert-info py-2 mb-3 small">
-                            <i class="bx bx-info-circle"></i> <strong>Configuration des dates</strong> — 
-                            Ajoutez les dates disponibles pour ce voyage. Seules ces dates seront sélectionnables dans le calendrier sur la page du tour.
-                        </p>
-
-                        <div id="travel-dates-container">
-                            @php $datesList = $travelDates ?? collect(); @endphp
-                            @forelse($datesList as $di => $dateItem)
-                            <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
-                                <div class="card-body py-2">
-                                    <div class="row g-2 align-items-center">
-                                        <div class="col-md-3">
-                                            <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
-                                            <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small mb-1">Places</label>
-                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small mb-1">Prix spécifique</label>
-                                            <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="Prix">
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end pb-2">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
-                                                <label class="form-check-label small">Actif</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1 d-flex align-items-end pb-2">
-                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>@endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @empty
-                            <div class="alert alert-warning">
-                                Aucune date disponible configurée. Cliquez sur "Ajouter une date" pour commencer.
-                            </div>
-                            @endforelse
-                        </div>
-                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-travel-date">
-                            <i class="bx bx-plus"></i> Ajouter une date
-                        </button>
-
-                        {{-- Section 2: Départ & Vol --}}
-                        <h5 class="mb-3 mt-5"><i class="bx bx-trip"></i> Départ & Vol principal</h5>
-                        @php
-                            $depPlaceIdVal = old('departure_place_id', $voyage->departure_place_id ?? $meta['departure_place_id'] ?? '');
-                            $depDateVal = old('departure_date');
-                            if ($depDateVal === null || $depDateVal === '') {
-                                $rawDepDate = $voyage->departure_date ?? $meta['departure_date'] ?? $meta['start_date'] ?? '';
-                                $depDateVal = '';
-                                if ($rawDepDate !== '' && $rawDepDate !== null) {
-                                    try {
-                                        $depDateVal = \Carbon\Carbon::parse($rawDepDate)->format('Y-m-d\TH:i');
-                                    } catch (\Exception $e) {
-                                        $depDateVal = '';
-                                    }
-                                }
-                            }
-                            $flightIdVal = old('flight_id', $voyage->flight_id ?? $meta['flight_id'] ?? '');
-                            $departurePlacesForSelect = $departurePlaces ?? collect();
-                        @endphp
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="departure_place_id" class="form-label">Lieu de départ</label>
-                                <select class="form-select @error('departure_place_id') is-invalid @enderror" id="departure_place_id" name="departure_place_id" aria-describedby="departure_place_id_help">
-                                    <option value="">— Sélectionner —</option>
-                                    @foreach($departurePlacesForSelect as $place)
-                                        <option value="{{ $place->id ?? '' }}" {{ (string)($place->id ?? '') === (string)$depPlaceIdVal ? 'selected' : '' }}>
-                                            {{ $place->name ?? '' }}{{ isset($place->code) && $place->code !== '' ? ' (' . $place->code . ')' : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <small id="departure_place_id_help" class="form-text text-muted">Aéroport / ville de départ.</small>
-                                @error('departure_place_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="departure_date" class="form-label">Date et heure de départ</label>
-                                <input type="datetime-local" class="form-control @error('departure_date') is-invalid @enderror" id="departure_date" name="departure_date" value="{{ $depDateVal }}" aria-describedby="departure_date_help">
-                                <small id="departure_date_help" class="form-text text-muted">Format date et heure.</small>
-                                @error('departure_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-12">
-                                <label for="flight_id" class="form-label">Vol</label>
-                                <select class="form-select @error('flight_id') is-invalid @enderror" id="flight_id" name="flight_id" aria-describedby="flight_id_help">
-                                    <option value="">— Sélectionner —</option>
-                                    @foreach($departurePlacesForSelect as $place)
-                                        @foreach($place->flights ?? [] as $fl)
-                                            @if(isset($fl->id))
-                                                <option value="{{ $fl->id }}" {{ (string)$fl->id === (string)$flightIdVal ? 'selected' : '' }}>
-                                                    {{ $place->name ?? '' }} — {{ $fl->airline ?? '' }} {{ $fl->flight_number ?? '' }}{{ isset($fl->from_airport) || isset($fl->to_airport) ? ' (' . ($fl->from_airport ?? '') . ' → ' . ($fl->to_airport ?? '') . ')' : '' }}
-                                                </option>
-                                            @endif
-                                        @endforeach
-                                    @endforeach
-                                </select>
-                                <small id="flight_id_help" class="form-text text-muted">Vol associé au départ. Laisser vide pour « Vol à confirmer ».</small>
-                                @error('flight_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Section 3: Lieux de départ (Starting from) --}}
-                        <h5 class="mb-3 mt-5"><i class="bx bx-map-pin"></i> Lieux de départ (Starting from)</h5>
-
-                        <div id="departure-places-container">
-                            @php $placesList = $departurePlaces->isEmpty() ? [] : $departurePlaces->all(); @endphp
-                            @forelse($placesList as $pi => $place)
-                            <div class="card mb-3 departure-place-row" data-index="{{ $pi }}">
-                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
-                                    <strong>Lieu de départ {{ $pi + 1 }}</strong>
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-departure-place" aria-label="Supprimer">×</button>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3 mb-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Nom du lieu <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="departure_places[{{ $pi }}][name]" value="{{ old("departure_places.{$pi}.name", $place->name ?? '') }}" placeholder="Ex. Casablanca" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">Code (IATA)</label>
-                                            <input type="text" class="form-control" name="departure_places[{{ $pi }}][code]" value="{{ old("departure_places.{$pi}.code", $place->code ?? '') }}" placeholder="Ex. CMN">
-                                        </div>
-                                        <div class="col-md-3 d-flex align-items-end pb-2">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" name="departure_places[{{ $pi }}][is_active]" value="1" {{ old("departure_places.{$pi}.is_active", $place->is_active ?? true) ? 'checked' : '' }}>
-                                                <label class="form-check-label">Actif</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @empty
-                            <div class="alert alert-warning">
-                                Aucun lieu de départ configuré. Cliquez sur "Ajouter un lieu de départ" pour commencer.
-                            </div>
-                            @endforelse
-                        </div>
-                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-departure-place">
-                            <i class="bx bx-plus"></i> Ajouter un lieu de départ
-                        </button>
-
-                        <script>
-                        // Travel dates management
-                        (function(){
-                            var container = document.getElementById('travel-dates-container');
-                            var addBtn = document.getElementById('add-travel-date');
-                            if (!container || !addBtn) return;
-                            if (container.dataset.initialized === 'true') return;
-                            container.dataset.initialized = 'true';
-
-                            addBtn.addEventListener('click', function(){
-                                var rows = container.querySelectorAll('.travel-date-row');
-                                var nextIndex = rows.length;
-                                var html = `<div class="card mb-2 bg-light travel-date-row" data-index="${nextIndex}">
-                                    <div class="card-body py-2">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-md-3">
-                                                <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm" name="travel_dates[${nextIndex}][date]" required>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small mb-1">Places</label>
-                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small mb-1">Prix spécifique</label>
-                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="Prix">
-                                            </div>
-                                            <div class="col-md-2 d-flex align-items-end pb-2">
-                                                <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input" name="travel_dates[${nextIndex}][is_active]" value="1" checked>
-                                                    <label class="form-check-label small">Actif</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-1 d-flex align-items-end pb-2">
-                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
-                                container.insertAdjacentHTML('beforeend', html);
-                            });
-
-                            container.addEventListener('click', function(e){
-                                if (e.target.classList.contains('remove-travel-date')) {
-                                    var row = e.target.closest('.travel-date-row');
-                                    if (row) row.remove();
-                                }
-                            });
-                        })();
-
-                        // Departure places management
-                        (function(){
-                            var container = document.getElementById('departure-places-container');
-                            var addPlaceBtn = document.getElementById('add-departure-place');
-                            if (!container || !addPlaceBtn) return;
-                            if (container.dataset.initialized === 'true') return;
-                            container.dataset.initialized = 'true';
-
-                            addPlaceBtn.addEventListener('click', function(){
-                                var alert = container.querySelector('.alert-warning');
-                                if (alert) alert.remove();
-                                
-                                var rows = container.querySelectorAll('.departure-place-row');
-                                var nextIndex = rows.length;
-                                var html = `<div class="card mb-3 departure-place-row" data-index="${nextIndex}">
-                                    <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
-                                        <strong>Lieu de départ ${nextIndex + 1}</strong>
-                                        <button type="button" class="btn btn-sm btn-outline-danger remove-departure-place" aria-label="Supprimer">×</button>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row g-3 mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Nom du lieu <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="departure_places[${nextIndex}][name]" placeholder="Ex. Casablanca" required>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Code (IATA)</label>
-                                                <input type="text" class="form-control" name="departure_places[${nextIndex}][code]" placeholder="Ex. CMN">
-                                            </div>
-                                            <div class="col-md-3 d-flex align-items-end pb-2">
-                                                <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input" name="departure_places[${nextIndex}][is_active]" value="1" checked>
-                                                    <label class="form-check-label">Actif</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
-                                container.insertAdjacentHTML('beforeend', html);
-                            });
-
-                            container.addEventListener('click', function(e){
-                                if (e.target.classList.contains('remove-departure-place')) {
-                                    var row = e.target.closest('.departure-place-row');
-                                    if (row) {
-                                        row.remove();
-                                        var remainingRows = container.querySelectorAll('.departure-place-row');
-                                        if (remainingRows.length === 0) {
-                                            var alertHtml = '<div class="alert alert-warning">Aucun lieu de départ configuré. Cliquez sur "Ajouter un lieu de départ" pour commencer.</div>';
-                                            container.insertAdjacentHTML('beforeend', alertHtml);
-                                        }
-                                    }
-                                }
-                            });
-                        })();
-                        </script>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-pane" id="logistique" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Images & Vidéos</h4>
-
-                        {{-- Section 1 : Image principale (Hero / Cover) — Upload ou médiathèque --}}
-                        <div class="mb-4 p-3 border rounded bg-light">
-                            <h5 class="mb-2">Image principale du voyage (Hero / Cover)</h5>
-                            <p class="text-muted small mb-2">Cette image est utilisée comme image principale du voyage (hero, cartes, partage social). Une seule image.</p>
-                            <input type="hidden" name="hero_image_id" id="hero_image_id" value="{{ old('hero_image_id', $meta['hero_image_id'] ?? '') }}">
-                            <div class="d-flex flex-wrap align-items-start gap-3">
-                                <div id="hero-image-preview-wrap" class="border rounded overflow-hidden bg-white" style="width: 200px; min-height: 120px; display: {{ ($heroImageUrl ?? '') ? 'block' : 'none' }};">
-                                    <img id="hero-image-preview" src="{{ $heroImageUrl ?? '' }}" alt="Hero" class="img-fluid" style="max-height: 200px; object-fit: cover;">
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="mb-2">
-                                        <button type="button" class="btn btn-outline-primary btn-sm me-2" id="hero-upload-btn">
-                                            <i class="bx bx-upload"></i> Uploader une image
-                                        </button>
-                                        <input type="file" id="hero_image_file" accept="image/jpeg,image/png,image/webp" class="d-none">
-                                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="hero-choose-media-btn">
-                                            <i class="bx bx-images"></i> Choisir depuis la médiathèque
-                                        </button>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="hero-remove-btn">
-                                            <i class="bx bx-trash"></i> Supprimer
-                                        </button>
-                                    </div>
-                                    <small class="text-muted d-block">JPG, PNG ou WebP — max 5 Mo.</small>
-                                    <div id="hero-upload-error" class="alert alert-danger mt-2 mb-0 d-none" role="alert"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
-                            <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids', $gallery_csv ?? '') }}" placeholder="14435,14436,14437">
-                            <small class="text-muted">IDs séparés par des virgules. Images supplémentaires pour la section galerie complète (optionnel).</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="video" class="form-label">URL Vidéo</label>
-                            <input type="text" class="form-control" id="video" name="video" value="{{ old('video', $meta['video'] ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
-                            <small class="text-muted">YouTube, Vimeo, etc. (Optionnel)</small>
-                        </div>
-
-                        <h4 class="card-title mb-4 mt-5">Moyens de paiement</h4>
-                        <p class="text-muted">Cochez les passerelles de paiement disponibles pour ce tour</p>
-                        
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">
-                                        <i class="bx bxl-paypal"></i> PayPal
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">
-                                        OnePay
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">
-                                        OnePay ATM
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu">
-                                        PayU
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">
-                                        PayU Latam
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">
-                                        PayUmoney
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor">
-                                        <i class="bx bx-credit-card"></i> Razorpay
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Hôtels consolidés --}}
-                        <h4 class="card-title mb-4 mt-5">Hôtels</h4>
-                        @php
-                            $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1));
-                        @endphp
-                        <div id="tour-hotels-container">
-                            @php $hotelsList = isset($tourHotels) && $tourHotels->isNotEmpty() ? $tourHotels->all() : [null]; @endphp
-                            @foreach($hotelsList as $hi => $h)
-                            <div class="card mb-3 tour-hotel-row" data-index="{{ $hi }}">
-                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
-                                    <strong>Hôtel {{ $hi + 1 }}</strong>
-                                    @if($hi > 0)<button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.tour-hotel-row').remove()">×</button>@endif
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Nom de l'hôtel</label>
-                                            <input type="text" class="form-control" name="tour_hotels[{{ $hi }}][hotel_name]" value="{{ old("tour_hotels.{$hi}.hotel_name", optional($h)->hotel_name ?? '') }}" placeholder="Ex. Hôtel Les Almoravides">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">Étoiles (0–5)</label>
-                                            <input type="number" class="form-control" name="tour_hotels[{{ $hi }}][stars]" value="{{ old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') }}" min="0" max="5" placeholder="3">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">Jour</label>
-                                            <select class="form-select" name="tour_hotels[{{ $hi }}][day_number]">
-                                                @for($d = 1; $d <= $lastDayNumber; $d++)
-                                                    <option value="{{ $d }}" {{ old("tour_hotels.{$hi}.day_number", optional($h)->day_number ?? 1) == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
-                                                @endfor
-                                            </select>
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Adresse</label>
-                                            <input type="text" class="form-control" name="tour_hotels[{{ $hi }}][address]" value="{{ old("tour_hotels.{$hi}.address", optional($h)->address ?? '') }}" placeholder="Ville, pays">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-pane" id="programme" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Programme du voyage</h4>
-                        
-                        {{-- Programme par jours --}}
-                        <div class="form-group mb-5">
-                            <div class="row mb-3">
-                                <div class="col">
-                                    <h5 class="mb-0">Jours et activités détaillées</h5>
-                                    <p class="text-muted">Créez le programme jour par jour avec les activités correspondantes.</p>
-                                </div>
-                                <div class="col-auto">
-                                    <button type="button" class="btn btn-success btn-sm" id="add-program-day">
-                                        <i class="bx bx-plus"></i> Ajouter un jour
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div id="program-days-container">
-                                @php
-                                    $programDaysList = isset($programDays) && $programDays->isNotEmpty() ? $programDays : collect([null]);
-                                @endphp
-                                @foreach($programDaysList as $index => $dayData)
-                                <div class="program-day-item border rounded p-3 mb-3" data-day-index="{{ $index }}">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h6 class="mb-0">
-                                            <i class="bx bx-calendar"></i> 
-                                            Jour <span class="day-number">{{ $index + 1 }}</span>
-                                        </h6>
-                                        @if($index > 0)
-                                        <button type="button" class="btn btn-sm btn-outline-danger remove-day" onclick="removeDay(this)">
-                                            <i class="bx bx-trash"></i> Supprimer jour
-                                        </button>
-                                        @endif
-                                    </div>
-
-                                    <div class="row g-3 mb-3">
-                                        <div class="col-md-8">
-                                            <label class="form-label">Titre du jour</label>
-                                            <input type="text" class="form-control" name="program_days[{{ $index }}][title]" 
-                                                   value="{{ old("program_days.{$index}.title", optional($dayData)->title ?? '') }}" 
-                                                   placeholder="Ex. Arrivée à Marrakech - Découverte de la médina">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Ville - Pays</label>
-                                            <input type="text" class="form-control" name="program_days[{{ $index }}][location]" 
-                                                   value="{{ old("program_days.{$index}.location", optional($dayData)->location ?? '') }}" 
-                                                   placeholder="Marrakech - Maroc">
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Description du jour</label>
-                                        <textarea class="form-control" rows="3" name="program_days[{{ $index }}][description]" 
-                                                  placeholder="Description détaillée des activités et événements de cette journée...">{{ old("program_days.{$index}.description", optional($dayData)->description ?? '') }}</textarea>
-                                    </div>
-
-                                    {{-- Section Activités du jour --}}
-                                    <div class="bg-light p-3 rounded">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <strong>Activités de ce jour</strong>
-                                            <button type="button" class="btn btn-sm btn-outline-success add-activity" data-day-index="{{ $index }}">
-                                                <i class="bx bx-plus"></i> Ajouter activité
-                                            </button>
-                                        </div>
-
-                                        <div class="activities-container" data-day-index="{{ $index }}">
-                                            @php
-                                                $dayActivities = isset($activitiesByDay[$index]) ? $activitiesByDay[$index] : [null];
-                                            @endphp
-                                            @foreach($dayActivities as $actIndex => $activity)
-                                            <div class="activity-item border rounded p-2 mb-2 bg-white" data-activity-index="{{ $actIndex }}">
-                                                <div class="row g-2 align-items-end">
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small">Nom de l'activité</label>
-                                                        <input type="text" class="form-control form-control-sm" 
-                                                               name="program_days[{{ $index }}][activities][{{ $actIndex }}][name]" 
-                                                               value="{{ old("program_days.{$index}.activities.{$actIndex}.name", optional($activity)->name ?? '') }}" 
-                                                               placeholder="Ex. Visite des Jardins Majorelle">
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <label class="form-label small">Heure</label>
-                                                        <input type="time" class="form-control form-control-sm" 
-                                                               name="program_days[{{ $index }}][activities][{{ $actIndex }}][time]" 
-                                                               value="{{ old("program_days.{$index}.activities.{$actIndex}.time", optional($activity)->time ?? '') }}">
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <label class="form-label small">Durée (min)</label>
-                                                        <input type="number" class="form-control form-control-sm" 
-                                                               name="program_days[{{ $index }}][activities][{{ $actIndex }}][duration]" 
-                                                               value="{{ old("program_days.{$index}.activities.{$actIndex}.duration", optional($activity)->duration ?? '') }}" 
-                                                               placeholder="120">
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label class="form-label small">Description courte</label>
-                                                        <input type="text" class="form-control form-control-sm" 
-                                                               name="program_days[{{ $index }}][activities][{{ $actIndex }}][description]" 
-                                                               value="{{ old("program_days.{$index}.activities.{$actIndex}.description", optional($activity)->description ?? '') }}" 
-                                                               placeholder="Activité culturelle">
-                                                    </div>
-                                                    <div class="col-md-1">
-                                                        @if($actIndex > 0 || count($dayActivities) > 1)
-                                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeActivity(this)">×</button>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        {{-- Section Notes et informations --}}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="inclusions" class="form-label">Inclusions</label>
-                                <textarea class="form-control" id="inclusions" name="inclusions" rows="4" placeholder="Liste des éléments inclus dans le tour...">{{ old('inclusions', $meta['inclusions'] ?? '') }}</textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="exclusions" class="form-label">Exclusions</label>
-                                <textarea class="form-control" id="exclusions" name="exclusions" rows="4" placeholder="Liste des éléments non inclus...">{{ old('exclusions', $meta['exclusions'] ?? '') }}</textarea>
-                            </div>
-                            <div class="col-md-6 mt-3">
-                                <label for="additional_information" class="form-label">Informations complémentaires</label>
-                                <textarea class="form-control" id="additional_information" name="additional_information" rows="3" placeholder="Informations importantes à communiquer...">{{ old('additional_information', $meta['additional_information'] ?? '') }}</textarea>
-                            </div>
-                            <div class="col-md-6 mt-3">
-                                <label for="note" class="form-label">Note</label>
-                                <textarea class="form-control" id="note" name="note" rows="3" placeholder="Note interne ou recommandations...">{{ old('note', $meta['note'] ?? '') }}</textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- TAB 8: BROUILLON --}}
-            <div class="tab-pane" id="brouillon" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Brouillon et statut</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="is_draft" name="is_draft" value="1" {{ old('is_draft', $voyage->post_status ?? 'publish') === 'draft' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_draft">
-                                        <i class="bx bx-edit"></i> Enregistrer comme brouillon
-                                    </label>
-                                    <small class="form-text text-muted d-block">Si coché, ce voyage ne sera pas visible publiquement.</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-
-{{-- JavaScript pour la gestion des onglets et interactions --}}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Gestion des onglets
-    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
-    const tabPanes = document.querySelectorAll('.tab-pane');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Désactiver tous les onglets
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabPanes.forEach(pane => pane.classList.remove('active', 'show'));
-            
-            // Activer l'onglet cliqué
-            this.classList.add('active');
-            const targetPane = document.querySelector(this.getAttribute('href'));
-            if (targetPane) {
-                targetPane.classList.add('active', 'show');
-            }
-        });
-    });
-
-    // Ajouter un jour au programme
-    document.getElementById('add-program-day').addEventListener('click', function() {
-        const container = document.getElementById('program-days-container');
-        const dayIndex = container.children.length;
-        const dayNumber = dayIndex + 1;
-        
-        const dayHtml = `
-        <div class="program-day-item border rounded p-3 mb-3" data-day-index="${dayIndex}">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mb-0">
-                    <i class="bx bx-calendar"></i> 
-                    Jour <span class="day-number">${dayNumber}</span>
-                </h6>
-                <button type="button" class="btn btn-sm btn-outline-danger remove-day" onclick="removeDay(this)">
-                    <i class="bx bx-trash"></i> Supprimer jour
-                </button>
-            </div>
-            <div class="row g-3 mb-3">
-                <div class="col-md-8">
-                    <label class="form-label">Titre du jour</label>
-                    <input type="text" class="form-control" name="program_days[${dayIndex}][title]" placeholder="Ex. Arrivée à Marrakech - Découverte de la médina">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Ville - Pays</label>
-                    <input type="text" class="form-control" name="program_days[${dayIndex}][location]" placeholder="Marrakech - Maroc">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description du jour</label>
-                <textarea class="form-control" rows="3" name="program_days[${dayIndex}][description]" placeholder="Description détaillée des activités et événements de cette journée..."></textarea>
-            </div>
-            <div class="bg-light p-3 rounded">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <strong>Activités de ce jour</strong>
-                    <button type="button" class="btn btn-sm btn-outline-success add-activity" data-day-index="${dayIndex}">
-                        <i class="bx bx-plus"></i> Ajouter activité
-                    </button>
-                </div>
-                <div class="activities-container" data-day-index="${dayIndex}">
-                    <div class="activity-item border rounded p-2 mb-2 bg-white" data-activity-index="0">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label small">Nom de l'activité</label>
-                                <input type="text" class="form-control form-control-sm" name="program_days[${dayIndex}][activities][0][name]" placeholder="Ex. Visite des Jardins Majorelle">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small">Heure</label>
-                                <input type="time" class="form-control form-control-sm" name="program_days[${dayIndex}][activities][0][time]">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small">Durée (min)</label>
-                                <input type="number" class="form-control form-control-sm" name="program_days[${dayIndex}][activities][0][duration]" placeholder="120">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small">Description courte</label>
-                                <input type="text" class="form-control form-control-sm" name="program_days[${dayIndex}][activities][0][description]" placeholder="Activité culturelle">
-                            </div>
-                            <div class="col-md-1"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-        
-        container.insertAdjacentHTML('beforeend', dayHtml);
-        
-        // Réattacher les événements pour le nouveau jour
-        attachActivityEvents(container.lastElementChild);
-    });
-
-    // Fonction pour attacher les événements aux activités
-    function attachActivityEvents(dayElement) {
-        const addActivityBtn = dayElement.querySelector('.add-activity');
-        if (addActivityBtn) {
-            addActivityBtn.addEventListener('click', function() {
-                const dayIndex = this.dataset.dayIndex;
-                const activitiesContainer = dayElement.querySelector('.activities-container');
-                const activityIndex = activitiesContainer.children.length;
-                
-                const activityHtml = `
-                <div class="activity-item border rounded p-2 mb-2 bg-white" data-activity-index="${activityIndex}">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-4">
-                            <label class="form-label small">Nom de l'activité</label>
-                            <input type="text" class="form-control form-control-sm" name="program_days[${dayIndex}][activities][${activityIndex}][name]" placeholder="Ex. Visite des Jardins Majorelle">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small">Heure</label>
-                            <input type="time" class="form-control form-control-sm" name="program_days[${dayIndex}][activities][${activityIndex}][time]">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small">Durée (min)</label>
-                            <input type="number" class="form-control form-control-sm" name="program_days[${dayIndex}][activities][${activityIndex}][duration]" placeholder="120">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">Description courte</label>
-                            <input type="text" class="form-control form-control-sm" name="program_days[${dayIndex}][activities][${activityIndex}][description]" placeholder="Activité culturelle">
-                        </div>
-                        <div class="col-md-1">
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeActivity(this)">×</button>
-                        </div>
-                    </div>
-                </div>`;
-                
-                activitiesContainer.insertAdjacentHTML('beforeend', activityHtml);
-            });
-        }
-    }
-
-    // Attacher les événements aux éléments existants
-    document.querySelectorAll('.program-day-item').forEach(attachActivityEvents);
-});
-
-// Fonction globale pour supprimer un jour
-function removeDay(button) {
-    const dayItem = button.closest('.program-day-item');
-    dayItem.remove();
-    
-    // Renuméroter les jours
-    const remainingDays = document.querySelectorAll('.program-day-item');
-    remainingDays.forEach((day, index) => {
-        day.querySelector('.day-number').textContent = index + 1;
-        day.dataset.dayIndex = index;
-    });
-}
-
-// Fonction globale pour supprimer une activité
-function removeActivity(button) {
-    const activityItem = button.closest('.activity-item');
-    activityItem.remove();
-}
-</script>
-
                         <h4 class="card-title mb-4">Images & Vidéos</h4>
 
                         {{-- Section 1 : Image principale (Hero / Cover) — Upload ou médiathèque --}}
