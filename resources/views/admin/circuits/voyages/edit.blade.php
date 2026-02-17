@@ -1799,12 +1799,10 @@
                         </button>
 
                         <script>
-                        (function(){
+                        document.addEventListener('DOMContentLoaded', function() {
                             var container = document.getElementById('departure-places-container');
                             var addPlaceBtn = document.getElementById('add-departure-place');
                             if (!container || !addPlaceBtn) return;
-                            if (container.dataset.initialized === 'true') return;
-                            container.dataset.initialized = 'true';
 
                             // Ajouter un lieu de départ
                             addPlaceBtn.addEventListener('click', function(){
@@ -1944,7 +1942,7 @@
                                     if (flightRow) flightRow.remove();
                                 }
                             });
-                        })();
+                        });
                         </script>
                     </div>
                 </div>
