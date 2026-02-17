@@ -1352,7 +1352,6 @@ function removeActivity(button) {
 }
 </script>
 
-@endsection
                         <h4 class="card-title mb-4">Images & Vidéos</h4>
 
                         {{-- Section 1 : Image principale (Hero / Cover) — Upload ou médiathèque --}}
