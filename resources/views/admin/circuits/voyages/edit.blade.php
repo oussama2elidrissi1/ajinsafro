@@ -3377,6 +3377,114 @@
                 }
             }
         });
+
+        // ——— Onglet Vols : boutons Ajouter / Modifier / Enregistrer / Annuler / REMOVE ———
+        (function flightOptionsHandlers() {
+            var templatesEl = document.getElementById('flight-opt-templates');
+            var nextIndexEl = document.getElementById('flight-opt-next-index');
+            var dash = '—';
+
+            function getNextIndex() {
+                if (!nextIndexEl) return 0;
+                var n = parseInt(nextIndexEl.value, 10) || 0;
+                nextIndexEl.value = n + 1;
+                return n;
+            }
+
+            document.addEventListener('click', function(e) {
+                // Ajouter un vol (Aller / Retour / segment)
+                if (e.target.closest('.btn-add-flight-opt')) {
+                    var btn = e.target.closest('.btn-add-flight-opt');
+                    var type = btn.getAttribute('data-type');
+                    var lastDay = btn.getAttribute('data-day') || '1';
+                    if (!templatesEl || !type) return;
+                    var tpl = templatesEl.querySelector('[data-flight-tpl="' + type + '"]');
+                    if (!tpl) return;
+                    var card = tpl.querySelector('.flight-opt-card');
+                    if (!card) return;
+                    var idx = getNextIndex();
+                    var clone = card.cloneNode(true);
+                    clone.setAttribute('data-flight-opt-index', idx);
+                    clone.querySelectorAll('[name^="flight_options["]').forEach(function(el) {
+                        el.name = el.name.replace(/flight_options\[-1\]/, 'flight_options[' + idx + ']');
+                        el.removeAttribute('disabled');
+                    });
+                    clone.querySelectorAll('.flight-opt-view .flight-opt-route, .flight-opt-dep-date, .flight-opt-arr-date, .flight-opt-from, .flight-opt-to, .flight-opt-cabin-bag, .flight-opt-checkin-bag').forEach(function(span) {
+                        if (span && span.textContent !== undefined) span.textContent = dash;
+                    });
+                    var editPanel = clone.querySelector('.flight-opt-edit');
+                    var viewPanel = clone.querySelector('.flight-opt-view');
+                    if (editPanel) editPanel.style.display = 'none';
+                    if (viewPanel) viewPanel.style.display = '';
+                    var badgeWrap = clone.querySelector('.flight-opt-badge');
+                    if (badgeWrap) badgeWrap.style.display = 'none';
+                    var container = document.querySelector('.flight-opt-cards-' + type);
+                    if (container) container.appendChild(clone);
+                    return;
+                }
+
+                // Supprimer un vol (REMOVE)
+                if (e.target.closest('.flight-opt-remove')) {
+                    var card = e.target.closest('.flight-opt-card');
+                    if (card && confirm('Supprimer ce vol ?')) card.remove();
+                    return;
+                }
+
+                // Modifier
+                if (e.target.closest('.flight-opt-edit-btn')) {
+                    var card = e.target.closest('.flight-opt-card');
+                    if (!card) return;
+                    var view = card.querySelector('.flight-opt-view');
+                    var edit = card.querySelector('.flight-opt-edit');
+                    if (view) view.style.display = 'none';
+                    if (edit) edit.style.display = 'block';
+                    return;
+                }
+
+                // Enregistrer (mise à jour des libellés en vue)
+                if (e.target.closest('.flight-opt-save-btn')) {
+                    var card = e.target.closest('.flight-opt-card');
+                    if (!card) return;
+                    var edit = card.querySelector('.flight-opt-edit');
+                    var view = card.querySelector('.flight-opt-view');
+                    var fromCity = edit && edit.querySelector('input[name*="[from_city]"]');
+                    var toCity = edit && edit.querySelector('input[name*="[to_city]"]');
+                    var depDate = edit && edit.querySelector('input[name*="[departure_date]"]');
+                    var cabinKg = edit && edit.querySelector('input[name*="[baggage_cabin_kg]"]');
+                    var checkinKg = edit && edit.querySelector('input[name*="[baggage_checkin_kg]"]');
+                    var tentativeCb = edit && edit.querySelector('input[name*="[is_tentative]"]');
+                    var route = view && view.querySelector('.flight-opt-route');
+                    var depDateEl = view && view.querySelector('.flight-opt-dep-date');
+                    var arrDateEl = view && view.querySelector('.flight-opt-arr-date');
+                    var fromEl = view && view.querySelector('.flight-opt-from');
+                    var toEl = view && view.querySelector('.flight-opt-to');
+                    var cabinBagEl = view && view.querySelector('.flight-opt-cabin-bag');
+                    var checkinBagEl = view && view.querySelector('.flight-opt-checkin-bag');
+                    var badgeWrap = view && view.querySelector('.flight-opt-badge');
+                    if (route) route.textContent = (fromCity && fromCity.value ? fromCity.value : dash) + ' → ' + (toCity && toCity.value ? toCity.value : dash);
+                    var d = depDate && depDate.value ? depDate.value : dash;
+                    if (depDateEl) depDateEl.textContent = d;
+                    if (arrDateEl) arrDateEl.textContent = d;
+                    if (fromEl) fromEl.textContent = fromCity && fromCity.value ? fromCity.value : dash;
+                    if (toEl) toEl.textContent = toCity && toCity.value ? toCity.value : dash;
+                    if (cabinBagEl) cabinBagEl.textContent = cabinKg && cabinKg.value ? cabinKg.value + ' kg' : dash;
+                    if (checkinBagEl) checkinBagEl.textContent = checkinKg && checkinKg.value ? checkinKg.value + ' kg' : dash;
+                    if (badgeWrap) badgeWrap.style.display = (tentativeCb && tentativeCb.checked) ? '' : 'none';
+                    if (view) view.style.display = '';
+                    if (edit) edit.style.display = 'none';
+                    return;
+                }
+
+                // Annuler
+                if (e.target.closest('.flight-opt-cancel-btn')) {
+                    var card = e.target.closest('.flight-opt-card');
+                    if (!card) return;
+                    var view = card.querySelector('.flight-opt-view');
+                    var edit = card.querySelector('.flight-opt-edit');
+                    if (view) view.style.display = '';
+                    if (edit) edit.style.display = 'none';
+                }
+            });
+        })();
     </script>
 @endpush
-
