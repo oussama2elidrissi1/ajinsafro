@@ -1188,6 +1188,549 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- ANCIEN CONTENU PRÉSERVÉ --}}
+                        <hr class="my-5">
+                        <h4 class="card-title mb-4 text-warning">⚠️ Ancien contenu des onglets (à réorganiser)</h4>
+                        <div class="accordion" id="draftAccordion">
+
+                            {{-- Ancien onglet Payment --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftPayment">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftPayment">
+                                        <i class="bx bx-credit-card me-2"></i> Moyens de paiement (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftPayment" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <p class="text-muted">Cochez les passerelles de paiement disponibles pour ce tour</p>
+                                        
+                                        <div class="row">
+                                            <div class="col-lg-4">
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal_draft" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal_draft">
+                                                        <i class="bx bxl-paypal"></i> PayPal
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_draft" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_draft">
+                                                        OnePay
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm_draft" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm_draft">
+                                                        OnePay ATM
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-lg-4">
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu_draft" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu_draft">
+                                                        PayU
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam_draft" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam_draft">
+                                                        PayU Latam
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-lg-4">
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney_draft" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney_draft">
+                                                        PayUmoney
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor_draft" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor_draft">
+                                                        <i class="bx bx-credit-card"></i> Razorpay
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Ancien onglet Taxonomies --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftTaxonomies">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftTaxonomies">
+                                        <i class="bx bx-category me-2"></i> Catégories & Taxonomies (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftTaxonomies" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            <label for="st_categories_draft" class="form-label">Catégories de tours</label>
+                                            <select class="form-select" id="st_categories_draft" name="st_categories[]" multiple>
+                                                @php $selectedCategories = old('st_categories', $meta['st_categories'] ?? []); @endphp
+                                                @if(isset($stCategories) && $stCategories->count())
+                                                    @foreach($stCategories as $cat)
+                                                        <option value="{{ $cat->term_id }}" {{ in_array($cat->term_id, (array)$selectedCategories) ? 'selected' : '' }}>
+                                                            {{ $cat->name }}
+                                                        </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                            <small class="text-muted">Maintenez Ctrl/Cmd pour sélectionner plusieurs catégories.</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="st_activity_draft" class="form-label">Types d'activités</label>
+                                            <select class="form-select" id="st_activity_draft" name="st_activity[]" multiple>
+                                                @php $selectedActivities = old('st_activity', $meta['st_activity'] ?? []); @endphp
+                                                @if(isset($stActivities) && $stActivities->count())
+                                                    @foreach($stActivities as $activity)
+                                                        <option value="{{ $activity->term_id }}" {{ in_array($activity->term_id, (array)$selectedActivities) ? 'selected' : '' }}>
+                                                            {{ $activity->name }}
+                                                        </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="st_feature_draft" class="form-label">Caractéristiques</label>
+                                            <select class="form-select" id="st_feature_draft" name="st_feature[]" multiple>
+                                                @php $selectedFeatures = old('st_feature', $meta['st_feature'] ?? []); @endphp
+                                                @if(isset($stFeatures) && $stFeatures->count())
+                                                    @foreach($stFeatures as $feature)
+                                                        <option value="{{ $feature->term_id }}" {{ in_array($feature->term_id, (array)$selectedFeatures) ? 'selected' : '' }}>
+                                                            {{ $feature->name }}
+                                                        </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Ancien onglet Flights --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftFlights">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftFlights">
+                                        <i class="bx bx-plane me-2"></i> Vols (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftFlights" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="flight_included_draft" name="flight_included" value="1" {{ old('flight_included', $meta['flight_included'] ?? '') ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="flight_included_draft">
+                                                    Vol inclus dans le forfait
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="departure_airport_draft" class="form-label">Aéroport de départ</label>
+                                                    <input type="text" class="form-control" id="departure_airport_draft" name="departure_airport" value="{{ old('departure_airport', $meta['departure_airport'] ?? '') }}" placeholder="CDG - Paris Charles de Gaulle">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="arrival_airport_draft" class="form-label">Aéroport d'arrivée</label>
+                                                    <input type="text" class="form-control" id="arrival_airport_draft" name="arrival_airport" value="{{ old('arrival_airport', $meta['arrival_airport'] ?? '') }}" placeholder="RAK - Marrakech Menara">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="flight_duration_draft" class="form-label">Durée du vol (heures)</label>
+                                                    <input type="number" class="form-control" id="flight_duration_draft" name="flight_duration" value="{{ old('flight_duration', $meta['flight_duration'] ?? '') }}" step="0.5" min="0" placeholder="3.5">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="airline_draft" class="form-label">Compagnie aérienne</label>
+                                                    <input type="text" class="form-control" id="airline_draft" name="airline" value="{{ old('airline', $meta['airline'] ?? '') }}" placeholder="Air France">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Ancien onglet Hotels --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftHotels">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftHotels">
+                                        <i class="bx bx-hotel me-2"></i> Hôtels détaillés (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftHotels" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <div id="hotels-container-draft">
+                                            @php $hotelsList = isset($tourHotels) && $tourHotels->isNotEmpty() ? $tourHotels->all() : [null]; @endphp
+                                            @foreach($hotelsList as $index => $hotel)
+                                            <div class="card mb-3 hotel-item-draft">
+                                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">Hôtel {{ $index + 1 }}</h6>
+                                                    @if($index > 0)
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.hotel-item-draft').remove()">
+                                                        <i class="bx bx-trash"></i>
+                                                    </button>
+                                                    @endif
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Nom de l'hôtel</label>
+                                                            <input type="text" class="form-control" name="tour_hotels_draft[{{ $index }}][hotel_name]" value="{{ old("tour_hotels.{$index}.hotel_name", optional($hotel)->hotel_name ?? '') }}" placeholder="Ex. Hôtel Les Almoravides">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">Étoiles (0–5)</label>
+                                                            <input type="number" class="form-control" name="tour_hotels_draft[{{ $index }}][stars]" value="{{ old("tour_hotels.{$index}.stars", optional($hotel)->stars ?? '') }}" min="0" max="5" placeholder="3">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">Jour</label>
+                                                            <select class="form-select" name="tour_hotels_draft[{{ $index }}][day_number]">
+                                                                @for($d = 1; $d <= 10; $d++)
+                                                                    <option value="{{ $d }}" {{ old("tour_hotels.{$index}.day_number", optional($hotel)->day_number ?? 1) == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
+                                                                @endfor
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <label class="form-label">Adresse</label>
+                                                            <input type="text" class="form-control" name="tour_hotels_draft[{{ $index }}][address]" value="{{ old("tour_hotels.{$index}.address", optional($hotel)->address ?? '') }}" placeholder="Ville, pays">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        <button type="button" class="btn btn-outline-success" onclick="addHotelDraft()">
+                                            <i class="bx bx-plus"></i> Ajouter un hôtel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Ancien onglet Activities --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftActivities">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftActivities">
+                                        <i class="bx bx-run me-2"></i> Activités détaillées (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftActivities" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <p class="text-muted">Gestion détaillée des activités avec horaires et descriptions.</p>
+                                        
+                                        <div id="activities-container-draft">
+                                            @php
+                                                $activitiesList = isset($tourActivities) && $tourActivities->isNotEmpty() ? $tourActivities->all() : [null];
+                                            @endphp
+                                            @foreach($activitiesList as $index => $activity)
+                                            <div class="card mb-3 activity-item-draft">
+                                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">Activité {{ $index + 1 }}</h6>
+                                                    @if($index > 0)
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.activity-item-draft').remove()">
+                                                        <i class="bx bx-trash"></i>
+                                                    </button>
+                                                    @endif
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Nom de l'activité</label>
+                                                            <input type="text" class="form-control" name="tour_activities_draft[{{ $index }}][name]" value="{{ old("tour_activities.{$index}.name", optional($activity)->name ?? '') }}" placeholder="Ex. Visite des Jardins Majorelle">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">Jour</label>
+                                                            <select class="form-select" name="tour_activities_draft[{{ $index }}][day_number]">
+                                                                @for($d = 1; $d <= 10; $d++)
+                                                                    <option value="{{ $d }}" {{ old("tour_activities.{$index}.day_number", optional($activity)->day_number ?? 1) == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
+                                                                @endfor
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">Heure</label>
+                                                            <input type="time" class="form-control" name="tour_activities_draft[{{ $index }}][time]" value="{{ old("tour_activities.{$index}.time", optional($activity)->time ?? '') }}">
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <label class="form-label">Description</label>
+                                                            <textarea class="form-control" name="tour_activities_draft[{{ $index }}][description]" rows="3" placeholder="Description de l'activité...">{{ old("tour_activities.{$index}.description", optional($activity)->description ?? '') }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        <button type="button" class="btn btn-outline-success" onclick="addActivityDraft()">
+                                            <i class="bx bx-plus"></i> Ajouter une activité
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Ancien onglet Transfers --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftTransfers">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftTransfers">
+                                        <i class="bx bx-car me-2"></i> Transferts (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftTransfers" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="transfer_included_draft" name="transfer_included" value="1" {{ old('transfer_included', $meta['transfer_included'] ?? '') ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="transfer_included_draft">
+                                                    Transferts inclus dans le forfait
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="pickup_location_draft" class="form-label">Lieu de prise en charge</label>
+                                                    <input type="text" class="form-control" id="pickup_location_draft" name="pickup_location" value="{{ old('pickup_location', $meta['pickup_location'] ?? '') }}" placeholder="Ex. Hôtel, aéroport...">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="dropoff_location_draft" class="form-label">Lieu de dépose</label>
+                                                    <input type="text" class="form-control" id="dropoff_location_draft" name="dropoff_location" value="{{ old('dropoff_location', $meta['dropoff_location'] ?? '') }}" placeholder="Ex. Hôtel, aéroport...">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="vehicle_type_draft" class="form-label">Type de véhicule</label>
+                                                    <select class="form-select" id="vehicle_type_draft" name="vehicle_type">
+                                                        <option value="">Sélectionner...</option>
+                                                        <option value="bus" {{ old('vehicle_type', $meta['vehicle_type'] ?? '') === 'bus' ? 'selected' : '' }}>Bus</option>
+                                                        <option value="minibus" {{ old('vehicle_type', $meta['vehicle_type'] ?? '') === 'minibus' ? 'selected' : '' }}>Minibus</option>
+                                                        <option value="car" {{ old('vehicle_type', $meta['vehicle_type'] ?? '') === 'car' ? 'selected' : '' }}>Voiture</option>
+                                                        <option value="private_driver" {{ old('vehicle_type', $meta['vehicle_type'] ?? '') === 'private_driver' ? 'selected' : '' }}>Chauffeur privé</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="transfer_duration_draft" class="form-label">Durée du transfert (minutes)</label>
+                                                    <input type="number" class="form-control" id="transfer_duration_draft" name="transfer_duration" value="{{ old('transfer_duration', $meta['transfer_duration'] ?? '') }}" min="0" placeholder="60">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="transfer_notes_draft" class="form-label">Notes sur les transferts</label>
+                                            <textarea class="form-control" id="transfer_notes_draft" name="transfer_notes" rows="3" placeholder="Informations supplémentaires sur les transferts...">{{ old('transfer_notes', $meta['transfer_notes'] ?? '') }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Ancien onglet Departure Places --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftDeparturePlaces">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftDeparturePlaces">
+                                        <i class="bx bx-map-pin me-2"></i> Lieux de départ (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftDeparturePlaces" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <p class="text-muted">Configurez les différents points de départ disponibles pour ce voyage.</p>
+                                        
+                                        <div class="mb-3">
+                                            <label for="departure_places_draft" class="form-label">Points de départ multiples</label>
+                                            <textarea class="form-control" id="departure_places_draft" name="departure_places_draft" rows="4" placeholder="Un lieu par ligne, par exemple :&#10;Paris - Charles de Gaulle&#10;Lyon - Saint-Exupéry&#10;Marseille - Provence">{{ old('departure_places', $meta['departure_places'] ?? '') }}</textarea>
+                                            <small class="text-muted">Saisissez un lieu de départ par ligne.</small>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="main_departure_city_draft" class="form-label">Ville de départ principale</label>
+                                                    <input type="text" class="form-control" id="main_departure_city_draft" name="main_departure_city" value="{{ old('main_departure_city', $meta['main_departure_city'] ?? '') }}" placeholder="Paris">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="departure_country_draft" class="form-label">Pays de départ</label>
+                                                    <input type="text" class="form-control" id="departure_country_draft" name="departure_country" value="{{ old('departure_country', $meta['departure_country'] ?? '') }}" placeholder="France">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="multiple_departures_draft" name="multiple_departures" value="1" {{ old('multiple_departures', $meta['multiple_departures'] ?? '') ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="multiple_departures_draft">
+                                                    Autoriser plusieurs points de départ
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Ancien onglet Travel Dates --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftTravelDates">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftTravelDates">
+                                        <i class="bx bx-calendar-event me-2"></i> Dates de voyage (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftTravelDates" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <p class="text-muted">Gérez les dates disponibles et les périodes de voyage.</p>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="available_from_draft" class="form-label">Disponible à partir du</label>
+                                                    <input type="date" class="form-control" id="available_from_draft" name="available_from" value="{{ old('available_from', $meta['available_from'] ?? '') }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="available_until_draft" class="form-label">Disponible jusqu'au</label>
+                                                    <input type="date" class="form-control" id="available_until_draft" name="available_until" value="{{ old('available_until', $meta['available_until'] ?? '') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="fixed_dates_draft" class="form-label">Dates fixes de départ</label>
+                                            <textarea class="form-control" id="fixed_dates_draft" name="fixed_dates_draft" rows="4" placeholder="Saisissez les dates de départ fixes, une par ligne :&#10;2024-06-15&#10;2024-07-01&#10;2024-07-15">{{ old('fixed_dates', $meta['fixed_dates'] ?? '') }}</textarea>
+                                            <small class="text-muted">Format : YYYY-MM-DD, une date par ligne.</small>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="flexible_dates_draft" name="flexible_dates" value="1" {{ old('flexible_dates', $meta['flexible_dates'] ?? '') ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="flexible_dates_draft">
+                                                            Dates flexibles
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="advance_booking_draft" class="form-label">Réservation à l'avance (jours)</label>
+                                                    <input type="number" class="form-control" id="advance_booking_draft" name="advance_booking" value="{{ old('advance_booking', $meta['advance_booking'] ?? '') }}" min="0" placeholder="7">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="seasonal_info_draft" class="form-label">Informations saisonnières</label>
+                                            <textarea class="form-control" id="seasonal_info_draft" name="seasonal_info_draft" rows="3" placeholder="Informations sur les variations saisonnières, météo, etc...">{{ old('seasonal_info', $meta['seasonal_info'] ?? '') }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Ancien contenu Programme détaillé --}}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="draftProgram">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDraftProgram">
+                                        <i class="bx bx-calendar-week me-2"></i> Programme détaillé jour par jour (ancien)
+                                    </button>
+                                </h2>
+                                <div id="collapseDraftProgram" class="accordion-collapse collapse" data-bs-parent="#draftAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            <label for="inclusions_draft" class="form-label">Ce qui est inclus</label>
+                                            <textarea class="form-control" id="inclusions_draft" name="inclusions_draft" rows="4" placeholder="Liste des éléments inclus dans le tour...">{{ old('inclusions', $meta['inclusions'] ?? '') }}</textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="exclusions_draft" class="form-label">Ce qui n'est pas inclus</label>
+                                            <textarea class="form-control" id="exclusions_draft" name="exclusions_draft" rows="4" placeholder="Liste des éléments non inclus...">{{ old('exclusions', $meta['exclusions'] ?? '') }}</textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="additional_information_draft" class="form-label">Informations complémentaires</label>
+                                            <textarea class="form-control" id="additional_information_draft" name="additional_information_draft" rows="3" placeholder="Informations importantes à communiquer...">{{ old('additional_information', $meta['additional_information'] ?? '') }}</textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="note_draft" class="form-label">Note</label>
+                                            <textarea class="form-control" id="note_draft" name="note_draft" rows="3" placeholder="Note interne ou recommandations...">{{ old('note', $meta['note'] ?? '') }}</textarea>
+                                        </div>
+
+                                        {{-- Programme par jours --}}
+                                        <h5 class="mt-4 mb-3">Jours du programme</h5>
+                                        <div id="program-days-container-draft">
+                                            @php
+                                                $programDaysList = isset($programDays) && $programDays->isNotEmpty() ? $programDays : collect([null]);
+                                            @endphp
+                                            @foreach($programDaysList as $index => $dayData)
+                                            <div class="card mb-3 program-day-item-draft">
+                                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">
+                                                        <i class="bx bx-calendar"></i> 
+                                                        Jour {{ $index + 1 }}
+                                                    </h6>
+                                                    @if($index > 0)
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.program-day-item-draft').remove()">
+                                                        <i class="bx bx-trash"></i>
+                                                    </button>
+                                                    @endif
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row g-3 mb-3">
+                                                        <div class="col-md-8">
+                                                            <label class="form-label">Titre du jour</label>
+                                                            <input type="text" class="form-control" name="program_days_draft[{{ $index }}][title]" 
+                                                                   value="{{ old("program_days.{$index}.title", optional($dayData)->title ?? '') }}" 
+                                                                   placeholder="Ex. Arrivée à Marrakech - Découverte de la médina">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label">Ville - Pays</label>
+                                                            <input type="text" class="form-control" name="program_days_draft[{{ $index }}][location]" 
+                                                                   value="{{ old("program_days.{$index}.location", optional($dayData)->location ?? '') }}" 
+                                                                   placeholder="Marrakech - Maroc">
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Description du jour</label>
+                                                        <textarea class="form-control" rows="3" name="program_days_draft[{{ $index }}][description]" 
+                                                                  placeholder="Description détaillée des activités de cette journée...">{{ old("program_days.{$index}.description", optional($dayData)->description ?? '') }}</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        <button type="button" class="btn btn-outline-success" onclick="addProgramDayDraft()">
+                                            <i class="bx bx-plus"></i> Ajouter un jour
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        {{-- FIN ANCIEN CONTENU PRÉSERVÉ --}}
                     </div>
                 </div>
             </div>
@@ -1221,5 +1764,114 @@
                 }
             }
         });
+        
+        // Fonctions pour l'onglet Draft
+        window.addHotelDraft = function() {
+            var container = document.getElementById('hotels-container-draft');
+            var index = container.children.length;
+            var html = `
+            <div class="card mb-3 hotel-item-draft">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Hôtel ${index + 1}</h6>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.hotel-item-draft').remove()">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nom de l'hôtel</label>
+                            <input type="text" class="form-control" name="tour_hotels_draft[${index}][hotel_name]" placeholder="Ex. Hôtel Les Almoravides">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Étoiles</label>
+                            <input type="number" class="form-control" name="tour_hotels_draft[${index}][stars]" min="0" max="5" placeholder="3">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Jour</label>
+                            <select class="form-select" name="tour_hotels_draft[${index}][day_number]">
+                                <option value="1">Jour 1</option>
+                                <option value="2">Jour 2</option>
+                                <option value="3">Jour 3</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Adresse</label>
+                            <input type="text" class="form-control" name="tour_hotels_draft[${index}][address]" placeholder="Ville, pays">
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        };
+
+        window.addActivityDraft = function() {
+            var container = document.getElementById('activities-container-draft');
+            var index = container.children.length;
+            var html = `
+            <div class="card mb-3 activity-item-draft">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Activité ${index + 1}</h6>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.activity-item-draft').remove()">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nom de l'activité</label>
+                            <input type="text" class="form-control" name="tour_activities_draft[${index}][name]" placeholder="Ex. Visite des Jardins Majorelle">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Jour</label>
+                            <select class="form-select" name="tour_activities_draft[${index}][day_number]">
+                                <option value="1">Jour 1</option>
+                                <option value="2">Jour 2</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Heure</label>
+                            <input type="time" class="form-control" name="tour_activities_draft[${index}][time]">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="tour_activities_draft[${index}][description]" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        };
+
+        window.addProgramDayDraft = function() {
+            var container = document.getElementById('program-days-container-draft');
+            var index = container.children.length;
+            var html = `
+            <div class="card mb-3 program-day-item-draft">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bx bx-calendar"></i> Jour ${index + 1}</h6>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.program-day-item-draft').remove()">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Titre du jour</label>
+                            <input type="text" class="form-control" name="program_days_draft[${index}][title]" placeholder="Ex. Arrivée à Marrakech - Découverte de la médina">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Ville - Pays</label>
+                            <input type="text" class="form-control" name="program_days_draft[${index}][location]" placeholder="Marrakech - Maroc">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description du jour</label>
+                        <textarea class="form-control" rows="3" name="program_days_draft[${index}][description]" placeholder="Description détaillée des activités de cette journée..."></textarea>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        };
     </script>
 @endpush
