@@ -187,6 +187,7 @@ $available_dates_json = wp_json_encode($available_dates);
                     <span class="aj-search-value aj-search-value--disabled"><?php esc_html_e('No dates available', 'ajinsafro-tour-bridge'); ?></span>
                 <?php endif; ?>
             </div>
+            <div class="aj-date-popover" id="aj-date-popover" hidden></div>
         </div>
 
         <!-- 3. Rooms & Guests -->
@@ -244,36 +245,6 @@ $available_dates_json = wp_json_encode($available_dates);
 <script>
 jQuery(document).ready(function($) {
     'use strict';
-    
-    // Empêcher le scroll automatique au chargement de la page
-    var initialScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-    var initialScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-    
-    // Restaurer la position de scroll si elle change automatiquement
-    function preventAutoScroll() {
-        var currentScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-        var currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-        // Si le scroll a changé sans action utilisateur, le restaurer
-        if (Math.abs(currentScrollX - initialScrollX) > 5 || Math.abs(currentScrollY - initialScrollY) > 5) {
-            window.scrollTo(initialScrollX, initialScrollY);
-        }
-    }
-    
-    // Surveiller le scroll pendant les premières secondes après le chargement
-    var scrollCheckInterval = setInterval(function() {
-        preventAutoScroll();
-    }, 100);
-    
-    setTimeout(function() {
-        clearInterval(scrollCheckInterval);
-    }, 2000);
-    
-    // Empêcher le focus automatique sur les inputs cachés
-    $(document).on('focus', 'input[type="hidden"], input[style*="display: none"], input[style*="opacity: 0"]', function(e) {
-        e.preventDefault();
-        this.blur();
-        return false;
-    });
     
     // Get data from attributes
     var searchbar = document.getElementById('aj-searchbar');
@@ -382,409 +353,130 @@ jQuery(document).ready(function($) {
         });
     }
     
-    // Handle date selection - restrict to available dates with calendar picker
+    // Date popover (dropdown like Rooms & Guests)
     var dateDisplay = document.getElementById('aj-search-date-display');
-    if (dateDisplay && availableDatesData.length > 0) {
-        console.log('[AJTB] Initializing datepicker with', availableDatesData.length, 'available dates');
-        console.log('[AJTB] Available dates:', availableDatesData);
-        
-        // Test: make sure click event works (native event listener as backup)
-        dateDisplay.addEventListener('click', function(e) {
-            console.log('[AJTB] Date display clicked (native listener test)');
-            // If jQuery handler doesn't work, try to trigger it manually
-            if (window.ajtbOpenDatepicker) {
-                console.log('[AJTB] Calling global openDatepicker function');
-                window.ajtbOpenDatepicker();
+    var hiddenDateInput = document.getElementById('aj-search-date');
+    var datePopover = document.getElementById('aj-date-popover');
+    if (dateDisplay && hiddenDateInput && datePopover && availableDatesData.length > 0) {
+        function initDatepickerPopover() {
+            if (typeof $.fn.datepicker !== 'function') return;
+            
+            // Create input inside popover
+            var popoverInput = document.createElement('input');
+            popoverInput.type = 'text';
+            popoverInput.id = 'aj-datepicker-input';
+            popoverInput.setAttribute('tabindex', '-1');
+            popoverInput.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+            datePopover.appendChild(popoverInput);
+
+            var mois = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+            var moisCourt = ['Janv.','Févr.','Mars','Avr.','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
+            var jours = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
+
+            $(popoverInput).datepicker({
+                dateFormat: 'yy-mm-dd',
+                minDate: 0,
+                firstDay: 1,
+                showOtherMonths: true,
+                monthNames: mois,
+                monthNamesShort: moisCourt,
+                dayNamesMin: jours,
+                prevText: '‹ Préc.',
+                nextText: 'Suiv. ›',
+                showMonthAfterYear: false,
+                beforeShow: function(input, inst) {
+                    // Force le datepicker à apparaître dans notre popover
+                    setTimeout(function() {
+                        if (inst.dpDiv && inst.dpDiv.length) {
+                            datePopover.appendChild(inst.dpDiv[0]);
+                            // Reset position pour annuler jQuery UI positioning
+                            inst.dpDiv.css({
+                                position: 'static',
+                                left: '0',
+                                top: '0',
+                                transform: 'none'
+                            });
+                        }
+                    }, 1);
+                },
+                beforeShowDay: function(date) {
+                    var dateString = $.datepicker.formatDate('yy-mm-dd', date);
+                    var isAvailable = availableDatesData.indexOf(dateString) !== -1;
+                    return [isAvailable, isAvailable ? 'aj-available-date' : 'aj-unavailable-date', isAvailable ? '' : 'Date non disponible'];
+                },
+                onSelect: function(dateText) {
+                    hiddenDateInput.value = dateText;
+                    var dateObj = new Date(dateText + 'T00:00:00');
+                    dateDisplay.textContent = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    var bookingDateInput = document.getElementById('booking-date');
+                    if (bookingDateInput) bookingDateInput.value = dateText;
+                    closeDatePopover();
+                }
+            });
+
+            function openDatePopover() {
+                datePopover.removeAttribute('hidden');
+                if (hiddenDateInput.value && availableDatesData.indexOf(hiddenDateInput.value) !== -1) {
+                    $(popoverInput).datepicker('setDate', hiddenDateInput.value);
+                } else if (availableDatesData.length > 0) {
+                    $(popoverInput).datepicker('setDate', availableDatesData[0]);
+                }
+                $(popoverInput).datepicker('show');
             }
-        });
-        
-        // Create a hidden input for the datepicker
-        var hiddenDateInput = document.getElementById('aj-search-date');
-        if (!hiddenDateInput) {
-            hiddenDateInput = document.createElement('input');
-            hiddenDateInput.type = 'hidden';
-            hiddenDateInput.id = 'aj-search-date';
-            hiddenDateInput.setAttribute('data-aj-search', 'date');
-            dateDisplay.parentElement.appendChild(hiddenDateInput);
-        }
-        
-        // Create a temporary input for datepicker (will be positioned absolutely)
-        var tempInput = document.createElement('input');
-        tempInput.type = 'text';
-        tempInput.id = 'aj-datepicker-temp';
-        tempInput.tabIndex = -1; // Empêcher le focus clavier
-        tempInput.style.position = 'absolute';
-        tempInput.style.left = '-9999px';
-        tempInput.style.opacity = '0';
-        tempInput.style.width = '1px';
-        tempInput.style.height = '1px';
-        tempInput.style.pointerEvents = 'none'; // Empêcher les interactions
-        document.body.appendChild(tempInput);
-        
-        // Empêcher le focus automatique sur cet input
-        tempInput.addEventListener('focus', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            this.blur();
-            return false;
-        }, true);
-        
-        // Function to initialize datepicker
-        function initDatepicker() {
-            console.log('[AJTB] Checking for jQuery UI datepicker...');
-            console.log('[AJTB] jQuery available:', typeof $ !== 'undefined');
-            console.log('[AJTB] $.fn available:', typeof $ !== 'undefined' && typeof $.fn !== 'undefined');
-            console.log('[AJTB] $.fn.datepicker available:', typeof $ !== 'undefined' && typeof $.fn !== 'undefined' && typeof $.fn.datepicker !== 'undefined');
+
+            function closeDatePopover() {
+                $(popoverInput).datepicker('hide');
+                datePopover.setAttribute('hidden', '');
+            }
+
+            // Click handlers
+            $(dateDisplay).on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openDatePopover();
+            });
             
-            // Check if jQuery UI datepicker is available
-            var hasDatepicker = typeof $ !== 'undefined' && typeof $.fn !== 'undefined' && typeof $.fn.datepicker === 'function';
-            
-            if (hasDatepicker) {
-                console.log('[AJTB] jQuery UI datepicker found, initializing...');
-                
-                // Libellés français pour l'agenda
-                var mois = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-                var moisCourt = ['Janv.','Févr.','Mars','Avr.','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
-                var jours = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
-                
-                // Initialize datepicker : un mois à la fois, navigation Précédent / Suivant
-                $(tempInput).datepicker({
-                    dateFormat: 'yy-mm-dd',
-                    minDate: 0,
-                    firstDay: 1,
-                    showOtherMonths: true,
-                    monthNames: mois,
-                    monthNamesShort: moisCourt,
-                    dayNamesMin: jours,
-                    prevText: '‹ Préc.',
-                    nextText: 'Suiv. ›',
-                    showMonthAfterYear: false,
-                    beforeShowDay: function(date) {
-                        var dateString = $.datepicker.formatDate('yy-mm-dd', date);
-                        var isAvailable = availableDatesData.indexOf(dateString) !== -1;
-                        return [isAvailable, isAvailable ? 'aj-available-date' : 'aj-unavailable-date', isAvailable ? '' : 'Date non disponible'];
-                    },
-                    onSelect: function(dateText, inst) {
-                        hiddenDateInput.value = dateText;
-                        var dateObj = new Date(dateText + 'T00:00:00');
-                        var formattedDate = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        dateDisplay.textContent = formattedDate;
-                        var bookingDateInput = document.getElementById('booking-date');
-                        if (bookingDateInput) bookingDateInput.value = dateText;
-                        $(tempInput).datepicker('hide');
-                    },
-                    onChangeMonthYear: function(year, month, inst) {
-                        var self = this;
-                        // Sauvegarder le scroll avant le changement de mois
-                        var savedScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-                        var savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-                        setTimeout(function() { 
-                            $(self).datepicker('refresh');
-                            // Restaurer le scroll après le refresh
-                            window.scrollTo(savedScrollX, savedScrollY);
-                        }, 1);
-                    },
-                    beforeShow: function(input, inst) {
-                        inst.dpDiv.appendTo('body');
-                        var rect = dateDisplay.getBoundingClientRect();
-                        var spaceBelow = window.innerHeight - rect.bottom;
-                        var pickerHeight = 260;
-                        var pickerWidth = 300;
-                        var leftPx = Math.max(10, Math.min(rect.left, window.innerWidth - pickerWidth));
-                        if (spaceBelow < pickerHeight && rect.top > pickerHeight) {
-                            inst.dpDiv.css({ position: 'fixed', top: (rect.top - pickerHeight - 5) + 'px', left: leftPx + 'px', zIndex: 2147483647 });
-                        } else {
-                            inst.dpDiv.css({ position: 'fixed', top: (rect.bottom + 5) + 'px', left: leftPx + 'px', zIndex: 2147483647 });
-                        }
-                    }
-                });
-                
-                // Fonction pour restaurer le scroll (appelée plusieurs fois pour être sûr)
-                function restoreScroll(scrollX, scrollY) {
-                    window.scrollTo(scrollX, scrollY);
-                    document.documentElement.scrollLeft = scrollX;
-                    document.documentElement.scrollTop = scrollY;
-                    if (document.body) {
-                        document.body.scrollLeft = scrollX;
-                        document.body.scrollTop = scrollY;
-                    }
-                }
-                
-                // Open datepicker when clicking on the display or the wrap
-                function openDatepicker() {
-                    try {
-                        // Sauvegarder la position de scroll AVANT toute action
-                        var scrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-                        var scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-                        
-                        // Empêcher le focus sur l'input temporaire
-                        if (document.activeElement === tempInput) {
-                            tempInput.blur();
-                        }
-                        
-                        // Set current date if available
-                        if (hiddenDateInput.value && availableDatesData.indexOf(hiddenDateInput.value) !== -1) {
-                            $(tempInput).datepicker('setDate', hiddenDateInput.value);
-                        } else if (availableDatesData.length > 0) {
-                            $(tempInput).datepicker('setDate', availableDatesData[0]);
-                        }
-                        
-                        // Restaurer le scroll immédiatement avant show()
-                        restoreScroll(scrollX, scrollY);
-                        
-                        $(tempInput).datepicker('show');
-                        
-                        // Empêcher le focus après show()
-                        setTimeout(function() {
-                            if (document.activeElement === tempInput) {
-                                tempInput.blur();
-                            }
-                            restoreScroll(scrollX, scrollY);
-                        }, 0);
-                        
-                        // Reposition after showing + restaurer le scroll plusieurs fois
-                        setTimeout(function() {
-                            var dpDiv = $('.ui-datepicker');
-                            if (dpDiv.length > 0) {
-                                var rect = dateDisplay.getBoundingClientRect();
-                                var spaceBelow = window.innerHeight - rect.bottom;
-                                var pickerHeight = 260;
-                                var pickerWidth = 300;
-                                var topPx, leftPx;
-                                if (spaceBelow < pickerHeight && rect.top > pickerHeight) {
-                                    topPx = (rect.top - pickerHeight - 5) + 'px';
-                                } else {
-                                    topPx = (rect.bottom + 5) + 'px';
-                                }
-                                leftPx = Math.max(10, Math.min(rect.left, window.innerWidth - pickerWidth)) + 'px';
-                                dpDiv.css({
-                                    position: 'fixed',
-                                    top: topPx,
-                                    left: leftPx,
-                                    zIndex: 2147483647,
-                                    display: 'block',
-                                    visibility: 'visible',
-                                    opacity: '1'
-                                });
-                                dpDiv.appendTo('body');
-                                
-                                // Mettre à jour les boutons Précédent/Suivant
-                                var prevBtn = dpDiv.find('.ui-datepicker-prev');
-                                var nextBtn = dpDiv.find('.ui-datepicker-next');
-                                prevBtn.empty().html('<span>‹ Préc.</span>').attr('title', 'Mois précédent');
-                                nextBtn.empty().html('<span>Suiv. ›</span>').attr('title', 'Mois suivant');
-                                
-                                // Empêcher le scroll quand on clique sur Précédent/Suivant
-                                // IMPORTANT: stopPropagation pour éviter que le calendrier se ferme
-                                prevBtn.off('click.scrollfix').on('click.scrollfix', function(e) {
-                                    e.stopPropagation(); // Empêcher la propagation vers le handler "click outside"
-                                    var savedScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-                                    var savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-                                    setTimeout(function() {
-                                        restoreScroll(savedScrollX, savedScrollY);
-                                    }, 0);
-                                    setTimeout(function() {
-                                        restoreScroll(savedScrollX, savedScrollY);
-                                    }, 50);
-                                    setTimeout(function() {
-                                        restoreScroll(savedScrollX, savedScrollY);
-                                    }, 100);
-                                });
-                                
-                                nextBtn.off('click.scrollfix').on('click.scrollfix', function(e) {
-                                    e.stopPropagation(); // Empêcher la propagation vers le handler "click outside"
-                                    var savedScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-                                    var savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-                                    setTimeout(function() {
-                                        restoreScroll(savedScrollX, savedScrollY);
-                                    }, 0);
-                                    setTimeout(function() {
-                                        restoreScroll(savedScrollX, savedScrollY);
-                                    }, 50);
-                                    setTimeout(function() {
-                                        restoreScroll(savedScrollX, savedScrollY);
-                                    }, 100);
-                                });
-                            }
-                            restoreScroll(scrollX, scrollY);
-                        }, 50);
-                        
-                        // Restaurer plusieurs fois pour être sûr
-                        requestAnimationFrame(function() {
-                            restoreScroll(scrollX, scrollY);
-                        });
-                        setTimeout(function() {
-                            restoreScroll(scrollX, scrollY);
-                        }, 100);
-                        setTimeout(function() {
-                            restoreScroll(scrollX, scrollY);
-                        }, 200);
-                    } catch (error) {
-                        console.error('[AJTB] Error showing datepicker:', error);
-                        alert('Erreur lors de l\'ouverture du calendrier: ' + error.message);
-                    }
-                }
-                
-                // Attach click handler to display
-                $(dateDisplay).css({
-                    'cursor': 'pointer',
-                    'user-select': 'none'
-                });
-                
-                $(dateDisplay).on('click', function(e) {
+            var dateWrap = dateDisplay.closest('.aj-search-date-wrap');
+            if (dateWrap) {
+                $(dateWrap).on('click', function(e) {
+                    if ($(e.target).closest('svg').length) return;
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('[AJTB] Date display clicked');
-                    openDatepicker();
-                    return false;
-                });
-                
-                // Also make the whole date wrap clickable
-                var dateWrap = dateDisplay.closest('.aj-search-date-wrap');
-                if (dateWrap) {
-                    $(dateWrap).css('cursor', 'pointer');
-                    $(dateWrap).on('click', function(e) {
-                        // Don't trigger if clicking on SVG icon
-                        if ($(e.target).closest('svg').length) {
-                            return;
-                        }
-                        if (e.target !== dateDisplay && !dateDisplay.contains(e.target)) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('[AJTB] Date wrap clicked');
-                            openDatepicker();
-                            return false;
-                        }
-                    });
-                }
-                
-                // Debug: test click
-                console.log('[AJTB] Datepicker click handlers attached to:', dateDisplay);
-                console.log('[AJTB] Date wrap:', dateWrap);
-                
-                // Empêcher le scroll lors des clics sur Précédent/Suivant (handler global)
-                // IMPORTANT: stopPropagation pour éviter que le handler "click outside" ferme le calendrier
-                $(document).on('click', '.ui-datepicker-prev, .ui-datepicker-next', function(e) {
-                    e.stopPropagation(); // Empêcher la propagation vers le handler "click outside"
-                    var savedScrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-                    var savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-                    
-                    // Restaurer immédiatement et plusieurs fois après
-                    setTimeout(function() {
-                        window.scrollTo(savedScrollX, savedScrollY);
-                    }, 0);
-                    setTimeout(function() {
-                        window.scrollTo(savedScrollX, savedScrollY);
-                    }, 50);
-                    setTimeout(function() {
-                        window.scrollTo(savedScrollX, savedScrollY);
-                    }, 100);
-                    setTimeout(function() {
-                        window.scrollTo(savedScrollX, savedScrollY);
-                    }, 200);
-                });
-                
-                // Empêcher la fermeture du calendrier lors des clics à l'intérieur
-                $(document).on('click', '.ui-datepicker', function(e) {
-                    e.stopPropagation(); // Empêcher que le clic remonte au document
-                });
-                
-                // Close datepicker when clicking outside
-                // IMPORTANT: exclure explicitement les boutons Précédent/Suivant et tout le datepicker
-                $(document).on('click', function(e) {
-                    // Ne pas fermer si on clique sur le datepicker ou ses éléments (y compris Précédent/Suivant)
-                    var isDatepicker = $(e.target).closest('.ui-datepicker').length > 0;
-                    // Ne pas fermer si on clique sur les boutons Précédent/Suivant (double vérification)
-                    var isNavButton = $(e.target).is('.ui-datepicker-prev, .ui-datepicker-next') || 
-                                      $(e.target).closest('.ui-datepicker-prev, .ui-datepicker-next').length > 0;
-                    // Ne pas fermer si on clique sur le trigger de date
-                    var isDateTrigger = $(e.target).closest('.aj-search-date-trigger, .aj-search-date-wrap, .aj-search-date-value, .aj-search-date-chevron').length > 0;
-                    
-                    // Ne fermer que si on clique vraiment en dehors de tout
-                    if (!isDatepicker && !isNavButton && !isDateTrigger) {
-                        $(tempInput).datepicker('hide');
-                    }
-                });
-                
-                // Store global reference for debugging
-                window.ajtbTempDateInput = tempInput;
-                window.ajtbOpenDatepicker = openDatepicker;
-                window.ajtbDateDisplay = dateDisplay;
-                
-                console.log('[AJTB] Datepicker initialized successfully');
-                console.log('[AJTB] You can test by calling: window.ajtbOpenDatepicker()');
-            } else {
-                console.log('[AJTB] jQuery UI datepicker not found, using fallback');
-                // Fallback: use native date input
-                var nativeInput = document.createElement('input');
-                nativeInput.type = 'date';
-                nativeInput.id = 'aj-search-date-native';
-                nativeInput.style.position = 'absolute';
-                nativeInput.style.left = '-9999px';
-                nativeInput.min = new Date().toISOString().split('T')[0];
-                document.body.appendChild(nativeInput);
-                
-                $(dateDisplay).on('click', function(e) {
-                    e.preventDefault();
-                    console.log('[AJTB] Opening native date picker');
-                    if (nativeInput.showPicker) {
-                        nativeInput.showPicker();
-                    } else {
-                        nativeInput.focus();
-                        nativeInput.click();
-                    }
-                });
-                
-                nativeInput.addEventListener('change', function() {
-                    var selectedDate = this.value;
-                    if (availableDatesData.indexOf(selectedDate) !== -1) {
-                        hiddenDateInput.value = selectedDate;
-                        var dateObj = new Date(selectedDate + 'T00:00:00');
-                        var formattedDate = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        dateDisplay.textContent = formattedDate;
-                        
-                        var bookingDateInput = document.getElementById('booking-date');
-                        if (bookingDateInput) {
-                            bookingDateInput.value = selectedDate;
-                        }
-                    } else {
-                        alert('Cette date n\'est pas disponible pour ce voyage. Veuillez choisir parmi les dates disponibles.');
-                        this.value = '';
-                    }
+                    openDatePopover();
                 });
             }
-        }
-        
-        // Initialize datepicker (wait for jQuery UI to be fully loaded)
-        // Try multiple times if jQuery UI is not ready yet
-        var initAttempts = 0;
-        var maxAttempts = 10;
-        
-        function tryInitDatepicker() {
-            initAttempts++;
-            console.log('[AJTB] Attempt', initAttempts, 'to initialize datepicker');
+
+            // Keep popover open when clicking inside
+            $(datePopover).on('click', function(e) { 
+                e.stopPropagation(); 
+            });
             
+            // Keep popover open when clicking on datepicker elements
+            $(document).on('click', '.ui-datepicker, .ui-datepicker *, .aj-date-popover, .aj-date-popover *', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Close when clicking outside
+            $(document).on('click.ajdatepopover', function(e) {
+                if ($(e.target).closest('#aj-date-popover, .aj-search-date-wrap, .ui-datepicker').length) return;
+                closeDatePopover();
+            });
+        }
+
+        // Initialize with retry logic
+        var initAttempts = 0;
+        function tryInit() {
+            initAttempts++;
             if (typeof $ !== 'undefined' && typeof $.fn !== 'undefined' && typeof $.fn.datepicker === 'function') {
-                console.log('[AJTB] jQuery UI datepicker is ready, initializing...');
-                initDatepicker();
-            } else if (initAttempts < maxAttempts) {
-                console.log('[AJTB] jQuery UI datepicker not ready yet, retrying in 200ms...');
-                setTimeout(tryInitDatepicker, 200);
-            } else {
-                console.error('[AJTB] jQuery UI datepicker not available after', maxAttempts, 'attempts, using fallback');
-                initDatepicker(); // Will use fallback
+                initDatepickerPopover();
+            } else if (initAttempts < 10) {
+                setTimeout(tryInit, 200);
             }
         }
-        
-        // Start trying to initialize
-        setTimeout(tryInitDatepicker, 100);
+        setTimeout(tryInit, 100);
     } else if (dateDisplay && availableDatesData.length === 0) {
-        // No dates available - disable interaction
         dateDisplay.style.cursor = 'not-allowed';
         dateDisplay.style.opacity = '0.6';
-        console.log('[AJTB] No dates available');
-    } else {
-        console.log('[AJTB] Date display element not found or no dates');
     }
     
     // Helper function to escape HTML
@@ -802,26 +494,39 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-/* Empêcher le scroll automatique sur l'input temporaire du datepicker */
-#aj-datepicker-temp {
-    position: absolute !important;
-    left: -9999px !important;
-    top: 0 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    tab-index: -1 !important;
+/* Travelling on: popover ancré au champ (dropdown comme Rooms & Guests) */
+.aj-searchitem--date {
+    position: relative;
+}
+.aj-date-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    z-index: 99999;
+}
+.aj-date-popover[hidden] {
+    display: none !important;
 }
 
-#aj-datepicker-temp:focus {
-    outline: none !important;
-    border: none !important;
+/* Forcer le calendrier dans le popover - position static pour annuler jQuery UI */
+.aj-date-popover .ui-datepicker {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+}
+@media (max-width: 992px) {
+    .aj-date-popover {
+        left: 0;
+        right: 0;
+        max-width: 100%;
+    }
 }
 
-/* Empêcher le scroll lors de l'ouverture du datepicker */
 .ui-datepicker {
     scroll-margin: 0 !important;
 }
-
 .ui-datepicker * {
     scroll-margin: 0 !important;
 }
@@ -938,10 +643,9 @@ jQuery(document).ready(function($) {
     background: #fff;
     padding: 0;
     overflow: hidden;
-    z-index: 2147483647 !important;
-    position: fixed !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    z-index: 1;
+    visibility: visible;
+    opacity: 1;
     min-width: 320px;
 }
 
