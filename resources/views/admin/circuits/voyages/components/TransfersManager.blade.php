@@ -31,9 +31,12 @@
         <div id="transfers-summary-text" class="small">0 transfert configuré</div>
     </div>
 
-    {{-- Actions --}}
+    {{-- Actions : "+ Ajouter" si vide, "Configurer" + "Tout retirer" si déjà des transferts (jour imposé, pas de select Jour) --}}
     <div class="d-flex flex-wrap gap-2 mb-3">
-        <button type="button" class="btn btn-sm btn-outline-primary" id="transfers-manager-choose-btn">
+        <button type="button" class="btn btn-sm btn-primary d-none" id="transfers-manager-add-btn">
+            <i class="bx bx-plus"></i> <span id="transfers-add-btn-label">+ Ajouter des transferts (Jour 1)</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-primary d-none" id="transfers-manager-choose-btn">
             <i class="bx bx-edit-alt"></i> <span id="transfers-choose-btn-label">Configurer les transferts (Jour 1)</span>
         </button>
         <button type="button" class="btn btn-sm btn-outline-danger d-none" id="transfers-manager-remove-all-btn">
@@ -41,8 +44,9 @@
         </button>
     </div>
 
-    {{-- Picker (caché par défaut, affiché au clic "Configurer") --}}
+    {{-- Picker : aucun champ "Jour", enregistré automatiquement pour le jour courant --}}
     <div id="transfers-manager-picker" class="border rounded p-3 mb-3" style="display: none;">
+        <p class="small text-muted mb-2" id="transfers-picker-hint">Sera enregistré pour le jour courant.</p>
         <label class="form-label small">Transferts (multi-sélection)</label>
         <div id="transfers-manager-list" class="border rounded p-2 bg-white" style="max-height: 280px; overflow-y: auto;">
             <!-- Rempli dynamiquement -->
@@ -57,13 +61,17 @@
 (function() {
     if (!window.tourTransfersData) window.tourTransfersData = { arrival: [], departure: [] };
 
+    var currentDayIndex = '';
     var titleEl = document.getElementById('transfers-context-title');
     var descEl = document.getElementById('transfers-context-description');
     var summaryEl = document.getElementById('transfers-summary-text');
+    var addBtn = document.getElementById('transfers-manager-add-btn');
+    var addBtnLabel = document.getElementById('transfers-add-btn-label');
     var chooseBtnLabel = document.getElementById('transfers-choose-btn-label');
     var chooseBtn = document.getElementById('transfers-manager-choose-btn');
     var removeAllBtn = document.getElementById('transfers-manager-remove-all-btn');
     var picker = document.getElementById('transfers-manager-picker');
+    var pickerHint = document.getElementById('transfers-picker-hint');
     var listEl = document.getElementById('transfers-manager-list');
     var confirmBtn = document.getElementById('transfers-manager-confirm-btn');
 
@@ -140,13 +148,18 @@
 
     function refreshUI() {
         var day = getDrawerDay();
+        currentDayIndex = day.index;
         if (titleEl) titleEl.textContent = 'Transferts – Jour ' + day.number;
-        if (descEl) descEl.textContent = 'Configurez les transferts (arrivée / départ) pour ce jour.';
+        if (descEl) descEl.textContent = 'Configurez les transferts (arrivée / départ) pour ce jour. Pas de champ "Jour" : le jour est imposé par le contexte.';
+        if (addBtnLabel) addBtnLabel.textContent = '+ Ajouter des transferts (Jour ' + day.number + ')';
         if (chooseBtnLabel) chooseBtnLabel.textContent = 'Configurer les transferts (Jour ' + day.number + ')';
+        if (pickerHint) pickerHint.textContent = 'Sera enregistré automatiquement pour le Jour ' + day.number + '.';
 
         var ids = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getTransfers(day.index) : [];
         var count = ids.length;
+        var isEmpty = count === 0;
         if (summaryEl) {
+            summaryEl.textContent = '';
             if (count === 0) {
                 summaryEl.textContent = '0 transfert configuré';
             } else {
@@ -167,7 +180,9 @@
                 }
             }
         }
-        if (removeAllBtn) removeAllBtn.classList.toggle('d-none', count === 0);
+        if (addBtn) addBtn.classList.toggle('d-none', !isEmpty);
+        if (chooseBtn) chooseBtn.classList.toggle('d-none', isEmpty);
+        if (removeAllBtn) removeAllBtn.classList.toggle('d-none', isEmpty);
         loadTransfersList();
         if (day.index !== '' && window.dayItemsManager) {
             setCheckboxesFromIds(window.dayItemsManager.getTransfers(day.index));
@@ -178,6 +193,7 @@
         var day = getDrawerDay();
         var ids = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getTransfers(day.index) : [];
         var count = ids.length;
+        var isEmpty = count === 0;
         if (summaryEl) {
             summaryEl.textContent = '';
             if (count === 0) {
@@ -202,35 +218,39 @@
                 }
             }
         }
-        if (removeAllBtn) removeAllBtn.classList.toggle('d-none', count === 0);
+        if (addBtn) addBtn.classList.toggle('d-none', !isEmpty);
+        if (chooseBtn) chooseBtn.classList.toggle('d-none', isEmpty);
+        if (removeAllBtn) removeAllBtn.classList.toggle('d-none', isEmpty);
     }
 
     document.addEventListener('day-builder:context-changed', function(e) {
         var detail = e.detail || {};
-        var dayIndex = String(detail.dayIndex || '');
-        if (window.dayItemsManager) window.dayItemsManager.loadFromForm(dayIndex);
+        currentDayIndex = String(detail.dayIndex || '');
+        if (window.dayItemsManager) window.dayItemsManager.loadFromForm(currentDayIndex);
         refreshUI();
         if (picker) picker.style.display = 'none';
     });
 
-    if (chooseBtn && picker) {
-        chooseBtn.addEventListener('click', function() {
-            var day = getDrawerDay();
-            loadTransfersList();
-            if (day.index !== '' && window.dayItemsManager) {
-                setCheckboxesFromIds(window.dayItemsManager.getTransfers(day.index));
-            }
-            picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
-        });
+    function openPicker() {
+        var day = getDrawerDay();
+        loadTransfersList();
+        if (day.index !== '' && window.dayItemsManager) {
+            setCheckboxesFromIds(window.dayItemsManager.getTransfers(day.index));
+        }
+        if (picker) picker.style.display = 'block';
     }
+    if (addBtn && picker) addBtn.addEventListener('click', openPicker);
+    if (chooseBtn && picker) chooseBtn.addEventListener('click', function() {
+        if (picker.style.display === 'none') openPicker();
+        else picker.style.display = 'none';
+    });
 
     if (removeAllBtn) {
         removeAllBtn.addEventListener('click', function() {
-            var day = getDrawerDay();
-            if (!window.dayItemsManager || day.index === '') return;
-            window.dayItemsManager.setTransfers(day.index, []);
-            window.dayItemsManager.syncToForm(day.index);
-            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+            if (!window.dayItemsManager || currentDayIndex === '') return;
+            window.dayItemsManager.setTransfers(currentDayIndex, []);
+            window.dayItemsManager.syncToForm(currentDayIndex);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: currentDayIndex } }));
             refreshSummaryOnly();
             if (picker) picker.style.display = 'none';
         });
@@ -238,12 +258,11 @@
 
     if (confirmBtn && listEl) {
         confirmBtn.addEventListener('click', function() {
-            var day = getDrawerDay();
-            if (!window.dayItemsManager || day.index === '') return;
+            if (!window.dayItemsManager || currentDayIndex === '') return;
             var ids = getCheckedTransferIds();
-            window.dayItemsManager.setTransfers(day.index, ids);
-            window.dayItemsManager.syncToForm(day.index);
-            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+            window.dayItemsManager.setTransfers(currentDayIndex, ids);
+            window.dayItemsManager.syncToForm(currentDayIndex);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: currentDayIndex } }));
             refreshSummaryOnly();
             picker.style.display = 'none';
             var drawer = document.getElementById('day-builder-drawer');

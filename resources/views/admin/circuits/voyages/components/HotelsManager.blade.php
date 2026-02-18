@@ -31,9 +31,12 @@
         <div id="hotels-summary-text" class="small">Aucun hôtel configuré</div>
     </div>
 
-    {{-- Actions --}}
+    {{-- Actions : "+ Ajouter" si vide, "Choisir / Modifier" + "Retirer" si déjà un hôtel (jour imposé par le contexte, pas de select Jour) --}}
     <div class="d-flex flex-wrap gap-2 mb-3">
-        <button type="button" class="btn btn-sm btn-outline-primary" id="hotels-manager-choose-btn">
+        <button type="button" class="btn btn-sm btn-primary d-none" id="hotels-manager-add-btn">
+            <i class="bx bx-plus"></i> <span id="hotels-add-btn-label">+ Ajouter un hôtel (Jour 1)</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-primary d-none" id="hotels-manager-choose-btn">
             <i class="bx bx-edit-alt"></i> <span id="hotels-choose-btn-label">Choisir / Modifier l'hôtel (Jour 1)</span>
         </button>
         <button type="button" class="btn btn-sm btn-outline-danger d-none" id="hotels-manager-remove-btn">
@@ -41,8 +44,9 @@
         </button>
     </div>
 
-    {{-- Picker (caché par défaut, affiché au clic "Choisir / Modifier") --}}
+    {{-- Picker : aucun champ "Jour", enregistré automatiquement pour le jour courant --}}
     <div id="hotels-manager-picker" class="border rounded p-3 mb-3" style="display: none;">
+        <p class="small text-muted mb-2" id="hotels-picker-hint">Sera enregistré pour le jour courant.</p>
         <label for="hotels-manager-select" class="form-label small">Hôtel</label>
         <select id="hotels-manager-select" class="form-select form-select-sm">
             <option value="">— Aucun hôtel</option>
@@ -57,13 +61,17 @@
 (function() {
     if (!window.tourHotelsData) window.tourHotelsData = {};
 
+    var currentDayIndex = '';
     var titleEl = document.getElementById('hotels-context-title');
     var descEl = document.getElementById('hotels-context-description');
     var summaryEl = document.getElementById('hotels-summary-text');
+    var addBtn = document.getElementById('hotels-manager-add-btn');
+    var addBtnLabel = document.getElementById('hotels-add-btn-label');
     var chooseBtnLabel = document.getElementById('hotels-choose-btn-label');
     var chooseBtn = document.getElementById('hotels-manager-choose-btn');
     var removeBtn = document.getElementById('hotels-manager-remove-btn');
     var picker = document.getElementById('hotels-manager-picker');
+    var pickerHint = document.getElementById('hotels-picker-hint');
     var select = document.getElementById('hotels-manager-select');
     var confirmBtn = document.getElementById('hotels-manager-confirm-btn');
 
@@ -78,21 +86,26 @@
 
     function refreshUI() {
         var day = getDrawerDay();
+        currentDayIndex = day.index;
         if (titleEl) titleEl.textContent = 'Hôtels – Jour ' + day.number;
-        if (descEl) descEl.textContent = 'Configurez l\'hôtel pour ce jour. Un seul hôtel par jour.';
+        if (descEl) descEl.textContent = 'Configurez l\'hôtel pour ce jour. Un seul hôtel par jour. Pas de champ "Jour" : le jour est imposé par le contexte.';
+        if (addBtnLabel) addBtnLabel.textContent = '+ Ajouter un hôtel (Jour ' + day.number + ')';
         if (chooseBtnLabel) chooseBtnLabel.textContent = 'Choisir / Modifier l\'hôtel (Jour ' + day.number + ')';
+        if (pickerHint) pickerHint.textContent = 'Sera enregistré automatiquement pour le Jour ' + day.number + '.';
 
         var hotelId = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getHotel(day.index) : null;
+        var isEmpty = !hotelId || !window.tourHotelsData || !window.tourHotelsData[hotelId];
         if (summaryEl) {
-            if (!hotelId || !window.tourHotelsData || !window.tourHotelsData[hotelId]) {
+            if (isEmpty) {
                 summaryEl.textContent = 'Aucun hôtel configuré';
             } else {
                 summaryEl.textContent = 'Hôtel sélectionné : ' + (window.tourHotelsData[hotelId].hotel_name || '—');
             }
         }
-        if (removeBtn) removeBtn.classList.toggle('d-none', !hotelId);
+        if (addBtn) addBtn.classList.toggle('d-none', !isEmpty);
+        if (chooseBtn) chooseBtn.classList.toggle('d-none', isEmpty);
+        if (removeBtn) removeBtn.classList.toggle('d-none', isEmpty);
         if (select && window.tourHotelsData) {
-            var curVal = select.value;
             while (select.options.length > 1) select.remove(1);
             Object.values(window.tourHotelsData).forEach(function(h) {
                 var opt = document.createElement('option');
@@ -106,25 +119,26 @@
 
     document.addEventListener('day-builder:context-changed', function(e) {
         var detail = e.detail || {};
-        var dayIndex = String(detail.dayIndex || '');
-        if (window.dayItemsManager) window.dayItemsManager.loadFromForm(dayIndex);
+        currentDayIndex = String(detail.dayIndex || '');
+        if (window.dayItemsManager) window.dayItemsManager.loadFromForm(currentDayIndex);
         refreshUI();
         if (picker) picker.style.display = 'none';
     });
 
-    if (chooseBtn && picker) {
-        chooseBtn.addEventListener('click', function() {
-            picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
-        });
+    function openPicker() {
+        if (picker) picker.style.display = 'block';
     }
+    if (addBtn && picker) addBtn.addEventListener('click', openPicker);
+    if (chooseBtn && picker) chooseBtn.addEventListener('click', function() {
+        picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+    });
 
     if (removeBtn) {
         removeBtn.addEventListener('click', function() {
-            var day = getDrawerDay();
-            if (!window.dayItemsManager || day.index === '') return;
-            window.dayItemsManager.setHotel(day.index, null);
-            window.dayItemsManager.syncToForm(day.index);
-            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+            if (!window.dayItemsManager || currentDayIndex === '') return;
+            window.dayItemsManager.setHotel(currentDayIndex, null);
+            window.dayItemsManager.syncToForm(currentDayIndex);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: currentDayIndex } }));
             refreshUI();
             if (picker) picker.style.display = 'none';
         });
@@ -132,12 +146,11 @@
 
     if (confirmBtn && select) {
         confirmBtn.addEventListener('click', function() {
-            var day = getDrawerDay();
-            if (!window.dayItemsManager || day.index === '') return;
+            if (!window.dayItemsManager || currentDayIndex === '') return;
             var hotelId = select.value ? parseInt(select.value, 10) : null;
-            window.dayItemsManager.setHotel(day.index, hotelId);
-            window.dayItemsManager.syncToForm(day.index);
-            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+            window.dayItemsManager.setHotel(currentDayIndex, hotelId);
+            window.dayItemsManager.syncToForm(currentDayIndex);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: currentDayIndex } }));
             refreshUI();
             picker.style.display = 'none';
             var drawer = document.getElementById('day-builder-drawer');
