@@ -1,10 +1,21 @@
 <style>
 #day-builder-drawer {
     --drawer-w: clamp(560px, 40vw, 820px);
+    --drawer-header-h: 110px;
+    --drawer-footer-h: 72px;
     --bs-offcanvas-width: var(--drawer-w);
-    width: var(--drawer-w);
+    width: var(--drawer-w) !important;
+    min-width: 560px;
+    max-width: 820px;
     max-width: 100vw;
     height: 100vh;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: auto;
+    margin: 0;
+    border-left: 1px solid #e9ecef;
+    z-index: 2060;
     display: flex;
     flex-direction: column;
 }
@@ -35,6 +46,7 @@
 #day-builder-drawer .offcanvas-body {
     overflow-y: auto;
     flex: 1 1 auto;
+    height: calc(100vh - var(--drawer-header-h) - var(--drawer-footer-h));
 }
 #day-builder-drawer .day-builder-summary {
     font-size: 0.875rem;
@@ -48,15 +60,31 @@
     #day-builder-drawer {
         --drawer-w: min(70vw, 720px);
         --bs-offcanvas-width: var(--drawer-w);
-        width: var(--drawer-w);
+        width: var(--drawer-w) !important;
+        min-width: 0;
+        max-width: 720px;
     }
 }
 @media (max-width: 768px) {
     #day-builder-drawer {
         --drawer-w: 100vw;
         --bs-offcanvas-width: var(--drawer-w);
-        width: 100vw;
+        width: 100vw !important;
+        min-width: 0;
+        max-width: 100vw;
     }
+}
+
+body.day-builder-open {
+    overflow: hidden !important;
+}
+
+.offcanvas-backdrop.show {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 1;
+    z-index: 2055;
 }
 </style>
 

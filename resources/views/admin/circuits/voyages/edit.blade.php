@@ -3280,10 +3280,12 @@
 
             drawer.addEventListener('shown.bs.offcanvas', function() {
                 document.body.style.overflow = 'hidden';
+                document.body.classList.add('day-builder-open');
             });
 
             drawer.addEventListener('hidden.bs.offcanvas', function() {
                 document.body.style.overflow = '';
+                document.body.classList.remove('day-builder-open');
             });
 
             document.addEventListener('day-builder:item-count-changed', function(e) {
