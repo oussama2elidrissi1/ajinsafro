@@ -8,7 +8,7 @@
                     <span class="btn-text">Afficher le formulaire</span>
                 </button>
             </div>
-            <div id="day-builder-new-activity-form" class="card-body collapse">
+            <div id="day-builder-new-activity-form" class="card-body" style="display: none;">
                 <form id="day-builder-new-activity-form-el" action="{{ route('admin.circuits.activities.store') }}" method="POST">
                     @csrf
                     <div class="row g-2">
@@ -60,7 +60,6 @@
 <script>
 (function() {
     var form = document.getElementById('day-builder-new-activity-form-el');
-    var toggleBtn = document.getElementById('day-builder-toggle-new-activity');
     var formWrap = document.getElementById('day-builder-new-activity-form');
     var submitBtn = document.getElementById('day-builder-new-activity-submit');
     var errorEl = document.getElementById('day-builder-new-activity-error');
@@ -69,20 +68,24 @@
 
     if (!form || !container) return;
 
-    if (toggleBtn && formWrap) {
-        toggleBtn.addEventListener('click', function() {
-            var isShown = formWrap.classList.contains('show');
-            if (!isShown) {
-                formWrap.classList.add('show');
-                toggleBtn.setAttribute('aria-expanded', 'true');
-                if (toggleBtn.querySelector('.btn-text')) toggleBtn.querySelector('.btn-text').textContent = 'Masquer le formulaire';
-            } else {
-                formWrap.classList.remove('show');
-                toggleBtn.setAttribute('aria-expanded', 'false');
-                if (toggleBtn.querySelector('.btn-text')) toggleBtn.querySelector('.btn-text').textContent = 'Afficher le formulaire';
-            }
-        });
-    }
+    // Délégation d'événement : le clic fonctionne même si le drawer/onglet est chargé dynamiquement
+    document.addEventListener('click', function(e) {
+        var toggleBtn = e.target && e.target.closest && e.target.closest('#day-builder-toggle-new-activity');
+        if (!toggleBtn || !formWrap) return;
+        e.preventDefault();
+        var isShown = formWrap.style.display !== 'none';
+        if (!isShown) {
+            formWrap.style.display = 'block';
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            var txt = toggleBtn.querySelector('.btn-text');
+            if (txt) txt.textContent = 'Masquer le formulaire';
+        } else {
+            formWrap.style.display = 'none';
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            var txt = toggleBtn.querySelector('.btn-text');
+            if (txt) txt.textContent = 'Afficher le formulaire';
+        }
+    });
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -124,9 +127,13 @@
             }
             if (emptyMsg) emptyMsg.style.display = 'none';
             form.reset();
-            if (formWrap && formWrap.classList) formWrap.classList.remove('show');
-            if (toggleBtn && toggleBtn.querySelector('.btn-text')) toggleBtn.querySelector('.btn-text').textContent = 'Afficher le formulaire';
-            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+            if (formWrap) formWrap.style.display = 'none';
+            var toggleBtn = document.getElementById('day-builder-toggle-new-activity');
+            if (toggleBtn) {
+                toggleBtn.setAttribute('aria-expanded', 'false');
+                var t = toggleBtn.querySelector('.btn-text');
+                if (t) t.textContent = 'Afficher le formulaire';
+            }
         })
         .catch(function(err) {
             var msg = (err && err.message) || 'Erreur lors de la création.';
