@@ -128,11 +128,13 @@ body.day-builder-open {
                 @include('admin.circuits.voyages.components.ActivitiesManager', ['activitiesCatalog' => $activitiesCatalog])
             </div>
             <div class="tab-pane fade" id="day-builder-tab-hotels" role="tabpanel">
-                {{-- Même contenu que l'onglet Hôtels de la page : le bloc tour-hotels-wrapper y est déplacé au focus de cet onglet --}}
+                {{-- Même CRUD que l'onglet Hôtels : le formulaire complet y est déplacé (ajout de lignes sans rafraîchir) --}}
+                <p class="text-muted small mb-2"><i class="bx bx-hotel"></i> Même formulaire que l'onglet <strong>Hôtels</strong>. Ajoutez ou modifiez des lignes ci-dessous.</p>
                 <div id="day-builder-hotels-placeholder" class="day-builder-section-placeholder"></div>
             </div>
             <div class="tab-pane fade" id="day-builder-tab-transfers" role="tabpanel">
-                {{-- Même contenu que l'onglet Transferts de la page : le bloc tour-transfers-wrapper y est déplacé au focus de cet onglet --}}
+                {{-- Même CRUD que l'onglet Transferts : le formulaire complet y est déplacé (ajout de lignes sans rafraîchir) --}}
+                <p class="text-muted small mb-2"><i class="bx bx-car"></i> Même formulaire que l'onglet <strong>Transferts</strong>. Ajoutez ou modifiez des lignes ci-dessous.</p>
                 <div id="day-builder-transfers-placeholder" class="day-builder-section-placeholder"></div>
             </div>
             <div class="tab-pane fade" id="day-builder-tab-flights" role="tabpanel">
