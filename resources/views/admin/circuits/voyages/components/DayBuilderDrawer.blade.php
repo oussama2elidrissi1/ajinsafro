@@ -1,12 +1,11 @@
 <style>
 #day-builder-drawer {
-    --drawer-w: clamp(560px, 40vw, 820px);
+    --drawer-w: clamp(420px, 40vw, 100vw);
     --drawer-header-h: 110px;
     --drawer-footer-h: 72px;
     --bs-offcanvas-width: var(--drawer-w);
     width: var(--drawer-w) !important;
-    min-width: 560px;
-    max-width: 820px;
+    min-width: 0;
     max-width: 100vw;
     height: 100vh;
     position: fixed;
