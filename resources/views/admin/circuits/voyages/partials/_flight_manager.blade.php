@@ -113,6 +113,19 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
                 ])
             </div>
 
+            <div data-compact-flight-section="segment">
+                @include('admin.circuits.voyages.partials._flight_section_focused', [
+                    'type' => 'segment',
+                    'title' => "Vols pendant le circuit - Jour {$dayNumber}",
+                    'flightOptionsWithIndex' => $flightOptionsWithIndex,
+                    'airlines' => $airlines,
+                    'fmtDate' => $fmtDate,
+                    'dash' => $dash,
+                    'dayNumber' => $dayNumber,
+                    'isModal' => true
+                ])
+            </div>
+
             <div data-compact-flight-section="return">
                 @include('admin.circuits.voyages.partials._flight_section_focused', [
                     'type' => 'return',
@@ -127,7 +140,7 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
             </div>
 
             <div class="alert alert-info compact-flight-guidance" data-compact-flight-section="mid">
-                <p class="mb-2">Les vols se configurent sur Jour 1 (Aller) et Jour {{ $totalDays }} (Retour).</p>
+                <p class="mb-2">Le Vol Aller se configure sur Jour 1, le Vol Retour sur Jour {{ $totalDays }}, et les vols pendant le circuit sur le jour courant.</p>
                 <div class="d-flex gap-2 flex-wrap">
                     <button type="button" class="btn btn-sm btn-outline-primary" data-flight-jump-day="1">
                         Configurer Vol Aller (Jour 1)
@@ -173,6 +186,7 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
         const titleEl = container.querySelector('[data-flight-context-title]');
         const descEl = container.querySelector('[data-flight-context-description]');
         const outboundSection = container.querySelector('[data-compact-flight-section="outbound"]');
+        const segmentSection = container.querySelector('[data-compact-flight-section="segment"]');
         const returnSection = container.querySelector('[data-compact-flight-section="return"]');
         const midSection = container.querySelector('[data-compact-flight-section="mid"]');
         const totalDays = parseInt(container.getAttribute('data-total-days') || '1', 10) || 1;
@@ -193,14 +207,28 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
                     titleEl.textContent = 'Jour ' + totalDays + ' — Vol Retour';
                     descEl.textContent = 'Configuration du vol retour du circuit.';
                 } else {
-                    titleEl.textContent = 'Jour ' + day + ' — Vols';
-                    descEl.textContent = 'Les vols se gèrent uniquement sur Jour 1 (Aller) et Jour ' + totalDays + ' (Retour).';
+                    titleEl.textContent = 'Jour ' + day + ' — Vols pendant le circuit';
+                    descEl.textContent = 'Ajoutez ici les vols pendant le circuit pour ce jour. Aller/Retour restent sur Jour 1 et Jour ' + totalDays + '.';
                 }
             }
 
             if (outboundSection) outboundSection.style.display = day === 1 ? '' : 'none';
+            if (segmentSection) segmentSection.style.display = (day !== 1 && day !== totalDays) ? '' : 'none';
             if (returnSection) returnSection.style.display = day === totalDays ? '' : 'none';
             if (midSection) midSection.style.display = (day !== 1 && day !== totalDays) ? '' : 'none';
+
+            if (segmentSection) {
+                var segmentHeader = segmentSection.querySelector('.flight-section-header h6');
+                if (segmentHeader) {
+                    segmentHeader.innerHTML = '<i class="bx bx-trip me-1"></i>Vols pendant le circuit - Jour ' + day;
+                }
+                segmentSection.querySelectorAll('.btn-add-flight-opt[data-type="segment"]').forEach(function(btn) {
+                    btn.setAttribute('data-day', String(day));
+                });
+                segmentSection.querySelectorAll('.flight-section-focused[data-type="segment"]').forEach(function(section) {
+                    section.setAttribute('data-day', String(day));
+                });
+            }
             hideValidationError();
         }
 
