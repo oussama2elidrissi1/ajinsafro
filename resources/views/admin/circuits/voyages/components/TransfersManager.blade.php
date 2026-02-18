@@ -17,7 +17,11 @@
             </div>
         </div>
     </div>
-    {{-- Pas d'input hidden ici : la valeur est écrite dans la carte du jour via dayItemsManager.syncToForm() --}}
+
+    <button type="button" class="btn btn-primary mt-3" id="transfers-manager-confirm-btn">
+        <i class="bx bx-check"></i> Confirmer / Ajouter au jour
+    </button>
+    {{-- La valeur est écrite dans la carte du jour via dayItemsManager.syncToForm() au clic Confirmer --}}
 </div>
 
 <script>
@@ -113,31 +117,17 @@ function loadTransfersForManager() {
 
 function updateTransfersSelection(selectedIds) {
     var transferCheckboxes = document.querySelectorAll('#day-builder-transfers-manager .transfer-checkbox');
-    
-    // Décocher tous les checkboxes d'abord
     transferCheckboxes.forEach(cb => cb.checked = false);
-    
-    // Cocher les sélectionnés
     selectedIds.forEach(id => {
         const cb = document.getElementById('transfer-' + id);
         if (cb) cb.checked = true;
     });
-    
-    updateTransfersInput();
     updateTransfersDetails();
 }
 
-function updateTransfersInput() {
-    var checked = document.querySelectorAll('.transfer-checkbox:checked');
-    var drawer = document.getElementById('day-builder-drawer');
-    var dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
-    
-    var ids = Array.from(checked).map(function(cb) { return parseInt(cb.value, 10); });
-    
-    if (window.dayItemsManager && dayIndex !== '') {
-        window.dayItemsManager.setTransfers(dayIndex, ids);
-        document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: dayIndex } }));
-    }
+function getCheckedTransferIds() {
+    var checked = document.querySelectorAll('#day-builder-transfers-manager .transfer-checkbox:checked');
+    return Array.from(checked).map(function(cb) { return parseInt(cb.value, 10); });
 }
 
 function updateTransfersDetails() {
@@ -176,11 +166,26 @@ function updateTransfersDetails() {
     detailsDiv.style.display = '';
 }
 
-// Listener sur les checkboxes de transferts
+// Checkboxes : mise à jour de l'aperçu uniquement (appliquer au jour au clic Confirmer)
 document.addEventListener('change', function(e) {
     if (e.target.classList.contains('transfer-checkbox')) {
-        updateTransfersInput();
         updateTransfersDetails();
+    }
+});
+
+// Confirmer : affecte les transferts au jour courant, sync, met à jour le résumé, ferme le drawer
+document.addEventListener('click', function(e) {
+    if (e.target.id !== 'transfers-manager-confirm-btn' && !e.target.closest('#transfers-manager-confirm-btn')) return;
+    var drawer = document.getElementById('day-builder-drawer');
+    var dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
+    if (!window.dayItemsManager || dayIndex === '') return;
+    var ids = getCheckedTransferIds();
+    window.dayItemsManager.setTransfers(dayIndex, ids);
+    window.dayItemsManager.syncToForm(dayIndex);
+    document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: dayIndex } }));
+    if (drawer && typeof bootstrap !== 'undefined') {
+        var offcanvas = bootstrap.Offcanvas.getInstance(drawer);
+        if (offcanvas) offcanvas.hide();
     }
 });
 </script>

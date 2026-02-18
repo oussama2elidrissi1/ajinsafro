@@ -128,14 +128,12 @@ body.day-builder-open {
                 @include('admin.circuits.voyages.components.ActivitiesManager', ['activitiesCatalog' => $activitiesCatalog])
             </div>
             <div class="tab-pane fade" id="day-builder-tab-hotels" role="tabpanel">
-                {{-- Même CRUD que l'onglet Hôtels : le formulaire complet y est déplacé (ajout de lignes sans rafraîchir) --}}
-                <p class="text-muted small mb-2"><i class="bx bx-hotel"></i> Même formulaire que l'onglet <strong>Hôtels</strong>. Ajoutez ou modifiez des lignes ci-dessous.</p>
-                <div id="day-builder-hotels-placeholder" class="day-builder-section-placeholder"></div>
+                {{-- Picker comme Vols : sélection + bouton Confirmer → affecté au jour courant --}}
+                @include('admin.circuits.voyages.components.HotelsManager')
             </div>
             <div class="tab-pane fade" id="day-builder-tab-transfers" role="tabpanel">
-                {{-- Même CRUD que l'onglet Transferts : le formulaire complet y est déplacé (ajout de lignes sans rafraîchir) --}}
-                <p class="text-muted small mb-2"><i class="bx bx-car"></i> Même formulaire que l'onglet <strong>Transferts</strong>. Ajoutez ou modifiez des lignes ci-dessous.</p>
-                <div id="day-builder-transfers-placeholder" class="day-builder-section-placeholder"></div>
+                {{-- Picker comme Vols : multi-sélection + bouton Confirmer → affectés au jour courant --}}
+                @include('admin.circuits.voyages.components.TransfersManager')
             </div>
             <div class="tab-pane fade" id="day-builder-tab-flights" role="tabpanel">
                 @include('admin.circuits.voyages.components.FlightsManager', [

@@ -30,7 +30,11 @@
             </div>
         </div>
     </div>
-    {{-- Pas d'input hidden ici : la valeur est écrite dans la carte du jour via dayItemsManager.syncToForm() --}}
+
+    <button type="button" class="btn btn-primary mt-3" id="hotels-manager-confirm-btn">
+        <i class="bx bx-check"></i> Confirmer / Ajouter au jour
+    </button>
+    {{-- La valeur est écrite dans la carte du jour via dayItemsManager.syncToForm() au clic Confirmer --}}
 </div>
 
 <script>
@@ -100,19 +104,28 @@ function updateHotelsDetails(hotelId) {
     document.getElementById('hotels-manager-details').style.display = '';
 }
 
-// Listener sur le select : même pattern que Vols → dayItemsManager.setHotel puis syncToForm (écrit dans la carte du jour)
+// Select : mise à jour de l'aperçu uniquement (appliquer au jour au clic Confirmer)
 document.addEventListener('change', function(e) {
     if (e.target.id === 'hotels-manager-select') {
         var hotelId = e.target.value ? parseInt(e.target.value, 10) : null;
-        var drawer = document.getElementById('day-builder-drawer');
-        var dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
-        
-        if (window.dayItemsManager && dayIndex !== '') {
-            window.dayItemsManager.setHotel(dayIndex, hotelId);
-            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: dayIndex } }));
-        }
-        
         updateHotelsDetails(hotelId);
+    }
+});
+
+// Confirmer : affecte l'hôtel au jour courant, sync, met à jour le résumé, ferme le drawer
+document.addEventListener('click', function(e) {
+    if (e.target.id !== 'hotels-manager-confirm-btn' && !e.target.closest('#hotels-manager-confirm-btn')) return;
+    var drawer = document.getElementById('day-builder-drawer');
+    var dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
+    var hotelsSelect = document.getElementById('hotels-manager-select');
+    if (!window.dayItemsManager || dayIndex === '' || !hotelsSelect) return;
+    var hotelId = hotelsSelect.value ? parseInt(hotelsSelect.value, 10) : null;
+    window.dayItemsManager.setHotel(dayIndex, hotelId);
+    window.dayItemsManager.syncToForm(dayIndex);
+    document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: dayIndex } }));
+    if (drawer && typeof bootstrap !== 'undefined') {
+        var offcanvas = bootstrap.Offcanvas.getInstance(drawer);
+        if (offcanvas) offcanvas.hide();
     }
 });
 </script>

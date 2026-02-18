@@ -118,7 +118,6 @@
             header.appendChild(rm);
         }
         container.appendChild(clone);
-        document.dispatchEvent(new CustomEvent('tour-hotels:row-added', { detail: { row: clone } }));
     });
 
     container.addEventListener('click', function(e){
