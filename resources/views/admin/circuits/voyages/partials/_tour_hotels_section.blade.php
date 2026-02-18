@@ -6,7 +6,7 @@
     <div id="tour-hotels-container">
         @foreach($hotelsList as $hi => $h)
         @php $hid = 'tour_hotel_image_id_' . $hi; $himg = optional($h)->image_id; $himgUrl = $himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$himg) : ''; @endphp
-        <div class="card mb-3 tour-hotel-row" data-index="{{ $hi }}">
+        <div class="card mb-3 tour-hotel-row" data-index="{{ $hi }}" data-hotel-id="{{ optional($h)->id ?? '' }}">
             <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                 <strong>Hôtel {{ $hi + 1 }}</strong>
                 @if($hi > 0)<button type="button" class="btn btn-sm btn-outline-danger tour-remove-row" data-target=".tour-hotel-row" aria-label="Supprimer">×</button>@endif
@@ -88,6 +88,7 @@
         var nextIndex = prevIndex + 1;
         var clone = last.cloneNode(true);
         clone.setAttribute('data-index', nextIndex);
+        clone.removeAttribute('data-hotel-id'); // nouveau row, pas d'id
         clone.querySelector('.card-header strong').textContent = 'Hôtel ' + (nextIndex + 1);
         clone.querySelectorAll('[name]').forEach(function(inp){
             if (inp.name && inp.name.indexOf('tour_hotels[') === 0)

@@ -1932,13 +1932,16 @@
 
         // Charger tous les hôtels du tour (disponibles pour sélection par jour)
         @foreach($tourHotels as $hotel)
+            @php $hotelImgUrl = !empty($hotel->image_id) ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$hotel->image_id) : ''; @endphp
             window.tourHotelsData[{{ $hotel->id }}] = {
                 id: {{ $hotel->id }},
                 hotel_name: @json($hotel->hotel_name),
                 address: @json($hotel->address),
                 room_type: @json($hotel->room_type),
                 meal_plan: @json($hotel->meal_plan),
-                stars: {{ $hotel->stars ?? 'null' }}
+                stars: {{ $hotel->stars ?? 'null' }},
+                image_id: {{ $hotel->image_id ?? 'null' }},
+                image_url: @json($hotelImgUrl ?? '')
             };
         @endforeach
 

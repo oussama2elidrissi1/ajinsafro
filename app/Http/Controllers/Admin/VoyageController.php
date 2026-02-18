@@ -1168,10 +1168,9 @@ class VoyageController extends Controller
             return;
         }
 
-        // Syncer l'hôtel (0..1)
+        // Syncer l'hôtel (0..1). Si hotel_id vide, lier au TourHotel créé pour ce jour (ex. ajout depuis le drawer).
         $hotelId = !empty($dayRow['hotel_id']) ? (int) $dayRow['hotel_id'] : null;
         if ($hotelId) {
-            // Valider que l'hôtel existe
             $hotel = TourHotel::find($hotelId);
             if ($hotel) {
                 $day->update(['hotel_id' => $hotelId]);
@@ -1179,7 +1178,10 @@ class VoyageController extends Controller
                 $day->update(['hotel_id' => null]);
             }
         } else {
-            $day->update(['hotel_id' => null]);
+            $hotelForDay = TourHotel::where('tour_id', $tourId)
+                ->where('day_number', (int) $tourDay->day_number)
+                ->first();
+            $day->update(['hotel_id' => $hotelForDay?->id]);
         }
 
         // Syncer les transferts (0..n)
