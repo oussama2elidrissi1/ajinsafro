@@ -71,13 +71,13 @@
 
     if (toggleBtn && formWrap) {
         toggleBtn.addEventListener('click', function() {
-            var collapsed = formWrap.classList.contains('collapse');
-            if (collapsed) {
-                formWrap.classList.remove('collapse');
+            var isShown = formWrap.classList.contains('show');
+            if (!isShown) {
+                formWrap.classList.add('show');
                 toggleBtn.setAttribute('aria-expanded', 'true');
                 if (toggleBtn.querySelector('.btn-text')) toggleBtn.querySelector('.btn-text').textContent = 'Masquer le formulaire';
             } else {
-                formWrap.classList.add('collapse');
+                formWrap.classList.remove('show');
                 toggleBtn.setAttribute('aria-expanded', 'false');
                 if (toggleBtn.querySelector('.btn-text')) toggleBtn.querySelector('.btn-text').textContent = 'Afficher le formulaire';
             }
@@ -124,7 +124,7 @@
             }
             if (emptyMsg) emptyMsg.style.display = 'none';
             form.reset();
-            if (formWrap && formWrap.classList) formWrap.classList.add('collapse');
+            if (formWrap && formWrap.classList) formWrap.classList.remove('show');
             if (toggleBtn && toggleBtn.querySelector('.btn-text')) toggleBtn.querySelector('.btn-text').textContent = 'Afficher le formulaire';
             if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
         })
