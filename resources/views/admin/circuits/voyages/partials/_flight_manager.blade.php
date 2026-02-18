@@ -57,6 +57,61 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
             margin-bottom: 16px;
         }
         .flight-manager .compact-flight-guidance { border-style: dashed; }
+
+        .flight-manager[data-mode="drawer"] .flight-section-header h6 {
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .flight-manager[data-mode="drawer"] .flight-opt-view .px-3.pb-2 {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .flight-manager[data-mode="drawer"] .flight-opt-edit .col-12 {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .flight-manager[data-mode="drawer"] .flight-opt-header .flight-opt-remove,
+        .flight-manager[data-mode="drawer"] .flight-opt-view .flight-opt-edit-btn {
+            font-weight: 600;
+        }
+        .flight-manager[data-mode="drawer"] .flight-cards-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .flight-manager[data-mode="drawer"] .flight-cards-container .flight-opt-card {
+            margin-bottom: 0;
+        }
+        .flight-manager[data-mode="drawer"] .flight-opt-edit .row.g-2 {
+            display: flex;
+            flex-wrap: wrap;
+            row-gap: 8px;
+        }
+        .flight-manager[data-mode="drawer"] .flight-opt-edit .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+        .flight-manager[data-mode="drawer"] .flight-opt-edit .col-md-4 {
+            flex: 0 0 33.3333%;
+            max-width: 33.3333%;
+        }
+        .flight-manager[data-mode="drawer"] .flight-opt-edit .col-12 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        @media (min-width: 600px) {
+            .flight-manager[data-mode="drawer"] .flight-cards-container {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 599px) {
+            .flight-manager[data-mode="drawer"] .flight-opt-edit .col-md-6,
+            .flight-manager[data-mode="drawer"] .flight-opt-edit .col-md-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
         </style>
 
         <div class="compact-flight-context">

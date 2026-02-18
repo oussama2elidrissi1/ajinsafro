@@ -3233,6 +3233,9 @@
                 '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button></div></div>';
             list.appendChild(row);
             updateProgrammeDayInclus(card);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', {
+                detail: { dayIndex: String(dayIndex), count: list.querySelectorAll('.programme-activity-row').length }
+            }));
             return true;
         }
 
@@ -3241,9 +3244,22 @@
             if (!drawer || !window.bootstrap || !bootstrap.Offcanvas) return;
 
             var titleEl = document.getElementById('day-builder-drawer-label');
+            var summaryEl = document.getElementById('day-builder-day-summary');
             var contextEl = document.getElementById('day-builder-drawer-context');
             var flightsManager = document.getElementById('day-builder-flights-manager');
             var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawer);
+
+            function getDayItemsCount(dayIndex) {
+                var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+                var list = card && card.querySelector('.programme-activities-list');
+                return list ? list.querySelectorAll('.programme-activity-row').length : 0;
+            }
+
+            function updateDrawerSummary(dayNum, dayIndex) {
+                if (!summaryEl) return;
+                var count = getDayItemsCount(dayIndex);
+                summaryEl.textContent = 'Jour ' + dayNum + ' — Ajouter (' + count + (count > 1 ? ' éléments)' : ' élément)');
+            }
 
             function setDrawerContext(dayIndex, dayId, dayNumber) {
                 var dayNum = parseInt(dayNumber || '0', 10);
@@ -3257,9 +3273,26 @@
                 drawer.setAttribute('data-day-number', String(dayNum));
 
                 if (titleEl) titleEl.textContent = 'Jour ' + dayNum + ' — Ajouter';
+                updateDrawerSummary(dayNum, dayIndex || String(dayNum - 1));
                 if (contextEl) contextEl.textContent = 'Ajout direct dans les éléments du Jour ' + dayNum + '.';
 
                 if (flightsManager) {
+
+            drawer.addEventListener('shown.bs.offcanvas', function() {
+                document.body.style.overflow = 'hidden';
+            });
+
+            drawer.addEventListener('hidden.bs.offcanvas', function() {
+                document.body.style.overflow = '';
+            });
+
+            document.addEventListener('day-builder:item-count-changed', function(e) {
+                var detail = (e && e.detail) ? e.detail : {};
+                var activeDayIndex = drawer.getAttribute('data-day-index');
+                if (String(detail.dayIndex) !== String(activeDayIndex)) return;
+                var dayNumber = parseInt(drawer.getAttribute('data-day-number') || '1', 10) || 1;
+                updateDrawerSummary(dayNumber, activeDayIndex);
+            });
                     var manager = flightsManager.querySelector('.flight-manager');
                     if (manager) manager.setAttribute('data-day-number', String(dayNum));
                 }
@@ -3385,8 +3418,15 @@
                 var row = e.target.closest('.programme-activity-row');
                 if (row && confirm('Retirer cette activité du jour ?')) {
                     var card = row.closest('.programme-day-card');
+                    var dayIndex = card ? card.getAttribute('data-day-index') : null;
                     row.remove();
                     updateProgrammeDayInclus(card);
+                    if (dayIndex !== null) {
+                        var list = card ? card.querySelector('.programme-activities-list') : null;
+                        document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', {
+                            detail: { dayIndex: String(dayIndex), count: list ? list.querySelectorAll('.programme-activity-row').length : 0 }
+                        }));
+                    }
                     if (window.autosaveProgram) window.autosaveProgram();
                 }
             }
