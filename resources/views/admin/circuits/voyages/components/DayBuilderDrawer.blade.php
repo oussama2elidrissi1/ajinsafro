@@ -128,10 +128,12 @@ body.day-builder-open {
                 @include('admin.circuits.voyages.components.ActivitiesManager', ['activitiesCatalog' => $activitiesCatalog])
             </div>
             <div class="tab-pane fade" id="day-builder-tab-hotels" role="tabpanel">
-                @include('admin.circuits.voyages.components.HotelsManager')
+                {{-- Même contenu que l'onglet Hôtels de la page : le bloc tour-hotels-wrapper y est déplacé au focus de cet onglet --}}
+                <div id="day-builder-hotels-placeholder" class="day-builder-section-placeholder"></div>
             </div>
             <div class="tab-pane fade" id="day-builder-tab-transfers" role="tabpanel">
-                @include('admin.circuits.voyages.components.TransfersManager')
+                {{-- Même contenu que l'onglet Transferts de la page : le bloc tour-transfers-wrapper y est déplacé au focus de cet onglet --}}
+                <div id="day-builder-transfers-placeholder" class="day-builder-section-placeholder"></div>
             </div>
             <div class="tab-pane fade" id="day-builder-tab-flights" role="tabpanel">
                 @include('admin.circuits.voyages.components.FlightsManager', [
