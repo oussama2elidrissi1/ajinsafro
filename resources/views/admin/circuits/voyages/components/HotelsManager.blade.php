@@ -1,131 +1,153 @@
+<style>
+#day-builder-hotels-manager .day-builder-context {
+    background: #e7f1ff;
+    border: 1px solid #b6d7ff;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+#day-builder-hotels-manager .day-builder-summary-block {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+</style>
 <div id="day-builder-hotels-manager">
-    <p class="text-muted small mb-3">Sélectionnez l'hôtel pour ce jour (0..1 hôtel par jour)</p>
-    
-    <div class="mb-3">
-        <label for="hotels-manager-select" class="form-label">Hôtel</label>
-        <select id="hotels-manager-select" class="form-select" data-type="hotels">
-            <option value="">— Aucun hôtel</option>
-        </select>
-    </div>
-
-    <div id="hotels-manager-details" style="display: none;">
-        <div class="card bg-light">
-            <div class="card-body">
-                <div class="mb-2">
-                    <strong class="d-block">Nom :</strong>
-                    <span id="hotels-hotel-name">—</span>
-                </div>
-                <div class="mb-2">
-                    <strong class="d-block">Adresse :</strong>
-                    <span id="hotels-hotel-address">—</span>
-                </div>
-                <div class="mb-2">
-                    <strong class="d-block">Type chambre :</strong>
-                    <span id="hotels-hotel-room-type">—</span>
-                </div>
-                <div class="mb-2">
-                    <strong class="d-block">Plan repas :</strong>
-                    <span id="hotels-hotel-meal-plan">—</span>
-                </div>
+    {{-- Bloc config du jour (même pattern que Vols) --}}
+    <div class="day-builder-context">
+        <div class="d-flex align-items-start gap-2">
+            <i class="bx bx-hotel text-primary mt-1"></i>
+            <div class="flex-grow-1">
+                <div class="fw-semibold text-primary" id="hotels-context-title">Hôtels – Jour 1</div>
+                <div class="small text-muted" id="hotels-context-description">Configurez l'hôtel pour ce jour. Un seul hôtel par jour.</div>
             </div>
         </div>
     </div>
 
-    <button type="button" class="btn btn-primary mt-3" id="hotels-manager-confirm-btn">
-        <i class="bx bx-check"></i> Confirmer / Ajouter au jour
-    </button>
-    {{-- La valeur est écrite dans la carte du jour via dayItemsManager.syncToForm() au clic Confirmer --}}
+    {{-- État / résumé --}}
+    <div class="day-builder-summary-block">
+        <div id="hotels-summary-text" class="small">Aucun hôtel configuré</div>
+    </div>
+
+    {{-- Actions --}}
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="hotels-manager-choose-btn">
+            <i class="bx bx-edit-alt"></i> <span id="hotels-choose-btn-label">Choisir / Modifier l'hôtel (Jour 1)</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger d-none" id="hotels-manager-remove-btn">
+            <i class="bx bx-trash"></i> Retirer l'hôtel
+        </button>
+    </div>
+
+    {{-- Picker (caché par défaut, affiché au clic "Choisir / Modifier") --}}
+    <div id="hotels-manager-picker" class="border rounded p-3 mb-3" style="display: none;">
+        <label for="hotels-manager-select" class="form-label small">Hôtel</label>
+        <select id="hotels-manager-select" class="form-select form-select-sm">
+            <option value="">— Aucun hôtel</option>
+        </select>
+        <button type="button" class="btn btn-primary btn-sm mt-2" id="hotels-manager-confirm-btn">
+            <i class="bx bx-check"></i> Confirmer
+        </button>
+    </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    if (!window.tourHotelsData) {
-        window.tourHotelsData = {};
-    }
-});
+(function() {
+    if (!window.tourHotelsData) window.tourHotelsData = {};
 
-// Appelé quand le drawer s'ouvre (même event que Vols : day-builder:context-changed)
-document.addEventListener('day-builder:context-changed', function(e) {
-    const detail = e.detail || {};
-    const dayIndex = String(detail.dayIndex || '');
-    
-    const hotelsSelect = document.getElementById('hotels-manager-select');
-    if (!hotelsSelect) return;
-    
-    // Charger les hôtels depuis window.tourHotelsData (passés par la vue)
-    loadHotelsForManager();
-    
-    // Charger l'état depuis la carte du jour (inputs hidden dans .programme-day-card)
-    if (window.dayItemsManager) {
-        window.dayItemsManager.loadFromForm(dayIndex);
-    }
-    
-    // Restaurer la sélection depuis dayItemsManager (pré-rempli au chargement ou après sauvegarde)
-    var hotelIdToSelect = (window.dayItemsManager && window.dayItemsManager.getHotel(dayIndex)) || '';
-    
-    if (hotelIdToSelect) {
-        hotelsSelect.value = hotelIdToSelect;
-        updateHotelsDetails(hotelIdToSelect);
-    } else {
-        hotelsSelect.value = '';
-        document.getElementById('hotels-manager-details').style.display = 'none';
-    }
-});
+    var titleEl = document.getElementById('hotels-context-title');
+    var descEl = document.getElementById('hotels-context-description');
+    var summaryEl = document.getElementById('hotels-summary-text');
+    var chooseBtnLabel = document.getElementById('hotels-choose-btn-label');
+    var chooseBtn = document.getElementById('hotels-manager-choose-btn');
+    var removeBtn = document.getElementById('hotels-manager-remove-btn');
+    var picker = document.getElementById('hotels-manager-picker');
+    var select = document.getElementById('hotels-manager-select');
+    var confirmBtn = document.getElementById('hotels-manager-confirm-btn');
 
-function loadHotelsForManager() {
-    const hotelsSelect = document.getElementById('hotels-manager-select');
-    if (!hotelsSelect || !window.tourHotelsData) return;
-    
-    // Garder la première option vide
-    while (hotelsSelect.options.length > 1) {
-        hotelsSelect.remove(1);
+    function getDrawerDay() {
+        var drawer = document.getElementById('day-builder-drawer');
+        if (!drawer) return { index: '', number: 1 };
+        return {
+            index: drawer.getAttribute('data-day-index') || '',
+            number: parseInt(drawer.getAttribute('data-day-number') || '1', 10) || 1
+        };
     }
-    
-    // Ajouter les hôtels
-    Object.values(window.tourHotelsData).forEach(hotel => {
-        const opt = document.createElement('option');
-        opt.value = hotel.id;
-        opt.textContent = hotel.hotel_name || 'Hôtel (ID: ' + hotel.id + ')';
-        hotelsSelect.appendChild(opt);
+
+    function refreshUI() {
+        var day = getDrawerDay();
+        if (titleEl) titleEl.textContent = 'Hôtels – Jour ' + day.number;
+        if (descEl) descEl.textContent = 'Configurez l\'hôtel pour ce jour. Un seul hôtel par jour.';
+        if (chooseBtnLabel) chooseBtnLabel.textContent = 'Choisir / Modifier l\'hôtel (Jour ' + day.number + ')';
+
+        var hotelId = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getHotel(day.index) : null;
+        if (summaryEl) {
+            if (!hotelId || !window.tourHotelsData || !window.tourHotelsData[hotelId]) {
+                summaryEl.textContent = 'Aucun hôtel configuré';
+            } else {
+                summaryEl.textContent = 'Hôtel sélectionné : ' + (window.tourHotelsData[hotelId].hotel_name || '—');
+            }
+        }
+        if (removeBtn) removeBtn.classList.toggle('d-none', !hotelId);
+        if (select && window.tourHotelsData) {
+            var curVal = select.value;
+            while (select.options.length > 1) select.remove(1);
+            Object.values(window.tourHotelsData).forEach(function(h) {
+                var opt = document.createElement('option');
+                opt.value = h.id;
+                opt.textContent = h.hotel_name || 'Hôtel (ID: ' + h.id + ')';
+                select.appendChild(opt);
+            });
+            if (hotelId) select.value = hotelId;
+        }
+    }
+
+    document.addEventListener('day-builder:context-changed', function(e) {
+        var detail = e.detail || {};
+        var dayIndex = String(detail.dayIndex || '');
+        if (window.dayItemsManager) window.dayItemsManager.loadFromForm(dayIndex);
+        refreshUI();
+        if (picker) picker.style.display = 'none';
     });
-}
 
-function updateHotelsDetails(hotelId) {
-    if (!hotelId || !window.tourHotelsData || !window.tourHotelsData[hotelId]) {
-        document.getElementById('hotels-manager-details').style.display = 'none';
-        return;
+    if (chooseBtn && picker) {
+        chooseBtn.addEventListener('click', function() {
+            picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+        });
     }
-    
-    const hotel = window.tourHotelsData[hotelId];
-    document.getElementById('hotels-hotel-name').textContent = hotel.hotel_name || '—';
-    document.getElementById('hotels-hotel-address').textContent = hotel.address || '—';
-    document.getElementById('hotels-hotel-room-type').textContent = hotel.room_type || '—';
-    document.getElementById('hotels-hotel-meal-plan').textContent = hotel.meal_plan || '—';
-    document.getElementById('hotels-manager-details').style.display = '';
-}
 
-// Select : mise à jour de l'aperçu uniquement (appliquer au jour au clic Confirmer)
-document.addEventListener('change', function(e) {
-    if (e.target.id === 'hotels-manager-select') {
-        var hotelId = e.target.value ? parseInt(e.target.value, 10) : null;
-        updateHotelsDetails(hotelId);
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function() {
+            var day = getDrawerDay();
+            if (!window.dayItemsManager || day.index === '') return;
+            window.dayItemsManager.setHotel(day.index, null);
+            window.dayItemsManager.syncToForm(day.index);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+            refreshUI();
+            if (picker) picker.style.display = 'none';
+        });
     }
-});
 
-// Confirmer : affecte l'hôtel au jour courant, sync, met à jour le résumé, ferme le drawer
-document.addEventListener('click', function(e) {
-    if (e.target.id !== 'hotels-manager-confirm-btn' && !e.target.closest('#hotels-manager-confirm-btn')) return;
-    var drawer = document.getElementById('day-builder-drawer');
-    var dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
-    var hotelsSelect = document.getElementById('hotels-manager-select');
-    if (!window.dayItemsManager || dayIndex === '' || !hotelsSelect) return;
-    var hotelId = hotelsSelect.value ? parseInt(hotelsSelect.value, 10) : null;
-    window.dayItemsManager.setHotel(dayIndex, hotelId);
-    window.dayItemsManager.syncToForm(dayIndex);
-    document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: dayIndex } }));
-    if (drawer && typeof bootstrap !== 'undefined') {
-        var offcanvas = bootstrap.Offcanvas.getInstance(drawer);
-        if (offcanvas) offcanvas.hide();
+    if (confirmBtn && select) {
+        confirmBtn.addEventListener('click', function() {
+            var day = getDrawerDay();
+            if (!window.dayItemsManager || day.index === '') return;
+            var hotelId = select.value ? parseInt(select.value, 10) : null;
+            window.dayItemsManager.setHotel(day.index, hotelId);
+            window.dayItemsManager.syncToForm(day.index);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+            refreshUI();
+            picker.style.display = 'none';
+            var drawer = document.getElementById('day-builder-drawer');
+            if (drawer && typeof bootstrap !== 'undefined') {
+                var offcanvas = bootstrap.Offcanvas.getInstance(drawer);
+                if (offcanvas) offcanvas.hide();
+            }
+        });
     }
-});
+
+    refreshUI();
+})();
 </script>
