@@ -7,6 +7,7 @@ use App\Http\Requests\StoreActivityRequest;
 use App\Http\Requests\UpdateActivityRequest;
 use App\Models\Wp\Activity;
 use App\Services\WordPressMediaService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -27,20 +28,33 @@ class ActivityController extends Controller
         return view('admin.circuits.activities.create');
     }
 
-    public function store(StoreActivityRequest $request): RedirectResponse
+    public function store(StoreActivityRequest $request): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
-        
+
         // Handle image upload
         if ($request->hasFile('image')) {
             $attachmentId = $this->mediaService->uploadAndCreateAttachment($request->file('image'));
             $data['image_id'] = $attachmentId;
         }
-        
+
         // Remove 'image' from data as it's not a database column
         unset($data['image']);
-        
-        Activity::create($data);
+
+        $activity = Activity::create($data);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('Activité créée avec succès.'),
+                'activity' => [
+                    'id' => $activity->id,
+                    'title' => $activity->title,
+                    'description' => $activity->description ?? '',
+                ],
+            ]);
+        }
+
         return redirect()
             ->route('admin.circuits.activities.index')
             ->with('success', 'Activité créée avec succès.');
