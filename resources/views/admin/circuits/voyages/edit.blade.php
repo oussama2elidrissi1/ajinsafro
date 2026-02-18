@@ -304,8 +304,8 @@
                 .flight-manager[data-mode="modal"] .flight-opt-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
                 .flight-manager .flight-option-toggle { padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 .flight-manager .quick-access-flights { font-size: 11px; }
-                #programme-add-element-modal .nav-tabs .nav-link { font-size: 13px; padding: 8px 16px; }
-                #programme-add-element-modal .nav-tabs .nav-link.active { background: #e7f1ff; border-color: #b6d7ff #b6d7ff #ffffff; color: #0d6efd; }
+                #day-builder-drawer .nav-pills .nav-link { font-size: 13px; padding: 8px 12px; }
+                #day-builder-drawer .nav-pills .nav-link.active { background: #e7f1ff; border-color: #b6d7ff; color: #0d6efd; }
                 .modal-flight-validation .alert-sm { padding: 8px 12px; font-size: 12px; }
                 .flight-section-focused[data-type="outbound"] { border-left: 4px solid #28a745; }
                 .flight-section-focused[data-type="return"] { border-left: 4px solid #dc3545; }
@@ -2256,7 +2256,7 @@
                                         @endforeach
                                     </div>
                                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                                        <button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}" data-bs-toggle="modal" data-bs-target="#programme-add-element-modal">
+                                        <button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}" data-day-number="{{ $day->day_number }}">
                                             <i class="bx bx-plus"></i> Ajouter un élément
                                         </button>
                                         <span class="small text-muted">ou</span>
@@ -2282,76 +2282,15 @@
                 </div>
             </div>
 
-            {{-- Modal Ajouter un élément (Vols / Transferts / Hôtels / Activités) --}}
-            <div class="modal fade" id="programme-add-element-modal" tabindex="-1" aria-labelledby="programme-add-element-modal-label" aria-hidden="true" data-day-index="" data-day-id="">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="programme-add-element-modal-label">Ajouter un élément au jour</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                        </div>
-                        <div class="modal-body">
-                            <ul class="nav nav-tabs mb-3" role="tablist">
-                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-activities" type="button">Activités</button></li>
-                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-flights" type="button">Vols</button></li>
-                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-transfers" type="button">Transferts</button></li>
-                                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-hotels" type="button">Hôtels</button></li>
-                            </ul>
-                            <div class="tab-content">
-                                <div class="tab-pane fade show active" id="tab-activities">
-                                    <div class="row g-3" id="programme-modal-activities">
-                                        @foreach($activitiesCatalog as $act)
-                                            <div class="col-md-6 col-lg-4">
-                                                <div class="card h-100 programme-catalog-card">
-                                                    <div class="card-body d-flex flex-column">
-                                                        <h6 class="card-title">{{ $act->title }}</h6>
-                                                        <p class="card-text small text-muted flex-grow-1">{{ \Illuminate\Support\Str::limit($act->description ?? '', 80) }}</p>
-                                                        <button type="button" class="btn btn-sm btn-primary programme-modal-add-activity" data-activity-id="{{ $act->id }}" data-activity-title="{{ e($act->title) }}">Ajouter au jour</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                        @if($activitiesCatalog->isEmpty())
-                                            <div class="col-12 text-muted">Aucune activité dans le catalogue.</div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="tab-flights">
-                                    {{-- Flight Manager en mode modal --}}
-                                    @include('admin.circuits.voyages.partials._flight_manager', [
-                                        'mode' => 'modal',
-                                        'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
-                                        'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
-                                        'lastDayNumber' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1),
-                                        'airlines' => $airlines ?? collect(),
-                                        'dayNumber' => null, // Sera défini dynamiquement par JS
-                                        'totalDays' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1)
-                                    ])
-                                </div>
-                                <div class="tab-pane fade" id="tab-transfers"><p class="text-muted">Transferts : à configurer.</p></div>
-                                <div class="tab-pane fade" id="tab-hotels"><p class="text-muted">Hôtels : à configurer.</p></div>
-                            </div>
-                        </div>
-                        {{-- Footer sticky du modal --}}
-                        <div class="modal-footer sticky-bottom bg-white border-top">
-                            <div class="d-flex justify-content-between align-items-center w-100">
-                                <div class="text-muted small">
-                                    <i class="bx bx-info-circle me-1"></i>
-                                    <span id="modal-flight-context-info">Configurez les éléments pour ce jour</span>
-                                </div>
-                                <div>
-                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
-                                        <i class="bx bx-x me-1"></i>Fermer
-                                    </button>
-                                    <button type="button" class="btn btn-primary" id="modal-save-elements">
-                                        <i class="bx bx-save me-1"></i>Enregistrer
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{-- Drawer Ajouter un élément (Vols / Transferts / Hôtels / Activités) --}}
+            @include('admin.circuits.voyages.components.DayBuilderDrawer', [
+                'activitiesCatalog' => $activitiesCatalog,
+                'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
+                'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
+                'lastDayNumber' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1),
+                'airlines' => $airlines ?? collect(),
+                'programDays' => $programDays ?? collect()
+            ])
         </div>
 
         {{-- SAVE BUTTON (Fixed bottom) --}}
@@ -3085,6 +3024,7 @@
                     });
                     card.querySelectorAll('[data-day-index]').forEach(function(el) { el.setAttribute('data-day-index', i); });
                     card.querySelectorAll('.add-activity-select, .add-activity-to-day').forEach(function(el) { el.setAttribute('data-day-index', i); });
+                    card.querySelectorAll('.btn-add-element-to-day').forEach(function(el) { el.setAttribute('data-day-number', i + 1); });
                     var label = card.querySelector('.programme-day-label');
                     var titleInput = card.querySelector('input[name$="[day_title]"]');
                     var dayNum = i + 1;
@@ -3123,7 +3063,7 @@
                     '<h6 class="mt-3 mb-2">Éléments du jour</h6>' +
                     '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
                     '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-                    '<button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="' + index + '" data-day-id="" data-bs-toggle="modal" data-bs-target="#programme-add-element-modal"><i class="bx bx-plus"></i> Ajouter un élément</button>' +
+                    '<button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="' + index + '" data-day-id="" data-day-number="' + (index + 1) + '"><i class="bx bx-plus"></i> Ajouter un élément</button>' +
                     '<span class="small text-muted">ou</span>' +
                     '<select class="form-select form-select-sm add-activity-select" style="max-width:240px" data-day-index="' + index + '" data-day-id="">' +
                     '<option value="">-- Activité rapide --</option>' + actOpts + '</select>' +
@@ -3260,50 +3200,125 @@
             }).catch(function() {});
         };
 
-        (function programmeModalAndAutosave() {
-            var modal = document.getElementById('programme-add-element-modal');
-            if (!modal) return;
-            modal.addEventListener('show.bs.modal', function(e) {
-                var btn = e.relatedTarget;
-                if (btn && btn.classList && btn.classList.contains('btn-add-element-to-day')) {
-                    modal.setAttribute('data-day-index', btn.getAttribute('data-day-index') || '');
-                    modal.setAttribute('data-day-id', btn.getAttribute('data-day-id') || '');
+        function updateProgrammeDayInclus(card) {
+            if (!card) return;
+            var list = card.querySelector('.programme-activities-list');
+            var inclusEl = card.querySelector('.programme-day-inclus');
+            if (!list || !inclusEl) return;
+            var count = list.querySelectorAll('.programme-activity-row').length;
+            inclusEl.textContent = 'INCLUS : ' + count + (count > 1 ? ' Activités' : ' Activité');
+        }
+
+        function appendActivityToDay(dayIndex, activityId, activityTitle) {
+            if (dayIndex === null || dayIndex === '' || !activityId) return false;
+            var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+            var list = card && card.querySelector('.programme-activities-list');
+            if (!list) return false;
+            var k = list.querySelectorAll('.programme-activity-row').length;
+            var prefix = 'programme_days[' + dayIndex + '][activities][' + k + ']';
+            var row = document.createElement('div');
+            row.className = 'programme-activity-row card mb-2';
+            row.setAttribute('data-day-activity-id', '0');
+            row.setAttribute('draggable', 'true');
+            row.innerHTML = '<div class="card-body py-2"><div class="d-flex flex-wrap align-items-start gap-2">' +
+                '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
+                '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
+                '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
+                '<span class="fw-medium">' + (activityTitle || 'Activité').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
+                '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
+                '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
+                '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
+                '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description"></textarea>' +
+                '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button></div></div>';
+            list.appendChild(row);
+            updateProgrammeDayInclus(card);
+            return true;
+        }
+
+        (function dayBuilderDrawerManager() {
+            var drawer = document.getElementById('day-builder-drawer');
+            if (!drawer || !window.bootstrap || !bootstrap.Offcanvas) return;
+
+            var titleEl = document.getElementById('day-builder-drawer-label');
+            var contextEl = document.getElementById('day-builder-drawer-context');
+            var flightsManager = document.getElementById('day-builder-flights-manager');
+            var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawer);
+
+            function setDrawerContext(dayIndex, dayId, dayNumber) {
+                var dayNum = parseInt(dayNumber || '0', 10);
+                if (!dayNum || dayNum < 1) {
+                    var parsedIndex = parseInt(dayIndex || '0', 10);
+                    dayNum = isNaN(parsedIndex) ? 1 : (parsedIndex + 1);
                 }
-            });
-            modal.addEventListener('click', function(e) {
-                var addBtn = e.target.closest('.programme-modal-add-activity');
+
+                drawer.setAttribute('data-day-index', dayIndex || '');
+                drawer.setAttribute('data-day-id', dayId || '');
+                drawer.setAttribute('data-day-number', String(dayNum));
+
+                if (titleEl) titleEl.textContent = 'Jour ' + dayNum + ' — Ajouter';
+                if (contextEl) contextEl.textContent = 'Ajout direct dans les éléments du Jour ' + dayNum + '.';
+
+                if (flightsManager) {
+                    var manager = flightsManager.querySelector('.flight-manager');
+                    if (manager) manager.setAttribute('data-day-number', String(dayNum));
+                }
+
+                document.dispatchEvent(new CustomEvent('day-builder:context-changed', {
+                    detail: {
+                        dayIndex: dayIndex || '',
+                        dayId: dayId || '',
+                        dayNumber: dayNum
+                    }
+                }));
+            }
+
+            function openForButton(btn, forcedTab) {
+                if (!btn) return;
+                setDrawerContext(
+                    btn.getAttribute('data-day-index') || '',
+                    btn.getAttribute('data-day-id') || '',
+                    btn.getAttribute('data-day-number') || ''
+                );
+
+                offcanvas.show();
+
+                if (forcedTab) {
+                    var tabButton = drawer.querySelector('[data-bs-target="#day-builder-tab-' + forcedTab + '"]');
+                    if (tabButton && bootstrap.Tab) {
+                        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+                    }
+                }
+            }
+
+            document.addEventListener('click', function(e) {
+                var openBtn = e.target.closest('.btn-add-element-to-day');
+                if (openBtn) {
+                    e.preventDefault();
+                    openForButton(openBtn);
+                    return;
+                }
+
+                var addBtn = e.target.closest('.day-builder-add-activity');
                 if (!addBtn) return;
+
                 e.preventDefault();
-                var dayIndex = modal.getAttribute('data-day-index');
-                var dayId = modal.getAttribute('data-day-id');
+                var dayIndex = drawer.getAttribute('data-day-index');
                 var activityId = addBtn.getAttribute('data-activity-id');
                 var activityTitle = addBtn.getAttribute('data-activity-title') || 'Activité';
-                if (!dayIndex || !activityId) return;
-                var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
-                var list = card && card.querySelector('.programme-activities-list');
-                if (!list) return;
-                var k = list.querySelectorAll('.programme-activity-row').length;
-                var prefix = 'programme_days[' + dayIndex + '][activities][' + k + ']';
-                var row = document.createElement('div');
-                row.className = 'programme-activity-row card mb-2';
-                row.setAttribute('data-day-activity-id', '0');
-                row.setAttribute('draggable', 'true');
-                row.innerHTML = '<div class="card-body py-2"><div class="d-flex flex-wrap align-items-start gap-2">' +
-                    '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
-                    '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
-                    '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
-                    '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
-                    '<span class="fw-medium">' + (activityTitle || 'Activité').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
-                    '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
-                    '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
-                    '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
-                    '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description"></textarea>' +
-                    '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button></div></div>';
-                list.appendChild(row);
-                var inclusEl = card.querySelector('.programme-day-inclus');
-                if (inclusEl) { var n = list.querySelectorAll('.programme-activity-row').length; inclusEl.textContent = 'INCLUS : ' + n + (n > 1 ? ' Activités' : ' Activité'); }
-                if (window.bootstrap && bootstrap.Modal) { var m = bootstrap.Modal.getInstance(modal); if (m) m.hide(); }
+                if (!appendActivityToDay(dayIndex, activityId, activityTitle)) return;
                 if (window.autosaveProgram) window.autosaveProgram();
+            });
+
+            document.addEventListener('day-builder:set-day', function(e) {
+                var detail = (e && e.detail) ? e.detail : {};
+                var dayNumber = parseInt(detail.dayNumber || '0', 10);
+                if (!dayNumber || dayNumber < 1) return;
+                var targetCard = document.querySelector('.programme-day-card[data-day-index="' + (dayNumber - 1) + '"]');
+                if (!targetCard) return;
+                var helperBtn = targetCard.querySelector('.btn-add-element-to-day');
+                if (!helperBtn) return;
+                openForButton(helperBtn, detail.tab || 'flights');
             });
         })();
 
@@ -3352,207 +3367,6 @@
             });
         })();
 
-        // Gestion de l'onglet Vols dans le modal "Ajouter un élément" 
-        (function modalFlightsManager() {
-            const modal = document.getElementById('programme-add-element-modal');
-            const flightsTab = document.querySelector('#tab-flights');
-            const flightManager = flightsTab ? flightsTab.querySelector('.flight-manager') : null;
-            const contextInfo = document.getElementById('modal-flight-context-info');
-            const saveBtn = document.getElementById('modal-save-elements');
-            
-            if (!modal || !flightManager) return;
-
-            // Variables globales pour le contexte
-            let currentDayNumber = null;
-            let totalDays = {{ $lastDayNumber ?? 1 }};
-
-            // Mise à jour du contexte quand le modal s'ouvre
-            modal.addEventListener('show.bs.modal', function(e) {
-                const btn = e.relatedTarget;
-                if (btn && btn.classList && btn.classList.contains('btn-add-element-to-day')) {
-                    const dayIndex = parseInt(btn.getAttribute('data-day-index') || '0');
-                    currentDayNumber = dayIndex + 1; // dayIndex est 0-based, dayNumber est 1-based
-                    
-                    // Mettre à jour le contexte du flight manager
-                    flightManager.setAttribute('data-day-number', currentDayNumber);
-                    
-                    // Mettre à jour l'affichage du contexte
-                    updateFlightContext();
-                    
-                    // Masquer/montrer les sections appropriées
-                    updateFlightSections();
-                }
-            });
-
-            // Fonction pour mettre à jour le contexte affiché
-            function updateFlightContext() {
-                if (!contextInfo || !currentDayNumber) return;
-                
-                let message = '';
-                if (currentDayNumber === 1) {
-                    message = 'Jour ' + currentDayNumber + ' - Configuration recommandée : Vol Aller';
-                } else if (currentDayNumber === totalDays) {
-                    message = 'Jour ' + currentDayNumber + ' - Configuration recommandée : Vol Retour';
-                } else {
-                    message = 'Jour ' + currentDayNumber + ' - Vols internes ou connexions';
-                }
-                
-                contextInfo.textContent = message;
-            }
-
-            // Fonction pour mettre à jour l'affichage des sections selon le contexte
-            function updateFlightSections() {
-                if (!flightManager || !currentDayNumber) return;
-
-                const modalContext = flightManager.querySelector('.modal-flight-context');
-                if (modalContext) {
-                    const contextText = modalContext.querySelector('.text-primary');
-                    const contextDescription = modalContext.querySelector('.small.text-muted');
-                    
-                    if (contextText && contextDescription) {
-                        contextText.innerHTML = '<strong class="text-primary">Jour ' + currentDayNumber + '</strong>';
-                        
-                        if (currentDayNumber === 1) {
-                            contextText.innerHTML += ' - Configuration du vol aller';
-                            contextDescription.textContent = 'Ce jour correspond au vol aller du circuit';
-                        } else if (currentDayNumber === totalDays) {
-                            contextText.innerHTML += ' - Configuration du vol retour'; 
-                            contextDescription.textContent = 'Ce jour correspond au vol retour du circuit';
-                        } else {
-                            contextText.innerHTML += ' - Vols internes';
-                            contextDescription.textContent = 'Vols aller (Jour 1) et retour (Jour ' + totalDays + ') à configurer séparément';
-                        }
-                    }
-                }
-
-                // Activer l'onglet par défaut selon le contexte
-                if (currentDayNumber === 1) {
-                    // Focus sur vol aller
-                    setTimeout(() => focusFlightSection('outbound'), 200);
-                } else if (currentDayNumber === totalDays) {
-                    // Focus sur vol retour
-                    setTimeout(() => focusFlightSection('return'), 200);
-                }
-            }
-
-            // Fonction pour focus sur une section de vol spécifique
-            function focusFlightSection(type) {
-                const section = flightManager.querySelector(`[data-flight-section="${type}"], [data-type="${type}"]`);
-                if (section) {
-                    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Highlighting temporaire
-                    section.style.border = '2px solid #0d6efd';
-                    section.style.borderRadius = '8px';
-                    setTimeout(() => {
-                        section.style.border = '';
-                        section.style.borderRadius = '';
-                    }, 2000);
-                }
-            }
-
-            // Gestion du bouton Enregistrer
-            if (saveBtn) {
-                saveBtn.addEventListener('click', function() {
-                    // Validation des vols avant enregistrement
-                    const noFlightsToggle = flightManager.querySelector('input[type="checkbox"][id*="no-flights-toggle"]');
-                    
-                    if (noFlightsToggle && !noFlightsToggle.checked) {
-                        // Vérifier s'il y a au moins un vol configuré pour les jours appropriés
-                        const hasFlights = validateModalFlights();
-                        if (!hasFlights) {
-                            showFlightValidationMessage('Veuillez configurer au moins un vol ou activer "Sans vol"');
-                            return;
-                        }
-                    }
-
-                    // Si validation OK, fermer le modal et déclencher sauvegarde
-                    const bsModal = bootstrap.Modal.getInstance(modal);
-                    if (bsModal) bsModal.hide();
-                    
-                    // Trigger autosave si disponible
-                    if (window.autosaveProgram) {
-                        setTimeout(() => window.autosaveProgram(), 300);
-                    }
-                });
-            }
-
-            // Fonction de validation des vols
-            function validateModalFlights() {
-                const flightCards = flightManager.querySelectorAll('.flight-opt-card[data-flight-opt-index]');
-                let hasRelevantFlight = false;
-
-                if (currentDayNumber === 1) {
-                    // Vérifier s'il y a un vol aller
-                    hasRelevantFlight = Array.from(flightCards).some(card => {
-                        const typeInput = card.querySelector('input[name*="[type]"]');
-                        return typeInput && typeInput.value === 'outbound';
-                    });
-                } else if (currentDayNumber === totalDays) {
-                    // Vérifier s'il y a un vol retour
-                    hasRelevantFlight = Array.from(flightCards).some(card => {
-                        const typeInput = card.querySelector('input[name*="[type]"]');
-                        return typeInput && typeInput.value === 'return';
-                    });
-                } else {
-                    // Pour les jours intermédiaires, pas d'obligation
-                    hasRelevantFlight = true;
-                }
-
-                return hasRelevantFlight;
-            }
-
-            // Fonction pour afficher un message de validation
-            function showFlightValidationMessage(message) {
-                const validationAlert = flightManager.querySelector('#flight-validation-error');
-                if (validationAlert) {
-                    const messageEl = validationAlert.querySelector('.validation-message');
-                    if (messageEl) {
-                        messageEl.textContent = message;
-                        validationAlert.classList.remove('d-none');
-                        
-                        // Auto-cacher après 5 secondes
-                        setTimeout(() => {
-                            validationAlert.classList.add('d-none');
-                        }, 5000);
-                    }
-                }
-            }
-
-            // Gestion des dropdowns dans le modal (z-index fixes)
-            modal.addEventListener('shown.bs.modal', function() {
-                // Fixer les problèmes de z-index pour Select2 ou autres dropdowns
-                const selects = flightManager.querySelectorAll('select');
-                selects.forEach(select => {
-                    // Si Select2 est utilisé, configurer dropdownParent
-                    if (window.jQuery && window.jQuery.fn.select2) {
-                        jQuery(select).select2({
-                            dropdownParent: jQuery(modal)
-                        });
-                    }
-                });
-
-                // Fixer les datepickers si nécessaire
-                const dateInputs = flightManager.querySelectorAll('input[type="date"]');
-                dateInputs.forEach(input => {
-                    // Configuration spécifique pour modal si un datepicker est utilisé
-                    input.style.position = 'relative';
-                    input.style.zIndex = '9999';
-                });
-            });
-
-            // Nettoyage quand le modal se ferme
-            modal.addEventListener('hidden.bs.modal', function() {
-                currentDayNumber = null;
-                
-                // Masquer les alertes de validation
-                const validationAlert = flightManager.querySelector('#flight-validation-error');
-                if (validationAlert) {
-                    validationAlert.classList.add('d-none');
-                }
-            });
-        })();
-
         // Programme (Jours): Add activity to day (délégation pour les jours ajoutés dynamiquement)
         document.addEventListener('click', function(e) {
             if (e.target.closest('.add-activity-to-day')) {
@@ -3563,28 +3377,7 @@
                 var activityId = select && select.value;
                 var activityTitle = select && select.options[select.selectedIndex] && select.options[select.selectedIndex].text;
                 if (!activityId || dayIndex === null) return;
-                var list = card ? card.querySelector('.programme-activities-list') : null;
-                if (!list) return;
-                var k = list.querySelectorAll('.programme-activity-row').length;
-                var prefix = 'programme_days[' + dayIndex + '][activities][' + k + ']';
-                var row = document.createElement('div');
-                row.className = 'programme-activity-row card mb-2';
-                row.setAttribute('data-day-activity-id', '0');
-                row.setAttribute('draggable', 'true');
-                row.innerHTML = '<div class="card-body py-2">' +
-                    '<div class="d-flex flex-wrap align-items-start gap-2">' +
-                    '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
-                    '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
-                    '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
-                    '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
-                    '<span class="fw-medium">' + (activityTitle || 'Activité').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
-                    '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
-                    '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
-                    '<input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre personnalisé">' +
-                    '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description personnalisée"></textarea>' +
-                    '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>' +
-                    '</div></div>';
-                list.appendChild(row);
+                if (!appendActivityToDay(dayIndex, activityId, activityTitle)) return;
                 select.value = '';
                 if (window.autosaveProgram) window.autosaveProgram();
             }
@@ -3593,9 +3386,7 @@
                 if (row && confirm('Retirer cette activité du jour ?')) {
                     var card = row.closest('.programme-day-card');
                     row.remove();
-                    var inclus = card && card.querySelector('.programme-day-inclus');
-                    var list = card && card.querySelector('.programme-activities-list');
-                    if (inclus && list) { var n = list.querySelectorAll('.programme-activity-row').length; inclus.textContent = 'INCLUS : ' + n + (n > 1 ? ' Activités' : ' Activité'); }
+                    updateProgrammeDayInclus(card);
                     if (window.autosaveProgram) window.autosaveProgram();
                 }
             }
