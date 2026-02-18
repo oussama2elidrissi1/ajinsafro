@@ -10,7 +10,8 @@ return new class extends Migration
     {
         // Table pivot dans la base 'default' (puisque TravelProgramDay est en 'default')
         // Elle relie TravelProgramDay (travel_program_days.id) avec TourTransfer (aj_tour_transfers.id, qui est sur 'wp')
-        Schema::create('program_day_transfers', function (Blueprint $table) {
+        // Utiliser explicitement la connexion 'mysql' (default) pour éviter que Laravel utilise la connexion 'wp'
+        Schema::connection('mysql')->create('program_day_transfers', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('program_day_id')->index();
             $table->unsignedBigInteger('transfer_id')->index();
@@ -31,6 +32,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('program_day_transfers');
+        Schema::connection('mysql')->dropIfExists('program_day_transfers');
     }
 };

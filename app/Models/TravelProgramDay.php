@@ -59,7 +59,8 @@ class TravelProgramDay extends Model
 
     public function transfers()
     {
-        return $this->belongsToMany(TourTransfer::class, 'program_day_transfers', 'program_day_id', 'transfer_id');
+        return $this->belongsToMany(TourTransfer::class, 'program_day_transfers', 'program_day_id', 'transfer_id')
+            ->using(ProgramDayTransfer::class);
     }
 
     public function items()
