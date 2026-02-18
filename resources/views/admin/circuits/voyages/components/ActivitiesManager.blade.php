@@ -2,13 +2,10 @@
     {{-- Créer une nouvelle activité (sans quitter le drawer / sans rafraîchir) --}}
     <div class="col-12 mb-2">
         <div class="card border-primary">
-            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+            <div class="card-header bg-light py-2">
                 <strong><i class="bx bx-plus-circle"></i> Créer une nouvelle activité</strong>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="day-builder-toggle-new-activity" aria-expanded="false" aria-controls="day-builder-new-activity-form">
-                    <span class="btn-text">Afficher le formulaire</span>
-                </button>
             </div>
-            <div id="day-builder-new-activity-form" class="card-body" style="display: none;">
+            <div id="day-builder-new-activity-form" class="card-body">
                 <form id="day-builder-new-activity-form-el" action="{{ route('admin.circuits.activities.store') }}" method="POST">
                     @csrf
                     <div class="row g-2">
@@ -68,25 +65,6 @@
 
     if (!form || !container) return;
 
-    // Délégation d'événement : le clic fonctionne même si le drawer/onglet est chargé dynamiquement
-    document.addEventListener('click', function(e) {
-        var toggleBtn = e.target && e.target.closest && e.target.closest('#day-builder-toggle-new-activity');
-        if (!toggleBtn || !formWrap) return;
-        e.preventDefault();
-        var isShown = formWrap.style.display !== 'none';
-        if (!isShown) {
-            formWrap.style.display = 'block';
-            toggleBtn.setAttribute('aria-expanded', 'true');
-            var txt = toggleBtn.querySelector('.btn-text');
-            if (txt) txt.textContent = 'Masquer le formulaire';
-        } else {
-            formWrap.style.display = 'none';
-            toggleBtn.setAttribute('aria-expanded', 'false');
-            var txt = toggleBtn.querySelector('.btn-text');
-            if (txt) txt.textContent = 'Afficher le formulaire';
-        }
-    });
-
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
@@ -127,13 +105,6 @@
             }
             if (emptyMsg) emptyMsg.style.display = 'none';
             form.reset();
-            if (formWrap) formWrap.style.display = 'none';
-            var toggleBtn = document.getElementById('day-builder-toggle-new-activity');
-            if (toggleBtn) {
-                toggleBtn.setAttribute('aria-expanded', 'false');
-                var t = toggleBtn.querySelector('.btn-text');
-                if (t) t.textContent = 'Afficher le formulaire';
-            }
         })
         .catch(function(err) {
             var msg = (err && err.message) || 'Erreur lors de la création.';
