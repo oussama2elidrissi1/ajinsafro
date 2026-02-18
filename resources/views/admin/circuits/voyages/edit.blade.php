@@ -2214,6 +2214,11 @@
                                     </div>
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
+                                    
+                                    {{-- Inputs hidden pour lignage par jour: vols/hôtel/transferts --}}
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][flights]" value="">
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="">
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="">
 
                                     <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
                                         INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activités' : 'Activité' }}
@@ -3291,10 +3296,140 @@
             var flightsManager = document.getElementById('day-builder-flights-manager');
             var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawer);
 
+            // ===== GESTIONNAIRE D'ÉTAT UNIFIÉ POUR VOLS/HÔTELS/TRANSFERTS PAR JOUR =====
+            window.dayItemsManager = {
+                // État interne : {dayIndex: {flights: [], hotel_id: null, transfer_ids: []}}
+                state: {},
+
+                // Initialiser depuis le formulaire (programme_days[X][...])
+                init: function() {
+                    this.state = {};
+                    var cards = document.querySelectorAll('.programme-day-card');
+                    cards.forEach(function(card, idx) {
+                        var dayId = card.getAttribute('data-day-id');
+                        var hotelsInput = card.querySelector('input[name^="programme_days["][name$="[hotel_id]"]');
+                        var transferInput = card.querySelector('input[name^="programme_days["][name$="[transfer_ids]"]');
+                        var flightsInput = card.querySelector('input[name^="programme_days["][name$="[flights]"]');
+
+                        window.dayItemsManager.state[String(idx)] = {
+                            dayId: dayId,
+                            flights: [],
+                            hotel_id: null,
+                            transfer_ids: []
+                        };
+                    });
+                },
+
+                // Obtenir l'état pour un jour
+                getDay: function(dayIndex) {
+                    var key = String(dayIndex);
+                    if (!this.state[key]) {
+                        this.state[key] = { dayId: null, flights: [], hotel_id: null, transfer_ids: [] };
+                    }
+                    return this.state[key];
+                },
+
+                // Défaut les vols pour un jour
+                setFlights: function(dayIndex, flightIds) {
+                    var day = this.getDay(dayIndex);
+                    day.flights = Array.isArray(flightIds) ? flightIds : (flightIds ? [flightIds] : []);
+                    this.syncToForm(dayIndex);
+                },
+
+                // Obtenir les vols pour un jour
+                getFlights: function(dayIndex) {
+                    return (this.getDay(dayIndex).flights || []).slice();
+                },
+
+                // Défaut l'hôtel pour un jour
+                setHotel: function(dayIndex, hotelId) {
+                    var day = this.getDay(dayIndex);
+                    day.hotel_id = hotelId || null;
+                    this.syncToForm(dayIndex);
+                },
+
+                // Obtenir l'hôtel pour un jour
+                getHotel: function(dayIndex) {
+                    return this.getDay(dayIndex).hotel_id;
+                },
+
+                // Défaut les transferts pour un jour
+                setTransfers: function(dayIndex, transferIds) {
+                    var day = this.getDay(dayIndex);
+                    day.transfer_ids = Array.isArray(transferIds) ? transferIds : (transferIds ? [transferIds] : []);
+                    this.syncToForm(dayIndex);
+                },
+
+                // Obtenir les transferts pour un jour
+                getTransfers: function(dayIndex) {
+                    return (this.getDay(dayIndex).transfer_ids || []).slice();
+                },
+
+                // Synchroniser l'état avec le formulaire (écrire dans les inputs hidden)
+                syncToForm: function(dayIndex) {
+                    var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+                    if (!card) return;
+
+                    var day = this.getDay(dayIndex);
+
+                    // Synchroniser vols
+                    var flightsInput = card.querySelector('input[name^="programme_days["][name$="[flights]"]');
+                    if (flightsInput) {
+                        flightsInput.value = day.flights.join(',');
+                    }
+
+                    // Synchroniser hôtel
+                    var hotelInput = card.querySelector('input[name^="programme_days["][name$="[hotel_id]"]');
+                    if (hotelInput) {
+                        hotelInput.value = day.hotel_id || '';
+                    }
+
+                    // Synchroniser transferts
+                    var transferInput = card.querySelector('input[name^="programme_days["][name$="[transfer_ids]"]');
+                    if (transferInput) {
+                        transferInput.value = day.transfer_ids.join(',');
+                    }
+                },
+
+                // Charger depuis le formulaire (lire les inputs hidden existants)
+                loadFromForm: function(dayIndex) {
+                    var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+                    if (!card) return;
+
+                    var day = this.getDay(dayIndex);
+
+                    var flightsInput = card.querySelector('input[name^="programme_days["][name$="[flights]"]');
+                    if (flightsInput && flightsInput.value) {
+                        day.flights = flightsInput.value.split(',').map(function(id) { return parseInt(id.trim(), 10); }).filter(function(id) { return id > 0; });
+                    }
+
+                    var hotelInput = card.querySelector('input[name^="programme_days["][name$="[hotel_id]"]');
+                    if (hotelInput && hotelInput.value) {
+                        day.hotel_id = parseInt(hotelInput.value, 10);
+                    }
+
+                    var transferInput = card.querySelector('input[name^="programme_days["][name$="[transfer_ids]"]');
+                    if (transferInput && transferInput.value) {
+                        day.transfer_ids = transferInput.value.split(',').map(function(id) { return parseInt(id.trim(), 10); }).filter(function(id) { return id > 0; });
+                    }
+                },
+
+                // Compter tous les items (activités + vols + hôtel + transferts)
+                countItems: function(dayIndex) {
+                    var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+                    var list = card && card.querySelector('.programme-activities-list');
+                    var actCount = list ? list.querySelectorAll('.programme-activity-row').length : 0;
+                    var day = this.getDay(dayIndex);
+                    var otherCount = (day.flights ? day.flights.length : 0) + (day.hotel_id ? 1 : 0) + (day.transfer_ids ? day.transfer_ids.length : 0);
+                    return actCount + otherCount;
+                }
+            };
+
+            // Initialiser le gestionnaire au chargement
+            window.dayItemsManager.init();
+
             function getDayItemsCount(dayIndex) {
-                var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
-                var list = card && card.querySelector('.programme-activities-list');
-                return list ? list.querySelectorAll('.programme-activity-row').length : 0;
+                return window.dayItemsManager.countItems(dayIndex);
             }
 
             function updateDrawerSummary(dayNum, dayIndex) {

@@ -57,21 +57,11 @@ document.addEventListener('day-builder:context-changed', function(e) {
     // Charger les hôtels depuis window.tourHotelsData (passés par la vue)
     loadHotelsForManager();
     
-    // Restaurer la sélection depuis programDayHotelsTransfers ou depuis l'input précédent
-    let hotelIdToSelect = '';
+    // Charger depuis le gestionnaire d'état (dayItemsManager)
+    window.dayItemsManager.loadFromForm(dayIndex);
     
-    // D'abord chercher dans window.programDayHotelsTransfers avec la clé dayId (detail.dayId si disponible)
-    if (window.programDayHotelsTransfers && detail.dayId) {
-        const dayHotelsTransfers = window.programDayHotelsTransfers[String(detail.dayId)];
-        if (dayHotelsTransfers && dayHotelsTransfers.hotel_id) {
-            hotelIdToSelect = String(dayHotelsTransfers.hotel_id);
-        }
-    }
-    
-    // Sinon utiliser la valeur de l'input
-    if (!hotelIdToSelect && hotelsInput.value) {
-        hotelIdToSelect = hotelsInput.value;
-    }
+    // Restaurer la sélection : d'abord depuis dayItemsManager, sinon depuis input
+    let hotelIdToSelect = window.dayItemsManager.getHotel(dayIndex) || '';
     
     if (hotelIdToSelect) {
         hotelsSelect.value = hotelIdToSelect;
@@ -119,11 +109,14 @@ function updateHotelsDetails(hotelId) {
 // Listener sur le select pour capturer le changement
 document.addEventListener('change', function(e) {
     if (e.target.id === 'hotels-manager-select') {
-        const hotelId = e.target.value;
+        const hotelId = e.target.value ? parseInt(e.target.value, 10) : null;
         const hotelsInput = document.querySelector('input[name^="programme_days["][name$="[hotel_id]"]');
+        const drawer = document.getElementById('day-builder-drawer');
+        const dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
         
-        if (hotelsInput) {
-            hotelsInput.value = hotelId;
+        // Mettre à jour le gestionnaire d'état
+        if (window.dayItemsManager && dayIndex) {
+            window.dayItemsManager.setHotel(dayIndex, hotelId);
         }
         
         updateHotelsDetails(hotelId);

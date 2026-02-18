@@ -43,21 +43,11 @@ document.addEventListener('day-builder:context-changed', function(e) {
     // Charger et afficher les transferts
     loadTransfersForManager();
     
-    // Restaurer les sélections depuis programDayHotelsTransfers ou depuis l'input précédent
-    let transferIdsToSelect = [];
+    // Charger depuis le gestionnaire d'état
+    window.dayItemsManager.loadFromForm(dayIndex);
     
-    // D'abord chercher dans window.programDayHotelsTransfers avec la clé dayId (detail.dayId si disponible)
-    if (window.programDayHotelsTransfers && detail.dayId) {
-        const dayHotelsTransfers = window.programDayHotelsTransfers[String(detail.dayId)];
-        if (dayHotelsTransfers && Array.isArray(dayHotelsTransfers.transfer_ids) && dayHotelsTransfers.transfer_ids.length > 0) {
-            transferIdsToSelect = dayHotelsTransfers.transfer_ids.map(id => parseInt(id, 10));
-        }
-    }
-    
-    // Sinon utiliser la valeur de l'input
-    if (transferIdsToSelect.length === 0 && transfersInput.value) {
-        transferIdsToSelect = transfersInput.value.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id) && id > 0);
-    }
+    // Restaurer les sélections : d'abord depuis dayItemsManager
+    let transferIdsToSelect = window.dayItemsManager.getTransfers(dayIndex) || [];
     
     updateTransfersSelection(transferIdsToSelect);
 });
@@ -149,11 +139,17 @@ function updateTransfersSelection(selectedIds) {
 function updateTransfersInput() {
     const transfersInput = document.querySelector('input[name^="programme_days["][name$="[transfer_ids]"]');
     const checked = document.querySelectorAll('.transfer-checkbox:checked');
+    const drawer = document.getElementById('day-builder-drawer');
+    const dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
     
     if (!transfersInput) return;
     
-    const ids = Array.from(checked).map(cb => cb.value).join(',');
-    transfersInput.value = ids;
+    const ids = Array.from(checked).map(cb => parseInt(cb.value, 10));
+    
+    // Mettre à jour le gestionnaire d'état
+    if (window.dayItemsManager && dayIndex) {
+        window.dayItemsManager.setTransfers(dayIndex, ids);
+    }
 }
 
 function updateTransfersDetails() {
