@@ -2216,7 +2216,7 @@
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
                                     
                                     {{-- Inputs hidden pour lignage par jour: vols/hôtel/transferts (pré-remplis depuis programDayHotelsTransfers pour le modal Programme) --}}
-                                    @php $dayHotelsTransfers = ($programDayHotelsTransfers ?? [])[$day->id ?? ''] ?? []; @endphp
+                                    @php $dayHotelsTransfers = ($programDayHotelsTransfers ?? [])[$dayIndex] ?? []; @endphp
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][flights]" value="">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ $dayHotelsTransfers['hotel_id'] ?? '' }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ implode(',', $dayHotelsTransfers['transfer_ids'] ?? []) }}">

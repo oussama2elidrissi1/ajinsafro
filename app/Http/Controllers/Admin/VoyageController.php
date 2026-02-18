@@ -7,6 +7,7 @@ use App\Http\Requests\StoreWpTourRequest;
 use App\Http\Requests\UpdateWpTourRequest;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\Activity;
+use App\Models\Wp\TourDay;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Voyage;
 use App\Models\TravelProgramDay;
@@ -335,15 +336,15 @@ class VoyageController extends Controller
         }
 
         // Charger les TravelProgramDay avec relations hotels/transfers pour le modal par jour
-        $travelProgramDaysWithRelations = collect();
-        $programDayHotelsTransfers = []; // Structure : [dayId => ['hotel_id' => x, 'transfer_ids' => [...]]]
+        // Clé par index du jour (0, 1, 2...) pour correspondre à $dayIndex dans la vue (programme_days)
+        $programDayHotelsTransfers = [];
         try {
             $travelProgramDaysWithRelations = $laravelVoyage->programDays()
                 ->with(['hotel', 'transfers'])
                 ->orderBy('day_number')
                 ->get();
-            foreach ($travelProgramDaysWithRelations as $pday) {
-                $programDayHotelsTransfers[(string)$pday->id] = [
+            foreach ($travelProgramDaysWithRelations as $index => $pday) {
+                $programDayHotelsTransfers[$index] = [
                     'hotel_id' => $pday->hotel_id,
                     'transfer_ids' => $pday->transfers()->pluck('id')->toArray(),
                 ];
@@ -1129,8 +1130,8 @@ class VoyageController extends Controller
                 }
             }
 
-            // Sync hotel & transfers for this day (per-day model)
-            $this->syncDayHotelsAndTransfers($dayId, $dayRow);
+            // Sync hotel & transfers for this day (TravelProgramDay, résolu depuis TourDay)
+            $this->syncDayHotelsAndTransfers($tourId, $dayId, $dayRow);
         }
 
         $current = TourDayActivity::where('tour_id', $tourId)->get();
@@ -1146,14 +1147,23 @@ class VoyageController extends Controller
     }
 
     /**
-     * Sync hotel and transfers for a specific TravelProgramDay.
-     * - $dayId: TravelProgramDay.id
+     * Sync hotel and transfers for a specific day.
+     * - $tourId: WP tour id (wp_posts.ID)
+     * - $dayId: TourDay.id (aj_tour_days) envoyé par le formulaire
      * - $dayRow: current programme_days[$i] request array
+     * On résout TourDay -> day_number puis TravelProgramDay par voyage_id + day_number.
      */
-    protected function syncDayHotelsAndTransfers(int $dayId, array $dayRow): void
+    protected function syncDayHotelsAndTransfers(int $tourId, int $dayId, array $dayRow): void
     {
-        // Récupérer le jour
-        $day = TravelProgramDay::find($dayId);
+        $tourDay = TourDay::where('tour_id', $tourId)->where('id', $dayId)->first();
+        if (!$tourDay) {
+            return;
+        }
+        $voyage = Voyage::where('wp_post_id', $tourId)->first();
+        if (!$voyage) {
+            return;
+        }
+        $day = TravelProgramDay::where('voyage_id', $voyage->id)->where('day_number', (int) $tourDay->day_number)->first();
         if (!$day) {
             return;
         }
@@ -1197,16 +1207,17 @@ class VoyageController extends Controller
             // Utiliser la connexion 'mysql' pour la table pivot
             $pivotTable = 'program_day_transfers';
             
+            $programDayId = $day->id; // TravelProgramDay.id pour la table pivot
             // Supprimer les anciennes associations
             DB::connection('mysql')->table($pivotTable)
-                ->where('program_day_id', $dayId)
+                ->where('program_day_id', $programDayId)
                 ->delete();
             
             // Insérer les nouvelles associations
             if (!empty($validIds)) {
-                $insertData = array_map(function($transferId) use ($dayId) {
+                $insertData = array_map(function($transferId) use ($programDayId) {
                     return [
-                        'program_day_id' => $dayId,
+                        'program_day_id' => $programDayId,
                         'transfer_id' => $transferId,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -1218,7 +1229,7 @@ class VoyageController extends Controller
         } else {
             // Supprimer toutes les associations
             DB::connection('mysql')->table('program_day_transfers')
-                ->where('program_day_id', $dayId)
+                ->where('program_day_id', $day->id)
                 ->delete();
         }
     }
