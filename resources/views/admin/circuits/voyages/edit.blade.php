@@ -2215,10 +2215,11 @@
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
                                     
-                                    {{-- Inputs hidden pour lignage par jour: vols/hôtel/transferts --}}
+                                    {{-- Inputs hidden pour lignage par jour: vols/hôtel/transferts (pré-remplis depuis programDayHotelsTransfers pour le modal Programme) --}}
+                                    @php $dayHotelsTransfers = ($programDayHotelsTransfers ?? [])[$day->id ?? ''] ?? []; @endphp
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][flights]" value="">
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="">
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="">
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ $dayHotelsTransfers['hotel_id'] ?? '' }}">
+                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ implode(',', $dayHotelsTransfers['transfer_ids'] ?? []) }}">
 
                                     <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
                                         INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activités' : 'Activité' }}
@@ -3106,6 +3107,9 @@
                     '<textarea class="form-control" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes ou description du jour"></textarea></div>' +
                     '<input type="hidden" name="programme_days[' + index + '][title]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][description]" value="">' +
+                    '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +
+                    '<input type="hidden" name="programme_days[' + index + '][hotel_id]" value="">' +
+                    '<input type="hidden" name="programme_days[' + index + '][transfer_ids]" value="">' +
                     '<p class="small text-muted mb-2 programme-day-inclus" data-day-index="' + index + '">INCLUS : 0 Activité</p>' +
                     '<h6 class="mt-3 mb-2">Éléments du jour</h6>' +
                     '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
@@ -3302,21 +3306,22 @@
                 state: {},
 
                 // Initialiser depuis le formulaire (programme_days[X][...])
+                // Puis charger l'état depuis les inputs hidden (pré-remplis par le serveur pour hotel/transferts)
                 init: function() {
                     this.state = {};
                     var cards = document.querySelectorAll('.programme-day-card');
                     cards.forEach(function(card, idx) {
                         var dayId = card.getAttribute('data-day-id');
-                        var hotelsInput = card.querySelector('input[name^="programme_days["][name$="[hotel_id]"]');
-                        var transferInput = card.querySelector('input[name^="programme_days["][name$="[transfer_ids]"]');
-                        var flightsInput = card.querySelector('input[name^="programme_days["][name$="[flights]"]');
-
                         window.dayItemsManager.state[String(idx)] = {
                             dayId: dayId,
                             flights: [],
                             hotel_id: null,
                             transfer_ids: []
                         };
+                    });
+                    var self = this;
+                    cards.forEach(function(card, idx) {
+                        self.loadFromForm(String(idx));
                     });
                 },
 

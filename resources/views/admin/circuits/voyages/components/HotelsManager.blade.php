@@ -30,8 +30,7 @@
             </div>
         </div>
     </div>
-
-    <input type="hidden" name="programme_days[__DAY_INDEX__][hotel_id]" value="">
+    {{-- Pas d'input hidden ici : la valeur est écrite dans la carte du jour via dayItemsManager.syncToForm() --}}
 </div>
 
 <script>
@@ -41,35 +40,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Appelé quand le drawer s'ouvre (depuis edit.blade.php)
+// Appelé quand le drawer s'ouvre (même event que Vols : day-builder:context-changed)
 document.addEventListener('day-builder:context-changed', function(e) {
     const detail = e.detail || {};
     const dayIndex = String(detail.dayIndex || '');
     
     const hotelsSelect = document.getElementById('hotels-manager-select');
-    const hotelsInput = document.querySelector('input[name^="programme_days["][name$="[hotel_id]"]');
-    
-    if (!hotelsSelect || !hotelsInput) return;
-    
-    // Mettre à jour le name de l'input
-    hotelsInput.name = 'programme_days[' + dayIndex + '][hotel_id]';
+    if (!hotelsSelect) return;
     
     // Charger les hôtels depuis window.tourHotelsData (passés par la vue)
     loadHotelsForManager();
     
-    // Charger depuis le gestionnaire d'état (dayItemsManager)
-    window.dayItemsManager.loadFromForm(dayIndex);
+    // Charger l'état depuis la carte du jour (inputs hidden dans .programme-day-card)
+    if (window.dayItemsManager) {
+        window.dayItemsManager.loadFromForm(dayIndex);
+    }
     
-    // Restaurer la sélection : d'abord depuis dayItemsManager, sinon depuis input
-    let hotelIdToSelect = window.dayItemsManager.getHotel(dayIndex) || '';
+    // Restaurer la sélection depuis dayItemsManager (pré-rempli au chargement ou après sauvegarde)
+    var hotelIdToSelect = (window.dayItemsManager && window.dayItemsManager.getHotel(dayIndex)) || '';
     
     if (hotelIdToSelect) {
         hotelsSelect.value = hotelIdToSelect;
-        hotelsInput.value = hotelIdToSelect;
         updateHotelsDetails(hotelIdToSelect);
     } else {
         hotelsSelect.value = '';
-        hotelsInput.value = '';
         document.getElementById('hotels-manager-details').style.display = 'none';
     }
 });
@@ -106,17 +100,16 @@ function updateHotelsDetails(hotelId) {
     document.getElementById('hotels-manager-details').style.display = '';
 }
 
-// Listener sur le select pour capturer le changement
+// Listener sur le select : même pattern que Vols → dayItemsManager.setHotel puis syncToForm (écrit dans la carte du jour)
 document.addEventListener('change', function(e) {
     if (e.target.id === 'hotels-manager-select') {
-        const hotelId = e.target.value ? parseInt(e.target.value, 10) : null;
-        const hotelsInput = document.querySelector('input[name^="programme_days["][name$="[hotel_id]"]');
-        const drawer = document.getElementById('day-builder-drawer');
-        const dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
+        var hotelId = e.target.value ? parseInt(e.target.value, 10) : null;
+        var drawer = document.getElementById('day-builder-drawer');
+        var dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
         
-        // Mettre à jour le gestionnaire d'état
-        if (window.dayItemsManager && dayIndex) {
+        if (window.dayItemsManager && dayIndex !== '') {
             window.dayItemsManager.setHotel(dayIndex, hotelId);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: dayIndex } }));
         }
         
         updateHotelsDetails(hotelId);

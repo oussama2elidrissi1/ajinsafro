@@ -17,8 +17,7 @@
             </div>
         </div>
     </div>
-
-    <input type="hidden" name="programme_days[__DAY_INDEX__][transfer_ids]" value="">
+    {{-- Pas d'input hidden ici : la valeur est écrite dans la carte du jour via dayItemsManager.syncToForm() --}}
 </div>
 
 <script>
@@ -28,26 +27,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Appelé quand le drawer s'ouvre (depuis edit.blade.php)
+// Appelé quand le drawer s'ouvre (même event que Vols : day-builder:context-changed)
 document.addEventListener('day-builder:context-changed', function(e) {
-    const detail = e.detail || {};
-    const dayIndex = String(detail.dayIndex || '');
+    var detail = e.detail || {};
+    var dayIndex = String(detail.dayIndex || '');
     
-    const transfersInput = document.querySelector('input[name^="programme_days["][name$="[transfer_ids]"]');
-    
-    if (!transfersInput) return;
-    
-    // Mettre à jour le name de l'input
-    transfersInput.name = 'programme_days[' + dayIndex + '][transfer_ids]';
-    
-    // Charger et afficher les transferts
+    // Charger et afficher les transferts depuis window.tourTransfersData
     loadTransfersForManager();
     
-    // Charger depuis le gestionnaire d'état
-    window.dayItemsManager.loadFromForm(dayIndex);
+    // Charger l'état depuis la carte du jour (inputs hidden dans .programme-day-card)
+    if (window.dayItemsManager) {
+        window.dayItemsManager.loadFromForm(dayIndex);
+    }
     
-    // Restaurer les sélections : d'abord depuis dayItemsManager
-    let transferIdsToSelect = window.dayItemsManager.getTransfers(dayIndex) || [];
+    // Restaurer les sélections depuis dayItemsManager (pré-rempli au chargement ou après sauvegarde)
+    var transferIdsToSelect = (window.dayItemsManager && window.dayItemsManager.getTransfers(dayIndex)) || [];
     
     updateTransfersSelection(transferIdsToSelect);
 });
@@ -118,10 +112,7 @@ function loadTransfersForManager() {
 }
 
 function updateTransfersSelection(selectedIds) {
-    const transfersInput = document.querySelector('input[name^="programme_days["][name$="[transfer_ids]"]');
-    const transferCheckboxes = document.querySelectorAll('.transfer-checkbox');
-    
-    if (!transfersInput) return;
+    var transferCheckboxes = document.querySelectorAll('#day-builder-transfers-manager .transfer-checkbox');
     
     // Décocher tous les checkboxes d'abord
     transferCheckboxes.forEach(cb => cb.checked = false);
@@ -137,18 +128,15 @@ function updateTransfersSelection(selectedIds) {
 }
 
 function updateTransfersInput() {
-    const transfersInput = document.querySelector('input[name^="programme_days["][name$="[transfer_ids]"]');
-    const checked = document.querySelectorAll('.transfer-checkbox:checked');
-    const drawer = document.getElementById('day-builder-drawer');
-    const dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
+    var checked = document.querySelectorAll('.transfer-checkbox:checked');
+    var drawer = document.getElementById('day-builder-drawer');
+    var dayIndex = drawer ? drawer.getAttribute('data-day-index') : '';
     
-    if (!transfersInput) return;
+    var ids = Array.from(checked).map(function(cb) { return parseInt(cb.value, 10); });
     
-    const ids = Array.from(checked).map(cb => parseInt(cb.value, 10));
-    
-    // Mettre à jour le gestionnaire d'état
-    if (window.dayItemsManager && dayIndex) {
+    if (window.dayItemsManager && dayIndex !== '') {
         window.dayItemsManager.setTransfers(dayIndex, ids);
+        document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: dayIndex } }));
     }
 }
 
