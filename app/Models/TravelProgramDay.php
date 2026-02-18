@@ -36,6 +36,7 @@ class TravelProgramDay extends Model
         'meal_breakfast',
         'meal_lunch',
         'meal_dinner',
+        'hotel_id',
     ];
 
     protected $casts = [
@@ -49,6 +50,16 @@ class TravelProgramDay extends Model
     public function voyage()
     {
         return $this->belongsTo(Voyage::class);
+    }
+
+    public function hotel()
+    {
+        return $this->belongsTo(TourHotel::class, 'hotel_id');
+    }
+
+    public function transfers()
+    {
+        return $this->belongsToMany(TourTransfer::class, 'program_day_transfers', 'program_day_id', 'transfer_id');
     }
 
     public function items()

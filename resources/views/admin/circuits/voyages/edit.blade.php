@@ -2339,6 +2339,48 @@
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
+        // Initialiser les données pour le modal "Ajouter un élément" (hotels & transfers par jour)
+        window.tourHotelsData = {};
+        window.tourTransfersData = { arrival: [], departure: [] };
+
+        // Charger tous les hôtels du tour (disponibles pour sélection par jour)
+        @foreach($tourHotels as $hotel)
+            window.tourHotelsData[{{ $hotel->id }}] = {
+                id: {{ $hotel->id }},
+                hotel_name: @json($hotel->hotel_name),
+                address: @json($hotel->address),
+                room_type: @json($hotel->room_type),
+                meal_plan: @json($hotel->meal_plan),
+                stars: {{ $hotel->stars ?? 'null' }}
+            };
+        @endforeach
+
+        // Charger tous les transferts du tour (disponibles pour sélection par jour)
+        @foreach($transferArrivals as $transfer)
+            window.tourTransfersData.arrival.push({
+                id: {{ $transfer->id }},
+                direction: 'arrival',
+                from_label: @json($transfer->from_label),
+                to_label: @json($transfer->to_label),
+                pickup_time: @json($transfer->pickup_time),
+                dropoff_time: @json($transfer->dropoff_time)
+            });
+        @endforeach
+
+        @foreach($transferDepartures as $transfer)
+            window.tourTransfersData.departure.push({
+                id: {{ $transfer->id }},
+                direction: 'departure',
+                from_label: @json($transfer->from_label),
+                to_label: @json($transfer->to_label),
+                pickup_time: @json($transfer->pickup_time),
+                dropoff_time: @json($transfer->dropoff_time)
+            });
+        @endforeach
+
+        // Structure pour pré-remplir le modal par jour (programme_days[$i] => { hotel_id: x, transfer_ids: [...] })
+        window.programDayHotelsTransfers = @json($programDayHotelsTransfers ?? []);
+
         // Ouvrir l'onglet Vols si ?tab=flights (depuis Hôtels / Transferts sidebar)
         document.addEventListener('DOMContentLoaded', function() {
             var params = new URLSearchParams(window.location.search);

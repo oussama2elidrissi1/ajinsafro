@@ -9,6 +9,7 @@ use App\Models\Wp\WpPost;
 use App\Models\Wp\Activity;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Voyage;
+use App\Models\TravelProgramDay;
 use App\Models\Airline;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
@@ -331,6 +332,25 @@ class VoyageController extends Controller
                 ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
             );
         }
+
+        // Charger les TravelProgramDay avec relations hotels/transfers pour le modal par jour
+        $travelProgramDaysWithRelations = collect();
+        $programDayHotelsTransfers = []; // Structure : [dayId => ['hotel_id' => x, 'transfer_ids' => [...]]]
+        try {
+            $travelProgramDaysWithRelations = $laravelVoyage->programDays()
+                ->with(['hotel', 'transfers'])
+                ->orderBy('day_number')
+                ->get();
+            foreach ($travelProgramDaysWithRelations as $pday) {
+                $programDayHotelsTransfers[(string)$pday->id] = [
+                    'hotel_id' => $pday->hotel_id,
+                    'transfer_ids' => $pday->transfers()->pluck('id')->toArray(),
+                ];
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageController@edit: could not load travel program days with relations', ['voyage_id' => $laravelVoyage->id, 'error' => $e->getMessage()]);
+        }
+
         $outboundFlight = $laravelVoyage->outboundFlight;
         $inboundFlight = $laravelVoyage->inboundFlight;
         $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int) ($meta['duration_day'] ?? 1));
@@ -397,7 +417,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'travelDates', 'programJson', 'programApiUrl'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -1035,6 +1055,7 @@ class VoyageController extends Controller
      * - Deletes days not in the submitted list.
      * - Renumbers day_number 1..N according to submitted order.
      * Tables: aj_tour_days, aj_tour_day_activities.
+     * - Also syncs day-level hotels and transfers (TravelProgramDay.hotel_id + transfers pivot).
      */
     protected function syncProgrammeDaysAndActivities(int $tourId, UpdateWpTourRequest $request): void
     {
@@ -1106,6 +1127,9 @@ class VoyageController extends Controller
                     $submittedDayActivityIds[] = $newDa->id;
                 }
             }
+
+            // Sync hotel & transfers for this day (per-day model)
+            $this->syncDayHotelsAndTransfers($dayId, $dayRow);
         }
 
         $current = TourDayActivity::where('tour_id', $tourId)->get();
@@ -1117,6 +1141,58 @@ class VoyageController extends Controller
                 continue;
             }
             $this->programService->removeDayActivity($da->id);
+        }
+    }
+
+    /**
+     * Sync hotel and transfers for a specific TravelProgramDay.
+     * - $dayId: TravelProgramDay.id
+     * - $dayRow: current programme_days[$i] request array
+     */
+    protected function syncDayHotelsAndTransfers(int $dayId, array $dayRow): void
+    {
+        // Récupérer le jour
+        $day = TravelProgramDay::find($dayId);
+        if (!$day) {
+            return;
+        }
+
+        // Syncer l'hôtel (0..1)
+        $hotelId = !empty($dayRow['hotel_id']) ? (int) $dayRow['hotel_id'] : null;
+        if ($hotelId) {
+            // Valider que l'hôtel existe
+            $hotel = TourHotel::find($hotelId);
+            if ($hotel) {
+                $day->update(['hotel_id' => $hotelId]);
+            } else {
+                $day->update(['hotel_id' => null]);
+            }
+        } else {
+            $day->update(['hotel_id' => null]);
+        }
+
+        // Syncer les transferts (0..n)
+        $transferIds = [];
+        $transferInput = $dayRow['transfer_ids'] ?? '';
+        if (is_string($transferInput) && !empty($transferInput)) {
+            // Format: "1,2,3" ou "1" ou ""
+            $transferIds = array_filter(
+                array_map('intval', array_map('trim', explode(',', $transferInput))),
+                fn($id) => $id > 0
+            );
+        } elseif (is_array($transferInput)) {
+            $transferIds = array_filter(
+                array_map('intval', $transferInput),
+                fn($id) => $id > 0
+            );
+        }
+
+        // Valider que chaque transfert existe, puis syncer
+        if (!empty($transferIds)) {
+            $validIds = TourTransfer::whereIn('id', $transferIds)->pluck('id')->toArray();
+            $day->transfers()->sync($validIds);
+        } else {
+            $day->transfers()->detach();
         }
     }
 
