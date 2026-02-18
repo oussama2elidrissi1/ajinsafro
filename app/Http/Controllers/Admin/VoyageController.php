@@ -25,6 +25,7 @@ use App\Services\Wp\WpTourRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -1188,11 +1189,37 @@ class VoyageController extends Controller
         }
 
         // Valider que chaque transfert existe, puis syncer
+        // Utiliser directement DB::connection('mysql') pour forcer la bonne connexion pour la table pivot
+        // car la relation belongsToMany utilise la connexion du modèle lié (TourTransfer sur 'wp')
         if (!empty($transferIds)) {
             $validIds = TourTransfer::whereIn('id', $transferIds)->pluck('id')->toArray();
-            $day->transfers()->sync($validIds);
+            
+            // Utiliser la connexion 'mysql' pour la table pivot
+            $pivotTable = 'program_day_transfers';
+            
+            // Supprimer les anciennes associations
+            DB::connection('mysql')->table($pivotTable)
+                ->where('program_day_id', $dayId)
+                ->delete();
+            
+            // Insérer les nouvelles associations
+            if (!empty($validIds)) {
+                $insertData = array_map(function($transferId) use ($dayId) {
+                    return [
+                        'program_day_id' => $dayId,
+                        'transfer_id' => $transferId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }, $validIds);
+                
+                DB::connection('mysql')->table($pivotTable)->insert($insertData);
+            }
         } else {
-            $day->transfers()->detach();
+            // Supprimer toutes les associations
+            DB::connection('mysql')->table('program_day_transfers')
+                ->where('program_day_id', $dayId)
+                ->delete();
         }
     }
 

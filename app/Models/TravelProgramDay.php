@@ -9,6 +9,14 @@ class TravelProgramDay extends Model
 {
     use HasFactory;
 
+    /**
+     * The connection name for the model.
+     * Explicitly set to 'mysql' to ensure pivot tables use the correct connection.
+     *
+     * @var string|null
+     */
+    protected $connection = 'mysql';
+
     public const DAY_TYPES = [
         'arrivee'  => 'Arrivée',
         'visite'   => 'Visite',
