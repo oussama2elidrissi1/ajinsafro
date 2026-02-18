@@ -293,6 +293,23 @@
                 .destination-country-checkbox-label input, .destination-city-checkbox-label input { margin: 0; flex-shrink: 0; }
                 .destination-country-checkbox-label { font-weight: 500; color: #0d6efd; }
                 .destination-city-checkbox-label:hover { color: #0d6efd; }
+                
+                /* Styles pour Flight Manager Modal */
+                .modal-lg { max-width: 900px; }
+                .modal-dialog-scrollable .modal-body { max-height: calc(100vh - 200px); }
+                .modal-footer.sticky-bottom { position: sticky; bottom: 0; background: white; z-index: 1055; margin: 0; }
+                .flight-manager[data-mode="modal"] .modal-flight-context { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                .flight-manager[data-mode="modal"] .flight-section-focused { margin-bottom: 16px; }
+                .flight-manager[data-mode="modal"] .flight-opt-card { transition: all 0.2s ease; }
+                .flight-manager[data-mode="modal"] .flight-opt-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+                .flight-manager .flight-option-toggle { padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
+                .flight-manager .quick-access-flights { font-size: 11px; }
+                #programme-add-element-modal .nav-tabs .nav-link { font-size: 13px; padding: 8px 16px; }
+                #programme-add-element-modal .nav-tabs .nav-link.active { background: #e7f1ff; border-color: #b6d7ff #b6d7ff #ffffff; color: #0d6efd; }
+                .modal-flight-validation .alert-sm { padding: 8px 12px; font-size: 12px; }
+                .flight-section-focused[data-type="outbound"] { border-left: 4px solid #28a745; }
+                .flight-section-focused[data-type="return"] { border-left: 4px solid #dc3545; }
+                .flight-section-focused[data-type="segment"] { border-left: 4px solid #ffc107; }
                 </style>
                 <div class="card destination-ux-card">
                     <div class="card-body destination-ux-body">
@@ -1191,41 +1208,18 @@
                 $fmtDate = function($d) { return $d ? (\Carbon\Carbon::parse($d)->format('D, d M')) : null; };
             @endphp
             <div class="tab-pane" id="flights" role="tabpanel">
-                <style>
-                .flight-card-admin { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #e9ecef; overflow: hidden; }
-                .flight-card-admin .flight-card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
-                .flight-card-admin .flight-card-title { font-size: 13px; font-weight: 600; color: #495057; }
-                .flight-card-admin .flight-remove-btn { background: none; border: none; color: #dc3545; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0 4px; }
-                .flight-card-admin .flight-remove-btn:hover { text-decoration: underline; }
-                .flight-card-admin .flight-card-body { display: flex; align-items: stretch; padding: 16px; gap: 16px; }
-                .flight-card-admin .flight-card-col { display: flex; flex-direction: column; justify-content: center; }
-                .flight-card-admin .flight-icon-circle { width: 48px; height: 48px; border-radius: 50%; background: #e7f1ff; color: #0d6efd; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-                .flight-card-admin .flight-card-center { flex: 1; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-                .flight-card-admin .flight-dep, .flight-card-admin .flight-arr { text-align: center; }
-                .flight-card-admin .flight-date { font-size: 12px; color: #6c757d; margin-bottom: 2px; }
-                .flight-card-admin .flight-place { font-size: 14px; font-weight: 500; color: #212529; }
-                .flight-card-admin .flight-arrow { color: #adb5bd; font-size: 18px; }
-                .flight-card-admin .flight-card-baggage { font-size: 12px; color: #6c757d; }
-                .flight-card-admin .flight-card-baggage div { margin-bottom: 4px; }
-                .flight-card-admin .flight-card-badge-wrap { padding: 0 16px 12px; }
-                .flight-card-admin .flight-badge-tentative { display: inline-block; padding: 4px 10px; border-radius: 20px; background: #f5e6d3; color: #856404; font-size: 11px; font-weight: 600; }
-                .flight-block { margin-bottom: 20px; }
-                .flight-block .flight-card-view { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-                .flight-block .flight-card-view .flight-edit-btn { margin-top: 8px; }
-                .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
-                </style>
-                <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> <strong>Vols Aller / Retour / Segments</strong> (plusieurs options possibles). Les hôtels et transferts sont dans leurs propres onglets.</p>
-                @if(Route::has('admin.circuits.airlines.index'))
-                <div class="mb-3">
-                    <a href="{{ route('admin.circuits.airlines.index') }}" class="btn btn-sm btn-outline-secondary" target="_blank"><i class="bx bx-list-ul me-1"></i> Gérer les compagnies aériennes</a>
-                    @if(($airlines ?? collect())->isEmpty())
-                    <span class="text-muted ms-2">— Aucune compagnie. <a href="{{ route('admin.circuits.airlines.create') }}">Créer une compagnie</a></span>
-                    @endif
-                </div>
-                @endif
-                @php $lastDayNumber = $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1); @endphp
-                @include('admin.circuits.voyages.partials._flight_options_sections', ['flightOptionsWithIndex' => $flightOptionsWithIndex ?? [], 'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0, 'lastDayNumber' => $lastDayNumber, 'airlines' => $airlines ?? collect()])
-                <p class="text-muted small mt-2">Enregistrez le voyage pour sauvegarder les vols.</p>
+                @php 
+                    $lastDayNumber = $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1); 
+                @endphp
+                
+                {{-- Utilisation du Flight Manager réutilisable en mode complet --}}
+                @include('admin.circuits.voyages.partials._flight_manager', [
+                    'mode' => 'full',
+                    'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
+                    'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
+                    'lastDayNumber' => $lastDayNumber,
+                    'airlines' => $airlines ?? collect()
+                ])
             </div>
 
             {{-- TAB HÔTELS — Hôtels par jour (multi-lignes) --}}
@@ -2322,9 +2316,37 @@
                                         @endif
                                     </div>
                                 </div>
-                                <div class="tab-pane fade" id="tab-flights"><p class="text-muted">Vols : à configurer (vol aller Jour 1, retour dernier jour).</p></div>
+                                <div class="tab-pane fade" id="tab-flights">
+                                    {{-- Flight Manager en mode modal --}}
+                                    @include('admin.circuits.voyages.partials._flight_manager', [
+                                        'mode' => 'modal',
+                                        'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
+                                        'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
+                                        'lastDayNumber' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1),
+                                        'airlines' => $airlines ?? collect(),
+                                        'dayNumber' => null, // Sera défini dynamiquement par JS
+                                        'totalDays' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1)
+                                    ])
+                                </div>
                                 <div class="tab-pane fade" id="tab-transfers"><p class="text-muted">Transferts : à configurer.</p></div>
                                 <div class="tab-pane fade" id="tab-hotels"><p class="text-muted">Hôtels : à configurer.</p></div>
+                            </div>
+                        </div>
+                        {{-- Footer sticky du modal --}}
+                        <div class="modal-footer sticky-bottom bg-white border-top">
+                            <div class="d-flex justify-content-between align-items-center w-100">
+                                <div class="text-muted small">
+                                    <i class="bx bx-info-circle me-1"></i>
+                                    <span id="modal-flight-context-info">Configurez les éléments pour ce jour</span>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
+                                        <i class="bx bx-x me-1"></i>Fermer
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="modal-save-elements">
+                                        <i class="bx bx-save me-1"></i>Enregistrer
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3327,6 +3349,207 @@
                 });
                 if (window.autosaveProgram) window.autosaveProgram();
                 draggedActivityRow = null;
+            });
+        })();
+
+        // Gestion de l'onglet Vols dans le modal "Ajouter un élément" 
+        (function modalFlightsManager() {
+            const modal = document.getElementById('programme-add-element-modal');
+            const flightsTab = document.querySelector('#tab-flights');
+            const flightManager = flightsTab ? flightsTab.querySelector('.flight-manager') : null;
+            const contextInfo = document.getElementById('modal-flight-context-info');
+            const saveBtn = document.getElementById('modal-save-elements');
+            
+            if (!modal || !flightManager) return;
+
+            // Variables globales pour le contexte
+            let currentDayNumber = null;
+            let totalDays = {{ $lastDayNumber ?? 1 }};
+
+            // Mise à jour du contexte quand le modal s'ouvre
+            modal.addEventListener('show.bs.modal', function(e) {
+                const btn = e.relatedTarget;
+                if (btn && btn.classList && btn.classList.contains('btn-add-element-to-day')) {
+                    const dayIndex = parseInt(btn.getAttribute('data-day-index') || '0');
+                    currentDayNumber = dayIndex + 1; // dayIndex est 0-based, dayNumber est 1-based
+                    
+                    // Mettre à jour le contexte du flight manager
+                    flightManager.setAttribute('data-day-number', currentDayNumber);
+                    
+                    // Mettre à jour l'affichage du contexte
+                    updateFlightContext();
+                    
+                    // Masquer/montrer les sections appropriées
+                    updateFlightSections();
+                }
+            });
+
+            // Fonction pour mettre à jour le contexte affiché
+            function updateFlightContext() {
+                if (!contextInfo || !currentDayNumber) return;
+                
+                let message = '';
+                if (currentDayNumber === 1) {
+                    message = 'Jour ' + currentDayNumber + ' - Configuration recommandée : Vol Aller';
+                } else if (currentDayNumber === totalDays) {
+                    message = 'Jour ' + currentDayNumber + ' - Configuration recommandée : Vol Retour';
+                } else {
+                    message = 'Jour ' + currentDayNumber + ' - Vols internes ou connexions';
+                }
+                
+                contextInfo.textContent = message;
+            }
+
+            // Fonction pour mettre à jour l'affichage des sections selon le contexte
+            function updateFlightSections() {
+                if (!flightManager || !currentDayNumber) return;
+
+                const modalContext = flightManager.querySelector('.modal-flight-context');
+                if (modalContext) {
+                    const contextText = modalContext.querySelector('.text-primary');
+                    const contextDescription = modalContext.querySelector('.small.text-muted');
+                    
+                    if (contextText && contextDescription) {
+                        contextText.innerHTML = '<strong class="text-primary">Jour ' + currentDayNumber + '</strong>';
+                        
+                        if (currentDayNumber === 1) {
+                            contextText.innerHTML += ' - Configuration du vol aller';
+                            contextDescription.textContent = 'Ce jour correspond au vol aller du circuit';
+                        } else if (currentDayNumber === totalDays) {
+                            contextText.innerHTML += ' - Configuration du vol retour'; 
+                            contextDescription.textContent = 'Ce jour correspond au vol retour du circuit';
+                        } else {
+                            contextText.innerHTML += ' - Vols internes';
+                            contextDescription.textContent = 'Vols aller (Jour 1) et retour (Jour ' + totalDays + ') à configurer séparément';
+                        }
+                    }
+                }
+
+                // Activer l'onglet par défaut selon le contexte
+                if (currentDayNumber === 1) {
+                    // Focus sur vol aller
+                    setTimeout(() => focusFlightSection('outbound'), 200);
+                } else if (currentDayNumber === totalDays) {
+                    // Focus sur vol retour
+                    setTimeout(() => focusFlightSection('return'), 200);
+                }
+            }
+
+            // Fonction pour focus sur une section de vol spécifique
+            function focusFlightSection(type) {
+                const section = flightManager.querySelector(`[data-flight-section="${type}"], [data-type="${type}"]`);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Highlighting temporaire
+                    section.style.border = '2px solid #0d6efd';
+                    section.style.borderRadius = '8px';
+                    setTimeout(() => {
+                        section.style.border = '';
+                        section.style.borderRadius = '';
+                    }, 2000);
+                }
+            }
+
+            // Gestion du bouton Enregistrer
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                    // Validation des vols avant enregistrement
+                    const noFlightsToggle = flightManager.querySelector('input[type="checkbox"][id*="no-flights-toggle"]');
+                    
+                    if (noFlightsToggle && !noFlightsToggle.checked) {
+                        // Vérifier s'il y a au moins un vol configuré pour les jours appropriés
+                        const hasFlights = validateModalFlights();
+                        if (!hasFlights) {
+                            showFlightValidationMessage('Veuillez configurer au moins un vol ou activer "Sans vol"');
+                            return;
+                        }
+                    }
+
+                    // Si validation OK, fermer le modal et déclencher sauvegarde
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                    
+                    // Trigger autosave si disponible
+                    if (window.autosaveProgram) {
+                        setTimeout(() => window.autosaveProgram(), 300);
+                    }
+                });
+            }
+
+            // Fonction de validation des vols
+            function validateModalFlights() {
+                const flightCards = flightManager.querySelectorAll('.flight-opt-card[data-flight-opt-index]');
+                let hasRelevantFlight = false;
+
+                if (currentDayNumber === 1) {
+                    // Vérifier s'il y a un vol aller
+                    hasRelevantFlight = Array.from(flightCards).some(card => {
+                        const typeInput = card.querySelector('input[name*="[type]"]');
+                        return typeInput && typeInput.value === 'outbound';
+                    });
+                } else if (currentDayNumber === totalDays) {
+                    // Vérifier s'il y a un vol retour
+                    hasRelevantFlight = Array.from(flightCards).some(card => {
+                        const typeInput = card.querySelector('input[name*="[type]"]');
+                        return typeInput && typeInput.value === 'return';
+                    });
+                } else {
+                    // Pour les jours intermédiaires, pas d'obligation
+                    hasRelevantFlight = true;
+                }
+
+                return hasRelevantFlight;
+            }
+
+            // Fonction pour afficher un message de validation
+            function showFlightValidationMessage(message) {
+                const validationAlert = flightManager.querySelector('#flight-validation-error');
+                if (validationAlert) {
+                    const messageEl = validationAlert.querySelector('.validation-message');
+                    if (messageEl) {
+                        messageEl.textContent = message;
+                        validationAlert.classList.remove('d-none');
+                        
+                        // Auto-cacher après 5 secondes
+                        setTimeout(() => {
+                            validationAlert.classList.add('d-none');
+                        }, 5000);
+                    }
+                }
+            }
+
+            // Gestion des dropdowns dans le modal (z-index fixes)
+            modal.addEventListener('shown.bs.modal', function() {
+                // Fixer les problèmes de z-index pour Select2 ou autres dropdowns
+                const selects = flightManager.querySelectorAll('select');
+                selects.forEach(select => {
+                    // Si Select2 est utilisé, configurer dropdownParent
+                    if (window.jQuery && window.jQuery.fn.select2) {
+                        jQuery(select).select2({
+                            dropdownParent: jQuery(modal)
+                        });
+                    }
+                });
+
+                // Fixer les datepickers si nécessaire
+                const dateInputs = flightManager.querySelectorAll('input[type="date"]');
+                dateInputs.forEach(input => {
+                    // Configuration spécifique pour modal si un datepicker est utilisé
+                    input.style.position = 'relative';
+                    input.style.zIndex = '9999';
+                });
+            });
+
+            // Nettoyage quand le modal se ferme
+            modal.addEventListener('hidden.bs.modal', function() {
+                currentDayNumber = null;
+                
+                // Masquer les alertes de validation
+                const validationAlert = flightManager.querySelector('#flight-validation-error');
+                if (validationAlert) {
+                    validationAlert.classList.add('d-none');
+                }
             });
         })();
 
