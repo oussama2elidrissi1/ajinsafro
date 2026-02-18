@@ -3056,19 +3056,81 @@
                     anchor.appendChild(wrapper);
                 }
             }
+
+            function applyDrawerDayToRow(row, dayNumber) {
+                if (!row || !dayNumber) return;
+                var sel = row.querySelector('select[name*="[day_number]"]');
+                if (!sel) return;
+                if (row.getAttribute('data-drawer-day-applied') === '1') return;
+                sel.value = String(dayNumber);
+                sel.style.display = 'none';
+                var span = document.createElement('span');
+                span.className = 'drawer-day-label text-muted small d-block mt-1';
+                span.textContent = 'Jour ' + dayNumber;
+                sel.parentNode.appendChild(span);
+                row.setAttribute('data-drawer-day-applied', '1');
+            }
+            function restorePageDayInRow(row) {
+                if (!row) return;
+                if (row.getAttribute('data-drawer-day-applied') !== '1') return;
+                var sel = row.querySelector('select[name*="[day_number]"]');
+                var label = row.querySelector('.drawer-day-label');
+                if (label) label.remove();
+                if (sel) sel.style.display = '';
+                row.removeAttribute('data-drawer-day-applied');
+            }
+            function applyDrawerDayToSection(wrapper, dayNumber) {
+                if (!wrapper || !dayNumber) return;
+                var dayNum = parseInt(dayNumber, 10) || 1;
+                wrapper.querySelectorAll('.tour-hotel-row').forEach(function(row) { applyDrawerDayToRow(row, dayNum); });
+                wrapper.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) { applyDrawerDayToRow(row, dayNum); });
+            }
+            function restorePageDayInSection(wrapper) {
+                if (!wrapper) return;
+                wrapper.querySelectorAll('[data-drawer-day-applied="1"]').forEach(restorePageDayInRow);
+            }
+
             function applyDrawerTabContent(activeTabId) {
+                var dayNum = drawer.getAttribute('data-day-number') || '1';
+                var hotelsWrapper = document.getElementById('tour-hotels-wrapper');
+                var transfersWrapper = document.getElementById('tour-transfers-wrapper');
+                restorePageDayInSection(hotelsWrapper);
+                restorePageDayInSection(transfersWrapper);
                 moveDrawerSectionToAnchor('tour-hotels-wrapper', 'tour-hotels-anchor');
                 moveDrawerSectionToAnchor('tour-transfers-wrapper', 'tour-transfers-anchor');
                 if (activeTabId === 'day-builder-tab-hotels') {
                     moveDrawerSectionToPlaceholder('tour-hotels-wrapper', 'day-builder-hotels-placeholder', 'tour-hotels-anchor');
+                    applyDrawerDayToSection(document.getElementById('tour-hotels-wrapper'), dayNum);
                 } else if (activeTabId === 'day-builder-tab-transfers') {
                     moveDrawerSectionToPlaceholder('tour-transfers-wrapper', 'day-builder-transfers-placeholder', 'tour-transfers-anchor');
+                    applyDrawerDayToSection(document.getElementById('tour-transfers-wrapper'), dayNum);
                 }
             }
             function returnSectionsToAnchors() {
+                restorePageDayInSection(document.getElementById('tour-hotels-wrapper'));
+                restorePageDayInSection(document.getElementById('tour-transfers-wrapper'));
                 moveDrawerSectionToAnchor('tour-hotels-wrapper', 'tour-hotels-anchor');
                 moveDrawerSectionToAnchor('tour-transfers-wrapper', 'tour-transfers-anchor');
             }
+
+            document.addEventListener('tour-hotels:row-added', function(e) {
+                var row = e.detail && e.detail.row;
+                if (!row) return;
+                var wrapper = document.getElementById('tour-hotels-wrapper');
+                if (wrapper && wrapper.closest('#day-builder-drawer')) {
+                    var dayNum = drawer.getAttribute('data-day-number') || '1';
+                    applyDrawerDayToRow(row, dayNum);
+                }
+            });
+            document.addEventListener('tour-transfers:row-added', function(e) {
+                var row = e.detail && e.detail.row;
+                if (!row) return;
+                var wrapper = document.getElementById('tour-transfers-wrapper');
+                if (wrapper && wrapper.closest('#day-builder-drawer')) {
+                    var dayNum = drawer.getAttribute('data-day-number') || '1';
+                    applyDrawerDayToRow(row, dayNum);
+                }
+            });
 
             drawer.addEventListener('shown.bs.offcanvas', function() {
                 document.body.style.overflow = 'hidden';

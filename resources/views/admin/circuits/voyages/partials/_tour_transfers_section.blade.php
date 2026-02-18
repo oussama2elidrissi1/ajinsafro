@@ -194,6 +194,7 @@
             }
         });
         arrContainer.appendChild(clone);
+        document.dispatchEvent(new CustomEvent('tour-transfers:row-added', { detail: { row: clone } }));
     });
 
     arrContainer.addEventListener('click', function(e){
@@ -259,6 +260,7 @@
             }
         });
         depContainer.appendChild(clone);
+        document.dispatchEvent(new CustomEvent('tour-transfers:row-added', { detail: { row: clone } }));
     });
 
     depContainer.addEventListener('click', function(e){
