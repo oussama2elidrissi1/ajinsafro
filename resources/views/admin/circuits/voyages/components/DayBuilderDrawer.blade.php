@@ -1,6 +1,7 @@
 <style>
 #day-builder-drawer {
-    --drawer-w: min(max(40vw, 520px), 680px);
+    --drawer-w: clamp(560px, 40vw, 820px);
+    --bs-offcanvas-width: var(--drawer-w);
     width: var(--drawer-w);
     max-width: 100vw;
     height: 100vh;
@@ -43,18 +44,17 @@
     font-size: 0.92rem;
     font-weight: 600;
 }
-@media (min-width: 1400px) {
+@media (max-width: 992px) {
     #day-builder-drawer {
-        --drawer-w: min(max(40vw, 560px), 720px);
-    }
-}
-@media (max-width: 1024px) {
-    #day-builder-drawer {
-        width: min(78vw, 680px);
+        --drawer-w: min(70vw, 720px);
+        --bs-offcanvas-width: var(--drawer-w);
+        width: var(--drawer-w);
     }
 }
 @media (max-width: 768px) {
     #day-builder-drawer {
+        --drawer-w: 100vw;
+        --bs-offcanvas-width: var(--drawer-w);
         width: 100vw;
     }
 }
