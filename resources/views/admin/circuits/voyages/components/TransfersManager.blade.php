@@ -302,6 +302,82 @@
         });
     }
 
+    function getTransfersForDay(dayIndex, dayNumber) {
+        var transferIds = [];
+        var transferData = [];
+        
+        // 1. Chercher dans dayItemsManager
+        if (window.dayItemsManager && dayIndex !== '') {
+            var ids = window.dayItemsManager.getTransfers(dayIndex);
+            if (ids && ids.length > 0) {
+                ids.forEach(function(id) {
+                    if (window.tourTransfersData) {
+                        var t = window.tourTransfersData.arrival.find(function(x) { return x.id === id; }) ||
+                                window.tourTransfersData.departure.find(function(x) { return x.id === id; });
+                        if (t) {
+                            transferIds.push(id);
+                            transferData.push(t);
+                        }
+                    }
+                });
+            }
+        }
+        
+        // 2. Chercher aussi dans les lignes du formulaire principal (pour les transferts non encore sauvegardés avec ID)
+        document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
+            var daySel = row.querySelector('select[name*="[day_number]"]');
+            if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
+                var fromInp = row.querySelector('input[name*="[from_label]"]');
+                var toInp = row.querySelector('input[name*="[to_label]"]');
+                if (fromInp && toInp && (fromInp.value.trim() || toInp.value.trim())) {
+                    var rowId = row.getAttribute('data-index');
+                    var rowTransferId = row.getAttribute('data-transfer-id'); // Si existe
+                    var existingId = null;
+                    
+                    // Vérifier si ce transfert a déjà un ID dans tourTransfersData
+                    if (window.tourTransfersData && fromInp.value.trim() && toInp.value.trim()) {
+                        var allTransfers = (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || []);
+                        var found = allTransfers.find(function(t) {
+                            return t.from_label === fromInp.value.trim() && t.to_label === toInp.value.trim();
+                        });
+                        if (found) {
+                            existingId = found.id;
+                            // Si pas déjà dans la liste, l'ajouter
+                            if (transferIds.indexOf(existingId) === -1) {
+                                transferIds.push(existingId);
+                                transferData.push(found);
+                            }
+                        }
+                    }
+                    
+                    // Si pas déjà compté via dayItemsManager
+                    if (!existingId && transferIds.indexOf(rowTransferId) === -1) {
+                        var direction = row.classList.contains('tour-transfer-arrival-row') ? 'arrival' : 'departure';
+                        var vehicleInp = row.querySelector('input[name*="[vehicle_type]"]');
+                        var pickupInp = row.querySelector('input[name*="[pickup_time]"]');
+                        var dropoffInp = row.querySelector('input[name*="[dropoff_time]"]');
+                        var notesTa = row.querySelector('textarea[name*="[notes]"]');
+                        var transfer = {
+                            id: rowTransferId || null,
+                            direction: direction,
+                            from_label: fromInp.value.trim() || '',
+                            to_label: toInp.value.trim() || '',
+                            vehicle_type: vehicleInp ? vehicleInp.value.trim() : '',
+                            pickup_time: pickupInp ? pickupInp.value.trim() : '',
+                            dropoff_time: dropoffInp ? dropoffInp.value.trim() : '',
+                            notes: notesTa ? notesTa.value.trim() : '',
+                            source: 'formRow'
+                        };
+                        transferData.push(transfer);
+                        // Ne pas ajouter à transferIds car pas d'ID réel
+                    }
+                }
+            }
+        });
+        
+        return { ids: transferIds, data: transferData };
+    }
+
     function refreshUI() {
         var day = getDrawerDay();
         currentDayIndex = day.index;
@@ -311,8 +387,10 @@
         if (chooseBtnLabel) chooseBtnLabel.textContent = 'Configurer les transferts (Jour ' + day.number + ')';
         if (pickerHint) pickerHint.textContent = 'Sera enregistré automatiquement pour le Jour ' + day.number + '.';
 
-        var ids = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getTransfers(day.index) : [];
-        var count = ids.length;
+        var transfersInfo = getTransfersForDay(day.index, day.number);
+        var ids = transfersInfo.ids;
+        var transferData = transfersInfo.data;
+        var count = transferData.length;
         var isEmpty = count === 0;
         if (summaryEl) {
             summaryEl.innerHTML = '';
@@ -323,73 +401,89 @@
                 titleDiv.className = 'fw-semibold mb-2';
                 titleDiv.textContent = count + ' transfert' + (count > 1 ? 's' : '') + ' configuré' + (count > 1 ? 's' : '');
                 summaryEl.appendChild(titleDiv);
-                if (window.tourTransfersData) {
-                    ids.forEach(function(id) {
-                        var t = window.tourTransfersData.arrival.find(function(x) { return x.id === id; }) ||
-                                window.tourTransfersData.departure.find(function(x) { return x.id === id; });
-                        if (t) {
-                            var card = document.createElement('div');
-                            card.className = 'card mb-2 border';
-                            card.style.fontSize = '13px';
-                            var cardBody = document.createElement('div');
-                            cardBody.className = 'card-body p-2 d-flex justify-content-between align-items-start';
-                            var infoDiv = document.createElement('div');
-                            infoDiv.className = 'flex-grow-1';
-                            var mainLabel = document.createElement('div');
-                            mainLabel.className = 'fw-medium';
-                            mainLabel.textContent = (t.from_label || '?') + ' → ' + (t.to_label || '?');
-                            infoDiv.appendChild(mainLabel);
-                            var details = [];
-                            if (t.direction === 'arrival') details.push('<span class="badge bg-success">Arrivée</span>');
-                            else details.push('<span class="badge bg-danger">Départ</span>');
-                            if (t.vehicle_type) details.push('Véhicule: ' + t.vehicle_type);
-                            if (t.pickup_time) details.push('Prise: ' + t.pickup_time);
-                            if (t.dropoff_time) details.push('Arrivée: ' + t.dropoff_time);
-                            if (details.length > 0) {
-                                var detailsEl = document.createElement('div');
-                                detailsEl.className = 'mt-1 text-muted';
-                                detailsEl.style.fontSize = '11px';
-                                detailsEl.innerHTML = details.join(' • ');
-                                infoDiv.appendChild(detailsEl);
+                
+                transferData.forEach(function(t) {
+                    var transferId = t.id;
+                    var card = document.createElement('div');
+                    card.className = 'card mb-2 border';
+                    card.style.fontSize = '13px';
+                    var cardBody = document.createElement('div');
+                    cardBody.className = 'card-body p-2 d-flex justify-content-between align-items-start';
+                    var infoDiv = document.createElement('div');
+                    infoDiv.className = 'flex-grow-1';
+                    var mainLabel = document.createElement('div');
+                    mainLabel.className = 'fw-medium';
+                    mainLabel.textContent = (t.from_label || '?') + ' → ' + (t.to_label || '?');
+                    infoDiv.appendChild(mainLabel);
+                    var details = [];
+                    if (t.direction === 'arrival') details.push('<span class="badge bg-success">Arrivée</span>');
+                    else details.push('<span class="badge bg-danger">Départ</span>');
+                    if (t.vehicle_type) details.push('Véhicule: ' + t.vehicle_type);
+                    if (t.pickup_time) details.push('Prise: ' + t.pickup_time);
+                    if (t.dropoff_time) details.push('Arrivée: ' + t.dropoff_time);
+                    if (details.length > 0) {
+                        var detailsEl = document.createElement('div');
+                        detailsEl.className = 'mt-1 text-muted';
+                        detailsEl.style.fontSize = '11px';
+                        detailsEl.innerHTML = details.join(' • ');
+                        infoDiv.appendChild(detailsEl);
+                    }
+                    if (t.notes) {
+                        var notesEl = document.createElement('div');
+                        notesEl.className = 'mt-1 text-muted';
+                        notesEl.style.fontSize = '11px';
+                        notesEl.style.fontStyle = 'italic';
+                        notesEl.textContent = t.notes.substring(0, 50) + (t.notes.length > 50 ? '...' : '');
+                        infoDiv.appendChild(notesEl);
+                    }
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-sm btn-outline-danger';
+                    removeBtn.innerHTML = '<i class="bx bx-trash"></i>';
+                    removeBtn.title = 'Retirer ce transfert';
+                    removeBtn.addEventListener('click', function() {
+                        if (confirm('Retirer ce transfert du Jour ' + day.number + ' ?')) {
+                            if (transferId && window.dayItemsManager) {
+                                var currentIds = window.dayItemsManager.getTransfers(day.index);
+                                var newIds = currentIds.filter(function(x) { return x !== transferId; });
+                                window.dayItemsManager.setTransfers(day.index, newIds);
+                                window.dayItemsManager.syncToForm(day.index);
                             }
-                            if (t.notes) {
-                                var notesEl = document.createElement('div');
-                                notesEl.className = 'mt-1 text-muted';
-                                notesEl.style.fontSize = '11px';
-                                notesEl.style.fontStyle = 'italic';
-                                notesEl.textContent = t.notes.substring(0, 50) + (t.notes.length > 50 ? '...' : '');
-                                infoDiv.appendChild(notesEl);
+                            // Retirer aussi la ligne du formulaire principal si elle existe
+                            if (t.source === 'formRow') {
+                                document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
+                                    var daySel = row.querySelector('select[name*="[day_number]"]');
+                                    var rowFrom = row.querySelector('input[name*="[from_label]"]');
+                                    var rowTo = row.querySelector('input[name*="[to_label]"]');
+                                    if (daySel && parseInt(daySel.value || '0', 10) === day.number &&
+                                        rowFrom && rowFrom.value.trim() === t.from_label &&
+                                        rowTo && rowTo.value.trim() === t.to_label) {
+                                        var removeBtnRow = row.querySelector('.tour-remove-transfer-arrival, .tour-remove-transfer-departure');
+                                        if (removeBtnRow) removeBtnRow.click();
+                                    }
+                                });
                             }
-                            var removeBtn = document.createElement('button');
-                            removeBtn.type = 'button';
-                            removeBtn.className = 'btn btn-sm btn-outline-danger';
-                            removeBtn.innerHTML = '<i class="bx bx-trash"></i>';
-                            removeBtn.title = 'Retirer ce transfert';
-                            removeBtn.addEventListener('click', function() {
-                                if (confirm('Retirer ce transfert du Jour ' + day.number + ' ?')) {
-                                    var currentIds = window.dayItemsManager.getTransfers(day.index);
-                                    var newIds = currentIds.filter(function(x) { return x !== id; });
-                                    window.dayItemsManager.setTransfers(day.index, newIds);
-                                    window.dayItemsManager.syncToForm(day.index);
-                                    document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
-                                    refreshUI();
-                                }
-                            });
-                            cardBody.appendChild(infoDiv);
-                            cardBody.appendChild(removeBtn);
-                            card.appendChild(cardBody);
-                            summaryEl.appendChild(card);
+                            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+                            refreshUI();
                         }
                     });
-                }
+                    cardBody.appendChild(infoDiv);
+                    cardBody.appendChild(removeBtn);
+                    card.appendChild(cardBody);
+                    summaryEl.appendChild(card);
+                });
             }
         }
         if (addBtn) addBtn.classList.toggle('d-none', !isEmpty);
         if (chooseBtn) chooseBtn.classList.toggle('d-none', isEmpty);
         if (removeAllBtn) removeAllBtn.classList.toggle('d-none', isEmpty);
+        
+        // Charger la liste des transferts et pré-cocher ceux qui sont sélectionnés
         loadTransfersList();
         if (day.index !== '' && window.dayItemsManager) {
-            setCheckboxesFromIds(window.dayItemsManager.getTransfers(day.index));
+            // Utiliser les IDs réels depuis dayItemsManager pour pré-cocher
+            var realIds = window.dayItemsManager.getTransfers(day.index);
+            setCheckboxesFromIds(realIds);
         }
     }
 
@@ -432,15 +526,25 @@
         currentDayIndex = String(detail.dayIndex || '');
         if (window.dayItemsManager) window.dayItemsManager.loadFromForm(currentDayIndex);
         refreshUI();
-        if (picker) picker.style.display = 'none';
+        // Si le picker est ouvert, pré-cocher les transferts existants
+        if (picker && picker.style.display !== 'none') {
+            var day = getDrawerDay();
+            if (day.index !== '' && window.dayItemsManager) {
+                var realIds = window.dayItemsManager.getTransfers(day.index);
+                setCheckboxesFromIds(realIds);
+            }
+        }
         if (newFormWrap) newFormWrap.style.display = 'none';
     });
 
     function openPicker() {
         var day = getDrawerDay();
         loadTransfersList();
+        // Pré-cocher les transferts existants (depuis dayItemsManager ET formulaire principal)
         if (day.index !== '' && window.dayItemsManager) {
-            setCheckboxesFromIds(window.dayItemsManager.getTransfers(day.index));
+            var transfersInfo = getTransfersForDay(day.index, day.number);
+            // Utiliser les IDs réels pour pré-cocher
+            setCheckboxesFromIds(transfersInfo.ids);
         }
         if (picker) picker.style.display = 'block';
         if (newFormWrap) newFormWrap.style.display = 'none';
@@ -467,13 +571,18 @@
     if (addBtn && picker) addBtn.addEventListener('click', function() {
         var day = getDrawerDay();
         if (day.index === '') { openPicker(); return; }
-        var hasTransfers = window.dayItemsManager && window.dayItemsManager.getTransfers(day.index).length > 0;
-        if (hasTransfers) openPicker();
-        else openNewForm();
+        // Vérifier s'il y a des transferts (depuis dayItemsManager OU formulaire principal)
+        var transfersInfo = getTransfersForDay(day.index, day.number);
+        var hasTransfers = transfersInfo.data.length > 0;
+        if (hasTransfers) openPicker(); // Ouvrir le picker avec les transferts pré-cochés
+        else openNewForm(); // Ouvrir le formulaire de création
     });
     if (chooseBtn && picker) chooseBtn.addEventListener('click', function() {
-        if (picker.style.display === 'none') openPicker();
-        else picker.style.display = 'none';
+        if (picker.style.display === 'none') {
+            openPicker(); // Ouvre le picker avec les transferts pré-cochés
+        } else {
+            picker.style.display = 'none';
+        }
     });
     var pickerNewBtn = document.getElementById('transfers-picker-new-btn');
     if (pickerNewBtn) pickerNewBtn.addEventListener('click', openNewForm);
@@ -573,13 +682,26 @@
         removeAllBtn.addEventListener('click', function() {
             var day = getDrawerDay();
             if (!window.dayItemsManager || day.index === '') return;
-            if (confirm('Retirer tous les transferts du Jour ' + day.number + ' ?')) {
-                window.dayItemsManager.setTransfers(day.index, []);
-                window.dayItemsManager.syncToForm(day.index);
-                document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
-                refreshUI();
-                if (picker) picker.style.display = 'none';
-            }
+            if (!confirm('Retirer tous les transferts du Jour ' + day.number + ' ?')) return;
+            
+            // Retirer de dayItemsManager
+            window.dayItemsManager.setTransfers(day.index, []);
+            window.dayItemsManager.syncToForm(day.index);
+            
+            // Retirer aussi les lignes du formulaire principal pour ce jour
+            document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
+                var daySel = row.querySelector('select[name*="[day_number]"]');
+                if (daySel && parseInt(daySel.value || '0', 10) === day.number) {
+                    var removeBtnRow = row.querySelector('.tour-remove-transfer-arrival, .tour-remove-transfer-departure');
+                    if (removeBtnRow) {
+                        removeBtnRow.click();
+                    }
+                }
+            });
+            
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+            refreshUI();
+            if (picker) picker.style.display = 'none';
         });
     }
 
