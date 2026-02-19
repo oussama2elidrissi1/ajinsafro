@@ -3308,5 +3308,30 @@
                 }
             });
         })();
+
+        // ——— Secours : bouton « Enregistrer toutes les modifications » (soumission forcée si le clic est intercepté) ———
+        (function() {
+            function initSaveButtonFallback() {
+                var btn = document.getElementById('edit-voyage-submit-btn');
+                var form = document.getElementById('edit-voyage-form');
+                if (!btn || !form) return;
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    var acc = document.getElementById('accordionProgrammeDays');
+                    var durationInput = document.getElementById('duration_day');
+                    if (acc && durationInput) {
+                        var n = acc.querySelectorAll('.programme-day-card').length;
+                        durationInput.value = n > 0 ? n : (durationInput.value || 1);
+                    }
+                    form.submit();
+                }, true);
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initSaveButtonFallback);
+            } else {
+                initSaveButtonFallback();
+            }
+        })();
     </script>
 @endpush
