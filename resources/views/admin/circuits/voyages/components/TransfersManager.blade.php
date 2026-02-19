@@ -173,8 +173,14 @@
             arrivalLabel.textContent = 'Arrivée (' + arrivals.length + ') :';
             listEl.appendChild(arrivalLabel);
             arrivals.forEach(function(transfer) {
+                var day = getDrawerDay();
+                var isSelected = (window.dayItemsManager && day.index !== '' && window.dayItemsManager.getTransfers(day.index).indexOf(transfer.id) !== -1);
                 var card = document.createElement('div');
                 card.className = 'card mb-2';
+                if (isSelected) {
+                    card.style.borderColor = '#0d6efd';
+                    card.style.backgroundColor = '#f0f7ff';
+                }
                 var cardBody = document.createElement('div');
                 cardBody.className = 'card-body p-2';
                 var checkWrap = document.createElement('div');
@@ -185,6 +191,7 @@
                 input.value = transfer.id;
                 input.id = 'transfer-' + transfer.id;
                 input.dataset.direction = 'arrival';
+                input.checked = isSelected;
                 var labelDiv = document.createElement('div');
                 labelDiv.className = 'flex-grow-1 small';
                 var mainLabel = document.createElement('label');
@@ -228,8 +235,14 @@
             depLabel.textContent = 'Départ (' + departures.length + ') :';
             listEl.appendChild(depLabel);
             departures.forEach(function(transfer) {
+                var day = getDrawerDay();
+                var isSelected = (window.dayItemsManager && day.index !== '' && window.dayItemsManager.getTransfers(day.index).indexOf(transfer.id) !== -1);
                 var card = document.createElement('div');
                 card.className = 'card mb-2';
+                if (isSelected) {
+                    card.style.borderColor = '#0d6efd';
+                    card.style.backgroundColor = '#f0f7ff';
+                }
                 var cardBody = document.createElement('div');
                 cardBody.className = 'card-body p-2';
                 var checkWrap = document.createElement('div');
@@ -240,6 +253,7 @@
                 input.value = transfer.id;
                 input.id = 'transfer-' + transfer.id;
                 input.dataset.direction = 'departure';
+                input.checked = isSelected;
                 var labelDiv = document.createElement('div');
                 labelDiv.className = 'flex-grow-1 small';
                 var mainLabel = document.createElement('label');
@@ -301,32 +315,72 @@
         var count = ids.length;
         var isEmpty = count === 0;
         if (summaryEl) {
-            summaryEl.textContent = '';
+            summaryEl.innerHTML = '';
             if (count === 0) {
                 summaryEl.textContent = '0 transfert configuré';
             } else {
-                summaryEl.textContent = count + ' transfert' + (count > 1 ? 's' : '') + ' configuré' + (count > 1 ? 's' : '');
+                var titleDiv = document.createElement('div');
+                titleDiv.className = 'fw-semibold mb-2';
+                titleDiv.textContent = count + ' transfert' + (count > 1 ? 's' : '') + ' configuré' + (count > 1 ? 's' : '');
+                summaryEl.appendChild(titleDiv);
                 if (window.tourTransfersData) {
-                    var lines = [];
                     ids.forEach(function(id) {
                         var t = window.tourTransfersData.arrival.find(function(x) { return x.id === id; }) ||
                                 window.tourTransfersData.departure.find(function(x) { return x.id === id; });
                         if (t) {
-                            var line = (t.from_label || '?') + ' → ' + (t.to_label || '?');
+                            var card = document.createElement('div');
+                            card.className = 'card mb-2 border';
+                            card.style.fontSize = '13px';
+                            var cardBody = document.createElement('div');
+                            cardBody.className = 'card-body p-2 d-flex justify-content-between align-items-start';
+                            var infoDiv = document.createElement('div');
+                            infoDiv.className = 'flex-grow-1';
+                            var mainLabel = document.createElement('div');
+                            mainLabel.className = 'fw-medium';
+                            mainLabel.textContent = (t.from_label || '?') + ' → ' + (t.to_label || '?');
+                            infoDiv.appendChild(mainLabel);
                             var details = [];
-                            if (t.vehicle_type) details.push(t.vehicle_type);
+                            if (t.direction === 'arrival') details.push('<span class="badge bg-success">Arrivée</span>');
+                            else details.push('<span class="badge bg-danger">Départ</span>');
+                            if (t.vehicle_type) details.push('Véhicule: ' + t.vehicle_type);
                             if (t.pickup_time) details.push('Prise: ' + t.pickup_time);
                             if (t.dropoff_time) details.push('Arrivée: ' + t.dropoff_time);
-                            if (details.length > 0) line += ' (' + details.join(', ') + ')';
-                            lines.push(line);
+                            if (details.length > 0) {
+                                var detailsEl = document.createElement('div');
+                                detailsEl.className = 'mt-1 text-muted';
+                                detailsEl.style.fontSize = '11px';
+                                detailsEl.innerHTML = details.join(' • ');
+                                infoDiv.appendChild(detailsEl);
+                            }
+                            if (t.notes) {
+                                var notesEl = document.createElement('div');
+                                notesEl.className = 'mt-1 text-muted';
+                                notesEl.style.fontSize = '11px';
+                                notesEl.style.fontStyle = 'italic';
+                                notesEl.textContent = t.notes.substring(0, 50) + (t.notes.length > 50 ? '...' : '');
+                                infoDiv.appendChild(notesEl);
+                            }
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'btn btn-sm btn-outline-danger';
+                            removeBtn.innerHTML = '<i class="bx bx-trash"></i>';
+                            removeBtn.title = 'Retirer ce transfert';
+                            removeBtn.addEventListener('click', function() {
+                                if (confirm('Retirer ce transfert du Jour ' + day.number + ' ?')) {
+                                    var currentIds = window.dayItemsManager.getTransfers(day.index);
+                                    var newIds = currentIds.filter(function(x) { return x !== id; });
+                                    window.dayItemsManager.setTransfers(day.index, newIds);
+                                    window.dayItemsManager.syncToForm(day.index);
+                                    document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+                                    refreshUI();
+                                }
+                            });
+                            cardBody.appendChild(infoDiv);
+                            cardBody.appendChild(removeBtn);
+                            card.appendChild(cardBody);
+                            summaryEl.appendChild(card);
                         }
                     });
-                    if (lines.length) {
-                        var div = document.createElement('div');
-                        div.className = 'mt-2 text-muted';
-                        div.innerHTML = lines.map(function(l) { return '<div class="small">' + l + '</div>'; }).join('');
-                        summaryEl.appendChild(div);
-                    }
                 }
             }
         }
@@ -517,29 +571,46 @@
 
     if (removeAllBtn) {
         removeAllBtn.addEventListener('click', function() {
-            if (!window.dayItemsManager || currentDayIndex === '') return;
-            window.dayItemsManager.setTransfers(currentDayIndex, []);
-            window.dayItemsManager.syncToForm(currentDayIndex);
-            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: currentDayIndex } }));
-            refreshSummaryOnly();
-            if (picker) picker.style.display = 'none';
+            var day = getDrawerDay();
+            if (!window.dayItemsManager || day.index === '') return;
+            if (confirm('Retirer tous les transferts du Jour ' + day.number + ' ?')) {
+                window.dayItemsManager.setTransfers(day.index, []);
+                window.dayItemsManager.syncToForm(day.index);
+                document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+                refreshUI();
+                if (picker) picker.style.display = 'none';
+            }
+        });
+    }
+
+    // Mettre à jour visuellement les cartes quand les checkboxes changent
+    if (listEl) {
+        listEl.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('transfer-checkbox')) {
+                var card = e.target.closest('.card');
+                if (card) {
+                    if (e.target.checked) {
+                        card.style.borderColor = '#0d6efd';
+                        card.style.backgroundColor = '#f0f7ff';
+                    } else {
+                        card.style.borderColor = '';
+                        card.style.backgroundColor = '';
+                    }
+                }
+            }
         });
     }
 
     if (confirmBtn && listEl) {
         confirmBtn.addEventListener('click', function() {
-            if (!window.dayItemsManager || currentDayIndex === '') return;
+            var day = getDrawerDay();
+            if (!window.dayItemsManager || day.index === '') return;
             var ids = getCheckedTransferIds();
-            window.dayItemsManager.setTransfers(currentDayIndex, ids);
-            window.dayItemsManager.syncToForm(currentDayIndex);
-            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: currentDayIndex } }));
-            refreshSummaryOnly();
-            picker.style.display = 'none';
-            var drawer = document.getElementById('day-builder-drawer');
-            if (drawer && typeof bootstrap !== 'undefined') {
-                var offcanvas = bootstrap.Offcanvas.getInstance(drawer);
-                if (offcanvas) offcanvas.hide();
-            }
+            window.dayItemsManager.setTransfers(day.index, ids);
+            window.dayItemsManager.syncToForm(day.index);
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+            refreshUI();
+            if (picker) picker.style.display = 'none';
         });
     }
 

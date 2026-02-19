@@ -199,10 +199,77 @@
         var hotelId = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getHotel(day.index) : null;
         var isEmpty = !hotelId || !window.tourHotelsData || !window.tourHotelsData[hotelId];
         if (summaryEl) {
+            summaryEl.innerHTML = '';
             if (isEmpty) {
                 summaryEl.textContent = 'Aucun hôtel configuré';
             } else {
-                summaryEl.textContent = 'Hôtel sélectionné : ' + (window.tourHotelsData[hotelId].hotel_name || '—');
+                var h = window.tourHotelsData[hotelId];
+                var card = document.createElement('div');
+                card.className = 'card mb-0 border';
+                card.style.fontSize = '13px';
+                var cardBody = document.createElement('div');
+                cardBody.className = 'card-body p-2 d-flex justify-content-between align-items-start';
+                var infoDiv = document.createElement('div');
+                infoDiv.className = 'flex-grow-1';
+                var titleDiv = document.createElement('div');
+                titleDiv.className = 'fw-semibold mb-1';
+                titleDiv.textContent = h.hotel_name || 'Hôtel';
+                infoDiv.appendChild(titleDiv);
+                var details = [];
+                if (h.stars !== null && h.stars !== undefined) {
+                    var starsText = '';
+                    for (var i = 0; i < parseInt(h.stars, 10); i++) starsText += '★';
+                    details.push(starsText || 'Non classé');
+                }
+                if (h.room_type) details.push('Chambre: ' + h.room_type);
+                if (h.address) details.push(h.address);
+                if (h.meal_plan) details.push('Repas: ' + h.meal_plan);
+                if (h.is_optional) details.push('<span class="badge bg-warning">Option client</span>');
+                if (details.length > 0) {
+                    var detailsEl = document.createElement('div');
+                    detailsEl.className = 'mt-1 text-muted';
+                    detailsEl.style.fontSize = '11px';
+                    detailsEl.innerHTML = details.join(' • ');
+                    infoDiv.appendChild(detailsEl);
+                }
+                if (h.notes) {
+                    var notesEl = document.createElement('div');
+                    notesEl.className = 'mt-1 text-muted';
+                    notesEl.style.fontSize = '11px';
+                    notesEl.style.fontStyle = 'italic';
+                    notesEl.textContent = h.notes.substring(0, 60) + (h.notes.length > 60 ? '...' : '');
+                    infoDiv.appendChild(notesEl);
+                }
+                if (h.image_url) {
+                    var imgDiv = document.createElement('div');
+                    imgDiv.className = 'mt-2';
+                    var img = document.createElement('img');
+                    img.src = h.image_url;
+                    img.style.maxWidth = '100px';
+                    img.style.maxHeight = '60px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '4px';
+                    img.className = 'border';
+                    imgDiv.appendChild(img);
+                    infoDiv.appendChild(imgDiv);
+                }
+                var removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-sm btn-outline-danger';
+                removeBtn.innerHTML = '<i class="bx bx-trash"></i>';
+                removeBtn.title = 'Retirer cet hôtel';
+                removeBtn.addEventListener('click', function() {
+                    if (confirm('Retirer cet hôtel du Jour ' + day.number + ' ?')) {
+                        window.dayItemsManager.setHotel(day.index, null);
+                        window.dayItemsManager.syncToForm(day.index);
+                        document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+                        refreshUI();
+                    }
+                });
+                cardBody.appendChild(infoDiv);
+                cardBody.appendChild(removeBtn);
+                card.appendChild(cardBody);
+                summaryEl.appendChild(card);
             }
         }
         if (addBtn) addBtn.classList.toggle('d-none', !isEmpty);
