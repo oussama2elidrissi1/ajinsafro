@@ -3324,7 +3324,12 @@
                         var n = acc.querySelectorAll('.programme-day-card').length;
                         durationInput.value = n > 0 ? n : (durationInput.value || 1);
                     }
-                    form.submit();
+                    // requestSubmit() déclenche la validation HTML5 (required, etc.) avant envoi
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        form.submit();
+                    }
                 }, true);
             }
             if (document.readyState === 'loading') {

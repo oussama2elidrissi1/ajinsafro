@@ -10,13 +10,14 @@
                 <div id="day-builder-new-activity-form-el" data-action="{{ route('admin.circuits.activities.store') }}">
                     @csrf
                     <div class="row g-2">
+                        {{-- Pas de name="title" / name="description" : ces champs sont dans #edit-voyage-form, ils écraseraient le titre du voyage à l'envoi --}}
                         <div class="col-md-5">
                             <label for="day-builder-activity-title" class="form-label small">Titre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-sm" id="day-builder-activity-title" name="title" required placeholder="Ex. Visite du château">
+                            <input type="text" class="form-control form-control-sm" id="day-builder-activity-title" required placeholder="Ex. Visite du château">
                         </div>
                         <div class="col-md-5">
                             <label for="day-builder-activity-description" class="form-label small">Description</label>
-                            <input type="text" class="form-control form-control-sm" id="day-builder-activity-description" name="description" placeholder="Optionnel">
+                            <input type="text" class="form-control form-control-sm" id="day-builder-activity-description" placeholder="Optionnel">
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="button" class="btn btn-sm btn-primary w-100" id="day-builder-new-activity-submit">
