@@ -5,8 +5,9 @@
             <div class="card-header bg-light py-2">
                 <strong><i class="bx bx-plus-circle"></i> Créer une nouvelle activité</strong>
             </div>
+            {{-- Pas de <form> ici : le drawer est dans #edit-voyage-form, un form imbriqué casserait le bouton "Enregistrer toutes les modifications" --}}
             <div id="day-builder-new-activity-form" class="card-body">
-                <form id="day-builder-new-activity-form-el" action="{{ route('admin.circuits.activities.store') }}" method="POST">
+                <div id="day-builder-new-activity-form-el" data-action="{{ route('admin.circuits.activities.store') }}">
                     @csrf
                     <div class="row g-2">
                         <div class="col-md-5">
@@ -18,14 +19,14 @@
                             <input type="text" class="form-control form-control-sm" id="day-builder-activity-description" name="description" placeholder="Optionnel">
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-sm btn-primary w-100" id="day-builder-new-activity-submit">
+                            <button type="button" class="btn btn-sm btn-primary w-100" id="day-builder-new-activity-submit">
                                 <span class="btn-text">Créer</span>
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                             </button>
                         </div>
                     </div>
                     <div id="day-builder-new-activity-error" class="small text-danger mt-2" style="display: none;"></div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -65,8 +66,7 @@
 
     if (!form || !container) return;
 
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
+    function doSubmit() {
         if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
         var btnText = submitBtn && submitBtn.querySelector('.btn-text');
         var spinner = submitBtn && submitBtn.querySelector('.spinner-border');
@@ -74,11 +74,17 @@
         if (btnText) btnText.classList.add('d-none');
         if (spinner) spinner.classList.remove('d-none');
 
-        var formData = new FormData(form);
+        var formData = new FormData();
         var token = form.querySelector('input[name="_token"]');
         if (token) formData.append('_token', token.value);
+        var titleInp = document.getElementById('day-builder-activity-title');
+        var descInp = document.getElementById('day-builder-activity-description');
+        if (titleInp) formData.append('title', titleInp.value);
+        if (descInp) formData.append('description', descInp.value);
 
-        fetch(form.action, {
+        var url = form.getAttribute('data-action') || '';
+
+        fetch(url, {
             method: 'POST',
             body: formData,
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
@@ -104,7 +110,8 @@
                 container.appendChild(col);
             }
             if (emptyMsg) emptyMsg.style.display = 'none';
-            form.reset();
+            if (titleInp) titleInp.value = '';
+            if (descInp) descInp.value = '';
         })
         .catch(function(err) {
             var msg = (err && err.message) || 'Erreur lors de la création.';
@@ -119,6 +126,12 @@
             if (btnText) btnText.classList.remove('d-none');
             if (spinner) spinner.classList.add('d-none');
         });
+    }
+
+    submitBtn && submitBtn.addEventListener('click', function() {
+        var titleInp = document.getElementById('day-builder-activity-title');
+        if (titleInp && !titleInp.value.trim()) { titleInp.focus(); return; }
+        doSubmit();
     });
 })();
 </script>
