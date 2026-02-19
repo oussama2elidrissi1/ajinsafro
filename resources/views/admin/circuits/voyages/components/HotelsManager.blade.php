@@ -94,7 +94,7 @@
         </div>
         <div class="mt-3 d-flex gap-2">
             <button type="button" class="btn btn-primary btn-sm" id="hotels-manager-confirm-btn">
-                <i class="bx bx-check"></i> Confirmer
+                <i class="bx bx-check"></i> <span id="hotels-confirm-btn-text">Confirmer</span>
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" id="hotels-manager-cancel-btn">Annuler</button>
         </div>
@@ -117,6 +117,7 @@
     var formWrap = document.getElementById('hotels-manager-form-wrap');
     var formHint = document.getElementById('hotels-form-hint');
     var confirmBtn = document.getElementById('hotels-manager-confirm-btn');
+    var confirmBtnText = document.getElementById('hotels-confirm-btn-text');
     var cancelBtn = document.getElementById('hotels-manager-cancel-btn');
 
     var formFields = {
@@ -155,23 +156,9 @@
     }
 
     function fillFormFromHotel(hotelId) {
-        clearForm();
+        // Compatibilité : utiliser la nouvelle fonction générique
         var h = window.tourHotelsData && hotelId ? window.tourHotelsData[hotelId] : null;
-        if (!h) return;
-        if (formFields.is_optional) formFields.is_optional.checked = !!h.is_optional;
-        if (formFields.hotel_name) formFields.hotel_name.value = h.hotel_name || '';
-        if (formFields.stars) formFields.stars.value = h.stars !== undefined && h.stars !== null ? h.stars : '';
-        if (formFields.room_type) formFields.room_type.value = h.room_type || '';
-        if (formFields.address) formFields.address.value = h.address || '';
-        if (formFields.meal_plan) formFields.meal_plan.value = h.meal_plan || '';
-        if (formFields.notes) formFields.notes.value = h.notes || '';
-        if (formFields.image_id && h.image_id) formFields.image_id.value = h.image_id;
-        if (h.image_url) {
-            var prev = document.getElementById('day_builder_hotel_image_preview');
-            var wrap = document.getElementById('day_builder_hotel_image_preview_wrap');
-            if (prev) prev.src = h.image_url;
-            if (wrap) wrap.style.display = 'flex';
-        }
+        fillFormFromHotelData(h);
     }
 
     function getFormData() {
@@ -187,6 +174,56 @@
         };
     }
 
+    function getHotelForDay(dayIndex, dayNumber) {
+        // 1. Chercher dans dayItemsManager
+        var hotelId = (window.dayItemsManager && dayIndex !== '') ? window.dayItemsManager.getHotel(dayIndex) : null;
+        if (hotelId && window.tourHotelsData && window.tourHotelsData[hotelId]) {
+            return { id: hotelId, data: window.tourHotelsData[hotelId], source: 'dayItemsManager' };
+        }
+        // 2. Chercher dans les lignes du formulaire principal
+        var existingRow = getTourHotelRowForDay(dayNumber);
+        if (existingRow) {
+            var idx = existingRow.getAttribute('data-index');
+            var rowHotelId = existingRow.getAttribute('data-hotel-id');
+            var nameInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][hotel_name]"]');
+            if (nameInp && nameInp.value.trim()) {
+                var hotelData = {
+                    hotel_name: nameInp.value.trim(),
+                    stars: null,
+                    room_type: '',
+                    address: '',
+                    meal_plan: '',
+                    notes: '',
+                    is_optional: false,
+                    image_id: null,
+                    image_url: ''
+                };
+                var starsInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][stars]"]');
+                if (starsInp && starsInp.value) hotelData.stars = parseInt(starsInp.value, 10);
+                var roomInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][room_type]"]');
+                if (roomInp) hotelData.room_type = roomInp.value.trim();
+                var addrInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][address]"]');
+                if (addrInp) hotelData.address = addrInp.value.trim();
+                var mealInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][meal_plan]"]');
+                if (mealInp) hotelData.meal_plan = mealInp.value.trim();
+                var notesTa = existingRow.querySelector('textarea[name="tour_hotels[' + idx + '][notes]"]');
+                if (notesTa) hotelData.notes = notesTa.value.trim();
+                var optInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][is_optional]"]');
+                if (optInp) hotelData.is_optional = optInp.checked;
+                var imgInp = existingRow.querySelector('input[name^="tour_hotels["][name$="[image_id]"]');
+                if (imgInp && imgInp.value) {
+                    hotelData.image_id = parseInt(imgInp.value, 10);
+                    // Essayer de récupérer l'URL de l'image depuis tourHotelsData si l'ID correspond
+                    if (rowHotelId && window.tourHotelsData && window.tourHotelsData[rowHotelId] && window.tourHotelsData[rowHotelId].image_url) {
+                        hotelData.image_url = window.tourHotelsData[rowHotelId].image_url;
+                    }
+                }
+                return { id: rowHotelId || null, data: hotelData, source: 'formRow', rowIndex: idx };
+            }
+        }
+        return null;
+    }
+
     function refreshUI() {
         var day = getDrawerDay();
         currentDayIndex = day.index;
@@ -196,14 +233,15 @@
         if (chooseBtnLabel) chooseBtnLabel.textContent = 'Choisir / Modifier l\'hôtel (Jour ' + day.number + ')';
         if (formHint) formHint.textContent = 'Sera enregistré automatiquement pour le Jour ' + day.number + '.';
 
-        var hotelId = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getHotel(day.index) : null;
-        var isEmpty = !hotelId || !window.tourHotelsData || !window.tourHotelsData[hotelId];
+        var hotelInfo = getHotelForDay(day.index, day.number);
+        var isEmpty = !hotelInfo;
+        
         if (summaryEl) {
             summaryEl.innerHTML = '';
             if (isEmpty) {
                 summaryEl.textContent = 'Aucun hôtel configuré';
             } else {
-                var h = window.tourHotelsData[hotelId];
+                var h = hotelInfo.data;
                 var card = document.createElement('div');
                 card.className = 'card mb-0 border';
                 card.style.fontSize = '13px';
@@ -253,21 +291,7 @@
                     imgDiv.appendChild(img);
                     infoDiv.appendChild(imgDiv);
                 }
-                var removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'btn btn-sm btn-outline-danger';
-                removeBtn.innerHTML = '<i class="bx bx-trash"></i>';
-                removeBtn.title = 'Retirer cet hôtel';
-                removeBtn.addEventListener('click', function() {
-                    if (confirm('Retirer cet hôtel du Jour ' + day.number + ' ?')) {
-                        window.dayItemsManager.setHotel(day.index, null);
-                        window.dayItemsManager.syncToForm(day.index);
-                        document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
-                        refreshUI();
-                    }
-                });
                 cardBody.appendChild(infoDiv);
-                cardBody.appendChild(removeBtn);
                 card.appendChild(cardBody);
                 summaryEl.appendChild(card);
             }
@@ -275,6 +299,11 @@
         if (addBtn) addBtn.classList.toggle('d-none', !isEmpty);
         if (chooseBtn) chooseBtn.classList.toggle('d-none', isEmpty);
         if (removeBtn) removeBtn.classList.toggle('d-none', isEmpty);
+        
+        // Mettre à jour le texte du bouton Confirmer
+        if (confirmBtnText) {
+            confirmBtnText.textContent = isEmpty ? 'Confirmer' : 'Mettre à jour';
+        }
     }
 
     document.addEventListener('day-builder:context-changed', function(e) {
@@ -282,39 +311,57 @@
         currentDayIndex = String(detail.dayIndex || '');
         if (window.dayItemsManager) window.dayItemsManager.loadFromForm(currentDayIndex);
         refreshUI();
-        if (formWrap) formWrap.style.display = 'none';
+        // Si le formulaire est ouvert, le pré-remplir avec l'hôtel existant
+        if (formWrap && formWrap.style.display !== 'none') {
+            var day = getDrawerDay();
+            var hotelInfo = getHotelForDay(day.index, day.number);
+            if (hotelInfo && hotelInfo.data) {
+                fillFormFromHotelData(hotelInfo.data);
+            } else {
+                clearForm();
+            }
+        } else {
+            // Fermer le formulaire si on change de jour
+            if (formWrap) formWrap.style.display = 'none';
+        }
     });
+
+    function fillFormFromHotelData(hotelData) {
+        clearForm();
+        if (!hotelData) return;
+        if (formFields.is_optional) formFields.is_optional.checked = !!hotelData.is_optional;
+        if (formFields.hotel_name) formFields.hotel_name.value = hotelData.hotel_name || '';
+        if (formFields.stars) formFields.stars.value = hotelData.stars !== undefined && hotelData.stars !== null ? hotelData.stars : '';
+        if (formFields.room_type) formFields.room_type.value = hotelData.room_type || '';
+        if (formFields.address) formFields.address.value = hotelData.address || '';
+        if (formFields.meal_plan) formFields.meal_plan.value = hotelData.meal_plan || '';
+        if (formFields.notes) formFields.notes.value = hotelData.notes || '';
+        if (formFields.image_id && hotelData.image_id) formFields.image_id.value = hotelData.image_id;
+        if (hotelData.image_url) {
+            var prev = document.getElementById('day_builder_hotel_image_preview');
+            var wrap = document.getElementById('day_builder_hotel_image_preview_wrap');
+            if (prev) prev.src = hotelData.image_url;
+            if (wrap) wrap.style.display = 'flex';
+        }
+    }
 
     function openForm(isNew) {
         var day = getDrawerDay();
         if (formHint) formHint.textContent = 'Sera enregistré automatiquement pour le Jour ' + day.number + '.';
-        var hotelId = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getHotel(day.index) : null;
-        var existingRow = getTourHotelRowForDay(day.number);
-        if (!isNew && (hotelId || existingRow)) {
-            if (hotelId && window.tourHotelsData && window.tourHotelsData[hotelId]) {
-                fillFormFromHotel(hotelId);
-            } else if (existingRow) {
-                var idx = existingRow.getAttribute('data-index');
-                var optInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][is_optional]"]');
-                if (formFields.is_optional) formFields.is_optional.checked = optInp ? !!optInp.checked : false;
-                var nameInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][hotel_name]"]');
-                if (formFields.hotel_name) formFields.hotel_name.value = nameInp ? nameInp.value : '';
-                var starsInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][stars]"]');
-                if (formFields.stars) formFields.stars.value = starsInp ? starsInp.value : '';
-                var roomInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][room_type]"]');
-                if (formFields.room_type) formFields.room_type.value = roomInp ? roomInp.value : '';
-                var addrInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][address]"]');
-                if (formFields.address) formFields.address.value = addrInp ? addrInp.value : '';
-                var mealInp = existingRow.querySelector('input[name="tour_hotels[' + idx + '][meal_plan]"]');
-                if (formFields.meal_plan) formFields.meal_plan.value = mealInp ? mealInp.value : '';
-                var notesTa = existingRow.querySelector('textarea[name="tour_hotels[' + idx + '][notes]"]');
-                if (formFields.notes) formFields.notes.value = notesTa ? notesTa.value : '';
-                var imgInp = existingRow.querySelector('input[name^="tour_hotels["][name$="[image_id]"]');
-                if (formFields.image_id && imgInp) formFields.image_id.value = imgInp.value || '';
+        
+        if (!isNew) {
+            // Mode édition : pré-remplir avec l'hôtel existant
+            var hotelInfo = getHotelForDay(day.index, day.number);
+            if (hotelInfo && hotelInfo.data) {
+                fillFormFromHotelData(hotelInfo.data);
+            } else {
+                clearForm();
             }
         } else {
+            // Mode ajout : formulaire vide
             clearForm();
         }
+        
         if (formWrap) formWrap.style.display = 'block';
     }
 
@@ -374,11 +421,20 @@
         setRowData(row, idx, dayNum, data);
     }
 
-    if (addBtn && formWrap) addBtn.addEventListener('click', function() { openForm(true); });
-    if (chooseBtn && formWrap) chooseBtn.addEventListener('click', function() {
-        if (formWrap.style.display === 'none') openForm(false);
-        else formWrap.style.display = 'none';
-    });
+    if (addBtn && formWrap) {
+        addBtn.addEventListener('click', function() {
+            openForm(true);
+        });
+    }
+    if (chooseBtn && formWrap) {
+        chooseBtn.addEventListener('click', function() {
+            if (formWrap.style.display === 'none') {
+                openForm(false); // Mode édition : pré-remplir
+            } else {
+                formWrap.style.display = 'none';
+            }
+        });
+    }
 
     if (cancelBtn && formWrap) cancelBtn.addEventListener('click', function() {
         formWrap.style.display = 'none';
@@ -386,10 +442,24 @@
 
     if (removeBtn) {
         removeBtn.addEventListener('click', function() {
-            if (!window.dayItemsManager || currentDayIndex === '') return;
-            window.dayItemsManager.setHotel(currentDayIndex, null);
-            window.dayItemsManager.syncToForm(currentDayIndex);
-            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: currentDayIndex } }));
+            var day = getDrawerDay();
+            if (!window.dayItemsManager || day.index === '') return;
+            if (!confirm('Retirer l\'hôtel du Jour ' + day.number + ' ?')) return;
+            
+            // Retirer de dayItemsManager
+            window.dayItemsManager.setHotel(day.index, null);
+            window.dayItemsManager.syncToForm(day.index);
+            
+            // Optionnel : retirer aussi la ligne du formulaire principal si elle existe
+            var existingRow = getTourHotelRowForDay(day.number);
+            if (existingRow) {
+                var removeBtnRow = existingRow.querySelector('.tour-remove-hotel');
+                if (removeBtnRow) {
+                    removeBtnRow.click();
+                }
+            }
+            
+            document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
             refreshUI();
             if (formWrap) formWrap.style.display = 'none';
         });
@@ -400,24 +470,43 @@
             var day = getDrawerDay();
             if (day.index === '') return;
             var data = getFormData();
-            var hotelId = window.dayItemsManager ? window.dayItemsManager.getHotel(day.index) : null;
-            var existingRow = getTourHotelRowForDay(day.number);
-            if (hotelId && window.tourHotelsData && window.tourHotelsData[hotelId]) {
-                updateTourHotelRowByHotelId(String(hotelId), data);
-            } else if (existingRow) {
-                var idx = existingRow.getAttribute('data-index');
-                setRowData(existingRow, idx, day.number, data);
-            } else {
-                addTourHotelRowAndLinkDay(day.number, data);
+            if (!data.hotel_name || !data.hotel_name.trim()) {
+                alert('Veuillez saisir un nom d\'hôtel.');
+                if (formFields.hotel_name) formFields.hotel_name.focus();
+                return;
             }
+            
+            var hotelInfo = getHotelForDay(day.index, day.number);
+            var existingRow = getTourHotelRowForDay(day.number);
+            var newHotelId = null;
+            
+            if (hotelInfo && hotelInfo.id && window.tourHotelsData && window.tourHotelsData[hotelInfo.id]) {
+                // Mettre à jour un hôtel existant avec ID
+                updateTourHotelRowByHotelId(String(hotelInfo.id), data);
+                newHotelId = parseInt(hotelInfo.id, 10);
+            } else if (existingRow) {
+                // Mettre à jour une ligne existante sans ID encore
+                var idx = existingRow.getAttribute('data-index');
+                var rowHotelId = existingRow.getAttribute('data-hotel-id');
+                setRowData(existingRow, idx, day.number, data);
+                if (rowHotelId) newHotelId = parseInt(rowHotelId, 10);
+            } else {
+                // Créer une nouvelle ligne
+                addTourHotelRowAndLinkDay(day.number, data);
+                // Le nouvel hôtel n'aura pas d'ID immédiatement, mais on peut le lier plus tard
+                // Pour l'instant, on ne met pas à jour dayItemsManager avec un ID
+            }
+            
+            // Mettre à jour dayItemsManager si on a un ID
+            if (newHotelId && window.dayItemsManager) {
+                window.dayItemsManager.setHotel(day.index, newHotelId);
+                window.dayItemsManager.syncToForm(day.index);
+            }
+            
+            // Déclencher la mise à jour de l'UI
             document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
             refreshUI();
-            formWrap.style.display = 'none';
-            var drawer = document.getElementById('day-builder-drawer');
-            if (drawer && typeof bootstrap !== 'undefined') {
-                var offcanvas = bootstrap.Offcanvas.getInstance(drawer);
-                if (offcanvas) offcanvas.hide();
-            }
+            if (formWrap) formWrap.style.display = 'none';
         });
     }
 
