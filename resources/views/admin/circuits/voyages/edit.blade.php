@@ -1886,7 +1886,7 @@
                 <div class="card">
                     <div class="card-footer d-flex justify-content-between align-items-center bg-light">
                         <div>
-                            <button type="submit" class="btn btn-primary btn-lg waves-effect waves-light">
+                            <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg waves-effect waves-light" id="edit-voyage-submit-btn">
                                 <i class="bx bx-save me-1"></i> Enregistrer toutes les modifications
                             </button>
                             <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
