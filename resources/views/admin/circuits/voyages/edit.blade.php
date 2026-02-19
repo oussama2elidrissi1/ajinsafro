@@ -1802,6 +1802,7 @@
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ $dayHotelsTransfers['hotel_id'] ?? '' }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ implode(',', $dayHotelsTransfers['transfer_ids'] ?? []) }}">
 
+                                    <div class="programme-day-extras small text-muted mb-2" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"></div>
                                     <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
                                         INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activités' : 'Activité' }}
                                     </p>
@@ -2694,6 +2695,7 @@
                     '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][hotel_id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][transfer_ids]" value="">' +
+                    '<div class="programme-day-extras small text-muted mb-2" data-day-index="' + index + '" data-day-id=""></div>' +
                     '<p class="small text-muted mb-2 programme-day-inclus" data-day-index="' + index + '">INCLUS : 0 Activité</p>' +
                     '<h6 class="mt-3 mb-2">Éléments du jour</h6>' +
                     '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
@@ -2719,6 +2721,7 @@
                     if (collapseEl) new bootstrap.Collapse(collapseEl, { toggle: true });
                 }
                 attachDragToCards();
+                if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(String(count() - 1));
             }
             function removeDay(btn) {
                 var card = btn.closest('.programme-day-card');
@@ -2731,6 +2734,13 @@
                 card.remove();
                 if (count() === 0 && noDaysAlert) noDaysAlert.style.display = '';
                 renumber();
+                var cards = accordion.querySelectorAll('.programme-day-card');
+                if (window.dayItemsManager && window.updateProgrammeDayExtras) {
+                    cards.forEach(function(c, i) {
+                        window.dayItemsManager.loadFromForm(String(i));
+                        window.updateProgrammeDayExtras(String(i));
+                    });
+                }
             }
             document.addEventListener('DOMContentLoaded', function() {
                 updateBadge();
@@ -2843,6 +2853,41 @@
             var count = list.querySelectorAll('.programme-activity-row').length;
             inclusEl.textContent = 'INCLUS : ' + count + (count > 1 ? ' Activités' : ' Activité');
         }
+
+        function updateProgrammeDayExtras(dayIndex) {
+            var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+            if (!card) return;
+            var extrasEl = card.querySelector('.programme-day-extras');
+            if (!extrasEl) return;
+            var day = window.dayItemsManager ? window.dayItemsManager.getDay(dayIndex) : { hotel_id: null, transfer_ids: [], flights: [] };
+            var parts = [];
+            if (day.hotel_id && window.tourHotelsData && window.tourHotelsData[day.hotel_id]) {
+                parts.push('<i class="bx bx-hotel"></i> ' + (window.tourHotelsData[day.hotel_id].hotel_name || 'Hôtel'));
+            } else {
+                parts.push('<i class="bx bx-hotel"></i> —');
+            }
+            if (day.transfer_ids && day.transfer_ids.length) {
+                var labels = [];
+                (window.tourTransfersData && (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || [])).forEach(function(t) {
+                    if (day.transfer_ids.indexOf(t.id) !== -1) labels.push((t.from_label || '') + ' → ' + (t.to_label || ''));
+                });
+                parts.push('<i class="bx bx-car"></i> ' + (labels.length ? labels.join(' ; ') : day.transfer_ids.length + ' transfert(s)'));
+            } else {
+                parts.push('<i class="bx bx-car"></i> —');
+            }
+            if (day.flights && day.flights.length) {
+                parts.push('<i class="bx bx-trip"></i> ' + day.flights.length + ' vol(s)');
+            } else {
+                parts.push('<i class="bx bx-trip"></i> —');
+            }
+            extrasEl.innerHTML = parts.join(' &nbsp;|&nbsp; ');
+        }
+        window.updateProgrammeDayExtras = updateProgrammeDayExtras;
+
+        document.addEventListener('day-builder:item-count-changed', function(e) {
+            var d = e.detail || {};
+            if (d.dayIndex != null && window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(d.dayIndex);
+        });
 
         function appendActivityToDay(dayIndex, activityId, activityTitle) {
             if (dayIndex === null || dayIndex === '' || !activityId) return false;
@@ -3016,6 +3061,12 @@
 
             // Initialiser le gestionnaire au chargement
             window.dayItemsManager.init();
+            // Afficher Hôtel / Transferts / Vols dans chaque carte de jour (comme les activités)
+            var cards = document.querySelectorAll('.programme-day-card');
+            cards.forEach(function(card) {
+                var dayIndex = card.getAttribute('data-day-index');
+                if (dayIndex != null && window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
+            });
 
             function getDayItemsCount(dayIndex) {
                 return window.dayItemsManager.countItems(dayIndex);
