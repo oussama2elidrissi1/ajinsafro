@@ -123,6 +123,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::match(['put', 'patch'], 'circuits/tour-hotels/{tourId}', [TourHotelController::class, 'update'])->name('circuits.tour-hotels.update')->whereNumber('tourId');
 
     Route::get('circuits/tour-transfers', [TourTransferController::class, 'index'])->name('circuits.tour-transfers.index');
+    Route::post('circuits/tour-transfers', [TourTransferController::class, 'store'])->name('circuits.tour-transfers.store');
     Route::get('circuits/tour-transfers/{tourId}/edit', [TourTransferController::class, 'edit'])->name('circuits.tour-transfers.edit')->whereNumber('tourId');
     Route::match(['put', 'patch'], 'circuits/tour-transfers/{tourId}', [TourTransferController::class, 'update'])->name('circuits.tour-transfers.update')->whereNumber('tourId');
 

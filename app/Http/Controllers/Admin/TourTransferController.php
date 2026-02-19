@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TourTransfer;
 use App\Models\Wp\WpPost;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -112,5 +113,38 @@ class TourTransferController extends Controller
         return redirect()
             ->route('admin.circuits.tour-transfers.index')
             ->with('success', 'Transferts du circuit enregistrés.');
+    }
+
+    /**
+     * Créer un nouveau transfert depuis le drawer (AJAX).
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'tour_id' => 'required|integer',
+            'direction' => 'required|in:arrival,departure',
+            'from_label' => 'nullable|string|max:255',
+            'to_label' => 'nullable|string|max:255',
+            'pickup_time' => 'nullable|string|max:20',
+            'dropoff_time' => 'nullable|string|max:20',
+            'vehicle_type' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:2000',
+            'day_number' => 'nullable|integer|min:1',
+        ]);
+
+        $transfer = TourTransfer::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Transfert créé avec succès.'),
+            'transfer' => [
+                'id' => $transfer->id,
+                'direction' => $transfer->direction,
+                'from_label' => $transfer->from_label ?? '',
+                'to_label' => $transfer->to_label ?? '',
+                'pickup_time' => $transfer->pickup_time ?? '',
+                'dropoff_time' => $transfer->dropoff_time ?? '',
+            ],
+        ]);
     }
 }

@@ -44,10 +44,69 @@
         </button>
     </div>
 
+    {{-- Créer un nouveau transfert (comme activités) --}}
+    <div class="card border-primary mb-3" id="transfers-new-form-wrap" style="display: none;">
+        <div class="card-header bg-light py-2">
+            <strong><i class="bx bx-plus-circle"></i> Créer un nouveau transfert</strong>
+        </div>
+        <div class="card-body">
+            {{-- Pas de <form> : dans #edit-voyage-form, éviter les conflits --}}
+            <div id="transfers-new-form-el" data-action="{{ route('admin.circuits.tour-transfers.store') }}">
+                @csrf
+                <div class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label small">Direction</label>
+                        <select class="form-select form-select-sm" id="transfers-new-direction">
+                            <option value="arrival">Arrivée</option>
+                            <option value="departure">Départ</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">De</label>
+                        <input type="text" class="form-control form-control-sm" id="transfers-new-from" placeholder="Ex. Aéroport">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">À</label>
+                        <input type="text" class="form-control form-control-sm" id="transfers-new-to" placeholder="Ex. Hôtel">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Heure prise en charge</label>
+                        <input type="time" class="form-control form-control-sm" id="transfers-new-pickup">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Heure arrivée</label>
+                        <input type="time" class="form-control form-control-sm" id="transfers-new-dropoff">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">Type de véhicule</label>
+                        <input type="text" class="form-control form-control-sm" id="transfers-new-vehicle" placeholder="Ex. Minibus">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">Notes</label>
+                        <textarea class="form-control form-control-sm" id="transfers-new-notes" rows="2" placeholder="Notes"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="button" class="btn btn-sm btn-primary" id="transfers-new-submit">
+                            <span class="btn-text">Créer</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="transfers-new-cancel">Annuler</button>
+                    </div>
+                    <div id="transfers-new-error" class="small text-danger mt-2" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Picker : aucun champ "Jour", enregistré automatiquement pour le jour courant --}}
     <div id="transfers-manager-picker" class="border rounded p-3 mb-3" style="display: none;">
         <p class="small text-muted mb-2" id="transfers-picker-hint">Sera enregistré pour le jour courant.</p>
-        <label class="form-label small">Transferts (multi-sélection)</label>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label small mb-0">Transferts (multi-sélection)</label>
+            <button type="button" class="btn btn-sm btn-outline-success" id="transfers-picker-new-btn">
+                <i class="bx bx-plus"></i> Créer un nouveau
+            </button>
+        </div>
         <div id="transfers-manager-list" class="border rounded p-2 bg-white" style="max-height: 280px; overflow-y: auto;">
             <!-- Rempli dynamiquement -->
         </div>
@@ -74,6 +133,11 @@
     var pickerHint = document.getElementById('transfers-picker-hint');
     var listEl = document.getElementById('transfers-manager-list');
     var confirmBtn = document.getElementById('transfers-manager-confirm-btn');
+    var newFormWrap = document.getElementById('transfers-new-form-wrap');
+    var newFormEl = document.getElementById('transfers-new-form-el');
+    var newFormSubmit = document.getElementById('transfers-new-submit');
+    var newFormCancel = document.getElementById('transfers-new-cancel');
+    var newFormError = document.getElementById('transfers-new-error');
 
     function getDrawerDay() {
         var drawer = document.getElementById('day-builder-drawer');
@@ -229,6 +293,7 @@
         if (window.dayItemsManager) window.dayItemsManager.loadFromForm(currentDayIndex);
         refreshUI();
         if (picker) picker.style.display = 'none';
+        if (newFormWrap) newFormWrap.style.display = 'none';
     });
 
     function openPicker() {
@@ -238,12 +303,126 @@
             setCheckboxesFromIds(window.dayItemsManager.getTransfers(day.index));
         }
         if (picker) picker.style.display = 'block';
+        if (newFormWrap) newFormWrap.style.display = 'none';
     }
-    if (addBtn && picker) addBtn.addEventListener('click', openPicker);
+    function openNewForm() {
+        if (newFormWrap) newFormWrap.style.display = 'block';
+        if (picker) picker.style.display = 'none';
+        if (newFormError) { newFormError.style.display = 'none'; newFormError.textContent = ''; }
+        var dirInp = document.getElementById('transfers-new-direction');
+        var fromInp = document.getElementById('transfers-new-from');
+        var toInp = document.getElementById('transfers-new-to');
+        var pickupInp = document.getElementById('transfers-new-pickup');
+        var dropoffInp = document.getElementById('transfers-new-dropoff');
+        var vehicleInp = document.getElementById('transfers-new-vehicle');
+        var notesInp = document.getElementById('transfers-new-notes');
+        if (dirInp) dirInp.value = 'arrival';
+        if (fromInp) fromInp.value = '';
+        if (toInp) toInp.value = '';
+        if (pickupInp) pickupInp.value = '';
+        if (dropoffInp) dropoffInp.value = '';
+        if (vehicleInp) vehicleInp.value = '';
+        if (notesInp) notesInp.value = '';
+    }
+    if (addBtn && picker) addBtn.addEventListener('click', function() {
+        var day = getDrawerDay();
+        if (day.index === '') { openPicker(); return; }
+        var hasTransfers = window.dayItemsManager && window.dayItemsManager.getTransfers(day.index).length > 0;
+        if (hasTransfers) openPicker();
+        else openNewForm();
+    });
     if (chooseBtn && picker) chooseBtn.addEventListener('click', function() {
         if (picker.style.display === 'none') openPicker();
         else picker.style.display = 'none';
     });
+    var pickerNewBtn = document.getElementById('transfers-picker-new-btn');
+    if (pickerNewBtn) pickerNewBtn.addEventListener('click', openNewForm);
+    if (newFormCancel && newFormWrap) newFormCancel.addEventListener('click', function() {
+        newFormWrap.style.display = 'none';
+    });
+
+    if (newFormSubmit && newFormEl) {
+        newFormSubmit.addEventListener('click', function() {
+            var form = document.getElementById('edit-voyage-form');
+            var tourId = form ? parseInt(form.getAttribute('data-voyage-id') || '0', 10) : 0;
+            if (!tourId) { if (newFormError) { newFormError.textContent = 'Tour ID manquant.'; newFormError.style.display = 'block'; } return; }
+            var day = getDrawerDay();
+            var direction = document.getElementById('transfers-new-direction');
+            var fromInp = document.getElementById('transfers-new-from');
+            var toInp = document.getElementById('transfers-new-to');
+            if (!fromInp || !fromInp.value.trim()) { if (fromInp) fromInp.focus(); return; }
+            if (!toInp || !toInp.value.trim()) { if (toInp) toInp.focus(); return; }
+            if (newFormError) { newFormError.style.display = 'none'; newFormError.textContent = ''; }
+            var btnText = newFormSubmit.querySelector('.btn-text');
+            var spinner = newFormSubmit.querySelector('.spinner-border');
+            newFormSubmit.disabled = true;
+            if (btnText) btnText.classList.add('d-none');
+            if (spinner) spinner.classList.remove('d-none');
+            var formData = new FormData();
+            var token = newFormEl.querySelector('input[name="_token"]');
+            if (token) formData.append('_token', token.value);
+            formData.append('tour_id', tourId);
+            formData.append('direction', direction ? direction.value : 'arrival');
+            formData.append('from_label', fromInp.value.trim());
+            formData.append('to_label', toInp.value.trim());
+            var pickupInp = document.getElementById('transfers-new-pickup');
+            var dropoffInp = document.getElementById('transfers-new-dropoff');
+            var vehicleInp = document.getElementById('transfers-new-vehicle');
+            var notesInp = document.getElementById('transfers-new-notes');
+            if (pickupInp && pickupInp.value) formData.append('pickup_time', pickupInp.value);
+            if (dropoffInp && dropoffInp.value) formData.append('dropoff_time', dropoffInp.value);
+            if (vehicleInp && vehicleInp.value) formData.append('vehicle_type', vehicleInp.value.trim());
+            if (notesInp && notesInp.value) formData.append('notes', notesInp.value.trim());
+            if (day.index !== '') formData.append('day_number', day.number);
+            var url = newFormEl.getAttribute('data-action') || '';
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) {
+                if (r.ok) return r.json();
+                return r.json().then(function(data) { throw data; });
+            })
+            .then(function(data) {
+                if (!data.transfer) return;
+                var t = data.transfer;
+                var dir = t.direction === 'arrival' ? 'arrival' : 'departure';
+                if (!window.tourTransfersData[dir]) window.tourTransfersData[dir] = [];
+                window.tourTransfersData[dir].push({
+                    id: t.id,
+                    direction: dir,
+                    from_label: t.from_label || '',
+                    to_label: t.to_label || '',
+                    pickup_time: t.pickup_time || '',
+                    dropoff_time: t.dropoff_time || ''
+                });
+                loadTransfersList();
+                if (day.index !== '' && window.dayItemsManager) {
+                    var currentIds = window.dayItemsManager.getTransfers(day.index);
+                    currentIds.push(t.id);
+                    window.dayItemsManager.setTransfers(day.index, currentIds);
+                    window.dayItemsManager.syncToForm(day.index);
+                    document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+                }
+                refreshUI();
+                newFormWrap.style.display = 'none';
+            })
+            .catch(function(err) {
+                var msg = (err && err.message) || 'Erreur lors de la création.';
+                if (err && err.errors) {
+                    var first = Object.keys(err.errors).map(function(k) { return err.errors[k][0]; })[0];
+                    if (first) msg = first;
+                }
+                if (newFormError) { newFormError.textContent = msg; newFormError.style.display = 'block'; }
+            })
+            .finally(function() {
+                newFormSubmit.disabled = false;
+                if (btnText) btnText.classList.remove('d-none');
+                if (spinner) spinner.classList.add('d-none');
+            });
+        });
+    }
 
     if (removeAllBtn) {
         removeAllBtn.addEventListener('click', function() {
@@ -270,6 +449,89 @@
                 var offcanvas = bootstrap.Offcanvas.getInstance(drawer);
                 if (offcanvas) offcanvas.hide();
             }
+        });
+    }
+
+    if (newFormSubmit && newFormEl) {
+        newFormSubmit.addEventListener('click', function() {
+            var form = document.getElementById('edit-voyage-form');
+            var tourId = form ? parseInt(form.getAttribute('data-voyage-id') || '0', 10) : 0;
+            if (!tourId) { if (newFormError) { newFormError.textContent = 'Tour ID manquant.'; newFormError.style.display = 'block'; } return; }
+            var day = getDrawerDay();
+            var direction = document.getElementById('transfers-new-direction');
+            var fromInp = document.getElementById('transfers-new-from');
+            var toInp = document.getElementById('transfers-new-to');
+            if (!fromInp || !fromInp.value.trim()) { if (fromInp) fromInp.focus(); return; }
+            if (!toInp || !toInp.value.trim()) { if (toInp) toInp.focus(); return; }
+            if (newFormError) { newFormError.style.display = 'none'; newFormError.textContent = ''; }
+            var btnText = newFormSubmit.querySelector('.btn-text');
+            var spinner = newFormSubmit.querySelector('.spinner-border');
+            newFormSubmit.disabled = true;
+            if (btnText) btnText.classList.add('d-none');
+            if (spinner) spinner.classList.remove('d-none');
+            var formData = new FormData();
+            var token = newFormEl.querySelector('input[name="_token"]');
+            if (token) formData.append('_token', token.value);
+            formData.append('tour_id', tourId);
+            formData.append('direction', direction ? direction.value : 'arrival');
+            formData.append('from_label', fromInp.value.trim());
+            formData.append('to_label', toInp.value.trim());
+            var pickupInp = document.getElementById('transfers-new-pickup');
+            var dropoffInp = document.getElementById('transfers-new-dropoff');
+            var vehicleInp = document.getElementById('transfers-new-vehicle');
+            var notesInp = document.getElementById('transfers-new-notes');
+            if (pickupInp && pickupInp.value) formData.append('pickup_time', pickupInp.value);
+            if (dropoffInp && dropoffInp.value) formData.append('dropoff_time', dropoffInp.value);
+            if (vehicleInp && vehicleInp.value) formData.append('vehicle_type', vehicleInp.value.trim());
+            if (notesInp && notesInp.value) formData.append('notes', notesInp.value.trim());
+            if (day.index !== '') formData.append('day_number', day.number);
+            var url = newFormEl.getAttribute('data-action') || '';
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) {
+                if (r.ok) return r.json();
+                return r.json().then(function(data) { throw data; });
+            })
+            .then(function(data) {
+                if (!data.transfer) return;
+                var t = data.transfer;
+                var dir = t.direction === 'arrival' ? 'arrival' : 'departure';
+                if (!window.tourTransfersData[dir]) window.tourTransfersData[dir] = [];
+                window.tourTransfersData[dir].push({
+                    id: t.id,
+                    direction: dir,
+                    from_label: t.from_label || '',
+                    to_label: t.to_label || '',
+                    pickup_time: t.pickup_time || '',
+                    dropoff_time: t.dropoff_time || ''
+                });
+                loadTransfersList();
+                if (day.index !== '' && window.dayItemsManager) {
+                    var currentIds = window.dayItemsManager.getTransfers(day.index);
+                    currentIds.push(t.id);
+                    window.dayItemsManager.setTransfers(day.index, currentIds);
+                    window.dayItemsManager.syncToForm(day.index);
+                    document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
+                }
+                refreshUI();
+                newFormWrap.style.display = 'none';
+            })
+            .catch(function(err) {
+                var msg = (err && err.message) || 'Erreur lors de la création.';
+                if (err && err.errors) {
+                    var first = Object.keys(err.errors).map(function(k) { return err.errors[k][0]; })[0];
+                    if (first) msg = first;
+                }
+                if (newFormError) { newFormError.textContent = msg; newFormError.style.display = 'block'; }
+            })
+            .finally(function() {
+                newFormSubmit.disabled = false;
+                if (btnText) btnText.classList.remove('d-none');
+                if (spinner) spinner.classList.add('d-none');
+            });
         });
     }
 

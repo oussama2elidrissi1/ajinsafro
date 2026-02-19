@@ -2860,12 +2860,33 @@
             var extrasEl = card.querySelector('.programme-day-extras');
             if (!extrasEl) return;
             var day = window.dayItemsManager ? window.dayItemsManager.getDay(dayIndex) : { hotel_id: null, transfer_ids: [], flights: [] };
+            var dayNumber = parseInt(dayIndex || '0', 10) + 1;
             var parts = [];
+            // Hôtel : depuis dayItemsManager OU depuis tour_hotels rows avec day_number
+            var hotelName = null;
             if (day.hotel_id && window.tourHotelsData && window.tourHotelsData[day.hotel_id]) {
-                parts.push('<i class="bx bx-hotel"></i> ' + (window.tourHotelsData[day.hotel_id].hotel_name || 'Hôtel'));
+                hotelName = window.tourHotelsData[day.hotel_id].hotel_name || 'Hôtel';
+            } else {
+                // Chercher dans tour_hotels rows (même sans ID encore)
+                var hotelRows = document.querySelectorAll('.tour-hotel-row');
+                for (var i = 0; i < hotelRows.length; i++) {
+                    var row = hotelRows[i];
+                    var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
+                    if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
+                        var nameInp = row.querySelector('input[name^="tour_hotels["][name$="[hotel_name]"]');
+                        if (nameInp && nameInp.value.trim()) {
+                            hotelName = nameInp.value.trim();
+                            break;
+                        }
+                    }
+                }
+            }
+            if (hotelName) {
+                parts.push('<i class="bx bx-hotel"></i> ' + hotelName);
             } else {
                 parts.push('<i class="bx bx-hotel"></i> —');
             }
+            // Transferts
             if (day.transfer_ids && day.transfer_ids.length) {
                 var labels = [];
                 (window.tourTransfersData && (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || [])).forEach(function(t) {
@@ -2875,8 +2896,24 @@
             } else {
                 parts.push('<i class="bx bx-car"></i> —');
             }
-            if (day.flights && day.flights.length) {
-                parts.push('<i class="bx bx-trip"></i> ' + day.flights.length + ' vol(s)');
+            // Vols : lire depuis flight_options[*][day_number] dans le formulaire principal
+            var flightCount = 0;
+            var flightLabels = [];
+            document.querySelectorAll('select[name^="flight_options["][name$="[day_number]"], input[name^="flight_options["][name$="[day_number]"]').forEach(function(inp) {
+                if (inp.value && parseInt(inp.value, 10) === dayNumber && !inp.disabled) {
+                    flightCount++;
+                    var card = inp.closest('.flight-opt-card, .card');
+                    if (card) {
+                        var fromInp = card.querySelector('input[name*="[from_city]"]');
+                        var toInp = card.querySelector('input[name*="[to_city]"]');
+                        var from = fromInp ? fromInp.value.trim() : '';
+                        var to = toInp ? toInp.value.trim() : '';
+                        if (from || to) flightLabels.push((from || '?') + ' → ' + (to || '?'));
+                    }
+                }
+            });
+            if (flightCount > 0) {
+                parts.push('<i class="bx bx-trip"></i> ' + (flightLabels.length ? flightLabels.join(' ; ') : flightCount + ' vol(s)'));
             } else {
                 parts.push('<i class="bx bx-trip"></i> —');
             }
@@ -2887,6 +2924,38 @@
         document.addEventListener('day-builder:item-count-changed', function(e) {
             var d = e.detail || {};
             if (d.dayIndex != null && window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(d.dayIndex);
+        });
+        // Mettre à jour les extras quand un vol change dans le formulaire principal (onglet Vols)
+        document.addEventListener('change', function(e) {
+            if (!e.target || !e.target.name) return;
+            if (e.target.name.indexOf('flight_options[') === 0 && e.target.name.indexOf('[day_number]') !== -1) {
+                var dayNumber = parseInt(e.target.value || '0', 10);
+                if (dayNumber >= 1) {
+                    var dayIndex = String(dayNumber - 1);
+                    if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
+                }
+            }
+            // Mettre à jour quand un hôtel change dans tour_hotels (onglet Hôtels)
+            if (e.target.name && e.target.name.indexOf('tour_hotels[') === 0 && e.target.name.indexOf('[day_number]') !== -1) {
+                var dayNumber = parseInt(e.target.value || '0', 10);
+                if (dayNumber >= 1) {
+                    var dayIndex = String(dayNumber - 1);
+                    if (window.dayItemsManager) {
+                        // Trouver l'hôtel pour ce jour dans tour_hotels
+                        var hotelRow = e.target.closest('.tour-hotel-row');
+                        if (hotelRow) {
+                            var idx = hotelRow.getAttribute('data-index');
+                            var hotelIdInput = hotelRow.querySelector('input[name="tour_hotels[' + idx + '][image_id]"]');
+                            var hotelId = hotelRow.getAttribute('data-hotel-id');
+                            if (hotelId && window.dayItemsManager) {
+                                window.dayItemsManager.setHotel(dayIndex, parseInt(hotelId, 10));
+                                window.dayItemsManager.syncToForm(dayIndex);
+                                if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         function appendActivityToDay(dayIndex, activityId, activityTitle) {
@@ -3061,11 +3130,14 @@
 
             // Initialiser le gestionnaire au chargement
             window.dayItemsManager.init();
-            // Afficher Hôtel / Transferts / Vols dans chaque carte de jour (comme les activités)
+            // Charger les données depuis le formulaire et afficher Hôtel / Transferts / Vols dans chaque carte de jour
             var cards = document.querySelectorAll('.programme-day-card');
             cards.forEach(function(card) {
                 var dayIndex = card.getAttribute('data-day-index');
-                if (dayIndex != null && window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
+                if (dayIndex != null) {
+                    window.dayItemsManager.loadFromForm(dayIndex);
+                    if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
+                }
             });
 
             function getDayItemsCount(dayIndex) {

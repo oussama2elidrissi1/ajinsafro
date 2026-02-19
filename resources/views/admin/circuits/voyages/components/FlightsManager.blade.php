@@ -51,8 +51,10 @@ document.addEventListener('change', function(e) {
     });
     
     // Mettre à jour le gestionnaire d'état
-    if (window.dayItemsManager && selectedFlightIds.length > 0) {
+    if (window.dayItemsManager) {
         window.dayItemsManager.setFlights(dayIndex, selectedFlightIds);
+        window.dayItemsManager.syncToForm(dayIndex);
+        document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: dayIndex } }));
     }
 });
 </script>
