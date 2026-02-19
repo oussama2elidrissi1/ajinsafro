@@ -323,8 +323,8 @@
             }
         }
         
-        // 2. Chercher aussi dans les lignes du formulaire principal (pour les transferts non encore sauvegardés avec ID)
-        document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
+        // 2. Chercher aussi dans les lignes du formulaire principal (nouveau format unifié : tour_transfers)
+        document.querySelectorAll('.tour-transfer-row').forEach(function(row) {
             var daySel = row.querySelector('select[name*="[day_number]"]');
             if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
                 var fromInp = row.querySelector('input[name*="[from_label]"]');
@@ -335,10 +335,10 @@
                     var existingId = null;
                     
                     // Vérifier si ce transfert a déjà un ID dans tourTransfersData
-                    if (window.tourTransfersData && fromInp.value.trim() && toInp.value.trim()) {
+                    if (window.tourTransfersData && rowTransferId) {
                         var allTransfers = (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || []);
                         var found = allTransfers.find(function(t) {
-                            return t.from_label === fromInp.value.trim() && t.to_label === toInp.value.trim();
+                            return t.id == rowTransferId;
                         });
                         if (found) {
                             existingId = found.id;
@@ -351,14 +351,63 @@
                     }
                     
                     // Si pas déjà compté via dayItemsManager
-                    if (!existingId && transferIds.indexOf(rowTransferId) === -1) {
+                    if (!existingId && (!rowTransferId || transferIds.indexOf(parseInt(rowTransferId, 10)) === -1)) {
+                        var vehicleInp = row.querySelector('input[name*="[vehicle_type]"]');
+                        var pickupInp = row.querySelector('input[name*="[pickup_time]"]');
+                        var dropoffInp = row.querySelector('input[name*="[dropoff_time]"]');
+                        var notesTa = row.querySelector('textarea[name*="[notes]"]');
+                        // Par défaut, on utilise 'arrival' comme direction (compatibilité avec le modèle)
+                        var transfer = {
+                            id: rowTransferId ? parseInt(rowTransferId, 10) : null,
+                            direction: 'arrival', // Par défaut pour compatibilité
+                            from_label: fromInp.value.trim() || '',
+                            to_label: toInp.value.trim() || '',
+                            vehicle_type: vehicleInp ? vehicleInp.value.trim() : '',
+                            pickup_time: pickupInp ? pickupInp.value.trim() : '',
+                            dropoff_time: dropoffInp ? dropoffInp.value.trim() : '',
+                            notes: notesTa ? notesTa.value.trim() : '',
+                            source: 'formRow'
+                        };
+                        transferData.push(transfer);
+                        // Ne pas ajouter à transferIds si pas d'ID réel
+                        if (rowTransferId) {
+                            transferIds.push(parseInt(rowTransferId, 10));
+                        }
+                    }
+                }
+            }
+        });
+        // Compatibilité ancien format : tour-transfer-arrival-row / tour-transfer-departure-row
+        document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
+            var daySel = row.querySelector('select[name*="[day_number]"]');
+            if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
+                var fromInp = row.querySelector('input[name*="[from_label]"]');
+                var toInp = row.querySelector('input[name*="[to_label]"]');
+                if (fromInp && toInp && (fromInp.value.trim() || toInp.value.trim())) {
+                    var rowId = row.getAttribute('data-index');
+                    var rowTransferId = row.getAttribute('data-transfer-id');
+                    var existingId = null;
+                    
+                    if (window.tourTransfersData && rowTransferId) {
+                        var allTransfers = (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || []);
+                        var found = allTransfers.find(function(t) {
+                            return t.id == rowTransferId;
+                        });
+                        if (found && transferIds.indexOf(found.id) === -1) {
+                            transferIds.push(found.id);
+                            transferData.push(found);
+                            existingId = found.id;
+                        }
+                    }
+                    
+                    if (!existingId) {
                         var direction = row.classList.contains('tour-transfer-arrival-row') ? 'arrival' : 'departure';
                         var vehicleInp = row.querySelector('input[name*="[vehicle_type]"]');
                         var pickupInp = row.querySelector('input[name*="[pickup_time]"]');
                         var dropoffInp = row.querySelector('input[name*="[dropoff_time]"]');
                         var notesTa = row.querySelector('textarea[name*="[notes]"]');
                         var transfer = {
-                            id: rowTransferId || null,
+                            id: rowTransferId ? parseInt(rowTransferId, 10) : null,
                             direction: direction,
                             from_label: fromInp.value.trim() || '',
                             to_label: toInp.value.trim() || '',
@@ -369,7 +418,9 @@
                             source: 'formRow'
                         };
                         transferData.push(transfer);
-                        // Ne pas ajouter à transferIds car pas d'ID réel
+                        if (rowTransferId) {
+                            transferIds.push(parseInt(rowTransferId, 10));
+                        }
                     }
                 }
             }
@@ -451,6 +502,21 @@
                             }
                             // Retirer aussi la ligne du formulaire principal si elle existe
                             if (t.source === 'formRow') {
+                                // Nouveau format unifié
+                                document.querySelectorAll('.tour-transfer-row').forEach(function(row) {
+                                    var daySel = row.querySelector('select[name*="[day_number]"]');
+                                    var rowFrom = row.querySelector('input[name*="[from_label]"]');
+                                    var rowTo = row.querySelector('input[name*="[to_label]"]');
+                                    var rowTransferId = row.getAttribute('data-transfer-id');
+                                    if (daySel && parseInt(daySel.value || '0', 10) === day.number &&
+                                        ((rowTransferId && rowTransferId == transferId) ||
+                                         (rowFrom && rowFrom.value.trim() === t.from_label &&
+                                          rowTo && rowTo.value.trim() === t.to_label))) {
+                                        var removeBtnRow = row.querySelector('.tour-remove-transfer');
+                                        if (removeBtnRow) removeBtnRow.click();
+                                    }
+                                });
+                                // Compatibilité ancien format
                                 document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
                                     var daySel = row.querySelector('select[name*="[day_number]"]');
                                     var rowFrom = row.querySelector('input[name*="[from_label]"]');
@@ -689,6 +755,17 @@
             window.dayItemsManager.syncToForm(day.index);
             
             // Retirer aussi les lignes du formulaire principal pour ce jour
+            // Nouveau format unifié
+            document.querySelectorAll('.tour-transfer-row').forEach(function(row) {
+                var daySel = row.querySelector('select[name*="[day_number]"]');
+                if (daySel && parseInt(daySel.value || '0', 10) === day.number) {
+                    var removeBtnRow = row.querySelector('.tour-remove-transfer');
+                    if (removeBtnRow) {
+                        removeBtnRow.click();
+                    }
+                }
+            });
+            // Compatibilité ancien format
             document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
                 var daySel = row.querySelector('select[name*="[day_number]"]');
                 if (daySel && parseInt(daySel.value || '0', 10) === day.number) {

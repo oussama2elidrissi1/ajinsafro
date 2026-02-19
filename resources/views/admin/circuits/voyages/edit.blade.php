@@ -1272,13 +1272,13 @@
                 @endphp
                 <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> <strong>Transferts</strong> — Vous pouvez ajouter plusieurs transferts (arrivée et départ) et les associer à un jour spécifique du circuit.</p>
                 <p class="text-muted small mb-2">Vous pouvez ajouter une <strong>image</strong> pour chaque transfert ; elles s'affichent sur la fiche circuit (site WordPress).</p>
-                <h5 class="mb-3"><i class="bx bx-car"></i> Transferts (Aéroport ↔ Hôtel — plusieurs par jour possible)</h5>
+                <h5 class="mb-3"><i class="bx bx-car"></i> Transferts (plusieurs par jour possible)</h5>
 
                 <div id="tour-transfers-anchor">
                     @include('admin.circuits.voyages.partials._tour_transfers_section')
                 </div>
 
-                <p class="text-muted small">Les champs « De / À » sont préremplis avec l'aéroport du vol et l'hôtel. Vous pouvez ajouter plusieurs transferts (arrivée et départ) et les associer à un jour.</p>
+                <p class="text-muted small">Vous pouvez ajouter plusieurs transferts et les associer à un jour. Chaque transfert peut être configuré avec ses détails (De, À, heures, véhicule, notes, image).</p>
             </div>
 
             {{-- TAB LIEUX DE DÉPART — "Starting from" avec vols aller --}}
@@ -2987,7 +2987,30 @@
                     }
                 });
             }
-            // Chercher aussi dans les lignes du formulaire principal
+            // Chercher aussi dans les lignes du formulaire principal (nouveau format unifié)
+            document.querySelectorAll('.tour-transfer-row').forEach(function(row) {
+                var daySel = row.querySelector('select[name*="[day_number]"]');
+                if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
+                    var fromInp = row.querySelector('input[name*="[from_label]"]');
+                    var toInp = row.querySelector('input[name*="[to_label]"]');
+                    var vehicleInp = row.querySelector('input[name*="[vehicle_type]"]');
+                    var pickupInp = row.querySelector('input[name*="[pickup_time]"]');
+                    var dropoffInp = row.querySelector('input[name*="[dropoff_time]"]');
+                    if (fromInp && toInp && (fromInp.value.trim() || toInp.value.trim())) {
+                        // Par défaut, on utilise 'arrival' pour compatibilité avec le modèle
+                        var transfer = {
+                            from_label: fromInp.value.trim() || '',
+                            to_label: toInp.value.trim() || '',
+                            vehicle_type: vehicleInp ? vehicleInp.value.trim() : '',
+                            pickup_time: pickupInp ? pickupInp.value.trim() : '',
+                            dropoff_time: dropoffInp ? dropoffInp.value.trim() : '',
+                            direction: 'arrival' // Par défaut pour compatibilité
+                        };
+                        sections.transfers.arrival.push(transfer);
+                    }
+                }
+            });
+            // Compatibilité ancien format : tour-transfer-arrival-row / tour-transfer-departure-row
             document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
                 var daySel = row.querySelector('select[name*="[day_number]"]');
                 if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {

@@ -679,6 +679,18 @@ class VoyageController extends Controller
      */
     private function syncTourTransfers(int $tourId, \Illuminate\Http\Request $request, int $lastDayNumber = 1): void
     {
+        $transfers = [];
+        
+        // Nouveau format unifié : tour_transfers[]
+        if ($request->has('tour_transfers') && is_array($request->input('tour_transfers'))) {
+            foreach ($request->input('tour_transfers') as $transfer) {
+                if (is_array($transfer) && (isset($transfer['from_label']) || isset($transfer['to_label']) || isset($transfer['pickup_time']))) {
+                    $transfers[] = $transfer;
+                }
+            }
+        }
+        
+        // Ancien format : tour_transfer_arrivals[] et tour_transfer_departures[] (compatibilité)
         $arrivals = [];
         if ($request->has('tour_transfer_arrivals') && is_array($request->input('tour_transfer_arrivals'))) {
             foreach ($request->input('tour_transfer_arrivals') as $arr) {
@@ -692,6 +704,7 @@ class VoyageController extends Controller
                 $arrivals[] = $arr;
             }
         }
+        
         $departures = [];
         if ($request->has('tour_transfer_departures') && is_array($request->input('tour_transfer_departures'))) {
             foreach ($request->input('tour_transfer_departures') as $dep) {
@@ -705,42 +718,69 @@ class VoyageController extends Controller
                 $departures[] = $dep;
             }
         }
-        TourTransfer::where('tour_id', $tourId)->delete();
-        $sortOrder = 0;
-        foreach ($arrivals as $arr) {
-            $dayNumber = isset($arr['day_number']) && $arr['day_number'] !== '' ? max(1, (int) $arr['day_number']) : 1;
-            TourTransfer::create([
-                'tour_id' => $tourId,
-                'direction' => TourTransfer::DIRECTION_ARRIVAL,
-                'day_number' => $dayNumber,
-                'sort_order' => $sortOrder++,
-                'is_optional' => !empty($arr['is_optional']) ? 1 : 0,
-                'from_label' => $arr['from_label'] ?? null,
-                'to_label' => $arr['to_label'] ?? null,
-                'pickup_time' => $arr['pickup_time'] ?? null,
-                'dropoff_time' => $arr['dropoff_time'] ?? null,
-                'vehicle_type' => $arr['vehicle_type'] ?? null,
-                'notes' => $arr['notes'] ?? null,
-                'image_id' => isset($arr['image_id']) && $arr['image_id'] !== '' ? (int) $arr['image_id'] : null,
-            ]);
-        }
-        $sortOrder = 0;
-        foreach ($departures as $dep) {
-            $dayNumber = isset($dep['day_number']) && $dep['day_number'] !== '' ? max(1, min((int) $dep['day_number'], $lastDayNumber)) : $lastDayNumber;
-            TourTransfer::create([
-                'tour_id' => $tourId,
-                'direction' => TourTransfer::DIRECTION_DEPARTURE,
-                'day_number' => $dayNumber,
-                'sort_order' => $sortOrder++,
-                'is_optional' => !empty($dep['is_optional']) ? 1 : 0,
-                'from_label' => $dep['from_label'] ?? null,
-                'to_label' => $dep['to_label'] ?? null,
-                'pickup_time' => $dep['pickup_time'] ?? null,
-                'dropoff_time' => $dep['dropoff_time'] ?? null,
-                'vehicle_type' => $dep['vehicle_type'] ?? null,
-                'notes' => $dep['notes'] ?? null,
-                'image_id' => isset($dep['image_id']) && $dep['image_id'] !== '' ? (int) $dep['image_id'] : null,
-            ]);
+        
+        // Si nouveau format utilisé, ignorer l'ancien format
+        if (!empty($transfers)) {
+            TourTransfer::where('tour_id', $tourId)->delete();
+            $sortOrder = 0;
+            foreach ($transfers as $transfer) {
+                $dayNumber = isset($transfer['day_number']) && $transfer['day_number'] !== '' ? max(1, (int) $transfer['day_number']) : 1;
+                // Par défaut, on utilise 'arrival' comme direction (peut être changé plus tard si nécessaire)
+                // Pour l'instant, on garde la compatibilité avec le modèle qui nécessite une direction
+                TourTransfer::create([
+                    'tour_id' => $tourId,
+                    'direction' => TourTransfer::DIRECTION_ARRIVAL, // Par défaut, peut être adapté selon besoin
+                    'day_number' => $dayNumber,
+                    'sort_order' => $sortOrder++,
+                    'is_optional' => !empty($transfer['is_optional']) ? 1 : 0,
+                    'from_label' => $transfer['from_label'] ?? null,
+                    'to_label' => $transfer['to_label'] ?? null,
+                    'pickup_time' => $transfer['pickup_time'] ?? null,
+                    'dropoff_time' => $transfer['dropoff_time'] ?? null,
+                    'vehicle_type' => $transfer['vehicle_type'] ?? null,
+                    'notes' => $transfer['notes'] ?? null,
+                    'image_id' => isset($transfer['image_id']) && $transfer['image_id'] !== '' ? (int) $transfer['image_id'] : null,
+                ]);
+            }
+        } else {
+            // Ancien format : arrivals + departures
+            TourTransfer::where('tour_id', $tourId)->delete();
+            $sortOrder = 0;
+            foreach ($arrivals as $arr) {
+                $dayNumber = isset($arr['day_number']) && $arr['day_number'] !== '' ? max(1, (int) $arr['day_number']) : 1;
+                TourTransfer::create([
+                    'tour_id' => $tourId,
+                    'direction' => TourTransfer::DIRECTION_ARRIVAL,
+                    'day_number' => $dayNumber,
+                    'sort_order' => $sortOrder++,
+                    'is_optional' => !empty($arr['is_optional']) ? 1 : 0,
+                    'from_label' => $arr['from_label'] ?? null,
+                    'to_label' => $arr['to_label'] ?? null,
+                    'pickup_time' => $arr['pickup_time'] ?? null,
+                    'dropoff_time' => $arr['dropoff_time'] ?? null,
+                    'vehicle_type' => $arr['vehicle_type'] ?? null,
+                    'notes' => $arr['notes'] ?? null,
+                    'image_id' => isset($arr['image_id']) && $arr['image_id'] !== '' ? (int) $arr['image_id'] : null,
+                ]);
+            }
+            $sortOrder = 0;
+            foreach ($departures as $dep) {
+                $dayNumber = isset($dep['day_number']) && $dep['day_number'] !== '' ? max(1, min((int) $dep['day_number'], $lastDayNumber)) : $lastDayNumber;
+                TourTransfer::create([
+                    'tour_id' => $tourId,
+                    'direction' => TourTransfer::DIRECTION_DEPARTURE,
+                    'day_number' => $dayNumber,
+                    'sort_order' => $sortOrder++,
+                    'is_optional' => !empty($dep['is_optional']) ? 1 : 0,
+                    'from_label' => $dep['from_label'] ?? null,
+                    'to_label' => $dep['to_label'] ?? null,
+                    'pickup_time' => $dep['pickup_time'] ?? null,
+                    'dropoff_time' => $dep['dropoff_time'] ?? null,
+                    'vehicle_type' => $dep['vehicle_type'] ?? null,
+                    'notes' => $dep['notes'] ?? null,
+                    'image_id' => isset($dep['image_id']) && $dep['image_id'] !== '' ? (int) $dep['image_id'] : null,
+                ]);
+            }
         }
     }
 
