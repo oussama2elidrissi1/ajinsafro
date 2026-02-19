@@ -231,6 +231,36 @@
                 .destination-ux-header { margin-bottom: 1rem; }
                 .destination-ux-title { font-size: 1.1rem; font-weight: 600; color: #212529; margin: 0 0 0.25rem 0; }
                 .destination-ux-helper { font-size: 0.8125rem; color: #6c757d; margin: 0 0 0.5rem 0; }
+                
+                /* Styles pour le résumé du jour */
+                .day-summary-container { margin-top: 0.5rem; }
+                .day-summary-card {
+                    border: 1px solid #dee2e6;
+                    border-radius: 6px;
+                    padding: 0.75rem;
+                    background-color: #f8f9fa;
+                    transition: all 0.2s ease;
+                }
+                .day-summary-card:hover {
+                    border-color: #adb5bd;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                .day-summary-card .btn-xs {
+                    padding: 0.125rem 0.375rem;
+                    font-size: 0.75rem;
+                    line-height: 1.2;
+                }
+                .day-summary-card .badge {
+                    font-size: 0.7rem;
+                    padding: 0.2em 0.4em;
+                }
+                .day-summary-card strong {
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                }
+                .day-summary-card .small {
+                    font-size: 0.8125rem;
+                }
                 .destination-ux-badge-wrap { margin-top: 0.5rem; }
                 .destination-ux-badge { font-size: 0.75rem; font-weight: 500; }
                 .destination-ux-chips-section { margin-bottom: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
@@ -1802,7 +1832,7 @@
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ $dayHotelsTransfers['hotel_id'] ?? '' }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ implode(',', $dayHotelsTransfers['transfer_ids'] ?? []) }}">
 
-                                    <div class="programme-day-extras small text-muted mb-2" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"></div>
+                                    <div class="programme-day-extras mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"></div>
                                     <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
                                         INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activités' : 'Activité' }}
                                     </p>
@@ -2862,6 +2892,11 @@
             if (!list || !inclusEl) return;
             var count = list.querySelectorAll('.programme-activity-row').length;
             inclusEl.textContent = 'INCLUS : ' + count + (count > 1 ? ' Activités' : ' Activité');
+            // Mettre à jour aussi le résumé du jour
+            var dayIndex = card.getAttribute('data-day-index');
+            if (dayIndex != null && window.updateProgrammeDayExtras) {
+                window.updateProgrammeDayExtras(dayIndex);
+            }
         }
 
         function updateProgrammeDayExtras(dayIndex) {
@@ -2871,107 +2906,331 @@
             if (!extrasEl) return;
             var day = window.dayItemsManager ? window.dayItemsManager.getDay(dayIndex) : { hotel_id: null, transfer_ids: [], flights: [] };
             var dayNumber = parseInt(dayIndex || '0', 10) + 1;
-            var parts = [];
-            // Hôtel : depuis dayItemsManager OU depuis tour_hotels rows avec day_number
-            var hotelName = null;
+            
+            // Collecter toutes les données
+            var sections = {
+                activities: [],
+                hotels: null,
+                transfers: { arrival: [], departure: [] },
+                flights: { outbound: null, inbound: null, internal: [] }
+            };
+            
+            // 1. ACTIVITÉS : depuis le DOM
+            var activitiesList = card.querySelector('.programme-activities-list');
+            if (activitiesList) {
+                activitiesList.querySelectorAll('.programme-activity-row').forEach(function(row) {
+                    var titleEl = row.querySelector('.fw-medium');
+                    var customTitleInp = row.querySelector('input[name*="[custom_title]"]');
+                    var isIncludedEl = row.querySelector('input[name*="[is_included]"]');
+                    var title = '';
+                    if (customTitleInp && customTitleInp.value.trim()) {
+                        title = customTitleInp.value.trim();
+                    } else if (titleEl) {
+                        title = titleEl.textContent.trim();
+                    } else {
+                        title = 'Activité';
+                    }
+                    var isIncluded = isIncludedEl ? isIncludedEl.checked : true;
+                    sections.activities.push({ title: title, isIncluded: isIncluded });
+                });
+            }
+            
+            // 2. HÔTELS : depuis dayItemsManager OU depuis tour_hotels rows
+            var hotelData = null;
             if (day.hotel_id && window.tourHotelsData && window.tourHotelsData[day.hotel_id]) {
-                hotelName = window.tourHotelsData[day.hotel_id].hotel_name || 'Hôtel';
+                hotelData = window.tourHotelsData[day.hotel_id];
             } else {
-                // Chercher dans tour_hotels rows (même sans ID encore)
-                var hotelRows = document.querySelectorAll('.tour-hotel-row');
-                for (var i = 0; i < hotelRows.length; i++) {
-                    var row = hotelRows[i];
+                // Chercher dans tour_hotels rows
+                document.querySelectorAll('.tour-hotel-row').forEach(function(row) {
                     var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
                     if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
                         var nameInp = row.querySelector('input[name^="tour_hotels["][name$="[hotel_name]"]');
+                        var starsInp = row.querySelector('input[name^="tour_hotels["][name$="[stars]"]');
+                        var roomInp = row.querySelector('input[name^="tour_hotels["][name$="[room_type]"]');
+                        var optionalInp = row.querySelector('input[name^="tour_hotels["][name$="[is_optional]"]');
                         if (nameInp && nameInp.value.trim()) {
-                            hotelName = nameInp.value.trim();
-                            break;
+                            hotelData = {
+                                hotel_name: nameInp.value.trim(),
+                                stars: starsInp ? starsInp.value : null,
+                                room_type: roomInp ? roomInp.value.trim() : '',
+                                is_optional: optionalInp ? optionalInp.checked : false
+                            };
                         }
-                    }
-                }
-            }
-            if (hotelName) {
-                parts.push('<i class="bx bx-hotel"></i> ' + hotelName);
-            } else {
-                parts.push('<i class="bx bx-hotel"></i> —');
-            }
-            // Transferts : depuis dayItemsManager ET depuis tour_transfer_arrivals/departures rows avec day_number
-            var transferLabels = [];
-            var transferCount = 0;
-            if (day.transfer_ids && day.transfer_ids.length) {
-                (window.tourTransfersData && (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || [])).forEach(function(t) {
-                    if (day.transfer_ids.indexOf(t.id) !== -1) {
-                        transferCount++;
-                        var label = (t.from_label || '?') + ' → ' + (t.to_label || '?');
-                        if (t.vehicle_type) label += ' (' + t.vehicle_type + ')';
-                        transferLabels.push(label);
                     }
                 });
             }
-            // Chercher aussi dans les lignes tour_transfer_arrivals/departures du formulaire principal (pour les transferts non encore sauvegardés avec ID)
+            sections.hotels = hotelData;
+            
+            // 3. TRANSFERTS : depuis dayItemsManager ET depuis tour_transfer rows
+            var transferIds = day.transfer_ids || [];
+            var transferMap = {};
+            if (window.tourTransfersData) {
+                (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || []).forEach(function(t) {
+                    if (transferIds.indexOf(t.id) !== -1) {
+                        transferMap[t.id] = t;
+                    }
+                });
+            }
+            // Chercher aussi dans les lignes du formulaire principal
             document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
                 var daySel = row.querySelector('select[name*="[day_number]"]');
                 if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
                     var fromInp = row.querySelector('input[name*="[from_label]"]');
                     var toInp = row.querySelector('input[name*="[to_label]"]');
                     var vehicleInp = row.querySelector('input[name*="[vehicle_type]"]');
+                    var pickupInp = row.querySelector('input[name*="[pickup_time]"]');
+                    var dropoffInp = row.querySelector('input[name*="[dropoff_time]"]');
                     if (fromInp && toInp && (fromInp.value.trim() || toInp.value.trim())) {
-                        var rowId = row.getAttribute('data-index');
-                        var existingId = null;
-                        // Vérifier si ce transfert a déjà un ID dans tourTransfersData
-                        if (window.tourTransfersData) {
-                            var allTransfers = (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || []);
-                            var found = allTransfers.find(function(t) {
-                                return t.from_label === fromInp.value.trim() && t.to_label === toInp.value.trim();
-                            });
-                            if (found && day.transfer_ids && day.transfer_ids.indexOf(found.id) !== -1) {
-                                existingId = found.id;
-                            }
-                        }
-                        // Si pas déjà compté via day.transfer_ids
-                        if (!existingId) {
-                            transferCount++;
-                            var label = (fromInp.value.trim() || '?') + ' → ' + (toInp.value.trim() || '?');
-                            if (vehicleInp && vehicleInp.value.trim()) label += ' (' + vehicleInp.value.trim() + ')';
-                            transferLabels.push(label);
-                        }
+                        var direction = row.classList.contains('tour-transfer-arrival-row') ? 'arrival' : 'departure';
+                        var transfer = {
+                            from_label: fromInp.value.trim() || '',
+                            to_label: toInp.value.trim() || '',
+                            vehicle_type: vehicleInp ? vehicleInp.value.trim() : '',
+                            pickup_time: pickupInp ? pickupInp.value.trim() : '',
+                            dropoff_time: dropoffInp ? dropoffInp.value.trim() : '',
+                            direction: direction
+                        };
+                        sections.transfers[direction].push(transfer);
                     }
                 }
             });
-            if (transferCount > 0) {
-                parts.push('<i class="bx bx-car"></i> ' + (transferLabels.length ? transferLabels.join(' ; ') : transferCount + ' transfert(s)'));
-            } else {
-                parts.push('<i class="bx bx-car"></i> —');
-            }
-            // Vols : lire depuis flight_options[*][day_number] dans le formulaire principal
-            var flightCount = 0;
-            var flightLabels = [];
-            document.querySelectorAll('select[name^="flight_options["][name$="[day_number]"], input[name^="flight_options["][name$="[day_number]"]').forEach(function(inp) {
-                if (inp.value && parseInt(inp.value, 10) === dayNumber && !inp.disabled) {
-                    flightCount++;
-                    var card = inp.closest('.flight-opt-card, .card');
-                    if (card) {
-                        var fromInp = card.querySelector('input[name*="[from_city]"]');
-                        var toInp = card.querySelector('input[name*="[to_city]"]');
-                        var from = fromInp ? fromInp.value.trim() : '';
-                        var to = toInp ? toInp.value.trim() : '';
-                        if (from || to) flightLabels.push((from || '?') + ' → ' + (to || '?'));
+            // Ajouter les transferts depuis tourTransfersData
+            Object.keys(transferMap).forEach(function(id) {
+                var t = transferMap[id];
+                sections.transfers[t.direction].push(t);
+            });
+            
+            // 4. VOLS : depuis flight_options dans le formulaire principal
+            document.querySelectorAll('.flight-opt-card, .card').forEach(function(flightCard) {
+                var dayInp = flightCard.querySelector('select[name*="[day_number]"], input[name*="[day_number]"]');
+                if (dayInp && parseInt(dayInp.value || '0', 10) === dayNumber && !dayInp.disabled) {
+                    var typeSel = flightCard.querySelector('select[name*="[type]"]');
+                    var fromInp = flightCard.querySelector('input[name*="[from_city]"]');
+                    var toInp = flightCard.querySelector('input[name*="[to_city]"]');
+                    var dateInp = flightCard.querySelector('input[name*="[departure_date]"]');
+                    var timeInp = flightCard.querySelector('input[name*="[departure_time]"]');
+                    var type = typeSel ? typeSel.value : 'internal';
+                    var flight = {
+                        from: fromInp ? fromInp.value.trim() : '',
+                        to: toInp ? toInp.value.trim() : '',
+                        date: dateInp ? dateInp.value.trim() : '',
+                        time: timeInp ? timeInp.value.trim() : ''
+                    };
+                    if (type === 'outbound') {
+                        sections.flights.outbound = flight;
+                    } else if (type === 'inbound') {
+                        sections.flights.inbound = flight;
+                    } else {
+                        sections.flights.internal.push(flight);
                     }
                 }
             });
-            if (flightCount > 0) {
-                parts.push('<i class="bx bx-trip"></i> ' + (flightLabels.length ? flightLabels.join(' ; ') : flightCount + ' vol(s)'));
-            } else {
-                parts.push('<i class="bx bx-trip"></i> —');
+            
+            // Générer le HTML structuré
+            var html = '<div class="day-summary-container mt-2">';
+            var hasAnyContent = false;
+            
+            // Activités
+            if (sections.activities.length > 0) {
+                hasAnyContent = true;
+                html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light">';
+                html += '<div class="d-flex justify-content-between align-items-center mb-1">';
+                html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-list-check text-primary"></i><strong class="small">Activités (' + sections.activities.length + ')</strong></div>';
+                html += '<button type="button" class="btn btn-xs btn-outline-primary btn-sm day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="activities" title="Configurer"><i class="bx bx-cog"></i></button>';
+                html += '</div>';
+                var visibleActs = sections.activities.slice(0, 3);
+                visibleActs.forEach(function(act) {
+                    html += '<div class="small text-muted mb-1">• ' + act.title;
+                    if (act.isIncluded) html += ' <span class="badge bg-success">Inclus</span>';
+                    else html += ' <span class="badge bg-warning text-dark">Optionnel</span>';
+                    html += '</div>';
+                });
+                if (sections.activities.length > 3) {
+                    html += '<div class="small text-muted">... et ' + (sections.activities.length - 3) + ' autre(s)</div>';
+                }
+                html += '</div>';
             }
-            extrasEl.innerHTML = parts.join(' &nbsp;|&nbsp; ');
+            
+            // Hôtels
+            if (sections.hotels) {
+                hasAnyContent = true;
+                html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light">';
+                html += '<div class="d-flex justify-content-between align-items-center mb-1">';
+                html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-hotel text-primary"></i><strong class="small">Hôtel</strong></div>';
+                html += '<div class="d-flex gap-1">';
+                html += '<button type="button" class="btn btn-xs btn-outline-primary btn-sm day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="hotels" title="Configurer"><i class="bx bx-cog"></i></button>';
+                html += '<button type="button" class="btn btn-xs btn-outline-danger btn-sm day-summary-remove-btn" data-day-index="' + dayIndex + '" data-type="hotel" title="Retirer"><i class="bx bx-trash"></i></button>';
+                html += '</div></div>';
+                html += '<div class="small text-muted mb-1"><strong>' + sections.hotels.hotel_name + '</strong>';
+                if (sections.hotels.stars) {
+                    var stars = '';
+                    for (var i = 0; i < parseInt(sections.hotels.stars, 10); i++) stars += '★';
+                    html += ' <span class="badge bg-warning text-dark">' + stars + '</span>';
+                }
+                if (sections.hotels.room_type) html += ' • ' + sections.hotels.room_type;
+                if (sections.hotels.is_optional) html += ' <span class="badge bg-warning text-dark">Option client</span>';
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            // Transferts
+            var totalTransfers = sections.transfers.arrival.length + sections.transfers.departure.length;
+            if (totalTransfers > 0) {
+                hasAnyContent = true;
+                html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light">';
+                html += '<div class="d-flex justify-content-between align-items-center mb-1">';
+                html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-car text-primary"></i><strong class="small">Transferts (' + totalTransfers + ')</strong></div>';
+                html += '<div class="d-flex gap-1">';
+                html += '<button type="button" class="btn btn-xs btn-outline-primary btn-sm day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="transfers" title="Configurer"><i class="bx bx-cog"></i></button>';
+                html += '<button type="button" class="btn btn-xs btn-outline-danger btn-sm day-summary-remove-btn" data-day-index="' + dayIndex + '" data-type="transfers" title="Tout retirer"><i class="bx bx-trash"></i></button>';
+                html += '</div></div>';
+                if (sections.transfers.arrival.length > 0) {
+                    html += '<div class="small mb-1"><span class="badge bg-success">Arrivée</span>';
+                    sections.transfers.arrival.slice(0, 2).forEach(function(t) {
+                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' → ' + (t.to_label || '?');
+                        if (t.vehicle_type) html += ' <small>(' + t.vehicle_type + ')</small>';
+                        html += '</span>';
+                    });
+                    if (sections.transfers.arrival.length > 2) html += ' <small class="text-muted">+ ' + (sections.transfers.arrival.length - 2) + ' autre(s)</small>';
+                    html += '</div>';
+                }
+                if (sections.transfers.departure.length > 0) {
+                    html += '<div class="small mb-1"><span class="badge bg-danger">Départ</span>';
+                    sections.transfers.departure.slice(0, 2).forEach(function(t) {
+                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' → ' + (t.to_label || '?');
+                        if (t.vehicle_type) html += ' <small>(' + t.vehicle_type + ')</small>';
+                        html += '</span>';
+                    });
+                    if (sections.transfers.departure.length > 2) html += ' <small class="text-muted">+ ' + (sections.transfers.departure.length - 2) + ' autre(s)</small>';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            
+            // Vols
+            var totalFlights = (sections.flights.outbound ? 1 : 0) + (sections.flights.inbound ? 1 : 0) + sections.flights.internal.length;
+            if (totalFlights > 0) {
+                hasAnyContent = true;
+                html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light">';
+                html += '<div class="d-flex justify-content-between align-items-center mb-1">';
+                html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-trip text-primary"></i><strong class="small">Vols (' + totalFlights + ')</strong></div>';
+                html += '<div class="d-flex gap-1">';
+                html += '<button type="button" class="btn btn-xs btn-outline-primary btn-sm day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="flights" title="Configurer"><i class="bx bx-cog"></i></button>';
+                html += '<button type="button" class="btn btn-xs btn-outline-danger btn-sm day-summary-remove-btn" data-day-index="' + dayIndex + '" data-type="flights" title="Tout retirer"><i class="bx bx-trash"></i></button>';
+                html += '</div></div>';
+                if (sections.flights.outbound) {
+                    html += '<div class="small mb-1"><span class="badge bg-info">Aller</span> <span class="text-muted">' + (sections.flights.outbound.from || '?') + ' → ' + (sections.flights.outbound.to || '?');
+                    if (sections.flights.outbound.date) html += ' <small>(' + sections.flights.outbound.date + ')</small>';
+                    html += '</span></div>';
+                }
+                if (sections.flights.inbound) {
+                    html += '<div class="small mb-1"><span class="badge bg-info">Retour</span> <span class="text-muted">' + (sections.flights.inbound.from || '?') + ' → ' + (sections.flights.inbound.to || '?');
+                    if (sections.flights.inbound.date) html += ' <small>(' + sections.flights.inbound.date + ')</small>';
+                    html += '</span></div>';
+                }
+                if (sections.flights.internal.length > 0) {
+                    html += '<div class="small mb-1"><span class="badge bg-secondary">Internes</span>';
+                    sections.flights.internal.slice(0, 2).forEach(function(f) {
+                        html += ' <span class="text-muted">' + (f.from || '?') + ' → ' + (f.to || '?') + '</span>';
+                    });
+                    if (sections.flights.internal.length > 2) html += ' <small class="text-muted">+ ' + (sections.flights.internal.length - 2) + ' autre(s)</small>';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            
+            if (!hasAnyContent) {
+                html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light text-center">';
+                html += '<div class="small text-muted mb-2">Aucun élément configuré</div>';
+                html += '<button type="button" class="btn btn-sm btn-outline-primary day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="activities"><i class="bx bx-plus"></i> Configurer</button>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            extrasEl.innerHTML = html;
         }
         window.updateProgrammeDayExtras = updateProgrammeDayExtras;
 
         document.addEventListener('day-builder:item-count-changed', function(e) {
             var d = e.detail || {};
             if (d.dayIndex != null && window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(d.dayIndex);
+        });
+        
+        // Gestionnaires pour les boutons du résumé du jour
+        document.addEventListener('click', function(e) {
+            // Bouton "Configurer" : ouvre le drawer sur l'onglet spécifié
+            var configBtn = e.target.closest('.day-summary-config-btn');
+            if (configBtn) {
+                e.preventDefault();
+                var dayIndex = configBtn.getAttribute('data-day-index');
+                var tab = configBtn.getAttribute('data-tab');
+                var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+                if (!card) return;
+                var dayNumber = parseInt(dayIndex || '0', 10) + 1;
+                var dayId = card.getAttribute('data-day-id') || '';
+                // Trouver le bouton "Ajouter un élément" pour ce jour et l'utiliser pour ouvrir le drawer
+                var addBtn = card.querySelector('.btn-add-element-to-day');
+                if (addBtn) {
+                    // Déclencher l'événement pour ouvrir le drawer avec le bon contexte
+                    document.dispatchEvent(new CustomEvent('day-builder:set-day', {
+                        detail: {
+                            dayIndex: String(dayIndex),
+                            dayId: dayId,
+                            dayNumber: dayNumber
+                        }
+                    }));
+                    // Ouvrir le drawer via la fonction existante
+                    var drawer = document.getElementById('day-builder-drawer');
+                    if (drawer && window.bootstrap && bootstrap.Offcanvas) {
+                        var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawer);
+                        offcanvas.show();
+                        // Activer l'onglet demandé après un court délai
+                        setTimeout(function() {
+                            var tabButton = drawer.querySelector('[data-bs-target="#day-builder-tab-' + tab + '"]');
+                            if (tabButton && bootstrap.Tab) {
+                                bootstrap.Tab.getOrCreateInstance(tabButton).show();
+                            }
+                        }, 150);
+                    }
+                }
+                return;
+            }
+            
+            // Bouton "Retirer" : retire l'élément du jour
+            var removeBtn = e.target.closest('.day-summary-remove-btn');
+            if (removeBtn) {
+                e.preventDefault();
+                var dayIndex = removeBtn.getAttribute('data-day-index');
+                var type = removeBtn.getAttribute('data-type');
+                var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
+                if (!card) return;
+                var dayNumber = parseInt(dayIndex || '0', 10) + 1;
+                var confirmMsg = '';
+                if (type === 'hotel') {
+                    confirmMsg = 'Retirer l\'hôtel du Jour ' + dayNumber + ' ?';
+                } else if (type === 'transfers') {
+                    confirmMsg = 'Retirer tous les transferts du Jour ' + dayNumber + ' ?';
+                } else if (type === 'flights') {
+                    confirmMsg = 'Retirer tous les vols du Jour ' + dayNumber + ' ?';
+                }
+                if (!confirm(confirmMsg)) return;
+                
+                if (window.dayItemsManager) {
+                    if (type === 'hotel') {
+                        window.dayItemsManager.setHotel(dayIndex, null);
+                    } else if (type === 'transfers') {
+                        window.dayItemsManager.setTransfers(dayIndex, []);
+                    } else if (type === 'flights') {
+                        window.dayItemsManager.setFlights(dayIndex, []);
+                    }
+                    window.dayItemsManager.syncToForm(dayIndex);
+                    document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', {
+                        detail: { dayIndex: dayIndex }
+                    }));
+                    if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
+                }
+                return;
+            }
         });
         // Mettre à jour les extras quand un vol change dans le formulaire principal (onglet Vols)
         document.addEventListener('change', function(e) {
