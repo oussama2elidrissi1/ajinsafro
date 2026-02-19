@@ -1258,7 +1258,7 @@
                     $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1));
                 @endphp
                 <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> <strong>Hôtels</strong> — Vous pouvez ajouter plusieurs hôtels et les associer à un jour spécifique du circuit.</p>
-                <h5 class="mb-3"><i class="bx bx-hotel"></i> Hôtel(s) (séjour — check-in J1, check-out J{{ $lastDayNumber }})</h5>
+                <h5 class="mb-3" id="tour-hotels-title"><i class="bx bx-hotel"></i> Hôtel(s) <span id="tour-hotels-period">(séjour — check-in J1, check-out J{{ $lastDayNumber }})</span></h5>
                 <div id="tour-hotels-anchor">
                     @include('admin.circuits.voyages.partials._tour_hotels_section')
                 </div>
@@ -1972,7 +1972,10 @@
                 meal_plan: @json($hotel->meal_plan),
                 stars: {{ $hotel->stars ?? 'null' }},
                 image_id: {{ $hotel->image_id ?? 'null' }},
-                image_url: @json($hotelImgUrl ?? '')
+                image_url: @json($hotelImgUrl ?? ''),
+                check_in_day: {{ $hotel->check_in_day ?? ($hotel->day_number ?? 'null') }},
+                check_out_day: {{ $hotel->check_out_day ?? ($hotel->day_number ?? 'null') }},
+                day_number: {{ $hotel->day_number ?? 'null' }} // Compatibilité
             };
         @endforeach
 
@@ -2940,10 +2943,23 @@
             if (day.hotel_id && window.tourHotelsData && window.tourHotelsData[day.hotel_id]) {
                 hotelData = window.tourHotelsData[day.hotel_id];
             } else {
-                // Chercher dans tour_hotels rows
+                // Chercher dans tour_hotels rows (nouveau format : check_in_day / check_out_day)
                 document.querySelectorAll('.tour-hotel-row').forEach(function(row) {
-                    var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
-                    if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
+                    var checkInSel = row.querySelector('select[name^="tour_hotels["][name$="[check_in_day]"]');
+                    var checkOutSel = row.querySelector('select[name^="tour_hotels["][name$="[check_out_day]"]');
+                    var isInRange = false;
+                    if (checkInSel && checkOutSel) {
+                        var checkIn = parseInt(checkInSel.value || '1', 10);
+                        var checkOut = parseInt(checkOutSel.value || '1', 10);
+                        isInRange = (dayNumber >= checkIn && dayNumber <= checkOut);
+                    } else {
+                        // Compatibilité ancien format : day_number
+                        var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
+                        if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
+                            isInRange = true;
+                        }
+                    }
+                    if (isInRange) {
                         var nameInp = row.querySelector('input[name^="tour_hotels["][name$="[hotel_name]"]');
                         var starsInp = row.querySelector('input[name^="tour_hotels["][name$="[stars]"]');
                         var roomInp = row.querySelector('input[name^="tour_hotels["][name$="[room_type]"]');
@@ -3243,18 +3259,54 @@
                 }
             }
             // Mettre à jour quand un hôtel change dans tour_hotels (onglet Hôtels)
+            // Nouveau format : check_in_day / check_out_day
+            if (e.target.name && e.target.name.indexOf('tour_hotels[') === 0 && 
+                (e.target.name.indexOf('[check_in_day]') !== -1 || e.target.name.indexOf('[check_out_day]') !== -1)) {
+                var hotelRow = e.target.closest('.tour-hotel-row');
+                if (hotelRow) {
+                    var checkInSel = hotelRow.querySelector('select[name^="tour_hotels["][name$="[check_in_day]"]');
+                    var checkOutSel = hotelRow.querySelector('select[name^="tour_hotels["][name$="[check_out_day]"]');
+                    if (checkInSel && checkOutSel) {
+                        var checkIn = parseInt(checkInSel.value || '1', 10);
+                        var checkOut = parseInt(checkOutSel.value || '1', 10);
+                        var hotelId = hotelRow.getAttribute('data-hotel-id');
+                        // Mettre à jour tous les jours dans la plage check-in -> check-out
+                        if (hotelId && window.dayItemsManager) {
+                            for (var d = checkIn; d <= checkOut; d++) {
+                                var dayIndex = String(d - 1);
+                                window.dayItemsManager.setHotel(dayIndex, parseInt(hotelId, 10));
+                                window.dayItemsManager.syncToForm(dayIndex);
+                                if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
+                            }
+                            // Retirer l'hôtel des jours hors de la plage
+                            var allDays = document.querySelectorAll('.programme-day-card');
+                            allDays.forEach(function(card) {
+                                var dayIdx = card.getAttribute('data-day-index');
+                                var dayNum = parseInt(dayIdx || '0', 10) + 1;
+                                if (dayNum < checkIn || dayNum > checkOut) {
+                                    var currentHotelId = window.dayItemsManager.getHotel(dayIdx);
+                                    if (currentHotelId == hotelId) {
+                                        window.dayItemsManager.setHotel(dayIdx, null);
+                                        window.dayItemsManager.syncToForm(dayIdx);
+                                        if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIdx);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            // Compatibilité ancien format : day_number
             if (e.target.name && e.target.name.indexOf('tour_hotels[') === 0 && e.target.name.indexOf('[day_number]') !== -1) {
                 var dayNumber = parseInt(e.target.value || '0', 10);
                 if (dayNumber >= 1) {
                     var dayIndex = String(dayNumber - 1);
                     if (window.dayItemsManager) {
-                        // Trouver l'hôtel pour ce jour dans tour_hotels
                         var hotelRow = e.target.closest('.tour-hotel-row');
                         if (hotelRow) {
                             var idx = hotelRow.getAttribute('data-index');
-                            var hotelIdInput = hotelRow.querySelector('input[name="tour_hotels[' + idx + '][image_id]"]');
                             var hotelId = hotelRow.getAttribute('data-hotel-id');
-                            if (hotelId && window.dayItemsManager) {
+                            if (hotelId) {
                                 window.dayItemsManager.setHotel(dayIndex, parseInt(hotelId, 10));
                                 window.dayItemsManager.syncToForm(dayIndex);
                                 if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);

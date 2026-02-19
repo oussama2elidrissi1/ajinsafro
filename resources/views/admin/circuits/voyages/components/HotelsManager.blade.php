@@ -366,18 +366,38 @@
     }
 
     function getTourHotelRowForDay(dayNumber) {
+        // Chercher un hôtel où le jour est dans la période check-in -> check-out
         var container = document.getElementById('tour-hotels-container');
         if (!container) return null;
         var rows = container.querySelectorAll('.tour-hotel-row');
         for (var i = 0; i < rows.length; i++) {
             var row = rows[i];
-            var sel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
-            if (sel && sel.value === String(dayNumber)) return row;
+            // Nouveau format : check_in_day et check_out_day
+            var checkInSel = row.querySelector('select[name^="tour_hotels["][name$="[check_in_day]"]');
+            var checkOutSel = row.querySelector('select[name^="tour_hotels["][name$="[check_out_day]"]');
+            if (checkInSel && checkOutSel) {
+                var checkIn = parseInt(checkInSel.value || '1', 10);
+                var checkOut = parseInt(checkOutSel.value || '1', 10);
+                if (dayNumber >= checkIn && dayNumber <= checkOut) {
+                    return row;
+                }
+            }
+            // Compatibilité ancien format : day_number
+            var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
+            if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
+                return row;
+            }
         }
         return null;
     }
 
     function setRowData(row, idx, dayNumber, data) {
+        // Nouveau format : check_in_day et check_out_day (par défaut même jour pour check-in et check-out)
+        var checkInSel = row.querySelector('select[name="tour_hotels[' + idx + '][check_in_day]"]');
+        var checkOutSel = row.querySelector('select[name="tour_hotels[' + idx + '][check_out_day]"]');
+        if (checkInSel) checkInSel.value = String(dayNumber);
+        if (checkOutSel) checkOutSel.value = String(dayNumber);
+        // Compatibilité ancien format
         var daySel = row.querySelector('select[name="tour_hotels[' + idx + '][day_number]"]');
         if (daySel) daySel.value = String(dayNumber);
         var opt = row.querySelector('input[name="tour_hotels[' + idx + '][is_optional]"]');

@@ -13,13 +13,37 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-2">
-                        <label class="form-label">Jour</label>
-                        <select class="form-select" name="tour_hotels[{{ $hi }}][day_number]">
+                    @php
+                        // Compatibilité avec anciennes données : si day_number existe et check_in/out vides, utiliser day_number pour les deux
+                        $oldDayNumber = old("tour_hotels.{$hi}.day_number", optional($h)->day_number);
+                        $checkInDay = old("tour_hotels.{$hi}.check_in_day", optional($h)->check_in_day);
+                        $checkOutDay = old("tour_hotels.{$hi}.check_out_day", optional($h)->check_out_day);
+                        if (!$checkInDay && $oldDayNumber) {
+                            $checkInDay = $oldDayNumber;
+                        }
+                        if (!$checkOutDay && $oldDayNumber) {
+                            $checkOutDay = $oldDayNumber;
+                        }
+                        if (!$checkInDay) $checkInDay = 1;
+                        if (!$checkOutDay) $checkOutDay = 1;
+                    @endphp
+                    <div class="col-md-3">
+                        <label class="form-label">Jour check-in</label>
+                        <select class="form-select tour-hotel-check-in" name="tour_hotels[{{ $hi }}][check_in_day]" data-index="{{ $hi }}">
                             @for($d = 1; $d <= $lastDayNumber; $d++)
-                                <option value="{{ $d }}" {{ old("tour_hotels.{$hi}.day_number", optional($h)->day_number ?? 1) == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
+                                <option value="{{ $d }}" {{ $checkInDay == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
                             @endfor
                         </select>
+                        <small class="text-danger d-none tour-hotel-check-in-error" data-index="{{ $hi }}">Le check-out doit être >= check-in</small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Jour check-out</label>
+                        <select class="form-select tour-hotel-check-out" name="tour_hotels[{{ $hi }}][check_out_day]" data-index="{{ $hi }}">
+                            @for($d = 1; $d <= $lastDayNumber; $d++)
+                                <option value="{{ $d }}" {{ $checkOutDay == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
+                            @endfor
+                        </select>
+                        <small class="text-danger d-none tour-hotel-check-out-error" data-index="{{ $hi }}">Le check-out doit être >= check-in</small>
                     </div>
                     <div class="col-md-2 d-flex align-items-end pb-2">
                         <div class="form-check">
@@ -93,7 +117,17 @@
         clone.querySelectorAll('[name]').forEach(function(inp){
             if (inp.name && inp.name.indexOf('tour_hotels[') === 0)
                 inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + nextIndex + ']');
-            if (inp.name && inp.name.indexOf('[day_number]') !== -1) { inp.value = '1'; return; }
+            if (inp.name && inp.name.indexOf('[check_in_day]') !== -1) { 
+                inp.value = '1'; 
+                inp.setAttribute('data-index', nextIndex);
+                return; 
+            }
+            if (inp.name && inp.name.indexOf('[check_out_day]') !== -1) { 
+                inp.value = '1'; 
+                inp.setAttribute('data-index', nextIndex);
+                return; 
+            }
+            if (inp.name && inp.name.indexOf('[day_number]') !== -1) { inp.value = '1'; return; } // Compatibilité ancien format
             if (inp.name && inp.name.indexOf('[is_optional]') !== -1) { inp.checked = false; return; }
             if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
             if (inp.tagName === 'TEXTAREA') inp.value = '';
@@ -119,6 +153,106 @@
             header.appendChild(rm);
         }
         container.appendChild(clone);
+        // Initialiser la validation pour la nouvelle ligne
+        initHotelCheckInOutValidation(clone);
+        // Mettre à jour le titre
+        updateHotelsTitle();
+    });
+
+    // Validation check-in / check-out
+    function initHotelCheckInOutValidation(row) {
+        if (!row) return;
+        var checkInSel = row.querySelector('.tour-hotel-check-in');
+        var checkOutSel = row.querySelector('.tour-hotel-check-out');
+        var index = row.getAttribute('data-index');
+        if (!checkInSel || !checkOutSel) return;
+        
+        function validateCheckInOut() {
+            var checkIn = parseInt(checkInSel.value || '1', 10);
+            var checkOut = parseInt(checkOutSel.value || '1', 10);
+            var checkInError = row.querySelector('.tour-hotel-check-in-error[data-index="' + index + '"]');
+            var checkOutError = row.querySelector('.tour-hotel-check-out-error[data-index="' + index + '"]');
+            
+            if (checkOut < checkIn) {
+                // Ajuster automatiquement check-out si check-in est supérieur
+                checkOutSel.value = checkIn;
+                if (checkInError) checkInError.classList.remove('d-none');
+                if (checkOutError) checkOutError.classList.remove('d-none');
+                setTimeout(function() {
+                    if (checkInError) checkInError.classList.add('d-none');
+                    if (checkOutError) checkOutError.classList.add('d-none');
+                }, 3000);
+            } else {
+                if (checkInError) checkInError.classList.add('d-none');
+                if (checkOutError) checkOutError.classList.add('d-none');
+            }
+            // Mettre à jour le titre quand les valeurs changent
+            updateHotelsTitle();
+        }
+        
+        checkInSel.addEventListener('change', function() {
+            var checkIn = parseInt(checkInSel.value || '1', 10);
+            var checkOut = parseInt(checkOutSel.value || '1', 10);
+            if (checkOut < checkIn) {
+                checkOutSel.value = checkIn;
+            }
+            validateCheckInOut();
+        });
+        
+        checkOutSel.addEventListener('change', validateCheckInOut);
+    }
+
+    // Fonction pour mettre à jour le titre de la section Hôtels
+    function updateHotelsTitle() {
+        var titleEl = document.getElementById('tour-hotels-period');
+        if (!titleEl) return;
+        var rows = container.querySelectorAll('.tour-hotel-row');
+        if (rows.length === 0) {
+            titleEl.textContent = '(aucun hôtel configuré)';
+            return;
+        }
+        var minCheckIn = null;
+        var maxCheckOut = null;
+        rows.forEach(function(row) {
+            var checkInSel = row.querySelector('select[name^="tour_hotels["][name$="[check_in_day]"]');
+            var checkOutSel = row.querySelector('select[name^="tour_hotels["][name$="[check_out_day]"]');
+            if (checkInSel && checkOutSel) {
+                var checkIn = parseInt(checkInSel.value || '1', 10);
+                var checkOut = parseInt(checkOutSel.value || '1', 10);
+                if (minCheckIn === null || checkIn < minCheckIn) minCheckIn = checkIn;
+                if (maxCheckOut === null || checkOut > maxCheckOut) maxCheckOut = checkOut;
+            } else {
+                // Compatibilité ancien format
+                var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
+                if (daySel) {
+                    var day = parseInt(daySel.value || '1', 10);
+                    if (minCheckIn === null || day < minCheckIn) minCheckIn = day;
+                    if (maxCheckOut === null || day > maxCheckOut) maxCheckOut = day;
+                }
+            }
+        });
+        if (minCheckIn !== null && maxCheckOut !== null) {
+            if (minCheckIn === maxCheckOut) {
+                titleEl.textContent = '(séjour — Jour ' + minCheckIn + ')';
+            } else {
+                titleEl.textContent = '(séjour — check-in J' + minCheckIn + ', check-out J' + maxCheckOut + ')';
+            }
+        }
+    }
+
+    // Initialiser la validation pour les lignes existantes
+    container.querySelectorAll('.tour-hotel-row').forEach(function(row) {
+        initHotelCheckInOutValidation(row);
+    });
+    
+    // Mettre à jour le titre au chargement
+    updateHotelsTitle();
+    
+    // Mettre à jour le titre quand les champs check-in/check-out changent
+    container.addEventListener('change', function(e) {
+        if (e.target && (e.target.classList.contains('tour-hotel-check-in') || e.target.classList.contains('tour-hotel-check-out'))) {
+            updateHotelsTitle();
+        }
     });
 
     container.addEventListener('click', function(e){
@@ -129,14 +263,24 @@
                 container.querySelectorAll('.tour-hotel-row').forEach(function(r, i){
                     r.setAttribute('data-index', i);
                     r.querySelector('.card-header strong').textContent = 'Hôtel ' + (i + 1);
-                    r.querySelectorAll('[name^="tour_hotels["]').forEach(function(inp){ inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + i + ']'); });
+                    r.querySelectorAll('[name^="tour_hotels["]').forEach(function(inp){ 
+                        inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + i + ']');
+                        // Mettre à jour data-index pour les selects check-in/check-out
+                        if (inp.name.indexOf('[check_in_day]') !== -1 || inp.name.indexOf('[check_out_day]') !== -1) {
+                            inp.setAttribute('data-index', i);
+                        }
+                    });
                     r.querySelectorAll('[id^="tour_hotel_image_id_"]').forEach(function(el){ el.id = el.id.replace(/tour_hotel_image_id_\d+/, 'tour_hotel_image_id_' + i); });
                     r.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
                         if (btn.getAttribute('data-input')) btn.setAttribute('data-input', 'tour_hotel_image_id_' + i);
                         if (btn.getAttribute('data-preview')) btn.setAttribute('data-preview', 'tour_hotel_image_id_' + i + '_preview');
                         if (btn.getAttribute('data-preview-wrap')) btn.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + i + '_preview_wrap');
                     });
+                    // Réinitialiser la validation pour cette ligne
+                    initHotelCheckInOutValidation(r);
                 });
+                // Mettre à jour le titre après suppression
+                updateHotelsTitle();
             }
         }
     });

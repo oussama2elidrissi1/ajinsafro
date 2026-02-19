@@ -612,8 +612,30 @@ class VoyageController extends Controller
                 if (!is_array($raw)) {
                     continue;
                 }
+                // Nouveau format : check_in_day / check_out_day
+                $checkInDay = isset($raw['check_in_day']) && $raw['check_in_day'] !== '' ? max(1, (int) $raw['check_in_day']) : null;
+                $checkOutDay = isset($raw['check_out_day']) && $raw['check_out_day'] !== '' ? max(1, (int) $raw['check_out_day']) : null;
+                
+                // Compatibilité ancien format : si check_in/out vides mais day_number existe, utiliser day_number pour les deux
+                $oldDayNumber = isset($raw['day_number']) && $raw['day_number'] !== '' ? max(1, (int) $raw['day_number']) : null;
+                if (!$checkInDay && $oldDayNumber) {
+                    $checkInDay = $oldDayNumber;
+                }
+                if (!$checkOutDay && $oldDayNumber) {
+                    $checkOutDay = $oldDayNumber;
+                }
+                // Valeurs par défaut
+                if (!$checkInDay) $checkInDay = 1;
+                if (!$checkOutDay) $checkOutDay = 1;
+                // S'assurer que check_out >= check_in
+                if ($checkOutDay < $checkInDay) {
+                    $checkOutDay = $checkInDay;
+                }
+                
                 $items[] = [
-                    'day_number' => isset($raw['day_number']) && $raw['day_number'] !== '' ? max(1, (int) $raw['day_number']) : 1,
+                    'check_in_day' => $checkInDay,
+                    'check_out_day' => $checkOutDay,
+                    'day_number' => $oldDayNumber ?? $checkInDay, // Garder pour compatibilité
                     'is_optional' => !empty($raw['is_optional']) ? 1 : 0,
                     'hotel_name' => $raw['hotel_name'] ?? null,
                     'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
@@ -627,6 +649,8 @@ class VoyageController extends Controller
         } elseif ($request->has('tour_hotel')) {
             $raw = $request->input('tour_hotel', []);
             $items[] = [
+                'check_in_day' => 1,
+                'check_out_day' => 1,
                 'day_number' => 1,
                 'is_optional' => 0,
                 'hotel_name' => $raw['hotel_name'] ?? null,
@@ -1178,8 +1202,24 @@ class VoyageController extends Controller
                 $day->update(['hotel_id' => null]);
             }
         } else {
+            // Chercher un hôtel où le jour est dans la plage check-in -> check-out
+            $dayNumber = (int) $tourDay->day_number;
             $hotelForDay = TourHotel::where('tour_id', $tourId)
-                ->where('day_number', (int) $tourDay->day_number)
+                ->where(function($query) use ($dayNumber) {
+                    // Nouveau format : check_in_day / check_out_day
+                    $query->where(function($q) use ($dayNumber) {
+                        $q->whereNotNull('check_in_day')
+                          ->whereNotNull('check_out_day')
+                          ->where('check_in_day', '<=', $dayNumber)
+                          ->where('check_out_day', '>=', $dayNumber);
+                    })
+                    // Compatibilité ancien format : day_number
+                    ->orWhere(function($q) use ($dayNumber) {
+                        $q->whereNull('check_in_day')
+                          ->whereNull('check_out_day')
+                          ->where('day_number', $dayNumber);
+                    });
+                })
                 ->first();
             $day->update(['hotel_id' => $hotelForDay?->id]);
         }
