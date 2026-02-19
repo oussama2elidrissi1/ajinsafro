@@ -1946,7 +1946,7 @@
             };
         @endforeach
 
-        // Charger tous les transferts du tour (disponibles pour sélection par jour)
+        // Charger tous les transferts du tour (disponibles pour sélection par jour) avec tous les détails
         @foreach($transferArrivals as $transfer)
             window.tourTransfersData.arrival.push({
                 id: {{ $transfer->id }},
@@ -1954,7 +1954,12 @@
                 from_label: @json($transfer->from_label),
                 to_label: @json($transfer->to_label),
                 pickup_time: @json($transfer->pickup_time),
-                dropoff_time: @json($transfer->dropoff_time)
+                dropoff_time: @json($transfer->dropoff_time),
+                vehicle_type: @json($transfer->vehicle_type),
+                notes: @json($transfer->notes),
+                day_number: {{ $transfer->day_number ?? 'null' }},
+                is_optional: {{ $transfer->is_optional ? 'true' : 'false' }},
+                image_id: {{ $transfer->image_id ?? 'null' }}
             });
         @endforeach
 
@@ -1965,7 +1970,12 @@
                 from_label: @json($transfer->from_label),
                 to_label: @json($transfer->to_label),
                 pickup_time: @json($transfer->pickup_time),
-                dropoff_time: @json($transfer->dropoff_time)
+                dropoff_time: @json($transfer->dropoff_time),
+                vehicle_type: @json($transfer->vehicle_type),
+                notes: @json($transfer->notes),
+                day_number: {{ $transfer->day_number ?? 'null' }},
+                is_optional: {{ $transfer->is_optional ? 'true' : 'false' }},
+                image_id: {{ $transfer->image_id ?? 'null' }}
             });
         @endforeach
 
@@ -2886,13 +2896,51 @@
             } else {
                 parts.push('<i class="bx bx-hotel"></i> —');
             }
-            // Transferts
+            // Transferts : depuis dayItemsManager ET depuis tour_transfer_arrivals/departures rows avec day_number
+            var transferLabels = [];
+            var transferCount = 0;
             if (day.transfer_ids && day.transfer_ids.length) {
-                var labels = [];
                 (window.tourTransfersData && (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || [])).forEach(function(t) {
-                    if (day.transfer_ids.indexOf(t.id) !== -1) labels.push((t.from_label || '') + ' → ' + (t.to_label || ''));
+                    if (day.transfer_ids.indexOf(t.id) !== -1) {
+                        transferCount++;
+                        var label = (t.from_label || '?') + ' → ' + (t.to_label || '?');
+                        if (t.vehicle_type) label += ' (' + t.vehicle_type + ')';
+                        transferLabels.push(label);
+                    }
                 });
-                parts.push('<i class="bx bx-car"></i> ' + (labels.length ? labels.join(' ; ') : day.transfer_ids.length + ' transfert(s)'));
+            }
+            // Chercher aussi dans les lignes tour_transfer_arrivals/departures du formulaire principal (pour les transferts non encore sauvegardés avec ID)
+            document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
+                var daySel = row.querySelector('select[name*="[day_number]"]');
+                if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
+                    var fromInp = row.querySelector('input[name*="[from_label]"]');
+                    var toInp = row.querySelector('input[name*="[to_label]"]');
+                    var vehicleInp = row.querySelector('input[name*="[vehicle_type]"]');
+                    if (fromInp && toInp && (fromInp.value.trim() || toInp.value.trim())) {
+                        var rowId = row.getAttribute('data-index');
+                        var existingId = null;
+                        // Vérifier si ce transfert a déjà un ID dans tourTransfersData
+                        if (window.tourTransfersData) {
+                            var allTransfers = (window.tourTransfersData.arrival || []).concat(window.tourTransfersData.departure || []);
+                            var found = allTransfers.find(function(t) {
+                                return t.from_label === fromInp.value.trim() && t.to_label === toInp.value.trim();
+                            });
+                            if (found && day.transfer_ids && day.transfer_ids.indexOf(found.id) !== -1) {
+                                existingId = found.id;
+                            }
+                        }
+                        // Si pas déjà compté via day.transfer_ids
+                        if (!existingId) {
+                            transferCount++;
+                            var label = (fromInp.value.trim() || '?') + ' → ' + (toInp.value.trim() || '?');
+                            if (vehicleInp && vehicleInp.value.trim()) label += ' (' + vehicleInp.value.trim() + ')';
+                            transferLabels.push(label);
+                        }
+                    }
+                }
+            });
+            if (transferCount > 0) {
+                parts.push('<i class="bx bx-car"></i> ' + (transferLabels.length ? transferLabels.join(' ; ') : transferCount + ' transfert(s)'));
             } else {
                 parts.push('<i class="bx bx-car"></i> —');
             }

@@ -144,6 +144,10 @@ class TourTransferController extends Controller
                 'to_label' => $transfer->to_label ?? '',
                 'pickup_time' => $transfer->pickup_time ?? '',
                 'dropoff_time' => $transfer->dropoff_time ?? '',
+                'vehicle_type' => $transfer->vehicle_type ?? '',
+                'notes' => $transfer->notes ?? '',
+                'day_number' => $transfer->day_number ?? null,
+                'is_optional' => $transfer->is_optional ?? false,
             ],
         ]);
     }

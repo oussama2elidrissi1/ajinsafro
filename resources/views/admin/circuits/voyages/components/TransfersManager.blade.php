@@ -151,50 +151,128 @@
     function loadTransfersList() {
         if (!listEl || !window.tourTransfersData) return;
         listEl.innerHTML = '';
+        var allTransfers = [];
         if (window.tourTransfersData.arrival && window.tourTransfersData.arrival.length > 0) {
+            window.tourTransfersData.arrival.forEach(function(t) { allTransfers.push(t); });
+        }
+        if (window.tourTransfersData.departure && window.tourTransfersData.departure.length > 0) {
+            window.tourTransfersData.departure.forEach(function(t) { allTransfers.push(t); });
+        }
+        if (allTransfers.length === 0) {
+            var emptyMsg = document.createElement('div');
+            emptyMsg.className = 'text-muted small text-center py-3';
+            emptyMsg.textContent = 'Aucun transfert disponible. Créez-en un ci-dessus.';
+            listEl.appendChild(emptyMsg);
+            return;
+        }
+        // Arrivée
+        var arrivals = allTransfers.filter(function(t) { return t.direction === 'arrival'; });
+        if (arrivals.length > 0) {
             var arrivalLabel = document.createElement('div');
             arrivalLabel.className = 'fw-bold text-success small mb-2 mt-2';
-            arrivalLabel.textContent = 'Arrivée :';
+            arrivalLabel.textContent = 'Arrivée (' + arrivals.length + ') :';
             listEl.appendChild(arrivalLabel);
-            window.tourTransfersData.arrival.forEach(function(transfer) {
-                var wrap = document.createElement('div');
-                wrap.className = 'form-check mb-2';
+            arrivals.forEach(function(transfer) {
+                var card = document.createElement('div');
+                card.className = 'card mb-2';
+                var cardBody = document.createElement('div');
+                cardBody.className = 'card-body p-2';
+                var checkWrap = document.createElement('div');
+                checkWrap.className = 'form-check d-flex align-items-start gap-2';
                 var input = document.createElement('input');
                 input.type = 'checkbox';
-                input.className = 'form-check-input transfer-checkbox';
+                input.className = 'form-check-input transfer-checkbox mt-1';
                 input.value = transfer.id;
                 input.id = 'transfer-' + transfer.id;
                 input.dataset.direction = 'arrival';
-                var label = document.createElement('label');
-                label.className = 'form-check-label small';
-                label.htmlFor = 'transfer-' + transfer.id;
-                label.textContent = (transfer.from_label || '?') + ' → ' + (transfer.to_label || '?');
-                wrap.appendChild(input);
-                wrap.appendChild(label);
-                listEl.appendChild(wrap);
+                var labelDiv = document.createElement('div');
+                labelDiv.className = 'flex-grow-1 small';
+                var mainLabel = document.createElement('label');
+                mainLabel.className = 'form-check-label fw-medium d-block';
+                mainLabel.htmlFor = 'transfer-' + transfer.id;
+                mainLabel.textContent = (transfer.from_label || '?') + ' → ' + (transfer.to_label || '?');
+                labelDiv.appendChild(mainLabel);
+                var details = [];
+                if (transfer.pickup_time) details.push('Prise: ' + transfer.pickup_time);
+                if (transfer.dropoff_time) details.push('Arrivée: ' + transfer.dropoff_time);
+                if (transfer.vehicle_type) details.push('Véhicule: ' + transfer.vehicle_type);
+                if (transfer.day_number) details.push('Jour ' + transfer.day_number);
+                if (transfer.is_optional) details.push('Option client');
+                if (details.length > 0) {
+                    var detailsEl = document.createElement('div');
+                    detailsEl.className = 'text-muted mt-1';
+                    detailsEl.style.fontSize = '11px';
+                    detailsEl.textContent = details.join(' • ');
+                    labelDiv.appendChild(detailsEl);
+                }
+                if (transfer.notes) {
+                    var notesEl = document.createElement('div');
+                    notesEl.className = 'text-muted mt-1';
+                    notesEl.style.fontSize = '11px';
+                    notesEl.style.fontStyle = 'italic';
+                    notesEl.textContent = transfer.notes.substring(0, 60) + (transfer.notes.length > 60 ? '...' : '');
+                    labelDiv.appendChild(notesEl);
+                }
+                checkWrap.appendChild(input);
+                checkWrap.appendChild(labelDiv);
+                cardBody.appendChild(checkWrap);
+                card.appendChild(cardBody);
+                listEl.appendChild(card);
             });
         }
-        if (window.tourTransfersData.departure && window.tourTransfersData.departure.length > 0) {
+        // Départ
+        var departures = allTransfers.filter(function(t) { return t.direction === 'departure'; });
+        if (departures.length > 0) {
             var depLabel = document.createElement('div');
             depLabel.className = 'fw-bold text-danger small mb-2 mt-2';
-            depLabel.textContent = 'Départ :';
+            depLabel.textContent = 'Départ (' + departures.length + ') :';
             listEl.appendChild(depLabel);
-            window.tourTransfersData.departure.forEach(function(transfer) {
-                var wrap = document.createElement('div');
-                wrap.className = 'form-check mb-2';
+            departures.forEach(function(transfer) {
+                var card = document.createElement('div');
+                card.className = 'card mb-2';
+                var cardBody = document.createElement('div');
+                cardBody.className = 'card-body p-2';
+                var checkWrap = document.createElement('div');
+                checkWrap.className = 'form-check d-flex align-items-start gap-2';
                 var input = document.createElement('input');
                 input.type = 'checkbox';
-                input.className = 'form-check-input transfer-checkbox';
+                input.className = 'form-check-input transfer-checkbox mt-1';
                 input.value = transfer.id;
                 input.id = 'transfer-' + transfer.id;
                 input.dataset.direction = 'departure';
-                var label = document.createElement('label');
-                label.className = 'form-check-label small';
-                label.htmlFor = 'transfer-' + transfer.id;
-                label.textContent = (transfer.from_label || '?') + ' → ' + (transfer.to_label || '?');
-                wrap.appendChild(input);
-                wrap.appendChild(label);
-                listEl.appendChild(wrap);
+                var labelDiv = document.createElement('div');
+                labelDiv.className = 'flex-grow-1 small';
+                var mainLabel = document.createElement('label');
+                mainLabel.className = 'form-check-label fw-medium d-block';
+                mainLabel.htmlFor = 'transfer-' + transfer.id;
+                mainLabel.textContent = (transfer.from_label || '?') + ' → ' + (transfer.to_label || '?');
+                labelDiv.appendChild(mainLabel);
+                var details = [];
+                if (transfer.pickup_time) details.push('Prise: ' + transfer.pickup_time);
+                if (transfer.dropoff_time) details.push('Arrivée: ' + transfer.dropoff_time);
+                if (transfer.vehicle_type) details.push('Véhicule: ' + transfer.vehicle_type);
+                if (transfer.day_number) details.push('Jour ' + transfer.day_number);
+                if (transfer.is_optional) details.push('Option client');
+                if (details.length > 0) {
+                    var detailsEl = document.createElement('div');
+                    detailsEl.className = 'text-muted mt-1';
+                    detailsEl.style.fontSize = '11px';
+                    detailsEl.textContent = details.join(' • ');
+                    labelDiv.appendChild(detailsEl);
+                }
+                if (transfer.notes) {
+                    var notesEl = document.createElement('div');
+                    notesEl.className = 'text-muted mt-1';
+                    notesEl.style.fontSize = '11px';
+                    notesEl.style.fontStyle = 'italic';
+                    notesEl.textContent = transfer.notes.substring(0, 60) + (transfer.notes.length > 60 ? '...' : '');
+                    labelDiv.appendChild(notesEl);
+                }
+                checkWrap.appendChild(input);
+                checkWrap.appendChild(labelDiv);
+                cardBody.appendChild(checkWrap);
+                card.appendChild(cardBody);
+                listEl.appendChild(card);
             });
         }
     }
@@ -233,7 +311,15 @@
                     ids.forEach(function(id) {
                         var t = window.tourTransfersData.arrival.find(function(x) { return x.id === id; }) ||
                                 window.tourTransfersData.departure.find(function(x) { return x.id === id; });
-                        if (t) lines.push((t.from_label || '?') + ' → ' + (t.to_label || '?'));
+                        if (t) {
+                            var line = (t.from_label || '?') + ' → ' + (t.to_label || '?');
+                            var details = [];
+                            if (t.vehicle_type) details.push(t.vehicle_type);
+                            if (t.pickup_time) details.push('Prise: ' + t.pickup_time);
+                            if (t.dropoff_time) details.push('Arrivée: ' + t.dropoff_time);
+                            if (details.length > 0) line += ' (' + details.join(', ') + ')';
+                            lines.push(line);
+                        }
                     });
                     if (lines.length) {
                         var div = document.createElement('div');
@@ -395,7 +481,12 @@
                     from_label: t.from_label || '',
                     to_label: t.to_label || '',
                     pickup_time: t.pickup_time || '',
-                    dropoff_time: t.dropoff_time || ''
+                    dropoff_time: t.dropoff_time || '',
+                    vehicle_type: t.vehicle_type || '',
+                    notes: t.notes || '',
+                    day_number: day.number || null,
+                    is_optional: t.is_optional || false,
+                    image_id: null
                 });
                 loadTransfersList();
                 if (day.index !== '' && window.dayItemsManager) {
@@ -506,7 +597,12 @@
                     from_label: t.from_label || '',
                     to_label: t.to_label || '',
                     pickup_time: t.pickup_time || '',
-                    dropoff_time: t.dropoff_time || ''
+                    dropoff_time: t.dropoff_time || '',
+                    vehicle_type: t.vehicle_type || '',
+                    notes: t.notes || '',
+                    day_number: day.number || null,
+                    is_optional: t.is_optional || false,
+                    image_id: null
                 });
                 loadTransfersList();
                 if (day.index !== '' && window.dayItemsManager) {
