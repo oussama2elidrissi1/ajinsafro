@@ -56,15 +56,9 @@ class VoyageFlightOptionService
                 $dayNumber = $lastDay;
             }
 
-            $filled = !empty($row['airline_id']) || !empty($row['from_city']) || !empty($row['to_city'])
-                || !empty($row['departure_date']) || !empty($row['departure_datetime']) || !empty($row['flight_number'])
-                || (isset($row['departure_place_id']) && $row['departure_place_id'] !== '' && (int) $row['departure_place_id'] > 0);
-            if (!$filled && empty($row['id'])) {
-                continue;
-            }
-
+            // Parse departure_place_id et date AVANT de vérifier $filled
             $rawPlaceId = $row['departure_place_id'] ?? null;
-            $departurePlaceId = (isset($rawPlaceId) && $rawPlaceId !== '') ? (int) $rawPlaceId : null;
+            $departurePlaceId = (isset($rawPlaceId) && $rawPlaceId !== '' && $rawPlaceId !== '0') ? (int) $rawPlaceId : null;
             if ($departurePlaceId === 0) {
                 $departurePlaceId = null;
             }
@@ -72,6 +66,30 @@ class VoyageFlightOptionService
                 ?? $this->parseDateAndTime($row['departure_date'] ?? null, $row['departure_time'] ?? null);
             $arriveAt = $this->parseDateTime($row['arrival_datetime'] ?? null)
                 ?? $this->parseDateAndTime($row['arrival_date'] ?? $row['departure_date'] ?? null, $row['arrival_time'] ?? null);
+
+            // Condition $filled améliorée: inclut departure_place_id (numérique > 0) et departure_date parsée
+            $filled = !empty($row['airline_id']) || !empty($row['from_city']) || !empty($row['to_city'])
+                || !empty($row['departure_date']) || !empty($row['departure_datetime']) || !empty($row['flight_number'])
+                || ($departurePlaceId !== null && $departurePlaceId > 0)
+                || $departAt !== null;
+            
+            // Log pour diagnostic (uniquement si departure_place_id ou departure_date présents)
+            if (isset($row['departure_place_id']) || isset($row['departure_date'])) {
+                \Log::debug('VoyageFlightOptionService: processing flight option', [
+                    'index' => $i,
+                    'id' => $row['id'] ?? 'NEW',
+                    'type' => $type,
+                    'departure_place_id_raw' => $rawPlaceId,
+                    'departure_place_id_parsed' => $departurePlaceId,
+                    'departure_date_raw' => $row['departure_date'] ?? null,
+                    'depart_at_parsed' => $departAt,
+                    'filled' => $filled,
+                ]);
+            }
+
+            if (!$filled && empty($row['id'])) {
+                continue;
+            }
 
             $data = [
                 'voyage_id' => $voyageId,
