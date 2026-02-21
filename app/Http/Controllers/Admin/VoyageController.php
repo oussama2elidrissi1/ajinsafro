@@ -982,18 +982,33 @@ class VoyageController extends Controller
             } catch (\Throwable $e) {
                 // keep 1
             }
+            
+            // Log TOUTES les clés de la requête pour diagnostic
+            \Log::info('VoyageController@update - Request keys received', [
+                'tour_id' => $id,
+                'has_flight_options' => $request->has('flight_options'),
+                'has_flights' => $request->has('flights'),
+                'all_keys' => array_keys($request->all()),
+                'flight_options_count' => $request->has('flight_options') ? count($request->input('flight_options', [])) : 0,
+            ]);
+            
             if ($request->has('flight_options') && is_array($request->input('flight_options'))) {
                 try {
                     $flightOptionsInput = $request->input('flight_options');
-                    \Log::debug('VoyageController@update flight_options payload', [
+                    \Log::debug('VoyageController@update flight_options payload FULL', [
                         'tour_id' => $id,
                         'voyage_id' => $laravelVoyage->id,
                         'count' => count($flightOptionsInput),
-                        'first' => !empty($flightOptionsInput) ? array_values($flightOptionsInput)[0] : null,
+                        'all_options' => $flightOptionsInput, // Log TOUTES les options
                     ]);
                     $this->voyageFlightOptionService->syncOptions($laravelVoyage->id, $flightOptionsInput, $lastDayNumber);
+                    \Log::info('VoyageController@update flight_options sync SUCCESS', ['tour_id' => $id]);
                 } catch (\Throwable $e) {
-                    \Log::error('VoyageController@update flight options failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
+                    \Log::error('VoyageController@update flight options failed', [
+                        'tour_id' => $id,
+                        'message' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
                     throw $e;
                 }
             } elseif ($request->has('flights')) {

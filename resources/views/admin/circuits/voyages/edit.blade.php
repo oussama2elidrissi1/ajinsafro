@@ -3637,5 +3637,83 @@
                 initSaveButtonFallback();
             }
         })();
+
+        // ——— MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) ———
+        (function diagnosticMode() {
+            console.log('🔧 DIAGNOSTIC MODE - Flight Options Persistence');
+            
+            function removeDisabledFromFlightOptions() {
+                var count = 0;
+                document.querySelectorAll('[name^="flight_options"]').forEach(function(el) {
+                    if (el.hasAttribute('disabled')) {
+                        el.removeAttribute('disabled');
+                        console.log('  🔓 Disabled retiré:', el.name);
+                        count++;
+                    }
+                });
+                if (count > 0) {
+                    console.log('✅ Total disabled retirés:', count);
+                }
+            }
+            
+            function interceptFormSubmission() {
+                var form = document.getElementById('edit-voyage-form');
+                if (!form) {
+                    console.error('❌ Formulaire #edit-voyage-form introuvable!');
+                    return;
+                }
+                
+                form.addEventListener('submit', function(e) {
+                    console.log('🚀 FORMULAIRE SOUMIS (intercepté)');
+                    var fd = new FormData(this);
+                    var flightOptionsData = {};
+                    var count = 0;
+                    
+                    for (var pair of fd.entries()) {
+                        if (pair[0].startsWith('flight_options')) {
+                            flightOptionsData[pair[0]] = pair[1];
+                            console.log('  📦', pair[0], '=', pair[1]);
+                            count++;
+                        }
+                    }
+                    
+                    console.log('📊 Total flight_options fields:', count);
+                    
+                    if (count === 0) {
+                        console.error('❌ AUCUN flight_options détecté dans le FormData!');
+                        console.log('Vérifications:');
+                        console.log('  1. Les inputs ont-ils les bons attributs name?');
+                        console.log('  2. Les inputs sont-ils dans le formulaire #edit-voyage-form?');
+                        console.log('  3. Les inputs sont-ils disabled?');
+                        
+                        if (!confirm('⚠️ ATTENTION: Aucun flight_options détecté!\n\nVoulez-vous quand même envoyer le formulaire?\n(Cliquez sur Cancel pour déboguer)')) {
+                            e.preventDefault();
+                            e.stopImmediatePropagation();
+                        }
+                    } else {
+                        console.log('✅ Flight options detectés, soumission OK');
+                    }
+                }, true);
+                
+                console.log('✅ Intercepteur de formulaire installé');
+            }
+            
+            // Exécuter au chargement
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    removeDisabledFromFlightOptions();
+                    interceptFormSubmission();
+                });
+            } else {
+                removeDisabledFromFlightOptions();
+                interceptFormSubmission();
+            }
+            
+            // Re-vérifier après 2 secondes (au cas où des inputs sont ajoutés dynamiquement)
+            setTimeout(function() {
+                console.log('🔄 Re-vérification après 2s...');
+                removeDisabledFromFlightOptions();
+            }, 2000);
+        })();
     </script>
 @endpush
