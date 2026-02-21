@@ -729,6 +729,46 @@ function aj_render_flight_card($flight, $context = []) {
     if (trim($cabin_display) === '') { $cabin_display = $dash; }
     if (trim($checkin_display) === '') { $checkin_display = $dash; }
 
+    // Flight Card v2: optional fields (fallbacks for display only)
+    $dep_airport = isset($flight['depart_airport']) ? trim((string) $flight['depart_airport']) : '';
+    $arr_airport = isset($flight['arrive_airport']) ? trim((string) $flight['arrive_airport']) : '';
+    $origin_code = isset($flight['depart_code']) ? (string) $flight['depart_code'] : (isset($flight['from_code']) ? (string) $flight['from_code'] : '');
+    if ($origin_code === '' && $dep_airport !== '' && strlen($dep_airport) <= 4) {
+        $origin_code = $dep_airport;
+    }
+    if ($origin_code === '') {
+        $origin_code = $from !== $dash ? mb_substr($from, 0, 3) : $dash;
+    }
+    $dest_code = isset($flight['arrive_code']) ? (string) $flight['arrive_code'] : (isset($flight['to_code']) ? (string) $flight['to_code'] : '');
+    if ($dest_code === '' && $arr_airport !== '' && strlen($arr_airport) <= 4) {
+        $dest_code = $arr_airport;
+    }
+    if ($dest_code === '') {
+        $dest_code = $to !== $dash ? mb_substr($to, 0, 3) : $dash;
+    }
+    $origin_airport = $dep_airport !== '' ? $dep_airport : $from;
+    $dest_airport = $arr_airport !== '' ? $arr_airport : $to;
+    $dep_time = isset($flight['depart_time']) && trim((string) $flight['depart_time']) !== ''
+        ? (string) $flight['depart_time'] : $dash;
+    if ($dep_time !== $dash && preg_match('/^\d{4}-\d{2}-\d{2}/', $dep_time)) {
+        $dep_time = date_i18n('H:i', strtotime($dep_time));
+    }
+    $arr_time = isset($flight['arrive_time']) && trim((string) $flight['arrive_time']) !== ''
+        ? (string) $flight['arrive_time'] : $dash;
+    if ($arr_time !== $dash && preg_match('/^\d{4}-\d{2}-\d{2}/', $arr_time)) {
+        $arr_time = date_i18n('H:i', strtotime($arr_time));
+    }
+    $duration = isset($flight['duration']) ? trim((string) $flight['duration']) : (isset($flight['duration_formatted']) ? trim((string) $flight['duration_formatted']) : '');
+    $stops = isset($flight['stops']) ? (int) $flight['stops'] : 0;
+    $cabin_class_raw = isset($flight['cabin_class']) ? strtolower(trim((string) $flight['cabin_class'])) : '';
+    $class_label = '';
+    if ($cabin_class_raw === 'business' || $cabin_class_raw === 'premium') {
+        $class_label = _x('Business', 'cabin class', 'ajinsafro-tour-bridge');
+    } elseif ($cabin_class_raw !== '') {
+        $class_label = _x('Éco', 'cabin class', 'ajinsafro-tour-bridge');
+    }
+    $bagage_inclus = !empty($flight['bagage_inclus']);
+
     $is_tentative = !empty($flight['is_tentative']) || !empty($context['is_tentative']);
     $is_unavailable = !empty($context['unavailable']);
 
@@ -743,75 +783,97 @@ function aj_render_flight_card($flight, $context = []) {
 
     $title_override = isset($context['title']) ? (string) $context['title'] : '';
 
+    $subtitle_parts = [];
+    if ($dep_date !== $dash) {
+        $subtitle_parts[] = $dep_date;
+    }
+    if ($duration !== '') {
+        $subtitle_parts[] = $duration;
+    }
+    $subtitle = implode(' • ', $subtitle_parts);
+    if ($subtitle === '') {
+        $subtitle = $dash;
+    }
+
     ob_start();
     ?>
-    <div class="aj-flight-card<?php echo $is_unavailable ? ' aj-flight-card--unavailable' : ''; ?>" data-flight-id="<?php echo esc_attr((int) ($flight['id'] ?? 0)); ?>">
-        <div class="aj-flight-card__header">
-            <div class="aj-flight-card__header-left">
-                <span class="aj-flight-card__header-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
-                        <path d="M10.18 9"></path>
+    <div class="aj-flight-card aj-flight-card--v2<?php echo $is_unavailable ? ' aj-flight-card--unavailable' : ''; ?>" data-flight-id="<?php echo esc_attr((int) ($flight['id'] ?? 0)); ?>">
+        <div class="aj-flight-header">
+            <div class="aj-flight-header__left">
+                <span class="aj-flight-header__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
                         <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3-1 3 1v-1.5L13 19v-5.5z"></path>
                     </svg>
                 </span>
-                <div class="aj-flight-card__title">
-                    <?php if ($title_override !== ''): ?>
-                        <?php echo esc_html($title_override); ?>
-                    <?php else: ?>
-                        <span class="aj-flight-card__title-label"><?php esc_html_e('FLIGHT', 'ajinsafro-tour-bridge'); ?></span>
-                        <span class="aj-flight-card__title-sep">&bull;</span>
-                        <span class="aj-flight-card__title-route"><?php echo esc_html($from); ?> &rarr; <?php echo esc_html($to); ?></span>
-                    <?php endif; ?>
-                </div>
+                <span class="aj-flight-header__label"><?php esc_html_e('VOL', 'ajinsafro-tour-bridge'); ?></span>
             </div>
-            <?php if ($show_remove || $show_edit): ?>
-                <div class="aj-flight-card__actions">
-                    <?php if ($show_edit): ?>
-                        <a href="<?php echo esc_url($edit_url !== '' ? $edit_url : '#'); ?>" class="aj-flight-card__action aj-flight-card__edit">
-                            <?php esc_html_e('EDIT', 'ajinsafro-tour-bridge'); ?>
-                        </a>
-                    <?php endif; ?>
-                    <?php if ($show_remove): ?>
-                        <button type="button" class="aj-flight-card__action aj-flight-card__remove" data-aj-flight-remove aria-label="<?php esc_attr_e('Retirer', 'ajinsafro-tour-bridge'); ?>">
-                            <?php esc_html_e('REMOVE', 'ajinsafro-tour-bridge'); ?>
-                        </button>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
+            <div class="aj-flight-header__main">
+                <h4 class="aj-flight-header__title"><?php echo esc_html($from); ?> &rarr; <?php echo esc_html($to); ?></h4>
+                <?php if ($subtitle !== $dash): ?>
+                    <p class="aj-flight-header__subtitle"><?php echo esc_html($subtitle); ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="aj-flight-header__badge-wrap">
+                <?php if ($stops === 0): ?>
+                    <span class="aj-flight-badge aj-flight-badge--direct"><?php esc_html_e('Direct', 'ajinsafro-tour-bridge'); ?></span>
+                <?php else: ?>
+                    <span class="aj-flight-badge aj-flight-badge--stops"><?php echo esc_html(sprintf(_n('%d escale', '%d escales', $stops, 'ajinsafro-tour-bridge'), $stops)); ?></span>
+                <?php endif; ?>
+            </div>
         </div>
-        <div class="aj-flight-card__body">
-            <div class="aj-flight-card__left">
-                <div class="aj-flight-card__icon-wrap" aria-hidden="true">
+
+        <div class="aj-flight-timeline">
+            <div class="aj-flight-timeline__col aj-flight-timeline__col--origin">
+                <div class="aj-flight-time"><?php echo esc_html($dep_time); ?></div>
+                <div class="aj-flight-place"><?php echo esc_html($origin_code); ?> &bull; <?php echo esc_html($origin_airport); ?></div>
+            </div>
+            <div class="aj-flight-timeline__center">
+                <span class="aj-flight-timeline__dot" aria-hidden="true"></span>
+                <span class="aj-flight-timeline__plane" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
                         <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3-1 3 1v-1.5L13 19v-5.5z"></path>
                     </svg>
-                </div>
+                </span>
+                <span class="aj-flight-timeline__dot" aria-hidden="true"></span>
+                <?php if ($duration !== ''): ?>
+                    <span class="aj-flight-timeline__duration"><?php echo esc_html($duration); ?></span>
+                <?php endif; ?>
             </div>
-            <div class="aj-flight-card__center">
-                <div class="aj-flight-card__route">
-                    <div class="aj-flight-card__point aj-flight-card__point--depart">
-                        <span class="aj-flight-card__date"><?php echo esc_html($dep_date); ?></span>
-                        <span class="aj-flight-card__city"><?php echo esc_html($from); ?></span>
-                    </div>
-                    <div class="aj-flight-card__arrow" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
-                            <line x1="4" y1="12" x2="20" y2="12"></line>
-                            <polyline points="14,6 20,12 14,18"></polyline>
-                        </svg>
-                    </div>
-                    <div class="aj-flight-card__point aj-flight-card__point--arrive">
-                        <span class="aj-flight-card__date"><?php echo esc_html($arr_date); ?></span>
-                        <span class="aj-flight-card__city"><?php echo esc_html($to); ?></span>
-                    </div>
-                </div>
-            </div>
-            <div class="aj-flight-card__right">
-                <div class="aj-flight-card__baggage">
-                    <div><span class="aj-flight-card__baggage-label"><?php esc_html_e('Cabin:', 'ajinsafro-tour-bridge'); ?></span> <?php echo esc_html($cabin_display); ?></div>
-                    <div><span class="aj-flight-card__baggage-label"><?php esc_html_e('Check-in:', 'ajinsafro-tour-bridge'); ?></span> <?php echo esc_html($checkin_display); ?></div>
-                </div>
+            <div class="aj-flight-timeline__col aj-flight-timeline__col--dest">
+                <div class="aj-flight-time"><?php echo esc_html($arr_time); ?></div>
+                <div class="aj-flight-place"><?php echo esc_html($dest_code); ?> &bull; <?php echo esc_html($dest_airport); ?></div>
             </div>
         </div>
+
+        <div class="aj-flight-footer">
+            <div class="aj-flight-chips">
+                <?php if ($cabin_display !== $dash): ?>
+                    <span class="aj-chip"><?php echo esc_html(sprintf(__('Cabine %s', 'ajinsafro-tour-bridge'), $cabin_display)); ?></span>
+                <?php endif; ?>
+                <?php if ($checkin_display !== $dash): ?>
+                    <span class="aj-chip"><?php echo esc_html(sprintf(__('Soute %s', 'ajinsafro-tour-bridge'), $checkin_display)); ?></span>
+                <?php endif; ?>
+                <?php if ($class_label !== ''): ?>
+                    <span class="aj-chip"><?php echo esc_html(sprintf(__('Classe: %s', 'ajinsafro-tour-bridge'), $class_label)); ?></span>
+                <?php endif; ?>
+                <?php if ($bagage_inclus): ?>
+                    <span class="aj-chip"><?php esc_html_e('Bagage inclus', 'ajinsafro-tour-bridge'); ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="aj-flight-actions">
+                <button type="button" class="aj-btn aj-btn--secondary aj-flight-action-details"><?php esc_html_e('Détails', 'ajinsafro-tour-bridge'); ?></button>
+                <?php if ($show_edit): ?>
+                    <a href="<?php echo esc_url($edit_url !== '' ? $edit_url : '#'); ?>" class="aj-btn aj-btn--primary aj-flight-action-edit"><?php esc_html_e('Modifier', 'ajinsafro-tour-bridge'); ?></a>
+                <?php endif; ?>
+                <div class="aj-flight-more-wrap" aria-label="<?php esc_attr_e('Plus d\'options', 'ajinsafro-tour-bridge'); ?>">
+                    <button type="button" class="aj-btn aj-btn--icon aj-flight-more" aria-label="<?php esc_attr_e('Menu', 'ajinsafro-tour-bridge'); ?>">&#8942;</button>
+                </div>
+                <?php if ($show_remove && !$show_edit): ?>
+                    <button type="button" class="aj-flight-card__action aj-flight-card__remove" data-aj-flight-remove aria-label="<?php esc_attr_e('Retirer', 'ajinsafro-tour-bridge'); ?>"><?php esc_html_e('Retirer', 'ajinsafro-tour-bridge'); ?></button>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <?php if ($is_tentative): ?>
             <div class="aj-flight-card__badge-wrap">
                 <span class="aj-flight-card__badge aj-flight-card__badge--tentative">

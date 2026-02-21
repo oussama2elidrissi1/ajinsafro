@@ -2425,13 +2425,14 @@
     margin-bottom: 20px;
 }
 
-/* Flight card (MakeMyTrip-style) */
-.aj-flight-card {
-    background: var(--ajtb-bg);
-    border-radius: 14px;
-    border: 1px solid var(--ajtb-border);
+/* Flight card v2 (programme/jour – partial flight-card.php → aj_render_flight_card) */
+.aj-flight-card--v2 {
+    background: #fff;
+    border: 1px solid #e8edf5;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(16, 24, 40, 0.06);
     overflow: hidden;
-    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
+    padding: 16px;
 }
 
 .aj-flight-card--removed {
@@ -2442,167 +2443,262 @@
     opacity: 0.75;
 }
 
-.aj-flight-card__header {
+/* Header: icon + VOL, title (origin → dest), badge Direct/N escales, subtitle */
+.aj-flight-card--v2 .aj-flight-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.aj-flight-card--v2 .aj-flight-header__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.aj-flight-card--v2 .aj-flight-header__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ajtb-primary-light, #f2f6ff);
+    color: var(--ajtb-primary, #3b82f6);
+    flex-shrink: 0;
+}
+
+.aj-flight-card--v2 .aj-flight-header__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ajtb-text-muted, #64748b);
+}
+
+.aj-flight-card--v2 .aj-flight-header__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.aj-flight-card--v2 .aj-flight-header__title {
+    margin: 0 0 2px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ajtb-text, #1e293b);
+    line-height: 1.3;
+}
+
+.aj-flight-card--v2 .aj-flight-header__subtitle {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ajtb-text-muted, #64748b);
+}
+
+.aj-flight-card--v2 .aj-flight-header__badge-wrap {
+    flex-shrink: 0;
+}
+
+.aj-flight-card--v2 .aj-flight-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.aj-flight-card--v2 .aj-flight-badge--direct {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.aj-flight-card--v2 .aj-flight-badge--stops {
+    background: #fef3c7;
+    color: #8a5b00;
+}
+
+/* Timeline: origin col | center line + plane + duration | dest col */
+.aj-flight-card--v2 .aj-flight-timeline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    margin-bottom: 16px;
+    border-top: 1px solid #e8edf5;
+    border-bottom: 1px solid #e8edf5;
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__col {
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__col--origin {
+    text-align: left;
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__col--dest {
+    text-align: right;
+}
+
+.aj-flight-card--v2 .aj-flight-time {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ajtb-text, #1e293b);
+    margin-bottom: 2px;
+}
+
+.aj-flight-card--v2 .aj-flight-place {
+    font-size: 12px;
+    color: var(--ajtb-text-muted, #64748b);
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    position: relative;
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__center::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: #e2e8f0;
+    margin-top: -1px;
+    z-index: 0;
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__dot,
+.aj-flight-card--v2 .aj-flight-timeline__plane,
+.aj-flight-card--v2 .aj-flight-timeline__duration {
+    position: relative;
+    z-index: 1;
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ajtb-primary, #3b82f6);
+    flex-shrink: 0;
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__plane {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ajtb-primary, #3b82f6);
+    background: #fff;
+}
+
+.aj-flight-card--v2 .aj-flight-timeline__duration {
+    font-size: 12px;
+    color: var(--ajtb-text-muted, #64748b);
+    white-space: nowrap;
+}
+
+/* Footer: chips + actions */
+.aj-flight-card--v2 .aj-flight-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 12px 16px;
-    background: var(--ajtb-bg-light);
-    border-bottom: 1px solid var(--ajtb-border);
+    flex-wrap: wrap;
 }
 
-.aj-flight-card__header-left {
+.aj-flight-card--v2 .aj-flight-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.aj-flight-card--v2 .aj-chip {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ajtb-text, #1e293b);
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.aj-flight-card--v2 .aj-flight-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 0;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.aj-flight-card__header-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+.aj-flight-card--v2 .aj-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--ajtb-primary-light);
-    color: var(--ajtb-primary);
-    flex: 0 0 auto;
-}
-
-.aj-flight-card__title {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ajtb-text);
-}
-
-.aj-flight-card__title-sep {
-    color: var(--ajtb-text-muted);
-}
-
-.aj-flight-card__title-route {
+    padding: 8px 14px;
+    font-size: 13px;
     font-weight: 600;
-    letter-spacing: 0;
-    text-transform: none;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.aj-flight-card__actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.aj-btn--secondary {
+    background: #f1f5f9;
+    color: var(--ajtb-text, #1e293b);
+    border-color: #e2e8f0;
 }
 
-.aj-flight-card__action {
+.aj-btn--secondary:hover {
+    background: #e2e8f0;
+}
+
+.aj-btn--primary {
+    background: var(--ajtb-primary, #3b82f6);
+    color: #fff;
+}
+
+.aj-btn--primary:hover {
+    background: var(--ajtb-primary-dark, #2563eb);
+    color: #fff;
+}
+
+.aj-btn--icon {
+    padding: 8px 10px;
+    min-width: 36px;
+}
+
+.aj-flight-card--v2 .aj-flight-card__action.aj-flight-card__remove {
     background: transparent;
     border: 0;
     padding: 0;
     cursor: pointer;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ajtb-danger, #dc2626);
     text-decoration: none;
 }
 
-.aj-flight-card__edit {
-    color: var(--ajtb-primary);
+.aj-flight-card__action.aj-flight-card__remove:hover {
+    text-decoration: underline;
 }
 
-.aj-flight-card__remove {
-    color: var(--ajtb-danger);
-}
-
-.aj-flight-card__body {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px;
-}
-
-.aj-flight-card__left {
-    flex: 0 0 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.aj-flight-card__icon-wrap {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #f2f6ff;
-    color: var(--ajtb-primary);
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
-}
-
-.aj-flight-card__center {
-    flex: 1;
-    display: flex;
-    align-items: center;
-}
-
-.aj-flight-card__route {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    width: 100%;
-}
-
-.aj-flight-card__point {
-    min-width: 110px;
-}
-
-.aj-flight-card__date {
-    display: block;
-    font-size: 12px;
-    color: var(--ajtb-text-muted);
-    margin-bottom: 2px;
-}
-
-.aj-flight-card__city {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--ajtb-text);
-}
-
-.aj-flight-card__arrow {
-    color: var(--ajtb-primary);
-    display: inline-flex;
-    align-items: center;
-}
-
-.aj-flight-card__right {
-    flex: 0 0 150px;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.aj-flight-card__baggage {
-    font-size: 12px;
-    color: var(--ajtb-text-muted);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.aj-flight-card__baggage-label {
-    color: var(--ajtb-text);
-    font-weight: 600;
-    margin-right: 4px;
-}
-
-.aj-flight-card__badge-wrap {
-    padding: 0 16px 14px;
+.aj-flight-card--v2 .aj-flight-card__badge-wrap {
+    padding: 12px 0 0;
+    margin-top: 4px;
+    border-top: 1px dashed #e2e8f0;
 }
 
 .aj-flight-card__badge--tentative {
@@ -2622,36 +2718,55 @@
     align-items: center;
 }
 
+/* Responsive: timeline 2 rows, chips wrap */
 @media (max-width: 767px) {
-    .aj-flight-card__header {
+    .aj-flight-card--v2 {
+        padding: 12px;
+    }
+    .aj-flight-card--v2 .aj-flight-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
+        margin-bottom: 12px;
     }
-    .aj-flight-card__actions {
+    .aj-flight-card--v2 .aj-flight-header__badge-wrap {
         width: 100%;
-        justify-content: flex-end;
     }
-    .aj-flight-card__body {
+    .aj-flight-card--v2 .aj-flight-timeline {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        gap: 16px;
+        padding: 16px 0;
     }
-    .aj-flight-card__center {
-        width: 100%;
+    .aj-flight-card--v2 .aj-flight-timeline__center {
+        order: 0;
+        flex: none;
+        padding: 0 8px;
     }
-    .aj-flight-card__route {
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
+    .aj-flight-timeline__center::before,
+    .aj-flight-timeline__center::after {
+        max-width: 100%;
     }
-    .aj-flight-card__point {
-        min-width: 0;
+    .aj-flight-card--v2 .aj-flight-timeline__col--origin {
+        order: -1;
+        text-align: left;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed #e2e8f0;
     }
-    .aj-flight-card__right {
-        width: 100%;
-        justify-content: flex-start;
-        border-top: 1px dashed var(--ajtb-border);
+    .aj-flight-card--v2 .aj-flight-timeline__col--dest {
+        order: 1;
+        text-align: left;
         padding-top: 8px;
+    }
+    .aj-flight-card--v2 .aj-flight-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .aj-flight-card--v2 .aj-flight-chips {
+        justify-content: flex-start;
+    }
+    .aj-flight-card--v2 .aj-flight-actions {
+        justify-content: flex-end;
     }
 }
 
