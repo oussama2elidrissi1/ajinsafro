@@ -57,12 +57,17 @@ class VoyageFlightOptionService
             }
 
             $filled = !empty($row['airline_id']) || !empty($row['from_city']) || !empty($row['to_city'])
-                || !empty($row['departure_date']) || !empty($row['departure_datetime']) || !empty($row['flight_number']);
+                || !empty($row['departure_date']) || !empty($row['departure_datetime']) || !empty($row['flight_number'])
+                || (isset($row['departure_place_id']) && $row['departure_place_id'] !== '' && (int) $row['departure_place_id'] > 0);
             if (!$filled && empty($row['id'])) {
                 continue;
             }
 
-            $departurePlaceId = isset($row['departure_place_id']) && $row['departure_place_id'] !== '' ? (int) $row['departure_place_id'] : null;
+            $rawPlaceId = $row['departure_place_id'] ?? null;
+            $departurePlaceId = (isset($rawPlaceId) && $rawPlaceId !== '') ? (int) $rawPlaceId : null;
+            if ($departurePlaceId === 0) {
+                $departurePlaceId = null;
+            }
             $departAt = $this->parseDateTime($row['departure_datetime'] ?? null)
                 ?? $this->parseDateAndTime($row['departure_date'] ?? null, $row['departure_time'] ?? null);
             $arriveAt = $this->parseDateTime($row['arrival_datetime'] ?? null)

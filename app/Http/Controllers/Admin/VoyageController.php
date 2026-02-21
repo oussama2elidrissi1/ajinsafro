@@ -984,7 +984,14 @@ class VoyageController extends Controller
             }
             if ($request->has('flight_options') && is_array($request->input('flight_options'))) {
                 try {
-                    $this->voyageFlightOptionService->syncOptions($laravelVoyage->id, $request->input('flight_options'), $lastDayNumber);
+                    $flightOptionsInput = $request->input('flight_options');
+                    \Log::debug('VoyageController@update flight_options payload', [
+                        'tour_id' => $id,
+                        'voyage_id' => $laravelVoyage->id,
+                        'count' => count($flightOptionsInput),
+                        'first' => !empty($flightOptionsInput) ? array_values($flightOptionsInput)[0] : null,
+                    ]);
+                    $this->voyageFlightOptionService->syncOptions($laravelVoyage->id, $flightOptionsInput, $lastDayNumber);
                 } catch (\Throwable $e) {
                     \Log::error('VoyageController@update flight options failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
                     throw $e;
