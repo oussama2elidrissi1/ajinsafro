@@ -405,9 +405,19 @@ class VoyageController extends Controller
         $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
         $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
 
-        // Charger les lieux de départ et leurs vols
-        $departurePlaces = TravelDeparturePlace::getActivePlacesForTour($id);
-        
+        // Lieux de départ (tous pour édition, pas seulement actifs)
+        $departurePlaces = TravelDeparturePlace::where('travel_id', $id)->orderBy('sort_order')->orderBy('id')->get();
+        // Vols associés par lieu (source unique : aj_tour_flights.departure_place_id) pour l'onglet Lieux de départ en lecture seule
+        $departurePlaceFlightsFromTour = collect();
+        try {
+            if (\Illuminate\Support\Facades\Schema::connection('wp')->hasColumn('aj_tour_flights', 'departure_place_id')) {
+                $rows = \Illuminate\Support\Facades\DB::connection('wp')->table('aj_tour_flights')->where('tour_id', $id)->whereNotNull('departure_place_id')->get();
+                $departurePlaceFlightsFromTour = collect($rows)->groupBy('departure_place_id');
+            }
+        } catch (\Throwable $e) {
+            // table or column may not exist yet
+        }
+
         // Charger les dates disponibles
         $travelDates = TravelDate::getActiveDatesForTour($id);
 
@@ -419,7 +429,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -785,139 +795,50 @@ class VoyageController extends Controller
     }
 
     /**
-     * Sync departure places and their flights for tour.
-     * Les lieux sans vols ne seront pas sauvegardés.
+     * Sync departure places only (no flights). Single source of truth: flights live in voyage_flight_options / aj_tour_flights with departure_place_id.
+     * Flights are managed in the Vols tab; this only maintains aj_travel_departure_places (name, code, is_active, sort_order).
      */
     private function syncDeparturePlaces(int $tourId, \Illuminate\Http\Request $request): void
     {
-        // Debug logging
-        \Log::info('VoyageController@syncDeparturePlaces', [
-            'tour_id' => $tourId,
-            'request_data' => $request->input('departure_places', [])
-        ]);
-
         $places = $request->input('departure_places', []);
-        if (!is_array($places) || empty($places)) {
-            \Log::info('VoyageController@syncDeparturePlaces: No places data', ['places' => $places]);
-            // Si aucune donnée, supprimer tout
-            $oldPlaceIds = TravelDeparturePlace::where('travel_id', $tourId)->pluck('id');
-            if ($oldPlaceIds->isNotEmpty()) {
-                TravelDepartureFlight::whereIn('departure_place_id', $oldPlaceIds)->delete();
-            }
-            TravelDeparturePlace::where('travel_id', $tourId)->delete();
-            return;
+        if (!is_array($places)) {
+            $places = [];
         }
 
-        // Supprimer les anciens lieux et leurs vols
         $oldPlaceIds = TravelDeparturePlace::where('travel_id', $tourId)->pluck('id');
         if ($oldPlaceIds->isNotEmpty()) {
             TravelDepartureFlight::whereIn('departure_place_id', $oldPlaceIds)->delete();
         }
         TravelDeparturePlace::where('travel_id', $tourId)->delete();
 
+        if (empty($places)) {
+            return;
+        }
+
         $sortOrder = 0;
-        $savedCount = 0;
-        
         foreach ($places as $placeIndex => $placeData) {
             if (!is_array($placeData)) {
-                \Log::warning('VoyageController@syncDeparturePlaces: Invalid place data', ['index' => $placeIndex, 'data' => $placeData]);
                 continue;
             }
-
-            // Vérifier qu'il y a au moins un vol pour ce lieu
-            $flights = $placeData['flights'] ?? [];
-            if (!is_array($flights) || empty($flights)) {
-                \Log::info('VoyageController@syncDeparturePlaces: Place without flights skipped', ['place_name' => $placeData['name'] ?? 'unnamed']);
-                continue; // Ignorer les lieux sans vols
-            }
-
-            // Vérifier qu'il y a au moins un vol avec des données
-            $hasValidFlight = false;
-            foreach ($flights as $flightIndex => $flight) {
-                if (is_array($flight)) {
-                    // Accepter le vol s'il a au moins un champ rempli
-                    if (!empty($flight['airline']) || !empty($flight['flight_number']) || !empty($flight['from_airport']) || !empty($flight['to_airport'])) {
-                        $hasValidFlight = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!$hasValidFlight) {
-                \Log::info('VoyageController@syncDeparturePlaces: Place without valid flight data skipped', ['place_name' => $placeData['name'] ?? 'unnamed']);
-                continue; // Ignorer si aucun vol valide
-            }
-
-            // Vérifier que le nom du lieu n'est pas vide
             $placeName = trim($placeData['name'] ?? '');
-            if (empty($placeName)) {
-                \Log::warning('VoyageController@syncDeparturePlaces: Place with empty name skipped', ['place_data' => $placeData]);
+            if ($placeName === '') {
                 continue;
             }
-
-            // Créer le lieu
             try {
-                $place = TravelDeparturePlace::create([
+                TravelDeparturePlace::create([
                     'travel_id' => $tourId,
                     'name' => $placeName,
                     'code' => !empty($placeData['code']) ? trim($placeData['code']) : null,
                     'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
                     'sort_order' => $sortOrder++,
                 ]);
-
-                // Créer les vols pour ce lieu
-                $flightSortOrder = 0;
-                $flightCount = 0;
-                foreach ($flights as $flightData) {
-                    if (!is_array($flightData)) {
-                        continue;
-                    }
-
-                    // Ne créer que les vols qui ont au moins un champ rempli
-                    if (empty($flightData['airline']) && empty($flightData['flight_number']) && empty($flightData['from_airport']) && empty($flightData['to_airport'])) {
-                        continue;
-                    }
-
-                    TravelDepartureFlight::create([
-                        'departure_place_id' => $place->id,
-                        'airline' => !empty($flightData['airline']) ? trim($flightData['airline']) : null,
-                        'flight_number' => !empty($flightData['flight_number']) ? trim($flightData['flight_number']) : null,
-                        'from_airport' => !empty($flightData['from_airport']) ? trim($flightData['from_airport']) : null,
-                        'to_airport' => !empty($flightData['to_airport']) ? trim($flightData['to_airport']) : null,
-                        'depart_time' => !empty($flightData['depart_time']) ? $flightData['depart_time'] : null,
-                        'arrive_time' => !empty($flightData['arrive_time']) ? $flightData['arrive_time'] : null,
-                        'notes' => !empty($flightData['notes']) ? trim($flightData['notes']) : null,
-                        'sort_order' => $flightSortOrder++,
-                    ]);
-                    $flightCount++;
-                }
-
-                if ($flightCount > 0) {
-                    $savedCount++;
-                    \Log::info('VoyageController@syncDeparturePlaces: Place saved', [
-                        'place_id' => $place->id,
-                        'place_name' => $place->name,
-                        'flight_count' => $flightCount
-                    ]);
-                } else {
-                    // Supprimer le lieu si aucun vol n'a été créé
-                    $place->delete();
-                    \Log::warning('VoyageController@syncDeparturePlaces: Place deleted (no valid flights)', ['place_name' => $placeName]);
-                }
             } catch (\Exception $e) {
-                \Log::error('VoyageController@syncDeparturePlaces: Error saving place', [
-                    'place_name' => $placeName,
+                \Log::warning('VoyageController@syncDeparturePlaces: Error saving place', [
+                    'name' => $placeName,
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
                 ]);
             }
         }
-
-        \Log::info('VoyageController@syncDeparturePlaces: Completed', [
-            'tour_id' => $tourId,
-            'places_saved' => $savedCount,
-            'total_places_in_request' => count($places)
-        ]);
     }
 
     /**

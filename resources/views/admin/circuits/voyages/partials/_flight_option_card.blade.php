@@ -2,6 +2,8 @@
     $opt = $option ?? null;
     $isNew = !$opt;
     $depDate = $opt && $opt->depart_at ? $fmtDate($opt->depart_at) : ($dash ?? '—');
+    $departurePlaces = $departurePlaces ?? collect();
+    $showDeparturePlace = in_array($type ?? '', ['outbound', 'return'], true);
 @endphp
 <div class="flight-opt-card" data-flight-opt-index="{{ $index }}">
     <div class="flight-opt-view">
@@ -47,6 +49,17 @@
             </div>
         @else
             <input type="hidden" name="flight_options[{{ $index }}][day_number]" value="{{ $type === 'outbound' ? 1 : ($lastDayNumber ?? 1) }}" {{ $index === -1 ? 'disabled' : '' }}>
+        @endif
+        @if($showDeparturePlace)
+            <div class="row g-2 mb-2">
+                <div class="col-12"><label class="form-label small">Lieu de départ</label>
+                    <select name="flight_options[{{ $index }}][departure_place_id]" class="form-select form-select-sm" {{ $index === -1 ? 'disabled' : '' }}>
+                        <option value="">— Aucun —</option>
+                        @foreach($departurePlaces as $place)
+                            <option value="{{ $place->id ?? '' }}" {{ ($opt && (string)($opt->departure_place_id ?? '') === (string)($place->id ?? '')) ? 'selected' : '' }}>{{ $place->name ?? '' }}{{ isset($place->code) && $place->code !== '' ? ' (' . $place->code . ')' : '' }}</option>
+                        @endforeach
+                    </select></div>
+            </div>
         @endif
         <div class="row g-2">
             <div class="col-md-6"><label class="form-label small">Compagnie</label>

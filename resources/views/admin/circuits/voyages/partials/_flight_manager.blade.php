@@ -217,7 +217,8 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
                 'flightOptionsWithIndex' => $flightOptionsWithIndex,
                 'nextFlightOptionIndex' => $nextFlightOptionIndex,
                 'lastDayNumber' => $lastDayNumber,
-                'airlines' => $airlines
+                'airlines' => $airlines,
+                'departurePlaces' => $departurePlaces ?? collect()
             ])
         @endif
     </div>

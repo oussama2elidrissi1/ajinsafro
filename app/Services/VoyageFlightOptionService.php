@@ -62,8 +62,11 @@ class VoyageFlightOptionService
                 continue;
             }
 
+            $departurePlaceId = isset($row['departure_place_id']) && $row['departure_place_id'] !== '' ? (int) $row['departure_place_id'] : null;
+
             $data = [
                 'voyage_id' => $voyageId,
+                'departure_place_id' => $departurePlaceId,
                 'type' => $type,
                 'day_number' => $dayNumber,
                 'from_city' => trim((string) ($row['from_city'] ?? '')),
@@ -176,6 +179,9 @@ class VoyageFlightOptionService
                 }
                 if ($this->wpTableHasColumn($wp, $fullTable, 'laravel_option_id')) {
                     $row['laravel_option_id'] = $opt->id;
+                }
+                if ($this->wpTableHasColumn($wp, $fullTable, 'departure_place_id')) {
+                    $row['departure_place_id'] = $opt->departure_place_id;
                 }
 
                 $rows[] = $row;

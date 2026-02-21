@@ -4,6 +4,7 @@
     $nextFlightOptionIndex = $nextFlightOptionIndex ?? 0;
     $lastDayNumber = $lastDayNumber ?? 1;
     $airlines = $airlines ?? collect();
+    $departurePlaces = $departurePlaces ?? collect();
     $fmtDate = function($d) {
         if (!$d) return null;
         return $d instanceof \Carbon\Carbon ? $d->format('D, d M') : \Carbon\Carbon::parse($d)->format('D, d M');
@@ -27,7 +28,7 @@
     <div class="flight-opt-cards-outbound">
         @foreach($flightOptionsWithIndex as $entry)
             @if($entry['type'] === 'outbound')
-                @include('admin.circuits.voyages.partials._flight_option_card', ['index' => $entry['index'], 'option' => $entry['option'], 'type' => 'outbound', 'dayLabel' => 'Jour 1', 'airlines' => $airlines, 'fmtDate' => $fmtDate, 'dash' => $dash])
+                @include('admin.circuits.voyages.partials._flight_option_card', ['index' => $entry['index'], 'option' => $entry['option'], 'type' => 'outbound', 'dayLabel' => 'Jour 1', 'airlines' => $airlines, 'departurePlaces' => $departurePlaces, 'fmtDate' => $fmtDate, 'dash' => $dash])
             @endif
         @endforeach
     </div>
@@ -39,7 +40,7 @@
     <div class="flight-opt-cards-return">
         @foreach($flightOptionsWithIndex as $entry)
             @if($entry['type'] === 'return')
-                @include('admin.circuits.voyages.partials._flight_option_card', ['index' => $entry['index'], 'option' => $entry['option'], 'type' => 'return', 'dayLabel' => 'Jour ' . $lastDayNumber, 'airlines' => $airlines, 'fmtDate' => $fmtDate, 'dash' => $dash])
+                @include('admin.circuits.voyages.partials._flight_option_card', ['index' => $entry['index'], 'option' => $entry['option'], 'type' => 'return', 'dayLabel' => 'Jour ' . $lastDayNumber, 'airlines' => $airlines, 'departurePlaces' => $departurePlaces, 'fmtDate' => $fmtDate, 'dash' => $dash])
             @endif
         @endforeach
     </div>
@@ -63,10 +64,10 @@
 {{-- Templates for "Ajouter un vol" (cloned by JS; inputs disabled so not submitted) --}}
 <div id="flight-opt-templates" style="display:none" aria-hidden="true">
     <div data-flight-tpl="outbound">
-        @include('admin.circuits.voyages.partials._flight_option_card', ['index' => -1, 'option' => null, 'type' => 'outbound', 'dayLabel' => 'Jour 1', 'airlines' => $airlines, 'fmtDate' => $fmtDate, 'dash' => $dash])
+        @include('admin.circuits.voyages.partials._flight_option_card', ['index' => -1, 'option' => null, 'type' => 'outbound', 'dayLabel' => 'Jour 1', 'airlines' => $airlines, 'departurePlaces' => $departurePlaces, 'fmtDate' => $fmtDate, 'dash' => $dash])
     </div>
     <div data-flight-tpl="return">
-        @include('admin.circuits.voyages.partials._flight_option_card', ['index' => -1, 'option' => null, 'type' => 'return', 'dayLabel' => 'Jour ' . $lastDayNumber, 'airlines' => $airlines, 'fmtDate' => $fmtDate, 'dash' => $dash])
+        @include('admin.circuits.voyages.partials._flight_option_card', ['index' => -1, 'option' => null, 'type' => 'return', 'dayLabel' => 'Jour ' . $lastDayNumber, 'airlines' => $airlines, 'departurePlaces' => $departurePlaces, 'fmtDate' => $fmtDate, 'dash' => $dash])
     </div>
     <div data-flight-tpl="segment">
         @include('admin.circuits.voyages.partials._flight_option_card', ['index' => -1, 'option' => null, 'type' => 'segment', 'dayLabel' => '', 'airlines' => $airlines, 'fmtDate' => $fmtDate, 'dash' => $dash, 'lastDayNumber' => $lastDayNumber])

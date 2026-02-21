@@ -21,13 +21,12 @@ $available_dates = [];
 global $wpdb;
 
 // Get table names (Laravel tables: wp_prefix + aj_ + table_name)
-// Example: cFdgeZ_aj_travel_departure_places
 $places_table = $wpdb->prefix . 'aj_travel_departure_places';
-$flights_table = $wpdb->prefix . 'aj_travel_departure_flights';
+$tour_flights_table = $wpdb->prefix . 'aj_tour_flights';
+$legacy_flights_table = $wpdb->prefix . 'aj_travel_departure_flights';
 $dates_table = $wpdb->prefix . 'aj_travel_dates';
 
 try {
-    // Get departure places with flights
     $places = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM {$places_table} 
          WHERE travel_id = %d 
@@ -35,17 +34,36 @@ try {
          ORDER BY sort_order ASC, id ASC",
         $wp_post_id
     ), ARRAY_A);
-    
+
+    $tour_flights_has_place = false;
+    if ($places && $wpdb->get_var($wpdb->prepare(
+        "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'departure_place_id'",
+        $tour_flights_table
+    ))) {
+        $tour_flights_has_place = true;
+    }
+
     if ($places) {
         foreach ($places as &$place) {
-            $flights = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM {$flights_table} 
-                 WHERE departure_place_id = %d 
-                 ORDER BY sort_order ASC, id ASC",
-                $place['id']
-            ), ARRAY_A);
-            
-            // Only include places that have at least one flight
+            $flights = [];
+            if ($tour_flights_has_place) {
+                $flights = $wpdb->get_results($wpdb->prepare(
+                    "SELECT id, from_city, to_city, flight_type, depart_date, depart_time, arrive_date, arrive_time 
+                     FROM {$tour_flights_table} 
+                     WHERE tour_id = %d AND departure_place_id = %d 
+                     ORDER BY sort_order ASC, id ASC",
+                    $wp_post_id,
+                    $place['id']
+                ), ARRAY_A);
+            }
+            if (empty($flights)) {
+                $flights = $wpdb->get_results($wpdb->prepare(
+                    "SELECT * FROM {$legacy_flights_table} 
+                     WHERE departure_place_id = %d 
+                     ORDER BY sort_order ASC, id ASC",
+                    $place['id']
+                ), ARRAY_A);
+            }
             if (!empty($flights)) {
                 $place['flights'] = $flights;
                 $departure_places[] = $place;

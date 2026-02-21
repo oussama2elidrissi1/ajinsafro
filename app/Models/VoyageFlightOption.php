@@ -35,6 +35,7 @@ class VoyageFlightOption extends Model
 
     protected $fillable = [
         'voyage_id',
+        'departure_place_id',
         'type',
         'day_number',
         'from_city',
