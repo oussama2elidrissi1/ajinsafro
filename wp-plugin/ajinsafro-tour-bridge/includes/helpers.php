@@ -795,6 +795,16 @@ function aj_render_flight_card($flight, $context = []) {
         $subtitle = $dash;
     }
 
+    $departure_place_name = isset($flight['departure_place_name']) ? trim((string) $flight['departure_place_name']) : '';
+    $departure_place_code = isset($flight['departure_place_code']) ? trim((string) $flight['departure_place_code']) : '';
+    $departure_place_label = '';
+    if ($departure_place_name !== '' || $departure_place_code !== '') {
+        $departure_place_label = $departure_place_name;
+        if ($departure_place_code !== '') {
+            $departure_place_label .= ($departure_place_label !== '' ? ' (' . $departure_place_code . ')' : $departure_place_code);
+        }
+    }
+
     ob_start();
     ?>
     <div class="aj-flight-card aj-flight-card--v2<?php echo $is_unavailable ? ' aj-flight-card--unavailable' : ''; ?>" data-flight-id="<?php echo esc_attr((int) ($flight['id'] ?? 0)); ?>">
@@ -811,6 +821,9 @@ function aj_render_flight_card($flight, $context = []) {
                 <h4 class="aj-flight-header__title"><?php echo esc_html($from); ?> &rarr; <?php echo esc_html($to); ?></h4>
                 <?php if ($subtitle !== $dash): ?>
                     <p class="aj-flight-header__subtitle"><?php echo esc_html($subtitle); ?></p>
+                <?php endif; ?>
+                <?php if ($departure_place_label !== ''): ?>
+                    <p class="aj-flight-header__departure-place"><?php echo esc_html(sprintf(__('Départ depuis : %s', 'ajinsafro-tour-bridge'), $departure_place_label)); ?></p>
                 <?php endif; ?>
             </div>
             <div class="aj-flight-header__badge-wrap">

@@ -130,15 +130,22 @@ class AJTB_Laravel_Repository {
         }
 
         $airlines_exist = $this->table_exists($table_airlines);
+        $has_departure_place_id = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'departure_place_id'", $table_flights));
+        $table_places = preg_replace('/aj_tour_flights$/', 'aj_travel_departure_places', $table_flights);
+        $places_join = ($has_departure_place_id && $this->table_exists($table_places)) ? " LEFT JOIN {$table_places} dp ON dp.id = f.departure_place_id" : '';
 
         $sql = "SELECT f.*";
         if ($airlines_exist) {
             $sql .= ", a.name AS airline_name, a.iata_code AS airline_iata";
         }
+        if ($places_join !== '') {
+            $sql .= ", dp.name AS departure_place_name, dp.code AS departure_place_code";
+        }
         $sql .= " FROM {$table_flights} f";
         if ($airlines_exist) {
             $sql .= " LEFT JOIN {$table_airlines} a ON a.id = f.airline_id";
         }
+        $sql .= $places_join;
         $has_flight_type = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'flight_type'", $table_flights));
         $order_by = $has_flight_type ? "f.flight_type ASC" : "f.segment_number ASC";
         $sql .= " WHERE f.tour_id = %d ORDER BY {$order_by}";
@@ -155,6 +162,9 @@ class AJTB_Laravel_Repository {
             $to_city = isset($r['to_city']) ? ($r['to_city'] ?? '') : ($r['arrive_city'] ?? '');
             $baggage_cabin = isset($r['baggage_cabin_kg']) && $r['baggage_cabin_kg'] !== null && $r['baggage_cabin_kg'] !== '' ? ((int) $r['baggage_cabin_kg']) . ' KGS' : (isset($r['cabin_baggage']) && $r['cabin_baggage'] !== '' ? $r['cabin_baggage'] : '—');
             $baggage_checkin = isset($r['baggage_checkin_kg']) && $r['baggage_checkin_kg'] !== null && $r['baggage_checkin_kg'] !== '' ? ((int) $r['baggage_checkin_kg']) . ' KGS' : (isset($r['checkin_baggage']) && $r['checkin_baggage'] !== '' ? $r['checkin_baggage'] : '—');
+            $departure_place_id = isset($r['departure_place_id']) && $r['departure_place_id'] !== '' && $r['departure_place_id'] !== null ? (int) $r['departure_place_id'] : null;
+            $departure_place_name = isset($r['departure_place_name']) ? trim((string) $r['departure_place_name']) : '';
+            $departure_place_code = isset($r['departure_place_code']) ? trim((string) $r['departure_place_code']) : '';
             $flights[] = [
                 'id' => (int) $r['id'],
                 'tour_id' => (int) $r['tour_id'],
@@ -163,6 +173,9 @@ class AJTB_Laravel_Repository {
                 'airline_id' => isset($r['airline_id']) ? (int) $r['airline_id'] : null,
                 'airline_name' => $airlines_exist ? ($r['airline_name'] ?? '') : '',
                 'airline_iata' => $airlines_exist ? ($r['airline_iata'] ?? '') : '',
+                'departure_place_id' => $departure_place_id,
+                'departure_place_name' => $departure_place_name,
+                'departure_place_code' => $departure_place_code,
                 'cabin_class' => $r['cabin_class'] ?? 'economy',
                 'flight_number' => $r['flight_number'] ?? '',
                 'from_city' => $from_city,
@@ -211,6 +224,9 @@ class AJTB_Laravel_Repository {
         $has_flight_type = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'flight_type'", $table_flights));
         $has_day_number = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'day_number'", $table_flights));
         $has_sort_order = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'sort_order'", $table_flights));
+        $has_departure_place_id = $this->wpdb->get_var($this->wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'departure_place_id'", $table_flights));
+        $table_places = preg_replace('/aj_tour_flights$/', 'aj_travel_departure_places', $table_flights);
+        $places_join = ($has_departure_place_id && $this->table_exists($table_places)) ? " LEFT JOIN {$table_places} dp ON dp.id = f.departure_place_id" : '';
         $order_parts = [];
         if ($has_flight_type) {
             $order_parts[] = "CASE WHEN LOWER(TRIM(COALESCE(f.flight_type,''))) = 'return' THEN 'inbound' ELSE LOWER(TRIM(COALESCE(f.flight_type,'outbound'))) END ASC";
@@ -230,10 +246,14 @@ class AJTB_Laravel_Repository {
         if ($airlines_exist) {
             $sql .= ", a.name AS airline_name, a.iata_code AS airline_iata";
         }
+        if ($places_join !== '') {
+            $sql .= ", dp.name AS departure_place_name, dp.code AS departure_place_code";
+        }
         $sql .= " FROM {$table_flights} f";
         if ($airlines_exist) {
             $sql .= " LEFT JOIN {$table_airlines} a ON a.id = f.airline_id";
         }
+        $sql .= $places_join;
         $sql .= " WHERE f.tour_id = %d ORDER BY " . $order_by;
         $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $this->tour_id), ARRAY_A);
         $total_rows = is_array($rows) ? count($rows) : 0;
@@ -264,10 +284,16 @@ class AJTB_Laravel_Repository {
             $arr_date = !empty($r['arrive_date']) ? $r['arrive_date'] : null;
             $from_city = isset($r['from_city']) ? ($r['from_city'] ?? '') : ($r['depart_city'] ?? '');
             $to_city = isset($r['to_city']) ? ($r['to_city'] ?? '') : ($r['arrive_city'] ?? '');
+            $departure_place_id = isset($r['departure_place_id']) && $r['departure_place_id'] !== '' && $r['departure_place_id'] !== null ? (int) $r['departure_place_id'] : null;
+            $departure_place_name = isset($r['departure_place_name']) ? trim((string) $r['departure_place_name']) : '';
+            $departure_place_code = isset($r['departure_place_code']) ? trim((string) $r['departure_place_code']) : '';
             $row = [
                 'id' => (int) $r['id'],
                 'flight_type' => $ft,
                 'day_number' => $day_num,
+                'departure_place_id' => $departure_place_id,
+                'departure_place_name' => $departure_place_name,
+                'departure_place_code' => $departure_place_code,
                 'from_city' => $from_city,
                 'to_city' => $to_city,
                 'depart_label' => $from_city !== '' ? $from_city : '—',
