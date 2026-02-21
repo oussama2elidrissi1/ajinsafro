@@ -63,6 +63,10 @@ class VoyageFlightOptionService
             }
 
             $departurePlaceId = isset($row['departure_place_id']) && $row['departure_place_id'] !== '' ? (int) $row['departure_place_id'] : null;
+            $departAt = $this->parseDateTime($row['departure_datetime'] ?? null)
+                ?? $this->parseDateAndTime($row['departure_date'] ?? null, $row['departure_time'] ?? null);
+            $arriveAt = $this->parseDateTime($row['arrival_datetime'] ?? null)
+                ?? $this->parseDateAndTime($row['arrival_date'] ?? $row['departure_date'] ?? null, $row['arrival_time'] ?? null);
 
             $data = [
                 'voyage_id' => $voyageId,
@@ -71,8 +75,8 @@ class VoyageFlightOptionService
                 'day_number' => $dayNumber,
                 'from_city' => trim((string) ($row['from_city'] ?? '')),
                 'to_city' => trim((string) ($row['to_city'] ?? '')),
-                'depart_at' => $this->parseDateTime($row['departure_datetime'] ?? $row['departure_date'] ?? null),
-                'arrive_at' => $this->parseDateTime($row['arrival_datetime'] ?? $row['arrival_date'] ?? null),
+                'depart_at' => $departAt,
+                'arrive_at' => $arriveAt,
                 'airline_id' => isset($row['airline_id']) && $row['airline_id'] !== '' ? (int) $row['airline_id'] : null,
                 'flight_number' => isset($row['flight_number']) ? trim((string) $row['flight_number']) : null,
                 'cabin' => in_array($row['cabin'] ?? '', ['economy', 'business', 'first'], true) ? $row['cabin'] : 'economy',
@@ -307,6 +311,24 @@ class VoyageFlightOptionService
         }
         try {
             $d = \Carbon\Carbon::parse($value);
+            return $d->format('Y-m-d H:i:s');
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /** Build datetime from date (Y-m-d) + time (H:i or H:i:s). */
+    private function parseDateAndTime(?string $date, ?string $time): ?string
+    {
+        if ($date === null || $date === '') {
+            return null;
+        }
+        $time = trim((string) $time);
+        if ($time !== '' && preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $time)) {
+            return $date . ' ' . (strlen($time) === 5 ? $time . ':00' : $time);
+        }
+        try {
+            $d = \Carbon\Carbon::parse($date);
             return $d->format('Y-m-d H:i:s');
         } catch (\Throwable $e) {
             return null;

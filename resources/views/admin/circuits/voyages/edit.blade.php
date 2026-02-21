@@ -3515,7 +3515,7 @@
                         el.name = el.name.replace(/flight_options\[-1\]/, 'flight_options[' + idx + ']');
                         el.removeAttribute('disabled');
                     });
-                    clone.querySelectorAll('.flight-opt-view .flight-opt-route, .flight-opt-dep-date, .flight-opt-arr-date, .flight-opt-from, .flight-opt-to, .flight-opt-cabin-bag, .flight-opt-checkin-bag').forEach(function(span) {
+                    clone.querySelectorAll('.flight-opt-view .flight-opt-route, .flight-opt-dep-date, .flight-opt-arr-date, .flight-opt-dep-time, .flight-opt-arr-time, .flight-opt-from, .flight-opt-to, .flight-opt-cabin-bag, .flight-opt-checkin-bag').forEach(function(span) {
                         if (span && span.textContent !== undefined) span.textContent = dash;
                     });
                     var editPanel = clone.querySelector('.flight-opt-edit');
@@ -3556,12 +3556,16 @@
                     var fromCity = edit && edit.querySelector('input[name*="[from_city]"]');
                     var toCity = edit && edit.querySelector('input[name*="[to_city]"]');
                     var depDate = edit && edit.querySelector('input[name*="[departure_date]"]');
+                    var depTime = edit && edit.querySelector('input[name*="[departure_time]"]');
+                    var arrTime = edit && edit.querySelector('input[name*="[arrival_time]"]');
                     var cabinKg = edit && edit.querySelector('input[name*="[baggage_cabin_kg]"]');
                     var checkinKg = edit && edit.querySelector('input[name*="[baggage_checkin_kg]"]');
                     var tentativeCb = edit && edit.querySelector('input[name*="[is_tentative]"]');
                     var route = view && view.querySelector('.flight-opt-route');
                     var depDateEl = view && view.querySelector('.flight-opt-dep-date');
                     var arrDateEl = view && view.querySelector('.flight-opt-arr-date');
+                    var depTimeEl = view && view.querySelector('.flight-opt-dep-time');
+                    var arrTimeEl = view && view.querySelector('.flight-opt-arr-time');
                     var fromEl = view && view.querySelector('.flight-opt-from');
                     var toEl = view && view.querySelector('.flight-opt-to');
                     var cabinBagEl = view && view.querySelector('.flight-opt-cabin-bag');
@@ -3571,6 +3575,8 @@
                     var d = depDate && depDate.value ? depDate.value : dash;
                     if (depDateEl) depDateEl.textContent = d;
                     if (arrDateEl) arrDateEl.textContent = d;
+                    if (depTimeEl) depTimeEl.textContent = (depTime && depTime.value) ? depTime.value : dash;
+                    if (arrTimeEl) arrTimeEl.textContent = (arrTime && arrTime.value) ? arrTime.value : dash;
                     if (fromEl) fromEl.textContent = fromCity && fromCity.value ? fromCity.value : dash;
                     if (toEl) toEl.textContent = toCity && toCity.value ? toCity.value : dash;
                     if (cabinBagEl) cabinBagEl.textContent = cabinKg && cabinKg.value ? cabinKg.value + ' kg' : dash;

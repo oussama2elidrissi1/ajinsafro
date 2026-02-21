@@ -150,6 +150,28 @@ class UpdateWpTourRequest extends FormRequest
             'programme_days.*.activities.*.custom_title' => 'nullable|string',
             'programme_days.*.activities.*.custom_description' => 'nullable|string',
 
+            // Vols (voyage_flight_options) — multi-options Aller/Retour/Segment
+            'flight_options' => 'nullable|array',
+            'flight_options.*.id' => 'nullable|integer',
+            'flight_options.*.type' => 'nullable|string|in:outbound,return,segment',
+            'flight_options.*.day_number' => 'nullable|integer|min:1',
+            'flight_options.*.departure_place_id' => 'nullable|integer|min:0',
+            'flight_options.*.airline_id' => 'nullable|integer',
+            'flight_options.*.cabin' => 'nullable|string|in:economy,business,first',
+            'flight_options.*.from_city' => 'nullable|string|max:255',
+            'flight_options.*.to_city' => 'nullable|string|max:255',
+            'flight_options.*.departure_date' => 'nullable|string|date',
+            'flight_options.*.departure_time' => 'nullable|string|max:20',
+            'flight_options.*.arrival_date' => 'nullable|string|date',
+            'flight_options.*.arrival_time' => 'nullable|string|max:20',
+            'flight_options.*.departure_datetime' => 'nullable|string',
+            'flight_options.*.arrival_datetime' => 'nullable|string',
+            'flight_options.*.flight_number' => 'nullable|string|max:50',
+            'flight_options.*.baggage_cabin_kg' => 'nullable|integer|min:0',
+            'flight_options.*.baggage_checkin_kg' => 'nullable|integer|min:0',
+            'flight_options.*.is_tentative' => 'nullable',
+            'flight_options.*.notes' => 'nullable|string|max:2000',
+
             // Vols Laravel voyage_flights: outbound (Jour 1) + inbound (dernier jour)
             'flights' => 'nullable|array',
             'flights.outbound' => 'nullable|array',

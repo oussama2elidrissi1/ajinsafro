@@ -2,6 +2,9 @@
     $opt = $option ?? null;
     $isNew = !$opt;
     $depDate = $opt && $opt->depart_at ? $fmtDate($opt->depart_at) : ($dash ?? '—');
+    $arrDate = $opt && $opt->arrive_at ? $fmtDate($opt->arrive_at) : ($dash ?? '—');
+    $depTime = $opt && $opt->depart_at ? $opt->depart_at->format('H:i') : '';
+    $arrTime = $opt && $opt->arrive_at ? $opt->arrive_at->format('H:i') : '';
     $departurePlaces = $departurePlaces ?? collect();
     $showDeparturePlace = in_array($type ?? '', ['outbound', 'return'], true);
 @endphp
@@ -19,9 +22,9 @@
         <div class="flight-opt-body">
             <div class="flight-opt-icon"><i class="bx bx-trip"></i></div>
             <div class="flight-opt-center">
-                <div><div class="small text-muted">Date</div><div class="flight-opt-dep-date">{{ $depDate }}</div><div class="flight-opt-from">{{ $opt ? $opt->from_label : $dash }}</div></div>
+                <div><div class="small text-muted">Départ</div><div class="flight-opt-dep-date">{{ $depDate }}</div><div class="flight-opt-dep-time">{{ $depTime ?: $dash }}</div><div class="flight-opt-from">{{ $opt ? $opt->from_label : $dash }}</div></div>
                 <div class="text-muted">→</div>
-                <div><div class="small text-muted">Date</div><div class="flight-opt-arr-date">{{ $depDate }}</div><div class="flight-opt-to">{{ $opt ? $opt->to_label : $dash }}</div></div>
+                <div><div class="small text-muted">Arrivée</div><div class="flight-opt-arr-date">{{ $arrDate }}</div><div class="flight-opt-arr-time">{{ $arrTime ?: $dash }}</div><div class="flight-opt-to">{{ $opt ? $opt->to_label : $dash }}</div></div>
             </div>
             <div class="small text-muted">
                 <div>Cabin: <span class="flight-opt-cabin-bag">{{ $opt ? $opt->cabin_baggage_display : $dash }}</span></div>
@@ -79,8 +82,12 @@
                 <input type="text" class="form-control form-control-sm" name="flight_options[{{ $index }}][from_city]" value="{{ $opt ? $opt->from_city : '' }}" placeholder="ex. Paris" {{ $index === -1 ? 'disabled' : '' }}></div>
             <div class="col-md-6"><label class="form-label small">To (ville)</label>
                 <input type="text" class="form-control form-control-sm" name="flight_options[{{ $index }}][to_city]" value="{{ $opt ? $opt->to_city : '' }}" placeholder="ex. Rome" {{ $index === -1 ? 'disabled' : '' }}></div>
-            <div class="col-md-6"><label class="form-label small">Date départ</label>
+            <div class="col-md-4"><label class="form-label small">Date départ</label>
                 <input type="date" class="form-control form-control-sm" name="flight_options[{{ $index }}][departure_date]" value="{{ $opt && $opt->depart_at ? $opt->depart_at->format('Y-m-d') : '' }}" {{ $index === -1 ? 'disabled' : '' }}></div>
+            <div class="col-md-4"><label class="form-label small">Heure départ</label>
+                <input type="time" class="form-control form-control-sm" name="flight_options[{{ $index }}][departure_time]" value="{{ $opt && $opt->depart_at ? $opt->depart_at->format('H:i') : '' }}" {{ $index === -1 ? 'disabled' : '' }}></div>
+            <div class="col-md-4"><label class="form-label small">Heure arrivée</label>
+                <input type="time" class="form-control form-control-sm" name="flight_options[{{ $index }}][arrival_time]" value="{{ $opt && $opt->arrive_at ? $opt->arrive_at->format('H:i') : '' }}" {{ $index === -1 ? 'disabled' : '' }}></div>
             <div class="col-md-6"><label class="form-label small">N° vol</label>
                 <input type="text" class="form-control form-control-sm" name="flight_options[{{ $index }}][flight_number]" value="{{ $opt ? $opt->flight_number : '' }}" placeholder="AF1234" {{ $index === -1 ? 'disabled' : '' }}></div>
             <div class="col-md-4"><label class="form-label small">Cabine (kg)</label>
