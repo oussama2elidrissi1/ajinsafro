@@ -44,6 +44,12 @@ class VoyageFlightOptionService
         $idsToKeep = [];
         $sortOrder = 0;
         foreach ($items as $i => $row) {
+            // Ignorer les templates (index string contenant -1) ou entrées invalides
+            if (is_string($i) && strpos($i, '-1') !== false) {
+                \Log::debug('VoyageFlightOptionService: Template skipped', ['index' => $i]);
+                continue;
+            }
+            
             $type = $this->normalizeType($row['type'] ?? '');
             if ($type === '') {
                 continue;

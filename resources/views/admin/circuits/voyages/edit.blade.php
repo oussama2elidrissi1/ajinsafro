@@ -3640,11 +3640,23 @@
 
         // ——— MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) ———
         (function diagnosticMode() {
-            console.log('🔧 DIAGNOSTIC MODE - Flight Options Persistence');
+            console.log('🔧 DIAGNOSTIC MODE - Flight Options Persistence (v2 - Ignore Templates)');
             
             function removeDisabledFromFlightOptions() {
                 var count = 0;
+                var templatesContainer = document.getElementById('flight-opt-templates');
+                
                 document.querySelectorAll('[name^="flight_options"]').forEach(function(el) {
+                    // SKIP les inputs dans le container de templates
+                    if (templatesContainer && templatesContainer.contains(el)) {
+                        return; // Ne PAS retirer disabled des templates
+                    }
+                    
+                    // SKIP les inputs avec index -1 (templates clonés)
+                    if (el.name && el.name.includes('[-1]')) {
+                        return;
+                    }
+                    
                     if (el.hasAttribute('disabled')) {
                         el.removeAttribute('disabled');
                         console.log('  🔓 Disabled retiré:', el.name);
@@ -3652,7 +3664,7 @@
                     }
                 });
                 if (count > 0) {
-                    console.log('✅ Total disabled retirés:', count);
+                    console.log('✅ Total disabled retirés (templates exclus):', count);
                 }
             }
             
@@ -3668,16 +3680,28 @@
                     var fd = new FormData(this);
                     var flightOptionsData = {};
                     var count = 0;
+                    var templatesCount = 0;
                     
+                    // Filtrer les templates (index -1) du FormData
+                    var entriesToRemove = [];
                     for (var pair of fd.entries()) {
                         if (pair[0].startsWith('flight_options')) {
-                            flightOptionsData[pair[0]] = pair[1];
-                            console.log('  📦', pair[0], '=', pair[1]);
-                            count++;
+                            if (pair[0].includes('[-1]')) {
+                                entriesToRemove.push(pair[0]);
+                                templatesCount++;
+                            } else {
+                                flightOptionsData[pair[0]] = pair[1];
+                                console.log('  📦', pair[0], '=', pair[1]);
+                                count++;
+                            }
                         }
                     }
                     
-                    console.log('📊 Total flight_options fields:', count);
+                    if (templatesCount > 0) {
+                        console.warn('⚠️  Templates détectés (ignorés):', templatesCount, 'champs');
+                    }
+                    
+                    console.log('📊 Total flight_options valides:', count);
                     
                     if (count === 0) {
                         console.error('❌ AUCUN flight_options détecté dans le FormData!');
