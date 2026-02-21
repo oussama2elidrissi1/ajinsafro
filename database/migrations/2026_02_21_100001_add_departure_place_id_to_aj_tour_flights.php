@@ -17,11 +17,12 @@ return new class extends Migration
         if (!$schema->hasTable('aj_tour_flights')) {
             return;
         }
+        if ($schema->hasColumn('aj_tour_flights', 'departure_place_id')) {
+            return;
+        }
         $schema->table('aj_tour_flights', function (Blueprint $table) {
-            if (!$schema->hasColumn('aj_tour_flights', 'departure_place_id')) {
-                $table->unsignedBigInteger('departure_place_id')->nullable()->after('tour_id')
-                    ->comment('FK aj_travel_departure_places.id');
-            }
+            $table->unsignedBigInteger('departure_place_id')->nullable()->after('tour_id')
+                ->comment('FK aj_travel_departure_places.id');
         });
     }
 
@@ -31,10 +32,11 @@ return new class extends Migration
         if (!$schema->hasTable('aj_tour_flights')) {
             return;
         }
+        if (!$schema->hasColumn('aj_tour_flights', 'departure_place_id')) {
+            return;
+        }
         $schema->table('aj_tour_flights', function (Blueprint $table) {
-            if ($schema->hasColumn('aj_tour_flights', 'departure_place_id')) {
-                $table->dropColumn('departure_place_id');
-            }
+            $table->dropColumn('departure_place_id');
         });
     }
 };
