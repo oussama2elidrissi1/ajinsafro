@@ -3547,7 +3547,7 @@
                     return;
                 }
 
-                // Enregistrer (mise à jour des libellés en vue)
+                // Enregistrer : mise à jour des libellés en vue puis soumission du formulaire pour sauvegarder côté serveur
                 if (e.target.closest('.flight-opt-save-btn')) {
                     var card = e.target.closest('.flight-opt-card');
                     if (!card) return;
@@ -3584,6 +3584,15 @@
                     if (badgeWrap) badgeWrap.style.display = (tentativeCb && tentativeCb.checked) ? '' : 'none';
                     if (view) view.style.display = '';
                     if (edit) edit.style.display = 'none';
+                    // Soumettre le formulaire principal pour enregistrer les flight_options (lieu de départ, heures, etc.) côté serveur
+                    var form = document.getElementById('edit-voyage-form');
+                    if (form) {
+                        if (typeof form.requestSubmit === 'function') {
+                            form.requestSubmit();
+                        } else {
+                            form.submit();
+                        }
+                    }
                     return;
                 }
 
