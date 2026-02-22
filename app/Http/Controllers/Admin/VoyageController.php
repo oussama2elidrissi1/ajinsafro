@@ -16,6 +16,7 @@ use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Models\TravelDeparturePlace;
 use App\Models\TravelDepartureFlight;
+use App\Models\VoyageDeparturePlace;
 use App\Models\TravelDate;
 use App\Services\VoyageFlightService;
 use App\Services\VoyageFlightOptionService;
@@ -405,8 +406,10 @@ class VoyageController extends Controller
         $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
         $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
 
-        // Lieux de départ (tous pour édition, pas seulement actifs)
-        $departurePlaces = TravelDeparturePlace::where('travel_id', $id)->orderBy('sort_order')->orderBy('id')->get();
+        // Lieux de départ : source Laravel (voyage_departure_places) pour affichage et ajout dans l'onglet Vols
+        $departurePlaces = $laravelVoyage
+            ? VoyageDeparturePlace::where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
+            : collect();
         // Vols associés par lieu (source unique : aj_tour_flights.departure_place_id) pour l'onglet Lieux de départ en lecture seule
         $departurePlaceFlightsFromTour = collect();
         try {
@@ -795,26 +798,22 @@ class VoyageController extends Controller
     }
 
     /**
-     * Sync departure places only (no flights). Single source of truth: flights live in voyage_flight_options / aj_tour_flights with departure_place_id.
-     * Flights are managed in the Vols tab; this only maintains aj_travel_departure_places (name, code, is_active, sort_order).
+     * Sync departure places from request into Laravel table voyage_departure_places.
+     * Single source of truth for admin: affichage et ajout depuis Laravel uniquement.
      */
     private function syncDeparturePlaces(int $tourId, \Illuminate\Http\Request $request): void
     {
+        $voyage = Voyage::where('wp_post_id', $tourId)->first();
+        if (!$voyage) {
+            return;
+        }
+
         $places = $request->input('departure_places', []);
         if (!is_array($places)) {
             $places = [];
         }
 
-        $oldPlaceIds = TravelDeparturePlace::where('travel_id', $tourId)->pluck('id');
-        if ($oldPlaceIds->isNotEmpty()) {
-            TravelDepartureFlight::whereIn('departure_place_id', $oldPlaceIds)->delete();
-        }
-        TravelDeparturePlace::where('travel_id', $tourId)->delete();
-
-        if (empty($places)) {
-            return;
-        }
-
+        $keptIds = [];
         $sortOrder = 0;
         foreach ($places as $placeIndex => $placeData) {
             if (!is_array($placeData)) {
@@ -824,20 +823,39 @@ class VoyageController extends Controller
             if ($placeName === '') {
                 continue;
             }
+            $placeId = isset($placeData['id']) && $placeData['id'] !== '' ? (int) $placeData['id'] : null;
+            $data = [
+                'name' => $placeName,
+                'code' => !empty($placeData['code']) ? trim($placeData['code']) : null,
+                'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
+                'sort_order' => $sortOrder++,
+            ];
             try {
-                TravelDeparturePlace::create([
-                    'travel_id' => $tourId,
-                    'name' => $placeName,
-                    'code' => !empty($placeData['code']) ? trim($placeData['code']) : null,
-                    'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
-                    'sort_order' => $sortOrder++,
-                ]);
+                if ($placeId) {
+                    $place = VoyageDeparturePlace::where('voyage_id', $voyage->id)->where('id', $placeId)->first();
+                    if ($place) {
+                        $place->update($data);
+                        $keptIds[] = $place->id;
+                    } else {
+                        $place = VoyageDeparturePlace::create(array_merge($data, ['voyage_id' => $voyage->id]));
+                        $keptIds[] = $place->id;
+                    }
+                } else {
+                    $place = VoyageDeparturePlace::create(array_merge($data, ['voyage_id' => $voyage->id]));
+                    $keptIds[] = $place->id;
+                }
             } catch (\Exception $e) {
                 \Log::warning('VoyageController@syncDeparturePlaces: Error saving place', [
                     'name' => $placeName,
                     'error' => $e->getMessage(),
                 ]);
             }
+        }
+
+        $idsToDelete = VoyageDeparturePlace::where('voyage_id', $voyage->id)->whereNotIn('id', $keptIds)->pluck('id')->toArray();
+        if (!empty($idsToDelete)) {
+            \App\Models\VoyageFlightOption::where('voyage_id', $voyage->id)->whereIn('departure_place_id', $idsToDelete)->update(['departure_place_id' => null]);
+            VoyageDeparturePlace::where('voyage_id', $voyage->id)->whereIn('id', $idsToDelete)->delete();
         }
     }
 

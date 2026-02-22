@@ -3645,11 +3645,17 @@
             function removeDisabledFromFlightOptions() {
                 var count = 0;
                 var templatesContainer = document.getElementById('flight-opt-templates');
+                var drawerContainer = document.getElementById('day-builder-drawer');
                 
                 document.querySelectorAll('[name^="flight_options"]').forEach(function(el) {
                     // SKIP les inputs dans le container de templates
                     if (templatesContainer && templatesContainer.contains(el)) {
                         return; // Ne PAS retirer disabled des templates
+                    }
+                    
+                    // SKIP les inputs dans le DayBuilderDrawer (duplicate data!)
+                    if (drawerContainer && drawerContainer.contains(el)) {
+                        return; // Le drawer ne doit PAS soumettre ses données
                     }
                     
                     // SKIP les inputs avec index -1 (templates clonés)
@@ -3664,7 +3670,7 @@
                     }
                 });
                 if (count > 0) {
-                    console.log('✅ Total disabled retirés (templates exclus):', count);
+                    console.log('✅ Total disabled retirés (drawer/templates exclus):', count);
                 }
             }
             
@@ -3677,6 +3683,23 @@
                 
                 form.addEventListener('submit', function(e) {
                     console.log('🚀 FORMULAIRE SOUMIS (intercepté)');
+                    
+                    // DÉSACTIVER le drawer pour éviter qu'il soumette ses duplications
+                    var drawer = document.getElementById('day-builder-drawer');
+                    var drawerInputsDisabled = [];
+                    if (drawer) {
+                        drawer.querySelectorAll('[name^="flight_options"]').forEach(function(el) {
+                            if (!el.hasAttribute('disabled')) {
+                                el.setAttribute('disabled', 'disabled');
+                                el.setAttribute('data-was-enabled', '1');
+                                drawerInputsDisabled.push(el);
+                            }
+                        });
+                        if (drawerInputsDisabled.length > 0) {
+                            console.warn('⚠️  Drawer inputs désactivés temporairement:', drawerInputsDisabled.length);
+                        }
+                    }
+                    
                     var fd = new FormData(this);
                     var flightOptionsData = {};
                     var count = 0;
@@ -3713,10 +3736,17 @@
                         if (!confirm('⚠️ ATTENTION: Aucun flight_options détecté!\n\nVoulez-vous quand même envoyer le formulaire?\n(Cliquez sur Cancel pour déboguer)')) {
                             e.preventDefault();
                             e.stopImmediatePropagation();
+                            // Réactiver les inputs du drawer
+                            drawerInputsDisabled.forEach(function(el) {
+                                el.removeAttribute('disabled');
+                                el.removeAttribute('data-was-enabled');
+                            });
                         }
                     } else {
                         console.log('✅ Flight options detectés, soumission OK');
                     }
+                    
+                    // Note: Si soumission OK, la page va recharger donc pas besoin de réactiver
                 }, true);
                 
                 console.log('✅ Intercepteur de formulaire installé');

@@ -12,6 +12,9 @@
             <div class="card mb-2 departure-place-inline-row" data-index="{{ $pi }}">
                 <div class="card-body py-2">
                     <div class="row g-2 align-items-center">
+                        @if(!empty($place->id))
+                        <input type="hidden" name="departure_places[{{ $pi }}][id]" value="{{ $place->id }}">
+                        @endif
                         <div class="col-md-4">
                             <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][name]" value="{{ old("departure_places.{$pi}.name", $place->name ?? '') }}" placeholder="Ex. Casablanca" required>
                         </div>
