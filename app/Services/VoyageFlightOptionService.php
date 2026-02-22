@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Voyage;
+use App\Models\VoyageDeparturePlace;
 use App\Models\VoyageFlightOption;
 use Illuminate\Support\Facades\DB;
 
@@ -215,6 +216,13 @@ class VoyageFlightOptionService
                 }
                 if ($this->wpTableHasColumn($wp, $fullTable, 'departure_place_id')) {
                     $row['departure_place_id'] = $opt->departure_place_id;
+                }
+                $place = $opt->departure_place_id ? VoyageDeparturePlace::find($opt->departure_place_id) : null;
+                if ($place && $this->wpTableHasColumn($wp, $fullTable, 'departure_place_name')) {
+                    $row['departure_place_name'] = $place->name;
+                }
+                if ($place && $this->wpTableHasColumn($wp, $fullTable, 'departure_place_code')) {
+                    $row['departure_place_code'] = $place->code;
                 }
 
                 $rows[] = $row;
