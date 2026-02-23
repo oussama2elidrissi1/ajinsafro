@@ -805,9 +805,10 @@ function aj_render_flight_card($flight, $context = []) {
         }
     }
 
+    $flight_departure_place_id = isset($flight['departure_place_id']) && $flight['departure_place_id'] !== '' && $flight['departure_place_id'] !== null ? (int) $flight['departure_place_id'] : '';
     ob_start();
     ?>
-    <div class="aj-flight-card aj-flight-card--v2<?php echo $is_unavailable ? ' aj-flight-card--unavailable' : ''; ?>" data-flight-id="<?php echo esc_attr((int) ($flight['id'] ?? 0)); ?>">
+    <div class="aj-flight-card aj-flight-card--v2<?php echo $is_unavailable ? ' aj-flight-card--unavailable' : ''; ?>" data-flight-id="<?php echo esc_attr((int) ($flight['id'] ?? 0)); ?>" data-departure-place-id="<?php echo esc_attr($flight_departure_place_id); ?>" data-departure-place-name="<?php echo esc_attr($departure_place_name); ?>" data-departure-place-code="<?php echo esc_attr($departure_place_code); ?>">
         <div class="aj-flight-header">
             <div class="aj-flight-header__left">
                 <span class="aj-flight-header__icon" aria-hidden="true">

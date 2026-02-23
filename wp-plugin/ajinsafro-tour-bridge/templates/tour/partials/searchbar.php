@@ -27,26 +27,30 @@ $legacy_flights_table = $wpdb->prefix . 'aj_travel_departure_flights';
 $dates_table = $wpdb->prefix . 'aj_travel_dates';
 
 try {
-    $places = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$places_table} 
-         WHERE travel_id = %d 
-         AND is_active = 1 
-         ORDER BY sort_order ASC, id ASC",
-        $wp_post_id
-    ), ARRAY_A);
+    $places = [];
+    if ($wpdb->get_var($wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s", $places_table))) {
+        $places = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$places_table} 
+             WHERE travel_id = %d 
+             AND is_active = 1 
+             ORDER BY sort_order ASC, id ASC",
+            $wp_post_id
+        ), ARRAY_A);
+    }
 
-    $tour_flights_has_place = false;
-    if ($places && $wpdb->get_var($wpdb->prepare(
+    $tour_flights_has_place_id = (bool) $wpdb->get_var($wpdb->prepare(
         "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'departure_place_id'",
         $tour_flights_table
-    ))) {
-        $tour_flights_has_place = true;
-    }
+    ));
+    $tour_flights_has_place_name = (bool) $wpdb->get_var($wpdb->prepare(
+        "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'departure_place_name'",
+        $tour_flights_table
+    ));
 
     if ($places) {
         foreach ($places as &$place) {
             $flights = [];
-            if ($tour_flights_has_place) {
+            if ($tour_flights_has_place_id) {
                 $flights = $wpdb->get_results($wpdb->prepare(
                     "SELECT id, from_city, to_city, flight_type, depart_date, depart_time, arrive_date, arrive_time 
                      FROM {$tour_flights_table} 
@@ -56,7 +60,7 @@ try {
                     $place['id']
                 ), ARRAY_A);
             }
-            if (empty($flights)) {
+            if (empty($flights) && $wpdb->get_var($wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s", $legacy_flights_table))) {
                 $flights = $wpdb->get_results($wpdb->prepare(
                     "SELECT * FROM {$legacy_flights_table} 
                      WHERE departure_place_id = %d 
@@ -68,6 +72,57 @@ try {
                 $place['flights'] = $flights;
                 $departure_places[] = $place;
             }
+        }
+    }
+
+    // Fallback: build "Starting from" from aj_tour_flights (Laravel sync fills departure_place_name / departure_place_code)
+    if (empty($departure_places) && $tour_flights_has_place_name && $wpdb->get_var($wpdb->prepare("SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s", $tour_flights_table))) {
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT DISTINCT departure_place_name, departure_place_code 
+             FROM {$tour_flights_table} 
+             WHERE tour_id = %d 
+             AND departure_place_name IS NOT NULL 
+             AND TRIM(COALESCE(departure_place_name, '')) != '' 
+             ORDER BY departure_place_name ASC, departure_place_code ASC",
+            $wp_post_id
+        ), ARRAY_A);
+        foreach ($rows as $row) {
+            $name = trim($row['departure_place_name']);
+            $code = isset($row['departure_place_code']) ? trim($row['departure_place_code']) : '';
+            $place_id = $code !== '' ? $name . '|' . $code : $name;
+            $flights_raw = $wpdb->get_results($wpdb->prepare(
+                "SELECT id, from_city, to_city, flight_type, flight_number, depart_date, depart_time, arrive_date, arrive_time 
+                 FROM {$tour_flights_table} 
+                 WHERE tour_id = %d AND TRIM(COALESCE(departure_place_name,'')) = %s 
+                 AND (COALESCE(departure_place_code,'') = %s OR (%s = '' AND (departure_place_code IS NULL OR TRIM(COALESCE(departure_place_code,'')) = '')))
+                 ORDER BY sort_order ASC, id ASC",
+                $wp_post_id,
+                $name,
+                $code,
+                $code
+            ), ARRAY_A);
+            // Format attendu par le JS : from_airport/to_airport ou from_city/to_city, flight_number, depart_time, arrive_time
+            $flights = [];
+            foreach ($flights_raw ?: [] as $f) {
+                $flights[] = [
+                    'id' => isset($f['id']) ? $f['id'] : null,
+                    'from_city' => isset($f['from_city']) ? $f['from_city'] : '',
+                    'to_city' => isset($f['to_city']) ? $f['to_city'] : '',
+                    'from_airport' => isset($f['from_city']) ? $f['from_city'] : '',
+                    'to_airport' => isset($f['to_city']) ? $f['to_city'] : '',
+                    'flight_number' => isset($f['flight_number']) ? $f['flight_number'] : '',
+                    'depart_date' => isset($f['depart_date']) ? $f['depart_date'] : '',
+                    'depart_time' => isset($f['depart_time']) ? $f['depart_time'] : '',
+                    'arrive_date' => isset($f['arrive_date']) ? $f['arrive_date'] : '',
+                    'arrive_time' => isset($f['arrive_time']) ? $f['arrive_time'] : '',
+                ];
+            }
+            $departure_places[] = [
+                'id' => $place_id,
+                'name' => $name,
+                'code' => $code,
+                'flights' => $flights,
+            ];
         }
     }
     
@@ -307,61 +362,77 @@ jQuery(document).ready(function($) {
                 flightPlaceName.textContent = 'Vols depuis ' + selectedPlace.name;
             }
             
-            // Build flight cards
+            // Build flight cards (from_airport/from_city, to_airport/to_city for Laravel sync or legacy)
             var html = '';
             selectedPlace.flights.forEach(function(flight) {
+                var from = flight.from_airport || flight.from_city || '';
+                var to = flight.to_airport || flight.to_city || '';
+                if (!from && !to && !flight.flight_number) return;
                 html += '<div class="aj-flight-card">';
                 html += '<div class="aj-flight-card__row">';
-                
                 if (flight.airline) {
                     html += '<div class="aj-flight-info"><span class="aj-flight-label">Compagnie:</span> <strong>' + escapeHtml(flight.airline) + '</strong></div>';
                 }
-                
                 if (flight.flight_number) {
                     html += '<div class="aj-flight-info"><span class="aj-flight-label">Vol:</span> <strong>' + escapeHtml(flight.flight_number) + '</strong></div>';
                 }
-                
                 html += '</div>';
                 html += '<div class="aj-flight-card__row">';
-                
-                if (flight.from_airport) {
-                    html += '<div class="aj-flight-info"><span class="aj-flight-label">Départ:</span> ' + escapeHtml(flight.from_airport);
-                    if (flight.depart_time) {
-                        html += ' à <strong>' + escapeHtml(flight.depart_time) + '</strong>';
-                    }
+                if (from) {
+                    html += '<div class="aj-flight-info"><span class="aj-flight-label">Départ:</span> ' + escapeHtml(from);
+                    if (flight.depart_time) html += ' à <strong>' + escapeHtml(flight.depart_time) + '</strong>';
                     html += '</div>';
                 }
-                
-                if (flight.to_airport) {
-                    html += '<div class="aj-flight-info"><span class="aj-flight-label">Arrivée:</span> ' + escapeHtml(flight.to_airport);
-                    if (flight.arrive_time) {
-                        html += ' à <strong>' + escapeHtml(flight.arrive_time) + '</strong>';
-                    }
+                if (to) {
+                    html += '<div class="aj-flight-info"><span class="aj-flight-label">Arrivée:</span> ' + escapeHtml(to);
+                    if (flight.arrive_time) html += ' à <strong>' + escapeHtml(flight.arrive_time) + '</strong>';
                     html += '</div>';
                 }
-                
                 html += '</div>';
-                
                 if (flight.notes) {
                     html += '<div class="aj-flight-card__notes">' + escapeHtml(flight.notes) + '</div>';
                 }
-                
                 html += '</div>';
             });
-            
             if (flightCardsContainer) {
                 flightCardsContainer.innerHTML = html;
             }
-            
-            // Show section
-            flightDetailsSection.style.display = 'block';
+            // Show section only if we have at least one card
+            flightDetailsSection.style.display = html ? 'block' : 'none';
+
+            // Programme: show only outbound flight(s) from the selected city (Jour 1)
+            filterProgrammeOutboundFlightsByPlace(placeId);
         });
-        
-            // Trigger on page load if already selected
+
+        // Filter programme outbound flight cards by selected "Starting from" place
+        function filterProgrammeOutboundFlightsByPlace(placeId) {
+            var cards = document.querySelectorAll('.ajtb-day-flight-outbound .aj-flight-card[data-departure-place-name], .ajtb-day-flight-outbound .aj-flight-card[data-departure-place-id]');
+            if (!cards.length) return;
+            var isNumeric = placeId !== '' && /^\d+$/.test(String(placeId));
+            cards.forEach(function(card) {
+                var show = false;
+                if (!placeId) {
+                    show = true;
+                } else if (isNumeric) {
+                    var pid = card.getAttribute('data-departure-place-id');
+                    show = pid !== null && pid !== '' && String(pid) === String(placeId);
+                } else {
+                    var name = (card.getAttribute('data-departure-place-name') || '').trim();
+                    var code = (card.getAttribute('data-departure-place-code') || '').trim();
+                    var placeKey = code ? name + '|' + code : name;
+                    show = (name === placeId) || (placeKey === placeId);
+                }
+                card.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Trigger on page load if already selected
         if (fromSelect.value) {
             fromSelect.dispatchEvent(new Event('change'));
+        } else {
+            filterProgrammeOutboundFlightsByPlace('');
         }
-        
+
         // Sync with booking form
         fromSelect.addEventListener('change', function() {
             var bookingDepartureInput = document.getElementById('booking-departure-place');

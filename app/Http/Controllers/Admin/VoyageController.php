@@ -126,16 +126,56 @@ class VoyageController extends Controller
     }
 
     /**
-     * Show create form.
+     * Show create form. Uses the same view as edit with empty/default data.
      */
     public function create(): View
     {
-        // Charger les locations pour le formulaire create
+        $voyage = (object) [
+            'ID' => 0,
+            'post_title' => '',
+            'post_name' => '',
+            'post_content' => '',
+            'post_excerpt' => '',
+            'post_status' => 'draft',
+            'post_modified' => '',
+            'post_date' => '',
+            'name' => '',
+            'slug' => '',
+            'description' => '',
+            'accroche' => '',
+            'status' => 'draft',
+        ];
+
+        $metaKeys = [
+            'address', 'id_location', 'location_id', 'multi_location', 'map_lat', 'map_lng', 'map_zoom', 'map_type',
+            'is_featured', 'tour_price_by', 'st_tour_external_booking', 'hide_adult_in_booking_form', 'duration_day', 'max_people', 'min_people',
+            'contact_email', 'phone', 'fax', 'website',
+            'min_price', 'base_price', 'sale_price', 'adult_price', 'child_price', 'infant_price', 'discount', 'discount_type', 'discount_by_people_type', 'calculator_discount_by_people_type',
+            'tours_include', 'tours_exclude', 'tours_highlight', 'tours_faq', 'tours_program_style',
+            'tours_booking_period', 'st_booking_option_type', 'check_in', 'check_out', 'st_allow_cancel', 'st_cancel_percent', 'st_cancel_number_day', 'ical_url',
+            'thumbnail_id', 'hero_image_id', 'hero_gallery_ids', 'gallery', 'video', 'st_google_map',
+            'is_meta_payment_gateway_st_paypal', 'is_meta_payment_gateway_st_onepay', 'is_meta_payment_gateway_st_onepay_atm', 'is_meta_payment_gateway_st_payu',
+            'is_meta_payment_gateway_st_payulatam', 'is_meta_payment_gateway_st_payumoney', 'is_meta_payment_gateway_st_razor',
+        ];
+        $meta = array_fill_keys($metaKeys, '');
+
+        $gallery_csv = '';
+        $availableTaxonomies = $this->getAvailableTaxonomies();
+        $assignedTaxonomies = $this->getPostTaxonomies(0);
         $locationsTree = $this->repository->getLocationsTree();
         $selectedLocationIds = [];
-        
-        // Programme vide pour création
-        $tourProgram = ['style' => 'style1', 'items' => []];
+
+        $worldCountries = config('countries', []);
+        $countryCitiesData = $this->buildCountryCitiesData($worldCountries, $locationsTree);
+        $worldCities = config('world_cities', []);
+        $mergedCitiesByCode = $this->buildMergedCitiesByCode($worldCountries, $worldCities, $countryCitiesData);
+
+        $programDays = collect();
+        try {
+            $activitiesCatalog = Activity::orderBy('title')->get();
+        } catch (\Throwable $e) {
+            $activitiesCatalog = collect();
+        }
         try {
             $airlines = Airline::query()->orderBy('name')->get();
         } catch (\Throwable $e) {
@@ -143,7 +183,43 @@ class VoyageController extends Controller
             $airlines = collect();
         }
 
-        return view('admin.circuits.voyages.create', compact('locationsTree', 'selectedLocationIds', 'tourProgram', 'airlines'));
+        $laravelVoyage = (object) ['id' => 0, 'wp_post_id' => null];
+        $outboundFlight = null;
+        $inboundFlight = null;
+        $flightOptionsByType = ['outbound' => collect(), 'return' => collect(), 'segment' => collect()];
+        $flightOptionsWithIndex = [];
+        $nextFlightOptionIndex = 0;
+        $lastDayNumber = 1;
+        $heroImageUrl = null;
+        $tourHotel = null;
+        $tourHotels = collect();
+        $transferArrival = null;
+        $transferDeparture = null;
+        $transferArrivals = collect();
+        $transferDepartures = collect();
+        $suggestedArrivalFrom = '';
+        $suggestedArrivalTo = '';
+        $suggestedDepartureFrom = '';
+        $suggestedDepartureTo = '';
+        $tourHotelImageUrl = null;
+        $transferArrivalImageUrl = null;
+        $transferDepartureImageUrl = null;
+        $departurePlaces = collect();
+        $departurePlaceFlightsFromTour = collect();
+        $travelDates = collect();
+        $programJson = [];
+        $programApiUrl = '';
+        $programDayHotelsTransfers = [];
+
+        return view('admin.circuits.voyages.edit', compact(
+            'voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds',
+            'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines',
+            'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber',
+            'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures',
+            'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo',
+            'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl',
+            'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers'
+        ));
     }
 
     /**

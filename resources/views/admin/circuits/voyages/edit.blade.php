@@ -1,18 +1,21 @@
+@php
+    $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
+@endphp
 @extends('layouts.master-ajinsafro')
 @section('title')
-    Modifier le tour WordPress
+    {{ $isCreate ? 'Créer un tour WordPress' : 'Modifier le tour WordPress' }}
 @endsection
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Modifier : {{ $voyage->post_title ?? $voyage->name }}</h4>
+                <h4 class="page-title mb-0 font-size-18">{{ $isCreate ? 'Créer un tour WordPress' : 'Modifier : ' . ($voyage->post_title ?? $voyage->name) }}</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
-                        <li class="breadcrumb-item active">{{ $voyage->post_title ?? $voyage->name }}</li>
+                        <li class="breadcrumb-item active">{{ $isCreate ? 'Créer' : ($voyage->post_title ?? $voyage->name) }}</li>
                     </ol>
                 </div>
             </div>
@@ -42,9 +45,11 @@
         <strong>Admin aligné avec WordPress Traveler</strong> - Tous les champs ci-dessous écrivent directement dans la DB WordPress (cFdgeZ_postmeta + taxonomies).
     </div>
 
-    <form action="{{ route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST" id="edit-voyage-form" data-voyage-id="{{ $voyage->ID }}">
+    <form action="{{ $isCreate ? route('admin.circuits.voyages.store') : route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST" id="edit-voyage-form" data-voyage-id="{{ $voyage->ID ?? 0 }}">
         @csrf
-        @method('PUT')
+        @if (!$isCreate)
+            @method('PUT')
+        @endif
 
         {{-- NAVIGATION TABS --}}
         <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
@@ -1697,7 +1702,7 @@
                     <div class="card-footer d-flex justify-content-between align-items-center bg-light">
                         <div>
                             <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg waves-effect waves-light" id="edit-voyage-submit-btn">
-                                <i class="bx bx-save me-1"></i> Enregistrer toutes les modifications
+                                <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour dans WordPress' : 'Enregistrer toutes les modifications' }}
                             </button>
                             <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
                         </div>
@@ -1712,7 +1717,8 @@
 
     {{-- Plus de formulaire séparé pour ajout/suppression de jour : tout est géré en JS, sauvegardé au submit du formulaire principal --}}
 
-    {{-- DELETE ZONE --}}
+    {{-- DELETE ZONE (masquée en création) --}}
+    @if (!$isCreate)
     <div class="row mt-3">
         <div class="col-12">
             <div class="card border-danger">
@@ -1732,6 +1738,7 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
