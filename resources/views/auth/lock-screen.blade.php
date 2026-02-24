@@ -63,7 +63,7 @@
                         <p>©
                             <script>
                                 document.write(new Date().getFullYear())
-                            </script> Qovex. Crafted with <i class="mdi mdi-heart text-danger"></i> by
+                            </script> AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by
                             Themesbrand
                         </p>
                     </div>

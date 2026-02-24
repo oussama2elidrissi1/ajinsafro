@@ -22,7 +22,7 @@
                                 </div>
                             </div>
                         </div>
-                        <h4 class="mt-5">Let's get started with Qovex</h4>
+                        <h4 class="mt-5">Let's get started with AJINSAFRO</h4>
                         <p class="text-muted">It will be as simple as Occidental in fact it will be Occidental.</p>
 
                         <div class="row justify-content-center mt-5">

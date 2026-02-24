@@ -36,7 +36,7 @@
                                     </td>
                                     <td>
                                         <h5 class="text-truncate font-size-14 m-0"><a href="#"
-                                                class="text-reset">Create a Qovex Dashboard UI</a></h5>
+                                                class="text-reset">Create a AJINSAFRO Dashboard UI</a></h5>
                                     </td>
                                     <td>
                                         <div class="team">
@@ -107,7 +107,7 @@
                                     </td>
                                     <td>
                                         <h5 class="text-truncate font-size-14 m-0"><a href="#"
-                                                class="text-reset">Create a Qovex Logo</a></h5>
+                                                class="text-reset">Create a AJINSAFRO Logo</a></h5>
                                     </td>
                                     <td>
                                         <div class="team">

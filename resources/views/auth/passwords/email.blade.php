@@ -15,7 +15,7 @@
                             <div class="bg-login-overlay"></div>
                             <div class="position-relative">
                                 <h5 class="text-white font-size-20">Reset Password</h5>
-                                <p class="text-white-50 mb-0">Re-Password with Qovex.</p>
+                                <p class="text-white-50 mb-0">Re-Password with AJINSAFRO.</p>
 
                                 <a href="/index" class="logo logo-admin mt-4">
                                     <img src="{{ URL::asset('build/images/logo-sm-dark.png') }}" alt="" height="30">
@@ -61,7 +61,7 @@
                         <p>Remember It ? <a href="{{ route('register') }}" class="fw-medium text-primary"> Sign In
                                 here</a> </p>
                         <p>©
-                            {{ date('Y') }} Qovex. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand
+                            {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand
                         </p>
                     </div>
 

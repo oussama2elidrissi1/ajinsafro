@@ -15,7 +15,7 @@
                             <div class="bg-login-overlay"></div>
                             <div class="position-relative">
                                 <h5 class="text-white font-size-20">Welcome Back !</h5>
-                                <p class="text-white-50 mb-0">Sign in to continue to Qovex.</p>
+                                <p class="text-white-50 mb-0">Sign in to continue to AJINSAFRO.</p>
                                 <a href="/index" class="logo logo-admin mt-4">
                                     <img src="{{ URL::asset('build/images/logo-sm-dark.png') }}" alt=""
                                         height="30">
@@ -79,7 +79,7 @@
                         <p>Don't have an account ? <a href="{{ route('register') }}" class="fw-medium text-primary"> Signup
                                 now </a> </p>
                         <p>©
-                            {{ date('Y') }} Qovex. Crafted with <i class="mdi mdi-heart text-danger"></i> by
+                            {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by
                             Themesbrand
                         </p>
                     </div>

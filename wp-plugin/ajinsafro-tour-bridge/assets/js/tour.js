@@ -53,6 +53,119 @@
             this.initSmoothScroll();
             this.initStickyNav();
             this.initSearchbar();
+            this.initFlightsByDepartureFilter();
+        },
+
+        /**
+         * Normalize #aj-search-from value to {id, name, code} for matching cards.
+         * id is ONLY numeric: never set id to rawVal or name string.
+         * - rawVal numeric => id = rawVal, lookup name/code from places
+         * - "name|code" => name + code, lookup place => id = String(place.id) only if place.id is numeric
+         * - "name" => name, lookup place => id = String(place.id) only if numeric
+         */
+        normalizeStartingFrom: function(rawValue) {
+            var out = { id: '', name: '', code: '' };
+            var raw = (rawValue !== undefined && rawValue !== null) ? String(rawValue).trim() : '';
+            if (raw === '') return out;
+            var placesJson = $('#aj-searchbar').attr('data-departure-places') || '[]';
+            var places = [];
+            try {
+                places = JSON.parse(placesJson);
+            } catch (e) {}
+            if (/^\d+$/.test(raw)) {
+                out.id = raw;
+                for (var i = 0; i < places.length; i++) {
+                    var p = places[i];
+                    if (p && String(p.id) === raw) {
+                        out.name = (p.name != null) ? String(p.name).trim() : '';
+                        out.code = (p.code != null) ? String(p.code).trim() : '';
+                        break;
+                    }
+                }
+                return out;
+            }
+            if (raw.indexOf('|') >= 0) {
+                var parts = raw.split('|');
+                var n = (parts[0] != null) ? String(parts[0]).trim() : '';
+                var c = (parts[1] != null) ? String(parts[1]).trim() : '';
+                out.name = n;
+                out.code = c;
+                for (var j = 0; j < places.length; j++) {
+                    var q = places[j];
+                    if (!q) continue;
+                    var qn = (q.name != null) ? String(q.name).trim() : '';
+                    var qc = (q.code != null) ? String(q.code).trim() : '';
+                    if (qn.toLowerCase() === n.toLowerCase() && qc === c) {
+                        var pid = (q.id != null) ? String(q.id) : '';
+                        if (/^\d+$/.test(pid)) out.id = pid;
+                        break;
+                    }
+                }
+                return out;
+            }
+            out.name = raw;
+            for (var k = 0; k < places.length; k++) {
+                var r = places[k];
+                if (r && (r.name != null) && String(r.name).trim().toLowerCase() === raw.toLowerCase()) {
+                    var rid = (r.id != null) ? String(r.id) : '';
+                    if (/^\d+$/.test(rid)) out.id = rid;
+                    out.code = (r.code != null) ? String(r.code).trim() : '';
+                    break;
+                }
+            }
+            return out;
+        },
+
+        /**
+         * Filter by "Starting from" only:
+         * - #aj-flight-details .aj-flight-card
+         * - Programme Vol Aller: .ajtb-day-flight-block.ajtb-day-flight-outbound[data-aj-day-number="1"] .aj-flight-card
+         * Match by priority: id == data-departure-place-id OR code == data-departure-place-code OR name == data-departure-place-name (case-insensitive).
+         * No filter on #flights section.
+         */
+        applyFlightsByDeparture: function() {
+            var $from = $('#aj-search-from');
+            var rawVal = ($from.length && $from.val()) ? String($from.val()).trim() : '';
+            var normalized = this.normalizeStartingFrom(rawVal);
+            var showAll = rawVal === '';
+
+            function cardMatches($card, norm) {
+                if (showAll) return true;
+                var id = ($card.attr('data-departure-place-id') != null) ? String($card.attr('data-departure-place-id')).trim() : '';
+                var code = ($card.attr('data-departure-place-code') != null) ? String($card.attr('data-departure-place-code')).trim() : '';
+                var name = ($card.attr('data-departure-place-name') != null) ? String($card.attr('data-departure-place-name')).trim() : '';
+                if (/^\d+$/.test(norm.id) && id === norm.id) return true;
+                if (norm.code !== '' && code === norm.code) return true;
+                if (norm.name !== '' && name.toLowerCase() === norm.name.toLowerCase()) return true;
+                return false;
+            }
+
+            var selectorOutbound = '.ajtb-day-flight-block.ajtb-day-flight-outbound[data-aj-day-number="1"] .aj-flight-card';
+            var $cardsDetails = $('#aj-flight-details .aj-flight-card');
+            var $cardsOutbound = $(selectorOutbound);
+
+            var allCards = $cardsDetails.add($cardsOutbound);
+            var cardsDataset = [];
+
+            allCards.each(function() {
+                var $card = $(this);
+                var ds = {
+                    id: ($card.attr('data-departure-place-id') != null) ? String($card.attr('data-departure-place-id')) : '',
+                    name: ($card.attr('data-departure-place-name') != null) ? String($card.attr('data-departure-place-name')) : '',
+                    code: ($card.attr('data-departure-place-code') != null) ? String($card.attr('data-departure-place-code')) : ''
+                };
+                cardsDataset.push(ds);
+                var show = cardMatches($card, normalized);
+                if (show) $card.show(); else $card.hide();
+            });
+
+            if (typeof console !== 'undefined' && console.log) {
+                console.log('[AJTB Starting from] raw:', rawVal, '| normalized:', normalized, '| cards dataset:', cardsDataset);
+            }
+        },
+
+        initFlightsByDepartureFilter: function() {
+            // Filter is triggered on change in initSearchbar and after localStorage restore below
         },
 
         /**
@@ -1357,10 +1470,11 @@
                 if (!$(e.target).closest('#aj-searchbar').length) closeGuestsPanel();
             });
 
-            // Starting from (data-aj-search="from")
+            // Starting from (data-aj-search="from") — filter #aj-flight-details + Programme Vol Aller jour 1
             $(document).on('change', '#aj-searchbar [data-aj-search="from"]', function() {
                 var state = getSearchbarState();
                 setStored(state);
+                if (typeof self.applyFlightsByDeparture === 'function') self.applyFlightsByDeparture();
             });
 
             // Date (data-aj-search="date")
@@ -1411,7 +1525,7 @@
                 closeGuestsPanel();
             });
 
-            // On load: restore from localStorage, then update UI and total
+            // On load: restore from localStorage, then update UI and total, then apply Starting from filter
             if ($('#aj-searchbar').length) {
                 var saved = getStored();
                 var state = getSearchbarState();
@@ -1422,6 +1536,7 @@
                 setSearchbarDisplay(state);
                 setStored(state);
                 syncToBookingForm(state);
+                if (typeof self.applyFlightsByDeparture === 'function') self.applyFlightsByDeparture();
             }
         }
     };
