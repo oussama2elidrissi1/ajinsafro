@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Services\Wp\WpPostPayloadBuilder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -43,19 +44,10 @@ class WpRepository
             'post_status' => 'draft',
             'comment_status' => 'closed',
             'ping_status' => 'closed',
-            'post_password' => '',
-            'to_ping' => '',
-            'pinged' => '',
-            'post_content_filtered' => '',
-            'post_parent' => 0,
-            'guid' => '',
-            'menu_order' => 0,
             'post_type' => 'post',
-            'post_mime_type' => '',
-            'comment_count' => 0,
         ];
 
-        $postData = array_merge($defaults, $data);
+        $postData = WpPostPayloadBuilder::buildWpPostPayload($data, $defaults);
 
         $postId = DB::connection($this->connection)
             ->table($this->prefix . 'posts')

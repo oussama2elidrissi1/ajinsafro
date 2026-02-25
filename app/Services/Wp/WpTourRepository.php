@@ -4,6 +4,7 @@ namespace App\Services\Wp;
 
 use App\Models\Wp\WpPost;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WpTourRepository
@@ -62,8 +63,15 @@ class WpTourRepository
      */
     public function createTour(array $data): WpPost
     {
-        // Prepare post data
-        $postData = [
+        $defaults = [
+            'post_date' => now(),
+            'post_date_gmt' => now('UTC'),
+            'post_modified' => now(),
+            'post_modified_gmt' => now('UTC'),
+            'comment_status' => 'open',
+            'ping_status' => 'open',
+        ];
+        $postData = WpPostPayloadBuilder::buildWpPostPayload([
             'post_title' => $data['title'] ?? 'Untitled Tour',
             'post_name' => $this->ensureUniqueSlug($data['slug'] ?? Str::slug($data['title'] ?? 'tour')),
             'post_content' => $data['content'] ?? '',
@@ -71,17 +79,11 @@ class WpTourRepository
             'post_status' => $data['post_status'] ?? 'publish',
             'post_type' => 'st_tours',
             'post_author' => $data['author_id'] ?? 1,
-            'post_date' => now(),
-            'post_date_gmt' => now('UTC'),
-            'post_modified' => now(),
-            'post_modified_gmt' => now('UTC'),
-            'guid' => '', // Will be set after creation
-            'comment_status' => 'open',
-            'ping_status' => 'open',
-        ];
+        ], $defaults);
 
-        // Create post
+        // Create post (payload includes all NOT NULL columns for MySQL strict)
         $post = WpPost::create($postData);
+        Log::info('WP tour post created (INSERT ok)', ['post_id' => $post->ID, 'post_type' => 'st_tours']);
 
         // Update GUID (WordPress convention)
         $post->update([
