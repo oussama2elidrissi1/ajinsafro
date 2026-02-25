@@ -23,6 +23,11 @@ class AdminMiddleware
             return redirect('/')->with('error', 'Access denied.');
         }
 
+        if (isset($request->user()->is_active) && ! $request->user()->is_active) {
+            auth()->logout();
+            return redirect()->route('login')->with('error', 'Your account is disabled.');
+        }
+
         return $next($request);
     }
 }

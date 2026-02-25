@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReportingController;
 use App\Http\Controllers\Admin\ReservationsController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\RoleAccessController;
+use App\Http\Controllers\Admin\UserAccessController;
 use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\TravelDayItemController;
 use App\Http\Controllers\Admin\TravelProgramDayController;
@@ -70,7 +72,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('lock-screen/activate', [LockScreenController::class, 'lock'])->name('lock-screen.activate');
 });
 
-Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/vue-globale', [DashboardController::class, 'page'])->name('dashboard.vue-globale')->defaults('submenu', 'vue-globale');
     Route::get('dashboard/statistiques', [DashboardController::class, 'page'])->name('dashboard.statistiques')->defaults('submenu', 'statistiques');
@@ -193,8 +195,21 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::get('reporting/exports', [ReportingController::class, 'page'])->name('reporting.exports')->defaults('submenu', 'exports');
 
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::get('settings/utilisateurs', [SettingsController::class, 'page'])->name('settings.utilisateurs')->defaults('submenu', 'utilisateurs');
-    Route::get('settings/roles-permissions', [SettingsController::class, 'page'])->name('settings.roles-permissions')->defaults('submenu', 'roles-permissions');
+    Route::get('settings/utilisateurs', [UserAccessController::class, 'index'])->name('settings.utilisateurs');
+    Route::get('settings/utilisateurs/create', [UserAccessController::class, 'create'])->name('settings.utilisateurs.create');
+    Route::post('settings/utilisateurs', [UserAccessController::class, 'store'])->name('settings.utilisateurs.store');
+    Route::get('settings/utilisateurs/{user}/edit', [UserAccessController::class, 'edit'])->name('settings.utilisateurs.edit');
+    Route::match(['put', 'patch'], 'settings/utilisateurs/{user}', [UserAccessController::class, 'update'])->name('settings.utilisateurs.update');
+    Route::post('settings/utilisateurs/{user}/toggle-active', [UserAccessController::class, 'toggleActive'])->name('settings.utilisateurs.toggle-active');
+    Route::delete('settings/utilisateurs/{user}', [UserAccessController::class, 'destroy'])->name('settings.utilisateurs.destroy');
+
+    Route::get('settings/roles-permissions', [RoleAccessController::class, 'index'])->name('settings.roles-permissions');
+    Route::get('settings/roles-permissions/create', [RoleAccessController::class, 'create'])->name('settings.roles-permissions.create');
+    Route::post('settings/roles-permissions', [RoleAccessController::class, 'store'])->name('settings.roles-permissions.store');
+    Route::get('settings/roles-permissions/{role}/edit', [RoleAccessController::class, 'edit'])->name('settings.roles-permissions.edit');
+    Route::match(['put', 'patch'], 'settings/roles-permissions/{role}', [RoleAccessController::class, 'update'])->name('settings.roles-permissions.update');
+    Route::delete('settings/roles-permissions/{role}', [RoleAccessController::class, 'destroy'])->name('settings.roles-permissions.destroy');
+
     Route::get('settings/parametres-generaux', [SettingsController::class, 'page'])->name('settings.parametres-generaux')->defaults('submenu', 'parametres-generaux');
     Route::post('settings/parametres-generaux', [SettingsController::class, 'updateParametresGeneraux'])->name('settings.parametres-generaux.update');
     Route::get('settings/securite', [SettingsController::class, 'page'])->name('settings.securite')->defaults('submenu', 'securite');
