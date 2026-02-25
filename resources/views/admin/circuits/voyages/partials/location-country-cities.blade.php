@@ -20,14 +20,17 @@
     }
 
     $preselectedCountryCodes = [];
-    $preselectedIncludeCountry = [];
+    $preselectedCountryIds = [];
+    $preselectedIncludeCountryIds = [];
     $preselectedCityIds = [];
     $unknownSelectedIds = [];
+
     foreach ($selectedIds as $id) {
         if (isset($countryIdToCode[$id])) {
             $code = $countryIdToCode[$id];
             $preselectedCountryCodes[$code] = true;
-            $preselectedIncludeCountry[$code] = true;
+            $preselectedCountryIds[$id] = true;
+            $preselectedIncludeCountryIds[$id] = true;
             continue;
         }
         if (isset($cityIdToCode[$id])) {
@@ -50,31 +53,39 @@
 @endonce
 
 <div id="modern-location-selector" class="destination-modern-selector">
-    <div class="mb-3">
-        <label for="destinationCountrySelect" class="form-label fw-semibold">Pays</label>
-        <select id="destinationCountrySelect" class="form-select" multiple>
-            @foreach($worldCountries as $code => $name)
-                <option value="{{ $code }}" {{ isset($preselectedCountryCodes[$code]) ? 'selected' : '' }}>{{ $name }}</option>
-            @endforeach
-        </select>
-        <div class="d-flex gap-2 mt-2">
-            <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCountriesModern">Tout sélectionner</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCountriesModern">Tout désélectionner</button>
-        </div>
-    </div>
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
-                <input type="text" id="destinationCitySearchModern" class="form-control" style="max-width: 320px;" placeholder="Rechercher une ville...">
-                <button type="button" class="btn btn-sm btn-primary" id="destinationCitySearchBtnModern">Rechercher</button>
-                <button type="button" class="btn btn-sm btn-outline-danger ms-auto" id="destinationClearCitiesModern">Vider les villes</button>
+    <div class="row g-3 mb-3">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-body">
+                    <label for="destinationCountrySelect" class="form-label fw-semibold">Pays</label>
+                    <select id="destinationCountrySelect" class="form-select" multiple>
+                        @foreach($worldCountries as $code => $name)
+                            <option value="{{ $code }}" data-country-id="{{ $countryCitiesData[$code]['id'] ?? '' }}" {{ isset($preselectedCountryCodes[$code]) ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCountriesModern">Tout sélectionner</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCountriesModern">Tout désélectionner</button>
+                    </div>
+                </div>
             </div>
-            <div class="small text-muted mb-2" id="destinationCitiesMetaModern">Sélectionnez un ou plusieurs pays.</div>
-            <div class="list-group" id="destinationCityResultsModern"></div>
-            <div class="d-flex justify-content-between mt-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationCityPrevModern" disabled>Précédent</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationCityNextModern" disabled>Suivant</button>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                        <input type="text" id="destinationCitySearchModern" class="form-control" style="max-width: 320px;" placeholder="Rechercher une ville...">
+                        <button type="button" class="btn btn-sm btn-primary" id="destinationCitySearchBtnModern">Rechercher</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger ms-auto" id="destinationClearCitiesModern">Vider les villes</button>
+                    </div>
+                    <div class="small text-muted mb-2" id="destinationCitiesMetaModern">Sélectionnez un ou plusieurs pays.</div>
+                    <div class="list-group" id="destinationCityResultsModern"></div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationCityPrevModern" disabled>Précédent</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationCityNextModern" disabled>Suivant</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -83,24 +94,25 @@
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <h6 class="mb-0">Sélections actuelles</h6>
-                <span class="small text-muted" id="destinationSelectedCountModern">Villes (0) sélectionnées</span>
+                <span class="small text-muted" id="destinationSelectedGlobalCountModern">0 destination(s) sélectionnée(s)</span>
             </div>
             <div class="mb-2">
                 <div class="small text-muted mb-1">Pays sélectionnés</div>
                 <div id="destinationSelectedCountriesModern" class="d-flex flex-wrap gap-2"></div>
             </div>
             <div>
-                <div class="small text-muted mb-1">Villes sélectionnées</div>
+                <div class="small text-muted mb-1">Villes sélectionnées <span id="destinationSelectedCountModern">(0)</span></div>
                 <div id="destinationSelectedCitiesModern" class="d-flex flex-wrap gap-2"></div>
             </div>
         </div>
     </div>
 
-    <div id="destinationHiddenLocationsModern">
+    <div id="destinationHiddenLegacyLocationsModern">
         @foreach($unknownSelectedIds as $unknownId)
             <input type="hidden" name="locations[]" value="{{ $unknownId }}">
         @endforeach
     </div>
+    <div id="destinationHiddenDynamicLocationsModern"></div>
     <div id="destinationHiddenCountriesModern"></div>
     <div id="destinationHiddenCitiesModern"></div>
     <div id="destinationHiddenIncludeCountriesModern"></div>
@@ -126,7 +138,8 @@
     var selectedCountriesWrap = document.getElementById('destinationSelectedCountriesModern');
     var selectedCitiesWrap = document.getElementById('destinationSelectedCitiesModern');
     var selectedCount = document.getElementById('destinationSelectedCountModern');
-    var hiddenLocations = document.getElementById('destinationHiddenLocationsModern');
+    var selectedGlobalCount = document.getElementById('destinationSelectedGlobalCountModern');
+    var hiddenDynamicLocations = document.getElementById('destinationHiddenDynamicLocationsModern');
     var hiddenCountries = document.getElementById('destinationHiddenCountriesModern');
     var hiddenCities = document.getElementById('destinationHiddenCitiesModern');
     var hiddenIncludeCountries = document.getElementById('destinationHiddenIncludeCountriesModern');
@@ -135,7 +148,7 @@
     var countryCitiesData = @json($countryCitiesData);
     var mergedCitiesByCode = @json($mergedCitiesByCode);
     var preselectedCityIds = @json(array_map('intval', array_keys($preselectedCityIds)));
-    var preselectedIncludeCountry = @json(array_keys($preselectedIncludeCountry));
+    var preselectedIncludeCountryIds = @json(array_map('intval', array_keys($preselectedIncludeCountryIds)));
     var ensureLocationUrl = @json($ensureLocationUrl);
     var citiesSearchUrl = @json($citiesSearchUrl);
 
@@ -143,21 +156,44 @@
         selectedCountries: new Set(Array.from(countrySelect.options).filter(function(opt) { return opt.selected; }).map(function(opt) { return opt.value; })),
         includeCountry: {},
         selectedCities: {},
+        countryCodeToId: {},
         page: 1,
         lastPage: 1,
         q: '',
     };
 
-    preselectedIncludeCountry.forEach(function(code) {
-        state.includeCountry[code] = true;
-    });
-
     function escapeHtml(str) {
-        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
     function getCountryId(code) {
-        return countryCitiesData[code] && countryCitiesData[code].id ? parseInt(countryCitiesData[code].id, 10) : null;
+        if (state.countryCodeToId[code]) return parseInt(state.countryCodeToId[code], 10);
+        var option = Array.from(countrySelect.options).find(function(opt) { return opt.value === code; });
+        if (option) {
+            var fromOption = option.getAttribute('data-country-id');
+            if (fromOption) {
+                state.countryCodeToId[code] = parseInt(fromOption, 10);
+                return state.countryCodeToId[code];
+            }
+        }
+        if (countryCitiesData[code] && countryCitiesData[code].id) {
+            state.countryCodeToId[code] = parseInt(countryCitiesData[code].id, 10);
+            return state.countryCodeToId[code];
+        }
+        return null;
+    }
+
+    function getSelectedCountryCodes() {
+        return Array.from(state.selectedCountries);
+    }
+
+    function getSelectedCountryIds() {
+        var ids = [];
+        getSelectedCountryCodes().forEach(function(code) {
+            var id = getCountryId(code);
+            if (id) ids.push(id);
+        });
+        return ids;
     }
 
     function preloadSelectedCities() {
@@ -170,117 +206,44 @@
                         id: cityId,
                         name: city.title || ('Ville #' + cityId),
                         country_code: code,
-                        country: worldCountries[code] || code,
+                        country_name: worldCountries[code] || code,
                     };
                 }
             });
+        });
+
+        (preselectedIncludeCountryIds || []).forEach(function(countryId) {
+            var foundCode = null;
+            Array.from(countrySelect.options).some(function(opt) {
+                var id = opt.getAttribute('data-country-id');
+                if (id && parseInt(id, 10) === parseInt(countryId, 10)) {
+                    foundCode = opt.value;
+                    return true;
+                }
+                return false;
+            });
+            if (foundCode) {
+                state.includeCountry[foundCode] = true;
+                state.countryCodeToId[foundCode] = parseInt(countryId, 10);
+            }
         });
     }
 
     function refreshCountrySelectionFromSelect() {
         state.selectedCountries = new Set(Array.from(countrySelect.options).filter(function(opt) { return opt.selected; }).map(function(opt) { return opt.value; }));
+
         Object.keys(state.includeCountry).forEach(function(code) {
             if (!state.selectedCountries.has(code)) {
                 delete state.includeCountry[code];
             }
         });
+
         Object.keys(state.selectedCities).forEach(function(cityId) {
             var city = state.selectedCities[cityId];
             if (!state.selectedCountries.has(city.country_code) || state.includeCountry[city.country_code]) {
                 delete state.selectedCities[cityId];
             }
         });
-    }
-
-    function renderHiddenInputs() {
-        hiddenLocations.innerHTML = hiddenLocations.querySelectorAll('input[name="locations[]"]').length ? hiddenLocations.innerHTML : '';
-        hiddenCountries.innerHTML = '';
-        hiddenCities.innerHTML = '';
-        hiddenIncludeCountries.innerHTML = '';
-
-        Array.from(state.selectedCountries).forEach(function(code) {
-            var countryInput = document.createElement('input');
-            countryInput.type = 'hidden';
-            countryInput.name = 'countries[]';
-            countryInput.value = code;
-            hiddenCountries.appendChild(countryInput);
-
-            if (state.includeCountry[code]) {
-                var includeInput = document.createElement('input');
-                includeInput.type = 'hidden';
-                includeInput.name = 'include_country[' + code + ']';
-                includeInput.value = '1';
-                hiddenIncludeCountries.appendChild(includeInput);
-
-                var countryId = getCountryId(code);
-                if (countryId) {
-                    var locInput = document.createElement('input');
-                    locInput.type = 'hidden';
-                    locInput.name = 'locations[]';
-                    locInput.value = String(countryId);
-                    hiddenLocations.appendChild(locInput);
-                }
-            }
-        });
-
-        Object.keys(state.selectedCities).forEach(function(cityId) {
-            var city = state.selectedCities[cityId];
-            if (!city || state.includeCountry[city.country_code]) return;
-
-            var cityInput = document.createElement('input');
-            cityInput.type = 'hidden';
-            cityInput.name = 'cities[]';
-            cityInput.value = String(city.id);
-            hiddenCities.appendChild(cityInput);
-
-            var locInput = document.createElement('input');
-            locInput.type = 'hidden';
-            locInput.name = 'locations[]';
-            locInput.value = String(city.id);
-            hiddenLocations.appendChild(locInput);
-        });
-    }
-
-    function renderSelectedCountries() {
-        selectedCountriesWrap.innerHTML = '';
-        Array.from(state.selectedCountries).sort().forEach(function(code) {
-            var wrapper = document.createElement('div');
-            wrapper.className = 'badge bg-light text-dark border p-2 d-flex align-items-center gap-2';
-            wrapper.innerHTML =
-                '<span>' + escapeHtml(worldCountries[code] || code) + '</span>' +
-                '<label class="form-check form-switch mb-0" title="Inclure tout le pays">' +
-                    '<input class="form-check-input include-country-toggle" type="checkbox" data-country-code="' + escapeHtml(code) + '" ' + (state.includeCountry[code] ? 'checked' : '') + '>' +
-                '</label>' +
-                '<button type="button" class="btn btn-sm btn-link p-0 text-danger remove-country-chip" data-country-code="' + escapeHtml(code) + '">×</button>';
-            selectedCountriesWrap.appendChild(wrapper);
-        });
-    }
-
-    function renderSelectedCities() {
-        selectedCitiesWrap.innerHTML = '';
-        var count = 0;
-        Object.keys(state.selectedCities).forEach(function(cityId) {
-            var city = state.selectedCities[cityId];
-            if (!city || state.includeCountry[city.country_code]) return;
-            count += 1;
-            var chip = document.createElement('div');
-            chip.className = 'badge bg-info-subtle text-info border p-2 d-flex align-items-center gap-2';
-            chip.innerHTML =
-                '<span>' + escapeHtml(city.name) + ' (' + escapeHtml(city.country) + ')</span>' +
-                '<button type="button" class="btn btn-sm btn-link p-0 text-danger remove-city-chip" data-city-id="' + escapeHtml(cityId) + '">×</button>';
-            selectedCitiesWrap.appendChild(chip);
-        });
-        selectedCount.textContent = 'Villes (' + count + ') sélectionnées';
-    }
-
-    function renderAllSelections() {
-        renderSelectedCountries();
-        renderSelectedCities();
-        renderHiddenInputs();
-    }
-
-    function getSelectedCountryCodes() {
-        return Array.from(state.selectedCountries);
     }
 
     function ensureLocation(countryCode, cityName) {
@@ -298,13 +261,134 @@
         }).then(function(r) { return r.json(); });
     }
 
+    function ensureSelectedCountriesExist() {
+        var jobs = [];
+        getSelectedCountryCodes().forEach(function(code) {
+            if (getCountryId(code)) return;
+            jobs.push(
+                ensureLocation(code, null).then(function(res) {
+                    if (!res || !res.id) return;
+                    var id = parseInt(res.id, 10);
+                    if (!id) return;
+                    state.countryCodeToId[code] = id;
+                    if (!countryCitiesData[code]) countryCitiesData[code] = { title: worldCountries[code] || code, cities: [] };
+                    countryCitiesData[code].id = id;
+                    Array.from(countrySelect.options).forEach(function(opt) {
+                        if (opt.value === code) opt.setAttribute('data-country-id', String(id));
+                    });
+                }).catch(function() {})
+            );
+        });
+
+        return Promise.all(jobs).then(function() {
+            renderAllSelections();
+        });
+    }
+
+    function renderHiddenInputs() {
+        hiddenDynamicLocations.innerHTML = '';
+        hiddenCountries.innerHTML = '';
+        hiddenCities.innerHTML = '';
+        hiddenIncludeCountries.innerHTML = '';
+
+        getSelectedCountryCodes().forEach(function(code) {
+            var countryId = getCountryId(code);
+            if (!countryId) return;
+
+            var countryInput = document.createElement('input');
+            countryInput.type = 'hidden';
+            countryInput.name = 'countries[]';
+            countryInput.value = String(countryId);
+            hiddenCountries.appendChild(countryInput);
+
+            if (state.includeCountry[code]) {
+                var includeInput = document.createElement('input');
+                includeInput.type = 'hidden';
+                includeInput.name = 'include_country[]';
+                includeInput.value = String(countryId);
+                hiddenIncludeCountries.appendChild(includeInput);
+
+                var countryLocInput = document.createElement('input');
+                countryLocInput.type = 'hidden';
+                countryLocInput.name = 'locations[]';
+                countryLocInput.value = String(countryId);
+                hiddenDynamicLocations.appendChild(countryLocInput);
+            }
+        });
+
+        Object.keys(state.selectedCities).forEach(function(cityId) {
+            var city = state.selectedCities[cityId];
+            if (!city || state.includeCountry[city.country_code]) return;
+
+            var cityInput = document.createElement('input');
+            cityInput.type = 'hidden';
+            cityInput.name = 'cities[]';
+            cityInput.value = String(city.id);
+            hiddenCities.appendChild(cityInput);
+
+            var locInput = document.createElement('input');
+            locInput.type = 'hidden';
+            locInput.name = 'locations[]';
+            locInput.value = String(city.id);
+            hiddenDynamicLocations.appendChild(locInput);
+        });
+    }
+
+    function renderSelectedCountries() {
+        selectedCountriesWrap.innerHTML = '';
+
+        getSelectedCountryCodes().sort().forEach(function(code) {
+            var countryId = getCountryId(code);
+            var wrapper = document.createElement('div');
+            wrapper.className = 'badge bg-light text-dark border p-2 d-flex align-items-center gap-2';
+            wrapper.innerHTML =
+                '<span>' + escapeHtml(worldCountries[code] || code) + (state.includeCountry[code] ? ' <span class="badge bg-warning text-dark ms-1">Pays entier</span>' : '') + '</span>' +
+                '<label class="form-check form-switch mb-0" title="Inclure le pays entier">' +
+                    '<input class="form-check-input include-country-toggle" type="checkbox" data-country-code="' + escapeHtml(code) + '" data-country-id="' + escapeHtml(countryId || '') + '" ' + (state.includeCountry[code] ? 'checked' : '') + '>' +
+                '</label>' +
+                '<button type="button" class="btn btn-sm btn-link p-0 text-danger remove-country-chip" data-country-code="' + escapeHtml(code) + '">×</button>';
+            selectedCountriesWrap.appendChild(wrapper);
+        });
+    }
+
+    function renderSelectedCities() {
+        selectedCitiesWrap.innerHTML = '';
+        var cityCount = 0;
+
+        Object.keys(state.selectedCities).forEach(function(cityId) {
+            var city = state.selectedCities[cityId];
+            if (!city || state.includeCountry[city.country_code]) return;
+
+            cityCount += 1;
+            var chip = document.createElement('div');
+            chip.className = 'badge bg-info-subtle text-info border p-2 d-flex align-items-center gap-2';
+            chip.innerHTML =
+                '<span>' + escapeHtml(city.name) + ' (' + escapeHtml(city.country_name || city.country_code || '') + ')</span>' +
+                '<button type="button" class="btn btn-sm btn-link p-0 text-danger remove-city-chip" data-city-id="' + escapeHtml(cityId) + '">×</button>';
+            selectedCitiesWrap.appendChild(chip);
+        });
+
+        selectedCount.textContent = '(' + cityCount + ')';
+        var destinationCount = getSelectedCountryCodes().length + cityCount;
+        selectedGlobalCount.textContent = destinationCount + ' destination(s) sélectionnée(s)';
+    }
+
+    function renderAllSelections() {
+        renderSelectedCountries();
+        renderSelectedCities();
+        renderHiddenInputs();
+    }
+
     function renderCityResults(items, meta) {
         cityResults.innerHTML = '';
-        if (!Array.isArray(items) || items.length === 0) {
+
+        if (!Array.isArray(items) || !items.length) {
             cityResults.innerHTML = '<div class="list-group-item text-muted">Aucune ville trouvée.</div>';
         } else {
             items.forEach(function(item) {
-                var isIncludedByCountry = !!state.includeCountry[item.country_code];
+                var countryCode = item.country_code || '';
+                var countryName = item.country_name || item.country || countryCode;
+                var isIncludedByCountry = !!state.includeCountry[countryCode];
                 var alreadySelected = item.id && !!state.selectedCities[item.id];
                 var disabled = isIncludedByCountry ? 'disabled' : '';
                 var label = isIncludedByCountry ? 'Pays inclus' : (alreadySelected ? 'Ajoutée' : 'Ajouter');
@@ -314,35 +398,36 @@
                 row.innerHTML =
                     '<div>' +
                         '<div class="fw-medium">' + escapeHtml(item.name) + '</div>' +
-                        '<div class="small text-muted">' + escapeHtml(item.country || item.country_code || '') + '</div>' +
+                        '<div class="small text-muted">🌍 ' + escapeHtml(countryName) + '</div>' +
                     '</div>' +
                     '<button type="button" class="btn btn-sm btn-outline-primary add-city-btn" ' + disabled +
-                        ' data-city-id="' + escapeHtml(item.id || '') + '" data-city-name="' + escapeHtml(item.name || '') +
-                        '" data-country-code="' + escapeHtml(item.country_code || '') + '" data-country-name="' + escapeHtml(item.country || '') + '">' + label + '</button>';
+                        ' data-city-id="' + escapeHtml(item.id || '') + '" data-city-name="' + escapeHtml(item.name || '') + '"' +
+                        ' data-country-code="' + escapeHtml(countryCode) + '" data-country-id="' + escapeHtml(item.country_id || '') + '" data-country-name="' + escapeHtml(countryName) + '">' + label + '</button>';
                 cityResults.appendChild(row);
             });
         }
 
         var total = meta && meta.total ? meta.total : 0;
         var page = meta && meta.page ? meta.page : 1;
-        var lastPage = meta && meta.last_page ? meta.last_page : 1;
-        cityMeta.textContent = total + ' résultat(s) • Page ' + page + '/' + lastPage;
+        var totalPages = meta && (meta.total_pages || meta.last_page) ? (meta.total_pages || meta.last_page) : 1;
+
+        cityMeta.textContent = total + ' résultat(s) • Page ' + page + '/' + totalPages;
         prevBtn.disabled = page <= 1;
-        nextBtn.disabled = page >= lastPage;
+        nextBtn.disabled = page >= totalPages;
         state.page = page;
-        state.lastPage = lastPage;
+        state.lastPage = totalPages;
     }
 
     function fetchCities() {
-        var countries = getSelectedCountryCodes();
-        if (!countries.length) {
-            renderCityResults([], { total: 0, page: 1, last_page: 1 });
+        var countryIds = getSelectedCountryIds();
+        if (!countryIds.length) {
+            renderCityResults([], { total: 0, page: 1, total_pages: 1 });
             cityMeta.textContent = 'Sélectionnez un ou plusieurs pays.';
             return;
         }
 
         var params = new URLSearchParams();
-        countries.forEach(function(code) { params.append('country_ids[]', code); });
+        countryIds.forEach(function(id) { params.append('country_ids[]', id); });
         params.append('q', state.q || '');
         params.append('page', String(state.page || 1));
 
@@ -354,9 +439,21 @@
                 renderCityResults(payload.data || [], payload.meta || {});
             })
             .catch(function() {
-                renderCityResults([], { total: 0, page: 1, last_page: 1 });
+                renderCityResults([], { total: 0, page: 1, total_pages: 1 });
                 cityMeta.textContent = 'Erreur de chargement des villes.';
             });
+    }
+
+    function triggerCountryChange() {
+        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+            window.jQuery(countrySelect).trigger('change');
+        } else {
+            refreshCountrySelectionFromSelect();
+            state.page = 1;
+            ensureSelectedCountriesExist().then(function() {
+                fetchCities();
+            });
+        }
     }
 
     function enhanceCountrySelect() {
@@ -369,45 +466,57 @@
             $select.on('change', function() {
                 refreshCountrySelectionFromSelect();
                 state.page = 1;
-                renderAllSelections();
-                fetchCities();
+                ensureSelectedCountriesExist().then(function() {
+                    fetchCities();
+                });
             });
             return;
         }
+
         countrySelect.addEventListener('change', function() {
             refreshCountrySelectionFromSelect();
             state.page = 1;
-            renderAllSelections();
-            fetchCities();
+            ensureSelectedCountriesExist().then(function() {
+                fetchCities();
+            });
         });
     }
 
     selectedCountriesWrap.addEventListener('change', function(e) {
         var toggle = e.target.closest('.include-country-toggle');
         if (!toggle) return;
-        var code = toggle.getAttribute('data-country-code');
-        if (!code) return;
+
+        var countryCode = toggle.getAttribute('data-country-code');
+        var countryId = parseInt(toggle.getAttribute('data-country-id') || '0', 10) || null;
+        if (!countryCode) return;
 
         if (toggle.checked) {
-            state.includeCountry[code] = true;
+            state.includeCountry[countryCode] = true;
+            if (countryId) {
+                state.countryCodeToId[countryCode] = countryId;
+            }
             Object.keys(state.selectedCities).forEach(function(cityId) {
-                if (state.selectedCities[cityId] && state.selectedCities[cityId].country_code === code) {
+                var city = state.selectedCities[cityId];
+                if (city && city.country_code === countryCode) {
                     delete state.selectedCities[cityId];
                 }
             });
 
-            var countryId = getCountryId(code);
-            if (!countryId) {
-                ensureLocation(code, null).then(function(res) {
+            if (!getCountryId(countryCode)) {
+                ensureLocation(countryCode, null).then(function(res) {
                     if (res && res.id) {
-                        if (!countryCitiesData[code]) countryCitiesData[code] = { title: worldCountries[code] || code, cities: [] };
-                        countryCitiesData[code].id = parseInt(res.id, 10);
+                        state.countryCodeToId[countryCode] = parseInt(res.id, 10);
+                        if (!countryCitiesData[countryCode]) countryCitiesData[countryCode] = { title: worldCountries[countryCode] || countryCode, cities: [] };
+                        countryCitiesData[countryCode].id = parseInt(res.id, 10);
+                        Array.from(countrySelect.options).forEach(function(opt) {
+                            if (opt.value === countryCode) opt.setAttribute('data-country-id', String(res.id));
+                        });
                         renderAllSelections();
                     }
                 });
             }
         } else {
-            delete state.includeCountry[code];
+            delete state.includeCountry[countryCode];
         }
 
         renderAllSelections();
@@ -417,27 +526,26 @@
     selectedCountriesWrap.addEventListener('click', function(e) {
         var removeBtn = e.target.closest('.remove-country-chip');
         if (!removeBtn) return;
+
         var code = removeBtn.getAttribute('data-country-code');
         if (!code) return;
 
         Array.from(countrySelect.options).forEach(function(opt) {
-            if (opt.value === code) opt.selected = false;
+            if (opt.value === code) {
+                opt.selected = false;
+            }
         });
-        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-            window.jQuery(countrySelect).trigger('change');
-        } else {
-            refreshCountrySelectionFromSelect();
-            delete state.includeCountry[code];
-            renderAllSelections();
-            fetchCities();
-        }
+        delete state.includeCountry[code];
+        triggerCountryChange();
     });
 
     selectedCitiesWrap.addEventListener('click', function(e) {
         var removeBtn = e.target.closest('.remove-city-chip');
         if (!removeBtn) return;
+
         var cityId = removeBtn.getAttribute('data-city-id');
         if (!cityId) return;
+
         delete state.selectedCities[cityId];
         renderAllSelections();
         fetchCities();
@@ -451,7 +559,12 @@
         var cityName = addBtn.getAttribute('data-city-name') || '';
         var countryCode = addBtn.getAttribute('data-country-code') || '';
         var countryName = addBtn.getAttribute('data-country-name') || (worldCountries[countryCode] || countryCode);
+        var countryId = parseInt(addBtn.getAttribute('data-country-id') || '0', 10) || null;
+
         if (!countryCode || state.includeCountry[countryCode]) return;
+        if (countryId) {
+            state.countryCodeToId[countryCode] = countryId;
+        }
 
         var numericCityId = cityIdRaw ? parseInt(cityIdRaw, 10) : null;
         if (numericCityId) {
@@ -459,7 +572,7 @@
                 id: numericCityId,
                 name: cityName,
                 country_code: countryCode,
-                country: countryName,
+                country_name: countryName,
             };
             renderAllSelections();
             fetchCities();
@@ -474,7 +587,7 @@
                 id: newId,
                 name: res.title || cityName,
                 country_code: countryCode,
-                country: countryName,
+                country_name: countryName,
             };
             renderAllSelections();
             fetchCities();
@@ -510,28 +623,14 @@
 
     selectAllBtn.addEventListener('click', function() {
         Array.from(countrySelect.options).forEach(function(opt) { opt.selected = true; });
-        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-            window.jQuery(countrySelect).trigger('change');
-        } else {
-            refreshCountrySelectionFromSelect();
-            state.page = 1;
-            renderAllSelections();
-            fetchCities();
-        }
+        triggerCountryChange();
     });
 
     deselectAllBtn.addEventListener('click', function() {
         Array.from(countrySelect.options).forEach(function(opt) { opt.selected = false; });
         state.selectedCities = {};
         state.includeCountry = {};
-        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-            window.jQuery(countrySelect).trigger('change');
-        } else {
-            refreshCountrySelectionFromSelect();
-            state.page = 1;
-            renderAllSelections();
-            fetchCities();
-        }
+        triggerCountryChange();
     });
 
     clearCitiesBtn.addEventListener('click', function() {
@@ -543,7 +642,9 @@
     preloadSelectedCities();
     enhanceCountrySelect();
     refreshCountrySelectionFromSelect();
-    renderAllSelections();
-    fetchCities();
+    ensureSelectedCountriesExist().then(function() {
+        renderAllSelections();
+        fetchCities();
+    });
 })();
 </script>

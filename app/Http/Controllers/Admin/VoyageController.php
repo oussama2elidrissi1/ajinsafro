@@ -575,7 +575,7 @@ class VoyageController extends Controller
 
     /**
      * AJAX endpoint: search/filter cities by selected countries.
-     * GET /admin/locations/cities?country_ids[]=MA&q=casa&page=1
+        * GET /admin/locations/cities?country_ids[]=123&q=casa&page=1
      */
     public function locationsCities(Request $request): JsonResponse
     {
@@ -639,7 +639,7 @@ class VoyageController extends Controller
                 $rows[] = [
                     'id' => !empty($city['id']) ? (int) $city['id'] : null,
                     'name' => $cityName,
-                    'country' => $countryName,
+                    'country_name' => $countryName,
                     'country_code' => $code,
                     'country_id' => $countryWpId,
                     'needs_create' => (bool) ($city['needsCreate'] ?? false),
@@ -663,7 +663,7 @@ class VoyageController extends Controller
                 'page' => $page,
                 'per_page' => $perPage,
                 'total' => $total,
-                'last_page' => $lastPage,
+                'total_pages' => $lastPage,
             ],
         ]);
     }
