@@ -58,6 +58,11 @@
             <div class="card h-100">
                 <div class="card-body">
                     <label for="destinationCountrySelect" class="form-label fw-semibold">Pays</label>
+                    <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                        <input type="text" id="country-filter" class="form-control" style="max-width: 320px;" placeholder="Rechercher un pays...">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="country-filter-reset">Réinitialiser</button>
+                        <span class="small text-muted ms-auto" id="country-filter-count">0 résultats</span>
+                    </div>
                     <select id="destinationCountrySelect" class="form-select" multiple>
                         @foreach($worldCountries as $code => $name)
                             <option value="{{ $code }}" data-country-id="{{ $countryCitiesData[$code]['id'] ?? '' }}" {{ isset($preselectedCountryCodes[$code]) ? 'selected' : '' }}>{{ $name }}</option>
@@ -126,6 +131,9 @@
     if (!root) return;
 
     var countrySelect = document.getElementById('destinationCountrySelect');
+    var countryFilterInput = document.getElementById('country-filter');
+    var countryFilterResetBtn = document.getElementById('country-filter-reset');
+    var countryFilterCount = document.getElementById('country-filter-count');
     var selectAllBtn = document.getElementById('destinationSelectAllCountriesModern');
     var deselectAllBtn = document.getElementById('destinationDeselectAllCountriesModern');
     var citySearchInput = document.getElementById('destinationCitySearchModern');
@@ -164,6 +172,35 @@
 
     function escapeHtml(str) {
         return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function normalizeText(str) {
+        return String(str || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function applyCountryFilter() {
+        var term = normalizeText(countryFilterInput ? countryFilterInput.value : '');
+        var visibleCount = 0;
+
+        Array.from(countrySelect.options).forEach(function(opt) {
+            var label = normalizeText(opt.textContent || opt.innerText || '');
+            var match = !term || label.indexOf(term) !== -1;
+            opt.hidden = !match;
+            if (match) {
+                visibleCount += 1;
+            }
+        });
+
+        if (countryFilterCount) {
+            countryFilterCount.textContent = visibleCount + ' résultat' + (visibleCount > 1 ? 's' : '');
+        }
+
+        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+            window.jQuery(countrySelect).trigger('change.select2');
+        }
     }
 
     function getCountryId(code) {
@@ -609,6 +646,19 @@
         }
     });
 
+    if (countryFilterInput) {
+        countryFilterInput.addEventListener('keyup', applyCountryFilter);
+    }
+
+    if (countryFilterResetBtn) {
+        countryFilterResetBtn.addEventListener('click', function() {
+            if (countryFilterInput) {
+                countryFilterInput.value = '';
+            }
+            applyCountryFilter();
+        });
+    }
+
     prevBtn.addEventListener('click', function() {
         if (state.page <= 1) return;
         state.page -= 1;
@@ -642,6 +692,7 @@
     preloadSelectedCities();
     enhanceCountrySelect();
     refreshCountrySelectionFromSelect();
+    applyCountryFilter();
     ensureSelectedCountriesExist().then(function() {
         renderAllSelections();
         fetchCities();
