@@ -46,7 +46,6 @@
                         <div class="mb-3">
                             <label for="slug" class="form-label">Slug (URL)</label>
                             <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug') }}" placeholder="laissez vide pour générer automatiquement">
-                            <small class="text-muted">Sera visible sur : ajinsafro.net/tours/<strong>votre-slug</strong></small>
                         </div>
 
                         <div class="mb-3">
@@ -106,11 +105,6 @@
                                 <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible</p>
                             @endif
                         </div>
-                        
-                        <small class="text-muted d-block mt-2" style="font-size: 12px; color: #646970;">
-                            <i class="bx bx-info-circle"></i> 
-                            <span id="locationCountTextCreate">0 location(s) sélectionnée(s)</span>
-                        </small>
 
                         <div class="mb-3">
                             <label for="duration_text" class="form-label">Durée</label>
@@ -145,13 +139,11 @@
                         <div class="mb-3">
                             <label for="hero_image_id" class="form-label">Image principale du voyage (Hero / Cover)</label>
                             <input type="number" class="form-control" id="hero_image_id" name="hero_image_id" value="{{ old('hero_image_id') }}" placeholder="Ex. 14434" min="0">
-                            <small class="text-muted">ID de l'attachment. Utilisée en priorité pour hero, cartes et partage. Une seule image.</small>
                         </div>
 
                         {{-- Galerie Hero (5 images) --}}
                         <div class="mb-4 p-3 border rounded bg-light">
                             <h5 class="mb-2" style="font-size: 14px; font-weight: 600;">Galerie Hero (5 images)</h5>
-                            <p class="text-muted small mb-3">Sélectionnez exactement 5 images pour la galerie hero (1 principale + 4 secondaires).</p>
                             @php
                                 $hero_gallery_ids = old('hero_gallery_ids', []);
                                 if (!is_array($hero_gallery_ids)) {
@@ -197,22 +189,16 @@
                                     </div>
                                 @endfor
                             </div>
-                            <small class="text-muted d-block mt-2" style="font-size: 11px;">
-                                <i class="bx bx-info-circle"></i> 
-                                L'image principale sera affichée en grand à gauche, les 4 autres en grille 2x2 à droite.
-                            </small>
                         </div>
 
                         <div class="mb-3">
                             <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
                             <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id') }}" placeholder="14434">
-                            <small class="text-muted">Image à la une WordPress (secours si pas d'image principale)</small>
                         </div>
 
                         <div class="mb-3">
                             <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids') }}" placeholder="14435,14436,14437">
-                            <small class="text-muted">IDs séparés par des virgules. Images supplémentaires pour la section galerie complète (optionnel).</small>
                         </div>
                         
                         <div class="form-check mb-3">
@@ -223,7 +209,6 @@
                         </div>
                         
                         <hr>
-                        <p class="text-muted small"><i class="bx bx-info-circle"></i> Les champs Traveler avancés (tarification, réductions, taxonomies...) sont modifiables après création.</p>
                     </div>
                 </div>
             </div>
@@ -444,11 +429,6 @@
             </div>
         </div>
     </form>
-    
-    <div class="alert alert-info mt-3">
-        <i class="mdi mdi-information me-2"></i>
-        <strong>Note :</strong> Le tour sera créé directement dans la base de données WordPress et sera immédiatement visible sur ajinsafro.net après publication.
-    </div>
 @endsection
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>

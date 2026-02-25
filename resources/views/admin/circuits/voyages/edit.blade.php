@@ -40,18 +40,12 @@
         </div>
     @endif
 
-    <div class="alert alert-info mb-3">
-        <i class="mdi mdi-information me-2"></i>
-        <strong>Admin aligné avec WordPress Traveler</strong> - Tous les champs ci-dessous écrivent directement dans la DB WordPress (cFdgeZ_postmeta + taxonomies).
-    </div>
-
     <form action="{{ $isCreate ? route('admin.circuits.voyages.store') : route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST" id="edit-voyage-form" data-voyage-id="{{ $voyage->ID ?? 0 }}">
         @csrf
         @if (!$isCreate)
             @method('PUT')
         @endif
 
-        {{-- NAVIGATION TABS --}}
         <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
             <li class="nav-item">
                 <a class="nav-link active" data-bs-toggle="tab" href="#basic" role="tab">
@@ -132,7 +126,6 @@
         </ul>
 
         <div class="tab-content p-3 border border-top-0">
-            {{-- TAB 1: BASIC --}}
             <div class="tab-pane active" id="basic" role="tabpanel">
                 <div class="row">
                     <div class="col-lg-8">
@@ -148,7 +141,6 @@
                                 <div class="mb-3">
                                     <label for="slug" class="form-label">Slug (URL)</label>
                                     <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug', $voyage->post_name) }}">
-                                    <small class="text-muted">URL: ajinsafro.net/tours/<strong>{{ $voyage->post_name }}</strong></small>
                                 </div>
 
                                 <div class="mb-3">
@@ -180,7 +172,7 @@
 
                                 <div class="mb-3">
                                     <label for="duration_day" class="form-label">Durée (jours)</label>
-                                    <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly tabindex="-1" title="Calculé automatiquement depuis le Programme (onglet Programme)">
+                                    <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly>
                                 </div>
 
                                 <div class="mb-3">
@@ -220,7 +212,6 @@
                                 <div class="mb-3">
                                     <label for="st_tour_external_booking" class="form-label">Lien réservation externe</label>
                                     <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
-                                    <small class="text-muted">Optionnel</small>
                                 </div>
                             </div>
                         </div>
@@ -228,7 +219,6 @@
                 </div>
             </div>
 
-            {{-- TAB 2: LOCATION — Destination UX (search, tree, chips, actions) --}}
             <div class="tab-pane" id="location" role="tabpanel">
                 <style>
                 .destination-ux-card { border: 1px solid #dee2e6; border-radius: 6px; }
@@ -396,7 +386,6 @@
                                 <div class="mb-3">
                                     <label for="location_id" class="form-label">Location ID (alias)</label>
                                     <input type="number" class="form-control" id="location_id" name="location_id" value="{{ old('location_id', $meta['location_id'] ?? '') }}">
-                                    <small class="text-muted">Champ optionnel, peut rester vide</small>
                                 </div>
                             </div>
                             
@@ -431,7 +420,6 @@
                         <div class="mb-3">
                             <label for="st_google_map" class="form-label">Google Map (iframe code)</label>
                             <textarea class="form-control" id="st_google_map" name="st_google_map" rows="4">{{ old('st_google_map', $meta['st_google_map'] ?? '') }}</textarea>
-                            <small class="text-muted">Collez le code iframe complet de Google Maps</small>
                         </div>
                         
                         <h5 class="mb-3 mt-4">Informations de contact</h5>
@@ -458,7 +446,6 @@
                                 <div class="mb-3">
                                     <label for="website" class="form-label">Site web</label>
                                     <input type="text" class="form-control" id="website" name="website" value="{{ old('website', $meta['website'] ?? '') }}" placeholder="https://...">
-                                    <small class="text-muted">Optionnel</small>
                                 </div>
                             </div>
                         </div>
@@ -546,25 +533,21 @@
                         <div class="mb-3">
                             <label for="tours_include" class="form-label">Ce qui est inclus</label>
                             <textarea class="form-control" id="tours_include" name="tours_include" rows="6">{{ old('tours_include', $meta['tours_include'] ?? '') }}</textarea>
-                            <small class="text-muted">HTML accepté</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_exclude" class="form-label">Ce qui n'est pas inclus</label>
                             <textarea class="form-control" id="tours_exclude" name="tours_exclude" rows="6">{{ old('tours_exclude', $meta['tours_exclude'] ?? '') }}</textarea>
-                            <small class="text-muted">HTML accepté</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_highlight" class="form-label">Points forts</label>
                             <textarea class="form-control" id="tours_highlight" name="tours_highlight" rows="6">{{ old('tours_highlight', $meta['tours_highlight'] ?? '') }}</textarea>
-                            <small class="text-muted">HTML accepté</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_faq" class="form-label">FAQ</label>
                             <textarea class="form-control" id="tours_faq" name="tours_faq" rows="6">{{ old('tours_faq', $meta['tours_faq'] ?? '') }}</textarea>
-                            <small class="text-muted">HTML accepté</small>
                         </div>
                         
                         <div class="mb-3">
@@ -583,7 +566,6 @@
                 <div class="card mt-3">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Moyens de paiement</h4>
-                        <p class="text-muted">Cochez les passerelles de paiement disponibles pour ce tour</p>
                         
                         <div class="row">
                             <div class="col-lg-4">
@@ -707,13 +689,11 @@
                         <div class="mb-3">
                             <label for="ical_url" class="form-label">URL calendrier iCal</label>
                             <input type="text" class="form-control" id="ical_url" name="ical_url" value="{{ old('ical_url', $meta['ical_url'] ?? '') }}" placeholder="https://...">
-                            <small class="text-muted">Optionnel</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- TAB 6: MEDIA --}}
             <div class="tab-pane" id="media" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
@@ -722,7 +702,6 @@
                         {{-- Section 1 : Image principale (Hero / Cover) — Upload ou médiathèque --}}
                         <div class="mb-4 p-3 border rounded bg-light">
                             <h5 class="mb-2">Image principale du voyage (Hero / Cover)</h5>
-                            <p class="text-muted small mb-2">Cette image est utilisée comme image principale du voyage (hero, cartes, partage social). Une seule image.</p>
                             <input type="hidden" name="hero_image_id" id="hero_image_id" value="{{ old('hero_image_id', $meta['hero_image_id'] ?? '') }}">
                             <div class="d-flex flex-wrap align-items-start gap-3">
                                 <div id="hero-image-preview-wrap" class="border rounded overflow-hidden bg-white" style="width: 200px; min-height: 120px; display: {{ ($heroImageUrl ?? '') ? 'block' : 'none' }};">
@@ -760,13 +739,11 @@
                         <div class="mb-3">
                             <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
                             <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id', $meta['thumbnail_id'] ?? '') }}" placeholder="14434">
-                            <small class="text-muted">Utilisée en secours si aucune image principale. Peut être synchronisée via la case ci-dessus.</small>
                         </div>
 
                         {{-- Section 3 : Galerie Hero (5 images pour la galerie hero) --}}
                         <div class="mb-4 p-3 border rounded bg-light">
                             <h5 class="mb-2">Galerie Hero (5 images)</h5>
-                            <p class="text-muted small mb-3">Sélectionnez exactement 5 images pour la galerie hero (1 principale + 4 secondaires). Ces images seront affichées dans la section hero de la page détail.</p>
                             @php
                                 $hero_gallery_ids = old('hero_gallery_ids', isset($meta['hero_gallery_ids']) && $meta['hero_gallery_ids'] !== null ? explode(',', (string) $meta['hero_gallery_ids']) : []);
                                 if (!is_array($hero_gallery_ids)) {
@@ -812,22 +789,16 @@
                                     </div>
                                 @endfor
                             </div>
-                            <small class="text-muted d-block mt-2">
-                                <i class="bx bx-info-circle"></i> 
-                                L'image principale sera affichée en grand à gauche, les 4 autres en grille 2x2 à droite.
-                            </small>
                         </div>
 
                         <div class="mb-3">
                             <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids', $gallery_csv ?? '') }}" placeholder="14435,14436,14437">
-                            <small class="text-muted">IDs séparés par des virgules. Images supplémentaires pour la section galerie complète (optionnel).</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="video" class="form-label">URL Vidéo</label>
                             <input type="text" class="form-control" id="video" name="video" value="{{ old('video', $meta['video'] ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
-                            <small class="text-muted">YouTube, Vimeo, etc. (Optionnel)</small>
                         </div>
                     </div>
                 </div>
@@ -1171,7 +1142,6 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Catégories & Taxonomies</h4>
-                        <p class="text-muted">Ces catégories sont synchronisées avec WordPress</p>
                         
                         <div class="row">
                             @if(isset($availableTaxonomies['st_tour_type']) && $availableTaxonomies['st_tour_type']->isNotEmpty())
@@ -1280,15 +1250,11 @@
                 @php
                     $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1));
                 @endphp
-                <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> <strong>Transferts</strong> — Vous pouvez ajouter plusieurs transferts (arrivée et départ) et les associer à un jour spécifique du circuit.</p>
-                <p class="text-muted small mb-2">Vous pouvez ajouter une <strong>image</strong> pour chaque transfert ; elles s'affichent sur la fiche circuit (site WordPress).</p>
                 <h5 class="mb-3"><i class="bx bx-car"></i> Transferts (plusieurs par jour possible)</h5>
 
                 <div id="tour-transfers-anchor">
                     @include('admin.circuits.voyages.partials._tour_transfers_section')
                 </div>
-
-                <p class="text-muted small">Vous pouvez ajouter plusieurs transferts et les associer à un jour. Chaque transfert peut être configuré avec ses détails (De, À, heures, véhicule, notes, image).</p>
             </div>
 
             {{-- TAB LIEUX DE DÉPART — Lecture seule ; édition dans l'onglet Vols --}}
@@ -1531,22 +1497,13 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Activités</h4>
-                        <p class="text-muted mb-3">Les activités sont gérées dans l'onglet <strong>Programme</strong> où vous pouvez les associer à chaque jour du circuit.</p>
                         @if(Route::has('admin.circuits.activities.index'))
-                        <div class="alert alert-info">
-                            <i class="bx bx-info-circle me-2"></i>
-                            <strong>Catalogue d'activités</strong> — Gérez le catalogue complet des activités disponibles pour tous les circuits.
-                            <div class="mt-2">
-                                <a href="{{ route('admin.circuits.activities.index') }}" class="btn btn-sm btn-primary" target="_blank">
-                                    <i class="bx bx-list-ul me-1"></i> Ouvrir le catalogue d'activités
-                                </a>
-                            </div>
+                        <div class="mb-3">
+                            <a href="{{ route('admin.circuits.activities.index') }}" class="btn btn-primary" target="_blank">
+                                <i class="bx bx-list-ul me-1"></i> Catalogue d'activités
+                            </a>
                         </div>
                         @endif
-                        <div class="alert alert-warning">
-                            <i class="bx bx-info-circle me-2"></i>
-                            <strong>Note :</strong> Pour ajouter des activités à un jour spécifique du circuit, utilisez l'onglet <strong>Programme</strong>.
-                        </div>
                     </div>
                 </div>
             </div>
