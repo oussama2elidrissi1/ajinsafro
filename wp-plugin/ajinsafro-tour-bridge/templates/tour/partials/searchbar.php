@@ -227,14 +227,23 @@ $available_dates_json = wp_json_encode($available_dates);
             <span class="aj-search-label"><?php esc_html_e('Starting from', 'ajinsafro-tour-bridge'); ?></span>
             <div class="aj-search-value-wrap">
                 <svg class="aj-search-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                <?php if (!empty($departure_places)): ?>
+                <?php
+                $select_places = (!empty($tour['departure_places']) && is_array($tour['departure_places'])) ? $tour['departure_places'] : $departure_places;
+                if (!empty($select_places)): ?>
                     <select class="aj-search-select" id="aj-search-from" data-aj-search="from" aria-label="<?php esc_attr_e('Ville de départ', 'ajinsafro-tour-bridge'); ?>">
                         <option value=""><?php esc_html_e('Choisir', 'ajinsafro-tour-bridge'); ?></option>
-                        <?php foreach ($departure_places as $place): ?>
-                            <option value="<?php echo esc_attr($place['id']); ?>" <?php selected($start_from, $place['id']); ?>>
-                                <?php echo esc_html($place['name']); ?>
-                                <?php if (!empty($place['code'])): ?>
-                                    (<?php echo esc_html($place['code']); ?>)
+                        <?php foreach ($select_places as $place): ?>
+                            <?php
+                            $place_name = isset($place['name']) ? (string) $place['name'] : '';
+                            $place_id = isset($place['id']) ? (string) $place['id'] : '';
+                            $place_code = isset($place['code']) ? (string) $place['code'] : '';
+                            $opt_value = $place_id !== '' ? $place_id : $place_name;
+                            $is_selected = ($start_from === $place_name || $start_from === $place_id);
+                            ?>
+                            <option value="<?php echo esc_attr($opt_value); ?>" data-id="<?php echo esc_attr($place_id); ?>" data-code="<?php echo esc_attr($place_code); ?>"<?php if ($is_selected) echo ' selected="selected"'; ?>>
+                                <?php echo esc_html($place_name !== '' ? $place_name : $place_id); ?>
+                                <?php if ($place_code !== ''): ?>
+                                    (<?php echo esc_html($place_code); ?>)
                                 <?php endif; ?>
                             </option>
                         <?php endforeach; ?>
@@ -364,11 +373,17 @@ jQuery(document).ready(function($) {
             
             // Build flight cards (from_airport/from_city, to_airport/to_city for Laravel sync or legacy)
             var html = '';
-            selectedPlace.flights.forEach(function(flight) {
+            selectedPlace.flights.forEach(function(flight, index) {
                 var from = flight.from_airport || flight.from_city || '';
                 var to = flight.to_airport || flight.to_city || '';
+                var cardPlaceId = (flight.departure_place_id != null && String(flight.departure_place_id).trim() !== '') ? String(flight.departure_place_id).trim() : (selectedPlace.id != null ? String(selectedPlace.id).trim() : '');
+                var cardPlaceName = (flight.departure_place_name != null && String(flight.departure_place_name).trim() !== '') ? String(flight.departure_place_name).trim() : (selectedPlace.name != null ? String(selectedPlace.name).trim() : '');
+                var cardPlaceCode = (flight.departure_place_code != null && String(flight.departure_place_code).trim() !== '') ? String(flight.departure_place_code).trim() : (selectedPlace.code != null ? String(selectedPlace.code).trim() : '');
                 if (!from && !to && !flight.flight_number) return;
-                html += '<div class="aj-flight-card">';
+                if (index === 0) {
+                    console.log('[AJTB] selectedPlace.flights[0]:', flight);
+                }
+                html += '<div class="aj-flight-card" data-departure-place-id="' + escapeHtml(cardPlaceId) + '" data-departure-place-name="' + escapeHtml(cardPlaceName) + '" data-departure-place-code="' + escapeHtml(cardPlaceCode) + '">';
                 html += '<div class="aj-flight-card__row">';
                 if (flight.airline) {
                     html += '<div class="aj-flight-info"><span class="aj-flight-label">Compagnie:</span> <strong>' + escapeHtml(flight.airline) + '</strong></div>';
@@ -406,7 +421,7 @@ jQuery(document).ready(function($) {
 
         // Filter programme outbound flight cards by selected "Starting from" place
         function filterProgrammeOutboundFlightsByPlace(placeId) {
-            var cards = document.querySelectorAll('.ajtb-day-flight-outbound .aj-flight-card[data-departure-place-name], .ajtb-day-flight-outbound .aj-flight-card[data-departure-place-id]');
+            var cards = document.querySelectorAll('.ajtb-day-flight-block.ajtb-day-flight-outbound[data-aj-day-number="1"] .aj-flight-card[data-departure-place-name], .ajtb-day-flight-block.ajtb-day-flight-outbound[data-aj-day-number="1"] .aj-flight-card[data-departure-place-id]');
             if (!cards.length) return;
             var isNumeric = placeId !== '' && /^\d+$/.test(String(placeId));
             cards.forEach(function(card) {

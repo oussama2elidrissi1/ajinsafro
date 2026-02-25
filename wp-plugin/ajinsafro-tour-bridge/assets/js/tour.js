@@ -57,62 +57,22 @@
         },
 
         /**
-         * Normalize #aj-search-from value to {id, name, code} for matching cards.
-         * id is ONLY numeric: never set id to rawVal or name string.
-         * - rawVal numeric => id = rawVal, lookup name/code from places
-         * - "name|code" => name + code, lookup place => id = String(place.id) only if place.id is numeric
-         * - "name" => name, lookup place => id = String(place.id) only if numeric
+         * Normalize "Starting from" from the selected <option> of #aj-search-from.
+         * Priorité: option sélectionnée → out.id = opt.dataset.id (si numérique), out.code = opt.dataset.code, out.name = opt.textContent.trim().
+         * Ne dépend pas du JSON data-departure-places.
          */
-        normalizeStartingFrom: function(rawValue) {
+        normalizeStartingFrom: function() {
             var out = { id: '', name: '', code: '' };
-            var raw = (rawValue !== undefined && rawValue !== null) ? String(rawValue).trim() : '';
-            if (raw === '') return out;
-            var placesJson = $('#aj-searchbar').attr('data-departure-places') || '[]';
-            var places = [];
-            try {
-                places = JSON.parse(placesJson);
-            } catch (e) {}
-            if (/^\d+$/.test(raw)) {
-                out.id = raw;
-                for (var i = 0; i < places.length; i++) {
-                    var p = places[i];
-                    if (p && String(p.id) === raw) {
-                        out.name = (p.name != null) ? String(p.name).trim() : '';
-                        out.code = (p.code != null) ? String(p.code).trim() : '';
-                        break;
-                    }
-                }
-                return out;
-            }
-            if (raw.indexOf('|') >= 0) {
-                var parts = raw.split('|');
-                var n = (parts[0] != null) ? String(parts[0]).trim() : '';
-                var c = (parts[1] != null) ? String(parts[1]).trim() : '';
-                out.name = n;
-                out.code = c;
-                for (var j = 0; j < places.length; j++) {
-                    var q = places[j];
-                    if (!q) continue;
-                    var qn = (q.name != null) ? String(q.name).trim() : '';
-                    var qc = (q.code != null) ? String(q.code).trim() : '';
-                    if (qn.toLowerCase() === n.toLowerCase() && qc === c) {
-                        var pid = (q.id != null) ? String(q.id) : '';
-                        if (/^\d+$/.test(pid)) out.id = pid;
-                        break;
-                    }
-                }
-                return out;
-            }
-            out.name = raw;
-            for (var k = 0; k < places.length; k++) {
-                var r = places[k];
-                if (r && (r.name != null) && String(r.name).trim().toLowerCase() === raw.toLowerCase()) {
-                    var rid = (r.id != null) ? String(r.id) : '';
-                    if (/^\d+$/.test(rid)) out.id = rid;
-                    out.code = (r.code != null) ? String(r.code).trim() : '';
-                    break;
-                }
-            }
+            var select = document.getElementById('aj-search-from');
+            if (!select || select.selectedIndex < 0) return out;
+            var opt = select.options[select.selectedIndex];
+            if (!opt || opt.value === '') return out;
+            var dataId = (opt.dataset && opt.dataset.id != null) ? String(opt.dataset.id).trim() : '';
+            var dataCode = (opt.dataset && opt.dataset.code != null) ? String(opt.dataset.code).trim() : '';
+            var labelText = (opt.textContent || opt.innerText || '').replace(/\s+/g, ' ').trim();
+            if (/^\d+$/.test(dataId)) out.id = dataId;
+            out.code = dataCode;
+            out.name = labelText !== '' ? labelText : ((opt.value != null && opt.value !== '') ? String(opt.value).trim() : '');
             return out;
         },
 
@@ -126,8 +86,21 @@
         applyFlightsByDeparture: function() {
             var $from = $('#aj-search-from');
             var rawVal = ($from.length && $from.val()) ? String($from.val()).trim() : '';
-            var normalized = this.normalizeStartingFrom(rawVal);
-            var showAll = rawVal === '';
+            var normalized = this.normalizeStartingFrom();
+            var hasNorm = (normalized.id !== '' || normalized.name !== '' || normalized.code !== '');
+            var nameOnlyNumeric = /^\d+$/.test(normalized.name);
+            var showAll = rawVal === '' || !hasNorm || (normalized.id === '' && normalized.code === '' && nameOnlyNumeric);
+
+            function normStr(s) {
+                if (s == null || s === '') return '';
+                return String(s).replace(/\s+/g, ' ').trim().toLowerCase();
+            }
+            function nameMatch(a, b) {
+                if (a === '' || b === '') return false;
+                var na = normStr(a).replace(/\s*\([^)]*\)\s*$/, '').trim();
+                var nb = normStr(b).replace(/\s*\([^)]*\)\s*$/, '').trim();
+                return na === nb || normStr(a) === normStr(b);
+            }
 
             function cardMatches($card, norm) {
                 if (showAll) return true;
@@ -136,7 +109,7 @@
                 var name = ($card.attr('data-departure-place-name') != null) ? String($card.attr('data-departure-place-name')).trim() : '';
                 if (/^\d+$/.test(norm.id) && id === norm.id) return true;
                 if (norm.code !== '' && code === norm.code) return true;
-                if (norm.name !== '' && name.toLowerCase() === norm.name.toLowerCase()) return true;
+                if (norm.name !== '' && nameMatch(norm.name, name)) return true;
                 return false;
             }
 
@@ -145,22 +118,33 @@
             var $cardsOutbound = $(selectorOutbound);
 
             var allCards = $cardsDetails.add($cardsOutbound);
-            var cardsDataset = [];
+            var tableData = [];
+            var visibleCount = 0;
 
             allCards.each(function() {
                 var $card = $(this);
-                var ds = {
-                    id: ($card.attr('data-departure-place-id') != null) ? String($card.attr('data-departure-place-id')) : '',
-                    name: ($card.attr('data-departure-place-name') != null) ? String($card.attr('data-departure-place-name')) : '',
-                    code: ($card.attr('data-departure-place-code') != null) ? String($card.attr('data-departure-place-code')) : ''
-                };
-                cardsDataset.push(ds);
+                var id = ($card.attr('data-departure-place-id') != null) ? String($card.attr('data-departure-place-id')) : '';
+                var name = ($card.attr('data-departure-place-name') != null) ? String($card.attr('data-departure-place-name')) : '';
+                var code = ($card.attr('data-departure-place-code') != null) ? String($card.attr('data-departure-place-code')) : '';
                 var show = cardMatches($card, normalized);
+                if (show) visibleCount++;
+                tableData.push({ cardId: id, cardName: name, cardCode: code, match: show });
                 if (show) $card.show(); else $card.hide();
             });
 
+            if (!showAll && visibleCount === 0 && allCards.length > 0) {
+                allCards.show();
+                if (typeof console !== 'undefined' && console.warn) {
+                    console.warn('[AJTB Starting from] Aucun match: affichage de tous les vols. raw:', rawVal, 'normalized:', normalized, 'cards:', tableData);
+                }
+            }
+
             if (typeof console !== 'undefined' && console.log) {
-                console.log('[AJTB Starting from] raw:', rawVal, '| normalized:', normalized, '| cards dataset:', cardsDataset);
+                console.log('[AJTB Starting from] raw:', rawVal, '| normalized:', normalized);
+                console.log('[AJTB Starting from] cards.length', { details: $cardsDetails.length, outbound: $cardsOutbound.length, total: allCards.length });
+            }
+            if (typeof console !== 'undefined' && console.table && tableData.length) {
+                console.table(tableData);
             }
         },
 
@@ -1410,7 +1394,33 @@
                 var $dateDisplay = $bar.find('#aj-search-date-display');
                 var $panelAdults = $bar.find('#aj-panel-adults');
                 var $panelChildren = $bar.find('#aj-panel-children');
-                if (state.start_from !== undefined && $from.length) $from.val(state.start_from);
+                if (state.start_from !== undefined && $from.length) {
+                    var wantedFrom = String(state.start_from).trim();
+                    $from.val(wantedFrom);
+                    if (($from.val() || '').toString().trim() !== wantedFrom && wantedFrom !== '') {
+                        var lowerWanted = wantedFrom.toLowerCase();
+                        var mappedValue = '';
+                        $from.find('option').each(function() {
+                            if (mappedValue !== '') return;
+                            var $opt = $(this);
+                            var optionValue = ($opt.val() || '').toString().trim();
+                            var optionId = (($opt.data('id') || '') + '').trim();
+                            var optionCode = (($opt.data('code') || '') + '').trim();
+                            var optionLabel = ($opt.text() || '').replace(/\s+/g, ' ').trim();
+                            var optionName = optionLabel.replace(/\s*\([^)]*\)\s*$/, '').trim();
+                            if (
+                                optionValue === wantedFrom ||
+                                optionId === wantedFrom ||
+                                optionCode.toLowerCase() === lowerWanted ||
+                                optionName.toLowerCase() === lowerWanted ||
+                                optionLabel.toLowerCase() === lowerWanted
+                            ) {
+                                mappedValue = optionValue;
+                            }
+                        });
+                        if (mappedValue !== '') $from.val(mappedValue);
+                    }
+                }
                 if (state.travel_date) {
                     $dateInput.val(state.travel_date);
                     var parts = state.travel_date.split('-');
@@ -1534,9 +1544,15 @@
                 if (typeof saved.adults === 'number') state.adults = saved.adults;
                 if (typeof saved.children === 'number') state.children = saved.children;
                 setSearchbarDisplay(state);
+                state = getSearchbarState();
                 setStored(state);
                 syncToBookingForm(state);
-                if (typeof self.applyFlightsByDeparture === 'function') self.applyFlightsByDeparture();
+                var $from = $('#aj-searchbar #aj-search-from');
+                if ($from.length && ($from.val() || '').toString().trim() !== '') {
+                    $from.trigger('change');
+                } else if (typeof self.applyFlightsByDeparture === 'function') {
+                    self.applyFlightsByDeparture();
+                }
             }
         }
     };

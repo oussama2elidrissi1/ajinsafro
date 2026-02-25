@@ -154,8 +154,8 @@
                             <p class="text-muted small mb-3">Sélectionnez exactement 5 images pour la galerie hero (1 principale + 4 secondaires).</p>
                             @php
                                 $hero_gallery_ids = old('hero_gallery_ids', []);
-                                if (is_string($hero_gallery_ids)) {
-                                    $hero_gallery_ids = explode(',', $hero_gallery_ids);
+                                if (!is_array($hero_gallery_ids)) {
+                                    $hero_gallery_ids = is_string($hero_gallery_ids) ? explode(',', $hero_gallery_ids) : [];
                                 }
                                 $hero_gallery_ids = array_filter(array_map('trim', $hero_gallery_ids));
                                 $hero_gallery_ids = array_slice($hero_gallery_ids, 0, 5);

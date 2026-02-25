@@ -768,9 +768,9 @@
                             <h5 class="mb-2">Galerie Hero (5 images)</h5>
                             <p class="text-muted small mb-3">Sélectionnez exactement 5 images pour la galerie hero (1 principale + 4 secondaires). Ces images seront affichées dans la section hero de la page détail.</p>
                             @php
-                                $hero_gallery_ids = old('hero_gallery_ids', isset($meta['hero_gallery_ids']) ? explode(',', $meta['hero_gallery_ids']) : []);
-                                if (is_string($hero_gallery_ids)) {
-                                    $hero_gallery_ids = explode(',', $hero_gallery_ids);
+                                $hero_gallery_ids = old('hero_gallery_ids', isset($meta['hero_gallery_ids']) && $meta['hero_gallery_ids'] !== null ? explode(',', (string) $meta['hero_gallery_ids']) : []);
+                                if (!is_array($hero_gallery_ids)) {
+                                    $hero_gallery_ids = is_string($hero_gallery_ids) ? explode(',', $hero_gallery_ids) : [];
                                 }
                                 $hero_gallery_ids = array_filter(array_map('trim', $hero_gallery_ids));
                                 $hero_gallery_ids = array_slice($hero_gallery_ids, 0, 5); // Max 5
