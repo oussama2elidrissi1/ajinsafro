@@ -1,8 +1,8 @@
 /*
 Template Name: Borex - Admin & Dashboard Template
-Author: Themesbrand
-Website: https://Themesbrand.com/
-Contact: Themesbrand@gmail.com
+Author: AJINSAFRO
+Website: https://AJINSAFRO.com/
+Contact: AJINSAFRO@gmail.com
 File: Calendar init js
 */
 

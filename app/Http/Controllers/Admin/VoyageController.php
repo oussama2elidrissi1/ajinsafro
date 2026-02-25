@@ -11,6 +11,7 @@ use App\Models\Wp\TourDay;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Voyage;
 use App\Models\TravelProgramDay;
+use App\Models\TravelDayItem;
 use App\Models\Airline;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
@@ -412,6 +413,26 @@ class VoyageController extends Controller
             );
         }
 
+        $tourActivities = collect();
+        try {
+            $tourActivities = TravelDayItem::query()
+                ->where('voyage_id', $laravelVoyage->id)
+                ->where('type', 'activity')
+                ->where(function ($query) {
+                    $query->where('meta_json->source', 'voyage_activities_tab')
+                        ->orWhereNull('meta_json');
+                })
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get();
+        } catch (\Throwable $e) {
+            \Log::warning('VoyageController@edit: could not load tour activities', [
+                'tour_id' => $id,
+                'voyage_id' => $laravelVoyage->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // Charger les TravelProgramDay avec relations hotels/transfers pour le modal par jour
         // Clé par index du jour (0, 1, 2...) pour correspondre à $dayIndex dans la vue (programme_days)
         $programDayHotelsTransfers = [];
@@ -508,7 +529,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -1069,6 +1090,8 @@ class VoyageController extends Controller
                 ['wp_post_id' => $id],
                 ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
             );
+
+            $this->syncActivities($laravelVoyage, $request);
             $lastDayNumber = 1;
             try {
                 $program = $this->programJsonService->getProgram($id);
@@ -1255,6 +1278,88 @@ class VoyageController extends Controller
             }
             $this->programService->removeDayActivity($da->id);
         }
+    }
+
+    /**
+     * Sync inline "Activités" tab rows for a voyage (save-global strategy).
+     * Stores rows in travel_day_items with type=activity and source=voyage_activities_tab.
+     */
+    protected function syncActivities(Voyage $voyage, UpdateWpTourRequest $request): void
+    {
+        $payload = $request->input('tour_activities', []);
+        if (!is_array($payload)) {
+            return;
+        }
+
+        $keptIds = [];
+        $sortOrder = 0;
+
+        foreach ($payload as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $activityId = (int) ($row['activity_id'] ?? 0);
+            if ($activityId <= 0 || !Activity::whereKey($activityId)->exists()) {
+                continue;
+            }
+
+            $activity = Activity::find($activityId);
+            $title = trim((string) ($row['title'] ?? ($activity?->title ?? 'Activité')));
+            $pricingType = ($row['pricing_type'] ?? 'per_person') === 'fixed' ? 'fixed' : 'per_person';
+            $unitPrice = (float) ($row['unit_price'] ?? 0);
+            $unitPrice = $unitPrice < 0 ? 0 : round($unitPrice, 2);
+            $quantity = (int) ($row['quantity'] ?? 1);
+            $quantity = $quantity < 1 ? 1 : $quantity;
+
+            $itemData = [
+                'voyage_id' => $voyage->id,
+                'day_number' => 1,
+                'start_day' => 1,
+                'end_day' => 1,
+                'nights' => 0,
+                'type' => 'activity',
+                'title' => $title !== '' ? $title : ($activity?->title ?? 'Activité'),
+                'details' => null,
+                'included' => true,
+                'price_delta_per_person' => $pricingType === 'per_person' ? (int) round($unitPrice * 100) : 0,
+                'options_json' => [
+                    'activity_id' => $activityId,
+                    'pricing_type' => $pricingType,
+                    'unit_price' => $unitPrice,
+                    'quantity' => $quantity,
+                ],
+                'meta_json' => [
+                    'source' => 'voyage_activities_tab',
+                ],
+                'sort_order' => $sortOrder++,
+            ];
+
+            $itemId = (int) ($row['id'] ?? 0);
+            $existing = $itemId > 0
+                ? TravelDayItem::query()
+                    ->where('id', $itemId)
+                    ->where('voyage_id', $voyage->id)
+                    ->where('type', 'activity')
+                    ->first()
+                : null;
+
+            if ($existing) {
+                $existing->fill($itemData);
+                $existing->save();
+                $keptIds[] = $existing->id;
+            } else {
+                $new = TravelDayItem::create($itemData);
+                $keptIds[] = $new->id;
+            }
+        }
+
+        TravelDayItem::query()
+            ->where('voyage_id', $voyage->id)
+            ->where('type', 'activity')
+            ->where('meta_json->source', 'voyage_activities_tab')
+            ->when(!empty($keptIds), fn ($query) => $query->whereNotIn('id', $keptIds))
+            ->delete();
     }
 
     /**

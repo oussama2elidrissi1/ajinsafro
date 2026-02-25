@@ -150,6 +150,15 @@ class UpdateWpTourRequest extends FormRequest
             'programme_days.*.activities.*.custom_title' => 'nullable|string',
             'programme_days.*.activities.*.custom_description' => 'nullable|string',
 
+            // Activités inline (onglet Activités)
+            'tour_activities' => 'nullable|array',
+            'tour_activities.*.id' => 'nullable|integer',
+            'tour_activities.*.activity_id' => 'required|integer|exists:wp.aj_activities,id',
+            'tour_activities.*.title' => 'nullable|string|max:255',
+            'tour_activities.*.pricing_type' => 'nullable|in:per_person,fixed',
+            'tour_activities.*.unit_price' => 'nullable|numeric|min:0',
+            'tour_activities.*.quantity' => 'nullable|integer|min:1|max:999',
+
             // Vols (voyage_flight_options) — multi-options Aller/Retour/Segment
             'flight_options' => 'nullable|array',
             'flight_options.*.id' => 'nullable|integer',

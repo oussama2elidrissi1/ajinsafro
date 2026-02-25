@@ -91,7 +91,7 @@
                         <p>Already have an account ? <a href="{{ route('login') }}" class="fw-medium text-primary">
                                 Login</a> </p>
                         <p>©
-                            {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand
+                            {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by AJINSAFRO
                         </p>
                     </div>
 

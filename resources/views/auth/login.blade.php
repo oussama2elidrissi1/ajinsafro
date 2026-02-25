@@ -80,7 +80,7 @@
                                 now </a> </p>
                         <p>©
                             {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by
-                            Themesbrand
+                            AJINSAFRO
                         </p>
                     </div>
 

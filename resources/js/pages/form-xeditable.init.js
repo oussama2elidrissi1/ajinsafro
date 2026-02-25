@@ -1,8 +1,8 @@
 /*
 Template Name: Qovex - Admin & Dashboard Template
-Author: Themesbrand
-Website: https://themesbrand.com/
-Contact: themesbrand@gmail.com
+Author: AJINSAFRO
+Website: https://AJINSAFRO.com/
+Contact: AJINSAFRO@gmail.com
 File: Form xeditable
 */
 

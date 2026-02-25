@@ -1356,14 +1356,107 @@
             <div class="tab-pane" id="activities" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Activités</h4>
-                        @if(Route::has('admin.circuits.activities.index'))
-                        <div class="mb-3">
-                            <a href="{{ route('admin.circuits.activities.index') }}" class="btn btn-primary" target="_blank">
-                                <i class="bx bx-list-ul me-1"></i> Catalogue d'activités
-                            </a>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <h4 class="card-title mb-0">Activités</h4>
+                            <button type="button" class="btn btn-primary" id="btn-open-activities-modal" data-bs-toggle="modal" data-bs-target="#activitiesCatalogModal">
+                                <i class="bx bx-plus me-1"></i> Ajouter une activité
+                            </button>
                         </div>
-                        @endif
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Activité</th>
+                                        <th style="min-width:150px;">Type</th>
+                                        <th style="min-width:140px;">Prix</th>
+                                        <th style="min-width:120px;">Quantité</th>
+                                        <th style="min-width:140px;">Total ligne</th>
+                                        <th style="width:110px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="voyage-activities-rows">
+                                    @forelse($tourActivities as $idx => $tourActivity)
+                                        @php
+                                            $opts = is_array($tourActivity->options_json ?? null) ? $tourActivity->options_json : [];
+                                            $activityId = (int) ($opts['activity_id'] ?? 0);
+                                            $pricingType = in_array(($opts['pricing_type'] ?? 'per_person'), ['per_person', 'fixed'], true) ? ($opts['pricing_type'] ?? 'per_person') : 'per_person';
+                                            $quantity = max(1, (int) ($opts['quantity'] ?? 1));
+                                            $unitPrice = (float) ($opts['unit_price'] ?? ($pricingType === 'per_person' ? ((int) ($tourActivity->price_delta_per_person ?? 0) / 100) : 0));
+                                        @endphp
+                                        <tr class="voyage-activity-row" data-activity-id="{{ $activityId }}">
+                                            <td>
+                                                <span class="fw-medium voyage-activity-title">{{ $tourActivity->title }}</span>
+                                                <input type="hidden" data-field="id" name="tour_activities[{{ $idx }}][id]" value="{{ $tourActivity->id }}">
+                                                <input type="hidden" data-field="activity_id" name="tour_activities[{{ $idx }}][activity_id]" value="{{ $activityId }}">
+                                                <input type="hidden" data-field="title" name="tour_activities[{{ $idx }}][title]" value="{{ $tourActivity->title }}">
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm voyage-activity-pricing" data-field="pricing_type" name="tour_activities[{{ $idx }}][pricing_type]">
+                                                    <option value="per_person" {{ $pricingType === 'per_person' ? 'selected' : '' }}>Par personne</option>
+                                                    <option value="fixed" {{ $pricingType === 'fixed' ? 'selected' : '' }}>Fixe</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm voyage-activity-price" data-field="unit_price" name="tour_activities[{{ $idx }}][unit_price]" value="{{ number_format($unitPrice, 2, '.', '') }}" min="0" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm voyage-activity-qty" data-field="quantity" name="tour_activities[{{ $idx }}][quantity]" value="{{ $quantity }}" min="1" step="1" {{ $pricingType === 'fixed' ? 'disabled' : '' }}>
+                                            </td>
+                                            <td>
+                                                <span class="voyage-activity-line-total fw-semibold">0.00</span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary voyage-activity-edit"><i class="bx bx-pencil"></i></button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger voyage-activity-remove"><i class="bx bx-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="alert alert-info mt-3 mb-0" id="voyage-activities-empty-state" style="display:none;">
+                            Aucune activité ajoutée. Cliquez sur <strong>Ajouter une activité</strong> pour commencer.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="activitiesCatalogModal" tabindex="-1" aria-labelledby="activitiesCatalogModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="activitiesCatalogModalLabel">Catalogue d'activités</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" id="activities-catalog-search" placeholder="Rechercher une activité...">
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nom</th>
+                                                <th style="width:120px;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="activities-catalog-body"></tbody>
+                                    </table>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-muted" id="activities-catalog-count">0 résultat</small>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-secondary" id="activities-catalog-prev">Précédent</button>
+                                        <button type="button" class="btn btn-outline-secondary" id="activities-catalog-next">Suivant</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2268,6 +2361,11 @@
         })();
         
         window.PROGRAMME_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(fn($a) => ['id' => $a->id, 'title' => $a->title])->values()->all());
+        window.TOUR_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(fn($a) => [
+            'id' => $a->id,
+            'title' => $a->title,
+            'base_price' => (float) ($a->base_price ?? 0),
+        ])->values()->all());
         window.PROGRAM_API_URL = @json($programApiUrl ?? '');
         window.PROGRAM_VOYAGE_ID = @json($voyage->ID ?? 0);
 
@@ -3461,6 +3559,248 @@
             } else {
                 initSaveButtonFallback();
             }
+        })();
+
+        (function inlineActivitiesManager() {
+            var rowsContainer = document.getElementById('voyage-activities-rows');
+            if (!rowsContainer) return;
+
+            var emptyState = document.getElementById('voyage-activities-empty-state');
+            var modalEl = document.getElementById('activitiesCatalogModal');
+            var searchInput = document.getElementById('activities-catalog-search');
+            var catalogBody = document.getElementById('activities-catalog-body');
+            var prevBtn = document.getElementById('activities-catalog-prev');
+            var nextBtn = document.getElementById('activities-catalog-next');
+            var countLabel = document.getElementById('activities-catalog-count');
+
+            var catalog = Array.isArray(window.TOUR_ACTIVITIES_CATALOG) ? window.TOUR_ACTIVITIES_CATALOG : [];
+            var filteredCatalog = catalog.slice();
+            var page = 1;
+            var pageSize = 8;
+
+            function esc(str) {
+                return String(str || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function toNumber(value, fallback) {
+                var num = parseFloat(value);
+                return Number.isFinite(num) ? num : fallback;
+            }
+
+            function toInt(value, fallback) {
+                var num = parseInt(value, 10);
+                return Number.isFinite(num) ? num : fallback;
+            }
+
+            function updateEmptyState() {
+                if (!emptyState) return;
+                emptyState.style.display = rowsContainer.querySelectorAll('.voyage-activity-row').length ? 'none' : '';
+            }
+
+            function computeLineTotal(row) {
+                var pricing = row.querySelector('.voyage-activity-pricing');
+                var priceInput = row.querySelector('.voyage-activity-price');
+                var qtyInput = row.querySelector('.voyage-activity-qty');
+                var lineTotal = row.querySelector('.voyage-activity-line-total');
+                if (!pricing || !priceInput || !qtyInput || !lineTotal) return;
+
+                var unitPrice = Math.max(0, toNumber(priceInput.value, 0));
+                var quantity = Math.max(1, toInt(qtyInput.value, 1));
+                var pricingType = pricing.value === 'fixed' ? 'fixed' : 'per_person';
+
+                if (pricingType === 'fixed') {
+                    qtyInput.value = 1;
+                    qtyInput.setAttribute('disabled', 'disabled');
+                } else {
+                    qtyInput.removeAttribute('disabled');
+                    qtyInput.value = quantity;
+                }
+
+                var total = pricingType === 'fixed' ? unitPrice : (unitPrice * quantity);
+                lineTotal.textContent = total.toFixed(2);
+            }
+
+            function reindexRows() {
+                rowsContainer.querySelectorAll('.voyage-activity-row').forEach(function(row, index) {
+                    row.querySelectorAll('[data-field]').forEach(function(input) {
+                        var field = input.getAttribute('data-field');
+                        if (field) {
+                            input.name = 'tour_activities[' + index + '][' + field + ']';
+                        }
+                    });
+                    computeLineTotal(row);
+                });
+                updateEmptyState();
+            }
+
+            function hasActivity(activityId) {
+                return !!rowsContainer.querySelector('.voyage-activity-row[data-activity-id="' + activityId + '"]');
+            }
+
+            function buildRow(activity) {
+                var title = esc(activity.title || ('Activité #' + activity.id));
+                var defaultPrice = toNumber(activity.base_price, 0).toFixed(2);
+
+                var tr = document.createElement('tr');
+                tr.className = 'voyage-activity-row';
+                tr.setAttribute('data-activity-id', activity.id);
+                tr.innerHTML =
+                    '<td>' +
+                        '<span class="fw-medium voyage-activity-title">' + title + '</span>' +
+                        '<input type="hidden" data-field="id" value="">' +
+                        '<input type="hidden" data-field="activity_id" value="' + activity.id + '">' +
+                        '<input type="hidden" data-field="title" value="' + title + '">' +
+                    '</td>' +
+                    '<td>' +
+                        '<select class="form-select form-select-sm voyage-activity-pricing" data-field="pricing_type">' +
+                            '<option value="per_person" selected>Par personne</option>' +
+                            '<option value="fixed">Fixe</option>' +
+                        '</select>' +
+                    '</td>' +
+                    '<td><input type="number" class="form-control form-control-sm voyage-activity-price" data-field="unit_price" min="0" step="0.01" value="' + defaultPrice + '"></td>' +
+                    '<td><input type="number" class="form-control form-control-sm voyage-activity-qty" data-field="quantity" min="1" step="1" value="1"></td>' +
+                    '<td><span class="voyage-activity-line-total fw-semibold">0.00</span></td>' +
+                    '<td>' +
+                        '<div class="d-flex gap-1">' +
+                            '<button type="button" class="btn btn-sm btn-outline-primary voyage-activity-edit"><i class="bx bx-pencil"></i></button>' +
+                            '<button type="button" class="btn btn-sm btn-outline-danger voyage-activity-remove"><i class="bx bx-trash"></i></button>' +
+                        '</div>' +
+                    '</td>';
+
+                return tr;
+            }
+
+            function refreshCatalog() {
+                if (!catalogBody) return;
+
+                var term = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase().trim();
+                filteredCatalog = catalog.filter(function(item) {
+                    return !term || String(item.title || '').toLowerCase().indexOf(term) !== -1;
+                });
+
+                var total = filteredCatalog.length;
+                var totalPages = Math.max(1, Math.ceil(total / pageSize));
+                if (page > totalPages) page = totalPages;
+                if (page < 1) page = 1;
+
+                var start = (page - 1) * pageSize;
+                var current = filteredCatalog.slice(start, start + pageSize);
+
+                if (countLabel) {
+                    countLabel.textContent = total + ' résultat' + (total > 1 ? 's' : '') + ' • Page ' + page + '/' + totalPages;
+                }
+
+                if (prevBtn) prevBtn.disabled = page <= 1;
+                if (nextBtn) nextBtn.disabled = page >= totalPages;
+
+                if (!current.length) {
+                    catalogBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">Aucune activité trouvée.</td></tr>';
+                    return;
+                }
+
+                catalogBody.innerHTML = current.map(function(item) {
+                    var disabled = hasActivity(item.id) ? 'disabled' : '';
+                    return '<tr>' +
+                        '<td>' + item.id + '</td>' +
+                        '<td>' + esc(item.title) + '</td>' +
+                        '<td><button type="button" class="btn btn-sm btn-success add-catalog-activity" data-activity-id="' + item.id + '" ' + disabled + '>Ajouter</button></td>' +
+                    '</tr>';
+                }).join('');
+            }
+
+            rowsContainer.addEventListener('click', function(e) {
+                var removeBtn = e.target.closest('.voyage-activity-remove');
+                if (removeBtn) {
+                    var row = removeBtn.closest('.voyage-activity-row');
+                    if (row && confirm('Supprimer cette activité du voyage ?')) {
+                        row.remove();
+                        reindexRows();
+                        refreshCatalog();
+                    }
+                    return;
+                }
+
+                var editBtn = e.target.closest('.voyage-activity-edit');
+                if (editBtn) {
+                    var rowEdit = editBtn.closest('.voyage-activity-row');
+                    var focusTarget = rowEdit ? rowEdit.querySelector('.voyage-activity-price') : null;
+                    if (focusTarget) {
+                        focusTarget.focus();
+                        focusTarget.select();
+                    }
+                }
+            });
+
+            rowsContainer.addEventListener('input', function(e) {
+                if (e.target.closest('.voyage-activity-row')) {
+                    computeLineTotal(e.target.closest('.voyage-activity-row'));
+                }
+            });
+
+            rowsContainer.addEventListener('change', function(e) {
+                if (e.target.closest('.voyage-activity-row')) {
+                    computeLineTotal(e.target.closest('.voyage-activity-row'));
+                }
+            });
+
+            if (catalogBody) {
+                catalogBody.addEventListener('click', function(e) {
+                    var addBtn = e.target.closest('.add-catalog-activity');
+                    if (!addBtn) return;
+
+                    var activityId = toInt(addBtn.getAttribute('data-activity-id'), 0);
+                    if (!activityId || hasActivity(activityId)) return;
+
+                    var activity = catalog.find(function(item) { return item.id === activityId; });
+                    if (!activity) return;
+
+                    var row = buildRow(activity);
+                    rowsContainer.appendChild(row);
+                    reindexRows();
+                    refreshCatalog();
+
+                    var bsModal = window.bootstrap && window.bootstrap.Modal ? window.bootstrap.Modal.getInstance(modalEl) : null;
+                    if (bsModal) {
+                        bsModal.hide();
+                    }
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    page = 1;
+                    refreshCatalog();
+                });
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function() {
+                    page -= 1;
+                    refreshCatalog();
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function() {
+                    page += 1;
+                    refreshCatalog();
+                });
+            }
+
+            if (modalEl) {
+                modalEl.addEventListener('shown.bs.modal', function() {
+                    refreshCatalog();
+                    if (searchInput) searchInput.focus();
+                });
+            }
+
+            reindexRows();
+            refreshCatalog();
         })();
 
         // "”"”"” MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) "”"”"”

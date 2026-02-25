@@ -61,7 +61,7 @@
                         <p>Remember It ? <a href="{{ route('register') }}" class="fw-medium text-primary"> Sign In
                                 here</a> </p>
                         <p>©
-                            {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand
+                            {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by AJINSAFRO
                         </p>
                     </div>
 

@@ -1,8 +1,8 @@
 /*
 Template Name: Qovex - Admin & Dashboard Template
-Author: Themesbrand
-Website: https://themesbrand.com/
-Contact: themesbrand@gmail.com
+Author: AJINSAFRO
+Website: https://AJINSAFRO.com/
+Contact: AJINSAFRO@gmail.com
 File: Sweet alerts 
 */
 
@@ -147,7 +147,7 @@ File: Sweet alerts
                 title: '<i>HTML</i> <u>example</u>',
                 type: 'info',
                 html: 'You can use <b>bold text</b>, ' +
-                '<a href="//Themesbrand.in/">links</a> ' +
+                '<a href="//AJINSAFRO.in/">links</a> ' +
                 'and other HTML tags',
                 showCloseButton: true,
                 showCancelButton: true,
