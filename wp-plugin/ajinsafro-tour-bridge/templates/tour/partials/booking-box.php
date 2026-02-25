@@ -48,26 +48,6 @@ $current_season = $pricing['current_season'] ?? null;
         <?php endif; ?>
     </div>
 
-    <!-- Price Breakdown -->
-    <div class="booking-price-breakdown">
-        <div class="price-row">
-            <span class="label">Adulte</span>
-            <span class="value"><?php echo ajtb_format_price($pricing['adult'] ?? $display_price); ?></span>
-        </div>
-        <?php if (($pricing['child'] ?? 0) > 0): ?>
-            <div class="price-row">
-                <span class="label">Enfant (2-12 ans)</span>
-                <span class="value"><?php echo ajtb_format_price($pricing['child']); ?></span>
-            </div>
-        <?php endif; ?>
-        <?php if (($pricing['infant'] ?? 0) > 0): ?>
-            <div class="price-row">
-                <span class="label">Bébé (0-2 ans)</span>
-                <span class="value"><?php echo ajtb_format_price($pricing['infant']); ?></span>
-            </div>
-        <?php endif; ?>
-    </div>
-
     <!-- Quick Info -->
     <div class="booking-quick-info">
         <?php if ($tour['duration_day'] > 0): ?>
@@ -101,21 +81,18 @@ $current_season = $pricing['current_season'] ?? null;
         <!-- Cart Summary -->
         <div class="booking-cart" id="booking-cart">
             <div class="cart-item cart-item-base">
-                <span class="cart-label" id="cart-base-label">Base (Adulte x <span id="cart-adults-count">2</span>)</span>
+                <span class="cart-label">Prix de base</span>
                 <span class="cart-value" id="cart-base-value">
                     <?php echo number_format($display_price * 2, 0, ',', ' '); ?> <?php echo esc_html($currency_symbol); ?>
                 </span>
             </div>
-            <?php if (($pricing['child'] ?? 0) > 0): ?>
-            <div class="cart-item cart-item-base">
-                <span class="cart-label" id="cart-child-label">Base (Enfant x <span id="cart-children-count">0</span>)</span>
-                <span class="cart-value" id="cart-child-value">
-                    0 <?php echo esc_html($currency_symbol); ?>
-                </span>
-            </div>
-            <?php endif; ?>
-            <div class="cart-activities" id="cart-activities-list">
-                <!-- Activities will be added here dynamically -->
+            
+            <!-- Activities List -->
+            <div class="cart-activities" id="cart-activities-wrapper" style="display: none;">
+                <div class="cart-activities-header">Activités ajoutées</div>
+                <ul class="ajtb-activity-list" id="cart-activities-list">
+                    <!-- Activities will be added here dynamically -->
+                </ul>
             </div>
         </div>
 
@@ -149,30 +126,6 @@ $current_season = $pricing['current_season'] ?? null;
             </button>
         <?php endif; ?>
     </form>
-
-    <!-- Trust Badges -->
-    <div class="booking-trust">
-        <div class="trust-item">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
-            <span>Paiement sécurisé</span>
-        </div>
-        <div class="trust-item">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12,6 12,12 16,14"></polyline>
-            </svg>
-            <span>Support 24/7</span>
-        </div>
-        <div class="trust-item">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22,4 12,14.01 9,11.01"></polyline>
-            </svg>
-            <span>Meilleur prix garanti</span>
-        </div>
-    </div>
 
     <!-- Share & Wishlist -->
     <div class="booking-actions">

@@ -56,101 +56,210 @@
     box-sizing: border-box;
 }
 
+/* ===================================
+   CONTAINER SYSTEM - Professional Layout with Margins
+   Centré avec max-width et marges horizontales cohérentes
+   Responsive: Desktop → Tablet → Mobile
+   =================================== */
+
+/* Container de base (fallback pour usage général) */
 .ajtb-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
 }
 
-/* Wide container for tour detail (MakeMyTrip-style): utilisé hors .ajtb-tour-page */
+/* 
+ * Container principal pour les pages tour (MakeMyTrip-style)
+ * Utilisé dans .ajtb-tour-page et sections hero
+ * Centré, avec max-width et padding horizontal pour respiration
+ */
 .aj-wide-container {
-    max-width: 1320px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
     padding-left: 16px;
     padding-right: 16px;
 }
 
 /* ===================================
-   Page single tour – Layout MakeMyTrip (contenu large, sidebar fixe)
-   Container centré, max-width 1200–1320px, padding horizontal pour respiration (MakeMyTrip/Booking/Expedia).
+   Layout Variables
    =================================== */
 .ajtb-tour-page {
     --ajtb-sidebar-width: 320px;
-    --ajtb-layout-gap: 28px; /* min 24px entre contenu principal et sidebar */
+    --ajtb-layout-gap: 28px;
 }
 
-/* Container principal : centré, max-width clair, padding cohérent */
+/* 
+ * Container dans le contexte de la page tour
+ * Override du container de base avec des valeurs optimisées
+ */
 .ajtb-tour-page .aj-wide-container {
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-    max-width: 1320px;
+    max-width: 1200px;
     padding-left: 24px;
     padding-right: 24px;
 }
 
-/* Desktop large (≥1400px) : max-width 1320px, padding 32px */
+/* ===================================
+   RESPONSIVE BREAKPOINTS
+   =================================== */
+
+/* Desktop Extra Large (≥1400px) : Confortable pour grands écrans */
 @media (min-width: 1400px) {
+    .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
-        max-width: 1320px;
+        max-width: 1200px;
         padding-left: 32px;
         padding-right: 32px;
     }
     
-    /* Barre globale sticky : même max-width et padding que le container */
-    .ajtb-global-summary-bar {
-        max-width: 1320px;
-        padding-left: 32px;
-        padding-right: 32px;
-    }
-    
-    /* Barre Day Details : padding identique aux cards de contenu */
-    .ajtb-day-details-bar {
-        padding-left: 28px;
-        padding-right: 28px;
-    }
-}
-
-/* Desktop (1200–1399px) : max-width 1280px, padding 28px */
-@media (min-width: 1200px) and (max-width: 1399px) {
-    .ajtb-tour-page .aj-wide-container {
-        max-width: 1280px;
-        padding-left: 28px;
-        padding-right: 28px;
-    }
-    
-    /* Barre globale sticky : même max-width et padding que le container */
-    .ajtb-global-summary-bar {
-        max-width: 1280px;
-        padding-left: 28px;
-        padding-right: 28px;
-    }
-    
-    /* Barre Day Details : padding identique aux cards de contenu */
-    .ajtb-day-details-bar {
-        padding-left: 28px;
-        padding-right: 28px;
-    }
-}
-
-/* Tablet (992–1199px) : 2 colonnes, padding ~20px */
-@media (min-width: 992px) and (max-width: 1199px) {
-    .ajtb-tour-page .aj-wide-container {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-    
-    /* Barre globale sticky : même max-width et padding que le container */
     .ajtb-global-summary-bar {
         max-width: 1200px;
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+    
+    .ajtb-day-details-bar {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+}
+
+/* Desktop Large (1200-1399px) : Format standard confortable */
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .aj-wide-container,
+    .ajtb-tour-page .aj-wide-container {
+        max-width: 1180px;
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+    
+    .ajtb-global-summary-bar {
+        max-width: 1180px;
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+    
+    .ajtb-day-details-bar {
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+}
+
+/* Desktop Small / Tablet Large (992-1199px) : Transition desktop → tablet */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .aj-wide-container,
+    .ajtb-tour-page .aj-wide-container {
+        max-width: 100%;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+    
+    .ajtb-global-summary-bar {
+        max-width: 100%;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+    
+    .ajtb-day-details-bar {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+
+/* Tablet (768-991px) : Une colonne ou layout simplifié */
+@media (min-width: 768px) and (max-width: 991px) {
+    .aj-wide-container,
+    .ajtb-tour-page .aj-wide-container {
+        max-width: 100%;
         padding-left: 20px;
         padding-right: 20px;
     }
     
-    /* Barre Day Details : padding identique aux cards de contenu */
+    .ajtb-global-summary-bar {
+        max-width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
     .ajtb-day-details-bar {
         padding-left: 20px;
         padding-right: 20px;
+    }
+}
+
+/* Mobile (<768px) : Layout compact */
+@media (max-width: 767px) {
+    .aj-wide-container,
+    .ajtb-tour-page .aj-wide-container {
+        max-width: 100%;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    .ajtb-global-summary-bar {
+        max-width: 100%;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    .ajtb-day-details-bar {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+/* ===================================
+   UTILITY CLASSES
+   =================================== */
+
+/* 
+ * Classe utilitaire pour sections full-width
+ * À utiliser pour les sections qui doivent sortir du container
+ * Exemple: barre de recherche sticky, hero background, etc.
+ */
+.ajtb-fullwidth {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    max-width: none !important;
+}
+
+/* 
+ * Wrapper pour contenu centré à l'intérieur d'un élément fullwidth
+ * Utiliser: <div class="ajtb-fullwidth"><div class="ajtb-fullwidth-content">...</div></div>
+ */
+.ajtb-fullwidth .ajtb-fullwidth-content {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+/* Responsive pour fullwidth-content */
+@media (min-width: 1400px) {
+    .ajtb-fullwidth .ajtb-fullwidth-content {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+}
+
+@media (max-width: 991px) {
+    .ajtb-fullwidth .ajtb-fullwidth-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .ajtb-fullwidth .ajtb-fullwidth-content {
+        padding-left: 16px;
+        padding-right: 16px;
     }
 }
 
@@ -836,6 +945,14 @@
 
     /* Keep same left/right padding as rest of page on mobile */
     .ajtb-hero.ajtb-hero-gallery .aj-wide-container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    /* Mobile: max-width 100%, padding réduit */
+    .aj-wide-container,
+    .ajtb-tour-page .aj-wide-container {
+        max-width: 100%;
         padding-left: 16px;
         padding-right: 16px;
     }
@@ -4835,7 +4952,8 @@
     font-weight: 600;
 }
 
-/* Price Breakdown */
+/* Price Breakdown - REMOVED (no longer used) */
+/*
 .booking-price-breakdown {
     padding: 16px 24px;
     background: var(--ajtb-bg-light);
@@ -4861,6 +4979,7 @@
     font-weight: 600;
     color: var(--ajtb-text);
 }
+*/
 
 /* Quick Info */
 .booking-quick-info {
@@ -4990,26 +5109,116 @@
     background: none;
 }
 
+/* ===================================
+   Booking Cart & Activities
+   =================================== */
+.booking-cart {
+    margin-bottom: 16px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--ajtb-border-light);
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-item-base {
+    padding: 14px 0;
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--ajtb-border);
+}
+
+.cart-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ajtb-text);
+}
+
+.cart-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+}
+
+/* Activities Section */
+.cart-activities {
+    margin-top: 12px;
+}
+
+.cart-activities-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ajtb-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    padding-left: 4px;
+}
+
+.ajtb-activity-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+}
+
+.ajtb-activity-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--ajtb-bg-light);
+    border-radius: 10px;
+    transition: var(--ajtb-transition);
+}
+
+.ajtb-activity-row:hover {
+    background: var(--ajtb-bg-gray);
+}
+
+.ajtb-activity-name {
+    font-size: 14px;
+    color: var(--ajtb-text);
+    flex: 1;
+    padding-right: 12px;
+}
+
+.ajtb-activity-price {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ajtb-text);
+    white-space: nowrap;
+}
+
 /* Booking Total */
 .booking-total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    background: var(--ajtb-bg-gray);
-    border-radius: var(--ajtb-radius);
-    margin-bottom: 16px;
+    padding: 18px 16px;
+    background: linear-gradient(135deg, var(--ajtb-primary-light) 0%, #f0f8ff 100%);
+    border: 2px solid var(--ajtb-primary);
+    border-radius: var(--ajtb-radius-lg);
+    margin-bottom: 18px;
 }
 
 .booking-total .total-label {
-    font-size: 14px;
-    color: var(--ajtb-text-light);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ajtb-text);
 }
 
 .booking-total .total-value {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
-    color: var(--ajtb-text);
+    color: var(--ajtb-primary);
 }
 
 /* Buttons */
@@ -5099,7 +5308,8 @@
     text-decoration: underline;
 }
 
-/* Trust Badges */
+/* Trust Badges - REMOVED (no longer used) */
+/*
 .booking-trust {
     padding: 16px 24px;
     border-top: 1px solid var(--ajtb-border);
@@ -5117,6 +5327,7 @@
 .booking-trust .trust-item svg {
     color: var(--ajtb-success);
 }
+*/
 
 /* Booking Actions */
 .booking-actions {
@@ -5299,9 +5510,7 @@
     }
 
     .ajtb-booking-box .booking-form,
-    .ajtb-booking-box .booking-price-breakdown,
     .ajtb-booking-box .booking-quick-info,
-    .ajtb-booking-box .booking-trust,
     .ajtb-booking-box .booking-actions {
         padding-left: 16px;
         padding-right: 16px;
@@ -5313,6 +5522,19 @@
 
     .booking-price-header .price-current {
         font-size: 28px;
+    }
+    
+    /* Activities responsive on small screens */
+    .ajtb-activity-row {
+        padding: 10px 12px;
+    }
+    
+    .ajtb-activity-name {
+        font-size: 13px;
+    }
+    
+    .ajtb-activity-price {
+        font-size: 13px;
     }
 }
 

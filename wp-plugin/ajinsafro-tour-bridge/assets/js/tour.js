@@ -305,17 +305,21 @@
             // Get and display activities
             var activities = this.getAddedActivities();
             var $activitiesList = $('#cart-activities-list');
+            var $activitiesWrapper = $('#cart-activities-wrapper');
             $activitiesList.empty();
 
             if (activities.length > 0) {
+                $activitiesWrapper.show();
                 var totalActivities = 0;
                 activities.forEach(function(act) {
                     totalActivities += act.price;
-                    var $item = $('<div class="cart-item cart-item-activity"></div>');
-                    $item.append('<span class="cart-label">Activité: ' + this.escapeHtml(act.title) + '</span>');
-                    $item.append('<span class="cart-value">' + this.formatPrice(act.price) + ' ' + this.config.currency + '</span>');
+                    var $item = $('<li class="ajtb-activity-row"></li>');
+                    $item.append('<span class="ajtb-activity-name">' + this.escapeHtml(act.title) + '</span>');
+                    $item.append('<span class="ajtb-activity-price">' + this.formatPrice(act.price) + ' ' + this.config.currency + '</span>');
                     $activitiesList.append($item);
                 }.bind(this));
+            } else {
+                $activitiesWrapper.hide();
             }
         },
 
