@@ -249,7 +249,7 @@ class VoyageController extends Controller
                 $this->repository->saveTourProgram($tour->ID, $programStyle, $programItems);
             }
 
-            if ($request->has('flights')) {
+            if (!$request->boolean('without_flight') && $request->input('without_flight') !== '1' && $request->has('flights')) {
                 try {
                     $laravelVoyage = Voyage::firstOrCreate(
                         ['wp_post_id' => $tour->ID],
@@ -1086,7 +1086,17 @@ class VoyageController extends Controller
                 'flight_options_count' => $request->has('flight_options') ? count($request->input('flight_options', [])) : 0,
             ]);
             
-            if ($request->has('flight_options') && is_array($request->input('flight_options'))) {
+            $withoutFlight = $request->boolean('without_flight') || $request->input('without_flight') === '1';
+            if ($withoutFlight) {
+                try {
+                    $this->voyageFlightOptionService->syncOptions($laravelVoyage->id, [], $lastDayNumber);
+                    if ($laravelVoyage->wp_post_id) {
+                        $this->voyageFlightOptionService->syncOptionsToWp($laravelVoyage->id, (int) $laravelVoyage->wp_post_id, $lastDayNumber);
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('VoyageController@update clear flights (without_flight) failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
+                }
+            } elseif ($request->has('flight_options') && is_array($request->input('flight_options'))) {
                 try {
                     $flightOptionsInput = $request->input('flight_options');
                     \Log::debug('VoyageController@update flight_options payload FULL', [

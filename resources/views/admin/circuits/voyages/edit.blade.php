@@ -1257,7 +1257,8 @@
                     'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
                     'lastDayNumber' => $lastDayNumber,
                     'airlines' => $airlines ?? collect(),
-                    'departurePlaces' => $departurePlaces ?? collect()
+                    'departurePlaces' => $departurePlaces ?? collect(),
+                    'without_flight' => empty($flightOptionsWithIndex),
                 ])
             </div>
 
@@ -3733,7 +3734,8 @@
                     
                     console.log('📊 Total flight_options valides:', count);
                     
-                    if (count === 0) {
+                    var withoutFlight = fd.get('without_flight') === '1';
+                    if (count === 0 && !withoutFlight) {
                         console.error('❌ AUCUN flight_options détecté dans le FormData!');
                         console.log('Vérifications:');
                         console.log('  1. Les inputs ont-ils les bons attributs name?');
@@ -3749,6 +3751,8 @@
                                 el.removeAttribute('data-was-enabled');
                             });
                         }
+                    } else if (withoutFlight) {
+                        console.log('✅ Sans vol activé, soumission OK (aucun flight_options attendu)');
                     } else {
                         console.log('✅ Flight options detectés, soumission OK');
                     }
