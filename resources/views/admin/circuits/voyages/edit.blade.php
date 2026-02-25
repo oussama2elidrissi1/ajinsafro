@@ -2360,19 +2360,33 @@
             }
         })();
         
-        window.PROGRAMME_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(function ($a) {
-            return [
-                'id' => $a->id,
-                'title' => $a->title,
-            ];
-        })->values()->all());
-        window.TOUR_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(function ($a) {
-            return [
-                'id' => $a->id,
-                'title' => $a->title,
-                'base_price' => (float) ($a->base_price ?? 0),
-            ];
-        })->values()->all());
+        @php
+            $programmeActivitiesCatalog = $activitiesCatalog->map(function ($a) {
+                return [
+                    'id' => $a->id,
+                    'title' => $a->title,
+                ];
+            })->values()->all();
+
+            $tourActivitiesCatalog = $activitiesCatalog->map(function ($a) {
+                return [
+                    'id' => $a->id,
+                    'title' => $a->title,
+                    'base_price' => (float) ($a->base_price ?? 0),
+                ];
+            })->values()->all();
+
+            $tourActivitiesSelected = collect($tourActivities ?? [])->map(function ($a) {
+                return [
+                    'id' => data_get($a, 'activity_id'),
+                    'title' => data_get($a, 'title'),
+                ];
+            })->values()->all();
+        @endphp
+
+        window.PROGRAMME_ACTIVITIES_CATALOG = @json($programmeActivitiesCatalog);
+        window.TOUR_ACTIVITIES_SELECTED = @json($tourActivitiesSelected);
+        window.TOUR_ACTIVITIES_CATALOG = @json($tourActivitiesCatalog);
         window.PROGRAM_API_URL = @json($programApiUrl ?? '');
         window.PROGRAM_VOYAGE_ID = @json($voyage->ID ?? 0);
 
