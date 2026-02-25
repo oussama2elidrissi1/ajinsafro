@@ -2360,12 +2360,19 @@
             }
         })();
         
-        window.PROGRAMME_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(fn($a) => ['id' => $a->id, 'title' => $a->title])->values()->all());
-        window.TOUR_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(fn($a) => [
-            'id' => $a->id,
-            'title' => $a->title,
-            'base_price' => (float) ($a->base_price ?? 0),
-        ])->values()->all());
+        window.PROGRAMME_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(function ($a) {
+            return [
+                'id' => $a->id,
+                'title' => $a->title,
+            ];
+        })->values()->all());
+        window.TOUR_ACTIVITIES_CATALOG = @json($activitiesCatalog->map(function ($a) {
+            return [
+                'id' => $a->id,
+                'title' => $a->title,
+                'base_price' => (float) ($a->base_price ?? 0),
+            ];
+        })->values()->all());
         window.PROGRAM_API_URL = @json($programApiUrl ?? '');
         window.PROGRAM_VOYAGE_ID = @json($voyage->ID ?? 0);
 
