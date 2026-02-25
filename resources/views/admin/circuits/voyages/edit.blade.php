@@ -3,19 +3,19 @@
 @endphp
 @extends('layouts.master-ajinsafro')
 @section('title')
-    {{ $isCreate ? 'CrÃ©er un tour WordPress' : 'Modifier le tour WordPress' }}
+    {{ $isCreate ? 'Créer un tour WordPress' : 'Modifier le tour WordPress' }}
 @endsection
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">{{ $isCreate ? 'CrÃ©er un tour WordPress' : 'Modifier : ' . ($voyage->post_title ?? $voyage->name) }}</h4>
+                <h4 class="page-title mb-0 font-size-18">{{ $isCreate ? 'Créer un tour WordPress' : 'Modifier : ' . ($voyage->post_title ?? $voyage->name) }}</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
-                        <li class="breadcrumb-item active">{{ $isCreate ? 'CrÃ©er' : ($voyage->post_title ?? $voyage->name) }}</li>
+                        <li class="breadcrumb-item active">{{ $isCreate ? 'Créer' : ($voyage->post_title ?? $voyage->name) }}</li>
                     </ol>
                 </div>
             </div>
@@ -69,18 +69,18 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#availability" role="tab">
-                    <i class="bx bx-calendar"></i> DisponibilitÃ©
+                    <i class="bx bx-calendar"></i> Disponibilité
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#media" role="tab">
-                    <i class="bx bx-image"></i> MÃ©dias
+                    <i class="bx bx-image"></i> Médias
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#taxonomies" role="tab">
-                    <i class="bx bx-category"></i> CatÃ©gories
+                    <i class="bx bx-category"></i> Catégories
                 </a>
             </li>
             <li class="nav-item">
@@ -90,7 +90,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#hotels" role="tab">
-                    <i class="bx bx-hotel"></i> HÃ´tels
+                    <i class="bx bx-hotel"></i> Hôtels
                 </a>
             </li>
             <li class="nav-item">
@@ -105,7 +105,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#activities" role="tab">
-                    <i class="bx bx-list-check"></i> ActivitÃ©s
+                    <i class="bx bx-list-check"></i> Activités
                 </a>
             </li>
             <li class="nav-item">
@@ -134,7 +134,7 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="content" class="form-label">Description complÃ¨te</label>
+                                    <label for="content" class="form-label">Description complète</label>
                                     <textarea class="form-control" id="content" name="content" rows="10">{{ old('content', $voyage->post_content) }}</textarea>
                                 </div>
 
@@ -149,19 +149,19 @@
                     <div class="col-lg-4">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title mb-4">ParamÃ¨tres gÃ©nÃ©raux</h4>
+                                <h4 class="card-title mb-4">Paramètres généraux</h4>
 
                                 <div class="mb-3">
                                     <label for="post_status" class="form-label">Statut</label>
                                     <select class="form-select" id="post_status" name="post_status">
-                                        <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>PubliÃ©</option>
+                                        <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>Publié</option>
                                         <option value="draft" {{ old('post_status', $voyage->post_status) === 'draft' ? 'selected' : '' }}>Brouillon</option>
                                         <option value="pending" {{ old('post_status', $voyage->post_status) === 'pending' ? 'selected' : '' }}>En attente</option>
                                     </select>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="duration_day" class="form-label">DurÃ©e (jours)</label>
+                                    <label for="duration_day" class="form-label">Durée (jours)</label>
                                     <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly>
                                 </div>
 
@@ -178,7 +178,7 @@
                                 <div class="mb-3">
                                     <label for="tour_price_by" class="form-label">Tarification par</label>
                                     <select class="form-select" id="tour_price_by" name="tour_price_by">
-                                        <option value="">-- SÃ©lectionner --</option>
+                                        <option value="">-- Sélectionner --</option>
                                         <option value="person" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'person' ? 'selected' : '' }}>Par personne</option>
                                         <option value="group" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'group' ? 'selected' : '' }}>Par groupe</option>
                                         <option value="fixed" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'fixed' ? 'selected' : '' }}>Prix fixe</option>
@@ -200,7 +200,7 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="st_tour_external_booking" class="form-label">Lien rÃ©servation externe</label>
+                                    <label for="st_tour_external_booking" class="form-label">Lien réservation externe</label>
                                     <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
                                 </div>
                             </div>
@@ -217,7 +217,7 @@
                 .destination-ux-title { font-size: 1.1rem; font-weight: 600; color: #212529; margin: 0 0 0.25rem 0; }
                 .destination-ux-helper { font-size: 0.8125rem; color: #6c757d; margin: 0 0 0.5rem 0; }
                 
-                /* Styles pour le rÃ©sumÃ© du jour */
+                /* Styles pour le résumé du jour */
                 .day-summary-container { margin-top: 0.5rem; }
                 .day-summary-card {
                     border: 1px solid #dee2e6;
@@ -275,7 +275,7 @@
                 .destination-tree-title { flex: 1; min-width: 0; }
                 .destination-tree-title mark { background: #fff3cd; padding: 0 0.1em; border-radius: 2px; }
                 .destination-tree-item.indeterminate > .destination-tree-row .location-checkbox { opacity: 0.85; }
-                .destination-tree-item.destination-search-path .destination-tree-title[data-path]::after { content: ' â€º ' attr(data-path); font-size: 0.7rem; color: #6c757d; margin-left: 0.35rem; display: inline; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+                .destination-tree-item.destination-search-path .destination-tree-title[data-path]::after { content: ' "º ' attr(data-path); font-size: 0.7rem; color: #6c757d; margin-left: 0.35rem; display: inline; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
                 .destination-country-cities .destination-country-select { max-width: 100%; min-width: 280px; }
                 .destination-country-multi-wrap { border: 1px solid #dee2e6; border-radius: 6px; padding: 0.75rem; background: #fafafa; }
                 .destination-country-list { max-height: 220px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem 1rem; }
@@ -330,22 +330,22 @@
                     <div class="card-body destination-ux-body">
                         <div class="destination-ux-header">
                             <h4 class="destination-ux-title">Tour location</h4>
-                            <p class="destination-ux-helper">SÃ©lectionnez une ou plusieurs destinations pour ce circuit.</p>
+                            <p class="destination-ux-helper">Sélectionnez une ou plusieurs destinations pour ce circuit.</p>
                             <div class="destination-ux-badge-wrap">
                                 <span class="badge bg-primary destination-ux-badge" id="locationCountBadge">
-                                    <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} destination(s) sÃ©lectionnÃ©e(s)</span>
+                                    <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} destination(s) sélectionnée(s)</span>
                                 </span>
                             </div>
                         </div>
 
-                        {{-- SÃ©lections actuelles (chips) --}}
+                        {{-- Sélections actuelles (chips) --}}
                         <div class="destination-ux-chips-section">
-                            <div class="destination-ux-chips-label">SÃ©lections actuelles</div>
+                            <div class="destination-ux-chips-label">Sélections actuelles</div>
                             <div class="destination-ux-chips" id="locationChipsContainer"></div>
                             <button type="button" class="btn btn-sm btn-outline-secondary destination-ux-chips-clear" id="locationChipsClear" style="display: none;">Effacer tout</button>
                         </div>
 
-                        {{-- Tous les pays du monde + catalogue villes (world_cities + WP, crÃ©ation Ã  la volÃ©e) --}}
+                        {{-- Tous les pays du monde + catalogue villes (world_cities + WP, création Ã  la volée) --}}
                         <div id="locationTreeContainer">
                             @include('admin.circuits.voyages.partials.location-country-cities', [
                                 'worldCountries' => $worldCountries ?? [],
@@ -364,7 +364,7 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="address" class="form-label">Adresse complÃ¨te</label>
+                                    <label for="address" class="form-label">Adresse complète</label>
                                     <input type="text" class="form-control" id="address" name="address" value="{{ old('address', $meta['address'] ?? '') }}">
                                 </div>
                                 
@@ -422,7 +422,7 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="phone" class="form-label">TÃ©lÃ©phone</label>
+                                    <label for="phone" class="form-label">Téléphone</label>
                                     <input type="text" class="form-control" id="phone" name="phone" value="{{ old('phone', $meta['phone'] ?? '') }}">
                                 </div>
                             </div>
@@ -447,7 +447,7 @@
             <div class="tab-pane" id="price" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">ParamÃ¨tres de prix</h4>
+                        <h4 class="card-title mb-4">Paramètres de prix</h4>
                         
                         <div class="row">
                             <div class="col-lg-4">
@@ -462,7 +462,7 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="sale_price" class="form-label">Prix soldÃ© (MAD)</label>
+                                    <label for="sale_price" class="form-label">Prix soldé (MAD)</label>
                                     <input type="number" class="form-control" id="sale_price" name="sale_price" value="{{ old('sale_price', $meta['sale_price'] ?? '') }}" step="0.01" min="0">
                                 </div>
                             </div>
@@ -479,19 +479,19 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="infant_price" class="form-label">Prix BÃ©bÃ© (MAD)</label>
+                                    <label for="infant_price" class="form-label">Prix Bébé (MAD)</label>
                                     <input type="number" class="form-control" id="infant_price" name="infant_price" value="{{ old('infant_price', $meta['infant_price'] ?? '') }}" step="0.01" min="0">
                                 </div>
                             </div>
                             
                             <div class="col-lg-4">
                                 <div class="mb-3">
-                                    <label for="discount" class="form-label">RÃ©duction</label>
+                                    <label for="discount" class="form-label">Réduction</label>
                                     <input type="text" class="form-control" id="discount" name="discount" value="{{ old('discount', $meta['discount'] ?? '') }}">
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="discount_type" class="form-label">Type de rÃ©duction</label>
+                                    <label for="discount_type" class="form-label">Type de réduction</label>
                                     <select class="form-select" id="discount_type" name="discount_type">
                                         <option value="">Aucune</option>
                                         <option value="percent" {{ old('discount_type', $meta['discount_type'] ?? '') === 'percent' ? 'selected' : '' }}>Pourcentage</option>
@@ -500,12 +500,12 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="discount_by_people_type" class="form-label">RÃ©duction selon type personne</label>
+                                    <label for="discount_by_people_type" class="form-label">Réduction selon type personne</label>
                                     <input type="text" class="form-control" id="discount_by_people_type" name="discount_by_people_type" value="{{ old('discount_by_people_type', $meta['discount_by_people_type'] ?? '') }}" placeholder="adult,child,infant">
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="calculator_discount_by_people_type" class="form-label">Calculateur rÃ©duction</label>
+                                    <label for="calculator_discount_by_people_type" class="form-label">Calculateur réduction</label>
                                     <input type="text" class="form-control" id="calculator_discount_by_people_type" name="calculator_discount_by_people_type" value="{{ old('calculator_discount_by_people_type', $meta['calculator_discount_by_people_type'] ?? '') }}">
                                 </div>
                             </div>
@@ -543,16 +543,16 @@
                         <div class="mb-3">
                             <label for="tours_program_style" class="form-label">Style du programme</label>
                             <select class="form-select" id="tours_program_style" name="tours_program_style">
-                                <option value="">DÃ©faut</option>
+                                <option value="">Défaut</option>
                                 <option value="tab" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'tab' ? 'selected' : '' }}>Onglets</option>
-                                <option value="accordion" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'accordion' ? 'selected' : '' }}>AccordÃ©on</option>
+                                <option value="accordion" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'accordion' ? 'selected' : '' }}>Accordéon</option>
                                 <option value="list" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'list' ? 'selected' : '' }}>Liste</option>
                             </select>
                         </div>
                     </div>
                 </div>
                 
-                {{-- Section Paiement fusionnÃ©e --}}
+                {{-- Section Paiement fusionnée --}}
                 <div class="card mt-3">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Moyens de paiement</h4>
@@ -621,15 +621,15 @@
             <div class="tab-pane" id="availability" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">DisponibilitÃ© & RÃ©servation</h4>
+                        <h4 class="card-title mb-4">Disponibilité & Réservation</h4>
                         
                         <div class="mb-3">
-                            <label for="tours_booking_period" class="form-label">PÃ©riode de rÃ©servation</label>
+                            <label for="tours_booking_period" class="form-label">Période de réservation</label>
                             <input type="text" class="form-control" id="tours_booking_period" name="tours_booking_period" value="{{ old('tours_booking_period', $meta['tours_booking_period'] ?? '') }}">
                         </div>
                         
                         <div class="mb-3">
-                            <label for="st_booking_option_type" class="form-label">Type d'option de rÃ©servation</label>
+                            <label for="st_booking_option_type" class="form-label">Type d'option de réservation</label>
                             <input type="text" class="form-control" id="st_booking_option_type" name="st_booking_option_type" value="{{ old('st_booking_option_type', $meta['st_booking_option_type'] ?? '') }}">
                         </div>
                         
@@ -668,7 +668,7 @@
                             
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="st_cancel_number_day" class="form-label">Nombre de jours avant dÃ©part</label>
+                                    <label for="st_cancel_number_day" class="form-label">Nombre de jours avant départ</label>
                                     <input type="number" class="form-control" id="st_cancel_number_day" name="st_cancel_number_day" value="{{ old('st_cancel_number_day', $meta['st_cancel_number_day'] ?? '') }}" min="0">
                                 </div>
                             </div>
@@ -687,9 +687,9 @@
             <div class="tab-pane" id="media" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Images & VidÃ©os</h4>
+                        <h4 class="card-title mb-4">Images & Vidéos</h4>
 
-                        {{-- Section 1 : Image principale (Hero / Cover) â€” Upload ou mÃ©diathÃ¨que --}}
+                        {{-- Section 1 : Image principale (Hero / Cover) "” Upload ou médiathèque --}}
                         <div class="mb-4 p-3 border rounded bg-light">
                             <h5 class="mb-2">Image principale du voyage (Hero / Cover)</h5>
                             <input type="hidden" name="hero_image_id" id="hero_image_id" value="{{ old('hero_image_id', $meta['hero_image_id'] ?? '') }}">
@@ -704,13 +704,13 @@
                                         </button>
                                         <input type="file" id="hero_image_file" accept="image/jpeg,image/png,image/webp" class="d-none">
                                         <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="hero-choose-media-btn">
-                                            <i class="bx bx-images"></i> Choisir depuis la mÃ©diathÃ¨que
+                                            <i class="bx bx-images"></i> Choisir depuis la médiathèque
                                         </button>
                                         <button type="button" class="btn btn-outline-danger btn-sm" id="hero-remove-btn">
                                             <i class="bx bx-trash"></i> Supprimer
                                         </button>
                                     </div>
-                                    <small class="text-muted d-block">JPG, PNG ou WebP â€” max 5 Mo.</small>
+                                    <small class="text-muted d-block">JPG, PNG ou WebP "” max 5 Mo.</small>
                                     <div id="hero-upload-error" class="alert alert-danger mt-2 mb-0 d-none" role="alert"></div>
                                 </div>
                             </div>
@@ -782,24 +782,24 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie gÃ©nÃ©rale (images supplÃ©mentaires)</label>
+                            <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids', $gallery_csv ?? '') }}" placeholder="14435,14436,14437">
                         </div>
                         
                         <div class="mb-3">
-                            <label for="video" class="form-label">URL VidÃ©o</label>
+                            <label for="video" class="form-label">URL Vidéo</label>
                             <input type="text" class="form-control" id="video" name="video" value="{{ old('video', $meta['video'] ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Modal MÃ©diathÃ¨que WP (choix image hero) --}}
+            {{-- Modal Médiathèque WP (choix image hero) --}}
             <div class="modal fade" id="hero-media-modal" tabindex="-1" aria-labelledby="hero-media-modal-label" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="hero-media-modal-label">Choisir une image depuis la mÃ©diathÃ¨que</h5>
+                            <h5 class="modal-title" id="hero-media-modal-label">Choisir une image depuis la médiathèque</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                         </div>
                         <div class="modal-body">
@@ -845,7 +845,7 @@
                             else { alert(msg || 'Erreur lors de l\'upload.'); }
                         }
                         function hideError() { if (errEl) { errEl.textContent = ''; errEl.classList.add('d-none'); } }
-                        if (!csrfToken) { showError('Token de sÃ©curitÃ© manquant. Rechargez la page.'); heroFileInput.value = ''; return; }
+                        if (!csrfToken) { showError('Token de sécurité manquant. Rechargez la page.'); heroFileInput.value = ''; return; }
                         hideError();
                         var formData = new FormData();
                         formData.append('hero_image', file);
@@ -861,7 +861,7 @@
                             }
                         }).then(function(res) {
                             return res.json().then(function(r) { return { ok: res.ok, status: res.status, data: r }; }).catch(function() {
-                                return { ok: false, status: res.status, data: { message: res.status === 419 ? 'Session expirÃ©e. Rechargez la page puis rÃ©essayez.' : 'RÃ©ponse serveur invalide.' } };
+                                return { ok: false, status: res.status, data: { message: res.status === 419 ? 'Session expirée. Rechargez la page puis réessayez.' : 'Réponse serveur invalide.' } };
                             });
                         }).then(function(result) {
                             heroFileInput.value = '';
@@ -873,7 +873,7 @@
                             }
                         }).catch(function() {
                             heroFileInput.value = '';
-                            showError('Erreur rÃ©seau ou serveur. VÃ©rifiez votre connexion.');
+                            showError('Erreur réseau ou serveur. Vérifiez votre connexion.');
                         });
                     });
                 }
@@ -946,7 +946,7 @@
                             }
                             if (data.last_page > 1 && mediaPag) {
                                 mediaPag.classList.remove('d-none');
-                                mediaPag.innerHTML = '<ul class="pagination pagination-sm mb-0"><li class="page-item' + (data.current_page <= 1 ? ' disabled' : '') + '"><a class="page-link" href="#" data-page="' + (data.current_page - 1) + '">PrÃ©c.</a></li><li class="page-item"><span class="page-link">' + data.current_page + ' / ' + data.last_page + '</span></li><li class="page-item' + (data.current_page >= data.last_page ? ' disabled' : '') + '"><a class="page-link" href="#" data-page="' + (data.current_page + 1) + '">Suiv.</a></li></ul>';
+                                mediaPag.innerHTML = '<ul class="pagination pagination-sm mb-0"><li class="page-item' + (data.current_page <= 1 ? ' disabled' : '') + '"><a class="page-link" href="#" data-page="' + (data.current_page - 1) + '">Préc.</a></li><li class="page-item"><span class="page-link">' + data.current_page + ' / ' + data.last_page + '</span></li><li class="page-item' + (data.current_page >= data.last_page ? ' disabled' : '') + '"><a class="page-link" href="#" data-page="' + (data.current_page + 1) + '">Suiv.</a></li></ul>';
                                 mediaPag.querySelectorAll('a[data-page]').forEach(function(a) {
                                     a.addEventListener('click', function(e) { e.preventDefault(); loadMediaSearch(parseInt(this.getAttribute('data-page'), 10)); });
                                 });
@@ -1068,7 +1068,7 @@
                                     alert((result.data && result.data.message) || 'Erreur lors de l\'upload.');
                                 }
                             }).catch(function() {
-                                alert('Erreur rÃ©seau.');
+                                alert('Erreur réseau.');
                             });
                         });
                         fileInput.click();
@@ -1131,7 +1131,7 @@
             <div class="tab-pane" id="taxonomies" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">CatÃ©gories & Taxonomies</h4>
+                        <h4 class="card-title mb-4">Catégories & Taxonomies</h4>
                         
                         <div class="row">
                             @if(isset($availableTaxonomies['st_tour_type']) && $availableTaxonomies['st_tour_type']->isNotEmpty())
@@ -1150,7 +1150,7 @@
                             
                             @if(isset($availableTaxonomies['durations']) && $availableTaxonomies['durations']->isNotEmpty())
                             <div class="col-lg-3">
-                                <h5 class="mb-3">DurÃ©e</h5>
+                                <h5 class="mb-3">Durée</h5>
                                 @foreach($availableTaxonomies['durations'] as $term)
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" name="durations[]" value="{{ $term->term_id }}" id="durations_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['durations'] ?? []) ? 'checked' : '' }}>
@@ -1194,12 +1194,12 @@
                 </div>
             </div>
 
-            {{-- TAB VOLS â€” Vol Aller = toujours Jour 1, Vol Retour = toujours Dernier jour (N) â€” Laravel voyage_flights --}}
+            {{-- TAB VOLS "” Vol Aller = toujours Jour 1, Vol Retour = toujours Dernier jour (N) "” Laravel voyage_flights --}}
             @php
                 $fOutbound = $outboundFlight ?? null;
                 $fInbound = $inboundFlight ?? null;
                 $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1));
-                $flightDash = 'â€”';
+                $flightDash = '"”';
                 $fmtDate = function($d) { return $d ? (\Carbon\Carbon::parse($d)->format('D, d M')) : null; };
             @endphp
             <div class="tab-pane" id="flights" role="tabpanel">
@@ -1207,10 +1207,10 @@
                     $lastDayNumber = $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1); 
                 @endphp
 
-                {{-- Lieux de dÃ©part (Ã©ditables) â€” source unique : vols gÃ©rÃ©s dans les options ci-dessous avec "Lieu de dÃ©part" --}}
+                {{-- Lieux de départ (éditables) "” source unique : vols gérés dans les options ci-dessous avec "Lieu de départ" --}}
                 @include('admin.circuits.voyages.partials._departure_places_inline', ['departurePlaces' => $departurePlaces ?? collect()])
 
-                {{-- Utilisation du Flight Manager rÃ©utilisable en mode complet --}}
+                {{-- Utilisation du Flight Manager réutilisable en mode complet --}}
                 @include('admin.circuits.voyages.partials._flight_manager', [
                     'mode' => 'full',
                     'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
@@ -1222,20 +1222,20 @@
                 ])
             </div>
 
-            {{-- TAB HÃ”TELS â€” HÃ´tels par jour (multi-lignes) â€” mÃªme contenu affichÃ© dans le drawer Jour X â€” Ajouter --}}
+            {{-- TAB HÃ”TELS "” Hôtels par jour (multi-lignes) "” même contenu affiché dans le drawer Jour X "” Ajouter --}}
             <div class="tab-pane" id="hotels" role="tabpanel">
                 @php
                     $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1));
                 @endphp
-                <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> <strong>HÃ´tels</strong> â€” Vous pouvez ajouter plusieurs hÃ´tels et les associer Ã  un jour spÃ©cifique du circuit.</p>
-                <h5 class="mb-3" id="tour-hotels-title"><i class="bx bx-hotel"></i> HÃ´tel(s) <span id="tour-hotels-period">(sÃ©jour â€” check-in J1, check-out J{{ $lastDayNumber }})</span></h5>
+                <p class="alert alert-info py-2 mb-3 small"><i class="bx bx-info-circle"></i> <strong>Hôtels</strong> "” Vous pouvez ajouter plusieurs hôtels et les associer Ã  un jour spécifique du circuit.</p>
+                <h5 class="mb-3" id="tour-hotels-title"><i class="bx bx-hotel"></i> Hôtel(s) <span id="tour-hotels-period">(séjour "” check-in J1, check-out J{{ $lastDayNumber }})</span></h5>
                 <div id="tour-hotels-anchor">
                     @include('admin.circuits.voyages.partials._tour_hotels_section')
                 </div>
                 <p class="text-muted small mt-3">Les images s'affichent sur la fiche circuit (site WordPress).</p>
             </div>
 
-            {{-- TAB TRANSFERTS â€” Transferts par jour (multi-lignes) â€” mÃªme contenu affichÃ© dans le drawer Jour X â€” Ajouter --}}
+            {{-- TAB TRANSFERTS "” Transferts par jour (multi-lignes) "” même contenu affiché dans le drawer Jour X "” Ajouter --}}
             <div class="tab-pane" id="transfers" role="tabpanel">
                 @php
                     $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1));
@@ -1252,9 +1252,9 @@
                     <div class="card-body">
                         <h4 class="card-title mb-3"><i class="bx bx-calendar-check"></i> Dates disponibles (Travelling on)</h4>
                         <p class="alert alert-info py-2 mb-3 small">
-                            <i class="bx bx-info-circle"></i> <strong>Configuration des dates</strong> â€” 
-                            Ajoutez les dates disponibles pour ce voyage. Seules ces dates seront sÃ©lectionnables dans le calendrier sur la page du tour. 
-                            Si aucune date n'est configurÃ©e, un message "No dates available" sera affichÃ©.
+                            <i class="bx bx-info-circle"></i> <strong>Configuration des dates</strong> "” 
+                            Ajoutez les dates disponibles pour ce voyage. Seules ces dates seront sélectionnables dans le calendrier sur la page du tour. 
+                            Si aucune date n'est configurée, un message "No dates available" sera affiché.
                         </p>
 
                         <div id="travel-dates-container">
@@ -1269,10 +1269,10 @@
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small mb-1">Places</label>
-                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="IllimitÃ©">
+                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
                                         </div>
                                         <div class="col-md-2">
-                                            <label class="form-label small mb-1">Prix spÃ©cifique</label>
+                                            <label class="form-label small mb-1">Prix spécifique</label>
                                             <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="Prix">
                                         </div>
                                         <div class="col-md-2 d-flex align-items-end pb-2">
@@ -1282,14 +1282,14 @@
                                             </div>
                                         </div>
                                         <div class="col-md-1 d-flex align-items-end pb-2">
-                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">Ã—</button>@endif
+                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>@endif
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             @empty
                             <div class="alert alert-warning">
-                                Aucune date disponible configurÃ©e. Cliquez sur "Ajouter une date" pour commencer.
+                                Aucune date disponible configurée. Cliquez sur "Ajouter une date" pour commencer.
                             </div>
                             @endforelse
                         </div>
@@ -1318,10 +1318,10 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label small mb-1">Places</label>
-                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="IllimitÃ©">
+                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label small mb-1">Prix spÃ©cifique</label>
+                                                <label class="form-label small mb-1">Prix spécifique</label>
                                                 <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="Prix">
                                             </div>
                                             <div class="col-md-2 d-flex align-items-end pb-2">
@@ -1331,7 +1331,7 @@
                                                 </div>
                                             </div>
                                             <div class="col-md-1 d-flex align-items-end pb-2">
-                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">Ã—</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1351,15 +1351,15 @@
                 </div>
             </div>
 
-            {{-- TAB ACTIVITÃ‰S â€” Gestion du catalogue d'activitÃ©s --}}
+            {{-- TAB ACTIVITÉS "” Gestion du catalogue d'activités --}}
             <div class="tab-pane" id="activities" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">ActivitÃ©s</h4>
+                        <h4 class="card-title mb-4">Activités</h4>
                         @if(Route::has('admin.circuits.activities.index'))
                         <div class="mb-3">
                             <a href="{{ route('admin.circuits.activities.index') }}" class="btn btn-primary" target="_blank">
-                                <i class="bx bx-list-ul me-1"></i> Catalogue d'activitÃ©s
+                                <i class="bx bx-list-ul me-1"></i> Catalogue d'activités
                             </a>
                         </div>
                         @endif
@@ -1367,14 +1367,14 @@
                 </div>
             </div>
 
-            {{-- TAB PROGRAMME (unique) â€” Jours + notes + activitÃ©s --}}
+            {{-- TAB PROGRAMME (unique) "” Jours + notes + activités --}}
             <div class="tab-pane" id="program-days" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
                             <div>
                                 <h4 class="card-title mb-1">Programme</h4>
-                                <p class="text-muted mb-0 small">Chaque jour : mode, titre, notes, activitÃ©s. @if(Route::has('admin.circuits.activities.index'))<a href="{{ route('admin.circuits.activities.index') }}" target="_blank">Catalogue dâ€™activitÃ©s</a>.@endif</p>
+                                <p class="text-muted mb-0 small">Chaque jour : mode, titre, notes, activités. @if(Route::has('admin.circuits.activities.index'))<a href="{{ route('admin.circuits.activities.index') }}" target="_blank">Catalogue d'activités</a>.@endif</p>
                             </div>
                             <div class="d-flex align-items-center gap-3">
                                 <span class="badge bg-primary fs-6" id="program-days-badge">0 jours</span>
@@ -1395,9 +1395,9 @@
                             @endphp
                             <div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}" data-day-index="{{ $dayIndex }}">
                                 <h2 class="accordion-header d-flex align-items-center">
-                                    <span class="drag-handle me-2 text-muted cursor-grab" title="DÃ©placer" aria-hidden="true"><i class="bx bx-dots-vertical-rounded"></i></span>
+                                    <span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer" aria-hidden="true"><i class="bx bx-dots-vertical-rounded"></i></span>
                                     <button class="accordion-button flex-grow-1 {{ $isFirst ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
-                                        <span class="programme-day-label">JOUR {{ $day->day_number }} â€“ {{ $dayTitleDisplay }}</span>
+                                        <span class="programme-day-label">JOUR {{ $day->day_number }} "“ {{ $dayTitleDisplay }}</span>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-danger me-2 btn-remove-program-day" title="Supprimer ce jour" data-day-id="{{ $day->id }}">
                                         <i class="bx bx-trash"></i>
@@ -1417,7 +1417,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Titre du jour</label>
-                                            <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex: Jour 1 - ArrivÃ©e">
+                                            <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex: Jour 1 - Arrivée">
                                         </div>
                                     </div>
                                     <div class="mb-3">
@@ -1427,7 +1427,7 @@
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
                                     
-                                    {{-- Inputs hidden pour lignage par jour: vols/hÃ´tel/transferts (prÃ©-remplis depuis programDayHotelsTransfers pour le modal Programme) --}}
+                                    {{-- Inputs hidden pour lignage par jour: vols/hôtel/transferts (pré-remplis depuis programDayHotelsTransfers pour le modal Programme) --}}
                                     @php $dayHotelsTransfers = ($programDayHotelsTransfers ?? [])[$dayIndex] ?? []; @endphp
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][flights]" value="">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ $dayHotelsTransfers['hotel_id'] ?? '' }}">
@@ -1435,20 +1435,20 @@
 
                                     <div class="programme-day-extras mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"></div>
                                     <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
-                                        INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'ActivitÃ©s' : 'ActivitÃ©' }}
+                                        INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activités' : 'Activité' }}
                                     </p>
 
-                                    <h6 class="mt-3 mb-2">Ã‰lÃ©ments du jour</h6>
+                                    <h6 class="mt-3 mb-2">Éléments du jour</h6>
                                     <div class="programme-activities-list mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
                                         @foreach($activities as $actIndex => $da)
                                             <div class="programme-activity-row card mb-2" data-day-activity-id="{{ $da->id }}" draggable="true">
                                                 <div class="card-body py-2">
                                                     <div class="d-flex flex-wrap align-items-start gap-2">
-                                                        <span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="RÃ©ordonner"><i class="bx bx-dots-vertical-rounded"></i></span>
+                                                        <span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][day_activity_id]" value="{{ $da->id }}">
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][activity_id]" value="{{ $da->activity_id }}">
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][sort_order]" value="{{ $actIndex }}">
-                                                        <span class="fw-medium">{{ $da->activity->title ?? 'ActivitÃ© #'.$da->activity_id }}</span>
+                                                        <span class="fw-medium">{{ $da->activity->title ?? 'Activité #'.$da->activity_id }}</span>
                                                         <span class="form-check form-check-inline mb-0">
                                                             <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="0">
                                                             <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
@@ -1460,8 +1460,8 @@
                                                             <label class="form-check-label small">Obligatoire</label>
                                                         </span>
                                                         @if($da->is_editable)
-                                                        <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisÃ©">
-                                                        <textarea class="form-control form-control-sm" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisÃ©e">{{ $da->custom_description }}</textarea>
+                                                        <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
+                                                        <textarea class="form-control form-control-sm" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
                                                         @else
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}">
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" value="{{ $da->custom_description }}">
@@ -1476,11 +1476,11 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2 flex-wrap">
                                         <button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}" data-day-number="{{ $day->day_number }}">
-                                            <i class="bx bx-plus"></i> Ajouter un Ã©lÃ©ment
+                                            <i class="bx bx-plus"></i> Ajouter un élément
                                         </button>
                                         <span class="small text-muted">ou</span>
                                         <select class="form-select form-select-sm add-activity-select" style="max-width:240px" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
-                                            <option value="">-- ActivitÃ© rapide --</option>
+                                            <option value="">-- Activité rapide --</option>
                                             @foreach($activitiesCatalog as $act)
                                                 <option value="{{ $act->id }}">{{ $act->title }}</option>
                                             @endforeach
@@ -1492,7 +1492,7 @@
                             </div>
                         @empty
                             <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2" id="program-no-days-alert">
-                                <span><i class="bx bx-info-circle"></i> Aucun jour. Cliquez sur Â« Ajouter un jour Â» pour dÃ©finir le programme.</span>
+                                <span><i class="bx bx-info-circle"></i> Aucun jour. Cliquez sur Â« Ajouter un jour Â» pour définir le programme.</span>
                                 <button type="button" class="btn btn-sm btn-success" id="btn-add-program-day-empty"><i class="bx bx-plus"></i> Ajouter un jour</button>
                             </div>
                         @endforelse
@@ -1501,7 +1501,7 @@
                 </div>
             </div>
 
-            {{-- Drawer Ajouter un Ã©lÃ©ment (Vols / Transferts / HÃ´tels / ActivitÃ©s) --}}
+            {{-- Drawer Ajouter un élément (Vols / Transferts / Hôtels / Activités) --}}
             @include('admin.circuits.voyages.components.DayBuilderDrawer', [
                 'activitiesCatalog' => $activitiesCatalog,
                 'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
@@ -1519,12 +1519,12 @@
                     <div class="card-footer d-flex justify-content-between align-items-center bg-light">
                         <div>
                             <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg waves-effect waves-light" id="edit-voyage-submit-btn">
-                                <i class="bx bx-save me-1"></i> {{ $isCreate ? 'CrÃ©er le tour dans WordPress' : 'Enregistrer toutes les modifications' }}
+                                <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour dans WordPress' : 'Enregistrer toutes les modifications' }}
                             </button>
                             <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
                         </div>
                         <div class="text-muted">
-                            <small><i class="bx bx-info-circle"></i> Modifications instantanÃ©es dans WordPress</small>
+                            <small><i class="bx bx-info-circle"></i> Modifications instantanées dans WordPress</small>
                         </div>
                     </div>
                 </div>
@@ -1532,23 +1532,23 @@
         </div>
     </form>
 
-    {{-- Plus de formulaire sÃ©parÃ© pour ajout/suppression de jour : tout est gÃ©rÃ© en JS, sauvegardÃ© au submit du formulaire principal --}}
+    {{-- Plus de formulaire séparé pour ajout/suppression de jour : tout est géré en JS, sauvegardé au submit du formulaire principal --}}
 
-    {{-- DELETE ZONE (masquÃ©e en crÃ©ation) --}}
+    {{-- DELETE ZONE (masquée en création) --}}
     @if (!$isCreate)
     <div class="row mt-3">
         <div class="col-12">
             <div class="card border-danger">
                 <div class="card-body">
                     <h5 class="card-title text-danger">Zone dangereuse</h5>
-                    <p class="text-muted">Cette action supprimera dÃ©finitivement le tour de WordPress.</p>
+                    <p class="text-muted">Cette action supprimera définitivement le tour de WordPress.</p>
                     <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" 
                           method="POST" 
-                          onsubmit="return confirm('âš ï¸ ATTENTION : Supprimer dÃ©finitivement ce tour de WordPress ?\n\nCette action est irrÃ©versible.');">
+                          onsubmit="return confirm('âš ï¸ ATTENTION : Supprimer définitivement ce tour de WordPress ?\n\nCette action est irréversible.');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger waves-effect waves-light">
-                            <i class="bx bx-trash me-1"></i> Supprimer ce tour dÃ©finitivement
+                            <i class="bx bx-trash me-1"></i> Supprimer ce tour définitivement
                         </button>
                     </form>
                 </div>
@@ -1560,11 +1560,11 @@
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
-        // Initialiser les donnÃ©es pour le modal "Ajouter un Ã©lÃ©ment" (hotels & transfers par jour)
+        // Initialiser les données pour le modal "Ajouter un élément" (hotels & transfers par jour)
         window.tourHotelsData = {};
         window.tourTransfersData = { arrival: [], departure: [] };
 
-        // Charger tous les hÃ´tels du tour (disponibles pour sÃ©lection par jour)
+        // Charger tous les hôtels du tour (disponibles pour sélection par jour)
         @foreach($tourHotels as $hotel)
             @php $hotelImgUrl = !empty($hotel->image_id) ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$hotel->image_id) : ''; @endphp
             window.tourHotelsData[{{ $hotel->id }}] = {
@@ -1578,11 +1578,11 @@
                 image_url: @json($hotelImgUrl ?? ''),
                 check_in_day: {{ $hotel->check_in_day ?? ($hotel->day_number ?? 'null') }},
                 check_out_day: {{ $hotel->check_out_day ?? ($hotel->day_number ?? 'null') }},
-                day_number: {{ $hotel->day_number ?? 'null' }} // CompatibilitÃ©
+                day_number: {{ $hotel->day_number ?? 'null' }} // Compatibilité
             };
         @endforeach
 
-        // Charger tous les transferts du tour (disponibles pour sÃ©lection par jour) avec tous les dÃ©tails
+        // Charger tous les transferts du tour (disponibles pour sélection par jour) avec tous les détails
         @foreach($transferArrivals as $transfer)
             window.tourTransfersData.arrival.push({
                 id: {{ $transfer->id }},
@@ -1615,10 +1615,10 @@
             });
         @endforeach
 
-        // Structure pour prÃ©-remplir le modal par jour (programme_days[$i] => { hotel_id: x, transfer_ids: [...] })
+        // Structure pour pré-remplir le modal par jour (programme_days[$i] => { hotel_id: x, transfer_ids: [...] })
         window.programDayHotelsTransfers = @json($programDayHotelsTransfers ?? []);
 
-        // Ouvrir l'onglet Vols si ?tab=flights (depuis HÃ´tels / Transferts sidebar)
+        // Ouvrir l'onglet Vols si ?tab=flights (depuis Hôtels / Transferts sidebar)
         document.addEventListener('DOMContentLoaded', function() {
             var params = new URLSearchParams(window.location.search);
             if (params.get('tab') === 'flights') {
@@ -1653,7 +1653,7 @@
 
             function updateCount() {
                 var n = document.querySelectorAll('.location-checkbox:checked').length;
-                if (countText) countText.textContent = n + ' destination(s) sÃ©lectionnÃ©e(s)';
+                if (countText) countText.textContent = n + ' destination(s) sélectionnée(s)';
             }
 
             function updateChips() {
@@ -1665,7 +1665,7 @@
                     var title = cb.getAttribute('data-loc-title') || id;
                     var chip = document.createElement('span');
                     chip.className = 'destination-ux-chip';
-                    chip.innerHTML = escapeHtml(title) + ' <button type="button" class="destination-ux-chip-remove" data-loc-id="' + escapeHtml(id) + '" aria-label="Retirer">Ã—</button>';
+                    chip.innerHTML = escapeHtml(title) + ' <button type="button" class="destination-ux-chip-remove" data-loc-id="' + escapeHtml(id) + '" aria-label="Retirer">×</button>';
                     chipsContainer.appendChild(chip);
                 });
                 if (chipsClearBtn) chipsClearBtn.style.display = boxes.length ? '' : 'none';
@@ -1815,7 +1815,7 @@
             updateChips();
             updateIndeterminate();
 
-            // Pays (choix multiple) + catalogue villes : recherche, Tout sÃ©lectionner/dÃ©sÃ©lectionner, ensureLocation Ã  la volÃ©e
+            // Pays (choix multiple) + catalogue villes : recherche, Tout sélectionner/désélectionner, ensureLocation Ã  la volée
             var panelDynamic = document.getElementById('destination-cities-panel-dynamic');
             var panelTitle = document.getElementById('destination-cities-panel-title');
             var panelList = document.getElementById('destination-cities-list');
@@ -1972,12 +1972,12 @@
                             var label = document.createElement('label');
                             label.className = 'destination-city-checkbox-label destination-city-row';
                             label.setAttribute('data-city-title', title.toLowerCase());
-                            label.setAttribute('data-path', countryName + ' â€º ' + title);
+                            label.setAttribute('data-path', countryName + ' "º ' + title);
                             label.setAttribute('data-country-code', code);
                             if (lid) {
-                                label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' â€º ' + escapeHtml(title) + '</span>';
+                                label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' "º ' + escapeHtml(title) + '</span>';
                             } else {
-                                label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' â€º ' + escapeHtml(title) + '</span>';
+                                label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' "º ' + escapeHtml(title) + '</span>';
                             }
                             block.appendChild(label);
                         });
@@ -2152,7 +2152,7 @@
                     var countryName = (countryCitiesData[code] && countryCitiesData[code].title) ? countryCitiesData[code].title : (worldCountries[code] || code);
                     (mergedCities[code] || []).forEach(function(city) {
                         var title = city.title || '';
-                        var path = countryName + ' â€º ' + title;
+                        var path = countryName + ' "º ' + title;
                         if (selectedPaths.indexOf(path) !== -1) return;
                         if (term && path.toLowerCase().indexOf(term) === -1 && title.toLowerCase().indexOf(term) === -1) return;
                         list.push({ code: code, countryName: countryName, path: path, city: city });
@@ -2308,7 +2308,7 @@
                     var titleInput = card.querySelector('input[name$="[day_title]"]');
                     var dayNum = i + 1;
                     var title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : ('Jour ' + dayNum);
-                    if (label) label.textContent = 'JOUR ' + dayNum + ' â€“ ' + title;
+                    if (label) label.textContent = 'JOUR ' + dayNum + ' "“ ' + title;
                 });
                 updateBadge();
                 updateDuration();
@@ -2321,9 +2321,9 @@
                 }).join('');
                 return '<div class="accordion-item programme-day-card" data-day-id="" data-day-index="' + index + '">' +
                     '<h2 class="accordion-header d-flex align-items-center">' +
-                    '<span class="drag-handle me-2 text-muted cursor-grab" title="DÃ©placer"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                    '<span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer"><i class="bx bx-dots-vertical-rounded"></i></span>' +
                     '<button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#' + collapseId + '" aria-expanded="false" aria-controls="' + collapseId + '">' +
-                    '<span class="programme-day-label">JOUR ' + (index + 1) + ' â€“ Jour ' + (index + 1) + '</span></button>' +
+                    '<span class="programme-day-label">JOUR ' + (index + 1) + ' "“ Jour ' + (index + 1) + '</span></button>' +
                     '<button type="button" class="btn btn-sm btn-outline-danger me-2 btn-remove-program-day" title="Supprimer ce jour"><i class="bx bx-trash"></i></button></h2>' +
                     '<div id="' + collapseId + '" class="accordion-collapse collapse" data-bs-parent="#accordionProgrammeDays">' +
                     '<div class="accordion-body" data-day-index="' + index + '" data-day-id="">' +
@@ -2333,7 +2333,7 @@
                     '<select name="programme_days[' + index + '][mode]" class="form-select programme-day-mode">' +
                     '<option value="program" selected>Programme</option><option value="free">Libre</option></select></div>' +
                     '<div class="col-md-6"><label class="form-label">Titre du jour</label>' +
-                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex: Jour ' + (index + 1) + ' - ArrivÃ©e"></div></div>' +
+                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex: Jour ' + (index + 1) + ' - Arrivée"></div></div>' +
                     '<div class="mb-3"><label class="form-label">Description / Notes</label>' +
                     '<textarea class="form-control" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes ou description du jour"></textarea></div>' +
                     '<input type="hidden" name="programme_days[' + index + '][title]" value="">' +
@@ -2342,14 +2342,14 @@
                     '<input type="hidden" name="programme_days[' + index + '][hotel_id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][transfer_ids]" value="">' +
                     '<div class="programme-day-extras small text-muted mb-2" data-day-index="' + index + '" data-day-id=""></div>' +
-                    '<p class="small text-muted mb-2 programme-day-inclus" data-day-index="' + index + '">INCLUS : 0 ActivitÃ©</p>' +
-                    '<h6 class="mt-3 mb-2">Ã‰lÃ©ments du jour</h6>' +
+                    '<p class="small text-muted mb-2 programme-day-inclus" data-day-index="' + index + '">INCLUS : 0 Activité</p>' +
+                    '<h6 class="mt-3 mb-2">Éléments du jour</h6>' +
                     '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
                     '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-                    '<button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="' + index + '" data-day-id="" data-day-number="' + (index + 1) + '"><i class="bx bx-plus"></i> Ajouter un Ã©lÃ©ment</button>' +
+                    '<button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="' + index + '" data-day-id="" data-day-number="' + (index + 1) + '"><i class="bx bx-plus"></i> Ajouter un élément</button>' +
                     '<span class="small text-muted">ou</span>' +
                     '<select class="form-select form-select-sm add-activity-select" style="max-width:240px" data-day-index="' + index + '" data-day-id="">' +
-                    '<option value="">-- ActivitÃ© rapide --</option>' + actOpts + '</select>' +
+                    '<option value="">-- Activité rapide --</option>' + actOpts + '</select>' +
                     '<button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="' + index + '" data-day-id=""><i class="bx bx-plus"></i> Ajouter</button></div>' +
                     '</div></div></div>';
             }
@@ -2376,7 +2376,7 @@
                     alert('Il doit rester au moins un jour.');
                     return;
                 }
-                if (!confirm('Supprimer ce jour ? Les activitÃ©s du jour seront supprimÃ©es. La sauvegarde sera effective au clic sur Â« Enregistrer Â».')) return;
+                if (!confirm('Supprimer ce jour ? Les activités du jour seront supprimées. La sauvegarde sera effective au clic sur Â« Enregistrer Â».')) return;
                 card.remove();
                 if (count() === 0 && noDaysAlert) noDaysAlert.style.display = '';
                 renumber();
@@ -2404,7 +2404,7 @@
                         var card = e.target.closest('.programme-day-card');
                         var i = parseInt(card.getAttribute('data-day-index'), 10);
                         var label = card.querySelector('.programme-day-label');
-                        if (label) label.textContent = 'JOUR ' + (i + 1) + ' â€“ ' + (e.target.value.trim() || ('Jour ' + (i + 1)));
+                        if (label) label.textContent = 'JOUR ' + (i + 1) + ' "“ ' + (e.target.value.trim() || ('Jour ' + (i + 1)));
                     }
                 });
                 document.getElementById('edit-voyage-form') && document.getElementById('edit-voyage-form').addEventListener('submit', function() {
@@ -2484,7 +2484,7 @@
                     var toast = document.createElement('div');
                     toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
                     toast.style.cssText = 'top:16px;right:16px;z-index:9999;min-width:200px;';
-                    toast.innerHTML = (data.message || 'EnregistrÃ©') + ' <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                    toast.innerHTML = (data.message || 'Enregistré') + ' <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
                     document.body.appendChild(toast);
                     setTimeout(function() { toast.remove(); }, 3000);
                 }
@@ -2497,8 +2497,8 @@
             var inclusEl = card.querySelector('.programme-day-inclus');
             if (!list || !inclusEl) return;
             var count = list.querySelectorAll('.programme-activity-row').length;
-            inclusEl.textContent = 'INCLUS : ' + count + (count > 1 ? ' ActivitÃ©s' : ' ActivitÃ©');
-            // Mettre Ã  jour aussi le rÃ©sumÃ© du jour
+            inclusEl.textContent = 'INCLUS : ' + count + (count > 1 ? ' Activités' : ' Activité');
+            // Mettre Ã  jour aussi le résumé du jour
             var dayIndex = card.getAttribute('data-day-index');
             if (dayIndex != null && window.updateProgrammeDayExtras) {
                 window.updateProgrammeDayExtras(dayIndex);
@@ -2513,7 +2513,7 @@
             var day = window.dayItemsManager ? window.dayItemsManager.getDay(dayIndex) : { hotel_id: null, transfer_ids: [], flights: [] };
             var dayNumber = parseInt(dayIndex || '0', 10) + 1;
             
-            // Collecter toutes les donnÃ©es
+            // Collecter toutes les données
             var sections = {
                 activities: [],
                 hotels: null,
@@ -2521,7 +2521,7 @@
                 flights: { outbound: null, inbound: null, internal: [] }
             };
             
-            // 1. ACTIVITÃ‰S : depuis le DOM
+            // 1. ACTIVITÉS : depuis le DOM
             var activitiesList = card.querySelector('.programme-activities-list');
             if (activitiesList) {
                 activitiesList.querySelectorAll('.programme-activity-row').forEach(function(row) {
@@ -2534,7 +2534,7 @@
                     } else if (titleEl) {
                         title = titleEl.textContent.trim();
                     } else {
-                        title = 'ActivitÃ©';
+                        title = 'Activité';
                     }
                     var isIncluded = isIncludedEl ? isIncludedEl.checked : true;
                     sections.activities.push({ title: title, isIncluded: isIncluded });
@@ -2556,7 +2556,7 @@
                         var checkOut = parseInt(checkOutSel.value || '1', 10);
                         isInRange = (dayNumber >= checkIn && dayNumber <= checkOut);
                     } else {
-                        // CompatibilitÃ© ancien format : day_number
+                        // Compatibilité ancien format : day_number
                         var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
                         if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
                             isInRange = true;
@@ -2590,7 +2590,7 @@
                     }
                 });
             }
-            // Chercher aussi dans les lignes du formulaire principal (nouveau format unifiÃ©)
+            // Chercher aussi dans les lignes du formulaire principal (nouveau format unifié)
             document.querySelectorAll('.tour-transfer-row').forEach(function(row) {
                 var daySel = row.querySelector('select[name*="[day_number]"]');
                 if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
@@ -2600,20 +2600,20 @@
                     var pickupInp = row.querySelector('input[name*="[pickup_time]"]');
                     var dropoffInp = row.querySelector('input[name*="[dropoff_time]"]');
                     if (fromInp && toInp && (fromInp.value.trim() || toInp.value.trim())) {
-                        // Par dÃ©faut, on utilise 'arrival' pour compatibilitÃ© avec le modÃ¨le
+                        // Par défaut, on utilise 'arrival' pour compatibilité avec le modèle
                         var transfer = {
                             from_label: fromInp.value.trim() || '',
                             to_label: toInp.value.trim() || '',
                             vehicle_type: vehicleInp ? vehicleInp.value.trim() : '',
                             pickup_time: pickupInp ? pickupInp.value.trim() : '',
                             dropoff_time: dropoffInp ? dropoffInp.value.trim() : '',
-                            direction: 'arrival' // Par dÃ©faut pour compatibilitÃ©
+                            direction: 'arrival' // Par défaut pour compatibilité
                         };
                         sections.transfers.arrival.push(transfer);
                     }
                 }
             });
-            // CompatibilitÃ© ancien format : tour-transfer-arrival-row / tour-transfer-departure-row
+            // Compatibilité ancien format : tour-transfer-arrival-row / tour-transfer-departure-row
             document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
                 var daySel = row.querySelector('select[name*="[day_number]"]');
                 if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
@@ -2668,21 +2668,21 @@
                 }
             });
             
-            // GÃ©nÃ©rer le HTML structurÃ©
+            // Générer le HTML structuré
             var html = '<div class="day-summary-container mt-2">';
             var hasAnyContent = false;
             
-            // ActivitÃ©s
+            // Activités
             if (sections.activities.length > 0) {
                 hasAnyContent = true;
                 html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light">';
                 html += '<div class="d-flex justify-content-between align-items-center mb-1">';
-                html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-list-check text-primary"></i><strong class="small">ActivitÃ©s (' + sections.activities.length + ')</strong></div>';
+                html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-list-check text-primary"></i><strong class="small">Activités (' + sections.activities.length + ')</strong></div>';
                 html += '<button type="button" class="btn btn-xs btn-outline-primary btn-sm day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="activities" title="Configurer"><i class="bx bx-cog"></i></button>';
                 html += '</div>';
                 var visibleActs = sections.activities.slice(0, 3);
                 visibleActs.forEach(function(act) {
-                    html += '<div class="small text-muted mb-1">â€¢ ' + act.title;
+                    html += '<div class="small text-muted mb-1">"¢ ' + act.title;
                     if (act.isIncluded) html += ' <span class="badge bg-success">Inclus</span>';
                     else html += ' <span class="badge bg-warning text-dark">Optionnel</span>';
                     html += '</div>';
@@ -2693,12 +2693,12 @@
                 html += '</div>';
             }
             
-            // HÃ´tels
+            // Hôtels
             if (sections.hotels) {
                 hasAnyContent = true;
                 html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light">';
                 html += '<div class="d-flex justify-content-between align-items-center mb-1">';
-                html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-hotel text-primary"></i><strong class="small">HÃ´tel</strong></div>';
+                html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-hotel text-primary"></i><strong class="small">Hôtel</strong></div>';
                 html += '<div class="d-flex gap-1">';
                 html += '<button type="button" class="btn btn-xs btn-outline-primary btn-sm day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="hotels" title="Configurer"><i class="bx bx-cog"></i></button>';
                 html += '<button type="button" class="btn btn-xs btn-outline-danger btn-sm day-summary-remove-btn" data-day-index="' + dayIndex + '" data-type="hotel" title="Retirer"><i class="bx bx-trash"></i></button>';
@@ -2709,7 +2709,7 @@
                     for (var i = 0; i < parseInt(sections.hotels.stars, 10); i++) stars += 'â˜…';
                     html += ' <span class="badge bg-warning text-dark">' + stars + '</span>';
                 }
-                if (sections.hotels.room_type) html += ' â€¢ ' + sections.hotels.room_type;
+                if (sections.hotels.room_type) html += ' "¢ ' + sections.hotels.room_type;
                 if (sections.hotels.is_optional) html += ' <span class="badge bg-warning text-dark">Option client</span>';
                 html += '</div>';
                 html += '</div>';
@@ -2727,7 +2727,7 @@
                 html += '<button type="button" class="btn btn-xs btn-outline-danger btn-sm day-summary-remove-btn" data-day-index="' + dayIndex + '" data-type="transfers" title="Tout retirer"><i class="bx bx-trash"></i></button>';
                 html += '</div></div>';
                 if (sections.transfers.arrival.length > 0) {
-                    html += '<div class="small mb-1"><span class="badge bg-success">ArrivÃ©e</span>';
+                    html += '<div class="small mb-1"><span class="badge bg-success">Arrivée</span>';
                     sections.transfers.arrival.slice(0, 2).forEach(function(t) {
                         html += ' <span class="text-muted">' + (t.from_label || '?') + ' â†’ ' + (t.to_label || '?');
                         if (t.vehicle_type) html += ' <small>(' + t.vehicle_type + ')</small>';
@@ -2737,7 +2737,7 @@
                     html += '</div>';
                 }
                 if (sections.transfers.departure.length > 0) {
-                    html += '<div class="small mb-1"><span class="badge bg-danger">DÃ©part</span>';
+                    html += '<div class="small mb-1"><span class="badge bg-danger">Départ</span>';
                     sections.transfers.departure.slice(0, 2).forEach(function(t) {
                         html += ' <span class="text-muted">' + (t.from_label || '?') + ' â†’ ' + (t.to_label || '?');
                         if (t.vehicle_type) html += ' <small>(' + t.vehicle_type + ')</small>';
@@ -2783,7 +2783,7 @@
             
             if (!hasAnyContent) {
                 html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light text-center">';
-                html += '<div class="small text-muted mb-2">Aucun Ã©lÃ©ment configurÃ©</div>';
+                html += '<div class="small text-muted mb-2">Aucun élément configuré</div>';
                 html += '<button type="button" class="btn btn-sm btn-outline-primary day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="activities"><i class="bx bx-plus"></i> Configurer</button>';
                 html += '</div>';
             }
@@ -2798,9 +2798,9 @@
             if (d.dayIndex != null && window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(d.dayIndex);
         });
         
-        // Gestionnaires pour les boutons du rÃ©sumÃ© du jour
+        // Gestionnaires pour les boutons du résumé du jour
         document.addEventListener('click', function(e) {
-            // Bouton "Configurer" : ouvre le drawer sur l'onglet spÃ©cifiÃ©
+            // Bouton "Configurer" : ouvre le drawer sur l'onglet spécifié
             var configBtn = e.target.closest('.day-summary-config-btn');
             if (configBtn) {
                 e.preventDefault();
@@ -2810,10 +2810,10 @@
                 if (!card) return;
                 var dayNumber = parseInt(dayIndex || '0', 10) + 1;
                 var dayId = card.getAttribute('data-day-id') || '';
-                // Trouver le bouton "Ajouter un Ã©lÃ©ment" pour ce jour et l'utiliser pour ouvrir le drawer
+                // Trouver le bouton "Ajouter un élément" pour ce jour et l'utiliser pour ouvrir le drawer
                 var addBtn = card.querySelector('.btn-add-element-to-day');
                 if (addBtn) {
-                    // DÃ©clencher l'Ã©vÃ©nement pour ouvrir le drawer avec le bon contexte
+                    // Déclencher l'événement pour ouvrir le drawer avec le bon contexte
                     document.dispatchEvent(new CustomEvent('day-builder:set-day', {
                         detail: {
                             dayIndex: String(dayIndex),
@@ -2826,7 +2826,7 @@
                     if (drawer && window.bootstrap && bootstrap.Offcanvas) {
                         var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawer);
                         offcanvas.show();
-                        // Activer l'onglet demandÃ© aprÃ¨s un court dÃ©lai
+                        // Activer l'onglet demandé après un court délai
                         setTimeout(function() {
                             var tabButton = drawer.querySelector('[data-bs-target="#day-builder-tab-' + tab + '"]');
                             if (tabButton && bootstrap.Tab) {
@@ -2838,7 +2838,7 @@
                 return;
             }
             
-            // Bouton "Retirer" : retire l'Ã©lÃ©ment du jour
+            // Bouton "Retirer" : retire l'élément du jour
             var removeBtn = e.target.closest('.day-summary-remove-btn');
             if (removeBtn) {
                 e.preventDefault();
@@ -2849,7 +2849,7 @@
                 var dayNumber = parseInt(dayIndex || '0', 10) + 1;
                 var confirmMsg = '';
                 if (type === 'hotel') {
-                    confirmMsg = 'Retirer l\'hÃ´tel du Jour ' + dayNumber + ' ?';
+                    confirmMsg = 'Retirer l\'hôtel du Jour ' + dayNumber + ' ?';
                 } else if (type === 'transfers') {
                     confirmMsg = 'Retirer tous les transferts du Jour ' + dayNumber + ' ?';
                 } else if (type === 'flights') {
@@ -2884,7 +2884,7 @@
                     if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
                 }
             }
-            // Mettre Ã  jour quand un hÃ´tel change dans tour_hotels (onglet HÃ´tels)
+            // Mettre Ã  jour quand un hôtel change dans tour_hotels (onglet Hôtels)
             // Nouveau format : check_in_day / check_out_day
             if (e.target.name && e.target.name.indexOf('tour_hotels[') === 0 && 
                 (e.target.name.indexOf('[check_in_day]') !== -1 || e.target.name.indexOf('[check_out_day]') !== -1)) {
@@ -2904,7 +2904,7 @@
                                 window.dayItemsManager.syncToForm(dayIndex);
                                 if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
                             }
-                            // Retirer l'hÃ´tel des jours hors de la plage
+                            // Retirer l'hôtel des jours hors de la plage
                             var allDays = document.querySelectorAll('.programme-day-card');
                             allDays.forEach(function(card) {
                                 var dayIdx = card.getAttribute('data-day-index');
@@ -2922,7 +2922,7 @@
                     }
                 }
             }
-            // CompatibilitÃ© ancien format : day_number
+            // Compatibilité ancien format : day_number
             if (e.target.name && e.target.name.indexOf('tour_hotels[') === 0 && e.target.name.indexOf('[day_number]') !== -1) {
                 var dayNumber = parseInt(e.target.value || '0', 10);
                 if (dayNumber >= 1) {
@@ -2955,11 +2955,11 @@
             row.setAttribute('data-day-activity-id', '0');
             row.setAttribute('draggable', 'true');
             row.innerHTML = '<div class="card-body py-2"><div class="d-flex flex-wrap align-items-start gap-2">' +
-                '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="RÃ©ordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
                 '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
                 '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
                 '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
-                '<span class="fw-medium">' + (activityTitle || 'ActivitÃ©').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
+                '<span class="fw-medium">' + (activityTitle || 'Activité').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
                 '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
@@ -2983,13 +2983,13 @@
             var flightsManager = document.getElementById('day-builder-flights-manager');
             var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawer);
 
-            // ===== GESTIONNAIRE D'Ã‰TAT UNIFIÃ‰ POUR VOLS/HÃ”TELS/TRANSFERTS PAR JOUR =====
+            // ===== GESTIONNAIRE D'ÉTAT UNIFIÉ POUR VOLS/HÃ”TELS/TRANSFERTS PAR JOUR =====
             window.dayItemsManager = {
-                // Ã‰tat interne : {dayIndex: {flights: [], hotel_id: null, transfer_ids: []}}
+                // État interne : {dayIndex: {flights: [], hotel_id: null, transfer_ids: []}}
                 state: {},
 
                 // Initialiser depuis le formulaire (programme_days[X][...])
-                // Puis charger l'Ã©tat depuis les inputs hidden (prÃ©-remplis par le serveur pour hotel/transferts)
+                // Puis charger l'état depuis les inputs hidden (pré-remplis par le serveur pour hotel/transferts)
                 init: function() {
                     this.state = {};
                     var cards = document.querySelectorAll('.programme-day-card');
@@ -3008,7 +3008,7 @@
                     });
                 },
 
-                // Obtenir l'Ã©tat pour un jour
+                // Obtenir l'état pour un jour
                 getDay: function(dayIndex) {
                     var key = String(dayIndex);
                     if (!this.state[key]) {
@@ -3017,7 +3017,7 @@
                     return this.state[key];
                 },
 
-                // DÃ©faut les vols pour un jour
+                // Défaut les vols pour un jour
                 setFlights: function(dayIndex, flightIds) {
                     var day = this.getDay(dayIndex);
                     day.flights = Array.isArray(flightIds) ? flightIds : (flightIds ? [flightIds] : []);
@@ -3029,19 +3029,19 @@
                     return (this.getDay(dayIndex).flights || []).slice();
                 },
 
-                // DÃ©faut l'hÃ´tel pour un jour
+                // Défaut l'hôtel pour un jour
                 setHotel: function(dayIndex, hotelId) {
                     var day = this.getDay(dayIndex);
                     day.hotel_id = hotelId || null;
                     this.syncToForm(dayIndex);
                 },
 
-                // Obtenir l'hÃ´tel pour un jour
+                // Obtenir l'hôtel pour un jour
                 getHotel: function(dayIndex) {
                     return this.getDay(dayIndex).hotel_id;
                 },
 
-                // DÃ©faut les transferts pour un jour
+                // Défaut les transferts pour un jour
                 setTransfers: function(dayIndex, transferIds) {
                     var day = this.getDay(dayIndex);
                     day.transfer_ids = Array.isArray(transferIds) ? transferIds : (transferIds ? [transferIds] : []);
@@ -3053,7 +3053,7 @@
                     return (this.getDay(dayIndex).transfer_ids || []).slice();
                 },
 
-                // Synchroniser l'Ã©tat avec le formulaire (Ã©crire dans les inputs hidden)
+                // Synchroniser l'état avec le formulaire (écrire dans les inputs hidden)
                 syncToForm: function(dayIndex) {
                     var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
                     if (!card) return;
@@ -3066,7 +3066,7 @@
                         flightsInput.value = day.flights.join(',');
                     }
 
-                    // Synchroniser hÃ´tel
+                    // Synchroniser hôtel
                     var hotelInput = card.querySelector('input[name^="programme_days["][name$="[hotel_id]"]');
                     if (hotelInput) {
                         hotelInput.value = day.hotel_id || '';
@@ -3102,7 +3102,7 @@
                     }
                 },
 
-                // Compter tous les items (activitÃ©s + vols + hÃ´tel + transferts)
+                // Compter tous les items (activités + vols + hôtel + transferts)
                 countItems: function(dayIndex) {
                     var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
                     var list = card && card.querySelector('.programme-activities-list');
@@ -3115,7 +3115,7 @@
 
             // Initialiser le gestionnaire au chargement
             window.dayItemsManager.init();
-            // Charger les donnÃ©es depuis le formulaire et afficher HÃ´tel / Transferts / Vols dans chaque carte de jour
+            // Charger les données depuis le formulaire et afficher Hôtel / Transferts / Vols dans chaque carte de jour
             var cards = document.querySelectorAll('.programme-day-card');
             cards.forEach(function(card) {
                 var dayIndex = card.getAttribute('data-day-index');
@@ -3132,7 +3132,7 @@
             function updateDrawerSummary(dayNum, dayIndex) {
                 if (!summaryEl) return;
                 var count = getDayItemsCount(dayIndex);
-                summaryEl.textContent = 'Jour ' + dayNum + ' â€” Ajouter (' + count + (count > 1 ? ' Ã©lÃ©ments)' : ' Ã©lÃ©ment)');
+                summaryEl.textContent = 'Jour ' + dayNum + ' "” Ajouter (' + count + (count > 1 ? ' éléments)' : ' élément)');
             }
 
             function setDrawerContext(dayIndex, dayId, dayNumber) {
@@ -3146,9 +3146,9 @@
                 drawer.setAttribute('data-day-id', dayId || '');
                 drawer.setAttribute('data-day-number', String(dayNum));
 
-                if (titleEl) titleEl.textContent = 'Jour ' + dayNum + ' â€” Ajouter';
+                if (titleEl) titleEl.textContent = 'Jour ' + dayNum + ' "” Ajouter';
                 updateDrawerSummary(dayNum, dayIndex || String(dayNum - 1));
-                if (contextEl) contextEl.textContent = 'Ajout direct dans les Ã©lÃ©ments du Jour ' + dayNum + '.';
+                if (contextEl) contextEl.textContent = 'Ajout direct dans les éléments du Jour ' + dayNum + '.';
 
                 if (flightsManager) {
 
@@ -3214,7 +3214,7 @@
                 e.preventDefault();
                 var dayIndex = drawer.getAttribute('data-day-index');
                 var activityId = addBtn.getAttribute('data-activity-id');
-                var activityTitle = addBtn.getAttribute('data-activity-title') || 'ActivitÃ©';
+                var activityTitle = addBtn.getAttribute('data-activity-title') || 'Activité';
                 if (!appendActivityToDay(dayIndex, activityId, activityTitle)) return;
                 if (window.autosaveProgram) window.autosaveProgram();
             });
@@ -3276,7 +3276,7 @@
             });
         })();
 
-        // Programme (Jours): Add activity to day (dÃ©lÃ©gation pour les jours ajoutÃ©s dynamiquement)
+        // Programme (Jours): Add activity to day (délégation pour les jours ajoutés dynamiquement)
         document.addEventListener('click', function(e) {
             if (e.target.closest('.add-activity-to-day')) {
                 var btn = e.target.closest('.add-activity-to-day');
@@ -3292,7 +3292,7 @@
             }
             if (e.target.closest('.remove-programme-activity')) {
                 var row = e.target.closest('.programme-activity-row');
-                if (row && confirm('Retirer cette activitÃ© du jour ?')) {
+                if (row && confirm('Retirer cette activité du jour ?')) {
                     var card = row.closest('.programme-day-card');
                     var dayIndex = card ? card.getAttribute('data-day-index') : null;
                     row.remove();
@@ -3308,11 +3308,11 @@
             }
         });
 
-        // â€”â€”â€” Onglet Vols : boutons Ajouter / Modifier / Enregistrer / Annuler / REMOVE â€”â€”â€”
+        // "”"”"” Onglet Vols : boutons Ajouter / Modifier / Enregistrer / Annuler / REMOVE "”"”"”
         (function flightOptionsHandlers() {
             var templatesEl = document.getElementById('flight-opt-templates');
             var nextIndexEl = document.getElementById('flight-opt-next-index');
-            var dash = 'â€”';
+            var dash = '"”';
 
             function getNextIndex() {
                 if (!nextIndexEl) return 0;
@@ -3371,7 +3371,7 @@
                     return;
                 }
 
-                // Enregistrer : mise Ã  jour des libellÃ©s en vue puis soumission du formulaire pour sauvegarder cÃ´tÃ© serveur
+                // Enregistrer : mise Ã  jour des libellés en vue puis soumission du formulaire pour sauvegarder côté serveur
                 if (e.target.closest('.flight-opt-save-btn')) {
                     var card = e.target.closest('.flight-opt-card');
                     if (!card) return;
@@ -3408,7 +3408,7 @@
                     if (badgeWrap) badgeWrap.style.display = (tentativeCb && tentativeCb.checked) ? '' : 'none';
                     if (view) view.style.display = '';
                     if (edit) edit.style.display = 'none';
-                    // Soumettre le formulaire principal pour enregistrer les flight_options (lieu de dÃ©part, heures, etc.) cÃ´tÃ© serveur
+                    // Soumettre le formulaire principal pour enregistrer les flight_options (lieu de départ, heures, etc.) côté serveur
                     var form = document.getElementById('edit-voyage-form');
                     if (form) {
                         if (typeof form.requestSubmit === 'function') {
@@ -3432,7 +3432,7 @@
             });
         })();
 
-        // â€”â€”â€” Secours : bouton Â« Enregistrer toutes les modifications Â» (soumission forcÃ©e si le clic est interceptÃ©) â€”â€”â€”
+        // "”"”"” Secours : bouton Â« Enregistrer toutes les modifications Â» (soumission forcée si le clic est intercepté) "”"”"”
         (function() {
             function initSaveButtonFallback() {
                 var btn = document.getElementById('edit-voyage-submit-btn');
@@ -3447,7 +3447,7 @@
                         var n = acc.querySelectorAll('.programme-day-card').length;
                         durationInput.value = n > 0 ? n : (durationInput.value || 1);
                     }
-                    // requestSubmit() dÃ©clenche la validation HTML5 (required, etc.) avant envoi
+                    // requestSubmit() déclenche la validation HTML5 (required, etc.) avant envoi
                     if (typeof form.requestSubmit === 'function') {
                         form.requestSubmit();
                     } else {
@@ -3462,7 +3462,7 @@
             }
         })();
 
-        // â€”â€”â€” MODE DIAGNOSTIC: Forcer retrait des disabled + logs dÃ©taillÃ©s (Ã€ RETIRER en production) â€”â€”â€”
+        // "”"”"” MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) "”"”"”
         (function diagnosticMode() {
             console.log('ðŸ”§ DIAGNOSTIC MODE - Flight Options Persistence (v2 - Ignore Templates)');
             
@@ -3479,22 +3479,22 @@
                     
                     // SKIP les inputs dans le DayBuilderDrawer (duplicate data!)
                     if (drawerContainer && drawerContainer.contains(el)) {
-                        return; // Le drawer ne doit PAS soumettre ses donnÃ©es
+                        return; // Le drawer ne doit PAS soumettre ses données
                     }
                     
-                    // SKIP les inputs avec index -1 (templates clonÃ©s)
+                    // SKIP les inputs avec index -1 (templates clonés)
                     if (el.name && el.name.includes('[-1]')) {
                         return;
                     }
                     
                     if (el.hasAttribute('disabled')) {
                         el.removeAttribute('disabled');
-                        console.log('  ðŸ”“ Disabled retirÃ©:', el.name);
+                        console.log('  ðŸ”“ Disabled retiré:', el.name);
                         count++;
                     }
                 });
                 if (count > 0) {
-                    console.log('âœ… Total disabled retirÃ©s (drawer/templates exclus):', count);
+                    console.log('âœ… Total disabled retirés (drawer/templates exclus):', count);
                 }
             }
             
@@ -3506,9 +3506,9 @@
                 }
                 
                 form.addEventListener('submit', function(e) {
-                    console.log('ðŸš€ FORMULAIRE SOUMIS (interceptÃ©)');
+                    console.log('ðŸš€ FORMULAIRE SOUMIS (intercepté)');
                     
-                    // DÃ‰SACTIVER le drawer pour Ã©viter qu'il soumette ses duplications
+                    // DÉSACTIVER le drawer pour éviter qu'il soumette ses duplications
                     var drawer = document.getElementById('day-builder-drawer');
                     var drawerInputsDisabled = [];
                     if (drawer) {
@@ -3520,7 +3520,7 @@
                             }
                         });
                         if (drawerInputsDisabled.length > 0) {
-                            console.warn('âš ï¸  Drawer inputs dÃ©sactivÃ©s temporairement:', drawerInputsDisabled.length);
+                            console.warn('âš ï¸  Drawer inputs désactivés temporairement:', drawerInputsDisabled.length);
                         }
                     }
                     
@@ -3545,41 +3545,41 @@
                     }
                     
                     if (templatesCount > 0) {
-                        console.warn('âš ï¸  Templates dÃ©tectÃ©s (ignorÃ©s):', templatesCount, 'champs');
+                        console.warn('âš ï¸  Templates détectés (ignorés):', templatesCount, 'champs');
                     }
                     
                     console.log('ðŸ“Š Total flight_options valides:', count);
                     
                     var withoutFlight = fd.get('without_flight') === '1';
                     if (count === 0 && !withoutFlight) {
-                        console.error('âŒ AUCUN flight_options dÃ©tectÃ© dans le FormData!');
-                        console.log('VÃ©rifications:');
+                        console.error('âŒ AUCUN flight_options détecté dans le FormData!');
+                        console.log('Vérifications:');
                         console.log('  1. Les inputs ont-ils les bons attributs name?');
                         console.log('  2. Les inputs sont-ils dans le formulaire #edit-voyage-form?');
                         console.log('  3. Les inputs sont-ils disabled?');
                         
-                        if (!confirm('âš ï¸ ATTENTION: Aucun flight_options dÃ©tectÃ©!\n\nVoulez-vous quand mÃªme envoyer le formulaire?\n(Cliquez sur Cancel pour dÃ©boguer)')) {
+                        if (!confirm('âš ï¸ ATTENTION: Aucun flight_options détecté!\n\nVoulez-vous quand même envoyer le formulaire?\n(Cliquez sur Cancel pour déboguer)')) {
                             e.preventDefault();
                             e.stopImmediatePropagation();
-                            // RÃ©activer les inputs du drawer
+                            // Réactiver les inputs du drawer
                             drawerInputsDisabled.forEach(function(el) {
                                 el.removeAttribute('disabled');
                                 el.removeAttribute('data-was-enabled');
                             });
                         }
                     } else if (withoutFlight) {
-                        console.log('âœ… Sans vol activÃ©, soumission OK (aucun flight_options attendu)');
+                        console.log('âœ… Sans vol activé, soumission OK (aucun flight_options attendu)');
                     } else {
-                        console.log('âœ… Flight options detectÃ©s, soumission OK');
+                        console.log('âœ… Flight options detectés, soumission OK');
                     }
                     
-                    // Note: Si soumission OK, la page va recharger donc pas besoin de rÃ©activer
+                    // Note: Si soumission OK, la page va recharger donc pas besoin de réactiver
                 }, true);
                 
-                console.log('âœ… Intercepteur de formulaire installÃ©');
+                console.log('âœ… Intercepteur de formulaire installé');
             }
             
-            // ExÃ©cuter au chargement
+            // Exécuter au chargement
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', function() {
                     removeDisabledFromFlightOptions();
@@ -3590,9 +3590,9 @@
                 interceptFormSubmission();
             }
             
-            // Re-vÃ©rifier aprÃ¨s 2 secondes (au cas oÃ¹ des inputs sont ajoutÃ©s dynamiquement)
+            // Re-vérifier après 2 secondes (au cas où des inputs sont ajoutés dynamiquement)
             setTimeout(function() {
-                console.log('ðŸ”„ Re-vÃ©rification aprÃ¨s 2s...');
+                console.log('ðŸ”„ Re-vérification après 2s...');
                 removeDisabledFromFlightOptions();
             }, 2000);
         })();
