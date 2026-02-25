@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -70,14 +71,29 @@ class AdminPermissionsSeeder extends Seeder
         })));
 
         $adminUsers = User::query()->where('is_admin', true)->get();
+        $hasAccessMode = Schema::hasColumn('users', 'access_mode');
+        $hasBaseRole = Schema::hasColumn('users', 'base_role');
+        $hasIsActive = Schema::hasColumn('users', 'is_active');
+
         foreach ($adminUsers as $adminUser) {
-            if ($adminUser->access_mode === 'custom') {
+            if ($hasAccessMode && $adminUser->access_mode === 'custom') {
                 continue;
             }
+
             $adminUser->syncRoles([$adminRole]);
-            $adminUser->access_mode = 'role';
-            $adminUser->base_role = 'Admin';
-            $adminUser->is_active = $adminUser->is_active ?? true;
+
+            if ($hasAccessMode) {
+                $adminUser->access_mode = 'role';
+            }
+
+            if ($hasBaseRole) {
+                $adminUser->base_role = 'Admin';
+            }
+
+            if ($hasIsActive) {
+                $adminUser->is_active = $adminUser->is_active ?? true;
+            }
+
             $adminUser->save();
         }
 
