@@ -24,6 +24,8 @@ use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\ProgramApiController;
+use App\Http\Controllers\Admin\DeparturePlaceApiController;
+use App\Http\Controllers\Admin\AirlineApiController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Auth\LockScreenController;
@@ -117,6 +119,18 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])->prefix('admin')->name
     Route::get('circuits/airlines/{airline}/edit', [AirlineController::class, 'edit'])->name('circuits.airlines.edit');
     Route::match(['put', 'patch'], 'circuits/airlines/{airline}', [AirlineController::class, 'update'])->name('circuits.airlines.update');
     Route::delete('circuits/airlines/{airline}', [AirlineController::class, 'destroy'])->name('circuits.airlines.destroy');
+
+    // JSON API for Vols tab (no page refresh)
+    Route::get('circuits/voyages/{id}/departure-places', [DeparturePlaceApiController::class, 'index'])->name('circuits.voyages.departure-places.index')->whereNumber('id');
+    Route::post('circuits/voyages/{id}/departure-places', [DeparturePlaceApiController::class, 'store'])->name('circuits.voyages.departure-places.store')->whereNumber('id');
+    Route::put('circuits/departure-places/{placeId}', [DeparturePlaceApiController::class, 'update'])->name('circuits.departure-places.update')->whereNumber('placeId');
+    Route::delete('circuits/departure-places/{placeId}', [DeparturePlaceApiController::class, 'destroy'])->name('circuits.departure-places.destroy')->whereNumber('placeId');
+    Route::patch('circuits/departure-places/{placeId}/toggle', [DeparturePlaceApiController::class, 'toggle'])->name('circuits.departure-places.toggle')->whereNumber('placeId');
+
+    Route::get('circuits/api/airlines', [AirlineApiController::class, 'index'])->name('circuits.api.airlines.index');
+    Route::post('circuits/api/airlines', [AirlineApiController::class, 'store'])->name('circuits.api.airlines.store');
+    Route::put('circuits/api/airlines/{id}', [AirlineApiController::class, 'update'])->name('circuits.api.airlines.update')->whereNumber('id');
+    Route::delete('circuits/api/airlines/{id}', [AirlineApiController::class, 'destroy'])->name('circuits.api.airlines.destroy')->whereNumber('id');
 
     Route::get('circuits/tour-hotels', [TourHotelController::class, 'index'])->name('circuits.tour-hotels.index');
     Route::get('circuits/tour-hotels/{tourId}/edit', [TourHotelController::class, 'edit'])->name('circuits.tour-hotels.edit')->whereNumber('tourId');

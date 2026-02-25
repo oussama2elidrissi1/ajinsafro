@@ -1242,13 +1242,27 @@
                 $flightDash = '—';
                 $fmtDate = function($d) { return $d ? (\Carbon\Carbon::parse($d)->format('D, d M')) : null; };
             @endphp
-            <div class="tab-pane" id="flights" role="tabpanel">
+            <div class="tab-pane" id="flights" role="tabpanel"
+                 data-travel-id="{{ $voyage->ID ?? 0 }}"
+                 data-url-departure-places-index="{{ route('admin.circuits.voyages.departure-places.index', ['id' => $voyage->ID ?? 0]) }}"
+                 data-url-departure-places-store="{{ route('admin.circuits.voyages.departure-places.store', ['id' => $voyage->ID ?? 0]) }}"
+                 data-url-departure-place-update="{{ url('/admin/circuits/departure-places') }}"
+                 data-url-departure-place-destroy="{{ url('/admin/circuits/departure-places') }}"
+                 data-url-departure-place-toggle="{{ url('/admin/circuits/departure-places') }}"
+                 data-url-airlines-index="{{ route('admin.circuits.api.airlines.index') }}"
+                 data-url-airlines-store="{{ route('admin.circuits.api.airlines.store') }}"
+                 data-url-airlines-update="{{ url('/admin/circuits/api/airlines') }}"
+                 data-url-airlines-destroy="{{ url('/admin/circuits/api/airlines') }}">
                 @php 
                     $lastDayNumber = $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1); 
                 @endphp
 
-                {{-- Lieux de départ (éditables) — source unique : vols gérés dans les options ci-dessous avec "Lieu de départ" --}}
-                @include('admin.circuits.voyages.partials._departure_places_inline', ['departurePlaces' => $departurePlaces ?? collect()])
+                <div id="departure-places-api-message" class="alert alert-warning py-2 small d-none mb-3" role="alert">
+                    <i class="bx bx-error-circle me-1"></i> Enregistrez le voyage d'abord pour gérer les lieux de départ.
+                </div>
+
+                {{-- Lieux de départ (éditables) — AJAX CRUD via API si travelId présent --}}
+                @include('admin.circuits.voyages.partials._departure_places_inline', ['departurePlaces' => $departurePlaces ?? collect(), 'travelId' => $voyage->ID ?? 0])
 
                 {{-- Utilisation du Flight Manager réutilisable en mode complet --}}
                 @include('admin.circuits.voyages.partials._flight_manager', [
@@ -1718,6 +1732,42 @@
 
     {{-- Plus de formulaire séparé pour ajout/suppression de jour : tout est géré en JS, sauvegardé au submit du formulaire principal --}}
 
+    {{-- Modal Gérer les compagnies aériennes (AJAX, sans quitter la page) --}}
+    <div class="modal fade" id="modal-airlines-manage" tabindex="-1" aria-labelledby="modal-airlines-title" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-airlines-title"><i class="bx bx-list-ul me-1"></i> Gérer les compagnies aériennes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="airlines-modal-message" class="alert d-none mb-3 py-2 small" role="alert"></div>
+                    <div class="mb-3 d-flex flex-wrap gap-2 align-items-end">
+                        <div class="flex-grow-1 min-w-200">
+                            <label class="form-label small mb-0">Nom</label>
+                            <input type="text" class="form-control form-control-sm" id="airline-modal-name" placeholder="Ex. Air France" required>
+                        </div>
+                        <div style="width: 90px;">
+                            <label class="form-label small mb-0">Code IATA</label>
+                            <input type="text" class="form-control form-control-sm" id="airline-modal-code" placeholder="AF" maxlength="10">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="airline-modal-add-btn">
+                            <i class="bx bx-plus"></i> Ajouter
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead><tr><th>Nom</th><th>Code</th><th>Actif</th><th width="100"></th></tr></thead>
+                            <tbody id="airlines-modal-tbody">
+                                <tr><td colspan="4" class="text-muted text-center py-4">Chargement…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- DELETE ZONE (masquée en création) --}}
     @if (!$isCreate)
     <div class="row mt-3">
@@ -1812,6 +1862,294 @@
                 }
             }
         });
+
+        // ——— Vols tab: Lieux de départ (AJAX) + Modal Compagnies aériennes ———
+        (function() {
+            var csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
+            var getHeaders = function(method) {
+                var h = { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' };
+                if (method === 'GET') delete h['Content-Type'];
+                return h;
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                var tab = document.querySelector('#flights.tab-pane');
+                if (!tab) return;
+                var travelId = parseInt(tab.getAttribute('data-travel-id') || '0', 10);
+                var msgEl = document.getElementById('departure-places-api-message');
+                var addBtn = document.getElementById('add-departure-place-inline');
+                var container = document.getElementById('departure-places-inline-container');
+
+                if (travelId <= 0) {
+                    if (msgEl) msgEl.classList.remove('d-none');
+                    if (addBtn) addBtn.disabled = true;
+                    return;
+                }
+                if (msgEl) msgEl.classList.add('d-none');
+
+                var urlIndex = tab.getAttribute('data-url-departure-places-index');
+                var urlStore = tab.getAttribute('data-url-departure-places-store');
+                var urlBase = tab.getAttribute('data-url-departure-place-update');
+                var urlDestroy = tab.getAttribute('data-url-departure-place-destroy');
+                var urlToggle = tab.getAttribute('data-url-departure-place-toggle');
+
+                function showToast(el, text, isError) {
+                    if (!el) return;
+                    el.textContent = text;
+                    el.classList.remove('d-none', 'alert-success', 'alert-danger');
+                    el.classList.add(isError ? 'alert-danger' : 'alert-success');
+                    setTimeout(function() { el.classList.add('d-none'); }, 4000);
+                }
+
+                function refreshDeparturePlaceSelects() {
+                    var opts = [];
+                    container.querySelectorAll('.departure-place-inline-row').forEach(function(row) {
+                        var idInp = row.querySelector('input[name*="[id]"]');
+                        var nameInp = row.querySelector('input[name*="[name]"]');
+                        var codeInp = row.querySelector('input[name*="[code]"]');
+                        if (idInp && idInp.value && nameInp) {
+                            opts.push({ id: idInp.value, name: nameInp.value, code: codeInp ? codeInp.value : '' });
+                        }
+                    });
+                    document.querySelectorAll('select[name*="flight_options"][name*="departure_place_id"]').forEach(function(sel) {
+                        var cur = sel.value;
+                        sel.innerHTML = '<option value="">— Lieu —</option>' + opts.map(function(p) {
+                            return '<option value="' + p.id + '">' + (p.name + (p.code ? ' (' + p.code + ')' : '')) + '</option>';
+                        }).join('');
+                        if (cur) sel.value = cur;
+                    });
+                }
+
+                function nextIndex() {
+                    var max = -1;
+                    container.querySelectorAll('.departure-place-inline-row').forEach(function(r) {
+                        var i = parseInt(r.getAttribute('data-index'), 10);
+                        if (!isNaN(i) && i > max) max = i;
+                    });
+                    return max + 1;
+                }
+
+                if (addBtn && container) {
+                    addBtn.addEventListener('click', function() {
+                        if (addBtn.disabled) return;
+                        var idx = nextIndex();
+                        var row = document.createElement('div');
+                        row.className = 'card mb-2 departure-place-inline-row';
+                        row.setAttribute('data-index', idx);
+                        row.innerHTML = '<div class="card-body py-2"><div class="row g-2 align-items-center">' +
+                            '<div class="col-md-4"><input type="text" class="form-control form-control-sm departure-place-name" placeholder="Ex. Casablanca" value=""></div>' +
+                            '<div class="col-md-2"><input type="text" class="form-control form-control-sm departure-place-code" placeholder="CMN" value=""></div>' +
+                            '<div class="col-md-2"><div class="form-check mb-0"><input type="checkbox" class="form-check-input departure-place-active" checked><label class="form-check-label small">Actif</label></div></div>' +
+                            '<div class="col-md-2"><button type="button" class="btn btn-sm btn-primary departure-place-save-new">Enregistrer</button></div>' +
+                            '<div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger remove-departure-place-inline" aria-label="Supprimer">×</button></div></div></div>';
+                        container.appendChild(row);
+
+                        row.querySelector('.departure-place-save-new').addEventListener('click', function() {
+                            var name = row.querySelector('.departure-place-name').value.trim();
+                            if (!name) { showToast(msgEl, 'Nom requis.', true); return; }
+                            var btn = this;
+                            btn.disabled = true;
+                            fetch(urlStore, {
+                                method: 'POST',
+                                headers: getHeaders('POST'),
+                                body: JSON.stringify({
+                                    name: name,
+                                    code: row.querySelector('.departure-place-code').value.trim() || null,
+                                    is_active: row.querySelector('.departure-place-active').checked,
+                                    _token: csrfToken
+                                })
+                            }).then(function(r) { return r.json(); }).then(function(res) {
+                                if (res.success && res.data) {
+                                    var d = res.data;
+                                    row.setAttribute('data-place-id', d.id);
+                                    row.querySelector('.card-body').innerHTML = '<div class="row g-2 align-items-center">' +
+                                        '<input type="hidden" name="departure_places[' + idx + '][id]" value="' + d.id + '">' +
+                                        '<div class="col-md-4"><input type="text" class="form-control form-control-sm" name="departure_places[' + idx + '][name]" value="' + (d.name || '').replace(/"/g, '&quot;') + '" placeholder="Ex. Casablanca" required></div>' +
+                                        '<div class="col-md-2"><input type="text" class="form-control form-control-sm" name="departure_places[' + idx + '][code]" value="' + (d.code || '').replace(/"/g, '&quot;') + '" placeholder="CMN"></div>' +
+                                        '<div class="col-md-2"><div class="form-check mb-0"><input type="checkbox" class="form-check-input" name="departure_places[' + idx + '][is_active]" value="1" ' + (d.is_active ? 'checked' : '') + '><label class="form-check-label small">Actif</label></div></div>' +
+                                        '<div class="col-md-2"><button type="button" class="btn btn-sm btn-outline-secondary departure-place-toggle">Toggle</button></div>' +
+                                        '<div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger remove-departure-place-inline" aria-label="Supprimer">×</button></div></div>';
+                                    refreshDeparturePlaceSelects();
+                                    showToast(msgEl, res.message || 'Lieu ajouté.', false);
+                                } else { showToast(msgEl, res.message || 'Erreur', true); }
+                            }).catch(function() { showToast(msgEl, 'Erreur réseau.', true); }).finally(function() { btn.disabled = false; });
+                        });
+                    });
+                }
+
+                container.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('remove-departure-place-inline')) {
+                        var row = e.target.closest('.departure-place-inline-row');
+                        if (!row) return;
+                        var placeId = row.getAttribute('data-place-id') || (row.querySelector('input[name*="[id]"]') || {}).value;
+                        if (!placeId) { row.remove(); refreshDeparturePlaceSelects(); return; }
+                        if (!confirm('Supprimer ce lieu de départ ?')) return;
+                        var btn = e.target;
+                        btn.disabled = true;
+                        fetch(urlDestroy + '/' + placeId, { method: 'DELETE', headers: getHeaders('DELETE') })
+                            .then(function(r) { return r.json(); })
+                            .then(function(res) {
+                                if (res.success) { row.remove(); refreshDeparturePlaceSelects(); showToast(msgEl, res.message || 'Supprimé.', false); }
+                                else showToast(msgEl, res.message || 'Erreur', true);
+                            })
+                            .catch(function() { showToast(msgEl, 'Erreur réseau.', true); })
+                            .finally(function() { btn.disabled = false; });
+                    } else if (e.target.classList.contains('departure-place-toggle')) {
+                        var row = e.target.closest('.departure-place-inline-row');
+                        var placeId = row.getAttribute('data-place-id') || (row.querySelector('input[name*="[id]"]') || {}).value;
+                        if (!placeId) return;
+                        e.target.disabled = true;
+                        fetch(urlToggle + '/' + placeId + '/toggle', { method: 'PATCH', headers: getHeaders('PATCH') })
+                            .then(function(r) { return r.json(); })
+                            .then(function(res) {
+                                if (res.success && res.data) {
+                                    var cb = row.querySelector('input[name*="[is_active]"]');
+                                    if (cb) { cb.checked = res.data.is_active; }
+                                    showToast(msgEl, res.message || 'Mis à jour.', false);
+                                }
+                            })
+                            .finally(function() { e.target.disabled = false; });
+                    }
+                });
+
+                function putPlace(row) {
+                    var placeId = row.getAttribute('data-place-id') || (row.querySelector('input[name*="[id]"]') || {}).value;
+                    if (!placeId) return;
+                    var nameInp = row.querySelector('input[name*="[name]"]');
+                    var codeInp = row.querySelector('input[name*="[code]"]');
+                    var activeInp = row.querySelector('input[name*="[is_active]"]');
+                    var name = nameInp ? nameInp.value.trim() : '';
+                    if (!name) return;
+                    fetch(urlBase + '/' + placeId, {
+                        method: 'PUT',
+                        headers: getHeaders('PUT'),
+                        body: JSON.stringify({
+                            name: name,
+                            code: codeInp ? codeInp.value.trim() : null,
+                            is_active: !!(activeInp && activeInp.checked),
+                            _token: csrfToken
+                        })
+                    }).then(function(r) { return r.json(); }).then(function(res) {
+                        if (res.success) refreshDeparturePlaceSelects();
+                    });
+                }
+
+                container.addEventListener('blur', function(e) {
+                    if (!e.target.name || e.target.name.indexOf('departure_places') === -1) return;
+                    if (e.target.name.indexOf('[name]') === -1 && e.target.name.indexOf('[code]') === -1) return;
+                    var row = e.target.closest('.departure-place-inline-row');
+                    if (row) putPlace(row);
+                }, true);
+
+                container.addEventListener('change', function(e) {
+                    if (e.target.name && e.target.name.indexOf('departure_places') !== -1 && e.target.name.indexOf('[is_active]') !== -1) {
+                        var row = e.target.closest('.departure-place-inline-row');
+                        var placeId = row && (row.getAttribute('data-place-id') || (row.querySelector('input[name*="[id]"]') || {}).value);
+                        if (!placeId) return;
+                        e.target.disabled = true;
+                        fetch(urlToggle + '/' + placeId + '/toggle', { method: 'PATCH', headers: getHeaders('PATCH') })
+                            .then(function(r) { return r.json(); })
+                            .then(function(res) {
+                                if (res.success) showToast(msgEl, res.message || 'Mis à jour.', false);
+                            })
+                            .finally(function() { e.target.disabled = false; });
+                    }
+                });
+
+                refreshDeparturePlaceSelects();
+            });
+
+            // Modal Compagnies aériennes
+            document.addEventListener('DOMContentLoaded', function() {
+                var modal = document.getElementById('modal-airlines-manage');
+                if (!modal) return;
+                var tbody = document.getElementById('airlines-modal-tbody');
+                var msgEl = document.getElementById('airlines-modal-message');
+                var nameInp = document.getElementById('airline-modal-name');
+                var codeInp = document.getElementById('airline-modal-code');
+                var addBtn = document.getElementById('airline-modal-add-btn');
+                var tab = document.querySelector('#flights.tab-pane') || document.querySelector('#flights-api-urls-create');
+                var urlIndex = tab ? tab.getAttribute('data-url-airlines-index') : '';
+                var urlStore = tab ? tab.getAttribute('data-url-airlines-store') : '';
+                var urlUpdate = tab ? tab.getAttribute('data-url-airlines-update') : '';
+                var urlDestroy = tab ? tab.getAttribute('data-url-airlines-destroy') : '';
+
+                function showMsg(text, isError) {
+                    msgEl.textContent = text;
+                    msgEl.classList.remove('d-none', 'alert-success', 'alert-danger');
+                    msgEl.classList.add(isError ? 'alert-danger' : 'alert-success');
+                }
+
+                function loadAirlines() {
+                    if (!urlIndex) return;
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-muted text-center py-4">Chargement…</td></tr>';
+                    fetch(urlIndex, { headers: getHeaders('GET') }).then(function(r) { return r.json(); }).then(function(res) {
+                        if (res.success && res.data) {
+                            if (res.data.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-muted text-center py-4">Aucune compagnie. Ajoutez-en une ci-dessus.</td></tr>';
+                            else {
+                                tbody.innerHTML = res.data.map(function(a) {
+                                    return '<tr data-airline-id="' + a.id + '">' +
+                                        '<td><input type="text" class="form-control form-control-sm border-0 airline-edit-name" value="' + (a.name || '').replace(/"/g, '&quot;') + '"></td>' +
+                                        '<td><input type="text" class="form-control form-control-sm border-0 airline-edit-code" value="' + (a.code_iata || a.iata_code || '').replace(/"/g, '&quot;') + '" maxlength="10"></td>' +
+                                        '<td>' + (a.is_active ? 'Oui' : 'Non') + '</td>' +
+                                        '<td><button type="button" class="btn btn-sm btn-outline-primary airline-save me-1">Enregistrer</button><button type="button" class="btn btn-sm btn-outline-danger airline-delete">Supprimer</button></td></tr>';
+                                }).join('');
+                            }
+                        }
+                    }).catch(function() { tbody.innerHTML = '<tr><td colspan="4" class="text-danger text-center py-4">Erreur de chargement.</td></tr>'); });
+                }
+
+                modal.addEventListener('show.bs.modal', function() { loadAirlines(); });
+
+                if (addBtn && urlStore) {
+                    addBtn.addEventListener('click', function() {
+                        var name = nameInp && nameInp.value.trim();
+                        if (!name) { showMsg('Nom requis.', true); return; }
+                        addBtn.disabled = true;
+                        fetch(urlStore, {
+                            method: 'POST',
+                            headers: getHeaders('POST'),
+                            body: JSON.stringify({ name: name, code_iata: (codeInp && codeInp.value.trim()) || null, is_active: true, _token: csrfToken })
+                        }).then(function(r) { return r.json(); }).then(function(res) {
+                            if (res.success) {
+                                nameInp.value = ''; if (codeInp) codeInp.value = '';
+                                showMsg(res.message || 'Créé.', false);
+                                loadAirlines();
+                            } else showMsg(res.message || 'Erreur', true);
+                        }).catch(function() { showMsg('Erreur réseau.', true); }).finally(function() { addBtn.disabled = false; });
+                    });
+                }
+
+                tbody.addEventListener('click', function(e) {
+                    var row = e.target.closest('tr[data-airline-id]');
+                    if (!row) return;
+                    var id = row.getAttribute('data-airline-id');
+                    if (e.target.classList.contains('airline-delete')) {
+                        if (!confirm('Supprimer cette compagnie ?')) return;
+                        e.target.disabled = true;
+                        fetch(urlDestroy + '/' + id, { method: 'DELETE', headers: getHeaders('DELETE') })
+                            .then(function(r) { return r.json(); })
+                            .then(function(res) {
+                                if (res.success) { row.remove(); showMsg(res.message || 'Supprimé.', false); }
+                                else showMsg(res.message || 'Erreur', true);
+                            })
+                            .finally(function() { e.target.disabled = false; });
+                    } else if (e.target.classList.contains('airline-save')) {
+                        var name = row.querySelector('.airline-edit-name').value.trim();
+                        if (!name) { showMsg('Nom requis.', true); return; }
+                        e.target.disabled = true;
+                        fetch(urlUpdate + '/' + id, {
+                            method: 'PUT',
+                            headers: getHeaders('PUT'),
+                            body: JSON.stringify({ name: name, code_iata: (row.querySelector('.airline-edit-code').value.trim()) || null, is_active: true, _token: csrfToken })
+                        }).then(function(r) { return r.json(); }).then(function(res) {
+                            if (res.success) showMsg(res.message || 'Mis à jour.', false);
+                            else showMsg(res.message || 'Erreur', true);
+                        }).finally(function() { e.target.disabled = false; });
+                    }
+                });
+            });
+        })();
         // Destination UX: location tree (search, chips, actions, hierarchy, indeterminate)
         (function destinationUx() {
             var container = document.getElementById('locationTreeContainer');

@@ -1,9 +1,10 @@
-{{-- Lieux de départ (éditables) en haut de l'onglet Vols. Uniquement name, code, is_active — les vols sont gérés dans les options Aller/Retour ci-dessous. --}}
+{{-- Lieux de départ (éditables) en haut de l'onglet Vols. Gestion AJAX si travelId présent. --}}
 @php
     $departurePlaces = $departurePlaces ?? collect();
     $placesList = $departurePlaces->isEmpty() ? [] : $departurePlaces->all();
+    $travelId = (int) ($travelId ?? 0);
 @endphp
-<div class="card mb-4">
+<div class="card mb-4" id="departure-places-card" data-travel-id="{{ $travelId }}">
     <div class="card-body">
         <h5 class="card-title mb-2"><i class="bx bx-map-pin"></i> Lieux de départ (Starting from)</h5>
         <p class="text-muted small mb-3">Définissez les lieux (ex. Casablanca, Paris). Associez ensuite chaque vol Aller/Retour à un lieu via le champ « Lieu de départ » dans chaque carte vol.</p>
@@ -38,11 +39,15 @@
         <button type="button" class="btn btn-sm btn-soft-primary" id="add-departure-place-inline"><i class="bx bx-plus"></i> Ajouter un lieu</button>
     </div>
 </div>
+{{-- Script legacy (add row in DOM only) — désactivé sur Edit quand travelId > 0 (géré par API) --}}
 <script>
 (function(){
     var container = document.getElementById('departure-places-inline-container');
     var addBtn = document.getElementById('add-departure-place-inline');
     if (!container || !addBtn) return;
+    var tab = document.querySelector('#flights.tab-pane');
+    var travelId = tab ? parseInt(tab.getAttribute('data-travel-id') || '0', 10) : 0;
+    if (travelId > 0) return;
     function nextIndex() {
         var rows = container.querySelectorAll('.departure-place-inline-row');
         var max = -1;
@@ -50,6 +55,7 @@
         return max + 1;
     }
     addBtn.addEventListener('click', function(){
+        if (addBtn.disabled) return;
         var idx = nextIndex();
         var div = document.createElement('div');
         div.className = 'card mb-2 departure-place-inline-row';

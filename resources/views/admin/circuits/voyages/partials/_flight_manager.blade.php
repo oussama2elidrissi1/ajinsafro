@@ -148,13 +148,13 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
 
     <div class="flights-content" style="{{ $withoutFlight ? 'display: none;' : '' }}" data-without-flight-target>
 
-        @if(!$isCompact && Route::has('admin.circuits.airlines.index'))
+        @if(!$isCompact)
             <div class="mb-3">
-                <a href="{{ route('admin.circuits.airlines.index') }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-airlines-manage" id="btn-open-airlines-modal">
                     <i class="bx bx-list-ul me-1"></i> Gérer les compagnies aériennes
-                </a>
+                </button>
                 @if($airlines->isEmpty())
-                    <span class="text-muted ms-2">— Aucune compagnie. <a href="{{ route('admin.circuits.airlines.create') }}">Créer une compagnie</a></span>
+                    <span class="text-muted ms-2">— Aucune compagnie. Cliquez pour en ajouter.</span>
                 @endif
             </div>
         @endif
