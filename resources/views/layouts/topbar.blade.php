@@ -4,27 +4,6 @@
     $adminBrandLogoUrl = \App\Models\Setting::storageUrl($adminBrandLogo);
 @endphp
 
-<style>
-    .admin-brand-logo {
-        height: 32px;
-        width: auto;
-        max-width: 180px;
-        object-fit: contain;
-    }
-
-    .admin-brand-logo-sm {
-        height: 24px;
-        width: auto;
-        object-fit: contain;
-    }
-
-    .navbar-brand-box .logo .logo-lg {
-        min-height: 32px;
-        display: flex;
-        align-items: center;
-    }
-</style>
-
 <header id="page-topbar">
     <div class="navbar-header">
         <div class="container-fluid">
@@ -229,14 +208,14 @@
                             @if($adminBrandLogoUrl)
                                 <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
                             @else
-                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="20">
+                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" class="admin-brand-logo-sm">
                             @endif
                         </span>
                         <span class="logo-lg">
                             @if($adminBrandLogoUrl)
                                 <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
                             @else
-                                <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="" height="17">
+                                <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="" class="admin-brand-logo">
                             @endif
                         </span>
                     </a>
@@ -246,14 +225,14 @@
                             @if($adminBrandLogoUrl)
                                 <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
                             @else
-                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="20">
+                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" class="admin-brand-logo-sm">
                             @endif
                         </span>
                         <span class="logo-lg">
                             @if($adminBrandLogoUrl)
                                 <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
                             @else
-                                <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="" height="19">
+                                <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="" class="admin-brand-logo">
                             @endif
                         </span>
                     </a>

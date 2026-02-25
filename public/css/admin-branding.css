@@ -1,0 +1,64 @@
+#page-topbar .navbar-brand-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70px;
+    padding: 0 12px;
+    overflow: hidden;
+}
+
+#page-topbar .navbar-brand-box .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70px;
+    width: 100%;
+    overflow: hidden;
+}
+
+#page-topbar .navbar-brand-box .logo .logo-sm,
+#page-topbar .navbar-brand-box .logo .logo-lg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#page-topbar .navbar-brand-box .logo .logo-lg {
+    justify-content: flex-start;
+}
+
+#page-topbar .navbar-brand-box .admin-brand-logo,
+#page-topbar .navbar-brand-box .logo img {
+    height: 32px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+#page-topbar .navbar-brand-box .admin-brand-logo-sm {
+    height: 26px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    #page-topbar .navbar-brand-box,
+    #page-topbar .navbar-brand-box .logo {
+        height: 70px;
+    }
+
+    #page-topbar .navbar-brand-box .admin-brand-logo,
+    #page-topbar .navbar-brand-box .logo img {
+        height: 26px;
+    }
+
+    #page-topbar .navbar-brand-box .admin-brand-logo-sm {
+        height: 24px;
+    }
+}
