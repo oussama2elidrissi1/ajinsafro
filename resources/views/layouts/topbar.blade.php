@@ -1,3 +1,30 @@
+@php
+    $adminBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
+    $adminBrandLogo = \App\Models\Setting::getValue('brand_logo');
+    $adminBrandLogoUrl = \App\Models\Setting::storageUrl($adminBrandLogo);
+@endphp
+
+<style>
+    .admin-brand-logo {
+        height: 32px;
+        width: auto;
+        max-width: 180px;
+        object-fit: contain;
+    }
+
+    .admin-brand-logo-sm {
+        height: 24px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    .navbar-brand-box .logo .logo-lg {
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+    }
+</style>
+
 <header id="page-topbar">
     <div class="navbar-header">
         <div class="container-fluid">
@@ -197,21 +224,37 @@
             <div>
                 <!-- LOGO -->
                 <div class="navbar-brand-box">
-                    <a href="{{ url('demo') }}" class="logo logo-dark">
+                    <a href="{{ route('admin.dashboard') }}" class="logo logo-dark">
                         <span class="logo-sm">
-                            <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="20">
+                            @if($adminBrandLogoUrl)
+                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
+                            @else
+                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="20">
+                            @endif
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="" height="17">
+                            @if($adminBrandLogoUrl)
+                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
+                            @else
+                                <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="" height="17">
+                            @endif
                         </span>
                     </a>
 
-                    <a href="{{ url('demo') }}" class="logo logo-light">
+                    <a href="{{ route('admin.dashboard') }}" class="logo logo-light">
                         <span class="logo-sm">
-                            <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="20">
+                            @if($adminBrandLogoUrl)
+                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
+                            @else
+                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="20">
+                            @endif
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="" height="19">
+                            @if($adminBrandLogoUrl)
+                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
+                            @else
+                                <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="" height="19">
+                            @endif
                         </span>
                     </a>
                 </div>
