@@ -95,13 +95,15 @@
                             >
                         </div>
                         
-                        <div id="locationTreeContainer" style="border: 1px solid #ccd0d4; background: #fff; padding: 12px; border-radius: 3px;">
-                            @include('admin.circuits.voyages.partials.location-country-cities', [
-                                'selectedLocationIds' => old('locations', []),
-                                'worldCountries' => $worldCountries ?? [],
-                                'countryCitiesData' => $countryCitiesData ?? [],
-                                'mergedCitiesByCode' => $mergedCitiesByCode ?? [],
-                            ])
+                        <div class="wp-location-box" id="locationTreeContainer" style="border: 1px solid #ccd0d4; background: #fff; padding: 12px; max-height: 300px; overflow-y: auto; border-radius: 3px;">
+                            @if(!empty($locationsTree))
+                                @include('admin.circuits.voyages.partials.location-tree', [
+                                    'locations' => $locationsTree, 
+                                    'selectedIds' => $selectedLocationIds ?? []
+                                ])
+                            @else
+                                <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible</p>
+                            @endif
                         </div>
 
                         <div class="mb-3">

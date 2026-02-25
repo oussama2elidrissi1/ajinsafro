@@ -23,36 +23,6 @@ class UpdateWpTourRequest extends FormRequest
         // No strict rules: outbound/inbound are optional; cabin defaults to economy in service.
     }
 
-    protected function prepareForValidation(): void
-    {
-        $locations = $this->input('locations', []);
-        $countries = $this->input('countries', []);
-        $cities = $this->input('cities', []);
-        $includeCountry = $this->input('include_country', []);
-
-        if (!is_array($locations)) {
-            $locations = [$locations];
-        }
-        if (!is_array($countries)) {
-            $countries = [$countries];
-        }
-        if (!is_array($cities)) {
-            $cities = [$cities];
-        }
-        if (!is_array($includeCountry)) {
-            $includeCountry = [$includeCountry];
-        }
-
-        $mergedLocations = array_values(array_unique(array_filter(array_map('intval', array_merge($locations, $cities, $includeCountry)))));
-
-        $this->merge([
-            'locations' => $mergedLocations,
-            'countries' => array_values(array_unique(array_filter(array_map('intval', $countries)))),
-            'cities' => array_values(array_unique(array_filter(array_map('intval', $cities)))),
-            'include_country' => array_values(array_unique(array_filter(array_map('intval', $includeCountry)))),
-        ]);
-    }
-
     /**
      * Get the validation rules that apply to the request.
      */
@@ -69,12 +39,6 @@ class UpdateWpTourRequest extends FormRequest
             // Location
             'locations' => 'nullable|array',
             'locations.*' => 'integer',
-            'countries' => 'nullable|array',
-            'countries.*' => 'integer',
-            'cities' => 'nullable|array',
-            'cities.*' => 'integer',
-            'include_country' => 'nullable|array',
-            'include_country.*' => 'integer',
             'address' => 'nullable|string',
             'id_location' => 'nullable|integer',
             'location_id' => 'nullable|integer',

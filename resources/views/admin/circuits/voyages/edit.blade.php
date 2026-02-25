@@ -1732,10 +1732,6 @@
         });
         // Destination UX: location tree (search, chips, actions, hierarchy, indeterminate)
         (function destinationUx() {
-            if (window.DESTINATION_MODERN_UI_ACTIVE) {
-                return;
-            }
-
             var container = document.getElementById('locationTreeContainer');
             var searchInput = document.getElementById('locationSearch');
             var countText = document.getElementById('locationCountText');
