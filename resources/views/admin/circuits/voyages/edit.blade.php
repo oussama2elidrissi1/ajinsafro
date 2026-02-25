@@ -1376,7 +1376,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="voyage-activities-rows">
-                                    @forelse($tourActivities as $idx => $tourActivity)
+                                    @forelse(($tourActivities ?? collect()) as $idx => $tourActivity)
                                         @php
                                             $opts = is_array($tourActivity->options_json ?? null) ? $tourActivity->options_json : [];
                                             $activityId = (int) ($opts['activity_id'] ?? 0);
@@ -1414,6 +1414,9 @@
                                             </td>
                                         </tr>
                                     @empty
+                                        <tr class="voyage-activities-empty-row">
+                                            <td colspan="6" class="text-center text-muted py-3">Aucune activité ajoutée pour ce voyage.</td>
+                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
