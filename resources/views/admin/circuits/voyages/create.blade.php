@@ -418,6 +418,16 @@
 
         <div class="row">
             <div class="col-12">
+                <div class="card" id="activities">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Activités</h4>
+                        @include('admin.circuits.voyages.partials._under_construction_notice', [
+                            'title' => '⚠️ Section en cours de construction — ne pas modifier',
+                            'tabName' => 'Activités',
+                        ])
+                    </div>
+                </div>
+
                 <div class="card" id="availability">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Disponibilité & Réservation</h4>

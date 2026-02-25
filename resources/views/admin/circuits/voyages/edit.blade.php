@@ -1356,6 +1356,11 @@
             <div class="tab-pane" id="activities" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
+                        @include('admin.circuits.voyages.partials._under_construction_notice', [
+                            'title' => '⚠️ Section en cours de construction — ne pas modifier',
+                            'tabName' => 'Activités',
+                        ])
+
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                             <h4 class="card-title mb-0">Activités</h4>
                             <button type="button" class="btn btn-primary" id="btn-open-activities-modal" data-bs-toggle="modal" data-bs-target="#activitiesCatalogModal">
