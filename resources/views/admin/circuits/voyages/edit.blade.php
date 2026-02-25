@@ -621,6 +621,7 @@
             <div class="tab-pane" id="availability" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
+                        @include('admin.circuits.voyages.partials._availability_notice')
                         <h4 class="card-title mb-4">Disponibilité & Réservation</h4>
                         
                         <div class="mb-3">

@@ -418,6 +418,17 @@
 
         <div class="row">
             <div class="col-12">
+                <div class="card" id="availability">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Disponibilité & Réservation</h4>
+                        @include('admin.circuits.voyages.partials._availability_notice')
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary waves-effect waves-light">
