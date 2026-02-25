@@ -44,7 +44,7 @@
                             ->values();
 
                         $hasSectionPermission = empty($section['permission']) || $user->can($section['permission']);
-                        $showSection = $children->isNotEmpty() || ($hasSectionPermission && empty($section['children']));
+                        $showSection = $hasSectionPermission && ($children->isNotEmpty() || empty($section['children']));
 
                         $sectionActive = $children->contains(function ($child) use ($currentRoute) {
                             return ($child['route'] ?? null) === $currentRoute;

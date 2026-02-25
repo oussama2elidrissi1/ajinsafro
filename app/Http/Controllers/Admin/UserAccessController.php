@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Role;
 
 class UserAccessController extends Controller
@@ -50,7 +51,7 @@ class UserAccessController extends Controller
         $user->is_admin = (bool) ($data['is_admin'] ?? true);
         $user->is_active = (bool) ($data['is_active'] ?? true);
         $user->access_mode = $data['access_mode'];
-        $user->base_role = $data['role_name'] ?? null;
+        $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
         $user->password = Hash::make($data['password']);
         $user->save();
 
@@ -77,7 +78,7 @@ class UserAccessController extends Controller
         $user->is_admin = (bool) ($data['is_admin'] ?? true);
         $user->is_active = (bool) ($data['is_active'] ?? true);
         $user->access_mode = $data['access_mode'];
-        $user->base_role = $data['role_name'] ?? null;
+        $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
 
         if (! empty($data['password'])) {
             $user->password = Hash::make($data['password']);
@@ -180,11 +181,13 @@ class UserAccessController extends Controller
         if ($accessMode === 'role') {
             $user->syncRoles($roleName ? [$roleName] : []);
             $user->syncPermissions([]);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
             return;
         }
 
         $user->syncRoles([]);
         $user->syncPermissions($data['permissions'] ?? []);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     private function permissionGroups(): array
