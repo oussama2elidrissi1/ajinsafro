@@ -247,12 +247,6 @@
                     <input type="hidden" name="without_flight" id="create-without-flight" value="{{ $createWithoutFlight ? '1' : '0' }}">
                     <p class="small text-muted mt-2 mb-0 {{ $createWithoutFlight ? '' : 'd-none' }}" id="create-no-flights-msg" role="status">Sans vol activé.</p>
                 </div>
-                <div class="mb-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-airlines-manage">
-                        <i class="bx bx-list-ul me-1"></i> Gérer les compagnies aériennes
-                    </button>
-                </div>
-                <div id="flights-api-urls-create" class="d-none" data-url-airlines-index="{{ route('admin.circuits.api.airlines.index') }}" data-url-airlines-store="{{ route('admin.circuits.api.airlines.store') }}" data-url-airlines-update="{{ url('/admin/circuits/api/airlines') }}" data-url-airlines-destroy="{{ url('/admin/circuits/api/airlines') }}"></div>
                 <div id="create-flights-content" class="create-flights-crud" style="{{ $createWithoutFlight ? 'display: none;' : '' }}">
                 <style>
                 .flight-card-admin { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #e9ecef; overflow: hidden; }
@@ -455,42 +449,6 @@
         <i class="mdi mdi-information me-2"></i>
         <strong>Note :</strong> Le tour sera créé directement dans la base de données WordPress et sera immédiatement visible sur ajinsafro.net après publication.
     </div>
-
-    {{-- Modal Gérer les compagnies aériennes (même que Edit) --}}
-    <div class="modal fade" id="modal-airlines-manage" tabindex="-1" aria-labelledby="modal-airlines-title" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modal-airlines-title"><i class="bx bx-list-ul me-1"></i> Gérer les compagnies aériennes</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="airlines-modal-message" class="alert d-none mb-3 py-2 small" role="alert"></div>
-                    <div class="mb-3 d-flex flex-wrap gap-2 align-items-end">
-                        <div class="flex-grow-1 min-w-200">
-                            <label class="form-label small mb-0">Nom</label>
-                            <input type="text" class="form-control form-control-sm" id="airline-modal-name" placeholder="Ex. Air France" required>
-                        </div>
-                        <div style="width: 90px;">
-                            <label class="form-label small mb-0">Code IATA</label>
-                            <input type="text" class="form-control form-control-sm" id="airline-modal-code" placeholder="AF" maxlength="10">
-                        </div>
-                        <button type="button" class="btn btn-primary btn-sm" id="airline-modal-add-btn">
-                            <i class="bx bx-plus"></i> Ajouter
-                        </button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead><tr><th>Nom</th><th>Code</th><th>Actif</th><th width="100"></th></tr></thead>
-                            <tbody id="airlines-modal-tbody">
-                                <tr><td colspan="4" class="text-muted text-center py-4">Ouvrez le modal pour charger la liste.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
@@ -541,81 +499,6 @@
             });
         });
         
-        // Create: Modal Compagnies aériennes (AJAX)
-        (function() {
-            var csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
-            var getHeaders = function() {
-                return { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' };
-            };
-            document.addEventListener('DOMContentLoaded', function() {
-                var urlEl = document.getElementById('flights-api-urls-create');
-                if (!urlEl) return;
-                var modal = document.getElementById('modal-airlines-manage');
-                if (!modal) return;
-                var tbody = document.getElementById('airlines-modal-tbody');
-                var msgEl = document.getElementById('airlines-modal-message');
-                var nameInp = document.getElementById('airline-modal-name');
-                var codeInp = document.getElementById('airline-modal-code');
-                var addBtn = document.getElementById('airline-modal-add-btn');
-                var urlIndex = urlEl.getAttribute('data-url-airlines-index');
-                var urlStore = urlEl.getAttribute('data-url-airlines-store');
-                var urlUpdate = urlEl.getAttribute('data-url-airlines-update');
-                var urlDestroy = urlEl.getAttribute('data-url-airlines-destroy');
-                function showMsg(text, isError) {
-                    msgEl.textContent = text;
-                    msgEl.classList.remove('d-none', 'alert-success', 'alert-danger');
-                    msgEl.classList.add(isError ? 'alert-danger' : 'alert-success');
-                }
-                function loadAirlines() {
-                    if (!urlIndex) return;
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-muted text-center py-4">Chargement…</td></tr>';
-                    fetch(urlIndex, { headers: getHeaders() }).then(function(r) { return r.json(); }).then(function(res) {
-                        if (res.success && res.data) {
-                            if (res.data.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-muted text-center py-4">Aucune compagnie. Ajoutez-en une ci-dessus.</td></tr>';
-                            else {
-                                tbody.innerHTML = res.data.map(function(a) {
-                                    return '<tr data-airline-id="' + a.id + '"><td><input type="text" class="form-control form-control-sm border-0 airline-edit-name" value="' + (a.name || '').replace(/"/g, '&quot;') + '"></td><td><input type="text" class="form-control form-control-sm border-0 airline-edit-code" value="' + (a.code_iata || a.iata_code || '').replace(/"/g, '&quot;') + '" maxlength="10"></td><td>' + (a.is_active ? 'Oui' : 'Non') + '</td><td><button type="button" class="btn btn-sm btn-outline-primary airline-save me-1">Enregistrer</button><button type="button" class="btn btn-sm btn-outline-danger airline-delete">Supprimer</button></td></tr>';
-                                }).join('');
-                            }
-                        }
-                    }).catch(function() { tbody.innerHTML = '<tr><td colspan="4" class="text-danger text-center py-4">Erreur de chargement.</td></tr>'); });
-                }
-                modal.addEventListener('show.bs.modal', function() { loadAirlines(); });
-                if (addBtn && urlStore) {
-                    addBtn.addEventListener('click', function() {
-                        var name = nameInp && nameInp.value.trim();
-                        if (!name) { showMsg('Nom requis.', true); return; }
-                        addBtn.disabled = true;
-                        fetch(urlStore, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ name: name, code_iata: (codeInp && codeInp.value.trim()) || null, is_active: true, _token: csrfToken }) })
-                            .then(function(r) { return r.json(); }).then(function(res) {
-                                if (res.success) { nameInp.value = ''; if (codeInp) codeInp.value = ''; showMsg(res.message || 'Créé.', false); loadAirlines(); }
-                                else showMsg(res.message || 'Erreur', true);
-                            }).catch(function() { showMsg('Erreur réseau.', true); }).finally(function() { addBtn.disabled = false; });
-                    });
-                }
-                tbody.addEventListener('click', function(e) {
-                    var row = e.target.closest('tr[data-airline-id]');
-                    if (!row) return;
-                    var id = row.getAttribute('data-airline-id');
-                    if (e.target.classList.contains('airline-delete')) {
-                        if (!confirm('Supprimer cette compagnie ?')) return;
-                        e.target.disabled = true;
-                        fetch(urlDestroy + '/' + id, { method: 'DELETE', headers: getHeaders() }).then(function(r) { return r.json(); }).then(function(res) {
-                            if (res.success) { row.remove(); showMsg(res.message || 'Supprimé.', false); } else showMsg(res.message || 'Erreur', true);
-                        }).finally(function() { e.target.disabled = false; });
-                    } else if (e.target.classList.contains('airline-save')) {
-                        var name = row.querySelector('.airline-edit-name').value.trim();
-                        if (!name) { showMsg('Nom requis.', true); return; }
-                        e.target.disabled = true;
-                        fetch(urlUpdate + '/' + id, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ name: name, code_iata: (row.querySelector('.airline-edit-code').value.trim()) || null, is_active: true, _token: csrfToken }) })
-                            .then(function(r) { return r.json(); }).then(function(res) {
-                                if (res.success) showMsg(res.message || 'Mis à jour.', false); else showMsg(res.message || 'Erreur', true);
-                            }).finally(function() { e.target.disabled = false; });
-                    }
-                });
-            });
-        })();
-
         // Create: Sans vol switch — show/hide CRUD vols and sync hidden input
         document.addEventListener('DOMContentLoaded', function() {
             var toggle = document.getElementById('create-no-flights-toggle');
