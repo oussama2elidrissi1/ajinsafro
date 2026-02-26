@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class HomePageSettingsController extends Controller
 {
@@ -146,8 +147,7 @@ class HomePageSettingsController extends Controller
 
         $optionValue = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-        $prefix = env('WP_DB_PREFIX', env('WP_TABLE_PREFIX', 'cFdgeZ_'));
-        $optionsTable = $prefix . 'options';
+        $optionsTable = $this->wpOptionsTable();
 
         DB::connection('wp')
             ->table($optionsTable)
@@ -197,8 +197,7 @@ class HomePageSettingsController extends Controller
             ],
         ];
 
-        $prefix = env('WP_DB_PREFIX', env('WP_TABLE_PREFIX', 'cFdgeZ_'));
-        $optionsTable = $prefix . 'options';
+        $optionsTable = $this->wpOptionsTable();
 
         $raw = DB::connection('wp')
             ->table($optionsTable)
@@ -230,5 +229,57 @@ class HomePageSettingsController extends Controller
         }
 
         return $settings;
+    }
+
+    private function wpPrefix(): string
+    {
+        $prefix = (string) env(
+            'WP_DB_PREFIX',
+            (string) (config('database.connections.wp.prefix') ?: env('WP_TABLE_PREFIX', 'wp_'))
+        );
+
+        $prefix = trim($prefix);
+        $prefix = trim($prefix, " \t\n\r\0\x0B`");
+
+        if ($prefix === '') {
+            $prefix = 'wp_';
+        }
+
+        $prefixLower = strtolower($prefix);
+        if (str_ends_with($prefixLower, 'options')) {
+            $prefix = substr($prefix, 0, -7);
+        }
+
+        $prefixLower = strtolower($prefix);
+        if (str_ends_with($prefixLower, 'options_')) {
+            $prefix = substr($prefix, 0, -8);
+        }
+
+        if (!str_ends_with($prefix, '_')) {
+            $prefix .= '_';
+        }
+
+        $prefix = preg_replace('/_+/', '_', $prefix) ?? $prefix;
+
+        if (preg_match('/^(.+?)\1$/', $prefix, $matches) === 1) {
+            $prefix = $matches[1];
+        }
+
+        return $prefix;
+    }
+
+    private function wpOptionsTable(): string
+    {
+        $prefix = $this->wpPrefix();
+        $optionsTable = $prefix . 'options';
+
+        $exists = DB::connection('wp')
+            ->select('SHOW TABLES LIKE ?', [$optionsTable]);
+
+        if (empty($exists)) {
+            throw new RuntimeException("WP options table not found: {$optionsTable}. Check WP_DB_PREFIX and WP DB credentials.");
+        }
+
+        return $optionsTable;
     }
 }
