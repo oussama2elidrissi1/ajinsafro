@@ -59,8 +59,15 @@ return [
             'permission' => 'circuits.view',
             'children' => [
                 ['label' => 'Voyages', 'route' => 'admin.circuits.voyages.index', 'permission' => 'circuits.voyages.view'],
+                ['label' => 'Hôtels (circuit)', 'route' => 'admin.circuits.tour-hotels.index', 'permission' => 'circuits.tour-hotels.view'],
+                ['label' => 'Transferts', 'route' => 'admin.circuits.tour-transfers.index', 'permission' => 'circuits.transfers.view'],
                 ['label' => 'Compagnies aériennes', 'route' => 'admin.circuits.airlines.index', 'permission' => 'circuits.airlines.view'],
                 ['label' => 'Activités', 'route' => 'admin.circuits.activities.index', 'permission' => 'circuits.activities.view'],
+                ['label' => 'Circuits', 'route' => 'admin.circuits.circuits', 'permission' => 'circuits.list.view'],
+                ['label' => 'Itinéraires', 'route' => 'admin.circuits.itineraires', 'permission' => 'circuits.itineraries.view'],
+                ['label' => 'Départs & Dates', 'route' => 'admin.circuits.departs-dates', 'permission' => 'circuits.departures.view'],
+                ['label' => 'Options', 'route' => 'admin.circuits.options', 'permission' => 'circuits.options.view'],
+                ['label' => 'Politiques & Conditions', 'route' => 'admin.circuits.politiques-conditions', 'permission' => 'circuits.policies.view'],
             ],
         ],
         [
