@@ -19,6 +19,7 @@ Le code Laravel est **100% fonctionnel** en local. Le problème est uniquement l
 cd /path/to/booking.ajinsafro.net
 
 # 2. Mettre à jour le code (si Git)
+
 git pull origin main
 
 # 3. Nettoyer les caches

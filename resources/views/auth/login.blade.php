@@ -30,7 +30,7 @@
                                         <label class="form-label" for="email">Email <span class="text-danger">*
                                             </span></label>
                                         <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                            name="email" id="email" value="admin@themesdesign.com" required
+                                            name="email" id="email" value=" " required
                                             autocomplete="email" autofocus placeholder="Enter email">
                                         @error('email')
                                             <span class="invalid-feedback" role="alert">
