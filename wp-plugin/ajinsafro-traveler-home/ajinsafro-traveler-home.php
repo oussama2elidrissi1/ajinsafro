@@ -203,6 +203,28 @@ function ajth_legacy_settings_to_json() {
     );
 }
 
+function ajth_debug_dump_home_settings_footer() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        return;
+    }
+
+    if ( ! isset( $_GET['ajdebug'] ) || '1' !== (string) $_GET['ajdebug'] ) {
+        return;
+    }
+
+    if ( function_exists( 'wp_cache_delete' ) ) {
+        wp_cache_delete( 'aj_home_settings', 'options' );
+    }
+
+    echo '<div style="margin:24px auto;max-width:1200px;padding:12px;border:1px dashed #b91c1c;background:#fff;">';
+    echo '<strong>AJ DEBUG — get_option(\'aj_home_settings\')</strong>';
+    echo '<pre style="white-space:pre-wrap;word-break:break-word;max-height:380px;overflow:auto;">';
+    var_dump( get_option( 'aj_home_settings' ) );
+    echo '</pre>';
+    echo '</div>';
+}
+add_action( 'wp_footer', 'ajth_debug_dump_home_settings_footer', 9999 );
+
 /* ──────────────────────────────────────────────
  * Activation: set default options if not present
  * ────────────────────────────────────────────── */

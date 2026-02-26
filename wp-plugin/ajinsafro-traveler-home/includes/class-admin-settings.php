@@ -122,7 +122,6 @@ class AJTH_Admin_Settings {
 
         // Redirect with success notice
         add_settings_error( 'ajth_messages', 'ajth_saved', __( 'Paramètres enregistrés.', 'ajinsafro-traveler-home' ), 'updated' );
-        set_transient( 'ajth_saved_notice', true, 30 );
 
         wp_safe_redirect( admin_url( 'admin.php?page=ajth-home-settings&saved=1' ) );
         exit;

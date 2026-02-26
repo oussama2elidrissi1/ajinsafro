@@ -16,8 +16,12 @@ $hero_cta_text = ! empty( $hero['cta_text'] ) ? $hero['cta_text'] : '';
 $hero_cta_url = ! empty( $hero['cta_url'] ) ? $hero['cta_url'] : '';
 $hero_overlay = isset( $hero['overlay'] ) ? max( 0, min( 1, floatval( $hero['overlay'] ) ) ) : 0.35;
 
-$bg = $hero_image_url
-    ? 'background-image:url(' . esc_url( $hero_image_url ) . ');'
+$default_hero_image_url = function_exists( 'get_header_image' ) ? (string) get_header_image() : '';
+$hero_image_source = $hero_image_url !== '' ? $hero_image_url : $default_hero_image_url;
+$hero_mode = ( $hero_type === 'video' && $hero_video_url !== '' ) ? 'video' : 'image';
+
+$bg = $hero_image_source
+    ? 'background-image:url(' . esc_url( $hero_image_source ) . ');'
     : 'background:linear-gradient(135deg,#c2935a 0%,#8b6914 40%,#d4a04a 100%);';
 
 $is_mp4_video = ! empty( $hero_video_url ) && preg_match( '/\.mp4(\?.*)?$/i', $hero_video_url );
@@ -32,8 +36,8 @@ if ( ! empty( $hero_video_url ) && ! $is_mp4_video ) {
 }
 ?>
 
-<section class="aj-hero <?php echo $hero_type === 'video' ? 'aj-hero--video' : 'aj-hero--image'; ?>" style="<?php echo esc_attr( $hero_type === 'image' ? $bg : '' ); ?>">
-    <?php if ( $hero_type === 'video' && $hero_video_url ) : ?>
+<section class="aj-hero <?php echo $hero_mode === 'video' ? 'aj-hero--video' : 'aj-hero--image'; ?>" style="<?php echo esc_attr( $hero_mode === 'image' ? $bg : '' ); ?>">
+    <?php if ( $hero_mode === 'video' && $hero_video_url ) : ?>
         <div class="aj-hero__media" aria-hidden="true">
             <?php if ( $is_mp4_video ) : ?>
                 <video class="aj-hero__video" autoplay muted loop playsinline>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use RuntimeException;
@@ -155,6 +156,18 @@ class HomePageSettingsController extends Controller
                 ['option_name' => 'aj_home_settings'],
                 ['option_value' => $optionValue, 'autoload' => 'no']
             );
+
+        $writtenRaw = DB::connection('wp')
+            ->table('options')
+            ->where('option_name', 'aj_home_settings')
+            ->value('option_value');
+
+        Log::info('WP aj_home_settings saved from Laravel', [
+            'option_name' => 'aj_home_settings',
+            'db' => config('database.connections.wp.database'),
+            'prefix' => config('database.connections.wp.prefix'),
+            'written_option_value' => $writtenRaw,
+        ]);
 
         return redirect()
             ->route('admin.settings.home-page.edit')
