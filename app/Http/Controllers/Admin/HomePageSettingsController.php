@@ -255,13 +255,10 @@ class HomePageSettingsController extends Controller
             $prefix = substr($prefix, 0, -8);
         }
 
-        if (!str_ends_with($prefix, '_')) {
-            $prefix .= '_';
-        }
-
         $prefix = preg_replace('/_+/', '_', $prefix) ?? $prefix;
+        $prefix = rtrim($prefix, '_') . '_';
 
-        if (preg_match('/^(.+?)\1$/', $prefix, $matches) === 1) {
+        if (preg_match('/^(.+_)\1+$/', $prefix, $matches) === 1) {
             $prefix = $matches[1];
         }
 
@@ -273,11 +270,21 @@ class HomePageSettingsController extends Controller
         $prefix = $this->wpPrefix();
         $optionsTable = $prefix . 'options';
 
-        $exists = DB::connection('wp')
-            ->select('SHOW TABLES LIKE ?', [$optionsTable]);
+        try {
+            $tableRows = DB::connection('wp')->select("SHOW TABLES LIKE '{$optionsTable}'");
 
-        if (empty($exists)) {
-            throw new RuntimeException("WP options table not found: {$optionsTable}. Check WP_DB_PREFIX and WP DB credentials.");
+            if (empty($tableRows)) {
+                $dbRow = DB::connection('wp')->selectOne('SELECT DATABASE() as db');
+                $db = (string) ($dbRow->db ?? 'unknown');
+
+                throw new RuntimeException(
+                    "WP options table not found: {$optionsTable} in DB {$db}. Check WP_DB_DATABASE and WP_DB_PREFIX against wp-config.php. Prefix used: {$prefix}"
+                );
+            }
+        } catch (RuntimeException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new RuntimeException('Failed to validate WordPress options table: ' . $e->getMessage(), 0, $e);
         }
 
         return $optionsTable;
