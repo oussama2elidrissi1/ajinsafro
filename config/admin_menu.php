@@ -59,15 +59,8 @@ return [
             'permission' => 'circuits.view',
             'children' => [
                 ['label' => 'Voyages', 'route' => 'admin.circuits.voyages.index', 'permission' => 'circuits.voyages.view'],
-                ['label' => 'Hôtels (circuit)', 'route' => 'admin.circuits.tour-hotels.index', 'permission' => 'circuits.tour-hotels.view'],
-                ['label' => 'Transferts', 'route' => 'admin.circuits.tour-transfers.index', 'permission' => 'circuits.transfers.view'],
                 ['label' => 'Compagnies aériennes', 'route' => 'admin.circuits.airlines.index', 'permission' => 'circuits.airlines.view'],
                 ['label' => 'Activités', 'route' => 'admin.circuits.activities.index', 'permission' => 'circuits.activities.view'],
-                ['label' => 'Circuits', 'route' => 'admin.circuits.circuits', 'permission' => 'circuits.list.view'],
-                ['label' => 'Itinéraires', 'route' => 'admin.circuits.itineraires', 'permission' => 'circuits.itineraries.view'],
-                ['label' => 'Départs & Dates', 'route' => 'admin.circuits.departs-dates', 'permission' => 'circuits.departures.view'],
-                ['label' => 'Options', 'route' => 'admin.circuits.options', 'permission' => 'circuits.options.view'],
-                ['label' => 'Politiques & Conditions', 'route' => 'admin.circuits.politiques-conditions', 'permission' => 'circuits.policies.view'],
             ],
         ],
         [
@@ -76,7 +69,7 @@ return [
             'icon' => 'bx bx-hotel',
             'permission' => 'accommodations.view',
             'children' => [
-                ['label' => 'Hôtels', 'route' => 'admin.accommodations.hotels', 'permission' => 'accommodations.hotels.view'],
+                ['label' => 'Hôtels (circuit)', 'route' => 'admin.circuits.tour-hotels.index', 'permission' => 'circuits.tour-hotels.view'],
                 ['label' => 'Chambres', 'route' => 'admin.accommodations.chambres', 'permission' => 'accommodations.rooms.view'],
                 ['label' => 'Tarifs saisonniers', 'route' => 'admin.accommodations.tarifs-saisonniers', 'permission' => 'accommodations.seasonal-pricing.view'],
                 ['label' => 'Disponibilités', 'route' => 'admin.accommodations.disponibilites', 'permission' => 'accommodations.availability.view'],
