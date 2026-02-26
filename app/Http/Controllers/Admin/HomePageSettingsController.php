@@ -147,10 +147,10 @@ class HomePageSettingsController extends Controller
 
         $optionValue = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-        $optionsTable = $this->wpOptionsTable();
+        $this->wpOptionsTable();
 
         DB::connection('wp')
-            ->table($optionsTable)
+            ->table('options')
             ->updateOrInsert(
                 ['option_name' => 'aj_home_settings'],
                 ['option_value' => $optionValue, 'autoload' => 'no']
@@ -197,10 +197,10 @@ class HomePageSettingsController extends Controller
             ],
         ];
 
-        $optionsTable = $this->wpOptionsTable();
+        $this->wpOptionsTable();
 
         $raw = DB::connection('wp')
-            ->table($optionsTable)
+            ->table('options')
             ->where('option_name', 'aj_home_settings')
             ->value('option_value');
 
@@ -231,54 +231,25 @@ class HomePageSettingsController extends Controller
         return $settings;
     }
 
-    private function wpPrefix(): string
-    {
-        $prefix = (string) env(
-            'WP_DB_PREFIX',
-            (string) (config('database.connections.wp.prefix') ?: env('WP_TABLE_PREFIX', 'wp_'))
-        );
-
-        $prefix = trim($prefix);
-        $prefix = trim($prefix, " \t\n\r\0\x0B`");
-
-        if ($prefix === '') {
-            $prefix = 'wp_';
-        }
-
-        $prefixLower = strtolower($prefix);
-        if (str_ends_with($prefixLower, 'options')) {
-            $prefix = substr($prefix, 0, -7);
-        }
-
-        $prefixLower = strtolower($prefix);
-        if (str_ends_with($prefixLower, 'options_')) {
-            $prefix = substr($prefix, 0, -8);
-        }
-
-        $prefix = preg_replace('/_+/', '_', $prefix) ?? $prefix;
-        $prefix = rtrim($prefix, '_') . '_';
-
-        if (preg_match('/^(.+_)\1+$/', $prefix, $matches) === 1) {
-            $prefix = $matches[1];
-        }
-
-        return $prefix;
-    }
-
     private function wpOptionsTable(): string
     {
-        $prefix = $this->wpPrefix();
-        $optionsTable = $prefix . 'options';
+        $optionsTable = 'options';
 
         try {
-            $tableRows = DB::connection('wp')->select("SHOW TABLES LIKE '{$optionsTable}'");
+            $prefix = (string) (config('database.connections.wp.prefix') ?: 'wp_');
+            $prefix = trim($prefix, " \t\n\r\0\x0B`");
+            $prefix = rtrim($prefix, '_') . '_';
+            $physicalTable = $prefix . 'options';
+            $tablePattern = addcslashes($physicalTable, "\\_%");
+
+            $tableRows = DB::connection('wp')->select("SHOW TABLES LIKE '{$tablePattern}'");
 
             if (empty($tableRows)) {
                 $dbRow = DB::connection('wp')->selectOne('SELECT DATABASE() as db');
                 $db = (string) ($dbRow->db ?? 'unknown');
 
                 throw new RuntimeException(
-                    "WP options table not found: {$optionsTable} in DB {$db}. Check WP_DB_DATABASE and WP_DB_PREFIX against wp-config.php. Prefix used: {$prefix}"
+                    "WP options table not found: {$physicalTable} in DB {$db}. Check WP_DB_DATABASE and WP_DB_PREFIX against wp-config.php. Prefix used: {$prefix}"
                 );
             }
         } catch (RuntimeException $e) {
