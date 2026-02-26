@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\TravelDayItemController;
 use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
+use App\Http\Controllers\Admin\HomePageSettingsController;
 use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\ActivityController;
@@ -213,6 +214,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('settings/parametres-generaux', [SettingsController::class, 'page'])->name('settings.parametres-generaux')->defaults('submenu', 'parametres-generaux');
     Route::post('settings/parametres-generaux', [SettingsController::class, 'updateParametresGeneraux'])->name('settings.parametres-generaux.update');
     Route::get('settings/securite', [SettingsController::class, 'page'])->name('settings.securite')->defaults('submenu', 'securite');
+    Route::get('settings/home-page', [HomePageSettingsController::class, 'edit'])->name('settings.home-page.edit');
+    Route::post('settings/home-page', [HomePageSettingsController::class, 'update'])->name('settings.home-page.update');
 
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');

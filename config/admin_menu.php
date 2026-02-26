@@ -151,6 +151,7 @@ return [
                 ['label' => 'Utilisateurs', 'route' => 'admin.settings.utilisateurs', 'permission' => 'settings.users.manage'],
                 ['label' => 'Rôles & Permissions', 'route' => 'admin.settings.roles-permissions', 'permission' => 'settings.roles.manage'],
                 ['label' => 'Paramètres généraux', 'route' => 'admin.settings.parametres-generaux', 'permission' => 'settings.general.manage'],
+                ['label' => 'Home page', 'route' => 'admin.settings.home-page.edit', 'permission' => 'settings.general.manage'],
                 ['label' => 'Sécurité', 'route' => 'admin.settings.securite', 'permission' => 'settings.security.manage'],
             ],
         ],
@@ -160,6 +161,8 @@ return [
         'admin.dashboard' => 'dashboard.view',
         'admin.settings.index' => 'settings.view',
         'admin.settings.parametres-generaux.update' => 'settings.general.manage',
+        'admin.settings.home-page.edit' => 'settings.general.manage',
+        'admin.settings.home-page.update' => 'settings.general.manage',
 
         'admin.profile.edit' => 'dashboard.view',
         'admin.profile.update' => 'dashboard.view',

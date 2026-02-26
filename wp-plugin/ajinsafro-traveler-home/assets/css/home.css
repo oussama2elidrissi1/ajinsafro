@@ -1,0 +1,579 @@
+/* ==========================================================================
+   Ajinsafro Traveler Home — home.css
+   Matches the provided mockup: desert hero, search overlay, horizontal
+   cards, 2×4 regions grid, 2×2 good-spots grid.
+   ========================================================================== */
+
+/* ── RESET inside plugin wrapper ─────────────────────────────────────────── */
+.aj-home,
+.aj-home *,
+.aj-home *::before,
+.aj-home *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.aj-home img { max-width: 100%; display: block; height: auto; }
+.aj-home a   { text-decoration: none; color: inherit; }
+
+.aj-home {
+    --aj-blue:    #1a73a7;
+    --aj-blue-d:  #0d4f7e;
+    --aj-orange:  #e8711a;
+    --aj-green:   #3aaa35;
+    --aj-red:     #e74c3c;
+    --aj-dark:    #222;
+    --aj-gray:    #777;
+    --aj-light:   #f5f6f8;
+    --aj-radius:  10px;
+    --aj-shadow:  0 2px 16px rgba(0,0,0,.08);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--aj-dark);
+    line-height: 1.55;
+    overflow-x: hidden;
+}
+
+.aj-container {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ==========================================================================
+   1. HERO
+   ========================================================================== */
+.aj-hero {
+    position: relative;
+    width: 100%;
+    min-height: 480px;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 80px;          /* room for the floating search bar */
+}
+
+.aj-hero__media,
+.aj-hero__video,
+.aj-hero__iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.aj-hero__media { z-index: 0; overflow: hidden; }
+.aj-hero__video { object-fit: cover; }
+
+.aj-hero__iframe {
+    border: 0;
+    pointer-events: none;
+    transform: scale(1.2);
+    transform-origin: center center;
+}
+
+.aj-hero__overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.28);
+    z-index: 1;
+}
+
+.aj-hero__center {
+    position: relative; z-index: 2;
+    text-align: center;
+    padding: 60px 20px 30px;
+}
+
+.aj-hero__title {
+    font-size: clamp(1.9rem, 4.5vw, 3rem);
+    font-weight: 800;
+    font-style: italic;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,.4);
+    line-height: 1.25;
+}
+
+.aj-hero__sub {
+    font-size: clamp(1rem, 2.2vw, 1.5rem);
+    font-weight: 600;
+    font-style: italic;
+    color: rgba(255,255,255,.92);
+    margin-top: 6px;
+    text-shadow: 0 1px 6px rgba(0,0,0,.3);
+}
+
+.aj-hero__cta-wrap { margin-top: 18px; }
+
+.aj-hero__cta {
+    display: inline-block;
+    padding: 10px 18px;
+    background: var(--aj-orange);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: background .2s;
+}
+
+.aj-hero__cta:hover { background: #cf6310; color: #fff; }
+
+/* ── 2. FLOATING SEARCH BAR ───────────────────────────────────────────── */
+.aj-search-float {
+    position: absolute;
+    bottom: -42px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 1060px;
+    z-index: 20;
+}
+
+.aj-search-card {
+    background: #fff;
+    border-radius: var(--aj-radius);
+    box-shadow: 0 4px 24px rgba(0,0,0,.14);
+    overflow: hidden;
+}
+
+.aj-search-native {
+    background: #fff;
+    border-radius: var(--aj-radius);
+    box-shadow: 0 4px 24px rgba(0,0,0,.14);
+    padding: 14px;
+}
+
+.aj-search-native * {
+    max-width: 100%;
+}
+
+.aj-search-native .container,
+.aj-search-native .st-search-form,
+.aj-search-native .search-form,
+.aj-search-native form {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+/* Tabs */
+.aj-search__tabs {
+    display: flex;
+    background: #f0f1f3;
+    border-radius: var(--aj-radius) var(--aj-radius) 0 0;
+    overflow-x: auto;
+}
+
+.aj-tab {
+    flex: 0 0 auto;
+    padding: 12px 22px;
+    border: none;
+    background: transparent;
+    font-size: .88rem;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .2s, color .2s;
+    border-radius: var(--aj-radius) var(--aj-radius) 0 0;
+}
+
+.aj-tab:hover { background: #e4e5e7; color: var(--aj-blue); }
+
+.aj-tab--on {
+    background: var(--aj-orange);
+    color: #fff;
+}
+.aj-tab--on:hover { background: #cf6310; color: #fff; }
+
+/* Form row */
+.aj-search__form {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border-top: 1px solid #eee;
+}
+
+.aj-sf {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.aj-sf__ico { flex-shrink: 0; display: flex; }
+
+.aj-sf__txt { display: flex; flex-direction: column; min-width: 0; }
+.aj-sf__txt small { font-size: .7rem; color: #999; text-transform: uppercase; letter-spacing: .3px; font-weight: 600; }
+.aj-sf__txt input {
+    border: none; outline: none; background: transparent;
+    font-size: .88rem; color: var(--aj-dark);
+    padding: 2px 0; width: 100%;
+}
+.aj-sf__txt input::placeholder { color: #aaa; }
+
+.aj-sep { width: 1px; height: 36px; background: #e0e0e0; flex-shrink: 0; display: block; }
+
+.aj-sf--more { flex: 0 0 auto; }
+.aj-more-btn {
+    border: 1px solid var(--aj-blue); background: transparent;
+    color: var(--aj-blue); padding: 6px 16px; border-radius: 6px;
+    font-size: .82rem; font-weight: 600; cursor: pointer;
+    white-space: nowrap;
+}
+.aj-more-btn:hover { background: var(--aj-blue); color: #fff; }
+
+.aj-search__btn {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--aj-blue); color: #fff; border: none;
+    padding: 0 28px; height: 100%; min-height: 58px;
+    font-size: .95rem; font-weight: 700; cursor: pointer;
+    border-radius: 0 0 var(--aj-radius) 0;
+    white-space: nowrap;
+    transition: background .2s;
+}
+.aj-search__btn:hover { background: var(--aj-blue-d); }
+
+/* ==========================================================================
+   3. OFFRES DE DERNIÈRE MINUTE
+   ========================================================================== */
+.aj-lm {
+    padding: 80px 0 50px;     /* top padding compensates the floating bar overlap */
+    background: #fff;
+}
+
+.aj-lm__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.aj-section-title {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--aj-blue);
+    margin: 0;
+}
+
+.aj-section-title--green { color: var(--aj-green); }
+
+.aj-lm__badge {
+    background: var(--aj-blue);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+
+.aj-lm__nav {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+
+.aj-arrow {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #555;
+    transition: border-color .2s, color .2s;
+}
+.aj-arrow:hover { border-color: var(--aj-blue); color: var(--aj-blue); }
+
+/* Slider track */
+.aj-lm__slider { overflow: hidden; }
+
+.aj-lm__track {
+    display: flex;
+    gap: 22px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 0 8px;
+}
+.aj-lm__track::-webkit-scrollbar { display: none; }
+
+/* Card */
+.aj-card {
+    flex: 0 0 calc(33.333% - 15px);
+    min-width: 280px;
+    scroll-snap-align: start;
+}
+
+.aj-card__a {
+    display: block;
+    background: #fff;
+    border-radius: var(--aj-radius);
+    overflow: hidden;
+    box-shadow: var(--aj-shadow);
+    transition: transform .22s, box-shadow .22s;
+}
+.aj-card__a:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0,0,0,.13);
+}
+
+.aj-card__top {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    overflow: hidden;
+    background: #ddd;
+}
+
+.aj-card__img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+}
+
+.aj-card__ph {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg,#ccc,#aaa);
+}
+
+.aj-card__badge {
+    position: absolute;
+    top: 12px; left: 12px;
+    background: var(--aj-red);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.aj-card__bot {
+    padding: 14px 16px 16px;
+}
+
+.aj-card__loc {
+    display: block;
+    font-size: .78rem;
+    color: var(--aj-gray);
+    margin-bottom: 4px;
+}
+
+.aj-card__title {
+    font-size: .98rem;
+    font-weight: 600;
+    color: var(--aj-dark);
+    margin: 0 0 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.aj-card__desc {
+    font-size: .82rem;
+    color: var(--aj-gray);
+    line-height: 1.45;
+    margin: 0 0 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.aj-card__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.aj-card__stars { display: flex; gap: 1px; }
+.aj-s { font-style: normal; font-size: .92rem; }
+.aj-s--on   { color: #ffc107; }
+.aj-s--half { color: #ffc107; opacity: .55; }
+.aj-s--off  { color: #ddd; }
+
+.aj-card__price {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--aj-orange);
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   4. DESTINATIONS PAR RÉGION
+   ========================================================================== */
+.aj-regions {
+    padding: 50px 0;
+    background: #fff;
+}
+
+.aj-regions .aj-section-title { margin-bottom: 24px; }
+
+.aj-regions__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.aj-reg {
+    position: relative;
+    display: block;
+    border-radius: var(--aj-radius);
+    overflow: hidden;
+    height: 160px;
+    box-shadow: var(--aj-shadow);
+    transition: transform .22s, box-shadow .22s;
+}
+.aj-reg:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+
+.aj-reg__img {
+    width: 100% !important; height: 100% !important;
+    object-fit: cover;
+    transition: transform .35s;
+}
+.aj-reg:hover .aj-reg__img { transform: scale(1.05); }
+
+.aj-reg__ph {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg,#b0c4de,#7a9cc6);
+}
+
+.aj-reg__label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px;
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,.45);
+    background: linear-gradient(transparent 30%, rgba(0,0,0,.35) 100%);
+}
+
+/* ==========================================================================
+   5. LES BONS COINS
+   ========================================================================== */
+.aj-spots {
+    padding: 50px 0 60px;
+    background: #fff;
+}
+
+.aj-spots .aj-section-title { margin-bottom: 24px; }
+
+.aj-spots__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.aj-spot {
+    position: relative;
+    display: block;
+    border-radius: var(--aj-radius);
+    overflow: hidden;
+    height: 220px;
+    box-shadow: var(--aj-shadow);
+    transition: transform .22s, box-shadow .22s;
+}
+.aj-spot:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+
+.aj-spot__img {
+    width: 100% !important; height: 100% !important;
+    object-fit: cover;
+    transition: transform .35s;
+}
+.aj-spot:hover .aj-spot__img { transform: scale(1.05); }
+
+.aj-spot__ph {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg,#d4a574,#a67c52);
+}
+
+.aj-spot__ov {
+    position: absolute; inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 22px;
+    background: linear-gradient(transparent 40%, rgba(0,0,0,.55) 100%);
+}
+
+.aj-spot__t {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+
+.aj-spot__s {
+    color: rgba(255,255,255,.85);
+    font-size: .88rem;
+    margin: 4px 0 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .aj-card { flex: 0 0 calc(50% - 11px); }
+    .aj-regions__grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Mobile landscape */
+@media (max-width: 768px) {
+    .aj-hero { min-height: 400px; padding-bottom: 70px; }
+
+    .aj-search-float { width: 94%; bottom: -36px; }
+    .aj-search__tabs { overflow-x: auto; }
+    .aj-tab { padding: 10px 14px; font-size: .8rem; }
+
+    .aj-search__form { flex-wrap: wrap; }
+    .aj-sf { flex: 1 1 100%; border-bottom: 1px solid #eee; }
+    .aj-sep { display: none; }
+    .aj-search__btn {
+        width: 100%; justify-content: center;
+        border-radius: 0 0 var(--aj-radius) var(--aj-radius);
+        min-height: 50px;
+    }
+
+    .aj-lm { padding-top: 70px; }
+    .aj-card { flex: 0 0 82%; min-width: 260px; }
+
+    .aj-regions__grid { grid-template-columns: repeat(2, 1fr); }
+    .aj-spots__grid   { grid-template-columns: 1fr; }
+    .aj-spot { height: 180px; }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+    .aj-hero { min-height: 340px; }
+    .aj-hero__title { font-size: 1.6rem; }
+    .aj-hero__sub   { font-size: .95rem; }
+
+    .aj-card { flex: 0 0 90%; }
+    .aj-regions__grid { grid-template-columns: 1fr 1fr; }
+    .aj-reg { height: 130px; }
+    .aj-reg__label { font-size: .8rem; }
+}

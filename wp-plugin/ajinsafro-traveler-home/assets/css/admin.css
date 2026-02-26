@@ -1,0 +1,58 @@
+/* ======================================================================
+   Ajinsafro Traveler Home — Admin Styles
+   ====================================================================== */
+
+.ajth-admin-wrap {
+    max-width: 860px;
+}
+
+.ajth-admin-wrap h2 {
+    margin-top: 40px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #0073aa;
+    color: #23282d;
+}
+
+.ajth-admin-wrap .form-table th {
+    width: 180px;
+}
+
+/* Image preview */
+.ajth-img-preview {
+    margin-bottom: 8px;
+}
+
+.ajth-img-preview img {
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+/* Region repeater rows */
+.ajth-region-row {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+}
+
+.ajth-region-row h4 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 12px;
+    font-size: 14px;
+}
+
+.ajth-region-row p {
+    margin: 0 0 8px;
+}
+
+.ajth-region-row label {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+#ajth-add-region {
+    margin-top: 8px;
+}

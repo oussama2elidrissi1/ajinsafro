@@ -25,8 +25,8 @@
     --ajtb-bg-gray: #f4f4f4;
     --ajtb-border: #e7e7e7;
     --ajtb-border-light: #f0f0f0;
-    --ajtb-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    --ajtb-shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+    --ajtb-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --ajtb-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
     --ajtb-radius: 8px;
     --ajtb-radius-lg: 12px;
     --ajtb-transition: all 0.2s ease;
@@ -76,11 +76,11 @@
  */
 .aj-wide-container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1440px;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: clamp(12px, 2vw, 32px);
+    padding-right: clamp(12px, 2vw, 32px);
 }
 
 /* ===================================
@@ -96,9 +96,9 @@
  * Override du container de base avec des valeurs optimisées
  */
 .ajtb-tour-page .aj-wide-container {
-    max-width: 1200px;
-    padding-left: 24px;
-    padding-right: 24px;
+    max-width: 1440px;
+    padding-left: clamp(12px, 2vw, 32px);
+    padding-right: clamp(12px, 2vw, 32px);
 }
 
 /* ===================================
@@ -107,61 +107,64 @@
 
 /* Desktop Extra Large (≥1400px) : Confortable pour grands écrans */
 @media (min-width: 1400px) {
+
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
-        max-width: 1200px;
-        padding-left: 32px;
-        padding-right: 32px;
+        max-width: 1440px;
+        padding-left: clamp(16px, 2vw, 40px);
+        padding-right: clamp(16px, 2vw, 40px);
     }
-    
+
     .ajtb-global-summary-bar {
-        max-width: 1200px;
-        padding-left: 32px;
-        padding-right: 32px;
+        max-width: 1440px;
+        padding-left: clamp(16px, 2vw, 40px);
+        padding-right: clamp(16px, 2vw, 40px);
     }
-    
+
     .ajtb-day-details-bar {
-        padding-left: 32px;
-        padding-right: 32px;
+        padding-left: clamp(16px, 2vw, 40px);
+        padding-right: clamp(16px, 2vw, 40px);
     }
 }
 
 /* Desktop Large (1200-1399px) : Format standard confortable */
 @media (min-width: 1200px) and (max-width: 1399px) {
+
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
-        max-width: 1180px;
-        padding-left: 28px;
-        padding-right: 28px;
+        max-width: 1320px;
+        padding-left: clamp(16px, 2vw, 32px);
+        padding-right: clamp(16px, 2vw, 32px);
     }
-    
+
     .ajtb-global-summary-bar {
-        max-width: 1180px;
-        padding-left: 28px;
-        padding-right: 28px;
+        max-width: 1320px;
+        padding-left: clamp(16px, 2vw, 32px);
+        padding-right: clamp(16px, 2vw, 32px);
     }
-    
+
     .ajtb-day-details-bar {
-        padding-left: 28px;
-        padding-right: 28px;
+        padding-left: clamp(16px, 2vw, 32px);
+        padding-right: clamp(16px, 2vw, 32px);
     }
 }
 
 /* Desktop Small / Tablet Large (992-1199px) : Transition desktop → tablet */
 @media (min-width: 992px) and (max-width: 1199px) {
+
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         max-width: 100%;
         padding-left: 24px;
         padding-right: 24px;
     }
-    
+
     .ajtb-global-summary-bar {
         max-width: 100%;
         padding-left: 24px;
         padding-right: 24px;
     }
-    
+
     .ajtb-day-details-bar {
         padding-left: 24px;
         padding-right: 24px;
@@ -170,19 +173,20 @@
 
 /* Tablet (768-991px) : Une colonne ou layout simplifié */
 @media (min-width: 768px) and (max-width: 991px) {
+
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         max-width: 100%;
         padding-left: 20px;
         padding-right: 20px;
     }
-    
+
     .ajtb-global-summary-bar {
         max-width: 100%;
         padding-left: 20px;
         padding-right: 20px;
     }
-    
+
     .ajtb-day-details-bar {
         padding-left: 20px;
         padding-right: 20px;
@@ -191,19 +195,20 @@
 
 /* Mobile (<768px) : Layout compact */
 @media (max-width: 767px) {
+
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         max-width: 100%;
         padding-left: 16px;
         padding-right: 16px;
     }
-    
+
     .ajtb-global-summary-bar {
         max-width: 100%;
         padding-left: 16px;
         padding-right: 16px;
     }
-    
+
     .ajtb-day-details-bar {
         padding-left: 16px;
         padding-right: 16px;
@@ -318,7 +323,7 @@
 .ajtb-hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.1) 100%);
 }
 
 .ajtb-hero-content {
@@ -335,7 +340,7 @@
     align-items: center;
     gap: 8px;
     font-size: 13px;
-    color: rgba(255,255,255,0.85);
+    color: rgba(255, 255, 255, 0.85);
     margin-bottom: 20px;
 }
 
@@ -343,7 +348,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: rgba(255,255,255,0.9);
+    color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     transition: var(--ajtb-transition);
 }
@@ -353,7 +358,7 @@
 }
 
 .ajtb-breadcrumbs .sep {
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .ajtb-breadcrumbs .current {
@@ -394,14 +399,14 @@
     color: #fff;
     margin: 0 0 12px 0;
     line-height: 1.3;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .ajtb-hero-location {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: rgba(255,255,255,0.9);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 15px;
 }
 
@@ -429,7 +434,7 @@
 .ajtb-hero-stats .stat-label {
     display: block;
     font-size: 12px;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -450,7 +455,7 @@
     height: 60px;
     border-radius: 6px;
     overflow: hidden;
-    border: 2px solid rgba(255,255,255,0.8);
+    border: 2px solid rgba(255, 255, 255, 0.8);
     transition: var(--ajtb-transition);
 }
 
@@ -471,7 +476,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.6);
     color: #fff;
     font-size: 13px;
     font-weight: 600;
@@ -489,8 +494,15 @@
 }
 
 @keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-8px); }
+
+    0%,
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    50% {
+        transform: translateX(-50%) translateY(-8px);
+    }
 }
 
 /* ===================================
@@ -743,7 +755,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 18px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     color: #fff;
     border-radius: 8px;
     font-size: 14px;
@@ -834,8 +846,8 @@
     height: 44px;
     border: none;
     border-radius: 50%;
-    background: rgba(255,255,255,0.9);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     padding: 0;
     transition: background 0.2s ease;
@@ -889,7 +901,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.5);
+    background: rgba(255, 255, 255, 0.5);
     border: none;
     padding: 0;
     cursor: pointer;
@@ -938,6 +950,7 @@
 }
 
 @media (max-width: 767px) {
+
     .ajtb-hero-gallery-grid,
     .ajtb-hero-gallery-tablet {
         display: none !important;
@@ -948,7 +961,7 @@
         padding-left: 16px;
         padding-right: 16px;
     }
-    
+
     /* Mobile: max-width 100%, padding réduit */
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
@@ -1371,7 +1384,7 @@
 
 .ajtb-tabs-nav .tab-link:hover {
     color: var(--ajtb-primary);
-    background: rgba(0,140,255,0.05);
+    background: rgba(0, 140, 255, 0.05);
 }
 
 .ajtb-tabs-nav .tab-link.active {
@@ -1795,8 +1808,10 @@
 
 .ajtb-top-itinerary-bar.aj-day-specific-bar {
     margin-top: 0;
-    display: none; /* Masquée, remplacée par ajtb-day-details-bar */
+    display: none;
+    /* Masquée, remplacée par ajtb-day-details-bar */
 }
+
 .ajtb-top-bar__left {
     display: flex;
     flex-wrap: wrap;
@@ -1804,16 +1819,19 @@
     gap: 10px 16px;
     min-width: 0;
 }
+
 .ajtb-top-bar__day {
     font-weight: 700;
     font-size: 1.1rem;
     color: var(--ajtb-text, #1a1a1a);
     white-space: nowrap;
 }
+
 .ajtb-top-bar__inclus {
     font-size: 0.9rem;
     color: var(--ajtb-text-muted, #6c757d);
 }
+
 .ajtb-top-bar__tabs {
     display: flex;
     flex-wrap: nowrap;
@@ -1824,6 +1842,7 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
 }
+
 .ajtb-tab-pill {
     display: inline-flex;
     align-items: center;
@@ -1838,11 +1857,13 @@
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
+
 .ajtb-tab-pill:hover {
     color: var(--ajtb-primary, #0d6efd);
     border-color: var(--ajtb-primary, #0d6efd);
     background: rgba(13, 110, 253, 0.06);
 }
+
 .ajtb-tab-pill.active {
     color: #fff;
     background: var(--ajtb-primary, #0d6efd);
@@ -2111,6 +2132,7 @@
 #itinerary .ajtb-day-content-panel {
     scroll-margin-top: calc(var(--header-h, 100px) + var(--aj-global-bar-height, 60px));
 }
+
 .aj-day-anchor {
     display: block;
     height: 0;
@@ -2155,7 +2177,8 @@
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
-        width: 160px; /* fallback */
+        width: 160px;
+        /* fallback */
         width: fit-content;
         max-width: 160px;
         flex: 0 0 auto;
@@ -2227,12 +2250,12 @@
         width: 100%;
         max-width: 100%;
     }
-    
+
     .ajtb-tour-page {
         --sticky-stack-h: calc(var(--header-h, 56px) + var(--aj-global-bar-height, 50px) + var(--aj-day-details-bar-height, 48px));
         --stickyTop: var(--sticky-stack-h);
     }
-    
+
     .ajtb-programme-days {
         top: calc(var(--header-h, 56px) + var(--aj-global-bar-height, 50px));
         margin-top: 0;
@@ -2273,7 +2296,7 @@
     .ajtb-tour-page {
         --sticky-stack-h: calc(var(--header-h, 56px) + var(--aj-global-bar-height, 50px) + var(--aj-day-details-bar-height, 48px));
     }
-    
+
     .ajtb-programme-mmt.programme-container {
         flex-direction: column;
         gap: 12px;
@@ -2281,7 +2304,7 @@
         padding-top: 12px;
         margin-top: 0;
     }
-    
+
     .ajtb-programme-center,
     .itinerary__content,
     .ajtb-day-panels {
@@ -2846,48 +2869,58 @@
     .aj-flight-card--v2 {
         padding: 12px;
     }
+
     .aj-flight-card--v2 .aj-flight-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
         margin-bottom: 12px;
     }
+
     .aj-flight-card--v2 .aj-flight-header__badge-wrap {
         width: 100%;
     }
+
     .aj-flight-card--v2 .aj-flight-timeline {
         flex-direction: column;
         align-items: stretch;
         gap: 16px;
         padding: 16px 0;
     }
+
     .aj-flight-card--v2 .aj-flight-timeline__center {
         order: 0;
         flex: none;
         padding: 0 8px;
     }
+
     .aj-flight-timeline__center::before,
     .aj-flight-timeline__center::after {
         max-width: 100%;
     }
+
     .aj-flight-card--v2 .aj-flight-timeline__col--origin {
         order: -1;
         text-align: left;
         padding-bottom: 8px;
         border-bottom: 1px dashed #e2e8f0;
     }
+
     .aj-flight-card--v2 .aj-flight-timeline__col--dest {
         order: 1;
         text-align: left;
         padding-top: 8px;
     }
+
     .aj-flight-card--v2 .aj-flight-footer {
         flex-direction: column;
         align-items: stretch;
     }
+
     .aj-flight-card--v2 .aj-flight-chips {
         justify-content: flex-start;
     }
+
     .aj-flight-card--v2 .aj-flight-actions {
         justify-content: flex-end;
     }
@@ -2898,28 +2931,33 @@
 .aj-hotel-card.aj-flight-card {
     margin-bottom: 16px;
 }
+
 .aj-transfer-card__notes,
 .aj-hotel-card__notes {
     padding: 0 16px 12px;
     font-size: 12px;
     color: var(--ajtb-text-muted);
 }
+
 .aj-hotel-card__name {
     font-size: 14px;
     font-weight: 600;
     color: var(--ajtb-text);
     margin-bottom: 4px;
 }
+
 .aj-hotel-card__stars {
     color: var(--ajtb-primary);
     margin-left: 4px;
 }
+
 .aj-hotel-card__address,
 .aj-hotel-card__meta {
     font-size: 12px;
     color: var(--ajtb-text-muted);
     margin-top: 2px;
 }
+
 .ajtb-day-transfer-block,
 .ajtb-day-hotel-block {
     margin-bottom: 16px;
@@ -2931,8 +2969,9 @@
     margin-bottom: 20px;
     border-radius: var(--ajtb-radius);
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
+
 .ajtb-day-banner img {
     width: 100%;
     height: auto;
@@ -2948,8 +2987,9 @@
     border-radius: var(--ajtb-radius);
     overflow: hidden;
     background: var(--ajtb-bg);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
+
 .ajtb-collapse-trigger {
     display: flex;
     align-items: center;
@@ -2965,10 +3005,12 @@
     list-style: none;
     text-align: left;
 }
+
 .ajtb-collapse-trigger::-webkit-details-marker,
 .ajtb-collapse-trigger::marker {
     display: none;
 }
+
 .ajtb-collapse-icon {
     display: inline-flex;
     align-items: center;
@@ -2978,12 +3020,15 @@
     font-weight: 400;
     color: var(--ajtb-primary);
 }
+
 .ajtb-collapse-section .ajtb-collapse-icon::before {
     content: '+';
 }
+
 .ajtb-collapse-section[open] .ajtb-collapse-icon::before {
     content: '−';
 }
+
 .ajtb-collapse-body {
     padding: 16px;
     border-top: 1px solid var(--ajtb-border);
@@ -2995,6 +3040,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
+
 .ajtb-transfer-hotel-col {
     min-width: 0;
 }
@@ -3015,15 +3061,19 @@
     display: flex;
     flex-direction: column;
 }
+
 .ajtb-card-with-image.ajtb-card--transfer {
     flex-direction: row;
 }
+
 .ajtb-card-with-image.ajtb-card--hotel {
     flex-direction: column;
 }
+
 .ajtb-card-with-image.ajtb-card--hotel .ajtb-card-image {
     height: 220px;
 }
+
 .ajtb-card-image {
     width: 100%;
     height: 160px;
@@ -3032,16 +3082,19 @@
     flex-shrink: 0;
     position: relative;
 }
+
 .ajtb-card-with-image.ajtb-card--transfer .ajtb-card-image {
     width: 220px;
     min-height: 180px;
 }
+
 .ajtb-card-image:not(.has-image)::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
 }
+
 .ajtb-card-image:not(.has-image)::before {
     content: "\2708";
     position: absolute;
@@ -3050,27 +3103,33 @@
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    color: rgba(0,0,0,0.35);
+    color: rgba(0, 0, 0, 0.35);
 }
+
 .ajtb-card-with-image.ajtb-card--hotel .ajtb-card-image:not(.has-image)::before {
     content: "\1F3E8";
 }
+
 .ajtb-card-with-image.ajtb-card--transfer .ajtb-card-image:not(.has-image)::before {
     content: "\1F697";
 }
+
 .ajtb-card-image--transfer {
     background-color: #e8f4fc;
     background-image: linear-gradient(135deg, #e8f4fc 0%, #d0e8f7 100%);
 }
+
 .ajtb-card-image--hotel {
     background-color: #f5f0e8;
     background-image: linear-gradient(135deg, #f5f0e8 0%, #e8dfd0 100%);
 }
+
 .ajtb-card-inner {
     padding: 18px 20px;
     flex: 1;
     min-width: 0;
 }
+
 .ajtb-card-inner .aj-flight-card {
     margin-bottom: 0;
     box-shadow: none;
@@ -3294,14 +3353,17 @@
     .ajtb-card-with-image.ajtb-card--transfer {
         flex-direction: column;
     }
+
     .ajtb-card-with-image.ajtb-card--transfer .ajtb-card-image {
         width: 100%;
         height: 160px;
     }
 }
+
 .ajtb-card-wrap {
     margin-bottom: 0;
 }
+
 .ajtb-collapse-body .ajtb-card-wrap .aj-flight-card {
     border: none;
     box-shadow: none;
@@ -3313,9 +3375,11 @@
         grid-template-columns: 200px 48px minmax(0, 1fr);
         column-gap: 16px;
     }
+
     .ajtb-day-plan.programme-container .aj-day-plan-nav {
         max-width: 200px;
     }
+
     .ajtb-day-plan.programme-container .ajtb-itinerary-timeline {
         grid-template-columns: 48px minmax(0, 1fr);
     }
@@ -3323,6 +3387,7 @@
 
 /* <992px : stack (jours en haut, contenu en dessous), annuler la grille */
 @media (max-width: 991px) {
+
     .ajtb-day-plan,
     .ajtb-day-plan.programme-container {
         display: flex;
@@ -3330,6 +3395,7 @@
         padding-left: 16px;
         padding-right: 16px;
     }
+
     .aj-day-plan-nav,
     .ajtb-day-plan.programme-container .aj-day-plan-nav {
         width: 100%;
@@ -3339,36 +3405,44 @@
         flex-direction: row;
         flex-wrap: wrap;
     }
+
     .ajtb-day-plan.programme-container .aj-day-plan-content {
         grid-column: auto;
         width: 100%;
     }
+
     .ajtb-day-plan.programme-container .ajtb-itinerary-timeline {
         display: block;
         grid-template-columns: none;
         margin: 0;
     }
+
     .ajtb-day-plan.programme-container .itinerary-day {
         display: flex;
         gap: 16px;
         margin-bottom: 20px;
     }
+
     .ajtb-day-plan.programme-container .itinerary-day.last {
         margin-bottom: 0;
     }
+
     .ajtb-day-plan.programme-container .day-marker {
         width: 56px;
         min-width: 56px;
         justify-self: auto;
         flex-shrink: 0;
     }
+
     .ajtb-day-plan.programme-container .day-card {
         flex: 1;
         min-width: 0;
     }
+
     .aj-day-link-title {
         white-space: normal;
     }
+
     .ajtb-transfer-hotel-row {
         grid-template-columns: 1fr;
     }
@@ -3439,9 +3513,11 @@
 .ajtb-day-flight-block {
     margin-bottom: 16px;
 }
+
 .ajtb-day-flight-block:last-of-type {
     margin-bottom: 20px;
 }
+
 .ajtb-day-flight-label {
     font-size: 0.9rem;
     font-weight: 600;
@@ -3692,7 +3768,7 @@
 .day-activity-item {
     margin-bottom: 12px;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(0,0,0,.06);
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
 }
 
 .day-activity-item:last-child {
@@ -3723,10 +3799,12 @@
     border-radius: 4px;
     cursor: pointer;
 }
+
 .day-activity-item .ajtb-btn-remove-activity:hover:not(:disabled) {
     background: var(--ajtb-danger, #dc3545);
     color: #fff;
 }
+
 .day-activity-item .ajtb-btn-remove-activity:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -3743,17 +3821,20 @@
     align-items: center;
     gap: 8px;
 }
+
 .day-add-activity label {
     font-size: 14px;
     font-weight: 500;
     margin: 0;
 }
+
 .day-add-activity .ajtb-add-activity-select {
     min-width: 200px;
     padding: 6px 10px;
     border-radius: 4px;
     border: 1px solid var(--ajtb-border);
 }
+
 .day-add-activity .ajtb-btn-add-activity {
     padding: 6px 14px;
     font-size: 14px;
@@ -3763,9 +3844,11 @@
     border-radius: 4px;
     cursor: pointer;
 }
+
 .day-add-activity .ajtb-btn-add-activity:hover:not(:disabled) {
     opacity: 0.9;
 }
+
 .day-add-activity .ajtb-btn-add-activity:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -3921,11 +4004,13 @@
     gap: 20px;
     margin-bottom: 24px;
 }
+
 @media (max-width: 1024px) {
     .ajtb-activity-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
 @media (max-width: 600px) {
     .ajtb-activity-grid {
         grid-template-columns: 1fr;
@@ -4065,11 +4150,13 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
+
 @media (max-width: 1024px) {
     .ajtb-activity-skeleton-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
 @media (max-width: 600px) {
     .ajtb-activity-skeleton-grid {
         grid-template-columns: 1fr;
@@ -4114,8 +4201,13 @@
 }
 
 @keyframes skeleton-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 /* Empty state */
@@ -4631,6 +4723,7 @@
 .aj-program-list {
     margin-top: 16px;
 }
+
 .aj-program-item {
     padding: 14px 16px;
     margin-bottom: 12px;
@@ -4638,31 +4731,38 @@
     border-radius: var(--ajtb-radius, 8px);
     background: var(--ajtb-bg, #fff);
 }
+
 .aj-program-item:last-child {
     margin-bottom: 0;
 }
+
 .aj-program-item-title {
     margin: 0 0 8px 0;
     font-size: 1rem;
     font-weight: 600;
     color: var(--ajtb-text);
 }
+
 .aj-program-item-desc {
     font-size: 14px;
     line-height: 1.6;
     color: var(--ajtb-text-muted);
 }
+
 .aj-program-item-desc p:last-child {
     margin-bottom: 0;
 }
+
 .program-style-style1 .aj-program-item {
     border-left: 3px solid var(--ajtb-primary, #0d6efd);
 }
+
 .program-style-style2 .aj-program-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
+
 .program-style-style2 .aj-program-item {
     border-left-width: 4px;
     border-left-color: var(--ajtb-primary, #0d6efd);
@@ -4908,7 +5008,7 @@
 .booking-price-header .season-badge {
     display: inline-block;
     padding: 4px 12px;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 50px;
     font-size: 12px;
     font-weight: 500;
@@ -5428,6 +5528,7 @@
    Responsive
    =================================== */
 @media (max-width: 1199px) {
+
     .ajtb-tour-layout,
     .ajtb-tour-page .ajtb-tour-layout {
         grid-template-columns: 1fr;
@@ -5523,16 +5624,16 @@
     .booking-price-header .price-current {
         font-size: 28px;
     }
-    
+
     /* Activities responsive on small screens */
     .ajtb-activity-row {
         padding: 10px 12px;
     }
-    
+
     .ajtb-activity-name {
         font-size: 13px;
     }
-    
+
     .ajtb-activity-price {
         font-size: 13px;
     }
@@ -5555,9 +5656,11 @@
 .ajtb-flight-group {
     margin-bottom: 20px;
 }
+
 .ajtb-flight-group:last-child {
     margin-bottom: 0;
 }
+
 .ajtb-flight-group-title {
     font-size: 0.95rem;
     font-weight: 600;
@@ -5771,11 +5874,11 @@
     position: relative;
 }
 
-.ajtb-destination-more > summary {
+.ajtb-destination-more>summary {
     list-style: none;
 }
 
-.ajtb-destination-more > summary::-webkit-details-marker {
+.ajtb-destination-more>summary::-webkit-details-marker {
     display: none;
 }
 
@@ -5818,6 +5921,7 @@
    Print Styles
    =================================== */
 @media print {
+
     .ajtb-hero,
     .ajtb-tour-sidebar,
     .ajtb-tabs-nav,
