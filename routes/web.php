@@ -120,6 +120,10 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('circuits/airlines/{airline}/edit', [AirlineController::class, 'edit'])->name('circuits.airlines.edit');
     Route::match(['put', 'patch'], 'circuits/airlines/{airline}', [AirlineController::class, 'update'])->name('circuits.airlines.update');
     Route::delete('circuits/airlines/{airline}', [AirlineController::class, 'destroy'])->name('circuits.airlines.destroy');
+    Route::get('circuits/airlines/ajax/list', [AirlineController::class, 'ajaxList'])->name('circuits.airlines.ajax.list');
+    Route::post('circuits/airlines/ajax/store', [AirlineController::class, 'ajaxStore'])->name('circuits.airlines.ajax.store');
+    Route::post('circuits/airlines/ajax/{airline}/update', [AirlineController::class, 'ajaxUpdate'])->name('circuits.airlines.ajax.update');
+    Route::delete('circuits/airlines/ajax/{airline}', [AirlineController::class, 'ajaxDestroy'])->name('circuits.airlines.ajax.destroy');
 
     Route::get('circuits/tour-hotels', [TourHotelController::class, 'index'])->name('circuits.tour-hotels.index');
     Route::get('circuits/tour-hotels/{tourId}/edit', [TourHotelController::class, 'edit'])->name('circuits.tour-hotels.edit')->whereNumber('tourId');
