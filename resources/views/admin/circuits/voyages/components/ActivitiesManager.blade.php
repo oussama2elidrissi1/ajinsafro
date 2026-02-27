@@ -45,7 +45,7 @@
                         <input type="hidden" id="activity-form-id">
                         <div class="mb-3">
                             <label for="activity-form-title" class="form-label">Titre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="activity-form-title" required>
+                            <input type="text" class="form-control" id="activity-form-title">
                             <div class="small text-danger mt-1 d-none" data-error="title"></div>
                         </div>
                         <div class="mb-3">

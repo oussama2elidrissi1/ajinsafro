@@ -274,7 +274,7 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
                                 <div class="row g-3">
                                     <div class="col-md-5">
                                         <label class="form-label" for="airline-editor-name">Nom <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="airline-editor-name" required>
+                                        <input type="text" class="form-control" id="airline-editor-name">
                                         <div class="invalid-feedback d-none" data-field-error="name"></div>
                                     </div>
                                     <div class="col-md-3">
