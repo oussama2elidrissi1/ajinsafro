@@ -150,6 +150,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::post('circuits/voyages/{id}/hero-image', [HeroImageController::class, 'upload'])->name('circuits.voyages.hero-image.upload')->whereNumber('id');
     Route::post('circuits/voyages/{id}/hero-image/select', [HeroImageController::class, 'select'])->name('circuits.voyages.hero-image.select')->whereNumber('id');
     Route::post('circuits/voyages/{id}/hero-image/remove', [HeroImageController::class, 'remove'])->name('circuits.voyages.hero-image.remove')->whereNumber('id');
+    Route::get('wp-media/list', [WpMediaController::class, 'list'])->name('wp-media.list');
+    Route::post('wp-media/upload', [WpMediaController::class, 'upload'])->name('wp-media.upload');
+    Route::post('wp-media/select', [WpMediaController::class, 'select'])->name('wp-media.select');
+    Route::post('wp-media/remove', [WpMediaController::class, 'remove'])->name('wp-media.remove');
+    Route::get('wp-media/get/{id}', [WpMediaController::class, 'get'])->name('wp-media.get')->whereNumber('id');
     Route::get('wp-media/search', [WpMediaController::class, 'search'])->name('wp-media.search');
     Route::get('circuits/voyages/{id}/program', [ProgramApiController::class, 'show'])->name('circuits.voyages.program.show')->whereNumber('id');
     Route::post('circuits/voyages/{id}/program', [ProgramApiController::class, 'save'])->name('circuits.voyages.program.save')->whereNumber('id');

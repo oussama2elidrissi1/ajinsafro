@@ -233,7 +233,6 @@ class WpTourRepository
             
             // MEDIA
             'gallery_ids' => 'gallery',
-            'thumbnail_id' => '_thumbnail_id',
             'video' => 'video',
             
             // MAP
@@ -283,6 +282,14 @@ class WpTourRepository
         // Handle featured image separately if provided
         if (isset($data['featured_image'])) {
             $post->setMeta('_thumbnail_id', $data['featured_image']);
+        }
+
+        if (array_key_exists('thumbnail_id', $data)) {
+            if ($data['thumbnail_id'] === '' || $data['thumbnail_id'] === null) {
+                $post->deleteMeta('_thumbnail_id');
+            } else {
+                $post->setMeta('_thumbnail_id', (string) (int) $data['thumbnail_id']);
+            }
         }
 
         // Image principale (hero) : enregistrer ou supprimer la meta

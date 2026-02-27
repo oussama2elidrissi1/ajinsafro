@@ -726,10 +726,39 @@
                             </div>
                         </div>
 
-                        {{-- Section 2 : Image Ã  la une (WP standard) + Galerie --}}
-                        <div class="mb-3">
-                            <label for="thumbnail_id" class="form-label">Image Ã  la une (ID WP)</label>
-                            <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id', $meta['thumbnail_id'] ?? '') }}" placeholder="14434">
+                        {{-- Section 2 : Image à la une WordPress (Featured Image) --}}
+                        @php
+                            $wpFeaturedImageId = old('thumbnail_id', $meta['thumbnail_id'] ?? '');
+                            $wpFeaturedImageUrl = $wpFeaturedImageId ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $wpFeaturedImageId) : '';
+                        @endphp
+                        <div class="mb-4 p-3 border rounded bg-light">
+                            <h5 class="mb-2">Image à la une WordPress (Featured Image)</h5>
+                            <input type="hidden" id="thumbnail_id" name="thumbnail_id" value="{{ $wpFeaturedImageId }}">
+                            <div class="d-flex flex-wrap align-items-start gap-3">
+                                <div id="wp-featured-preview-wrap" class="border rounded overflow-hidden bg-white" style="width: 180px; height: 120px; display: {{ $wpFeaturedImageUrl ? 'block' : 'none' }};">
+                                    <img id="wp-featured-preview" src="{{ $wpFeaturedImageUrl }}" alt="Featured image" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="mb-2 d-flex flex-wrap gap-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="wp-featured-choose-btn">
+                                            <i class="bx bx-images"></i> Choisir depuis la médiathèque WP
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="wp-featured-upload-btn">
+                                            <i class="bx bx-upload"></i> Uploader vers WP
+                                        </button>
+                                        <input type="file" id="wp_featured_image_file" class="d-none" accept="image/jpeg,image/png,image/webp">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="wp-featured-remove-btn" {{ $wpFeaturedImageId ? '' : 'disabled' }}>
+                                            <i class="bx bx-trash"></i> Supprimer
+                                        </button>
+                                    </div>
+                                    <div class="mb-2" style="max-width: 320px;">
+                                        <label for="wp_featured_image_id" class="form-label mb-1">ID Attachment WP</label>
+                                        <input type="text" class="form-control form-control-sm" id="wp_featured_image_id" value="{{ $wpFeaturedImageId }}" readonly>
+                                    </div>
+                                    <small class="text-muted d-block">JPG / PNG / WebP - max 5MB.</small>
+                                    <div id="wp-featured-error" class="alert alert-danger mt-2 mb-0 d-none" role="alert"></div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Section 3 : Galerie Hero (5 images pour la galerie hero) --}}
@@ -815,17 +844,45 @@
                 </div>
             </div>
 
+            <div class="modal fade" id="wp-featured-media-modal" tabindex="-1" aria-labelledby="wp-featured-media-modal-label" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="wp-featured-media-modal-label">Médiathèque WordPress - Image à la une</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <input type="search" class="form-control" id="wp-featured-media-search" placeholder="Rechercher un média...">
+                            </div>
+                            <div id="wp-featured-media-results" class="row g-3" style="min-height: 220px;"></div>
+                            <div id="wp-featured-media-loading" class="text-center py-4 text-muted d-none">Chargement...</div>
+                            <nav id="wp-featured-media-pagination" class="mt-3 d-none"></nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <script>
             (function() {
                 var heroUploadUrl = "{{ route('admin.circuits.voyages.hero-image.upload', ['id' => $voyage->ID]) }}";
                 var heroSelectUrl = "{{ route('admin.circuits.voyages.hero-image.select', ['id' => $voyage->ID]) }}";
                 var heroRemoveUrl = "{{ route('admin.circuits.voyages.hero-image.remove', ['id' => $voyage->ID]) }}";
                 var wpMediaSearchUrl = "{{ url('admin/wp-media/search') }}";
+                var wpFeaturedMediaListUrl = "{{ route('admin.wp-media.list') }}";
+                var wpFeaturedMediaUploadUrl = "{{ route('admin.wp-media.upload') }}";
+                var wpFeaturedMediaSelectUrl = "{{ route('admin.wp-media.select') }}";
+                var wpFeaturedMediaRemoveUrl = "{{ route('admin.wp-media.remove') }}";
                 var csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
                 var heroPreview = document.getElementById('hero-image-preview');
                 var heroPreviewWrap = document.getElementById('hero-image-preview-wrap');
                 var heroInput = document.getElementById('hero_image_id');
                 var heroFileInput = document.getElementById('hero_image_file');
+                var wpFeaturedHiddenInput = document.getElementById('thumbnail_id');
+                var wpFeaturedReadonlyInput = document.getElementById('wp_featured_image_id');
+                var wpFeaturedPreview = document.getElementById('wp-featured-preview');
+                var wpFeaturedPreviewWrap = document.getElementById('wp-featured-preview-wrap');
+                var wpFeaturedRemoveBtn = document.getElementById('wp-featured-remove-btn');
 
                 function setHeroPreview(url, id) {
                     if (heroInput) heroInput.value = id || '';
@@ -1000,6 +1057,276 @@
                 }
                 if (mediaSearch) {
                     mediaSearch.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); loadMediaSearch(1); } });
+                }
+
+                function setFeaturedPreview(url, id) {
+                    var value = id ? String(id) : '';
+                    if (wpFeaturedHiddenInput) wpFeaturedHiddenInput.value = value;
+                    if (wpFeaturedReadonlyInput) wpFeaturedReadonlyInput.value = value;
+                    if (wpFeaturedPreview) wpFeaturedPreview.src = url || '';
+                    if (wpFeaturedPreviewWrap) wpFeaturedPreviewWrap.style.display = url ? 'block' : 'none';
+                    if (wpFeaturedRemoveBtn) wpFeaturedRemoveBtn.disabled = !value;
+                }
+
+                function setFeaturedError(message) {
+                    var errorEl = document.getElementById('wp-featured-error');
+                    if (!errorEl) {
+                        if (message) alert(message);
+                        return;
+                    }
+                    if (!message) {
+                        errorEl.textContent = '';
+                        errorEl.classList.add('d-none');
+                        return;
+                    }
+                    errorEl.textContent = message;
+                    errorEl.classList.remove('d-none');
+                }
+
+                var featuredModalEl = document.getElementById('wp-featured-media-modal');
+                var featuredSearchEl = document.getElementById('wp-featured-media-search');
+                var featuredResultsEl = document.getElementById('wp-featured-media-results');
+                var featuredLoadingEl = document.getElementById('wp-featured-media-loading');
+                var featuredPaginationEl = document.getElementById('wp-featured-media-pagination');
+
+                function selectFeaturedAttachment(attachmentId) {
+                    if (!attachmentId) return;
+                    setFeaturedError('');
+                    var fd = new FormData();
+                    fd.append('attachment_id', attachmentId);
+                    if (csrfToken) fd.append('_token', csrfToken);
+
+                    fetch(wpFeaturedMediaSelectUrl, {
+                        method: 'POST',
+                        body: fd,
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken || ''
+                        }
+                    }).then(function(res) {
+                        return res.json().then(function(data) {
+                            return { ok: res.ok, data: data };
+                        }).catch(function() {
+                            return { ok: false, data: { message: 'Réponse serveur invalide.' } };
+                        });
+                    }).then(function(result) {
+                        if (!result.ok || !result.data || !result.data.success) {
+                            setFeaturedError((result.data && result.data.message) || 'Impossible de sélectionner ce média.');
+                            return;
+                        }
+                        setFeaturedPreview(result.data.url || '', result.data.attachment_id || '');
+                        if (featuredModalEl && window.bootstrap) {
+                            var modalInstance = bootstrap.Modal.getInstance(featuredModalEl);
+                            if (modalInstance) modalInstance.hide();
+                        }
+                    }).catch(function() {
+                        setFeaturedError('Erreur réseau pendant la sélection.');
+                    });
+                }
+
+                function renderFeaturedPagination(currentPage, lastPage) {
+                    if (!featuredPaginationEl || !lastPage || lastPage <= 1) {
+                        if (featuredPaginationEl) featuredPaginationEl.classList.add('d-none');
+                        return;
+                    }
+
+                    featuredPaginationEl.classList.remove('d-none');
+                    featuredPaginationEl.innerHTML =
+                        '<ul class="pagination pagination-sm mb-0">' +
+                            '<li class="page-item' + (currentPage <= 1 ? ' disabled' : '') + '">' +
+                                '<a class="page-link" href="#" data-page="' + (currentPage - 1) + '">Préc.</a>' +
+                            '</li>' +
+                            '<li class="page-item disabled"><span class="page-link">' + currentPage + ' / ' + lastPage + '</span></li>' +
+                            '<li class="page-item' + (currentPage >= lastPage ? ' disabled' : '') + '">' +
+                                '<a class="page-link" href="#" data-page="' + (currentPage + 1) + '">Suiv.</a>' +
+                            '</li>' +
+                        '</ul>';
+
+                    featuredPaginationEl.querySelectorAll('a[data-page]').forEach(function(link) {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            var page = parseInt(this.getAttribute('data-page'), 10);
+                            if (page > 0) {
+                                loadFeaturedMedia(page);
+                            }
+                        });
+                    });
+                }
+
+                function loadFeaturedMedia(page) {
+                    page = page || 1;
+                    if (!featuredResultsEl) return;
+
+                    setFeaturedError('');
+                    featuredResultsEl.innerHTML = '';
+                    if (featuredLoadingEl) featuredLoadingEl.classList.remove('d-none');
+
+                    var search = featuredSearchEl ? featuredSearchEl.value : '';
+                    var url = wpFeaturedMediaListUrl + '?page=' + page + '&per_page=24';
+                    if (search) url += '&search=' + encodeURIComponent(search);
+
+                    fetch(url, {
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }).then(function(res) {
+                        return res.json().then(function(data) {
+                            return { ok: res.ok, data: data };
+                        }).catch(function() {
+                            return { ok: false, data: { message: 'Réponse serveur invalide.' } };
+                        });
+                    }).then(function(result) {
+                        if (featuredLoadingEl) featuredLoadingEl.classList.add('d-none');
+                        if (!result.ok) {
+                            setFeaturedError((result.data && result.data.message) || 'Erreur de chargement de la médiathèque.');
+                            return;
+                        }
+
+                        var items = (result.data && result.data.data) || [];
+                        if (!items.length) {
+                            featuredResultsEl.innerHTML = '<div class="col-12 text-muted">Aucune image trouvée.</div>';
+                        } else {
+                            items.forEach(function(item) {
+                                var col = document.createElement('div');
+                                col.className = 'col-6 col-md-4 col-lg-3';
+                                col.innerHTML =
+                                    '<div class="card h-100">' +
+                                        '<img src="' + (item.url || '') + '" alt="" class="card-img-top" style="height:140px;object-fit:cover;">' +
+                                        '<div class="card-body p-2">' +
+                                            '<div class="small text-muted mb-2 text-truncate">#' + item.id + ' ' + (item.title || '') + '</div>' +
+                                            '<button type="button" class="btn btn-sm btn-primary w-100 wp-featured-select-item" data-id="' + item.id + '">Sélectionner</button>' +
+                                        '</div>' +
+                                    '</div>';
+                                featuredResultsEl.appendChild(col);
+                            });
+
+                            featuredResultsEl.querySelectorAll('.wp-featured-select-item').forEach(function(button) {
+                                button.addEventListener('click', function() {
+                                    selectFeaturedAttachment(this.getAttribute('data-id'));
+                                });
+                            });
+                        }
+
+                        renderFeaturedPagination(result.data.current_page || 1, result.data.last_page || 1);
+                    }).catch(function() {
+                        if (featuredLoadingEl) featuredLoadingEl.classList.add('d-none');
+                        setFeaturedError('Erreur réseau pendant le chargement de la médiathèque.');
+                    });
+                }
+
+                var featuredChooseBtn = document.getElementById('wp-featured-choose-btn');
+                if (featuredChooseBtn) {
+                    featuredChooseBtn.addEventListener('click', function() {
+                        setFeaturedError('');
+                        if (featuredModalEl && window.bootstrap) {
+                            var featuredModal = new bootstrap.Modal(featuredModalEl);
+                            featuredModal.show();
+                            loadFeaturedMedia(1);
+                        }
+                    });
+                }
+
+                if (featuredSearchEl) {
+                    featuredSearchEl.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            loadFeaturedMedia(1);
+                        }
+                    });
+                }
+
+                var featuredUploadBtn = document.getElementById('wp-featured-upload-btn');
+                var featuredFileInput = document.getElementById('wp_featured_image_file');
+                if (featuredUploadBtn && featuredFileInput) {
+                    featuredUploadBtn.addEventListener('click', function() {
+                        featuredFileInput.click();
+                    });
+
+                    featuredFileInput.addEventListener('change', function() {
+                        if (!this.files || !this.files[0]) return;
+                        setFeaturedError('');
+                        var file = this.files[0];
+
+                        if (file.size > 5 * 1024 * 1024) {
+                            setFeaturedError('Le fichier dépasse la limite de 5MB.');
+                            this.value = '';
+                            return;
+                        }
+
+                        var fd = new FormData();
+                        fd.append('image', file);
+                        fd.append('post_parent_id', "{{ (int) $voyage->ID }}");
+                        if (csrfToken) fd.append('_token', csrfToken);
+
+                        fetch(wpFeaturedMediaUploadUrl, {
+                            method: 'POST',
+                            body: fd,
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken || ''
+                            }
+                        }).then(function(res) {
+                            return res.json().then(function(data) {
+                                return { ok: res.ok, data: data };
+                            }).catch(function() {
+                                return { ok: false, data: { message: 'Réponse serveur invalide.' } };
+                            });
+                        }).then(function(result) {
+                            featuredFileInput.value = '';
+                            if (!result.ok || !result.data || !result.data.success) {
+                                var message = (result.data && result.data.message)
+                                    || (result.data && result.data.errors && result.data.errors.image && result.data.errors.image[0])
+                                    || 'Erreur lors de l\'upload vers WordPress.';
+                                setFeaturedError(message);
+                                return;
+                            }
+                            setFeaturedPreview(result.data.url || '', result.data.attachment_id || '');
+                        }).catch(function() {
+                            featuredFileInput.value = '';
+                            setFeaturedError('Erreur réseau pendant l\'upload.');
+                        });
+                    });
+                }
+
+                if (wpFeaturedRemoveBtn) {
+                    wpFeaturedRemoveBtn.addEventListener('click', function() {
+                        if (!confirm('Supprimer l\'image à la une WordPress ?')) return;
+
+                        setFeaturedError('');
+                        var fd = new FormData();
+                        if (csrfToken) fd.append('_token', csrfToken);
+
+                        fetch(wpFeaturedMediaRemoveUrl, {
+                            method: 'POST',
+                            body: fd,
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken || ''
+                            }
+                        }).then(function(res) {
+                            return res.json().then(function(data) {
+                                return { ok: res.ok, data: data };
+                            }).catch(function() {
+                                return { ok: false, data: { message: 'Réponse serveur invalide.' } };
+                            });
+                        }).then(function(result) {
+                            if (!result.ok || !result.data || !result.data.success) {
+                                setFeaturedError((result.data && result.data.message) || 'Impossible de supprimer l\'image à la une.');
+                                return;
+                            }
+                            setFeaturedPreview('', '');
+                        }).catch(function() {
+                            setFeaturedError('Erreur réseau pendant la suppression.');
+                        });
+                    });
                 }
 
                 // Hero Gallery (5 images) management
