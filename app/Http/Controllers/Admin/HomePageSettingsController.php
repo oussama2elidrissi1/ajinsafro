@@ -27,13 +27,20 @@ class HomePageSettingsController extends Controller
     public function update(Request $request)
     {
         try {
-            $hasVideoUpload = $request->hasFile('hero_video_file');
+            $videoFile = $request->file('hero_video_file');
+            $hasVideoUpload = $videoFile instanceof UploadedFile;
+            $phpUploadError = $_FILES['hero_video_file']['error'] ?? null;
+            $phpUploadName = $_FILES['hero_video_file']['name'] ?? null;
+            $phpUploadSize = $_FILES['hero_video_file']['size'] ?? null;
 
             Log::info('Home page settings update started', [
                 'has_video_upload' => $hasVideoUpload,
+                'request_has_file' => $request->hasFile('hero_video_file'),
+                'all_files_keys' => array_keys($request->allFiles()),
+                'php_upload_name' => $phpUploadName,
+                'php_upload_size' => $phpUploadSize,
+                'php_upload_error' => $phpUploadError,
             ]);
-
-            $videoFile = $request->file('hero_video_file');
 
             if ($videoFile instanceof UploadedFile && $videoFile->isValid()) {
                 Log::info('Home page hero video upload detected', [
@@ -41,6 +48,13 @@ class HomePageSettingsController extends Controller
                     'original_name' => $videoFile->getClientOriginalName(),
                     'is_valid' => $videoFile->isValid(),
                     'mime' => $videoFile->getMimeType(),
+                ]);
+            } elseif ($videoFile instanceof UploadedFile) {
+                Log::warning('Home page hero video upload invalid file state', [
+                    'original_name' => $videoFile->getClientOriginalName(),
+                    'is_valid' => $videoFile->isValid(),
+                    'error_code' => $videoFile->getError(),
+                    'error_message' => $videoFile->getErrorMessage(),
                 ]);
             }
 
@@ -103,7 +117,11 @@ class HomePageSettingsController extends Controller
                 $uploadedVideo = $request->file('hero_video_file');
 
                 if (!$uploadedVideo instanceof UploadedFile || !$uploadedVideo->isValid()) {
-                    throw new RuntimeException('Upload vidéo invalide. Vérifiez le fichier puis réessayez.');
+                    $errorMessage = $uploadedVideo instanceof UploadedFile
+                        ? $uploadedVideo->getErrorMessage()
+                        : 'fichier manquant';
+
+                    throw new RuntimeException('Upload vidéo invalide. Détail: ' . $errorMessage);
                 }
 
                 Log::info('Home page hero video upload processing started', [
