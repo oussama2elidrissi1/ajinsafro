@@ -26,6 +26,13 @@
         </div>
     @endif
 
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <ul class="mb-0">
@@ -77,6 +84,10 @@
                     <div class="col-md-6" id="hero_video_file_wrap">
                         <label class="form-label">Upload mp4</label>
                         <input type="file" class="form-control" name="hero[video_file]" accept="video/mp4">
+                        <small class="text-muted d-block mt-1">Max 50MB (MP4/M4V/MOV). Si l’upload mp4 échoue, augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.</small>
+                        @error('hero.video_file')
+                            <small class="text-danger d-block mt-1">{{ $message }}</small>
+                        @enderror
                     </div>
 
                     <div class="col-md-6">
@@ -196,7 +207,14 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <button type="submit" class="btn btn-primary" id="save-home-settings-btn">
+            <span class="save-label">Enregistrer</span>
+            <span class="save-loading d-none">
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Upload en cours...
+            </span>
+        </button>
+        <div class="small text-muted mt-2 d-none" id="save-timeout-help">Upload en cours... Si cela dure trop longtemps, vérifiez les limites serveur ou utilisez une URL vidéo.</div>
     </form>
 @endsection
 
@@ -208,6 +226,12 @@
     var videoWraps = [document.getElementById('hero_video_url_wrap'), document.getElementById('hero_video_file_wrap')];
     var overlay = document.getElementById('hero_overlay');
     var overlayValue = document.getElementById('hero_overlay_value');
+    var form = document.getElementById('home-page-settings-form');
+    var saveButton = document.getElementById('save-home-settings-btn');
+    var saveLabel = saveButton ? saveButton.querySelector('.save-label') : null;
+    var saveLoading = saveButton ? saveButton.querySelector('.save-loading') : null;
+    var timeoutHelp = document.getElementById('save-timeout-help');
+    var timeoutHandle = null;
 
     function toggleHeroFields() {
         var isImage = heroType.value === 'image';
@@ -259,6 +283,28 @@
                 var row = event.target.closest('.region-row');
                 if (row) row.remove();
             }
+        });
+    }
+
+    if (form && saveButton) {
+        form.addEventListener('submit', function () {
+            saveButton.disabled = true;
+            if (saveLabel) saveLabel.classList.add('d-none');
+            if (saveLoading) saveLoading.classList.remove('d-none');
+
+            timeoutHandle = window.setTimeout(function () {
+                if (timeoutHelp) timeoutHelp.classList.remove('d-none');
+            }, 20000);
+        });
+
+        window.addEventListener('pageshow', function () {
+            if (timeoutHandle) {
+                window.clearTimeout(timeoutHandle);
+            }
+
+            saveButton.disabled = false;
+            if (saveLabel) saveLabel.classList.remove('d-none');
+            if (saveLoading) saveLoading.classList.add('d-none');
         });
     }
 })();

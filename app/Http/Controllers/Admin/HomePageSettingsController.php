@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 use RuntimeException;
 
 class HomePageSettingsController extends Controller
@@ -23,43 +26,61 @@ class HomePageSettingsController extends Controller
 
     public function update(Request $request)
     {
-        $validated = $request->validate([
-            'hero.type' => ['required', Rule::in(['image', 'video'])],
-            'hero.image_url' => ['nullable', 'url', 'max:2048'],
-            'hero.video_url' => ['nullable', 'url', 'max:2048'],
-            'hero.image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
-            'hero.video_file' => ['nullable', 'file', 'mimes:mp4', 'max:102400'],
-            'hero.title' => ['required', 'string', 'max:255'],
-            'hero.subtitle' => ['nullable', 'string', 'max:500'],
-            'hero.cta_text' => ['nullable', 'string', 'max:120'],
-            'hero.cta_url' => ['nullable', 'url', 'max:2048'],
-            'hero.overlay' => ['required', 'numeric', 'min:0', 'max:1'],
+        try {
+            Log::info('Home page settings update started', [
+                'has_video_upload' => $request->hasFile('hero.video_file'),
+            ]);
 
-            'sections.search' => ['nullable', 'boolean'],
-            'sections.last_minute' => ['nullable', 'boolean'],
-            'sections.regions' => ['nullable', 'boolean'],
-            'sections.good_spots' => ['nullable', 'boolean'],
+            $videoFile = $request->file('hero.video_file');
+            if ($videoFile instanceof UploadedFile) {
+                Log::info('Home page hero video upload detected', [
+                    'size' => $videoFile->getSize(),
+                    'mime' => $videoFile->getMimeType(),
+                    'original_name' => $videoFile->getClientOriginalName(),
+                ]);
+            }
 
-            'search.shortcode' => ['nullable', 'string', 'max:1000'],
+            $validated = $request->validate([
+                'hero.type' => ['required', Rule::in(['image', 'video'])],
+                'hero.image_url' => ['nullable', 'url', 'max:2048'],
+                'hero.video_url' => ['nullable', 'url', 'max:2048'],
+                'hero.image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'hero.video_file' => ['nullable', 'file', 'mimetypes:video/mp4,video/quicktime,video/x-m4v', 'max:51200'],
+                'hero.title' => ['required', 'string', 'max:255'],
+                'hero.subtitle' => ['nullable', 'string', 'max:500'],
+                'hero.cta_text' => ['nullable', 'string', 'max:120'],
+                'hero.cta_url' => ['nullable', 'url', 'max:2048'],
+                'hero.overlay' => ['required', 'numeric', 'min:0', 'max:1'],
 
-            'last_minute.title' => ['required', 'string', 'max:255'],
-            'last_minute.count' => ['required', 'integer', 'min:1', 'max:20'],
-            'last_minute.featured_only' => ['nullable', 'boolean'],
+                'sections.search' => ['nullable', 'boolean'],
+                'sections.last_minute' => ['nullable', 'boolean'],
+                'sections.regions' => ['nullable', 'boolean'],
+                'sections.good_spots' => ['nullable', 'boolean'],
 
-            'regions' => ['nullable', 'array'],
-            'regions.*.title' => ['nullable', 'string', 'max:255'],
-            'regions.*.image_url' => ['nullable', 'url', 'max:2048'],
-            'regions.*.link_url' => ['nullable', 'url', 'max:2048'],
-            'regions_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'search.shortcode' => ['nullable', 'string', 'max:1000'],
 
-            'good_spots' => ['nullable', 'array'],
-            'good_spots.*.title' => ['nullable', 'string', 'max:255'],
-            'good_spots.*.image_url' => ['nullable', 'url', 'max:2048'],
-            'good_spots.*.link_url' => ['nullable', 'url', 'max:2048'],
-            'good_spots_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
-        ]);
+                'last_minute.title' => ['required', 'string', 'max:255'],
+                'last_minute.count' => ['required', 'integer', 'min:1', 'max:20'],
+                'last_minute.featured_only' => ['nullable', 'boolean'],
 
-        $current = $this->readHomeSettings();
+                'regions' => ['nullable', 'array'],
+                'regions.*.title' => ['nullable', 'string', 'max:255'],
+                'regions.*.image_url' => ['nullable', 'url', 'max:2048'],
+                'regions.*.link_url' => ['nullable', 'url', 'max:2048'],
+                'regions_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+
+                'good_spots' => ['nullable', 'array'],
+                'good_spots.*.title' => ['nullable', 'string', 'max:255'],
+                'good_spots.*.image_url' => ['nullable', 'url', 'max:2048'],
+                'good_spots.*.link_url' => ['nullable', 'url', 'max:2048'],
+                'good_spots_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+            ], [
+                'hero.video_file.max' => 'Vidéo trop grande (max 50MB). Utilisez une URL YouTube/Vimeo.',
+                'hero.video_file.uploaded' => 'Upload vidéo échoué (limite serveur). Augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.',
+                'hero.video_file.mimetypes' => 'Le fichier vidéo doit être un MP4/M4V/MOV valide.',
+            ]);
+
+            $current = $this->readHomeSettings();
 
         $heroImageUrl = $validated['hero']['image_url'] ?? ($current['hero']['image_url'] ?? '');
         if ($request->hasFile('hero.image_file')) {
@@ -67,11 +88,52 @@ class HomePageSettingsController extends Controller
             $heroImageUrl = Storage::disk('public')->url($heroImagePath);
         }
 
-        $heroVideoUrl = $validated['hero']['video_url'] ?? ($current['hero']['video_url'] ?? '');
-        if ($request->hasFile('hero.video_file')) {
-            $heroVideoPath = $request->file('hero.video_file')->store('home-settings/hero', 'public');
-            $heroVideoUrl = Storage::disk('public')->url($heroVideoPath);
-        }
+            $heroVideoUrl = $validated['hero']['video_url'] ?? ($current['hero']['video_url'] ?? '');
+            if ($request->hasFile('hero.video_file')) {
+                $uploadedVideo = $request->file('hero.video_file');
+
+                if (!$uploadedVideo instanceof UploadedFile) {
+                    throw new RuntimeException('Invalid uploaded video file payload.');
+                }
+
+                $baseName = pathinfo($uploadedVideo->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeBaseName = preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $baseName);
+                $safeBaseName = trim((string) $safeBaseName, '-_');
+                if ($safeBaseName === '') {
+                    $safeBaseName = 'hero-video';
+                }
+
+                $extension = strtolower((string) $uploadedVideo->getClientOriginalExtension());
+                if ($extension === '') {
+                    $extension = 'mp4';
+                }
+
+                $fileName = sprintf(
+                    '%s-%s-%s.%s',
+                    $safeBaseName,
+                    now()->format('YmdHis'),
+                    bin2hex(random_bytes(4)),
+                    $extension
+                );
+
+                Log::info('Home page hero video upload processing started', [
+                    'size' => $uploadedVideo->getSize(),
+                    'mime' => $uploadedVideo->getMimeType(),
+                    'filename' => $fileName,
+                ]);
+
+                $heroVideoPath = Storage::disk('public')->putFileAs('home-settings/hero', $uploadedVideo, $fileName);
+                if ($heroVideoPath === false) {
+                    throw new RuntimeException('Video file storage failed.');
+                }
+
+                $heroVideoUrl = Storage::disk('public')->url($heroVideoPath);
+
+                Log::info('Home page hero video upload processing completed', [
+                    'stored_path' => $heroVideoPath,
+                    'public_url' => $heroVideoUrl,
+                ]);
+            }
 
         $regions = [];
         $regionsInput = $validated['regions'] ?? [];
@@ -117,61 +179,79 @@ class HomePageSettingsController extends Controller
             ];
         }
 
-        $payload = [
-            'hero' => [
-                'type' => $validated['hero']['type'],
-                'image_url' => $heroImageUrl,
-                'video_url' => $heroVideoUrl,
-                'title' => $validated['hero']['title'],
-                'subtitle' => $validated['hero']['subtitle'] ?? '',
-                'cta_text' => $validated['hero']['cta_text'] ?? '',
-                'cta_url' => $validated['hero']['cta_url'] ?? '',
-                'overlay' => (float) $validated['hero']['overlay'],
-            ],
-            'sections' => [
-                'search' => (bool) $request->boolean('sections.search', true),
-                'last_minute' => (bool) $request->boolean('sections.last_minute', true),
-                'regions' => (bool) $request->boolean('sections.regions', true),
-                'good_spots' => (bool) $request->boolean('sections.good_spots', true),
-            ],
-            'search' => [
-                'shortcode' => trim((string)($validated['search']['shortcode'] ?? '[traveler_search]')),
-            ],
-            'last_minute' => [
-                'title' => $validated['last_minute']['title'],
-                'count' => (int) $validated['last_minute']['count'],
-                'featured_only' => (bool) $request->boolean('last_minute.featured_only', false),
-            ],
-            'regions' => $regions,
-            'good_spots' => $goodSpots,
-        ];
+            $payload = [
+                'hero' => [
+                    'type' => $validated['hero']['type'],
+                    'image_url' => $heroImageUrl,
+                    'video_url' => $heroVideoUrl,
+                    'title' => $validated['hero']['title'],
+                    'subtitle' => $validated['hero']['subtitle'] ?? '',
+                    'cta_text' => $validated['hero']['cta_text'] ?? '',
+                    'cta_url' => $validated['hero']['cta_url'] ?? '',
+                    'overlay' => (float) $validated['hero']['overlay'],
+                ],
+                'sections' => [
+                    'search' => (bool) $request->boolean('sections.search', true),
+                    'last_minute' => (bool) $request->boolean('sections.last_minute', true),
+                    'regions' => (bool) $request->boolean('sections.regions', true),
+                    'good_spots' => (bool) $request->boolean('sections.good_spots', true),
+                ],
+                'search' => [
+                    'shortcode' => trim((string)($validated['search']['shortcode'] ?? '[traveler_search]')),
+                ],
+                'last_minute' => [
+                    'title' => $validated['last_minute']['title'],
+                    'count' => (int) $validated['last_minute']['count'],
+                    'featured_only' => (bool) $request->boolean('last_minute.featured_only', false),
+                ],
+                'regions' => $regions,
+                'good_spots' => $goodSpots,
+            ];
 
-        $optionValue = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $optionValue = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-        $this->wpOptionsTable();
+            $this->wpOptionsTable();
 
-        DB::connection('wp')
-            ->table('options')
-            ->updateOrInsert(
-                ['option_name' => 'aj_home_settings'],
-                ['option_value' => $optionValue, 'autoload' => 'no']
-            );
+            DB::connection('wp')
+                ->table('options')
+                ->updateOrInsert(
+                    ['option_name' => 'aj_home_settings'],
+                    ['option_value' => $optionValue, 'autoload' => 'no']
+                );
 
-        $writtenRaw = DB::connection('wp')
-            ->table('options')
-            ->where('option_name', 'aj_home_settings')
-            ->value('option_value');
+            $writtenRaw = DB::connection('wp')
+                ->table('options')
+                ->where('option_name', 'aj_home_settings')
+                ->value('option_value');
 
-        Log::info('WP aj_home_settings saved from Laravel', [
-            'option_name' => 'aj_home_settings',
-            'db' => config('database.connections.wp.database'),
-            'prefix' => config('database.connections.wp.prefix'),
-            'written_option_value' => $writtenRaw,
-        ]);
+            Log::info('WP aj_home_settings saved from Laravel', [
+                'option_name' => 'aj_home_settings',
+                'db' => config('database.connections.wp.database'),
+                'prefix' => config('database.connections.wp.prefix'),
+                'written_option_value' => $writtenRaw,
+            ]);
 
-        return redirect()
-            ->route('admin.settings.home-page.edit')
-            ->with('success', 'Home page settings enregistrés. Rafraîchissez la home WordPress pour voir les changements.');
+            Log::info('Home page settings update finished', [
+                'has_video_upload' => $request->hasFile('hero.video_file'),
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('success', 'Home page settings enregistrés. Rafraîchissez la home WordPress pour voir les changements.');
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            Log::error('Home page settings update failed', [
+                'message' => $e->getMessage(),
+                'has_video_upload' => $request->hasFile('hero.video_file'),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', "Échec de l'enregistrement. Si l’upload mp4 échoue, augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.");
+        }
     }
 
     private function readHomeSettings(): array
