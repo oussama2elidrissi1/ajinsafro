@@ -1,24 +1,35 @@
-﻿@php
+@php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
 @endphp
 @extends('layouts.master-ajinsafro')
 @section('title')
     {{ $isCreate ? 'Créer un tour WordPress' : 'Modifier le tour WordPress' }}
 @endsection
+@push('css')
+    <link href="{{ URL::asset('css/voyage-edit.css') }}" rel="stylesheet" type="text/css" />
+@endpush
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">{{ $isCreate ? 'Créer un tour WordPress' : 'Modifier : ' . ($voyage->post_title ?? $voyage->name) }}</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
-                        <li class="breadcrumb-item active">{{ $isCreate ? 'Créer' : ($voyage->post_title ?? $voyage->name) }}</li>
-                    </ol>
-                </div>
+<div class="voyage-edit-page">
+    {{-- ===== Redesigned Page Header ===== --}}
+    @php $currentStatus = old('post_status', $voyage->post_status ?? 'draft'); @endphp
+    <div class="ve-page-header">
+        <ul class="ve-breadcrumb">
+            <li><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i> Admin</a></li>
+            <li><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
+            <li><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
+            <li class="active">{{ $isCreate ? 'Créer' : Str::limit($voyage->post_title ?? $voyage->name, 40) }}</li>
+        </ul>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1 class="ve-page-title">{{ $isCreate ? 'Créer un tour WordPress' : ($voyage->post_title ?? $voyage->name) }}</h1>
+                @if(!$isCreate)
+                    <p class="ve-page-subtitle">ID #{{ $voyage->ID }} &mdash; Dernière modification {{ $voyage->post_modified ? \Carbon\Carbon::parse($voyage->post_modified)->diffForHumans() : 'N/A' }}</p>
+                @endif
             </div>
+            <span class="ve-status-badge status-{{ $currentStatus }}">
+                <span class="status-dot"></span>
+                {{ $currentStatus === 'publish' ? 'Publié' : ($currentStatus === 'draft' ? 'Brouillon' : 'En attente') }}
+            </span>
         </div>
     </div>
 
@@ -46,76 +57,80 @@
             @method('PUT')
         @endif
 
-        <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#basic" role="tab">
-                    <i class="bx bx-edit-alt"></i> Basique
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#location" role="tab">
-                    <i class="bx bx-map"></i> Location
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#price" role="tab">
-                    <i class="bx bx-dollar"></i> Prix
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#information" role="tab">
-                    <i class="bx bx-info-circle"></i> Information & Paiement
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#availability" role="tab">
-                    <i class="bx bx-calendar"></i> Disponibilité
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#media" role="tab">
-                    <i class="bx bx-image"></i> Médias
-                </a>
-            </li>
+        {{-- ===== Modern Tab Navigation (scrollable, sticky) ===== --}}
+        <div class="ve-tabs-wrapper">
+            <div class="ve-tab-scroll">
+                <ul class="nav nav-tabs ve-nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#basic" role="tab">
+                            <i class="bx bx-edit-alt"></i> <span class="ve-tab-label">Basique</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#location" role="tab">
+                            <i class="bx bx-map"></i> <span class="ve-tab-label">Location</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#price" role="tab">
+                            <i class="bx bx-dollar"></i> <span class="ve-tab-label">Prix</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#information" role="tab">
+                            <i class="bx bx-info-circle"></i> <span class="ve-tab-label">Info & Paiement</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#availability" role="tab">
+                            <i class="bx bx-calendar"></i> <span class="ve-tab-label">Disponibilité</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#media" role="tab">
+                            <i class="bx bx-image"></i> <span class="ve-tab-label">Médias</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#taxonomies" role="tab">
+                            <i class="bx bx-category"></i> <span class="ve-tab-label">Catégories</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#flights" role="tab">
+                            <i class="bx bx-trip"></i> <span class="ve-tab-label">Vols</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hotels" role="tab">
+                            <i class="bx bx-hotel"></i> <span class="ve-tab-label">Hôtels</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#transfers" role="tab">
+                            <i class="bx bx-car"></i> <span class="ve-tab-label">Transferts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#travel-dates" role="tab">
+                            <i class="bx bx-calendar-check"></i> <span class="ve-tab-label">Dates</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#activities" role="tab">
+                            <i class="bx bx-list-check"></i> <span class="ve-tab-label">Activités</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#program-days" role="tab">
+                            <i class="bx bx-calendar-week"></i> <span class="ve-tab-label">Programme</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
 
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#taxonomies" role="tab">
-                    <i class="bx bx-category"></i> Catégories
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#flights" role="tab">
-                    <i class="bx bx-trip"></i> Vols
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#hotels" role="tab">
-                    <i class="bx bx-hotel"></i> Hôtels
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#transfers" role="tab">
-                    <i class="bx bx-car"></i> Transferts
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#travel-dates" role="tab">
-                    <i class="bx bx-calendar-check"></i> Dates disponibles
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#activities" role="tab">
-                    <i class="bx bx-list-check"></i> Activités
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#program-days" role="tab">
-                    <i class="bx bx-calendar-week"></i> Programme
-                </a>
-            </li>
-        </ul>
-
-        <div class="tab-content p-3 border border-top-0">
+        <div class="tab-content ve-tab-content pt-4">
             <div class="tab-pane active" id="basic" role="tabpanel">
                 <div class="row">
                     <div class="col-lg-8">
@@ -1941,50 +1956,44 @@
             ])
         </div>
 
-        {{-- SAVE BUTTON (Fixed bottom) --}}
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-footer d-flex justify-content-between align-items-center bg-light">
-                        <div>
-                            <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg waves-effect waves-light" id="edit-voyage-submit-btn">
-                                <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour dans WordPress' : 'Enregistrer toutes les modifications' }}
-                            </button>
-                            <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
-                        </div>
-                        <div class="text-muted">
-                            <small><i class="bx bx-info-circle"></i> Modifications instantanées dans WordPress</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {{-- Spacer for sticky save bar --}}
+        <div style="height: 20px;"></div>
     </form>
 
-    {{-- Plus de formulaire séparé pour ajout/suppression de jour : tout est géré en JS, sauvegardé au submit du formulaire principal --}}
-
-    {{-- DELETE ZONE (masquée en création) --}}
-    @if (!$isCreate)
-    <div class="row mt-3">
-        <div class="col-12">
-            <div class="card border-danger">
-                <div class="card-body">
-                    <h5 class="card-title text-danger">Zone dangereuse</h5>
-                    <p class="text-muted">Cette action supprimera définitivement le tour de WordPress.</p>
-                    <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" 
-                          method="POST" 
-                          onsubmit="return confirm('âš ï¸ ATTENTION : Supprimer définitivement ce tour de WordPress ?\n\nCette action est irréversible.');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger waves-effect waves-light">
-                            <i class="bx bx-trash me-1"></i> Supprimer ce tour définitivement
-                        </button>
-                    </form>
-                </div>
+    {{-- ===== Sticky Save Bar (Fixed bottom, glassmorphism) ===== --}}
+    <div class="ve-save-bar">
+        <div class="ve-save-inner">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg waves-effect waves-light" id="edit-voyage-submit-btn">
+                    <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}
+                </button>
+                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">
+                    <i class="bx bx-x me-1"></i> Annuler
+                </a>
+            </div>
+            <div class="text-muted d-none d-md-block">
+                <small><i class="bx bx-zap me-1"></i> Modifications instantanées dans WordPress</small>
             </div>
         </div>
     </div>
+
+    {{-- ===== Delete Zone (redesigned) ===== --}}
+    @if (!$isCreate)
+    <div class="ve-danger-zone">
+        <h5><i class="bx bx-error-circle"></i> Zone dangereuse</h5>
+        <p>Cette action supprimera definitivement le tour de WordPress. Elle est irreversible.</p>
+        <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}"
+              method="POST"
+              onsubmit="return confirm('ATTENTION : Supprimer definitivement ce tour de WordPress ?\n\nCette action est irreversible.');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger waves-effect waves-light">
+                <i class="bx bx-trash me-1"></i> Supprimer ce tour definitivement
+            </button>
+        </form>
+    </div>
     @endif
+</div>{{-- /.voyage-edit-page --}}
 @endsection
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
