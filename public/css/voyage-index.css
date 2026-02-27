@@ -148,6 +148,7 @@
 
 .voyage-index-page .vi-table {
     margin: 0;
+    min-width: 980px;
 }
 
 .voyage-index-page .vi-table thead th {
@@ -202,6 +203,10 @@
     border-radius: 8px;
 }
 
+.voyage-index-page .vi-actions {
+    white-space: nowrap;
+}
+
 .voyage-index-page .pagination {
     gap: 4px;
 }
@@ -211,6 +216,11 @@
     border: 1px solid var(--vi-border);
     color: var(--vi-primary);
     font-size: 0.82rem;
+}
+
+.voyage-index-page .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .voyage-index-page .pagination .page-item.active .page-link {
@@ -237,8 +247,16 @@
         width: 100%;
     }
 
+    .voyage-index-page .vi-info-banner {
+        font-size: 0.82rem;
+    }
+
     .voyage-index-page .vi-table thead th,
     .voyage-index-page .vi-table tbody td {
         padding: 10px;
+    }
+
+    .voyage-index-page .vi-main-card .card-body {
+        padding: 12px;
     }
 }
