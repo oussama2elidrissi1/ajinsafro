@@ -34,6 +34,14 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
      id="{{ $containerId }}">
 
     @if($isCompact)
+        <div class="alert alert-warning border-warning mb-3" role="alert">
+            <h6 class="mb-2"><i class="bx bx-error me-1"></i>Section en cours de construction — ne pas modifier</h6>
+            <p class="mb-1">Cette section n’est pas encore finalisée et ses champs ne sont pas pris en charge par la logique actuelle (enregistrement, validation, affichage).</p>
+            <p class="mb-0">Merci de ne rien modifier ici pour le moment afin d’éviter incohérences, erreurs de sauvegarde ou comportements inattendus. Cette partie sera activée dès qu’elle sera prête.</p>
+        </div>
+    @endif
+
+    @if($isCompact)
         <style>
         .flight-manager[data-mode="modal"] .flight-opt-card,
         .flight-manager[data-mode="drawer"] .flight-opt-card { margin-bottom: 8px; }
