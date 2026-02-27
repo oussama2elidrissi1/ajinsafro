@@ -1,0 +1,244 @@
+/* ============================================================================
+   VOYAGE INDEX — Modern UI Redesign
+   Scoped on .voyage-index-page only
+   ============================================================================ */
+
+.voyage-index-page {
+    --vi-primary: #4f46e5;
+    --vi-primary-dark: #3730a3;
+    --vi-primary-light: #818cf8;
+    --vi-primary-bg: rgba(79, 70, 229, 0.08);
+    --vi-surface: #ffffff;
+    --vi-border: #e2e8f0;
+    --vi-text: #1e293b;
+    --vi-muted: #64748b;
+    --vi-shadow: 0 1px 3px rgba(0, 0, 0, .04), 0 4px 14px rgba(0, 0, 0, .06);
+    --vi-radius: 14px;
+}
+
+.voyage-index-page .vi-page-header {
+    background: linear-gradient(135deg, var(--vi-primary) 0%, var(--vi-primary-dark) 100%);
+    border-radius: var(--vi-radius);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.voyage-index-page .vi-page-header::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -10%;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.voyage-index-page .vi-page-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+}
+
+.voyage-index-page .vi-page-subtitle {
+    margin: 0;
+    font-size: 0.86rem;
+    opacity: 0.85;
+}
+
+.voyage-index-page .vi-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    font-size: 0.8rem;
+    position: relative;
+    z-index: 1;
+}
+
+.voyage-index-page .vi-breadcrumb li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.voyage-index-page .vi-breadcrumb li + li::before {
+    content: '/';
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.voyage-index-page .vi-breadcrumb a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+}
+
+.voyage-index-page .vi-breadcrumb a:hover {
+    color: #fff;
+}
+
+.voyage-index-page .vi-breadcrumb .active {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.voyage-index-page .vi-header-cta {
+    border: 0;
+    border-radius: 10px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.32);
+}
+
+.voyage-index-page .vi-header-cta:hover {
+    transform: translateY(-1px);
+}
+
+.voyage-index-page .alert {
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.voyage-index-page .vi-main-card {
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    border-radius: var(--vi-radius);
+    box-shadow: var(--vi-shadow);
+    overflow: hidden;
+}
+
+.voyage-index-page .vi-main-card .card-body {
+    padding: 22px 24px;
+}
+
+.voyage-index-page .vi-info-banner {
+    border: 1px solid #bfdbfe;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    color: #1e40af;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 0.88rem;
+}
+
+.voyage-index-page .vi-info-banner i {
+    font-size: 1.1rem;
+    margin-top: 2px;
+}
+
+.voyage-index-page .vi-count-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--vi-primary);
+    background: var(--vi-primary-bg);
+    border: 1px solid rgba(79, 70, 229, 0.18);
+}
+
+.voyage-index-page .vi-table-wrap {
+    border: 1px solid var(--vi-border);
+    border-radius: 12px;
+}
+
+.voyage-index-page .vi-table {
+    margin: 0;
+}
+
+.voyage-index-page .vi-table thead th {
+    background: #f8fafc;
+    color: var(--vi-muted);
+    font-size: 0.77rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid var(--vi-border);
+    padding: 12px 14px;
+}
+
+.voyage-index-page .vi-table tbody td {
+    border-color: #f1f5f9;
+    padding: 12px 14px;
+    vertical-align: middle;
+    color: var(--vi-text);
+    font-size: 0.88rem;
+}
+
+.voyage-index-page .vi-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.voyage-index-page .vi-table a.text-body {
+    color: #0f172a !important;
+}
+
+.voyage-index-page .vi-status {
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 5px 10px;
+}
+
+.voyage-index-page .vi-status-publish {
+    background: rgba(16, 185, 129, .16);
+    color: #047857;
+}
+
+.voyage-index-page .vi-status-draft {
+    background: rgba(245, 158, 11, .18);
+    color: #92400e;
+}
+
+.voyage-index-page .vi-status-pending {
+    background: rgba(59, 130, 246, .16);
+    color: #1d4ed8;
+}
+
+.voyage-index-page .vi-actions .btn {
+    border-radius: 8px;
+}
+
+.voyage-index-page .pagination {
+    gap: 4px;
+}
+
+.voyage-index-page .pagination .page-link {
+    border-radius: 8px;
+    border: 1px solid var(--vi-border);
+    color: var(--vi-primary);
+    font-size: 0.82rem;
+}
+
+.voyage-index-page .pagination .page-item.active .page-link {
+    background: var(--vi-primary);
+    border-color: var(--vi-primary);
+}
+
+@media (max-width: 991.98px) {
+    .voyage-index-page .vi-page-header {
+        padding: 18px;
+    }
+
+    .voyage-index-page .vi-page-title {
+        font-size: 1.15rem;
+    }
+
+    .voyage-index-page .vi-main-card .card-body {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .voyage-index-page .vi-header-cta {
+        width: 100%;
+    }
+
+    .voyage-index-page .vi-table thead th,
+    .voyage-index-page .vi-table tbody td {
+        padding: 10px;
+    }
+}
