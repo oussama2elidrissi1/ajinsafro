@@ -88,6 +88,9 @@
                         @error('hero.video_file')
                             <small class="text-danger d-block mt-1">{{ $message }}</small>
                         @enderror
+                        @error('hero_video_file')
+                            <small class="text-danger d-block mt-1">{{ $message }}</small>
+                        @enderror
                     </div>
 
                     <div class="col-md-6">

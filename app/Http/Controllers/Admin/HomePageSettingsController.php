@@ -27,25 +27,34 @@ class HomePageSettingsController extends Controller
     public function update(Request $request)
     {
         try {
+            $hasVideoUpload = $request->hasFile('hero_video_file') || $request->hasFile('hero.video_file');
+
             Log::info('Home page settings update started', [
-                'has_video_upload' => $request->hasFile('hero.video_file'),
+                'has_video_upload' => $hasVideoUpload,
             ]);
 
-            $videoFile = $request->file('hero.video_file');
-            if ($videoFile instanceof UploadedFile) {
+            $videoFile = $request->file('hero_video_file');
+            if (!$videoFile instanceof UploadedFile) {
+                $videoFile = $request->file('hero.video_file');
+            }
+
+            if ($videoFile instanceof UploadedFile && $videoFile->isValid()) {
                 Log::info('Home page hero video upload detected', [
                     'size' => $videoFile->getSize(),
-                    'mime' => $videoFile->getMimeType(),
                     'original_name' => $videoFile->getClientOriginalName(),
+                    'is_valid' => $videoFile->isValid(),
+                    'mime' => $videoFile->getMimeType(),
                 ]);
             }
 
             $validated = $request->validate([
                 'hero.type' => ['required', Rule::in(['image', 'video'])],
                 'hero.image_url' => ['nullable', 'url', 'max:2048'],
-                'hero.video_url' => ['nullable', 'url', 'max:2048'],
+                'hero.video_url' => ['nullable', 'string'],
+                'hero_video_url' => ['nullable', 'string'],
                 'hero.image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
                 'hero.video_file' => ['nullable', 'file', 'mimetypes:video/mp4,video/quicktime,video/x-m4v', 'max:51200'],
+                'hero_video_file' => ['nullable', 'file', 'mimetypes:video/mp4,video/quicktime,video/x-m4v', 'max:51200'],
                 'hero.title' => ['required', 'string', 'max:255'],
                 'hero.subtitle' => ['nullable', 'string', 'max:500'],
                 'hero.cta_text' => ['nullable', 'string', 'max:120'],
@@ -76,8 +85,11 @@ class HomePageSettingsController extends Controller
                 'good_spots_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
             ], [
                 'hero.video_file.max' => 'Vidéo trop grande (max 50MB). Utilisez une URL YouTube/Vimeo.',
+                'hero_video_file.max' => 'Vidéo trop grande (max 50MB). Utilisez une URL YouTube/Vimeo.',
                 'hero.video_file.uploaded' => 'Upload vidéo échoué (limite serveur). Augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.',
+                'hero_video_file.uploaded' => 'Upload vidéo échoué (limite serveur). Augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.',
                 'hero.video_file.mimetypes' => 'Le fichier vidéo doit être un MP4/M4V/MOV valide.',
+                'hero_video_file.mimetypes' => 'Le fichier vidéo doit être un MP4/M4V/MOV valide.',
             ]);
 
             $current = $this->readHomeSettings();
@@ -88,13 +100,27 @@ class HomePageSettingsController extends Controller
             $heroImageUrl = Storage::disk('public')->url($heroImagePath);
         }
 
-            $heroVideoUrl = $validated['hero']['video_url'] ?? ($current['hero']['video_url'] ?? '');
-            if ($request->hasFile('hero.video_file')) {
-                $uploadedVideo = $request->file('hero.video_file');
+            $currentHeroVideoUrl = (string) ($current['hero']['video_url'] ?? '');
+            $videoUrlInput = trim((string) (
+                $validated['hero']['video_url']
+                ?? $validated['hero_video_url']
+                ?? ''
+            ));
+            $heroVideoUrl = $videoUrlInput !== '' ? $videoUrlInput : $currentHeroVideoUrl;
 
-                if (!$uploadedVideo instanceof UploadedFile) {
-                    throw new RuntimeException('Invalid uploaded video file payload.');
+            if ($hasVideoUpload) {
+                $uploadedVideo = $videoFile;
+
+                if (!$uploadedVideo instanceof UploadedFile || !$uploadedVideo->isValid()) {
+                    throw new RuntimeException('Upload vidéo invalide. Vérifiez le fichier puis réessayez.');
                 }
+
+                Log::info('Home page hero video upload processing started', [
+                    'size' => $uploadedVideo->getSize(),
+                    'original_name' => $uploadedVideo->getClientOriginalName(),
+                    'is_valid' => $uploadedVideo->isValid(),
+                    'mime' => $uploadedVideo->getMimeType(),
+                ]);
 
                 $baseName = pathinfo($uploadedVideo->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeBaseName = preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $baseName);
@@ -116,9 +142,7 @@ class HomePageSettingsController extends Controller
                     $extension
                 );
 
-                Log::info('Home page hero video upload processing started', [
-                    'size' => $uploadedVideo->getSize(),
-                    'mime' => $uploadedVideo->getMimeType(),
+                Log::info('Home page hero video upload file resolved', [
                     'filename' => $fileName,
                 ]);
 
@@ -232,7 +256,7 @@ class HomePageSettingsController extends Controller
             ]);
 
             Log::info('Home page settings update finished', [
-                'has_video_upload' => $request->hasFile('hero.video_file'),
+                'has_video_upload' => $hasVideoUpload,
             ]);
 
             return redirect()
@@ -243,7 +267,7 @@ class HomePageSettingsController extends Controller
         } catch (Throwable $e) {
             Log::error('Home page settings update failed', [
                 'message' => $e->getMessage(),
-                'has_video_upload' => $request->hasFile('hero.video_file'),
+                'has_video_upload' => ($request->hasFile('hero_video_file') || $request->hasFile('hero.video_file')),
                 'trace' => $e->getTraceAsString(),
             ]);
 
