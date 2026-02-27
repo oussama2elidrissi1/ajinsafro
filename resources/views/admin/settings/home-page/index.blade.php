@@ -83,11 +83,8 @@
                     </div>
                     <div class="col-md-6" id="hero_video_file_wrap">
                         <label class="form-label">Upload mp4</label>
-                        <input type="file" class="form-control" name="hero[video_file]" accept="video/mp4">
+                        <input type="file" class="form-control" name="hero_video_file" accept="video/mp4">
                         <small class="text-muted d-block mt-1">Max 50MB (MP4/M4V/MOV). Si l’upload mp4 échoue, augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.</small>
-                        @error('hero.video_file')
-                            <small class="text-danger d-block mt-1">{{ $message }}</small>
-                        @enderror
                         @error('hero_video_file')
                             <small class="text-danger d-block mt-1">{{ $message }}</small>
                         @enderror
