@@ -104,6 +104,7 @@
 <script>
 (function() {
     if (!window.tourHotelsData) window.tourHotelsData = {};
+    var HOTELS_MAINTENANCE_MSG = 'Le module Hôtels est temporairement en maintenance. Merci de réessayer dans quelques instants.';
 
     var currentDayIndex = '';
     var titleEl = document.getElementById('hotels-context-title');
@@ -463,7 +464,10 @@
     if (removeBtn) {
         removeBtn.addEventListener('click', function() {
             var day = getDrawerDay();
-            if (!window.dayItemsManager || day.index === '') return;
+            if (!window.dayItemsManager || day.index === '') {
+                alert(HOTELS_MAINTENANCE_MSG);
+                return;
+            }
             if (!confirm('Retirer l\'hôtel du Jour ' + day.number + ' ?')) return;
             
             // Retirer de dayItemsManager
@@ -488,7 +492,10 @@
     if (confirmBtn) {
         confirmBtn.addEventListener('click', function() {
             var day = getDrawerDay();
-            if (day.index === '') return;
+            if (day.index === '') {
+                alert(HOTELS_MAINTENANCE_MSG);
+                return;
+            }
             var data = getFormData();
             if (!data.hotel_name || !data.hotel_name.trim()) {
                 alert('Veuillez saisir un nom d\'hôtel.');

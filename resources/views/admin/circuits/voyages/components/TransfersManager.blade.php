@@ -119,6 +119,7 @@
 <script>
 (function() {
     if (!window.tourTransfersData) window.tourTransfersData = { arrival: [], departure: [] };
+    var TRANSFERS_MAINTENANCE_MSG = 'Le module Transferts est temporairement en maintenance. Merci de réessayer dans quelques instants.';
 
     var currentDayIndex = '';
     var titleEl = document.getElementById('transfers-context-title');
@@ -660,7 +661,7 @@
         newFormSubmit.addEventListener('click', function() {
             var form = document.getElementById('edit-voyage-form');
             var tourId = form ? parseInt(form.getAttribute('data-voyage-id') || '0', 10) : 0;
-            if (!tourId) { if (newFormError) { newFormError.textContent = 'Tour ID manquant.'; newFormError.style.display = 'block'; } return; }
+            if (!tourId) { if (newFormError) { newFormError.textContent = TRANSFERS_MAINTENANCE_MSG; newFormError.style.display = 'block'; } return; }
             var day = getDrawerDay();
             var direction = document.getElementById('transfers-new-direction');
             var fromInp = document.getElementById('transfers-new-from');
@@ -729,7 +730,7 @@
                 newFormWrap.style.display = 'none';
             })
             .catch(function(err) {
-                var msg = (err && err.message) || 'Erreur lors de la création.';
+                var msg = (err && err.message) || TRANSFERS_MAINTENANCE_MSG;
                 if (err && err.errors) {
                     var first = Object.keys(err.errors).map(function(k) { return err.errors[k][0]; })[0];
                     if (first) msg = first;
@@ -817,7 +818,7 @@
         newFormSubmit.addEventListener('click', function() {
             var form = document.getElementById('edit-voyage-form');
             var tourId = form ? parseInt(form.getAttribute('data-voyage-id') || '0', 10) : 0;
-            if (!tourId) { if (newFormError) { newFormError.textContent = 'Tour ID manquant.'; newFormError.style.display = 'block'; } return; }
+            if (!tourId) { if (newFormError) { newFormError.textContent = TRANSFERS_MAINTENANCE_MSG; newFormError.style.display = 'block'; } return; }
             var day = getDrawerDay();
             var direction = document.getElementById('transfers-new-direction');
             var fromInp = document.getElementById('transfers-new-from');
@@ -886,7 +887,7 @@
                 newFormWrap.style.display = 'none';
             })
             .catch(function(err) {
-                var msg = (err && err.message) || 'Erreur lors de la création.';
+                var msg = (err && err.message) || TRANSFERS_MAINTENANCE_MSG;
                 if (err && err.errors) {
                     var first = Object.keys(err.errors).map(function(k) { return err.errors[k][0]; })[0];
                     if (first) msg = first;
