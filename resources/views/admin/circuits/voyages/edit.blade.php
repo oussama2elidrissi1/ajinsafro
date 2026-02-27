@@ -2806,7 +2806,10 @@
                 html += '<div class="day-summary-card mb-2 border rounded p-2 bg-light">';
                 html += '<div class="d-flex justify-content-between align-items-center mb-1">';
                 html += '<div class="d-flex align-items-center gap-2"><i class="bx bx-list-check text-primary"></i><strong class="small">Activités (' + sections.activities.length + ')</strong></div>';
+                html += '<div class="d-flex gap-1">';
                 html += '<button type="button" class="btn btn-xs btn-outline-primary btn-sm day-summary-config-btn" data-day-index="' + dayIndex + '" data-tab="activities" title="Configurer"><i class="bx bx-cog"></i></button>';
+                html += '<button type="button" class="btn btn-xs btn-outline-danger btn-sm day-summary-remove-btn" data-day-index="' + dayIndex + '" data-type="activities" title="Retirer les activités optionnelles"><i class="bx bx-trash"></i></button>';
+                html += '</div>';
                 html += '</div>';
                 var visibleActs = sections.activities.slice(0, 3);
                 visibleActs.forEach(function(act) {
@@ -2982,6 +2985,8 @@
                     confirmMsg = 'Retirer tous les transferts du Jour ' + dayNumber + ' ?';
                 } else if (type === 'flights') {
                     confirmMsg = 'Retirer tous les vols du Jour ' + dayNumber + ' ?';
+                } else if (type === 'activities') {
+                    confirmMsg = 'Retirer les activités optionnelles du Jour ' + dayNumber + ' ?';
                 }
                 if (!confirm(confirmMsg)) return;
                 
@@ -2992,6 +2997,38 @@
                         window.dayItemsManager.setTransfers(dayIndex, []);
                     } else if (type === 'flights') {
                         window.dayItemsManager.setFlights(dayIndex, []);
+                    } else if (type === 'activities') {
+                        var activitiesList = card.querySelector('.programme-activities-list');
+                        if (activitiesList) {
+                            var rows = Array.from(activitiesList.querySelectorAll('.programme-activity-row'));
+                            var removedCount = 0;
+                            var mandatoryCount = 0;
+
+                            rows.forEach(function(row) {
+                                var mandatoryCheckbox = row.querySelector('input[type="checkbox"][name$="[is_mandatory]"]');
+                                var isMandatory = mandatoryCheckbox && mandatoryCheckbox.checked;
+                                if (isMandatory) {
+                                    mandatoryCount++;
+                                    return;
+                                }
+                                row.remove();
+                                removedCount++;
+                            });
+
+                            if (removedCount === 0) {
+                                alert(mandatoryCount > 0
+                                    ? 'Aucune activité supprimable : toutes les activités sont obligatoires.'
+                                    : 'Aucune activité à supprimer.');
+                                return;
+                            }
+
+                            reindexProgrammeActivities(card);
+                            updateProgrammeDayInclus(card);
+
+                            if (mandatoryCount > 0) {
+                                alert(removedCount + ' activité(s) supprimée(s). ' + mandatoryCount + ' activité(s) obligatoire(s) conservée(s).');
+                            }
+                        }
                     }
                     window.dayItemsManager.syncToForm(dayIndex);
                     document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', {
@@ -3099,6 +3136,20 @@
                 detail: { dayIndex: String(dayIndex), count: list.querySelectorAll('.programme-activity-row').length }
             }));
             return true;
+        }
+
+        function reindexProgrammeActivities(card) {
+            if (!card) return;
+            var list = card.querySelector('.programme-activities-list');
+            if (!list) return;
+            var rows = list.querySelectorAll('.programme-activity-row');
+            rows.forEach(function(row, idx) {
+                row.querySelectorAll('[name^="programme_days["]').forEach(function(el) {
+                    el.name = el.name.replace(/\]\[activities\]\[\d+\]/, '][activities][' + idx + ']');
+                });
+                var sortOrderInput = row.querySelector('input[name$="[sort_order]"]');
+                if (sortOrderInput) sortOrderInput.value = idx;
+            });
         }
 
         (function dayBuilderDrawerManager() {
@@ -3424,6 +3475,7 @@
                     var card = row.closest('.programme-day-card');
                     var dayIndex = card ? card.getAttribute('data-day-index') : null;
                     row.remove();
+                    reindexProgrammeActivities(card);
                     updateProgrammeDayInclus(card);
                     if (dayIndex !== null) {
                         var list = card ? card.querySelector('.programme-activities-list') : null;
