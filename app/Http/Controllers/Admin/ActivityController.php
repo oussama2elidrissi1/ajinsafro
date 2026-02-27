@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateActivityRequest;
 use App\Models\Wp\Activity;
 use App\Services\WordPressMediaService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -43,15 +44,15 @@ class ActivityController extends Controller
 
         $activity = Activity::create($data);
 
-        if ($request->wantsJson()) {
+        if ($this->expectsJson($request)) {
+            $payload = $this->serializeActivity($activity);
+
             return response()->json([
                 'success' => true,
                 'message' => __('Activité créée avec succès.'),
-                'activity' => [
-                    'id' => $activity->id,
-                    'title' => $activity->title,
-                    'description' => $activity->description ?? '',
-                ],
+                'data' => $payload,
+                'activity' => $payload,
+                'errors' => (object) [],
             ]);
         }
 
@@ -65,7 +66,7 @@ class ActivityController extends Controller
         return view('admin.circuits.activities.edit', compact('activity'));
     }
 
-    public function update(UpdateActivityRequest $request, Activity $activity): RedirectResponse
+    public function update(UpdateActivityRequest $request, Activity $activity): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
         
@@ -79,16 +80,54 @@ class ActivityController extends Controller
         unset($data['image']);
         
         $activity->update($data);
+
+        if ($this->expectsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => __('Activité mise à jour.'),
+                'data' => $this->serializeActivity($activity->fresh()),
+                'errors' => (object) [],
+            ]);
+        }
+
         return redirect()
             ->route('admin.circuits.activities.index')
             ->with('success', 'Activité mise à jour.');
     }
 
-    public function destroy(Activity $activity): RedirectResponse
+    public function destroy(Request $request, Activity $activity): RedirectResponse|JsonResponse
     {
+        $deletedId = $activity->id;
         $activity->delete();
+
+        if ($this->expectsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => __('Activité supprimée.'),
+                'data' => ['id' => $deletedId],
+                'errors' => (object) [],
+            ]);
+        }
+
         return redirect()
             ->route('admin.circuits.activities.index')
             ->with('success', 'Activité supprimée.');
+    }
+
+    private function expectsJson(Request $request): bool
+    {
+        return $request->ajax() || $request->expectsJson() || $request->wantsJson();
+    }
+
+    private function serializeActivity(Activity $activity): array
+    {
+        return [
+            'id' => $activity->id,
+            'title' => $activity->title,
+            'description' => $activity->description ?? '',
+            'image_url' => null,
+            'price' => $activity->base_price,
+            'base_price' => $activity->base_price,
+        ];
     }
 }
