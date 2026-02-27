@@ -261,7 +261,7 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
                             <button type="button" class="btn btn-sm btn-light" id="btn-airline-cancel-edit">Fermer</button>
                         </div>
                         <div class="card-body">
-                            <form id="airline-editor-form" novalidate>
+                            <div id="airline-editor-form" novalidate>
                                 <input type="hidden" id="airline-editor-id">
                                 <div class="row g-3">
                                     <div class="col-md-5">
@@ -287,13 +287,13 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
                                     </div>
                                     <div class="col-12 d-flex gap-2 justify-content-end">
                                         <button type="button" class="btn btn-light" id="btn-airline-reset-form">Réinitialiser</button>
-                                        <button type="submit" class="btn btn-primary" id="btn-airline-save">
+                                        <button type="button" class="btn btn-primary" id="btn-airline-save">
                                             <span class="spinner-border spinner-border-sm me-1 d-none" id="airline-save-spinner"></span>
                                             Enregistrer
                                         </button>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
 
@@ -887,10 +887,19 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
             });
         }
 
-        if (els.editorForm) {
-            els.editorForm.addEventListener('submit', function(e) {
+        if (els.saveBtn) {
+            els.saveBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 submitEditorForm();
+            });
+        }
+
+        if (els.editorForm) {
+            els.editorForm.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.target && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    submitEditorForm();
+                }
             });
         }
 
