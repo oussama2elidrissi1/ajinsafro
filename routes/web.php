@@ -113,6 +113,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('circuits/activities/{activity}/edit', [ActivityController::class, 'edit'])->name('circuits.activities.edit');
     Route::match(['put', 'patch'], 'circuits/activities/{activity}', [ActivityController::class, 'update'])->name('circuits.activities.update');
     Route::delete('circuits/activities/{activity}', [ActivityController::class, 'destroy'])->name('circuits.activities.destroy');
+    Route::get('circuits/activities/ajax/list', [ActivityController::class, 'ajaxList'])->name('circuits.activities.ajax.list');
+    Route::get('circuits/activities/ajax/{activity}', [ActivityController::class, 'ajaxShow'])->name('circuits.activities.ajax.show');
+    Route::post('circuits/activities/ajax/store', [ActivityController::class, 'ajaxStore'])->name('circuits.activities.ajax.store');
+    Route::post('circuits/activities/ajax/{activity}/update', [ActivityController::class, 'ajaxUpdate'])->name('circuits.activities.ajax.update');
+    Route::delete('circuits/activities/ajax/{activity}', [ActivityController::class, 'ajaxDestroy'])->name('circuits.activities.ajax.destroy');
 
     Route::get('circuits/airlines', [AirlineController::class, 'index'])->name('circuits.airlines.index');
     Route::get('circuits/airlines/create', [AirlineController::class, 'create'])->name('circuits.airlines.create');

@@ -30,11 +30,21 @@ class StoreActivityRequest extends FormRequest
             'base_price' => 'nullable|numeric|min:0',
             'default_duration_minutes' => 'nullable|integer|min:0',
             'location_text' => 'nullable|string|max:255',
+            'place_text' => 'nullable|string|max:255',
+            'is_active' => 'nullable|boolean',
         ];
     }
 
     protected function prepareForValidation(): void
     {
+        if (!$this->filled('location_text') && $this->filled('place_text')) {
+            $this->merge(['location_text' => $this->input('place_text')]);
+        }
+
+        if ($this->has('is_active') && !$this->filled('is_active')) {
+            $this->merge(['is_active' => false]);
+        }
+
         if (empty($this->slug) && $this->filled('title')) {
             $this->merge(['slug' => Str::slug($this->title)]);
         }

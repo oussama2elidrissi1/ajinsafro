@@ -1,81 +1,124 @@
-<div class="row g-3" id="day-builder-activities">
-    <div class="col-12 mb-2">
-        <div class="card border-primary">
-            <div class="card-header bg-light py-2">
-                <strong><i class="bx bx-plus-circle"></i> Créer une nouvelle activité</strong>
+<div id="day-builder-activities-root"
+     data-list-url="{{ route('admin.circuits.activities.ajax.list') }}"
+     data-show-url-base="{{ url('/admin/circuits/activities/ajax') }}"
+     data-store-url="{{ route('admin.circuits.activities.ajax.store') }}"
+     data-update-url-base="{{ url('/admin/circuits/activities/ajax') }}"
+     data-destroy-url-base="{{ url('/admin/circuits/activities/ajax') }}"
+     data-csrf="{{ csrf_token() }}">
+
+    <div id="day-builder-activities-list-view">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div class="input-group" style="max-width: 320px;">
+                <span class="input-group-text"><i class="bx bx-search"></i></span>
+                <input type="text" class="form-control" id="day-builder-activities-search" placeholder="Rechercher une activité...">
             </div>
-            <div id="day-builder-new-activity-form" class="card-body">
-                <div id="day-builder-new-activity-form-el"
-                     data-action="{{ route('admin.circuits.activities.store') }}"
-                     data-base-url="{{ url('/admin/circuits/activities') }}">
-                    @csrf
-                    <div class="row g-2">
-                        <div class="col-md-5">
-                            <label for="day-builder-activity-title" class="form-label small">Titre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-sm" id="day-builder-activity-title" placeholder="Ex. Visite du château">
-                            <div id="day-builder-activity-title-error" class="small text-danger mt-1 d-none"></div>
-                        </div>
-                        <div class="col-md-5">
-                            <label for="day-builder-activity-description" class="form-label small">Description</label>
-                            <input type="text" class="form-control form-control-sm" id="day-builder-activity-description" placeholder="Optionnel">
-                            <div id="day-builder-activity-description-error" class="small text-danger mt-1 d-none"></div>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-sm btn-primary w-100" id="day-builder-new-activity-submit">
-                                <span class="btn-text">Créer</span>
-                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="day-builder-new-activity-error" class="small text-danger mt-2 d-none"></div>
-                </div>
-            </div>
+            <button type="button" class="btn btn-primary" id="day-builder-activities-open-create">
+                <i class="bx bx-plus me-1"></i> Créer activité
+            </button>
         </div>
+
+        <div id="day-builder-activities-loader" class="text-center py-4 d-none">
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <div class="small text-muted mt-2">Chargement des activités...</div>
+        </div>
+
+        <div id="day-builder-activities-list-alert" class="alert d-none" role="alert"></div>
+
+        <div class="row g-3" id="day-builder-activities-cards"></div>
+        <div class="text-muted d-none" id="day-builder-activities-empty-msg">Aucune activité trouvée.</div>
     </div>
 
-    <div class="col-12">
-        <div class="row g-3" id="day-builder-activities-cards">
-            @foreach($activitiesCatalog as $act)
-                <div class="col-md-6 col-lg-6" data-activity-card-id="{{ $act->id }}">
-                    <div class="card h-100 programme-catalog-card">
-                        <div class="card-body d-flex flex-column" data-activity-view>
-                            <div class="d-flex justify-content-between align-items-start gap-2">
-                                <h6 class="card-title mb-1" data-activity-title>{{ $act->title }}</h6>
-                                <div class="d-flex gap-1">
-                                    <button type="button" class="btn btn-sm btn-light" data-action="edit" data-id="{{ $act->id }}" title="Modifier"><i class="bx bx-pencil"></i></button>
-                                    <button type="button" class="btn btn-sm btn-light text-danger" data-action="delete" data-id="{{ $act->id }}" title="Supprimer"><i class="bx bx-trash"></i></button>
-                                </div>
-                            </div>
-                            <p class="card-text small text-muted flex-grow-1" data-activity-description>{{ \Illuminate\Support\Str::limit($act->description ?? '', 90) }}</p>
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-primary day-builder-add-activity"
-                                data-activity-id="{{ $act->id }}"
-                                data-activity-title="{{ e($act->title) }}"
-                            >
-                                Ajouter au jour
-                            </button>
+    <div id="day-builder-activities-form-view" class="d-none">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="mb-0" id="day-builder-activities-form-title">Créer une activité</h6>
+            <button type="button" class="btn btn-sm btn-light" id="day-builder-activities-back-to-list">
+                <i class="bx bx-arrow-back me-1"></i> Retour à la liste
+            </button>
+        </div>
+
+        <div id="day-builder-activities-form-alert" class="alert d-none" role="alert"></div>
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="card mb-0">
+                    <div class="card-body">
+                        <input type="hidden" id="activity-form-id">
+                        <div class="mb-3">
+                            <label for="activity-form-title" class="form-label">Titre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="activity-form-title" required>
+                            <div class="small text-danger mt-1 d-none" data-error="title"></div>
                         </div>
-                        <div class="card-body d-none" data-activity-edit>
-                            <div class="mb-2">
-                                <label class="form-label small">Titre <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" data-edit-title value="{{ $act->title }}">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small">Description</label>
-                                <input type="text" class="form-control form-control-sm" data-edit-description value="{{ $act->description ?? '' }}">
-                            </div>
-                            <div class="small text-danger d-none mb-2" data-edit-error></div>
-                            <div class="d-flex justify-content-end gap-2">
-                                <button type="button" class="btn btn-sm btn-light" data-action="cancel-edit" data-id="{{ $act->id }}">Annuler</button>
-                                <button type="button" class="btn btn-sm btn-primary" data-action="save-edit" data-id="{{ $act->id }}">Enregistrer</button>
-                            </div>
+                        <div class="mb-3">
+                            <label for="activity-form-slug" class="form-label">Slug</label>
+                            <input type="text" class="form-control" id="activity-form-slug" placeholder="Généré automatiquement si vide">
+                            <div class="small text-danger mt-1 d-none" data-error="slug"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="activity-form-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="activity-form-description" rows="6"></textarea>
+                            <div class="small text-danger mt-1 d-none" data-error="description"></div>
                         </div>
                     </div>
                 </div>
-            @endforeach
+            </div>
 
-            <div class="col-12 text-muted {{ $activitiesCatalog->isEmpty() ? '' : 'd-none' }}" id="day-builder-activities-empty-msg">Aucune activité dans le catalogue. Créez-en une ci-dessus.</div>
+            <div class="col-lg-4">
+                <div class="card mb-0">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="activity-form-image" class="form-label">Image</label>
+                            <input type="file" class="form-control" id="activity-form-image" accept="image/jpeg,image/png,image/webp">
+                            <small class="text-muted d-block mt-1">JPEG/PNG/WebP (max 5MB)</small>
+                            <div class="small text-danger mt-1 d-none" data-error="image"></div>
+                            <div id="activity-form-image-current-wrap" class="mt-2 d-none">
+                                <img id="activity-form-image-current" src="" alt="Image actuelle" class="img-fluid rounded" style="max-height: 170px; object-fit: cover; width: 100%;">
+                                <small class="text-muted d-block mt-1">Image actuelle</small>
+                            </div>
+                            <div id="activity-form-image-preview-wrap" class="mt-2 d-none">
+                                <img id="activity-form-image-preview" src="" alt="Aperçu" class="img-fluid rounded" style="max-height: 170px; object-fit: cover; width: 100%;">
+                                <small class="text-muted d-block mt-1">Nouvelle image</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="activity-form-base-price" class="form-label">Prix de base</label>
+                            <input type="number" class="form-control" id="activity-form-base-price" step="0.01" min="0" placeholder="0.00">
+                            <div class="small text-danger mt-1 d-none" data-error="base_price"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="activity-form-icon" class="form-label">Icône</label>
+                            <input type="text" class="form-control" id="activity-form-icon" placeholder="Ex: bx-map">
+                            <div class="small text-danger mt-1 d-none" data-error="icon"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="activity-form-duration" class="form-label">Durée par défaut (minutes)</label>
+                            <input type="number" class="form-control" id="activity-form-duration" min="0">
+                            <div class="small text-danger mt-1 d-none" data-error="default_duration_minutes"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="activity-form-place" class="form-label">Place text</label>
+                            <input type="text" class="form-control" id="activity-form-place">
+                            <div class="small text-danger mt-1 d-none" data-error="place_text"></div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="activity-form-is-active" checked>
+                            <label class="form-check-label" for="activity-form-is-active">Actif</label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" id="activity-form-submit-btn">
+                                <span class="btn-text">Enregistrer</span>
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                            <button type="button" class="btn btn-light" id="activity-form-reset-btn">Réinitialiser</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -85,22 +128,52 @@
     if (window.__dayBuilderActivitiesManagerInit) return;
     window.__dayBuilderActivitiesManagerInit = true;
 
-    var root = document.getElementById('day-builder-activities');
-    var form = document.getElementById('day-builder-new-activity-form-el');
-    var submitBtn = document.getElementById('day-builder-new-activity-submit');
-    var titleInp = document.getElementById('day-builder-activity-title');
-    var descInp = document.getElementById('day-builder-activity-description');
-    var titleErr = document.getElementById('day-builder-activity-title-error');
-    var descErr = document.getElementById('day-builder-activity-description-error');
-    var formErr = document.getElementById('day-builder-new-activity-error');
+    var root = document.getElementById('day-builder-activities-root');
+    if (!root) return;
+
+    var urls = {
+        list: root.getAttribute('data-list-url') || '',
+        showBase: root.getAttribute('data-show-url-base') || '',
+        store: root.getAttribute('data-store-url') || '',
+        updateBase: root.getAttribute('data-update-url-base') || '',
+        destroyBase: root.getAttribute('data-destroy-url-base') || '',
+    };
+    var csrfToken = root.getAttribute('data-csrf') || '';
+
+    var listView = document.getElementById('day-builder-activities-list-view');
+    var formView = document.getElementById('day-builder-activities-form-view');
+    var searchInput = document.getElementById('day-builder-activities-search');
+    var openCreateBtn = document.getElementById('day-builder-activities-open-create');
+    var backToListBtn = document.getElementById('day-builder-activities-back-to-list');
+    var listLoader = document.getElementById('day-builder-activities-loader');
+    var listAlert = document.getElementById('day-builder-activities-list-alert');
     var cardsContainer = document.getElementById('day-builder-activities-cards');
     var emptyMsg = document.getElementById('day-builder-activities-empty-msg');
-    if (!root || !form || !cardsContainer) return;
 
-    var tokenEl = form.querySelector('input[name="_token"]');
-    var csrfToken = tokenEl ? tokenEl.value : '';
-    var storeUrl = form.getAttribute('data-action') || '';
-    var baseUrl = form.getAttribute('data-base-url') || '';
+    var formTitle = document.getElementById('day-builder-activities-form-title');
+    var formAlert = document.getElementById('day-builder-activities-form-alert');
+    var formId = document.getElementById('activity-form-id');
+    var formTitleInput = document.getElementById('activity-form-title');
+    var formSlugInput = document.getElementById('activity-form-slug');
+    var formDescriptionInput = document.getElementById('activity-form-description');
+    var formImageInput = document.getElementById('activity-form-image');
+    var currentImageWrap = document.getElementById('activity-form-image-current-wrap');
+    var currentImage = document.getElementById('activity-form-image-current');
+    var previewImageWrap = document.getElementById('activity-form-image-preview-wrap');
+    var previewImage = document.getElementById('activity-form-image-preview');
+    var formBasePriceInput = document.getElementById('activity-form-base-price');
+    var formIconInput = document.getElementById('activity-form-icon');
+    var formDurationInput = document.getElementById('activity-form-duration');
+    var formPlaceInput = document.getElementById('activity-form-place');
+    var formIsActiveInput = document.getElementById('activity-form-is-active');
+    var formSubmitBtn = document.getElementById('activity-form-submit-btn');
+    var formResetBtn = document.getElementById('activity-form-reset-btn');
+
+    var state = {
+        mode: 'list',
+        editingId: null,
+        activities: [],
+    };
 
     function esc(value) {
         return String(value == null ? '' : value)
@@ -136,39 +209,42 @@
         setTimeout(function() { toast.remove(); }, 3000);
     }
 
-    function clearCreateErrors() {
-        if (formErr) { formErr.classList.add('d-none'); formErr.textContent = ''; }
-        if (titleErr) { titleErr.classList.add('d-none'); titleErr.textContent = ''; }
-        if (descErr) { descErr.classList.add('d-none'); descErr.textContent = ''; }
-        [titleInp, descInp].forEach(function(input) {
-            if (input) input.classList.remove('is-invalid');
-        });
+    function showListAlert(type, message) {
+        if (!listAlert) return;
+        listAlert.className = 'alert alert-' + type;
+        listAlert.textContent = message;
+        listAlert.classList.remove('d-none');
     }
 
-    function applyCreateErrors(errors, fallbackMessage) {
-        clearCreateErrors();
-        if (errors && errors.title && titleErr) {
-            titleErr.textContent = errors.title[0];
-            titleErr.classList.remove('d-none');
-            if (titleInp) titleInp.classList.add('is-invalid');
-        }
-        if (errors && errors.description && descErr) {
-            descErr.textContent = errors.description[0];
-            descErr.classList.remove('d-none');
-            if (descInp) descInp.classList.add('is-invalid');
-        }
-        if (formErr) {
-            formErr.textContent = fallbackMessage || 'Veuillez corriger les erreurs.';
-            formErr.classList.remove('d-none');
-        }
+    function hideListAlert() {
+        if (!listAlert) return;
+        listAlert.classList.add('d-none');
     }
 
-    function setCreateLoading(loading) {
-        var btnText = submitBtn && submitBtn.querySelector('.btn-text');
-        var spinner = submitBtn && submitBtn.querySelector('.spinner-border');
-        if (submitBtn) submitBtn.disabled = loading;
+    function showFormAlert(type, message) {
+        if (!formAlert) return;
+        formAlert.className = 'alert alert-' + type;
+        formAlert.textContent = message;
+        formAlert.classList.remove('d-none');
+    }
+
+    function hideFormAlert() {
+        if (!formAlert) return;
+        formAlert.classList.add('d-none');
+    }
+
+    function setListLoading(show) {
+        if (!listLoader) return;
+        listLoader.classList.toggle('d-none', !show);
+    }
+
+    function setFormLoading(loading) {
+        var btnText = formSubmitBtn && formSubmitBtn.querySelector('.btn-text');
+        var spinner = formSubmitBtn && formSubmitBtn.querySelector('.spinner-border');
+        if (formSubmitBtn) formSubmitBtn.disabled = loading;
         if (btnText) btnText.classList.toggle('d-none', loading);
         if (spinner) spinner.classList.toggle('d-none', !loading);
+        if (formResetBtn) formResetBtn.disabled = loading;
     }
 
     function normalizeActivity(raw) {
@@ -191,15 +267,18 @@
                     '</div>' +
                 '</div>' +
                 '<p class="card-text small text-muted flex-grow-1" data-activity-description>' + esc(limitText(activity.description, 90)) + '</p>' +
+                '<div class="small text-muted mb-2">Prix: ' + esc(activity.base_price || '0.00') + ' • Durée: ' + esc(activity.default_duration_minutes || '—') + ' min</div>' +
                 '<button type="button" class="btn btn-sm btn-primary day-builder-add-activity" data-activity-id="' + activity.id + '" data-activity-title="' + esc(activity.title) + '">Ajouter au jour</button>' +
             '</div>' +
-            '<div class="card-body d-none" data-activity-edit>' +
-                '<div class="mb-2"><label class="form-label small">Titre <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" data-edit-title value="' + esc(activity.title) + '"></div>' +
-                '<div class="mb-2"><label class="form-label small">Description</label><input type="text" class="form-control form-control-sm" data-edit-description value="' + esc(activity.description) + '"></div>' +
-                '<div class="small text-danger d-none mb-2" data-edit-error></div>' +
-                '<div class="d-flex justify-content-end gap-2"><button type="button" class="btn btn-sm btn-light" data-action="cancel-edit" data-id="' + activity.id + '">Annuler</button><button type="button" class="btn btn-sm btn-primary" data-action="save-edit" data-id="' + activity.id + '">Enregistrer</button></div>' +
-            '</div>' +
         '</div>';
+    }
+
+    function renderCards() {
+        var html = state.activities.map(function(activity) {
+            return '<div class="col-md-6 col-lg-6" data-activity-card-id="' + activity.id + '">' + cardHtml(activity) + '</div>';
+        }).join('');
+        cardsContainer.innerHTML = html;
+        emptyMsg.classList.toggle('d-none', state.activities.length > 0);
     }
 
     function upsertCard(activity, prepend) {
@@ -275,111 +354,202 @@
         return json;
     }
 
-    async function createActivity() {
-        clearCreateErrors();
-        var title = (titleInp && titleInp.value || '').trim();
-        var description = (descInp && descInp.value || '').trim();
+    function clearFieldErrors() {
+        formView.querySelectorAll('[data-error]').forEach(function(el) {
+            el.classList.add('d-none');
+            el.textContent = '';
+        });
+        [formTitleInput, formSlugInput, formDescriptionInput, formImageInput, formBasePriceInput, formIconInput, formDurationInput, formPlaceInput].forEach(function(input) {
+            if (input) input.classList.remove('is-invalid');
+        });
+    }
 
-        if (!title) {
-            applyCreateErrors({ title: ['Le titre est obligatoire.'] }, 'Le titre est obligatoire.');
-            if (titleInp) titleInp.focus();
-            return;
-        }
+    function applyFieldErrors(errors) {
+        clearFieldErrors();
+        if (!errors) return;
+        Object.keys(errors).forEach(function(field) {
+            var key = field === 'location_text' ? 'place_text' : field;
+            var errEl = formView.querySelector('[data-error="' + key + '"]') || formView.querySelector('[data-error="' + field + '"]');
+            if (errEl) {
+                errEl.textContent = Array.isArray(errors[field]) ? errors[field][0] : String(errors[field]);
+                errEl.classList.remove('d-none');
+            }
+            var map = {
+                title: formTitleInput,
+                slug: formSlugInput,
+                description: formDescriptionInput,
+                image: formImageInput,
+                base_price: formBasePriceInput,
+                icon: formIconInput,
+                default_duration_minutes: formDurationInput,
+                place_text: formPlaceInput,
+                location_text: formPlaceInput,
+            };
+            if (map[field]) map[field].classList.add('is-invalid');
+        });
+    }
 
-        setCreateLoading(true);
+    function showListMode() {
+        state.mode = 'list';
+        formView.classList.add('d-none');
+        listView.classList.remove('d-none');
+        hideFormAlert();
+        clearFieldErrors();
+    }
+
+    function showFormMode(mode) {
+        state.mode = mode;
+        listView.classList.add('d-none');
+        formView.classList.remove('d-none');
+        formTitle.textContent = mode === 'edit' ? 'Modifier une activité' : 'Créer une activité';
+        hideFormAlert();
+        clearFieldErrors();
+    }
+
+    function resetFormValues() {
+        formId.value = '';
+        formTitleInput.value = '';
+        formSlugInput.value = '';
+        formDescriptionInput.value = '';
+        formImageInput.value = '';
+        formBasePriceInput.value = '';
+        formIconInput.value = '';
+        formDurationInput.value = '';
+        formPlaceInput.value = '';
+        formIsActiveInput.checked = true;
+        currentImageWrap.classList.add('d-none');
+        currentImage.src = '';
+        previewImageWrap.classList.add('d-none');
+        previewImage.src = '';
+    }
+
+    async function fetchList(search) {
+        setListLoading(true);
+        hideListAlert();
         try {
-            var formData = new FormData();
-            formData.append('_token', csrfToken);
-            formData.append('title', title);
-            formData.append('description', description);
-
-            var response = await fetch(storeUrl, {
-                method: 'POST',
-                body: formData,
+            var url = urls.list + ((search && search.trim()) ? ('?search=' + encodeURIComponent(search.trim())) : '');
+            var response = await fetch(url, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 credentials: 'same-origin'
             });
-
             var json = await parseJsonResponse(response);
-            var activity = normalizeActivity(json.data || json.activity || {});
-            if (!activity.id) throw new Error('Réponse invalide du serveur.');
-
-            upsertCard(activity, true);
-            upsertCatalogEntry(activity);
-            if (titleInp) titleInp.value = '';
-            if (descInp) descInp.value = '';
-            showToast(json.message || 'Activité créée.', 'success');
+            state.activities = (json.data || []).map(normalizeActivity);
+            renderCards();
         } catch (error) {
-            if (error.status === 422 && error.payload && error.payload.errors) {
-                applyCreateErrors(error.payload.errors, error.payload.message || 'Erreur de validation.');
-            } else {
-                applyCreateErrors(null, error.message || 'Erreur lors de la création.');
-            }
+            showListAlert('danger', error.message || 'Impossible de charger les activités.');
         } finally {
-            setCreateLoading(false);
+            setListLoading(false);
         }
     }
 
-    async function updateActivity(cardCol, activityId) {
-        var editWrap = cardCol.querySelector('[data-activity-edit]');
-        var viewWrap = cardCol.querySelector('[data-activity-view]');
-        if (!editWrap || !viewWrap) return;
-
-        var titleInput = editWrap.querySelector('[data-edit-title]');
-        var descInput = editWrap.querySelector('[data-edit-description]');
-        var errorEl = editWrap.querySelector('[data-edit-error]');
-        var saveBtn = editWrap.querySelector('[data-action="save-edit"]');
-        if (errorEl) { errorEl.classList.add('d-none'); errorEl.textContent = ''; }
-
-        var title = (titleInput && titleInput.value || '').trim();
-        var description = (descInput && descInput.value || '').trim();
-
-        if (!title) {
-            if (errorEl) {
-                errorEl.textContent = 'Le titre est obligatoire.';
-                errorEl.classList.remove('d-none');
-            }
-            if (titleInput) titleInput.focus();
-            return;
-        }
-
-        if (saveBtn) saveBtn.disabled = true;
+    async function fetchActivityForEdit(id) {
+        hideFormAlert();
+        clearFieldErrors();
+        setFormLoading(true);
         try {
-            var formData = new FormData();
-            formData.append('_token', csrfToken);
-            formData.append('_method', 'PATCH');
-            formData.append('title', title);
-            formData.append('description', description);
-
-            var response = await fetch(baseUrl + '/' + activityId, {
-                method: 'POST',
-                body: formData,
+            var response = await fetch(urls.showBase + '/' + id, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 credentials: 'same-origin'
             });
+            var json = await parseJsonResponse(response);
+            var data = normalizeActivity(json.data || {});
 
+            formId.value = String(data.id);
+            formTitleInput.value = data.title || '';
+            formSlugInput.value = data.slug || '';
+            formDescriptionInput.value = data.description || '';
+            formImageInput.value = '';
+            formBasePriceInput.value = data.base_price || '';
+            formIconInput.value = data.icon || '';
+            formDurationInput.value = data.default_duration_minutes || '';
+            formPlaceInput.value = data.location_text || data.place_text || '';
+            formIsActiveInput.checked = Boolean(data.is_active);
+
+            if (data.image_url) {
+                currentImage.src = data.image_url;
+                currentImageWrap.classList.remove('d-none');
+            } else {
+                currentImageWrap.classList.add('d-none');
+                currentImage.src = '';
+            }
+            previewImageWrap.classList.add('d-none');
+            previewImage.src = '';
+
+            showFormMode('edit');
+        } catch (error) {
+            showToast(error.message || 'Impossible de charger l’activité.', 'danger');
+        } finally {
+            setFormLoading(false);
+        }
+    }
+
+    function buildFormData() {
+        var fd = new FormData();
+        fd.append('_token', csrfToken);
+        fd.append('title', (formTitleInput.value || '').trim());
+        fd.append('slug', (formSlugInput.value || '').trim());
+        fd.append('description', formDescriptionInput.value || '');
+        fd.append('base_price', formBasePriceInput.value || '');
+        fd.append('icon', formIconInput.value || '');
+        fd.append('default_duration_minutes', formDurationInput.value || '');
+        fd.append('place_text', formPlaceInput.value || '');
+        fd.append('is_active', formIsActiveInput.checked ? '1' : '0');
+
+        if (formImageInput.files && formImageInput.files[0]) {
+            fd.append('image', formImageInput.files[0]);
+        }
+
+        return fd;
+    }
+
+    async function submitForm() {
+        clearFieldErrors();
+        hideFormAlert();
+
+        var id = formId.value ? Number(formId.value) : null;
+        var isEdit = Boolean(id);
+        var url = isEdit ? (urls.updateBase + '/' + id + '/update') : urls.store;
+
+        setFormLoading(true);
+        try {
+            var response = await fetch(url, {
+                method: 'POST',
+                body: buildFormData(),
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
             var json = await parseJsonResponse(response);
             var activity = normalizeActivity(json.data || {});
-            upsertCard(activity, false);
-            upsertCatalogEntry(activity);
-            showToast(json.message || 'Activité mise à jour.', 'success');
-        } catch (error) {
-            var msg = error.message || 'Impossible de modifier l’activité.';
-            if (error.status === 422 && error.payload && error.payload.errors && error.payload.errors.title) {
-                msg = error.payload.errors.title[0];
+
+            var idx = state.activities.findIndex(function(item) { return item.id === activity.id; });
+            if (idx >= 0) {
+                state.activities[idx] = activity;
+            } else {
+                state.activities.unshift(activity);
             }
-            if (errorEl) {
-                errorEl.textContent = msg;
-                errorEl.classList.remove('d-none');
+            renderCards();
+            upsertCatalogEntry(activity);
+
+            showListMode();
+            showToast(json.message || (isEdit ? 'Activité mise à jour.' : 'Activité créée.'), 'success');
+        } catch (error) {
+            if (error.status === 422 && error.payload && error.payload.errors) {
+                applyFieldErrors(error.payload.errors);
+                showFormAlert('warning', error.payload.message || 'Veuillez corriger les erreurs.');
+            } else {
+                showFormAlert('danger', error.message || 'Échec de l’enregistrement.');
             }
         } finally {
-            if (saveBtn) saveBtn.disabled = false;
+            setFormLoading(false);
         }
     }
 
@@ -387,22 +557,21 @@
         if (!window.confirm('Supprimer cette activité ?')) return;
 
         try {
-            var formData = new FormData();
-            formData.append('_token', csrfToken);
-            formData.append('_method', 'DELETE');
-
-            var response = await fetch(baseUrl + '/' + activityId, {
-                method: 'POST',
-                body: formData,
+            var response = await fetch(urls.destroyBase + '/' + activityId, {
+                method: 'DELETE',
                 headers: {
                     'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
                 credentials: 'same-origin'
             });
 
             var json = await parseJsonResponse(response);
-            removeCard(activityId);
+            state.activities = state.activities.filter(function(item) {
+                return item.id !== Number(activityId);
+            });
+            renderCards();
             removeCatalogEntry(activityId);
             showToast(json.message || 'Activité supprimée.', 'success');
         } catch (error) {
@@ -410,19 +579,62 @@
         }
     }
 
-    if (submitBtn) {
-        submitBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            createActivity();
+    if (openCreateBtn) {
+        openCreateBtn.addEventListener('click', function() {
+            state.editingId = null;
+            resetFormValues();
+            showFormMode('create');
         });
     }
 
-    if (titleInp) {
-        titleInp.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                createActivity();
+    if (backToListBtn) {
+        backToListBtn.addEventListener('click', function() {
+            showListMode();
+        });
+    }
+
+    if (formSubmitBtn) {
+        formSubmitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            submitForm();
+        });
+    }
+
+    if (formResetBtn) {
+        formResetBtn.addEventListener('click', function() {
+            if (state.mode === 'edit' && state.editingId) {
+                fetchActivityForEdit(state.editingId);
+            } else {
+                resetFormValues();
+                clearFieldErrors();
+                hideFormAlert();
             }
+        });
+    }
+
+    if (formImageInput) {
+        formImageInput.addEventListener('change', function() {
+            if (!formImageInput.files || !formImageInput.files[0]) {
+                previewImageWrap.classList.add('d-none');
+                previewImage.src = '';
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImageWrap.classList.remove('d-none');
+            };
+            reader.readAsDataURL(formImageInput.files[0]);
+        });
+    }
+
+    if (searchInput) {
+        var timer = null;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                fetchList(searchInput.value || '');
+            }, 250);
         });
     }
 
@@ -430,35 +642,10 @@
         var editBtn = e.target.closest('[data-action="edit"]');
         if (editBtn) {
             e.preventDefault();
-            var cardCol = editBtn.closest('[data-activity-card-id]');
-            if (!cardCol) return;
-            var viewWrap = cardCol.querySelector('[data-activity-view]');
-            var editWrap = cardCol.querySelector('[data-activity-edit]');
-            if (viewWrap) viewWrap.classList.add('d-none');
-            if (editWrap) editWrap.classList.remove('d-none');
-            return;
-        }
-
-        var cancelBtn = e.target.closest('[data-action="cancel-edit"]');
-        if (cancelBtn) {
-            e.preventDefault();
-            var cancelCard = cancelBtn.closest('[data-activity-card-id]');
-            if (!cancelCard) return;
-            var cancelView = cancelCard.querySelector('[data-activity-view]');
-            var cancelEdit = cancelCard.querySelector('[data-activity-edit]');
-            if (cancelEdit) cancelEdit.classList.add('d-none');
-            if (cancelView) cancelView.classList.remove('d-none');
-            return;
-        }
-
-        var saveBtn = e.target.closest('[data-action="save-edit"]');
-        if (saveBtn) {
-            e.preventDefault();
-            var saveCard = saveBtn.closest('[data-activity-card-id]');
-            if (!saveCard) return;
-            var saveId = saveBtn.getAttribute('data-id');
-            if (!saveId) return;
-            updateActivity(saveCard, saveId);
+            var id = Number(editBtn.getAttribute('data-id'));
+            if (!id) return;
+            state.editingId = id;
+            fetchActivityForEdit(id);
             return;
         }
 
@@ -470,5 +657,7 @@
             deleteActivity(deleteId);
         }
     });
+
+    fetchList('');
 })();
 </script>

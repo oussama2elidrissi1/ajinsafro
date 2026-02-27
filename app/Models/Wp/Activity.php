@@ -19,11 +19,13 @@ class Activity extends Model
         'base_price',
         'default_duration_minutes',
         'location_text',
+        'is_active',
     ];
 
     protected $casts = [
         'default_duration_minutes' => 'integer',
         'base_price' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     public function dayActivities()
