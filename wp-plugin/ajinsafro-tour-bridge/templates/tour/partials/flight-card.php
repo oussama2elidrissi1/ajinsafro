@@ -25,3 +25,4 @@ $show_remove = isset($show_remove) ? (bool) $show_remove : $is_tentative;
 echo aj_render_flight_card($flight, [
     'show_remove' => $show_remove,
 ]);
+
