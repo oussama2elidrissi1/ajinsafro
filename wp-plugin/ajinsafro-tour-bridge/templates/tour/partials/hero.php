@@ -119,9 +119,7 @@ foreach ($gallery as $img) {
                                  alt="<?php echo esc_attr($main['alt']); ?>" 
                                  loading="eager">
                         </a>
-                        <?php if (count($all_gallery) > 5): ?>
-                            <a href="#gallery" class="ajtb-hero-gallery-all-btn"><?php esc_html_e('Voir toutes les photos', 'ajinsafro-tour-bridge'); ?></a>
-                        <?php endif; ?>
+                        <a href="<?php echo count($all_gallery) > 5 ? '#gallery' : esc_url($main['url']); ?>" class="ajtb-hero-gallery-all-btn"><?php esc_html_e('Voir la galerie', 'ajinsafro-tour-bridge'); ?></a>
                     </div>
                     <div class="ajtb-hero-gallery-secondary">
                         <?php
@@ -166,9 +164,7 @@ foreach ($gallery as $img) {
                                  alt="<?php echo esc_attr($main['alt']); ?>" 
                                  loading="eager">
                         </a>
-                        <?php if (count($all_gallery) > 3): ?>
-                            <a href="#gallery" class="ajtb-hero-gallery-all-btn"><?php esc_html_e('Voir toutes les photos', 'ajinsafro-tour-bridge'); ?></a>
-                        <?php endif; ?>
+                        <a href="<?php echo count($all_gallery) > 3 ? '#gallery' : esc_url($main['url']); ?>" class="ajtb-hero-gallery-all-btn"><?php esc_html_e('Voir la galerie', 'ajinsafro-tour-bridge'); ?></a>
                     </div>
                     <div class="ajtb-hero-gallery-secondary ajtb-hero-gallery-secondary--tablet">
                         <?php foreach ($secondary_tablet as $i => $img): ?>

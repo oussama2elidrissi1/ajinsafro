@@ -579,7 +579,7 @@
     opacity: 0.6;
 }
 
-/* 2) Gallery wrap – images fill frame, no empty space */
+/* 2) Gallery wrap – style type MakeMyTrip: coins arrondis, espacement, overlays */
 .ajtb-hero-gallery-wrap {
     width: 100%;
 }
@@ -588,13 +588,13 @@
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
     grid-template-rows: 1fr 1fr;
-    gap: 0;
+    gap: 10px;
     height: 400px;
     min-height: 400px;
     max-height: 50vh;
     aspect-ratio: 16 / 9;
-    overflow: hidden;
-    border-radius: 12px;
+    overflow: visible;
+    border-radius: 0;
     width: 100%;
     align-items: stretch;
     justify-items: stretch;
@@ -603,13 +603,14 @@
 .ajtb-hero-gallery-main {
     grid-row: 1 / -1;
     grid-column: 1;
-    border-radius: 12px 0 0 12px;
+    border-radius: 10px;
     overflow: hidden;
     position: relative;
     min-height: 0;
     min-width: 0;
     max-width: 100%;
     align-self: stretch;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .ajtb-hero-gallery-main .ajtb-hero-gallery-item {
@@ -633,7 +634,6 @@
     transition: transform 0.35s ease;
     display: block;
     vertical-align: top;
-    /* Empêcher l'étirement */
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
     image-rendering: high-quality;
@@ -649,9 +649,9 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 0;
-    border-radius: 0 12px 12px 0;
-    overflow: hidden;
+    gap: 10px;
+    border-radius: 0;
+    overflow: visible;
     min-height: 0;
     min-width: 0;
     max-width: 100%;
@@ -670,6 +670,8 @@
     overflow: hidden;
     line-height: 0;
     font-size: 0;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .ajtb-hero-gallery-secondary .ajtb-hero-gallery-item img {
@@ -686,7 +688,6 @@
     object-position: center;
     transition: transform 0.35s ease;
     display: block;
-    /* Empêcher l'étirement */
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
     image-rendering: high-quality;
@@ -696,7 +697,7 @@
     transform: scale(1.06);
 }
 
-/* Placeholder cell – remplit la cellule sans vide */
+/* Placeholder cell – coins arrondis, pas de bordure */
 .ajtb-hero-gallery-secondary .ajtb-hero-gallery-fill {
     display: block;
     width: 100%;
@@ -706,6 +707,7 @@
     background: var(--ajtb-bg-gray, #e9ecef);
     align-self: stretch;
     justify-self: stretch;
+    border-radius: 10px;
 }
 
 .ajtb-hero-gallery-item {
@@ -728,6 +730,8 @@
     min-height: 0;
     width: 100%;
     height: 100%;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .ajtb-hero-gallery-more:hover {
@@ -746,6 +750,7 @@
     padding: 0 12px;
 }
 
+/* Bouton type "VIEW GALLERY" : fond sombre semi-transparent, coins arrondis, bas gauche */
 .ajtb-hero-gallery-all-btn {
     position: absolute;
     bottom: 16px;
@@ -755,18 +760,26 @@
     align-items: center;
     gap: 8px;
     padding: 10px 18px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.65);
     color: #fff;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
     transition: background 0.2s ease, color 0.2s ease;
+    border: none;
+    box-shadow: none;
 }
 
 .ajtb-hero-gallery-all-btn:hover {
-    background: var(--ajtb-primary, #008cff);
+    background: rgba(0, 0, 0, 0.85);
     color: #fff;
+}
+
+.ajtb-hero-gallery-all-btn::after {
+    content: "→";
+    margin-left: 4px;
+    font-weight: 600;
 }
 
 .ajtb-hero-gallery-placeholder {
@@ -779,7 +792,8 @@
     background: linear-gradient(145deg, #e9ecef 0%, #dee2e6 100%);
     color: var(--ajtb-text-muted, #757575);
     font-size: 15px;
-    border-radius: 12px;
+    border-radius: 10px;
+    box-shadow: none;
 }
 
 .ajtb-hero-gallery-placeholder-icon {
@@ -791,14 +805,14 @@
     display: none;
 }
 
-/* Tablet layout: 1 main + 2 secondary (2 rows), pas de vide */
+/* Tablet layout: 1 main + 2 secondary (2 rows), même style coins arrondis + gap */
 .ajtb-hero-gallery-secondary--tablet {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 0;
-    border-radius: 0 12px 12px 0;
-    overflow: hidden;
+    gap: 10px;
+    border-radius: 0;
+    overflow: visible;
     min-height: 0;
     align-items: stretch;
 }
@@ -806,6 +820,9 @@
 .ajtb-hero-gallery-secondary--tablet .ajtb-hero-gallery-item {
     min-height: 0;
     position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .ajtb-hero-gallery-secondary--tablet .ajtb-hero-gallery-item img {
@@ -913,7 +930,7 @@
     transform: scale(1.2);
 }
 
-/* Tablet: show 1+2 layout, hide desktop 1+4, pas de chevauchement */
+/* Tablet: show 1+2 layout, même style coins arrondis + gap */
 @media (min-width: 768px) and (max-width: 991px) {
     .ajtb-hero-gallery-grid {
         display: none;
@@ -923,29 +940,30 @@
         display: grid;
         grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
         grid-template-rows: 1fr;
-        gap: 0;
+        gap: 10px;
         height: 340px;
         min-height: 340px;
         max-height: 45vh;
         aspect-ratio: 16 / 9;
-        overflow: hidden;
-        border-radius: 12px;
+        overflow: visible;
+        border-radius: 0;
         width: 100%;
     }
 
     .ajtb-hero-gallery-tablet .ajtb-hero-gallery-main {
         grid-column: 1;
-        border-radius: 12px 0 0 12px;
+        border-radius: 10px;
         min-width: 0;
         overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     }
 
     .ajtb-hero-gallery-tablet .ajtb-hero-gallery-secondary--tablet {
         grid-column: 2;
-        border-radius: 0 12px 12px 0;
+        border-radius: 0;
         min-width: 0;
         height: 100%;
-        overflow: hidden;
+        overflow: visible;
     }
 }
 
