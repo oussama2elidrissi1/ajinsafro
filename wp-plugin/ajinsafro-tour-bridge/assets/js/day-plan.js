@@ -62,7 +62,8 @@
         applyFilterToPanel(dayNum);
     }
     
-    function setGlobalMode(tab) {
+    function setGlobalMode(tab, opts) {
+        opts = opts || {};
         currentMode = 'global';
         globalActiveTab = tab || 'programme';
         // Day Details bar stays visible, just update global bar pills
@@ -71,7 +72,7 @@
             $globalBar.find('.ajtb-global-pill').removeClass('active');
             $globalBar.find('[data-ajtb-global-tab="' + globalActiveTab + '"]').addClass('active');
         }
-        applyGlobalFilter(globalActiveTab);
+        applyGlobalFilter(globalActiveTab, opts);
     }
 
     function scrollToDay(dayNum) {
@@ -204,7 +205,8 @@
         });
     }
     
-    function applyGlobalFilter(tab) {
+    function applyGlobalFilter(tab, opts) {
+        opts = opts || {};
         // Show all days, filter by tab type across all days
         var panels = document.querySelectorAll('#itinerary .ajtb-day-content-panel');
         panels.forEach(function(panel) {
@@ -225,10 +227,12 @@
             });
         });
         
-        // Scroll to first visible content
-        var firstVisible = document.querySelector('#itinerary .ajtb-day-content-panel:not([style*="display: none"])');
-        if (firstVisible) {
-            firstVisible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Scroll to first visible content only when user changes tab (not on initial page load)
+        if (opts.scroll !== false) {
+            var firstVisible = document.querySelector('#itinerary .ajtb-day-content-panel:not([style*="display: none"])');
+            if (firstVisible) {
+                firstVisible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
     }
 
@@ -563,8 +567,8 @@
             setDayDetailsBarHeight();
         }, 500);
         
-        // Initialize: start in global mode
-        setGlobalMode('programme');
+        // Initialize: start in global mode (sans scroll pour garder la page en haut)
+        setGlobalMode('programme', { scroll: false });
         
         // Initialize active day in sidebar nav and Day Details bar
         if (activeDay) {
