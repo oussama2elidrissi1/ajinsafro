@@ -104,6 +104,15 @@ foreach ($gallery as $img) {
 
         <!-- 2) Image gallery -->
         <?php if ($has_gallery): ?>
+            <style type="text/css">
+                /* Style galerie hero (inline pour priorité sur cache/thème) */
+                .ajtb-hero-gallery-wrap .ajtb-hero-gallery-grid { gap: 10px !important; overflow: visible !important; border-radius: 0 !important; }
+                .ajtb-hero-gallery-wrap .ajtb-hero-gallery-main { border-radius: 10px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important; }
+                .ajtb-hero-gallery-wrap .ajtb-hero-gallery-secondary { gap: 10px !important; overflow: visible !important; border-radius: 0 !important; }
+                .ajtb-hero-gallery-wrap .ajtb-hero-gallery-secondary .ajtb-hero-gallery-item { border-radius: 10px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important; }
+                .ajtb-hero-gallery-wrap .ajtb-hero-gallery-secondary .ajtb-hero-gallery-fill { border-radius: 10px !important; }
+                .ajtb-hero-gallery-wrap .ajtb-hero-gallery-more { border-radius: 10px !important; }
+            </style>
             <div class="ajtb-hero-gallery-wrap">
                 <!-- Desktop: 1 main + 4 secondary -->
                 <div class="ajtb-hero-gallery-grid" role="region" aria-label="<?php esc_attr_e('Galerie du voyage', 'ajinsafro-tour-bridge'); ?>">
