@@ -408,23 +408,44 @@ class HomePageSettingsController extends Controller
 
         Setting::setValue('wp_header', $json);
 
+        $wpWriteOk = false;
         try {
             $this->wpOptionsTable();
+
             DB::connection('wp')
                 ->table('options')
                 ->updateOrInsert(
                     ['option_name' => 'aj_header_settings'],
                     ['option_value' => $json, 'autoload' => 'no']
                 );
+
+            DB::connection('wp')
+                ->table('options')
+                ->updateOrInsert(
+                    ['option_name' => 'aj_header_settings_ts'],
+                    ['option_value' => (string) time(), 'autoload' => 'no']
+                );
+
+            $wpWriteOk = true;
+
+            Log::info('Header settings written to wp_options', [
+                'json_length' => strlen($json),
+                'timestamp'   => time(),
+            ]);
         } catch (Throwable $e) {
-            Log::warning('Could not mirror header settings to wp_options', [
+            Log::error('Could not mirror header settings to wp_options', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
 
+        $msg = $wpWriteOk
+            ? 'Header settings enregistrés et synchronisés avec WordPress.'
+            : 'Header settings enregistrés localement, mais la synchronisation WordPress a échoué. Vérifiez la connexion WP DB.';
+
         return redirect()
             ->route('admin.settings.home-page.edit', ['tab' => 'header'])
-            ->with('success', 'Header settings enregistrés.');
+            ->with($wpWriteOk ? 'success' : 'error', $msg);
     }
 
     private function readHeaderSettings(): array

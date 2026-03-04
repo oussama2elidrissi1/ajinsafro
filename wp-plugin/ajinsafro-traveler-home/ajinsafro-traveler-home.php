@@ -97,13 +97,25 @@ add_shortcode( 'ajth_homepage', 'ajth_homepage_shortcode' );
  *
  * Reads from wp_options key 'aj_header_settings'
  * (mirrored from Laravel settings table, key='wp_header').
- * Cached via transient for 5 minutes.
+ *
+ * Cache is invalidated automatically when Laravel
+ * updates aj_header_settings_ts in wp_options.
+ * Admin can also force-flush with ?ajth_flush=1.
  * ────────────────────────────────────────────── */
 function ajth_get_header_settings() {
-    $cache_key = 'ajth_header_settings_v1';
-    $cached = get_transient( $cache_key );
+    $cache_key    = 'ajth_header_settings_v2';
+    $cache_ts_key = 'ajth_header_settings_ts';
 
-    if ( is_array( $cached ) ) {
+    if ( isset( $_GET['ajth_flush'] ) && $_GET['ajth_flush'] === '1' && current_user_can( 'manage_options' ) ) {
+        delete_transient( $cache_key );
+        delete_transient( $cache_ts_key );
+    }
+
+    $db_ts     = get_option( 'aj_header_settings_ts', '0' );
+    $cached_ts = get_transient( $cache_ts_key );
+    $cached    = get_transient( $cache_key );
+
+    if ( is_array( $cached ) && $cached_ts === $db_ts ) {
         return $cached;
     }
 
@@ -134,12 +146,14 @@ function ajth_get_header_settings() {
         $decoded = json_decode( $raw, true );
         if ( is_array( $decoded ) ) {
             $settings = array_replace_recursive( $defaults, $decoded );
-            set_transient( $cache_key, $settings, 5 * MINUTE_IN_SECONDS );
+            set_transient( $cache_key, $settings, 10 * MINUTE_IN_SECONDS );
+            set_transient( $cache_ts_key, $db_ts, 10 * MINUTE_IN_SECONDS );
             return $settings;
         }
     }
 
-    set_transient( $cache_key, $defaults, 5 * MINUTE_IN_SECONDS );
+    set_transient( $cache_key, $defaults, 2 * MINUTE_IN_SECONDS );
+    set_transient( $cache_ts_key, $db_ts, 2 * MINUTE_IN_SECONDS );
     return $defaults;
 }
 
