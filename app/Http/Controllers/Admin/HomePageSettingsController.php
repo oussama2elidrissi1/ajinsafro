@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +19,13 @@ class HomePageSettingsController extends Controller
     public function edit()
     {
         $settings = $this->readHomeSettings();
+        $header   = $this->readHeaderSettings();
+        $tab      = request()->query('tab', 'header');
 
         return view('admin.settings.home-page.index', [
             'settings' => $settings,
+            'header'   => $header,
+            'tab'      => $tab,
         ]);
     }
 
@@ -269,7 +274,7 @@ class HomePageSettingsController extends Controller
             ]);
 
             return redirect()
-                ->back()
+                ->route('admin.settings.home-page.edit', ['tab' => 'content'])
                 ->with('success', 'Home page settings enregistrés. Rafraîchissez la home WordPress pour voir les changements.');
         } catch (ValidationException $e) {
             throw $e;
@@ -281,10 +286,159 @@ class HomePageSettingsController extends Controller
             ]);
 
             return redirect()
-                ->back()
+                ->route('admin.settings.home-page.edit', ['tab' => 'content'])
                 ->withInput()
                 ->with('error', "Échec de l'enregistrement. Si l’upload mp4 échoue, augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.");
         }
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     * Header settings – stored in Laravel `settings` table (key=wp_header)
+     * AND mirrored to wp_options (key=aj_header_settings) for WP access.
+     * Header settings managed from Laravel admin /admin/settings/home-page
+     * ────────────────────────────────────────────────────────────────── */
+
+    private const HEADER_DEFAULTS = [
+        'enabled'          => true,
+        'topbar_enabled'   => true,
+        'phone'            => '(000) 999 - 656 - 888',
+        'email'            => 'contact@ajinsafro.ma',
+        'socials'          => [
+            'facebook'  => '',
+            'twitter'   => '',
+            'instagram' => '',
+            'youtube'   => '',
+        ],
+        'navbar_enabled'   => true,
+        'logo_url'         => '',
+        'show_auth_links'  => true,
+        'login_url'        => '/login',
+        'signup_url'       => '/register',
+        'menu_source'      => 'wp_menu',
+        'wp_menu_location' => 'primary',
+        'links'            => [],
+    ];
+
+    public function updateHeader(Request $request)
+    {
+        $validated = $request->validate([
+            'header.enabled'            => ['nullable'],
+            'header.topbar_enabled'     => ['nullable'],
+            'header.phone'              => ['nullable', 'string', 'max:60'],
+            'header.email'              => ['nullable', 'email', 'max:120'],
+            'header.socials.facebook'   => ['nullable', 'url', 'max:500'],
+            'header.socials.twitter'    => ['nullable', 'url', 'max:500'],
+            'header.socials.instagram'  => ['nullable', 'url', 'max:500'],
+            'header.socials.youtube'    => ['nullable', 'url', 'max:500'],
+            'header.navbar_enabled'     => ['nullable'],
+            'header.logo_url'           => ['nullable', 'string', 'max:2048'],
+            'header.logo_file'          => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:5120'],
+            'header.show_auth_links'    => ['nullable'],
+            'header.login_url'          => ['nullable', 'string', 'max:500'],
+            'header.signup_url'         => ['nullable', 'string', 'max:500'],
+            'header.menu_source'        => ['required', Rule::in(['wp_menu', 'laravel_links'])],
+            'header.wp_menu_location'   => ['nullable', 'string', 'max:80'],
+            'header.links'              => ['nullable', 'array'],
+            'header.links.*.label'      => ['nullable', 'string', 'max:120'],
+            'header.links.*.url'        => ['nullable', 'string', 'max:500'],
+            'header.links.*.children'   => ['nullable', 'array'],
+            'header.links.*.children.*.label' => ['nullable', 'string', 'max:120'],
+            'header.links.*.children.*.url'   => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $h = $validated['header'] ?? [];
+
+        $logoUrl = trim((string) ($h['logo_url'] ?? ''));
+        if ($request->hasFile('header.logo_file')) {
+            $path = $request->file('header.logo_file')->store('home-settings/header', 'public');
+            $logoUrl = Storage::disk('public')->url($path);
+        }
+
+        $links = [];
+        foreach (($h['links'] ?? []) as $link) {
+            $label = trim((string) ($link['label'] ?? ''));
+            $url   = trim((string) ($link['url'] ?? ''));
+            if ($label === '' && $url === '') {
+                continue;
+            }
+            $children = [];
+            $childrenRaw = $link['children'] ?? [];
+            if (!is_array($childrenRaw)) {
+                $childrenRaw = [];
+            }
+            $childrenJson = trim((string) ($link['children_json'] ?? ''));
+            if ($childrenJson !== '') {
+                $parsed = json_decode($childrenJson, true);
+                if (is_array($parsed)) {
+                    $childrenRaw = array_merge($childrenRaw, $parsed);
+                }
+            }
+            foreach ($childrenRaw as $child) {
+                $cl = trim((string) ($child['label'] ?? ''));
+                $cu = trim((string) ($child['url'] ?? ''));
+                if ($cl !== '' || $cu !== '') {
+                    $children[] = ['label' => $cl, 'url' => $cu];
+                }
+            }
+            $links[] = ['label' => $label, 'url' => $url, 'children' => $children];
+        }
+
+        $payload = [
+            'enabled'          => $request->boolean('header.enabled'),
+            'topbar_enabled'   => $request->boolean('header.topbar_enabled'),
+            'phone'            => trim((string) ($h['phone'] ?? '')),
+            'email'            => trim((string) ($h['email'] ?? '')),
+            'socials'          => [
+                'facebook'  => trim((string) ($h['socials']['facebook'] ?? '')),
+                'twitter'   => trim((string) ($h['socials']['twitter'] ?? '')),
+                'instagram' => trim((string) ($h['socials']['instagram'] ?? '')),
+                'youtube'   => trim((string) ($h['socials']['youtube'] ?? '')),
+            ],
+            'navbar_enabled'   => $request->boolean('header.navbar_enabled'),
+            'logo_url'         => $logoUrl,
+            'show_auth_links'  => $request->boolean('header.show_auth_links'),
+            'login_url'        => trim((string) ($h['login_url'] ?? '/login')),
+            'signup_url'       => trim((string) ($h['signup_url'] ?? '/register')),
+            'menu_source'      => $h['menu_source'] ?? 'wp_menu',
+            'wp_menu_location' => trim((string) ($h['wp_menu_location'] ?? 'primary')),
+            'links'            => $links,
+        ];
+
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        Setting::setValue('wp_header', $json);
+
+        try {
+            $this->wpOptionsTable();
+            DB::connection('wp')
+                ->table('options')
+                ->updateOrInsert(
+                    ['option_name' => 'aj_header_settings'],
+                    ['option_value' => $json, 'autoload' => 'no']
+                );
+        } catch (Throwable $e) {
+            Log::warning('Could not mirror header settings to wp_options', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.settings.home-page.edit', ['tab' => 'header'])
+            ->with('success', 'Header settings enregistrés.');
+    }
+
+    private function readHeaderSettings(): array
+    {
+        $raw = Setting::getValue('wp_header');
+
+        if (is_string($raw) && $raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                return array_replace_recursive(self::HEADER_DEFAULTS, $decoded);
+            }
+        }
+
+        return self::HEADER_DEFAULTS;
     }
 
     private function readHomeSettings(): array

@@ -1,9 +1,25 @@
 /**
  * Ajinsafro Traveler Home — home.js
- * Tab switching + horizontal slider prev/next
+ * Mobile menu + Tab switching + horizontal slider prev/next
  */
 (function(){
     'use strict';
+
+    /* ── Mobile burger menu ───────────────────────────────────── */
+    var burger = document.getElementById('aj-burger');
+    var navMenu = document.getElementById('aj-nav-menu');
+    if (burger && navMenu) {
+        burger.addEventListener('click', function () {
+            var open = navMenu.classList.toggle('aj-menu-open');
+            burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        document.addEventListener('click', function (e) {
+            if (!burger.contains(e.target) && !navMenu.contains(e.target)) {
+                navMenu.classList.remove('aj-menu-open');
+                burger.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
 
     /* ── Tabs ──────────────────────────────────────────────────── */
     var tabs = document.querySelectorAll('.aj-tab');

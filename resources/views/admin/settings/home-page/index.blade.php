@@ -1,7 +1,5 @@
 @extends('layouts.master-ajinsafro')
-@section('title')
-    Home page
-@endsection
+@section('title') Home page @endsection
 
 @section('content')
     <div class="row">
@@ -22,177 +20,325 @@
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    <form action="{{ route('admin.settings.home-page.update') }}" method="POST" enctype="multipart/form-data" id="home-page-settings-form">
-        @csrf
+    {{-- ═══════ TABS ═══════ --}}
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link {{ ($tab ?? 'header') === 'header' ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-header" role="tab">Header</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ ($tab ?? 'header') === 'content' ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-content" role="tab">Contenu</a>
+        </li>
+    </ul>
 
-        <div class="card">
-            <div class="card-header"><h5 class="card-title mb-0">Hero</h5></div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Type</label>
-                        <select class="form-select" name="hero[type]" id="hero_type" required>
-                            <option value="image" {{ old('hero.type', data_get($settings, 'hero.type')) === 'image' ? 'selected' : '' }}>Image</option>
-                            <option value="video" {{ old('hero.type', data_get($settings, 'hero.type')) === 'video' ? 'selected' : '' }}>Vidéo</option>
-                        </select>
-                    </div>
-                    <div class="col-md-8">
-                        <label class="form-label">Titre</label>
-                        <input type="text" class="form-control" name="hero[title]" value="{{ old('hero.title', data_get($settings, 'hero.title')) }}" required>
-                    </div>
+    <div class="tab-content">
 
-                    <div class="col-12">
-                        <label class="form-label">Sous-titre</label>
-                        <input type="text" class="form-control" name="hero[subtitle]" value="{{ old('hero.subtitle', data_get($settings, 'hero.subtitle')) }}">
-                    </div>
+    {{-- ═══════════════════════════════════════════
+         TAB 1 — HEADER (topbar + navbar)
+         ═══════════════════════════════════════════ --}}
+    <div class="tab-pane fade {{ ($tab ?? 'header') === 'header' ? 'show active' : '' }}" id="tab-header" role="tabpanel">
+        <form action="{{ route('admin.settings.home-page.update-header') }}" method="POST" enctype="multipart/form-data">
+            @csrf
 
-                    <div class="col-md-6" id="hero_image_url_wrap">
-                        <label class="form-label">Image URL</label>
-                        <input type="url" class="form-control" name="hero[image_url]" value="{{ old('hero.image_url', data_get($settings, 'hero.image_url')) }}" placeholder="https://...">
-                    </div>
-                    <div class="col-md-6" id="hero_image_file_wrap">
-                        <label class="form-label">Upload image</label>
-                        <input type="file" class="form-control" name="hero[image_file]" accept="image/*">
-                    </div>
-
-                    <div class="col-md-6" id="hero_video_url_wrap">
-                        <label class="form-label">Vidéo URL (YouTube/Vimeo/mp4)</label>
-                        <input type="url" class="form-control" name="hero[video_url]" value="{{ old('hero.video_url', data_get($settings, 'hero.video_url')) }}" placeholder="https://...">
-                    </div>
-                    <div class="col-md-6" id="hero_video_file_wrap">
-                        <label class="form-label">Upload mp4</label>
-                        <input type="file" class="form-control" name="hero_video_file" accept="video/mp4">
-                        <small class="text-muted d-block mt-1">Max 50MB (MP4/M4V/MOV). Si l’upload mp4 échoue, augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.</small>
-                        @error('hero_video_file')
-                            <small class="text-danger d-block mt-1">{{ $message }}</small>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">CTA texte</label>
-                        <input type="text" class="form-control" name="hero[cta_text]" value="{{ old('hero.cta_text', data_get($settings, 'hero.cta_text')) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">CTA URL</label>
-                        <input type="url" class="form-control" name="hero[cta_url]" value="{{ old('hero.cta_url', data_get($settings, 'hero.cta_url')) }}" placeholder="https://...">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Overlay</label>
-                        <input type="range" class="form-range" min="0" max="1" step="0.01" name="hero[overlay]" id="hero_overlay" value="{{ old('hero.overlay', data_get($settings, 'hero.overlay', 0.35)) }}">
-                        <small class="text-muted">Valeur: <span id="hero_overlay_value">{{ old('hero.overlay', data_get($settings, 'hero.overlay', 0.35)) }}</span></small>
+            {{-- Global enabled --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Header global</h5></div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="header[enabled]" value="1" id="hdr_enabled"
+                               {{ old('header.enabled', data_get($header, 'enabled')) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="hdr_enabled">Activer le header personnalisé</label>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header"><h5 class="card-title mb-0">Sections</h5></div>
-            <div class="card-body row g-3">
-                <div class="col-md-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="sections[search]" value="1" {{ old('sections.search', data_get($settings, 'sections.search')) ? 'checked' : '' }}>
-                        <label class="form-check-label">Search</label>
+            {{-- Topbar --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Topbar</h5></div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="header[topbar_enabled]" value="1" id="hdr_topbar"
+                               {{ old('header.topbar_enabled', data_get($header, 'topbar_enabled')) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="hdr_topbar">Afficher la topbar</label>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="sections[last_minute]" value="1" {{ old('sections.last_minute', data_get($settings, 'sections.last_minute')) ? 'checked' : '' }}>
-                        <label class="form-check-label">Offres dernière minute</label>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Téléphone</label>
+                            <input type="text" class="form-control" name="header[phone]"
+                                   value="{{ old('header.phone', data_get($header, 'phone')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="header[email]"
+                                   value="{{ old('header.email', data_get($header, 'email')) }}">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="sections[regions]" value="1" {{ old('sections.regions', data_get($settings, 'sections.regions')) ? 'checked' : '' }}>
-                        <label class="form-check-label">Destinations</label>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="sections[good_spots]" value="1" {{ old('sections.good_spots', data_get($settings, 'sections.good_spots')) ? 'checked' : '' }}>
-                        <label class="form-check-label">Bons coins</label>
+                    <h6 class="mt-3 mb-2">Réseaux sociaux</h6>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Facebook</label>
+                            <input type="url" class="form-control" name="header[socials][facebook]"
+                                   value="{{ old('header.socials.facebook', data_get($header, 'socials.facebook')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Twitter / X</label>
+                            <input type="url" class="form-control" name="header[socials][twitter]"
+                                   value="{{ old('header.socials.twitter', data_get($header, 'socials.twitter')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Instagram</label>
+                            <input type="url" class="form-control" name="header[socials][instagram]"
+                                   value="{{ old('header.socials.instagram', data_get($header, 'socials.instagram')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">YouTube</label>
+                            <input type="url" class="form-control" name="header[socials][youtube]"
+                                   value="{{ old('header.socials.youtube', data_get($header, 'socials.youtube')) }}" placeholder="https://...">
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header"><h5 class="card-title mb-0">Search</h5></div>
-            <div class="card-body">
-                <label class="form-label">Shortcode</label>
-                <input type="text" class="form-control" name="search[shortcode]" value="{{ old('search.shortcode', data_get($settings, 'search.shortcode', '[traveler_search]')) }}" placeholder="[traveler_search]">
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header"><h5 class="card-title mb-0">Offres dernière minute</h5></div>
-            <div class="card-body row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Titre</label>
-                    <input type="text" class="form-control" name="last_minute[title]" value="{{ old('last_minute.title', data_get($settings, 'last_minute.title')) }}" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Nombre d’items</label>
-                    <input type="number" class="form-control" min="1" max="20" name="last_minute[count]" value="{{ old('last_minute.count', data_get($settings, 'last_minute.count', 6)) }}" required>
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" name="last_minute[featured_only]" value="1" {{ old('last_minute.featured_only', data_get($settings, 'last_minute.featured_only')) ? 'checked' : '' }}>
-                        <label class="form-check-label">Featured only</label>
+            {{-- Navbar --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Navbar</h5></div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="header[navbar_enabled]" value="1" id="hdr_navbar"
+                               {{ old('header.navbar_enabled', data_get($header, 'navbar_enabled')) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="hdr_navbar">Afficher la navbar</label>
                     </div>
-                </div>
-            </div>
-        </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Logo URL</label>
+                            <input type="url" class="form-control" name="header[logo_url]"
+                                   value="{{ old('header.logo_url', data_get($header, 'logo_url')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Upload logo</label>
+                            <input type="file" class="form-control" name="header[logo_file]" accept="image/*">
+                        </div>
+                        @if(data_get($header, 'logo_url'))
+                            <div class="col-12">
+                                <img src="{{ data_get($header, 'logo_url') }}" alt="Logo" style="max-height:50px">
+                            </div>
+                        @endif
+                    </div>
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Destinations par région</h5>
-                <button type="button" class="btn btn-sm btn-outline-primary" id="add-region">Ajouter</button>
-            </div>
-            <div class="card-body">
-                <div id="regions-container" class="vstack gap-3">
-                    @foreach(old('regions', data_get($settings, 'regions', [])) as $idx => $region)
-                        <div class="border rounded p-3 region-row" data-index="{{ $idx }}">
-                            <div class="row g-2">
-                                <div class="col-md-4"><input class="form-control" name="regions[{{ $idx }}][title]" value="{{ data_get($region, 'title') }}" placeholder="Titre"></div>
-                                <div class="col-md-4"><input class="form-control" name="regions[{{ $idx }}][image_url]" value="{{ data_get($region, 'image_url') }}" placeholder="Image URL"></div>
-                                <div class="col-md-3"><input class="form-control" name="regions[{{ $idx }}][link_url]" value="{{ data_get($region, 'link_url') }}" placeholder="Link URL"></div>
-                                <div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-region">×</button></div>
-                                <div class="col-12"><input type="file" class="form-control" name="regions_files[{{ $idx }}]" accept="image/*"></div>
+                    <hr>
+                    <h6>Authentification</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="header[show_auth_links]" value="1" id="hdr_auth"
+                                       {{ old('header.show_auth_links', data_get($header, 'show_auth_links')) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="hdr_auth">Afficher Login / Sign Up</label>
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Login URL</label>
+                            <input type="text" class="form-control" name="header[login_url]"
+                                   value="{{ old('header.login_url', data_get($header, 'login_url', '/login')) }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Sign Up URL</label>
+                            <input type="text" class="form-control" name="header[signup_url]"
+                                   value="{{ old('header.signup_url', data_get($header, 'signup_url', '/register')) }}">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6>Menu</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Source du menu</label>
+                            <select class="form-select" name="header[menu_source]" id="hdr_menu_source">
+                                <option value="wp_menu" {{ old('header.menu_source', data_get($header, 'menu_source')) === 'wp_menu' ? 'selected' : '' }}>Menu WordPress</option>
+                                <option value="laravel_links" {{ old('header.menu_source', data_get($header, 'menu_source')) === 'laravel_links' ? 'selected' : '' }}>Liens manuels</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" id="hdr_wp_menu_wrap">
+                            <label class="form-label">Emplacement WP</label>
+                            <input type="text" class="form-control" name="header[wp_menu_location]"
+                                   value="{{ old('header.wp_menu_location', data_get($header, 'wp_menu_location', 'primary')) }}" placeholder="primary">
+                        </div>
+                    </div>
+
+                    {{-- Manual links repeater --}}
+                    <div id="hdr_links_wrap" class="mt-3" style="display:none">
+                        <label class="form-label fw-bold">Liens du menu</label>
+                        <div id="hdr-links-container" class="vstack gap-2">
+                            @foreach(old('header.links', data_get($header, 'links', [])) as $li => $link)
+                                <div class="border rounded p-2 hdr-link-row" data-index="{{ $li }}">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-3"><input class="form-control form-control-sm" name="header[links][{{ $li }}][label]" value="{{ data_get($link, 'label') }}" placeholder="Label"></div>
+                                        <div class="col-md-4"><input class="form-control form-control-sm" name="header[links][{{ $li }}][url]" value="{{ data_get($link, 'url') }}" placeholder="URL"></div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Children JSON (optionnel)</small>
+                                            <textarea class="form-control form-control-sm" name="header[links][{{ $li }}][children_json]" rows="1" placeholder='[{"label":"Sub","url":"/sub"}]'>{{ json_encode(data_get($link, 'children', []), JSON_UNESCAPED_UNICODE) !== '[]' ? json_encode(data_get($link, 'children', []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '' }}</textarea>
+                                        </div>
+                                        <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="hdr-add-link">+ Ajouter un lien</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mb-4">Enregistrer le Header</button>
+        </form>
+    </div>
+
+    {{-- ═══════════════════════════════════════════
+         TAB 2 — CONTENU (hero, sections, regions…)
+         ═══════════════════════════════════════════ --}}
+    <div class="tab-pane fade {{ ($tab ?? 'header') === 'content' ? 'show active' : '' }}" id="tab-content" role="tabpanel">
+        <form action="{{ route('admin.settings.home-page.update') }}" method="POST" enctype="multipart/form-data" id="home-page-settings-form">
+            @csrf
+
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Hero</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" name="hero[type]" id="hero_type" required>
+                                <option value="image" {{ old('hero.type', data_get($settings, 'hero.type')) === 'image' ? 'selected' : '' }}>Image</option>
+                                <option value="video" {{ old('hero.type', data_get($settings, 'hero.type')) === 'video' ? 'selected' : '' }}>Vidéo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Titre</label>
+                            <input type="text" class="form-control" name="hero[title]" value="{{ old('hero.title', data_get($settings, 'hero.title')) }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Sous-titre</label>
+                            <input type="text" class="form-control" name="hero[subtitle]" value="{{ old('hero.subtitle', data_get($settings, 'hero.subtitle')) }}">
+                        </div>
+                        <div class="col-md-6" id="hero_image_url_wrap">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-control" name="hero[image_url]" value="{{ old('hero.image_url', data_get($settings, 'hero.image_url')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6" id="hero_image_file_wrap">
+                            <label class="form-label">Upload image</label>
+                            <input type="file" class="form-control" name="hero[image_file]" accept="image/*">
+                        </div>
+                        <div class="col-md-6" id="hero_video_url_wrap">
+                            <label class="form-label">Vidéo URL (YouTube/Vimeo/mp4)</label>
+                            <input type="url" class="form-control" name="hero[video_url]" value="{{ old('hero.video_url', data_get($settings, 'hero.video_url')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6" id="hero_video_file_wrap">
+                            <label class="form-label">Upload mp4</label>
+                            <input type="file" class="form-control" name="hero_video_file" accept="video/mp4">
+                            <small class="text-muted d-block mt-1">Max 50MB. Si l'upload échoue, utilisez un lien vidéo.</small>
+                            @error('hero_video_file') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CTA texte</label>
+                            <input type="text" class="form-control" name="hero[cta_text]" value="{{ old('hero.cta_text', data_get($settings, 'hero.cta_text')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CTA URL</label>
+                            <input type="url" class="form-control" name="hero[cta_url]" value="{{ old('hero.cta_url', data_get($settings, 'hero.cta_url')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Overlay</label>
+                            <input type="range" class="form-range" min="0" max="1" step="0.01" name="hero[overlay]" id="hero_overlay"
+                                   value="{{ old('hero.overlay', data_get($settings, 'hero.overlay', 0.35)) }}">
+                            <small class="text-muted">Valeur: <span id="hero_overlay_value">{{ old('hero.overlay', data_get($settings, 'hero.overlay', 0.35)) }}</span></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Sections</h5></div>
+                <div class="card-body row g-3">
+                    @foreach(['search' => 'Search', 'last_minute' => 'Offres dernière minute', 'regions' => 'Destinations', 'good_spots' => 'Bons coins'] as $sKey => $sLabel)
+                    <div class="col-md-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="sections[{{ $sKey }}]" value="1"
+                                   {{ old("sections.$sKey", data_get($settings, "sections.$sKey")) ? 'checked' : '' }}>
+                            <label class="form-check-label">{{ $sLabel }}</label>
+                        </div>
+                    </div>
                     @endforeach
                 </div>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header"><h5 class="card-title mb-0">Les bons coins (4 items)</h5></div>
-            <div class="card-body vstack gap-3">
-                @foreach(old('good_spots', data_get($settings, 'good_spots', [])) as $idx => $spot)
-                    @if($idx < 4)
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Search</h5></div>
+                <div class="card-body">
+                    <label class="form-label">Shortcode</label>
+                    <input type="text" class="form-control" name="search[shortcode]" value="{{ old('search.shortcode', data_get($settings, 'search.shortcode', '[traveler_search]')) }}">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Offres dernière minute</h5></div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Titre</label>
+                        <input type="text" class="form-control" name="last_minute[title]" value="{{ old('last_minute.title', data_get($settings, 'last_minute.title')) }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Nombre d'items</label>
+                        <input type="number" class="form-control" min="1" max="20" name="last_minute[count]" value="{{ old('last_minute.count', data_get($settings, 'last_minute.count', 6)) }}" required>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" name="last_minute[featured_only]" value="1"
+                                   {{ old('last_minute.featured_only', data_get($settings, 'last_minute.featured_only')) ? 'checked' : '' }}>
+                            <label class="form-check-label">Featured only</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Destinations par région</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-region">Ajouter</button>
+                </div>
+                <div class="card-body">
+                    <div id="regions-container" class="vstack gap-3">
+                        @foreach(old('regions', data_get($settings, 'regions', [])) as $idx => $region)
+                            <div class="border rounded p-3 region-row" data-index="{{ $idx }}">
+                                <div class="row g-2">
+                                    <div class="col-md-4"><input class="form-control" name="regions[{{ $idx }}][title]" value="{{ data_get($region, 'title') }}" placeholder="Titre"></div>
+                                    <div class="col-md-4"><input class="form-control" name="regions[{{ $idx }}][image_url]" value="{{ data_get($region, 'image_url') }}" placeholder="Image URL"></div>
+                                    <div class="col-md-3"><input class="form-control" name="regions[{{ $idx }}][link_url]" value="{{ data_get($region, 'link_url') }}" placeholder="Link URL"></div>
+                                    <div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-region">×</button></div>
+                                    <div class="col-12"><input type="file" class="form-control" name="regions_files[{{ $idx }}]" accept="image/*"></div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Les bons coins (4 items)</h5></div>
+                <div class="card-body vstack gap-3">
+                    @foreach(old('good_spots', data_get($settings, 'good_spots', [])) as $idx => $spot)
+                        @if($idx < 4)
                         <div class="border rounded p-3">
                             <h6 class="mb-2">Item {{ $idx + 1 }}</h6>
                             <div class="row g-2">
@@ -202,25 +348,64 @@
                                 <div class="col-12"><input type="file" class="form-control" name="good_spots_files[{{ $idx }}]" accept="image/*"></div>
                             </div>
                         </div>
-                    @endif
-                @endforeach
+                        @endif
+                    @endforeach
+                </div>
             </div>
-        </div>
 
-        <button type="submit" class="btn btn-primary" id="save-home-settings-btn">
-            <span class="save-label">Enregistrer</span>
-            <span class="save-loading d-none">
-                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                Upload en cours...
-            </span>
-        </button>
-        <div class="small text-muted mt-2 d-none" id="save-timeout-help">Upload en cours... Si cela dure trop longtemps, vérifiez les limites serveur ou utilisez une URL vidéo.</div>
-    </form>
+            <button type="submit" class="btn btn-primary mb-4" id="save-home-settings-btn">
+                <span class="save-label">Enregistrer</span>
+                <span class="save-loading d-none">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>Upload en cours...
+                </span>
+            </button>
+        </form>
+    </div>
+
+    </div>{{-- /.tab-content --}}
 @endsection
 
 @push('script')
 <script>
 (function () {
+    /* ── Header tab JS ─────────────────────────── */
+    var menuSource = document.getElementById('hdr_menu_source');
+    var wpMenuWrap = document.getElementById('hdr_wp_menu_wrap');
+    var linksWrap = document.getElementById('hdr_links_wrap');
+
+    function toggleMenuSource() {
+        if (!menuSource) return;
+        var isWp = menuSource.value === 'wp_menu';
+        if (wpMenuWrap) wpMenuWrap.style.display = isWp ? '' : 'none';
+        if (linksWrap) linksWrap.style.display = isWp ? 'none' : '';
+    }
+    if (menuSource) menuSource.addEventListener('change', toggleMenuSource);
+    toggleMenuSource();
+
+    var linksContainer = document.getElementById('hdr-links-container');
+    var addLinkBtn = document.getElementById('hdr-add-link');
+    if (addLinkBtn && linksContainer) {
+        addLinkBtn.addEventListener('click', function () {
+            var idx = linksContainer.querySelectorAll('.hdr-link-row').length;
+            linksContainer.insertAdjacentHTML('beforeend',
+                '<div class="border rounded p-2 hdr-link-row" data-index="' + idx + '">' +
+                '<div class="row g-2 align-items-center">' +
+                '<div class="col-md-3"><input class="form-control form-control-sm" name="header[links][' + idx + '][label]" placeholder="Label"></div>' +
+                '<div class="col-md-4"><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="URL"></div>' +
+                '<div class="col-md-4"><textarea class="form-control form-control-sm" name="header[links][' + idx + '][children_json]" rows="1" placeholder=\'[{"label":"Sub","url":"/sub"}]\'></textarea></div>' +
+                '<div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>' +
+                '</div></div>'
+            );
+        });
+        linksContainer.addEventListener('click', function (e) {
+            if (e.target.classList.contains('hdr-remove-link')) {
+                var row = e.target.closest('.hdr-link-row');
+                if (row) row.remove();
+            }
+        });
+    }
+
+    /* ── Content tab JS (existing) ────────────── */
     var heroType = document.getElementById('hero_type');
     var imageWraps = [document.getElementById('hero_image_url_wrap'), document.getElementById('hero_image_file_wrap')];
     var videoWraps = [document.getElementById('hero_video_url_wrap'), document.getElementById('hero_video_file_wrap')];
@@ -228,80 +413,55 @@
     var overlayValue = document.getElementById('hero_overlay_value');
     var form = document.getElementById('home-page-settings-form');
     var saveButton = document.getElementById('save-home-settings-btn');
-    var saveLabel = saveButton ? saveButton.querySelector('.save-label') : null;
-    var saveLoading = saveButton ? saveButton.querySelector('.save-loading') : null;
-    var timeoutHelp = document.getElementById('save-timeout-help');
-    var timeoutHandle = null;
 
     function toggleHeroFields() {
+        if (!heroType) return;
         var isImage = heroType.value === 'image';
         imageWraps.forEach(function (el) { if (el) el.style.display = isImage ? '' : 'none'; });
         videoWraps.forEach(function (el) { if (el) el.style.display = isImage ? 'none' : ''; });
     }
-
     function syncOverlayValue() {
-        if (overlay && overlayValue) {
-            overlayValue.textContent = overlay.value;
-        }
+        if (overlay && overlayValue) overlayValue.textContent = overlay.value;
     }
 
-    heroType.addEventListener('change', toggleHeroFields);
+    if (heroType) heroType.addEventListener('change', toggleHeroFields);
     if (overlay) overlay.addEventListener('input', syncOverlayValue);
     toggleHeroFields();
     syncOverlayValue();
 
     var container = document.getElementById('regions-container');
     var addBtn = document.getElementById('add-region');
-
-    function nextIndex() {
-        return container.querySelectorAll('.region-row').length;
-    }
-
-    function regionRowTemplate(index) {
-        return '' +
-            '<div class="border rounded p-3 region-row" data-index="' + index + '">' +
-            '  <div class="row g-2">' +
-            '    <div class="col-md-4"><input class="form-control" name="regions[' + index + '][title]" placeholder="Titre"></div>' +
-            '    <div class="col-md-4"><input class="form-control" name="regions[' + index + '][image_url]" placeholder="Image URL"></div>' +
-            '    <div class="col-md-3"><input class="form-control" name="regions[' + index + '][link_url]" placeholder="Link URL"></div>' +
-            '    <div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-region">×</button></div>' +
-            '    <div class="col-12"><input type="file" class="form-control" name="regions_files[' + index + ']" accept="image/*"></div>' +
-            '  </div>' +
-            '</div>';
-    }
-
-    if (addBtn) {
+    if (addBtn && container) {
         addBtn.addEventListener('click', function () {
-            var index = nextIndex();
-            container.insertAdjacentHTML('beforeend', regionRowTemplate(index));
+            var idx = container.querySelectorAll('.region-row').length;
+            container.insertAdjacentHTML('beforeend',
+                '<div class="border rounded p-3 region-row" data-index="' + idx + '">' +
+                '<div class="row g-2">' +
+                '<div class="col-md-4"><input class="form-control" name="regions[' + idx + '][title]" placeholder="Titre"></div>' +
+                '<div class="col-md-4"><input class="form-control" name="regions[' + idx + '][image_url]" placeholder="Image URL"></div>' +
+                '<div class="col-md-3"><input class="form-control" name="regions[' + idx + '][link_url]" placeholder="Link URL"></div>' +
+                '<div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-region">×</button></div>' +
+                '<div class="col-12"><input type="file" class="form-control" name="regions_files[' + idx + ']" accept="image/*"></div>' +
+                '</div></div>'
+            );
         });
-    }
-
-    if (container) {
-        container.addEventListener('click', function (event) {
-            if (event.target.classList.contains('remove-region')) {
-                var row = event.target.closest('.region-row');
+        container.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-region')) {
+                var row = e.target.closest('.region-row');
                 if (row) row.remove();
             }
         });
     }
 
     if (form && saveButton) {
+        var saveLabel = saveButton.querySelector('.save-label');
+        var saveLoading = saveButton.querySelector('.save-loading');
         form.addEventListener('submit', function () {
             saveButton.disabled = true;
             if (saveLabel) saveLabel.classList.add('d-none');
             if (saveLoading) saveLoading.classList.remove('d-none');
-
-            timeoutHandle = window.setTimeout(function () {
-                if (timeoutHelp) timeoutHelp.classList.remove('d-none');
-            }, 20000);
         });
-
         window.addEventListener('pageshow', function () {
-            if (timeoutHandle) {
-                window.clearTimeout(timeoutHandle);
-            }
-
             saveButton.disabled = false;
             if (saveLabel) saveLabel.classList.remove('d-none');
             if (saveLoading) saveLoading.classList.add('d-none');

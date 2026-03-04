@@ -45,14 +45,23 @@ function ajth_init() {
 add_action( 'plugins_loaded', 'ajth_init' );
 
 /* ──────────────────────────────────────────────
- * Enqueue front-end assets ONLY on the home page
+ * Enqueue front-end assets on home page OR pages
+ * containing [ajth_homepage] shortcode.
  * ────────────────────────────────────────────── */
 function ajth_enqueue_front_assets() {
-    if ( ! is_front_page() && ! is_home() ) {
+    $load = is_front_page() || is_home();
+
+    if ( ! $load && is_singular() ) {
+        global $post;
+        if ( $post && has_shortcode( $post->post_content, 'ajth_homepage' ) ) {
+            $load = true;
+        }
+    }
+
+    if ( ! $load ) {
         return;
     }
 
-    // Load AFTER the theme CSS so our rules win
     wp_enqueue_style(
         'ajth-home-css',
         AJTH_URL . 'assets/css/home.css',
@@ -69,6 +78,85 @@ function ajth_enqueue_front_assets() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'ajth_enqueue_front_assets', 999 );
+
+/* ──────────────────────────────────────────────
+ * Shortcode: [ajth_homepage]
+ * Renders the full homepage inside any page.
+ * ────────────────────────────────────────────── */
+function ajth_homepage_shortcode( $atts ) {
+    ob_start();
+    $settings = ajth_get_settings();
+    include AJTH_DIR . 'templates/homepage.php';
+    return ob_get_clean();
+}
+add_shortcode( 'ajth_homepage', 'ajth_homepage_shortcode' );
+
+/* ──────────────────────────────────────────────
+ * Header settings managed from Laravel admin
+ * /admin/settings/home-page  (tab Header)
+ *
+ * Reads from wp_options key 'aj_header_settings'
+ * (mirrored from Laravel settings table, key='wp_header').
+ * Cached via transient for 5 minutes.
+ * ────────────────────────────────────────────── */
+function ajth_get_header_settings() {
+    $cache_key = 'ajth_header_settings_v1';
+    $cached = get_transient( $cache_key );
+
+    if ( is_array( $cached ) ) {
+        return $cached;
+    }
+
+    $defaults = array(
+        'enabled'          => true,
+        'topbar_enabled'   => true,
+        'phone'            => '(000) 999 - 656 - 888',
+        'email'            => 'contact@ajinsafro.ma',
+        'socials'          => array(
+            'facebook'  => '',
+            'twitter'   => '',
+            'instagram' => '',
+            'youtube'   => '',
+        ),
+        'navbar_enabled'   => true,
+        'logo_url'         => '',
+        'show_auth_links'  => true,
+        'login_url'        => '/login',
+        'signup_url'       => '/register',
+        'menu_source'      => 'wp_menu',
+        'wp_menu_location' => 'primary',
+        'links'            => array(),
+    );
+
+    $raw = get_option( 'aj_header_settings', '' );
+
+    if ( is_string( $raw ) && $raw !== '' ) {
+        $decoded = json_decode( $raw, true );
+        if ( is_array( $decoded ) ) {
+            $settings = array_replace_recursive( $defaults, $decoded );
+            set_transient( $cache_key, $settings, 5 * MINUTE_IN_SECONDS );
+            return $settings;
+        }
+    }
+
+    set_transient( $cache_key, $defaults, 5 * MINUTE_IN_SECONDS );
+    return $defaults;
+}
+
+/* ──────────────────────────────────────────────
+ * Add body class on home page when custom header is active
+ * ────────────────────────────────────────────── */
+function ajth_body_class_custom_header( $classes ) {
+    if ( ! is_front_page() && ! is_home() ) {
+        return $classes;
+    }
+    $h = ajth_get_header_settings();
+    if ( ! empty( $h['enabled'] ) ) {
+        $classes[] = 'aj-custom-header';
+    }
+    return $classes;
+}
+add_filter( 'body_class', 'ajth_body_class_custom_header' );
 
 /* ──────────────────────────────────────────────
  * Helper: get plugin settings with defaults
