@@ -13,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+
 class AJTH_Template_Router {
 
     public function __construct() {

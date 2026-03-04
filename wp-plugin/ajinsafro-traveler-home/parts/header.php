@@ -72,11 +72,28 @@ $social_icons = array(
                 <?php endif; ?>
             </div>
 
-            <button type="button" class="aj-navbar__burger" id="aj-burger" aria-label="Menu" aria-expanded="false">
+            <button type="button" class="aj-navbar__burger aj-header__toggle" id="aj-burger" aria-label="Menu" aria-expanded="false">
                 <span></span><span></span><span></span>
             </button>
 
-            <div class="aj-navbar__menu" id="aj-nav-menu">
+            <div class="aj-drawer aj-header__drawer" id="aj-drawer" aria-hidden="true">
+                <div class="aj-drawer__header">
+                    <span class="aj-drawer__title"><?php esc_html_e( 'Menu', 'ajinsafro-traveler-home' ); ?></span>
+                    <button type="button" class="aj-drawer__close" id="aj-drawer-close" aria-label="<?php esc_attr_e( 'Fermer', 'ajinsafro-traveler-home' ); ?>">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <?php if ( ! empty( $hdr['show_auth_links'] ) ) : ?>
+                <div class="aj-drawer__auth aj-header__auth--mobile">
+                    <?php if ( is_user_logged_in() ) : ?>
+                        <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="aj-auth-link aj-auth-link--block"><?php esc_html_e( 'Logout', 'ajinsafro-traveler-home' ); ?></a>
+                    <?php else : ?>
+                        <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : wp_login_url() ); ?>" class="aj-auth-link aj-auth-link--block"><?php esc_html_e( 'Sign In', 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( ! empty( $hdr['signup_url'] ) ? $hdr['signup_url'] : wp_registration_url() ); ?>" class="aj-auth-link aj-auth-link--signup aj-auth-link--block"><?php esc_html_e( 'Sign Up', 'ajinsafro-traveler-home' ); ?></a>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+                <div class="aj-navbar__menu" id="aj-nav-menu">
                 <?php if ( ! empty( $hdr['menu_source'] ) && $hdr['menu_source'] === 'wp_menu' ) : ?>
                     <?php
                     $menu_location = ! empty( $hdr['wp_menu_location'] ) ? $hdr['wp_menu_location'] : 'primary';
@@ -120,10 +137,11 @@ $social_icons = array(
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
+                </div>
             </div>
 
             <?php if ( ! empty( $hdr['show_auth_links'] ) ) : ?>
-            <div class="aj-navbar__auth">
+            <div class="aj-navbar__auth aj-header__auth--desktop" id="aj-navbar-auth">
                 <?php if ( is_user_logged_in() ) : ?>
                     <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="aj-auth-link"><?php esc_html_e( 'Logout', 'ajinsafro-traveler-home' ); ?></a>
                 <?php else : ?>

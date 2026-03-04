@@ -16,9 +16,14 @@ $settings = ajth_get_settings();
     <?php if ( ! empty( $settings['sections']['last_minute'] ) ) : ?>
         <?php include AJTH_DIR . 'parts/last-minute.php'; ?>
     <?php endif; ?>
-    <?php if ( ! empty( $settings['sections']['regions'] ) ) : ?>
-        <?php include AJTH_DIR . 'parts/regions.php'; ?>
-    <?php endif; ?>
+    <?php
+    $dbr = ajth_get_destinations_by_region();
+    if ( ! empty( $dbr['enabled'] ) && ! empty( $dbr['items'] ) ) :
+        include AJTH_DIR . 'parts/destinations-by-region.php';
+    elseif ( ! empty( $settings['sections']['regions'] ) ) :
+        include AJTH_DIR . 'parts/regions.php';
+    endif;
+    ?>
     <?php if ( ! empty( $settings['sections']['good_spots'] ) ) : ?>
         <?php include AJTH_DIR . 'parts/good-spots.php'; ?>
     <?php endif; ?>

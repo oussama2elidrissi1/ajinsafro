@@ -301,6 +301,35 @@ function ajth_get_settings() {
     return $settings;
 }
 
+/* ──────────────────────────────────────────────
+ * Destinations par région (Laravel admin, key destinations_by_region)
+ * Mirrored to wp_options aj_destinations_by_region — used for 2×4 grid on home.
+ * ────────────────────────────────────────────── */
+function ajth_get_destinations_by_region() {
+    $defaults = array(
+        'enabled' => true,
+        'title'   => 'Destinations par région',
+        'items'   => array(),
+    );
+
+    $raw = get_option( 'aj_destinations_by_region', '' );
+    if ( ! is_string( $raw ) || $raw === '' ) {
+        return $defaults;
+    }
+
+    $decoded = json_decode( $raw, true );
+    if ( ! is_array( $decoded ) ) {
+        return $defaults;
+    }
+
+    $items = isset( $decoded['items'] ) && is_array( $decoded['items'] ) ? $decoded['items'] : array();
+    return array(
+        'enabled' => ! empty( $decoded['enabled'] ),
+        'title'   => isset( $decoded['title'] ) ? (string) $decoded['title'] : $defaults['title'],
+        'items'   => $items,
+    );
+}
+
 function ajth_legacy_settings_to_json() {
     $legacy = get_option( 'ajth_home_settings', array() );
 
