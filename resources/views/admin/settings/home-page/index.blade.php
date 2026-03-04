@@ -336,18 +336,37 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Destinations par région</h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-region">Ajouter</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="dbr-add-item">Ajouter une région</button>
                 </div>
                 <div class="card-body">
-                    <div id="regions-container" class="vstack gap-3">
-                        @foreach(old('regions', data_get($settings, 'regions', [])) as $idx => $region)
-                            <div class="border rounded p-3 region-row" data-index="{{ $idx }}">
-                                <div class="row g-2">
-                                    <div class="col-md-4"><input class="form-control" name="regions[{{ $idx }}][title]" value="{{ data_get($region, 'title') }}" placeholder="Titre"></div>
-                                    <div class="col-md-4"><input class="form-control" name="regions[{{ $idx }}][image_url]" value="{{ data_get($region, 'image_url') }}" placeholder="Image URL"></div>
-                                    <div class="col-md-3"><input class="form-control" name="regions[{{ $idx }}][link_url]" value="{{ data_get($region, 'link_url') }}" placeholder="Link URL"></div>
-                                    <div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-region">×</button></div>
-                                    <div class="col-12"><input type="file" class="form-control" name="regions_files[{{ $idx }}]" accept="image/*"></div>
+                    <p class="text-muted small mb-3">Grille 2×4 côté WordPress. Label obligatoire ; image et lien optionnels.</p>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="destinations_by_region[enabled]" value="1" id="dbr-enabled"
+                               {{ old('destinations_by_region.enabled', data_get($destinationsByRegion, 'enabled', true)) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="dbr-enabled">Activer la section Destinations par région</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Titre de la section</label>
+                        <input type="text" class="form-control" name="destinations_by_region[title]" value="{{ old('destinations_by_region.title', data_get($destinationsByRegion, 'title', 'Destinations par région')) }}" placeholder="Destinations par région">
+                    </div>
+                    <div id="dbr-items-container" class="vstack gap-2">
+                        @php
+                            $dbrItems = old('destinations_by_region.items', data_get($destinationsByRegion, 'items', []));
+                            $dbrItems = is_array($dbrItems) ? $dbrItems : [];
+                        @endphp
+                        @foreach($dbrItems as $idx => $item)
+                            <div class="border rounded p-2 dbr-row align-items-center" data-index="{{ $idx }}">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto d-flex flex-column gap-0">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">↑</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">↓</button>
+                                    </div>
+                                    <div class="col"><input type="hidden" name="destinations_by_region[items][{{ $idx }}][order]" class="dbr-order" value="{{ data_get($item, 'order', $idx + 1) }}"><label class="form-label small mb-0">Ordre</label><span class="dbr-order-display">{{ data_get($item, 'order', $idx + 1) }}</span></div>
+                                    <div class="col"><label class="form-label small mb-0">Label <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][label]" value="{{ data_get($item, 'label') }}" placeholder="Ex: CAP NORD" required></div>
+                                    <div class="col"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][image_url]" value="{{ data_get($item, 'image_url') }}" placeholder="https://..."></div>
+                                    <div class="col-auto"><label class="form-label small mb-0">Choisir</label><input type="file" class="form-control form-control-sm dbr-file" name="destinations_by_region_files[{{ $idx }}]" accept="image/*" data-index="{{ $idx }}"></div>
+                                    <div class="col"><label class="form-label small mb-0">Lien URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][link_url]" value="{{ data_get($item, 'link_url') }}" placeholder="https://..."></div>
+                                    <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">×</button></div>
                                 </div>
                             </div>
                         @endforeach
@@ -473,26 +492,62 @@
     toggleHeroFields();
     syncOverlayValue();
 
-    var container = document.getElementById('regions-container');
-    var addBtn = document.getElementById('add-region');
-    if (addBtn && container) {
-        addBtn.addEventListener('click', function () {
-            var idx = container.querySelectorAll('.region-row').length;
-            container.insertAdjacentHTML('beforeend',
-                '<div class="border rounded p-3 region-row" data-index="' + idx + '">' +
-                '<div class="row g-2">' +
-                '<div class="col-md-4"><input class="form-control" name="regions[' + idx + '][title]" placeholder="Titre"></div>' +
-                '<div class="col-md-4"><input class="form-control" name="regions[' + idx + '][image_url]" placeholder="Image URL"></div>' +
-                '<div class="col-md-3"><input class="form-control" name="regions[' + idx + '][link_url]" placeholder="Link URL"></div>' +
-                '<div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-region">×</button></div>' +
-                '<div class="col-12"><input type="file" class="form-control" name="regions_files[' + idx + ']" accept="image/*"></div>' +
-                '</div></div>'
-            );
+    /* ── Destinations par région (DBR) ─────────── */
+    var dbrContainer = document.getElementById('dbr-items-container');
+    var dbrAddBtn = document.getElementById('dbr-add-item');
+    function dbrRowHtml(idx, order, label, imageUrl, linkUrl) {
+        label = label || ''; imageUrl = imageUrl || ''; linkUrl = linkUrl || ''; order = order == null ? idx + 1 : order;
+        return '<div class="border rounded p-2 dbr-row align-items-center" data-index="' + idx + '">' +
+            '<div class="row g-2 align-items-center">' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">↑</button><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">↓</button></div>' +
+            '<div class="col"><input type="hidden" name="destinations_by_region[items][' + idx + '][order]" class="dbr-order" value="' + order + '"><label class="form-label small mb-0">Ordre</label><span class="dbr-order-display">' + order + '</span></div>' +
+            '<div class="col"><label class="form-label small mb-0">Label <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][label]" value="' + (label.replace(/"/g, '&quot;')) + '" placeholder="Ex: CAP NORD" required></div>' +
+            '<div class="col"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][image_url]" value="' + (imageUrl.replace(/"/g, '&quot;')) + '" placeholder="https://..."></div>' +
+            '<div class="col-auto"><label class="form-label small mb-0">Choisir</label><input type="file" class="form-control form-control-sm dbr-file" name="destinations_by_region_files[' + idx + ']" accept="image/*" data-index="' + idx + '"></div>' +
+            '<div class="col"><label class="form-label small mb-0">Lien URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][link_url]" value="' + (linkUrl.replace(/"/g, '&quot;')) + '" placeholder="https://..."></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">×</button></div>' +
+            '</div></div>';
+    }
+    function dbrRenumber() {
+        if (!dbrContainer) return;
+        var rows = dbrContainer.querySelectorAll('.dbr-row');
+        rows.forEach(function (row, i) {
+            row.setAttribute('data-index', i);
+            var orderInp = row.querySelector('.dbr-order');
+            var orderDisp = row.querySelector('.dbr-order-display');
+            if (orderInp) { orderInp.name = 'destinations_by_region[items][' + i + '][order]'; orderInp.value = i + 1; }
+            if (orderDisp) orderDisp.textContent = i + 1;
+            row.querySelectorAll('input[name^="destinations_by_region"]').forEach(function (inp) {
+                inp.name = inp.name.replace(/destinations_by_region\[items\]\[\d+\]/, 'destinations_by_region[items][' + i + ']');
+            });
+            row.querySelectorAll('input[name^="destinations_by_region_files"]').forEach(function (inp) {
+                inp.name = 'destinations_by_region_files[' + i + ']';
+            });
         });
-        container.addEventListener('click', function (e) {
-            if (e.target.classList.contains('remove-region')) {
-                var row = e.target.closest('.region-row');
-                if (row) row.remove();
+    }
+    if (dbrAddBtn && dbrContainer) {
+        dbrAddBtn.addEventListener('click', function () {
+            var idx = dbrContainer.querySelectorAll('.dbr-row').length;
+            dbrContainer.insertAdjacentHTML('beforeend', dbrRowHtml(idx, idx + 1, '', '', ''));
+        });
+        dbrContainer.addEventListener('click', function (e) {
+            if (e.target.classList.contains('dbr-remove')) {
+                var row = e.target.closest('.dbr-row');
+                if (row) { row.remove(); dbrRenumber(); }
+            }
+            if (e.target.classList.contains('dbr-move-up')) {
+                var row = e.target.closest('.dbr-row');
+                if (row && row.previousElementSibling) {
+                    dbrContainer.insertBefore(row, row.previousElementSibling);
+                    dbrRenumber();
+                }
+            }
+            if (e.target.classList.contains('dbr-move-down')) {
+                var row = e.target.closest('.dbr-row');
+                if (row && row.nextElementSibling) {
+                    dbrContainer.insertBefore(row.nextElementSibling, row);
+                    dbrRenumber();
+                }
             }
         });
     }

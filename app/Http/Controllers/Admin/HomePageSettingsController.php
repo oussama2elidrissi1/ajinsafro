@@ -20,11 +20,13 @@ class HomePageSettingsController extends Controller
     {
         $settings = $this->readHomeSettings();
         $header   = $this->readHeaderSettings();
+        $destinationsByRegion = $this->readDestinationsByRegion();
         $tab      = request()->query('tab', 'header');
 
         return view('admin.settings.home-page.index', [
             'settings' => $settings,
             'header'   => $header,
+            'destinationsByRegion' => $destinationsByRegion,
             'tab'      => $tab,
         ]);
     }
@@ -97,6 +99,16 @@ class HomePageSettingsController extends Controller
                 'good_spots.*.image_url' => ['nullable', 'url', 'max:2048'],
                 'good_spots.*.link_url' => ['nullable', 'url', 'max:2048'],
                 'good_spots_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+
+                'destinations_by_region' => ['nullable', 'array'],
+                'destinations_by_region.enabled' => ['nullable'],
+                'destinations_by_region.title' => ['nullable', 'string', 'max:255'],
+                'destinations_by_region.items' => ['nullable', 'array'],
+                'destinations_by_region.items.*.label' => ['nullable', 'string', 'max:255'],
+                'destinations_by_region.items.*.image_url' => ['nullable', 'string', 'max:2048'],
+                'destinations_by_region.items.*.link_url' => ['nullable', 'string', 'max:2048'],
+                'destinations_by_region.items.*.order' => ['nullable', 'integer', 'min:0'],
+                'destinations_by_region_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
             ], [
                 'hero_video_file.max' => 'Vidéo trop grande (max 50MB). Utilisez une URL YouTube/Vimeo.',
                 'hero_video_file.uploaded' => 'Upload vidéo échoué (limite serveur). Augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.',
@@ -247,6 +259,23 @@ class HomePageSettingsController extends Controller
             ];
 
             $optionValue = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            $destinationsByRegionPayload = $this->buildDestinationsByRegionPayload($request);
+            if ($destinationsByRegionPayload !== null) {
+                $drJson = json_encode($destinationsByRegionPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                Setting::setValue('destinations_by_region', $drJson);
+                try {
+                    $this->wpOptionsTable();
+                    DB::connection('wp')
+                        ->table('options')
+                        ->updateOrInsert(
+                            ['option_name' => 'aj_destinations_by_region'],
+                            ['option_value' => $drJson, 'autoload' => 'no']
+                        );
+                } catch (Throwable $e) {
+                    Log::warning('Could not mirror destinations_by_region to wp_options', ['error' => $e->getMessage()]);
+                }
+            }
 
             $this->wpOptionsTable();
 
@@ -534,6 +563,88 @@ class HomePageSettingsController extends Controller
         }
 
         return $settings;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     * Destinations par région — Laravel settings (key=destinations_by_region)
+     * + mirrored to wp_options (aj_destinations_by_region) for WP (grille 2x4).
+     * ────────────────────────────────────────────────────────────────── */
+
+    private const DESTINATIONS_BY_REGION_DEFAULTS = [
+        'enabled' => true,
+        'title'   => 'Destinations par région',
+        'items'   => [
+            ['label' => 'CAP NORD', 'image_url' => '', 'link_url' => '', 'order' => 1],
+            ['label' => 'MAROC MÉDITERRANÉE', 'image_url' => '', 'link_url' => '', 'order' => 2],
+            ['label' => 'MAROC CENTRE', 'image_url' => '', 'link_url' => '', 'order' => 3],
+            ['label' => 'ATLAS ET VALLÉES', 'image_url' => '', 'link_url' => '', 'order' => 4],
+            ['label' => 'CENTRE ATLANTIQUE', 'image_url' => '', 'link_url' => '', 'order' => 5],
+            ['label' => 'MARRAKECH ATLANTIQUE', 'image_url' => '', 'link_url' => '', 'order' => 6],
+            ['label' => 'SOUSS SAHARA ATLANTIQUE', 'image_url' => '', 'link_url' => '', 'order' => 7],
+            ['label' => 'GRAND-SUD ATLANTIQUE', 'image_url' => '', 'link_url' => '', 'order' => 8],
+        ],
+    ];
+
+    private function readDestinationsByRegion(): array
+    {
+        $raw = Setting::getValue('destinations_by_region');
+        if (is_string($raw) && $raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $items = $decoded['items'] ?? [];
+                if (!is_array($items)) {
+                    $items = [];
+                }
+                return [
+                    'enabled' => (bool) ($decoded['enabled'] ?? true),
+                    'title'   => (string) ($decoded['title'] ?? self::DESTINATIONS_BY_REGION_DEFAULTS['title']),
+                    'items'   => array_values($items),
+                ];
+            }
+        }
+        return self::DESTINATIONS_BY_REGION_DEFAULTS;
+    }
+
+    private function buildDestinationsByRegionPayload(Request $request): ?array
+    {
+        $input = $request->input('destinations_by_region', []);
+        if (!is_array($input)) {
+            return null;
+        }
+        $itemsInput = $input['items'] ?? [];
+        if (!is_array($itemsInput)) {
+            $itemsInput = [];
+        }
+        $filtered = [];
+        foreach ($itemsInput as $idx => $item) {
+            $label = trim((string) ($item['label'] ?? ''));
+            if ($label === '') {
+                continue;
+            }
+            $imageUrl = trim((string) ($item['image_url'] ?? ''));
+            if ($request->hasFile("destinations_by_region_files.{$idx}")) {
+                $path = $request->file("destinations_by_region_files.{$idx}")->store('home-settings/destinations-by-region', 'public');
+                $imageUrl = Storage::disk('public')->url($path);
+            }
+            $order = isset($item['order']) ? (int) $item['order'] : ($idx + 1);
+            $filtered[] = [
+                'label'     => $label,
+                'image_url' => $imageUrl,
+                'link_url'  => trim((string) ($item['link_url'] ?? '')),
+                'order'     => $order,
+            ];
+        }
+        usort($filtered, fn ($a, $b) => $a['order'] <=> $b['order']);
+        $order = 1;
+        foreach ($filtered as &$row) {
+            $row['order'] = $order++;
+        }
+        unset($row);
+        return [
+            'enabled' => $request->boolean('destinations_by_region.enabled'),
+            'title'   => trim((string) ($input['title'] ?? self::DESTINATIONS_BY_REGION_DEFAULTS['title'])),
+            'items'   => array_values($filtered),
+        ];
     }
 
     private function wpOptionsTable(): string

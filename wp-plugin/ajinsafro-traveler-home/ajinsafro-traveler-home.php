@@ -84,7 +84,47 @@ function ajth_enqueue_front_assets() {
         true
     );
 }
-add_action( 'wp_enqueue_scripts', 'ajth_enqueue_front_assets', 999 );
+add_action( 'wp_enqueue_scripts', 'ajth_enqueue_front_assets', 5 );
+
+/* ──────────────────────────────────────────────
+ * Critical CSS inline in head to avoid FOUC
+ * (header styled immediately, full CSS loads after)
+ * ────────────────────────────────────────────── */
+function ajth_critical_header_css() {
+    $h = ajth_get_header_settings();
+    if ( empty( $h['enabled'] ) ) {
+        return;
+    }
+    $on_home = is_front_page() || is_home();
+    if ( ! $on_home && empty( $h['show_header_sitewide'] ) ) {
+        return;
+    }
+    $css = 'body.aj-custom-header #header,body.aj-custom-header .site-header,body.aj-custom-header .topbar,body.aj-custom-header .header-main,body.aj-custom-header>header:not(.aj-header),body.aj-custom-header #masthead{display:none!important}.aj-header{width:100%;z-index:1000;position:relative}.aj-topbar{background:#0B2C5D;color:rgba(255,255,255,.85);font-size:.78rem;line-height:1}.aj-topbar__inner{display:flex;align-items:center;justify-content:space-between;padding:8px 0}.aj-topbar__left,.aj-topbar__right{display:flex;align-items:center;gap:12px}.aj-topbar__item{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.85)}.aj-topbar__social{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff}.aj-navbar{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.06);position:relative;z-index:999}.aj-navbar__inner{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:60px}.aj-container{max-width:1100px;margin:0 auto;padding:0 20px;width:100%}.aj-nav-list{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:0}.aj-nav-list>li>a{display:flex;align-items:center;gap:4px;padding:18px 16px;font-size:.88rem;font-weight:600;color:#222;text-decoration:none}.aj-navbar__brand{font-size:1.25rem;font-weight:800;color:#1a73a7}.aj-navbar__auth{display:flex!important;align-items:center;gap:10px;flex-shrink:0}.aj-auth-link{font-size:.85rem;font-weight:600;color:#222;padding:6px 14px;border-radius:6px;text-decoration:none;white-space:nowrap}.aj-auth-link--signup{background:#1a73a7;color:#fff}';
+    echo '<style id="ajth-critical-header">' . $css . '</style>' . "\n";
+}
+add_action( 'wp_head', 'ajth_critical_header_css', 1 );
+
+/* Preload main stylesheet so it loads as early as possible */
+function ajth_preload_styles() {
+    $load = is_front_page() || is_home();
+    if ( ! $load && is_singular() ) {
+        global $post;
+        if ( $post && has_shortcode( $post->post_content, 'ajth_homepage' ) ) {
+            $load = true;
+        }
+    }
+    if ( ! $load ) {
+        $h = ajth_get_header_settings();
+        if ( ! empty( $h['enabled'] ) && ! empty( $h['show_header_sitewide'] ) ) {
+            $load = true;
+        }
+    }
+    if ( ! $load ) {
+        return;
+    }
+    echo '<link rel="preload" href="' . esc_url( AJTH_URL . 'assets/css/home.css' ) . '?ver=' . esc_attr( AJTH_VERSION ) . '" as="style">' . "\n";
+}
+add_action( 'wp_head', 'ajth_preload_styles', 0 );
 
 /* ──────────────────────────────────────────────
  * Shortcode: [ajth_homepage]

@@ -127,7 +127,7 @@ $social_icons = array(
                 <?php if ( is_user_logged_in() ) : ?>
                     <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="aj-auth-link"><?php esc_html_e( 'Logout', 'ajinsafro-traveler-home' ); ?></a>
                 <?php else : ?>
-                    <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : wp_login_url() ); ?>" class="aj-auth-link"><?php esc_html_e( 'Login', 'ajinsafro-traveler-home' ); ?></a>
+                    <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : wp_login_url() ); ?>" class="aj-auth-link"><?php esc_html_e( 'Sign In', 'ajinsafro-traveler-home' ); ?></a>
                     <a href="<?php echo esc_url( ! empty( $hdr['signup_url'] ) ? $hdr['signup_url'] : wp_registration_url() ); ?>" class="aj-auth-link aj-auth-link--signup"><?php esc_html_e( 'Sign Up', 'ajinsafro-traveler-home' ); ?></a>
                 <?php endif; ?>
             </div>

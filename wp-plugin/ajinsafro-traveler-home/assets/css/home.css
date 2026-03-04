@@ -259,12 +259,15 @@ body.aj-custom-header #masthead {
     color: var(--aj-blue);
 }
 
-/* Auth links */
+/* Auth links — always visible, never squeezed by menu */
 .aj-navbar__auth {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+}
+.aj-navbar__auth .aj-auth-link {
+    white-space: nowrap;
 }
 
 .aj-auth-link {
