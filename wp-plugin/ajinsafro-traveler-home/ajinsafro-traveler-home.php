@@ -183,8 +183,10 @@ function ajth_body_class_custom_header( $classes ) {
 add_filter( 'body_class', 'ajth_body_class_custom_header' );
 
 /* ──────────────────────────────────────────────
- * Output custom header on all pages when site-wide is on
- * (on home the template already includes it)
+ * Output custom header on all pages when site-wide is on.
+ * Uses get_header (runs before theme header.php) so it works
+ * even if the theme does not call wp_body_open().
+ * On home the template already includes the header.
  * ────────────────────────────────────────────── */
 function ajth_render_header_sitewide() {
     if ( is_front_page() || is_home() ) {
@@ -196,7 +198,7 @@ function ajth_render_header_sitewide() {
     }
     include AJTH_DIR . 'parts/header.php';
 }
-add_action( 'wp_body_open', 'ajth_render_header_sitewide', 5 );
+add_action( 'get_header', 'ajth_render_header_sitewide', 5 );
 
 /* ──────────────────────────────────────────────
  * Helper: get plugin settings with defaults

@@ -185,21 +185,35 @@
                         </div>
                     </div>
 
-                    {{-- Manual links repeater --}}
+                    {{-- Manual links repeater with sub-menus --}}
                     <div id="hdr_links_wrap" class="mt-3" style="display:none">
                         <label class="form-label fw-bold">Liens du menu</label>
-                        <div id="hdr-links-container" class="vstack gap-2">
+                        <div id="hdr-links-container" class="vstack gap-3">
                             @foreach(old('header.links', data_get($header, 'links', [])) as $li => $link)
-                                <div class="border rounded p-2 hdr-link-row" data-index="{{ $li }}">
-                                    <div class="row g-2 align-items-center">
-                                        <div class="col-md-3"><input class="form-control form-control-sm" name="header[links][{{ $li }}][label]" value="{{ data_get($link, 'label') }}" placeholder="Label"></div>
-                                        <div class="col-md-4"><input class="form-control form-control-sm" name="header[links][{{ $li }}][url]" value="{{ data_get($link, 'url') }}" placeholder="URL"></div>
-                                        <div class="col-md-4">
-                                            <small class="text-muted">Children JSON (optionnel)</small>
-                                            <textarea class="form-control form-control-sm" name="header[links][{{ $li }}][children_json]" rows="2" placeholder='[{"label":"Sub","url":"/sub"}]'>{{ json_encode(data_get($link, 'children', []), JSON_UNESCAPED_UNICODE) !== '[]' ? json_encode(data_get($link, 'children', []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '' }}</textarea>
-                                            <small class="text-muted">Format: <code>[{"label":"Texte","url":"/lien"}]</code> — attention à écrire <code>"url"</code> (pas "urf").</small>
+                                <div class="border rounded p-3 hdr-link-row" data-index="{{ $li }}">
+                                    <div class="row g-2 align-items-center mb-2">
+                                        <div class="col-md-3">
+                                            <label class="form-label small mb-0">Texte</label>
+                                            <input class="form-control form-control-sm" name="header[links][{{ $li }}][label]" value="{{ data_get($link, 'label') }}" placeholder="Ex: HOTEL">
                                         </div>
-                                        <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small mb-0">URL</label>
+                                            <input class="form-control form-control-sm" name="header[links][{{ $li }}][url]" value="{{ data_get($link, 'url') }}" placeholder="Ex: /hotel">
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button>
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>
+                                    </div>
+                                    <div class="hdr-children-list ms-3 ps-2 border-start border-2 border-light">
+                                        <small class="text-muted d-block mb-1">Sous-menus</small>
+                                        @foreach(data_get($link, 'children', []) as $ci => $child)
+                                            <div class="row g-2 align-items-center mb-1 hdr-child-row">
+                                                <div class="col-4"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][label]" value="{{ data_get($child, 'label') }}" placeholder="Label"></div>
+                                                <div class="col-4"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][url]" value="{{ data_get($child, 'url') }}" placeholder="URL"></div>
+                                                <div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child">×</button></div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             @endforeach
@@ -391,23 +405,46 @@
 
     var linksContainer = document.getElementById('hdr-links-container');
     var addLinkBtn = document.getElementById('hdr-add-link');
+    function newLinkRowHtml(idx) {
+        return '<div class="border rounded p-3 hdr-link-row" data-index="' + idx + '">' +
+            '<div class="row g-2 align-items-center mb-2">' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Texte</label><input class="form-control form-control-sm" name="header[links][' + idx + '][label]" placeholder="Ex: HOTEL"></div>' +
+            '<div class="col-md-4"><label class="form-label small mb-0">URL</label><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="Ex: /hotel"></div>' +
+            '<div class="col-md-4 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button></div>' +
+            '<div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>' +
+            '</div>' +
+            '<div class="hdr-children-list ms-3 ps-2 border-start border-2 border-light"><small class="text-muted d-block mb-1">Sous-menus</small></div>' +
+            '</div>';
+    }
+    function newChildRowHtml(linkIdx, childIdx) {
+        return '<div class="row g-2 align-items-center mb-1 hdr-child-row">' +
+            '<div class="col-4"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][label]" placeholder="Label"></div>' +
+            '<div class="col-4"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][url]" placeholder="URL"></div>' +
+            '<div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child">×</button></div>' +
+            '</div>';
+    }
     if (addLinkBtn && linksContainer) {
         addLinkBtn.addEventListener('click', function () {
             var idx = linksContainer.querySelectorAll('.hdr-link-row').length;
-            linksContainer.insertAdjacentHTML('beforeend',
-                '<div class="border rounded p-2 hdr-link-row" data-index="' + idx + '">' +
-                '<div class="row g-2 align-items-center">' +
-                '<div class="col-md-3"><input class="form-control form-control-sm" name="header[links][' + idx + '][label]" placeholder="Label"></div>' +
-                '<div class="col-md-4"><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="URL"></div>' +
-                '<div class="col-md-4"><textarea class="form-control form-control-sm" name="header[links][' + idx + '][children_json]" rows="1" placeholder=\'[{"label":"Sub","url":"/sub"}]\'></textarea></div>' +
-                '<div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>' +
-                '</div></div>'
-            );
+            linksContainer.insertAdjacentHTML('beforeend', newLinkRowHtml(idx));
         });
         linksContainer.addEventListener('click', function (e) {
             if (e.target.classList.contains('hdr-remove-link')) {
                 var row = e.target.closest('.hdr-link-row');
                 if (row) row.remove();
+            }
+            if (e.target.classList.contains('hdr-remove-child')) {
+                var row = e.target.closest('.hdr-child-row');
+                if (row) row.remove();
+            }
+            if (e.target.classList.contains('hdr-add-child')) {
+                var linkRow = e.target.closest('.hdr-link-row');
+                if (!linkRow) return;
+                var linkIdx = linkRow.getAttribute('data-index');
+                var childrenList = linkRow.querySelector('.hdr-children-list');
+                if (!childrenList) return;
+                var childIdx = childrenList.querySelectorAll('.hdr-child-row').length;
+                childrenList.insertAdjacentHTML('beforeend', newChildRowHtml(linkIdx, childIdx));
             }
         });
     }
