@@ -64,6 +64,12 @@
                                {{ old('header.enabled', data_get($header, 'enabled')) ? 'checked' : '' }}>
                         <label class="form-check-label" for="hdr_enabled">Activer le header personnalisé</label>
                     </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="header[show_header_sitewide]" value="1" id="hdr_sitewide"
+                               {{ old('header.show_header_sitewide', data_get($header, 'show_header_sitewide')) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="hdr_sitewide">Appliquer le header à toutes les pages WordPress</label>
+                    </div>
+                    <p class="small text-muted mt-1 mb-0">Si coché, le header s'affiche sur tout le site (pas seulement la page d'accueil). Le header du thème sera masqué.</p>
                 </div>
             </div>
 
@@ -190,7 +196,8 @@
                                         <div class="col-md-4"><input class="form-control form-control-sm" name="header[links][{{ $li }}][url]" value="{{ data_get($link, 'url') }}" placeholder="URL"></div>
                                         <div class="col-md-4">
                                             <small class="text-muted">Children JSON (optionnel)</small>
-                                            <textarea class="form-control form-control-sm" name="header[links][{{ $li }}][children_json]" rows="1" placeholder='[{"label":"Sub","url":"/sub"}]'>{{ json_encode(data_get($link, 'children', []), JSON_UNESCAPED_UNICODE) !== '[]' ? json_encode(data_get($link, 'children', []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '' }}</textarea>
+                                            <textarea class="form-control form-control-sm" name="header[links][{{ $li }}][children_json]" rows="2" placeholder='[{"label":"Sub","url":"/sub"}]'>{{ json_encode(data_get($link, 'children', []), JSON_UNESCAPED_UNICODE) !== '[]' ? json_encode(data_get($link, 'children', []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '' }}</textarea>
+                                            <small class="text-muted">Format: <code>[{"label":"Texte","url":"/lien"}]</code> — attention à écrire <code>"url"</code> (pas "urf").</small>
                                         </div>
                                         <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>
                                     </div>

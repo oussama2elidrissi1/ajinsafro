@@ -45,8 +45,8 @@ function ajth_init() {
 add_action( 'plugins_loaded', 'ajth_init' );
 
 /* ──────────────────────────────────────────────
- * Enqueue front-end assets on home page OR pages
- * containing [ajth_homepage] shortcode.
+ * Enqueue front-end assets on home page, pages with [ajth_homepage],
+ * or on all pages when header is enabled and "site-wide" is on.
  * ────────────────────────────────────────────── */
 function ajth_enqueue_front_assets() {
     $load = is_front_page() || is_home();
@@ -54,6 +54,13 @@ function ajth_enqueue_front_assets() {
     if ( ! $load && is_singular() ) {
         global $post;
         if ( $post && has_shortcode( $post->post_content, 'ajth_homepage' ) ) {
+            $load = true;
+        }
+    }
+
+    if ( ! $load ) {
+        $h = ajth_get_header_settings();
+        if ( ! empty( $h['enabled'] ) && ! empty( $h['show_header_sitewide'] ) ) {
             $load = true;
         }
     }
@@ -135,9 +142,10 @@ function ajth_get_header_settings() {
         'show_auth_links'  => true,
         'login_url'        => '/login',
         'signup_url'       => '/register',
-        'menu_source'      => 'wp_menu',
-        'wp_menu_location' => 'primary',
-        'links'            => array(),
+        'menu_source'           => 'wp_menu',
+        'wp_menu_location'      => 'primary',
+        'show_header_sitewide'  => false,
+        'links'                 => array(),
     );
 
     $raw = get_option( 'aj_header_settings', '' );
@@ -158,19 +166,37 @@ function ajth_get_header_settings() {
 }
 
 /* ──────────────────────────────────────────────
- * Add body class on home page when custom header is active
+ * Add body class when custom header is active
+ * (home only, or all pages if show_header_sitewide)
  * ────────────────────────────────────────────── */
 function ajth_body_class_custom_header( $classes ) {
-    if ( ! is_front_page() && ! is_home() ) {
+    $h = ajth_get_header_settings();
+    if ( empty( $h['enabled'] ) ) {
         return $classes;
     }
-    $h = ajth_get_header_settings();
-    if ( ! empty( $h['enabled'] ) ) {
+    $on_home = is_front_page() || is_home();
+    if ( $on_home || ! empty( $h['show_header_sitewide'] ) ) {
         $classes[] = 'aj-custom-header';
     }
     return $classes;
 }
 add_filter( 'body_class', 'ajth_body_class_custom_header' );
+
+/* ──────────────────────────────────────────────
+ * Output custom header on all pages when site-wide is on
+ * (on home the template already includes it)
+ * ────────────────────────────────────────────── */
+function ajth_render_header_sitewide() {
+    if ( is_front_page() || is_home() ) {
+        return;
+    }
+    $h = ajth_get_header_settings();
+    if ( empty( $h['enabled'] ) || empty( $h['show_header_sitewide'] ) ) {
+        return;
+    }
+    include AJTH_DIR . 'parts/header.php';
+}
+add_action( 'wp_body_open', 'ajth_render_header_sitewide', 5 );
 
 /* ──────────────────────────────────────────────
  * Helper: get plugin settings with defaults

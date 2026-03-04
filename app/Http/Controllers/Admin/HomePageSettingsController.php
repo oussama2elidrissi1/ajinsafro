@@ -299,24 +299,25 @@ class HomePageSettingsController extends Controller
      * ────────────────────────────────────────────────────────────────── */
 
     private const HEADER_DEFAULTS = [
-        'enabled'          => true,
-        'topbar_enabled'   => true,
-        'phone'            => '(000) 999 - 656 - 888',
-        'email'            => 'contact@ajinsafro.ma',
-        'socials'          => [
+        'enabled'               => true,
+        'topbar_enabled'        => true,
+        'phone'                 => '(000) 999 - 656 - 888',
+        'email'                 => 'contact@ajinsafro.ma',
+        'socials'               => [
             'facebook'  => '',
             'twitter'   => '',
             'instagram' => '',
             'youtube'   => '',
         ],
-        'navbar_enabled'   => true,
-        'logo_url'         => '',
-        'show_auth_links'  => true,
-        'login_url'        => '/login',
-        'signup_url'       => '/register',
-        'menu_source'      => 'wp_menu',
-        'wp_menu_location' => 'primary',
-        'links'            => [],
+        'navbar_enabled'        => true,
+        'logo_url'              => '',
+        'show_auth_links'       => true,
+        'login_url'             => '/login',
+        'signup_url'            => '/register',
+        'menu_source'           => 'wp_menu',
+        'wp_menu_location'      => 'primary',
+        'show_header_sitewide'  => false,
+        'links'                 => [],
     ];
 
     public function updateHeader(Request $request)
@@ -339,11 +340,13 @@ class HomePageSettingsController extends Controller
             'header.menu_source'        => ['required', Rule::in(['wp_menu', 'laravel_links'])],
             'header.wp_menu_location'   => ['nullable', 'string', 'max:80'],
             'header.links'              => ['nullable', 'array'],
-            'header.links.*.label'      => ['nullable', 'string', 'max:120'],
-            'header.links.*.url'        => ['nullable', 'string', 'max:500'],
-            'header.links.*.children'   => ['nullable', 'array'],
+            'header.links.*.label'        => ['nullable', 'string', 'max:120'],
+            'header.links.*.url'          => ['nullable', 'string', 'max:500'],
+            'header.links.*.children'     => ['nullable', 'array'],
             'header.links.*.children.*.label' => ['nullable', 'string', 'max:120'],
             'header.links.*.children.*.url'   => ['nullable', 'string', 'max:500'],
+            'header.links.*.children_json'    => ['nullable', 'string', 'max:2000'],
+            'header.show_header_sitewide'     => ['nullable'],
         ]);
 
         $h = $validated['header'] ?? [];
@@ -399,9 +402,10 @@ class HomePageSettingsController extends Controller
             'show_auth_links'  => $request->boolean('header.show_auth_links'),
             'login_url'        => trim((string) ($h['login_url'] ?? '/login')),
             'signup_url'       => trim((string) ($h['signup_url'] ?? '/register')),
-            'menu_source'      => $h['menu_source'] ?? 'wp_menu',
-            'wp_menu_location' => trim((string) ($h['wp_menu_location'] ?? 'primary')),
-            'links'            => $links,
+            'menu_source'           => $h['menu_source'] ?? 'wp_menu',
+            'wp_menu_location'      => trim((string) ($h['wp_menu_location'] ?? 'primary')),
+            'show_header_sitewide'  => $request->boolean('header.show_header_sitewide'),
+            'links'                 => $links,
         ];
 
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
