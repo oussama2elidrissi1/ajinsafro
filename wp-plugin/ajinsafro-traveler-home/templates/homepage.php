@@ -39,15 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         <?php include AJTH_DIR . 'parts/good-spots.php'; ?>
     <?php endif; ?>
 
-    <?php
-    $show_promotions = ! empty( $settings['sections']['promotions'] );
-    if ( ! $show_promotions && ! empty( $settings['promotions']['items'] ) && is_array( $settings['promotions']['items'] ) ) {
-        $show_promotions = true;
-    }
-    if ( $show_promotions ) :
-        ?>
-        <?php include AJTH_DIR . 'parts/promotions.php'; ?>
-    <?php endif; ?>
+    <?php include AJTH_DIR . 'parts/promotions.php'; ?>
 
     <?php include AJTH_DIR . 'parts/newsletter.php'; ?>
     </div>

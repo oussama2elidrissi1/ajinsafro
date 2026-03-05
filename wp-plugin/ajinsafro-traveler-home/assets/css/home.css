@@ -1841,23 +1841,47 @@ body.aj-has-bg-pattern::after {
 
 /* ==========================================================================
    14. PROMOTIONAL BANNERS — "Destinations de ce mois"
+   Force visible: section exists in DOM but can be hidden by theme/overflow.
    ========================================================================== */
-.aj-promos { padding: 50px 0; }
+#aj-promos,
+.aj-promos,
+.aj-home .aj-promos,
+.aj-home #aj-promos,
+body .aj-home section.aj-promos {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 2 !important;
+    padding: 50px 0 !important;
+    min-height: 320px !important;
+    overflow: visible !important;
+    clip: auto !important;
+    transform: none !important;
+}
 .aj-promos .aj-section-title { margin-bottom: 24px; }
 
 .aj-promos__grid {
-    display: grid;
+    display: grid !important;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+    min-height: 220px;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
+.aj-promos .aj-promo-card,
 .aj-promo-card {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     position: relative;
     border-radius: 12px;
     padding: 24px;
     color: #fff;
     overflow: hidden;
     height: 208px;
+    min-height: 208px;
     box-shadow: 0 4px 20px rgba(0,0,0,.08);
     cursor: pointer;
     transition: transform .3s;

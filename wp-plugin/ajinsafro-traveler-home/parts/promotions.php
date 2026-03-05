@@ -6,6 +6,9 @@
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+if ( ! isset( $settings ) || ! is_array( $settings ) ) {
+    $settings = array();
+}
 $promo_settings = isset( $settings['promotions'] ) && is_array( $settings['promotions'] )
     ? $settings['promotions']
     : array();
@@ -46,9 +49,12 @@ $default_promos = array(
 $promos = ! empty( $promo_settings['items'] ) && is_array( $promo_settings['items'] )
     ? $promo_settings['items']
     : $default_promos;
+if ( empty( $promos ) ) {
+    $promos = $default_promos;
+}
 ?>
 
-<section class="aj-promos" id="aj-promos">
+<section class="aj-promos" id="aj-promos" style="display:block;visibility:visible;">
     <div class="aj-container">
         <h2 class="aj-section-title"><?php echo esc_html( $section_title ); ?></h2>
 
