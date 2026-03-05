@@ -283,8 +283,17 @@ $default_menu_items = array(
                             </a>
                             <?php if ( $has_sub ) : ?>
                                 <ul class="aj-sub-menu">
-                                    <?php foreach ( $children as $child ) : ?>
-                                        <li><a href="<?php echo esc_url( ! empty( $child['url'] ) ? $child['url'] : '#' ); ?>"><?php echo esc_html( ! empty( $child['label'] ) ? $child['label'] : '' ); ?></a></li>
+                                    <?php foreach ( $children as $child ) :
+                                        $child_icon = ! empty( $child['icon'] ) ? $child['icon'] : '';
+                                    ?>
+                                        <li>
+                                            <a href="<?php echo esc_url( ! empty( $child['url'] ) ? $child['url'] : '#' ); ?>">
+                                                <?php if ( $child_icon ) : ?>
+                                                    <i class="<?php echo esc_attr( $child_icon ); ?>"></i>
+                                                <?php endif; ?>
+                                                <?php echo esc_html( ! empty( $child['label'] ) ? $child['label'] : '' ); ?>
+                                            </a>
+                                        </li>
                                     <?php endforeach; ?>
                                 </ul>
                             <?php endif; ?>

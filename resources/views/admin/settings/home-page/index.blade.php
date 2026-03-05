@@ -195,18 +195,31 @@
                         </div>
                     </div>
 
-                    {{-- Manual links repeater with sub-menus --}}
+                    {{-- Manual links repeater with sub-menus and drag/drop ordering --}}
                     <div id="hdr_links_wrap" class="mt-3" style="display:none">
-                        <label class="form-label fw-bold">Liens du menu</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0">Liens du menu</label>
+                            <small class="text-muted"><i class="fas fa-arrows-alt"></i> Utilisez les flèches pour réorganiser l'ordre</small>
+                        </div>
                         <div id="hdr-links-container" class="vstack gap-3">
                             @foreach(old('header.links', data_get($header, 'links', [])) as $li => $link)
-                                <div class="border rounded p-3 hdr-link-row" data-index="{{ $li }}">
+                                <div class="border rounded p-3 hdr-link-row bg-light" data-index="{{ $li }}">
+                                    <input type="hidden" name="header[links][{{ $li }}][order]" class="hdr-link-order" value="{{ data_get($link, 'order', $li + 1) }}">
                                     <div class="row g-2 align-items-center mb-2">
+                                        {{-- Move buttons --}}
+                                        <div class="col-auto d-flex flex-column gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary hdr-move-up py-0 px-1" title="Monter"><i class="fas fa-chevron-up"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary hdr-move-down py-0 px-1" title="Descendre"><i class="fas fa-chevron-down"></i></button>
+                                        </div>
+                                        {{-- Order display --}}
+                                        <div class="col-auto text-center" style="min-width:40px">
+                                            <span class="badge bg-primary hdr-order-display">{{ data_get($link, 'order', $li + 1) }}</span>
+                                        </div>
                                         <div class="col-md-2">
                                             <label class="form-label small mb-0">Texte</label>
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][label]" value="{{ data_get($link, 'label') }}" placeholder="Ex: HOTEL">
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <label class="form-label small mb-0">URL</label>
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][url]" value="{{ data_get($link, 'url') }}" placeholder="Ex: /hotel">
                                         </div>
@@ -214,31 +227,41 @@
                                             <label class="form-label small mb-0">Icône FA</label>
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][icon]" value="{{ data_get($link, 'icon') }}" placeholder="fas fa-hotel">
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-end gap-2">
+                                        <div class="col-auto d-flex align-items-end gap-2">
                                             <div class="form-check form-check-inline">
                                                 <input class="form-check-input" type="checkbox" name="header[links][{{ $li }}][active]" value="1" {{ data_get($link, 'active') ? 'checked' : '' }}>
                                                 <label class="form-check-label small">Actif</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-end">
+                                        <div class="col-auto d-flex align-items-end">
                                             <button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button>
                                         </div>
-                                        <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>
+                                        <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>
                                     </div>
-                                    <div class="hdr-children-list ms-3 ps-2 border-start border-2 border-light">
-                                        <small class="text-muted d-block mb-1">Sous-menus</small>
+                                    {{-- Sub-menus with ordering --}}
+                                    <div class="hdr-children-list ms-4 ps-3 border-start border-2 border-primary">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <small class="text-muted fw-semibold">Sous-menus</small>
+                                        </div>
                                         @foreach(data_get($link, 'children', []) as $ci => $child)
-                                            <div class="row g-2 align-items-center mb-1 hdr-child-row">
-                                                <div class="col-4"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][label]" value="{{ data_get($child, 'label') }}" placeholder="Label"></div>
-                                                <div class="col-4"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][url]" value="{{ data_get($child, 'url') }}" placeholder="URL"></div>
-                                                <div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child">×</button></div>
+                                            <div class="row g-2 align-items-center mb-1 hdr-child-row bg-white rounded p-1" data-child-index="{{ $ci }}">
+                                                <input type="hidden" name="header[links][{{ $li }}][children][{{ $ci }}][order]" class="hdr-child-order" value="{{ data_get($child, 'order', $ci + 1) }}">
+                                                <div class="col-auto d-flex gap-1">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary hdr-child-move-up py-0 px-1" title="Monter"><i class="fas fa-chevron-up fa-xs"></i></button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary hdr-child-move-down py-0 px-1" title="Descendre"><i class="fas fa-chevron-down fa-xs"></i></button>
+                                                </div>
+                                                <div class="col-auto"><span class="badge bg-secondary hdr-child-order-display">{{ data_get($child, 'order', $ci + 1) }}</span></div>
+                                                <div class="col-3"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][label]" value="{{ data_get($child, 'label') }}" placeholder="Label"></div>
+                                                <div class="col-3"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][url]" value="{{ data_get($child, 'url') }}" placeholder="URL"></div>
+                                                <div class="col-2"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][icon]" value="{{ data_get($child, 'icon', '') }}" placeholder="Icône FA"></div>
+                                                <div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">×</button></div>
                                             </div>
                                         @endforeach
                                     </div>
                                 </div>
                             @endforeach
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="hdr-add-link">+ Ajouter un lien</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="hdr-add-link"><i class="fas fa-plus me-1"></i>Ajouter un lien</button>
                     </div>
                 </div>
             </div>
@@ -571,48 +594,138 @@
 
     var linksContainer = document.getElementById('hdr-links-container');
     var addLinkBtn = document.getElementById('hdr-add-link');
-    function newLinkRowHtml(idx) {
-        return '<div class="border rounded p-3 hdr-link-row" data-index="' + idx + '">' +
+
+    function newLinkRowHtml(idx, order) {
+        order = order || idx + 1;
+        return '<div class="border rounded p-3 hdr-link-row bg-light" data-index="' + idx + '">' +
+            '<input type="hidden" name="header[links][' + idx + '][order]" class="hdr-link-order" value="' + order + '">' +
             '<div class="row g-2 align-items-center mb-2">' +
+            '<div class="col-auto d-flex flex-column gap-1"><button type="button" class="btn btn-sm btn-outline-secondary hdr-move-up py-0 px-1" title="Monter"><i class="fas fa-chevron-up"></i></button><button type="button" class="btn btn-sm btn-outline-secondary hdr-move-down py-0 px-1" title="Descendre"><i class="fas fa-chevron-down"></i></button></div>' +
+            '<div class="col-auto text-center" style="min-width:40px"><span class="badge bg-primary hdr-order-display">' + order + '</span></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Texte</label><input class="form-control form-control-sm" name="header[links][' + idx + '][label]" placeholder="Ex: HOTEL"></div>' +
-            '<div class="col-md-3"><label class="form-label small mb-0">URL</label><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="Ex: /hotel"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">URL</label><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="Ex: /hotel"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Icône FA</label><input class="form-control form-control-sm" name="header[links][' + idx + '][icon]" placeholder="fas fa-hotel"></div>' +
-            '<div class="col-md-2 d-flex align-items-end gap-2"><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="header[links][' + idx + '][active]" value="1"><label class="form-check-label small">Actif</label></div></div>' +
-            '<div class="col-md-2 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button></div>' +
-            '<div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>' +
+            '<div class="col-auto d-flex align-items-end gap-2"><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="header[links][' + idx + '][active]" value="1"><label class="form-check-label small">Actif</label></div></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>' +
             '</div>' +
-            '<div class="hdr-children-list ms-3 ps-2 border-start border-2 border-light"><small class="text-muted d-block mb-1">Sous-menus</small></div>' +
+            '<div class="hdr-children-list ms-4 ps-3 border-start border-2 border-primary"><div class="d-flex justify-content-between align-items-center mb-1"><small class="text-muted fw-semibold">Sous-menus</small></div></div>' +
             '</div>';
     }
-    function newChildRowHtml(linkIdx, childIdx) {
-        return '<div class="row g-2 align-items-center mb-1 hdr-child-row">' +
-            '<div class="col-4"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][label]" placeholder="Label"></div>' +
-            '<div class="col-4"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][url]" placeholder="URL"></div>' +
-            '<div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child">×</button></div>' +
+
+    function newChildRowHtml(linkIdx, childIdx, order) {
+        order = order || childIdx + 1;
+        return '<div class="row g-2 align-items-center mb-1 hdr-child-row bg-white rounded p-1" data-child-index="' + childIdx + '">' +
+            '<input type="hidden" name="header[links][' + linkIdx + '][children][' + childIdx + '][order]" class="hdr-child-order" value="' + order + '">' +
+            '<div class="col-auto d-flex gap-1"><button type="button" class="btn btn-sm btn-outline-secondary hdr-child-move-up py-0 px-1" title="Monter"><i class="fas fa-chevron-up fa-xs"></i></button><button type="button" class="btn btn-sm btn-outline-secondary hdr-child-move-down py-0 px-1" title="Descendre"><i class="fas fa-chevron-down fa-xs"></i></button></div>' +
+            '<div class="col-auto"><span class="badge bg-secondary hdr-child-order-display">' + order + '</span></div>' +
+            '<div class="col-3"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][label]" placeholder="Label"></div>' +
+            '<div class="col-3"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][url]" placeholder="URL"></div>' +
+            '<div class="col-2"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][icon]" placeholder="Icône FA"></div>' +
+            '<div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">×</button></div>' +
             '</div>';
     }
+
+    /* Renumber menu items after reordering */
+    function hdrRenumberLinks() {
+        if (!linksContainer) return;
+        var rows = linksContainer.querySelectorAll('.hdr-link-row');
+        rows.forEach(function (row, i) {
+            row.setAttribute('data-index', i);
+            var orderInp = row.querySelector('.hdr-link-order');
+            var orderDisp = row.querySelector('.hdr-order-display');
+            if (orderInp) { orderInp.name = 'header[links][' + i + '][order]'; orderInp.value = i + 1; }
+            if (orderDisp) orderDisp.textContent = i + 1;
+            row.querySelectorAll('input[name^="header[links]"]').forEach(function (inp) {
+                if (inp.classList.contains('hdr-link-order')) return;
+                inp.name = inp.name.replace(/header\[links\]\[\d+\]/, 'header[links][' + i + ']');
+            });
+            hdrRenumberChildren(row, i);
+        });
+    }
+
+    /* Renumber children within a menu item */
+    function hdrRenumberChildren(linkRow, linkIdx) {
+        var childrenList = linkRow.querySelector('.hdr-children-list');
+        if (!childrenList) return;
+        var children = childrenList.querySelectorAll('.hdr-child-row');
+        children.forEach(function (child, ci) {
+            child.setAttribute('data-child-index', ci);
+            var orderInp = child.querySelector('.hdr-child-order');
+            var orderDisp = child.querySelector('.hdr-child-order-display');
+            if (orderInp) { orderInp.name = 'header[links][' + linkIdx + '][children][' + ci + '][order]'; orderInp.value = ci + 1; }
+            if (orderDisp) orderDisp.textContent = ci + 1;
+            child.querySelectorAll('input:not(.hdr-child-order)').forEach(function (inp) {
+                inp.name = inp.name.replace(/header\[links\]\[\d+\]\[children\]\[\d+\]/, 'header[links][' + linkIdx + '][children][' + ci + ']');
+            });
+        });
+    }
+
     if (addLinkBtn && linksContainer) {
         addLinkBtn.addEventListener('click', function () {
             var idx = linksContainer.querySelectorAll('.hdr-link-row').length;
-            linksContainer.insertAdjacentHTML('beforeend', newLinkRowHtml(idx));
+            linksContainer.insertAdjacentHTML('beforeend', newLinkRowHtml(idx, idx + 1));
         });
+
         linksContainer.addEventListener('click', function (e) {
-            if (e.target.classList.contains('hdr-remove-link')) {
-                var row = e.target.closest('.hdr-link-row');
-                if (row) row.remove();
+            var btn = e.target.closest('button');
+            if (!btn) return;
+
+            /* Remove menu item */
+            if (btn.classList.contains('hdr-remove-link')) {
+                var row = btn.closest('.hdr-link-row');
+                if (row) { row.remove(); hdrRenumberLinks(); }
             }
-            if (e.target.classList.contains('hdr-remove-child')) {
-                var row = e.target.closest('.hdr-child-row');
-                if (row) row.remove();
+            /* Remove sub-menu item */
+            if (btn.classList.contains('hdr-remove-child')) {
+                var childRow = btn.closest('.hdr-child-row');
+                var linkRow = btn.closest('.hdr-link-row');
+                if (childRow) { childRow.remove(); }
+                if (linkRow) { hdrRenumberChildren(linkRow, linkRow.getAttribute('data-index')); }
             }
-            if (e.target.classList.contains('hdr-add-child')) {
-                var linkRow = e.target.closest('.hdr-link-row');
+            /* Add sub-menu */
+            if (btn.classList.contains('hdr-add-child')) {
+                var linkRow = btn.closest('.hdr-link-row');
                 if (!linkRow) return;
                 var linkIdx = linkRow.getAttribute('data-index');
                 var childrenList = linkRow.querySelector('.hdr-children-list');
                 if (!childrenList) return;
                 var childIdx = childrenList.querySelectorAll('.hdr-child-row').length;
-                childrenList.insertAdjacentHTML('beforeend', newChildRowHtml(linkIdx, childIdx));
+                childrenList.insertAdjacentHTML('beforeend', newChildRowHtml(linkIdx, childIdx, childIdx + 1));
+            }
+            /* Move menu item UP */
+            if (btn.classList.contains('hdr-move-up')) {
+                var row = btn.closest('.hdr-link-row');
+                if (row && row.previousElementSibling && row.previousElementSibling.classList.contains('hdr-link-row')) {
+                    linksContainer.insertBefore(row, row.previousElementSibling);
+                    hdrRenumberLinks();
+                }
+            }
+            /* Move menu item DOWN */
+            if (btn.classList.contains('hdr-move-down')) {
+                var row = btn.closest('.hdr-link-row');
+                if (row && row.nextElementSibling && row.nextElementSibling.classList.contains('hdr-link-row')) {
+                    linksContainer.insertBefore(row.nextElementSibling, row);
+                    hdrRenumberLinks();
+                }
+            }
+            /* Move sub-menu item UP */
+            if (btn.classList.contains('hdr-child-move-up')) {
+                var childRow = btn.closest('.hdr-child-row');
+                var linkRow = btn.closest('.hdr-link-row');
+                if (childRow && childRow.previousElementSibling && childRow.previousElementSibling.classList.contains('hdr-child-row')) {
+                    childRow.parentNode.insertBefore(childRow, childRow.previousElementSibling);
+                    if (linkRow) hdrRenumberChildren(linkRow, linkRow.getAttribute('data-index'));
+                }
+            }
+            /* Move sub-menu item DOWN */
+            if (btn.classList.contains('hdr-child-move-down')) {
+                var childRow = btn.closest('.hdr-child-row');
+                var linkRow = btn.closest('.hdr-link-row');
+                if (childRow && childRow.nextElementSibling && childRow.nextElementSibling.classList.contains('hdr-child-row')) {
+                    childRow.parentNode.insertBefore(childRow.nextElementSibling, childRow);
+                    if (linkRow) hdrRenumberChildren(linkRow, linkRow.getAttribute('data-index'));
+                }
             }
         });
     }

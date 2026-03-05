@@ -911,7 +911,7 @@ body.aj-custom-header #masthead {
    ========================================================================== */
 .aj-regions {
     padding: 50px 0;
-    background: #fff;
+    background: transparent;
 }
 
 .aj-regions .aj-section-title { margin-bottom: 24px; }
@@ -970,7 +970,7 @@ body.aj-custom-header #masthead {
    ========================================================================== */
 .aj-spots {
     padding: 50px 0 60px;
-    background: #fff;
+    background: transparent;
 }
 
 .aj-spots .aj-section-title { margin-bottom: 24px; }
@@ -1036,7 +1036,7 @@ body.aj-custom-header #masthead {
    ========================================================================== */
 .aj-footer-nl {
     padding: 50px 0 40px;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.85);
     border-top: 1px solid #eee;
 }
 
@@ -1156,7 +1156,7 @@ body.aj-custom-header #masthead {
 /* Payment bar */
 .aj-payments {
     padding: 20px 0;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.9);
     border-top: 1px solid #eee;
     text-align: center;
 }
@@ -1190,32 +1190,47 @@ body.aj-custom-header #masthead {
 }
 
 /* ==========================================================================
-   7. BACKGROUND PATTERN — Islamic geometric pattern (real div approach)
+   7. BACKGROUND PATTERN — Islamic geometric pattern
+   body::before = pattern layer (fixed, covers entire page)
+   body::after  = subtle gradient overlay for readability
    ========================================================================== */
-.aj-bg-pattern {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 0;
-}
-.aj-bg-pattern__texture {
-    position: absolute;
-    inset: 0;
-    background-image: url('https://i.ibb.co/4n5PwWsV/vecteezy-islamic-geometric-pattern-art-illustration-vector-14002298.jpg');
-    background-repeat: repeat;
-    background-position: center;
-    background-size: 520px;
-    opacity: 0.22;
-}
-.aj-bg-pattern__gradient {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 80% 70% at center, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.15) 100%);
+body.aj-has-bg-pattern {
+    background-color: #f8fafc;
+    position: relative;
 }
 
-body.aj-has-bg-pattern {
-    background-color: #fafbfc;
+/* Pattern layer — covers entire page, clearly visible */
+body.aj-has-bg-pattern::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('https://i.ibb.co/4n5PwWsV/vecteezy-islamic-geometric-pattern-art-illustration-vector-14002298.jpg');
+    background-repeat: repeat;
+    background-size: 350px;
+    opacity: 0.25;
+    z-index: -2;
+    pointer-events: none;
+}
+
+/* Very subtle gradient overlay — pattern stays visible */
+body.aj-has-bg-pattern::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.15) 60%, rgba(255, 255, 255, 0) 100%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.aj-home-wrap {
+    position: relative;
+    min-height: 100vh;
 }
 
 .aj-home {

@@ -436,11 +436,14 @@ class HomePageSettingsController extends Controller
             'header.links.*.label'        => ['nullable', 'string', 'max:120'],
             'header.links.*.url'          => ['nullable', 'string', 'max:500'],
             'header.links.*.icon'         => ['nullable', 'string', 'max:100'],
+            'header.links.*.order'        => ['nullable', 'integer', 'min:0'],
             'header.links.*.active'       => ['nullable'],
             'header.links.*.highlight'    => ['nullable'],
             'header.links.*.children'     => ['nullable', 'array'],
             'header.links.*.children.*.label' => ['nullable', 'string', 'max:120'],
             'header.links.*.children.*.url'   => ['nullable', 'string', 'max:500'],
+            'header.links.*.children.*.icon'  => ['nullable', 'string', 'max:100'],
+            'header.links.*.children.*.order' => ['nullable', 'integer', 'min:0'],
             'header.links.*.children_json'    => ['nullable', 'string', 'max:2000'],
             'header.show_header_sitewide'     => ['nullable'],
             'header.show_footer_sitewide'     => ['nullable'],
@@ -458,6 +461,7 @@ class HomePageSettingsController extends Controller
         }
 
         $links = [];
+        $linkIndex = 0;
         foreach (($h['links'] ?? []) as $link) {
             $label = trim((string) ($link['label'] ?? ''));
             $url   = trim((string) ($link['url'] ?? ''));
@@ -476,22 +480,49 @@ class HomePageSettingsController extends Controller
                     $childrenRaw = array_merge($childrenRaw, $parsed);
                 }
             }
+            $childIndex = 0;
             foreach ($childrenRaw as $child) {
                 $cl = trim((string) ($child['label'] ?? ''));
                 $cu = trim((string) ($child['url'] ?? ''));
                 if ($cl !== '' || $cu !== '') {
-                    $children[] = ['label' => $cl, 'url' => $cu];
+                    $children[] = [
+                        'label' => $cl,
+                        'url'   => $cu,
+                        'icon'  => trim((string) ($child['icon'] ?? '')),
+                        'order' => isset($child['order']) ? (int) $child['order'] : ($childIndex + 1),
+                    ];
+                    $childIndex++;
                 }
             }
+            // Sort children by order
+            usort($children, fn ($a, $b) => ($a['order'] ?? 999) <=> ($b['order'] ?? 999));
+            // Renumber children
+            $childOrder = 1;
+            foreach ($children as &$c) {
+                $c['order'] = $childOrder++;
+            }
+            unset($c);
+
             $links[] = [
                 'label'     => $label,
                 'url'       => $url,
                 'icon'      => trim((string) ($link['icon'] ?? '')),
+                'order'     => isset($link['order']) ? (int) $link['order'] : ($linkIndex + 1),
                 'active'    => !empty($link['active']),
                 'highlight' => !empty($link['highlight']),
                 'children'  => $children,
             ];
+            $linkIndex++;
         }
+
+        // Sort links by order
+        usort($links, fn ($a, $b) => ($a['order'] ?? 999) <=> ($b['order'] ?? 999));
+        // Renumber links
+        $linkOrder = 1;
+        foreach ($links as &$l) {
+            $l['order'] = $linkOrder++;
+        }
+        unset($l);
 
         $payload = [
             'enabled'          => $request->boolean('header.enabled'),
