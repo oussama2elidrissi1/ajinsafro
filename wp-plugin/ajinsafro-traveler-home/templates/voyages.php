@@ -45,8 +45,6 @@ $is_search = ! empty( $keyword );
 
 <div class="aj-home-wrap">
     <div id="aj-home" class="aj-home aj-voyages-page">
-        <?php include AJTH_DIR . 'parts/header.php'; ?>
-
         <?php if ( ! $is_search ) : ?>
         <section class="aj-voyages-hero">
             <div class="aj-container">

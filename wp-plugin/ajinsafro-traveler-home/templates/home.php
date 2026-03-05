@@ -28,7 +28,7 @@ $dbr = ajth_get_destinations_by_region();
 
         <?php
         foreach ( $section_order as $key ) {
-            $enabled = ! empty( $sections[ $key ] );
+            $enabled = isset( $sections[ $key ] ) && $sections[ $key ];
             if ( ! $enabled ) {
                 continue;
             }
