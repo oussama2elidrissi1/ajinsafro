@@ -48,8 +48,16 @@ $is_search = ! empty( $keyword );
         <?php if ( ! $is_search ) : ?>
         <section class="aj-voyages-hero">
             <div class="aj-container">
-                <h1 class="aj-voyages-title"><?php esc_html_e( 'Tous les voyages', 'ajinsafro-traveler-home' ); ?></h1>
-                <p class="aj-voyages-subtitle"><?php esc_html_e( 'Trouvez votre prochaine destination et réservez rapidement.', 'ajinsafro-traveler-home' ); ?></p>
+                <div class="aj-voyages-hero__header">
+                    <div>
+                        <h1 class="aj-voyages-title"><?php esc_html_e( 'Tous les voyages', 'ajinsafro-traveler-home' ); ?></h1>
+                        <p class="aj-voyages-subtitle"><?php esc_html_e( 'Trouvez votre prochaine destination et réservez rapidement.', 'ajinsafro-traveler-home' ); ?></p>
+                    </div>
+                    <a href="<?php echo esc_url( function_exists( 'ajth_get_vols_page_url' ) ? ajth_get_vols_page_url() : home_url( '/vols/' ) ); ?>" class="aj-voyages-vols-link">
+                        <i class="fas fa-plane"></i>
+                        <?php esc_html_e( 'Voir tous les vols', 'ajinsafro-traveler-home' ); ?>
+                    </a>
+                </div>
                 <div class="aj-voyages-search">
                     <?php include AJTH_DIR . 'parts/search.php'; ?>
                 </div>

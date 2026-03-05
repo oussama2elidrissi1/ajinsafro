@@ -430,6 +430,20 @@ function ajth_get_voyages_page_url() {
 }
 
 /* ──────────────────────────────────────────────
+ * Vols page URL helper
+ * ────────────────────────────────────────────── */
+function ajth_get_vols_page_url() {
+    $page = get_page_by_path( 'vols' );
+    if ( $page instanceof WP_Post ) {
+        $url = get_permalink( $page );
+        if ( $url ) {
+            return $url;
+        }
+    }
+    return home_url( '/vols/' );
+}
+
+/* ──────────────────────────────────────────────
  * Ensure "Voyages" page exists (slug: voyages)
  * ────────────────────────────────────────────── */
 function ajth_ensure_voyages_page() {
@@ -442,6 +456,23 @@ function ajth_ensure_voyages_page() {
         'post_status'  => 'publish',
         'post_title'   => 'Voyages',
         'post_name'    => 'voyages',
+        'post_content' => '',
+    ) );
+}
+
+/* ──────────────────────────────────────────────
+ * Ensure "Vols" page exists (slug: vols)
+ * ────────────────────────────────────────────── */
+function ajth_ensure_vols_page() {
+    if ( get_page_by_path( 'vols' ) ) {
+        return;
+    }
+
+    wp_insert_post( array(
+        'post_type'    => 'page',
+        'post_status'  => 'publish',
+        'post_title'   => 'Vols',
+        'post_name'    => 'vols',
         'post_content' => '',
     ) );
 }
@@ -739,5 +770,6 @@ function ajth_activate() {
     }
 
     ajth_ensure_voyages_page();
+    ajth_ensure_vols_page();
 }
 register_activation_hook( __FILE__, 'ajth_activate' );

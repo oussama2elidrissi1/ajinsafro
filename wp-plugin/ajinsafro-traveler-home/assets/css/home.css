@@ -2612,3 +2612,280 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
         grid-template-columns: 1fr;
     }
 }
+.aj-voyages-hero__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+
+.aj-voyages-vols-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #0083c4;
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s ease;
+    white-space: nowrap;
+}
+
+.aj-voyages-vols-link:hover {
+    background: #006ba1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 131, 196, 0.3);
+}
+
+@media (max-width: 768px) {
+    .aj-voyages-hero__header {
+        flex-direction: column;
+    }
+}
+
+/* ==========================================================================
+   VOLS PAGE
+   ========================================================================== */
+.aj-vols-page { background: #f8fafc; }
+
+.aj-vols-hero {
+    padding: 32px 0 18px;
+}
+
+.aj-vols-search-header {
+    padding: 32px 0 24px;
+}
+
+.aj-vols-title {
+    font-size: clamp(1.5rem, 2.3vw, 2.1rem);
+    font-weight: 800;
+    color: #0e3a5a;
+}
+
+.aj-vols-subtitle {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: .98rem;
+}
+
+.aj-vols-search {
+    margin-top: 18px;
+}
+
+.aj-vols-search-form {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.aj-vols-search-fields {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.aj-vols-search-field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.aj-vols-search-field i {
+    color: #0083c4;
+    font-size: 18px;
+}
+
+.aj-vols-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    outline: none;
+}
+
+.aj-vols-search-btn {
+    padding: 12px 24px;
+    background: #0083c4;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.aj-vols-search-btn:hover {
+    background: #006ba1;
+}
+
+.aj-vols-results {
+    padding: 12px 0 48px;
+}
+
+.aj-vols-results__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.aj-vols-results__count {
+    color: #6b7280;
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.aj-vols-list {
+    display: grid;
+    gap: 16px;
+}
+
+.aj-flight-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    transition: all .2s ease;
+}
+
+.aj-flight-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.aj-flight-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.aj-flight-card__type {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.aj-flight-card__type.aller {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.aj-flight-card__type.retour {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.aj-flight-card__number {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.aj-flight-card__route {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.aj-flight-card__city {
+    flex: 1;
+}
+
+.aj-flight-card__city strong {
+    display: block;
+    font-size: 18px;
+    color: #0e3a5a;
+    margin-bottom: 4px;
+}
+
+.aj-flight-card__city i {
+    margin-right: 8px;
+    color: #0083c4;
+}
+
+.aj-flight-card__datetime {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.aj-flight-card__arrow {
+    color: #0083c4;
+    font-size: 24px;
+}
+
+.aj-vols-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.aj-vols-pagination .page-numbers {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #334155;
+    font-weight: 600;
+    transition: all .2s ease;
+}
+
+.aj-vols-pagination .page-numbers.current,
+.aj-vols-pagination .page-numbers:hover {
+    background: #0083c4;
+    border-color: #0083c4;
+    color: #fff;
+}
+
+.aj-vols-empty {
+    padding: 48px 24px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    color: #475569;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .aj-vols-search-fields {
+        flex-direction: column;
+    }
+
+    .aj-vols-search-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .aj-flight-card__route {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .aj-flight-card__arrow {
+        transform: rotate(90deg);
+    }
+}

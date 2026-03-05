@@ -28,6 +28,14 @@ class AJTH_Template_Router {
      */
     public function maybe_override_front_page( $template ) {
 
+        // Handle vols page
+        if ( is_page( 'vols' ) ) {
+            $vols = AJTH_DIR . 'templates/vols.php';
+            if ( file_exists( $vols ) ) {
+                return $vols;
+            }
+        }
+
         // Handle voyages page, st_tours archive, and st_tours searches
         $is_voyages_context = is_page( 'voyages' ) 
             || is_post_type_archive( 'st_tours' )
