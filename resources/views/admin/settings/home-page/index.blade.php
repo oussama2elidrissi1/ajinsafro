@@ -364,7 +364,7 @@
                     <div class="col-md-2">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="sections[{{ $sKey }}]" value="1"
-                                   {{ old("sections.$sKey", data_get($settings, "sections.$sKey")) ? 'checked' : '' }}>
+                                   {{ old("sections.$sKey", data_get($settings, "sections.$sKey", true)) ? 'checked' : '' }}>
                             <label class="form-check-label">{{ $sLabel }}</label>
                         </div>
                     </div>

@@ -1190,16 +1190,16 @@ body.aj-custom-header #masthead {
 }
 
 /* ==========================================================================
-   7. BACKGROUND PATTERN — Islamic geometric pattern
+   7. BACKGROUND PATTERN — Islamic geometric pattern on left/right margins only
    body::before = pattern layer (fixed, covers entire page)
-   body::after  = subtle gradient overlay for readability
+   body::after  = white center overlay to hide pattern in content area
    ========================================================================== */
 body.aj-has-bg-pattern {
     background-color: #f8fafc;
     position: relative;
 }
 
-/* Pattern layer — covers entire page, clearly visible */
+/* Pattern layer — covers entire page */
 body.aj-has-bg-pattern::before {
     content: '';
     position: fixed;
@@ -1209,23 +1209,49 @@ body.aj-has-bg-pattern::before {
     height: 100vh;
     background-image: url('https://i.ibb.co/4n5PwWsV/vecteezy-islamic-geometric-pattern-art-illustration-vector-14002298.jpg');
     background-repeat: repeat;
-    background-size: 350px;
-    opacity: 0.25;
+    background-size: 300px;
+    opacity: 0.2;
     z-index: -2;
     pointer-events: none;
 }
 
-/* Very subtle gradient overlay — pattern stays visible */
+/* White center overlay — hides pattern in content area, shows on margins */
 body.aj-has-bg-pattern::after {
     content: '';
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100vw;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1320px;
+    max-width: calc(100vw - 80px);
     height: 100vh;
-    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.15) 60%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(to right, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 1) 3%, 
+        rgba(255, 255, 255, 1) 97%, 
+        rgba(255, 255, 255, 0) 100%
+    );
     z-index: -1;
     pointer-events: none;
+}
+
+/* Responsive: adjust center overlay width */
+@media (max-width: 1400px) {
+    body.aj-has-bg-pattern::after {
+        width: calc(100vw - 120px);
+        max-width: calc(100vw - 60px);
+    }
+}
+
+@media (max-width: 768px) {
+    body.aj-has-bg-pattern::after {
+        width: calc(100vw - 40px);
+        max-width: calc(100vw - 20px);
+    }
+    body.aj-has-bg-pattern::before {
+        background-size: 200px;
+        opacity: 0.15;
+    }
 }
 
 .aj-home-wrap {
