@@ -268,8 +268,8 @@ class HomePageSettingsController extends Controller
                     'promotions' => (bool) $request->boolean('sections.promotions', true),
                     'newsletter' => (bool) $request->boolean('sections.newsletter', true),
                 ], array_filter(
-                    array_map(fn ($v) => (bool) $v, $request->input('sections', [])),
-                    fn ($_, $k) => str_starts_with((string) $k, 'custom_'),
+                    array_map(function ($v) { return (bool) $v; }, $request->input('sections', [])),
+                    function ($k) { return str_starts_with((string) $k, 'custom_'); },
                     ARRAY_FILTER_USE_KEY
                 )),
                 'section_order' => $this->normalizeSectionOrder($request->input('section_order', [])),
