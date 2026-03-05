@@ -162,57 +162,26 @@ class HomePageSettingsController extends Controller
 
             if ($request->hasFile('hero_video_file')) {
                 $uploadedVideo = $request->file('hero_video_file');
-
-                if (!$uploadedVideo instanceof UploadedFile || !$uploadedVideo->isValid()) {
-                    $errorMessage = $uploadedVideo instanceof UploadedFile
-                        ? $uploadedVideo->getErrorMessage()
-                        : 'fichier manquant';
-
-                    throw new RuntimeException('Upload vidéo invalide. Détail: ' . $errorMessage);
+                $videoOk = false;
+                if ($uploadedVideo instanceof UploadedFile && $uploadedVideo->isValid()) {
+                    try {
+                        $baseName = pathinfo($uploadedVideo->getClientOriginalName(), PATHINFO_FILENAME);
+                        $safeBaseName = preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $baseName);
+                        $safeBaseName = trim((string) $safeBaseName, '-_') ?: 'hero-video';
+                        $extension = strtolower((string) $uploadedVideo->getClientOriginalExtension()) ?: 'mp4';
+                        $fileName = $safeBaseName . '-' . now()->format('YmdHis') . '-' . bin2hex(random_bytes(4)) . '.' . $extension;
+                        $heroVideoPath = Storage::disk('public')->putFileAs('home-settings/hero', $uploadedVideo, $fileName);
+                        if ($heroVideoPath !== false) {
+                            $heroVideoUrl = Storage::disk('public')->url($heroVideoPath);
+                            $videoOk = true;
+                        }
+                    } catch (Throwable $ve) {
+                        Log::warning('Home page hero video upload failed', ['message' => $ve->getMessage()]);
+                    }
                 }
-
-                Log::info('Home page hero video upload processing started', [
-                    'size' => $uploadedVideo->getSize(),
-                    'original_name' => $uploadedVideo->getClientOriginalName(),
-                    'is_valid' => $uploadedVideo->isValid(),
-                    'mime' => $uploadedVideo->getMimeType(),
-                ]);
-
-                $baseName = pathinfo($uploadedVideo->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeBaseName = preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $baseName);
-                $safeBaseName = trim((string) $safeBaseName, '-_');
-                if ($safeBaseName === '') {
-                    $safeBaseName = 'hero-video';
+                if (!$videoOk) {
+                    $request->session()->flash('warning', "L'upload de la video hero a echoue. L'URL existante est conservee. Utilisez un lien YouTube/Vimeo ou augmentez upload_max_filesize/post_max_size.");
                 }
-
-                $extension = strtolower((string) $uploadedVideo->getClientOriginalExtension());
-                if ($extension === '') {
-                    $extension = 'mp4';
-                }
-
-                $fileName = sprintf(
-                    '%s-%s-%s.%s',
-                    $safeBaseName,
-                    now()->format('YmdHis'),
-                    bin2hex(random_bytes(4)),
-                    $extension
-                );
-
-                Log::info('Home page hero video upload file resolved', [
-                    'filename' => $fileName,
-                ]);
-
-                $heroVideoPath = Storage::disk('public')->putFileAs('home-settings/hero', $uploadedVideo, $fileName);
-                if ($heroVideoPath === false) {
-                    throw new RuntimeException('Video file storage failed.');
-                }
-
-                $heroVideoUrl = Storage::disk('public')->url($heroVideoPath);
-
-                Log::info('Home page hero video upload processing completed', [
-                    'stored_path' => $heroVideoPath,
-                    'public_url' => $heroVideoUrl,
-                ]);
             }
 
         $regions = [];
@@ -383,14 +352,21 @@ class HomePageSettingsController extends Controller
         } catch (Throwable $e) {
             Log::error('Home page settings update failed', [
                 'message' => $e->getMessage(),
+                'exception' => get_class($e),
                 'has_video_upload' => $request->hasFile('hero_video_file'),
                 'trace' => $e->getTraceAsString(),
             ]);
 
+            $err = $e->getMessage();
+            $errorDisplay = 'Echec enregistrement : ' . $err;
+            if (stripos($err, 'video') !== false || stripos($err, 'upload') !== false || stripos($err, 'file') !== false || stripos($err, 'storage') !== false || stripos($err, 'size') !== false) {
+                $errorDisplay .= ' Pour la video, utilisez une URL (YouTube/Vimeo) ou augmentez upload_max_filesize/post_max_size.';
+            }
+
             return redirect()
                 ->route('admin.settings.home-page.edit', ['tab' => 'content'])
                 ->withInput()
-                ->with('error', "Échec de l'enregistrement. Si l’upload mp4 échoue, augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.");
+                ->with('error', $errorDisplay);
         }
     }
 

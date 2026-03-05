@@ -39,12 +39,15 @@ if ( $keyword !== '' ) {
 }
 
 $q = new WP_Query( $query_args );
+
+$is_search = ! empty( $keyword );
 ?>
 
 <div class="aj-home-wrap">
     <div id="aj-home" class="aj-home aj-voyages-page">
         <?php include AJTH_DIR . 'parts/header.php'; ?>
 
+        <?php if ( ! $is_search ) : ?>
         <section class="aj-voyages-hero">
             <div class="aj-container">
                 <h1 class="aj-voyages-title"><?php esc_html_e( 'Tous les voyages', 'ajinsafro-traveler-home' ); ?></h1>
@@ -54,15 +57,30 @@ $q = new WP_Query( $query_args );
                 </div>
             </div>
         </section>
+        <?php endif; ?>
 
         <section class="aj-voyages-results">
             <div class="aj-container">
+                <?php if ( $is_search ) : ?>
+                    <div class="aj-voyages-search-header">
+                        <h1 class="aj-voyages-title"><?php esc_html_e( 'Résultats de recherche', 'ajinsafro-traveler-home' ); ?></h1>
+                        <?php if ( $keyword ) : ?>
+                            <p class="aj-voyages-subtitle">
+                                <?php printf( esc_html__( 'Recherche pour : %s', 'ajinsafro-traveler-home' ), '<strong>' . esc_html( $keyword ) . '</strong>' ); ?>
+                            </p>
+                        <?php endif; ?>
+                        <div class="aj-voyages-search">
+                            <?php include AJTH_DIR . 'parts/search.php'; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="aj-voyages-results__head">
-                    <h2 class="aj-section-title"><?php esc_html_e( 'Liste des voyages', 'ajinsafro-traveler-home' ); ?></h2>
+                    <h2 class="aj-section-title"><?php echo $is_search ? esc_html__( 'Voyages trouvés', 'ajinsafro-traveler-home' ) : esc_html__( 'Liste des voyages', 'ajinsafro-traveler-home' ); ?></h2>
                     <p class="aj-voyages-results__count">
                         <?php
                         printf(
-                            esc_html__( '%d résultat(s)', 'ajinsafro-traveler-home' ),
+                            esc_html( _n( '%d résultat', '%d résultats', intval( $q->found_posts ), 'ajinsafro-traveler-home' ) ),
                             intval( $q->found_posts )
                         );
                         ?>
@@ -138,7 +156,13 @@ $q = new WP_Query( $query_args );
 
                 <?php else : ?>
                     <div class="aj-voyages-empty">
-                        <p><?php esc_html_e( 'Aucun voyage trouvé pour votre recherche.', 'ajinsafro-traveler-home' ); ?></p>
+                        <i class="fas fa-search" style="font-size: 48px; color: #cbd5e1; margin-bottom: 16px;"></i>
+                        <p style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">
+                            <?php esc_html_e( 'Aucun voyage trouvé', 'ajinsafro-traveler-home' ); ?>
+                        </p>
+                        <p style="color: #94a3b8;">
+                            <?php echo $keyword ? esc_html__( 'Essayez avec d\'autres mots-clés.', 'ajinsafro-traveler-home' ) : esc_html__( 'Aucun voyage n\'est disponible pour le moment.', 'ajinsafro-traveler-home' ); ?>
+                        </p>
                     </div>
                 <?php endif; ?>
             </div>

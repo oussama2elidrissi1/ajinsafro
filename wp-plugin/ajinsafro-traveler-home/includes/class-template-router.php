@@ -28,7 +28,12 @@ class AJTH_Template_Router {
      */
     public function maybe_override_front_page( $template ) {
 
-        if ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) ) {
+        // Handle voyages page, st_tours archive, and st_tours searches
+        $is_voyages_context = is_page( 'voyages' ) 
+            || is_post_type_archive( 'st_tours' )
+            || ( is_search() && get_query_var( 'post_type' ) === 'st_tours' );
+
+        if ( $is_voyages_context ) {
             $voyages = AJTH_DIR . 'templates/voyages.php';
             if ( file_exists( $voyages ) ) {
                 return $voyages;

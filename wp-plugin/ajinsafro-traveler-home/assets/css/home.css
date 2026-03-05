@@ -2498,6 +2498,10 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
     padding: 32px 0 18px;
 }
 
+.aj-voyages-search-header {
+    padding: 32px 0 24px;
+}
+
 .aj-voyages-title {
     font-size: clamp(1.5rem, 2.3vw, 2.1rem);
     font-weight: 800;
@@ -2580,12 +2584,16 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
 }
 
 .aj-voyages-empty {
-    padding: 24px;
+    padding: 48px 24px;
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     color: #475569;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 @media (max-width: 1024px) {
