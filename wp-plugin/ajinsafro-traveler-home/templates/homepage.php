@@ -39,6 +39,16 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         <?php include AJTH_DIR . 'parts/good-spots.php'; ?>
     <?php endif; ?>
 
+    <!-- TEST SECTION - À SUPPRIMER -->
+    <section style="background:#ffff00 !important;padding:50px 20px !important;margin:30px 0 !important;border:5px solid #ff0000 !important;display:block !important;visibility:visible !important;">
+        <div style="max-width:1280px;margin:0 auto;text-align:center;">
+            <h2 style="color:#ff0000 !important;font-size:3rem !important;font-weight:bold !important;margin:0 0 20px !important;">🔴 TEST SYNCHRONISATION 🔴</h2>
+            <p style="color:#000 !important;font-size:1.5rem !important;">Si vous voyez ce texte, la synchronisation fonctionne !</p>
+            <p style="color:#666 !important;font-size:1rem !important;">Date: <?php echo date('Y-m-d H:i:s'); ?></p>
+        </div>
+    </section>
+    <!-- FIN TEST SECTION -->
+
     <?php include AJTH_DIR . 'parts/promotions.php'; ?>
 
     <?php include AJTH_DIR . 'parts/newsletter.php'; ?>
