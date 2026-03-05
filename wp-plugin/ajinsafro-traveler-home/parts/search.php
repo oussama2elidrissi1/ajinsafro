@@ -14,6 +14,10 @@ $shortcode_tag = 'traveler_search';
 if ( preg_match( '/\[([a-zA-Z0-9_\-:]+)/', $search_shortcode, $m ) ) {
     $shortcode_tag = $m[1];
 }
+
+$voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
+    ? ajth_get_voyages_page_url()
+    : home_url( '/?post_type=st_tours' );
 ?>
 
 <?php if ( shortcode_exists( $shortcode_tag ) && ! empty( $search_shortcode ) ) : ?>
@@ -31,7 +35,7 @@ if ( preg_match( '/\[([a-zA-Z0-9_\-:]+)/', $search_shortcode, $m ) ) {
     <div class="aj-search-forms">
         <!-- FORM: VOYAGE -->
         <div id="aj-form-voyage" class="aj-search-form aj-search-form--active">
-            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+            <form method="get" action="<?php echo esc_url( $voyages_page_url ); ?>">
                 <input type="hidden" name="s" value="">
                 <input type="hidden" name="post_type" value="st_tours">
                 <div class="aj-search-form__row">

@@ -357,24 +357,95 @@
                 </div>
             </div>
 
+            @php
+                $sectionLabels = [
+                    'search' => 'Search',
+                    'last_minute' => 'Tendances du moment',
+                    'accommodations' => 'Séjours uniques',
+                    'regions' => 'Destinations',
+                    'good_spots' => 'Bons coins',
+                    'promotions' => 'Promotions',
+                    'newsletter' => 'Newsletter',
+                ];
+                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'newsletter']));
+                $sectionOrder = is_array($sectionOrder) ? $sectionOrder : [];
+                $customSections = old('custom_sections', data_get($settings, 'custom_sections', []));
+                $customSections = is_array($customSections) ? $customSections : [];
+            @endphp
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Sections</h5></div>
-                <div class="card-body row g-3">
-                    @foreach(['search' => 'Search', 'last_minute' => 'Tendances du moment', 'accommodations' => 'Séjours uniques', 'regions' => 'Destinations', 'good_spots' => 'Bons coins', 'promotions' => 'Promotions'] as $sKey => $sLabel)
-                    <div class="col-md-2">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="sections[{{ $sKey }}]" value="1"
-                                   {{ old("sections.$sKey", data_get($settings, "sections.$sKey", true)) ? 'checked' : '' }}>
-                            <label class="form-check-label">{{ $sLabel }}</label>
-                        </div>
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="card-title mb-0">Ordre et visibilité des sections</h5>
+                    <div class="d-flex gap-2 align-items-center">
+                        <select class="form-select form-select-sm" id="section-add-builtin" style="width:auto;">
+                            <option value="">Ajouter une section…</option>
+                            @foreach($sectionLabels as $sKey => $sLabel)
+                                @if(!in_array($sKey, $sectionOrder))
+                                    <option value="{{ $sKey }}">{{ $sLabel }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="section-add-custom">Section personnalisée</button>
                     </div>
-                    @endforeach
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Réordonnez les sections avec les flèches. Décochez pour masquer une section sur la page d'accueil.</p>
+                    <div id="section-order-container" class="vstack gap-2">
+                        @foreach($sectionOrder as $idx => $secKey)
+                            @if(str_starts_with((string)$secKey, 'custom_'))
+                                @php $custom = $customSections[$secKey] ?? ['title' => '', 'content' => '']; @endphp
+                                <div class="border rounded p-3 section-order-row bg-light" data-section-key="{{ $secKey }}">
+                                    <input type="hidden" name="section_order[]" value="{{ $secKey }}">
+                                    <div class="d-flex align-items-start gap-2 flex-wrap">
+                                        <div class="d-flex flex-column gap-0">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">↑</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">↓</button>
+                                        </div>
+                                        <div class="form-check form-switch align-self-center">
+                                            <input class="form-check-input" type="checkbox" name="sections[{{ $secKey }}]" value="1"
+                                                   {{ old("sections.$secKey", data_get($settings, "sections.$secKey", true)) ? 'checked' : '' }}>
+                                            <label class="form-check-label">Activer</label>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <label class="form-label small mb-0">Section personnalisée — Titre</label>
+                                            <input type="text" class="form-control form-control-sm" name="custom_sections[{{ $secKey }}][title]" value="{{ data_get($custom, 'title') }}" placeholder="Titre de la section">
+                                            <label class="form-label small mb-0 mt-1">Contenu (HTML / shortcodes)</label>
+                                            <textarea class="form-control form-control-sm" name="custom_sections[{{ $secKey }}][content]" rows="3" placeholder="<p>...</p> ou [shortcode]">{{ data_get($custom, 'content') }}</textarea>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <button type="button" class="btn btn-sm btn-outline-danger section-remove">×</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="border rounded p-2 section-order-row d-flex align-items-center gap-2" data-section-key="{{ $secKey }}">
+                                    <input type="hidden" name="section_order[]" value="{{ $secKey }}">
+                                    <div class="d-flex flex-column gap-0">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">↑</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">↓</button>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" name="sections[{{ $secKey }}]" value="1"
+                                               {{ old("sections.$secKey", data_get($settings, "sections.$secKey", true)) ? 'checked' : '' }}>
+                                        <label class="form-check-label">{{ $sectionLabels[$secKey] ?? $secKey }}</label>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">×</button>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header"><h5 class="card-title mb-0">Search</h5></div>
                 <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="sections[search]" value="1"
+                               {{ old('sections.search', data_get($settings, 'sections.search', true)) ? 'checked' : '' }}>
+                        <label class="form-check-label">Afficher la barre de recherche dans le hero</label>
+                    </div>
                     <label class="form-label">Shortcode</label>
                     <input type="text" class="form-control" name="search[shortcode]" value="{{ old('search.shortcode', data_get($settings, 'search.shortcode', '[traveler_search]')) }}">
                 </div>
@@ -753,6 +824,95 @@
     if (overlay) overlay.addEventListener('input', syncOverlayValue);
     toggleHeroFields();
     syncOverlayValue();
+
+    /* ── Ordre des sections + sections personnalisées ─────────── */
+    var sectionOrderContainer = document.getElementById('section-order-container');
+    var sectionAddCustomBtn = document.getElementById('section-add-custom');
+    var sectionLabels = {
+        last_minute: 'Tendances du moment',
+        accommodations: 'Séjours uniques',
+        regions: 'Destinations',
+        good_spots: 'Bons coins',
+        promotions: 'Promotions',
+        newsletter: 'Newsletter'
+    };
+    function nextCustomId() {
+        var max = 0;
+        sectionOrderContainer.querySelectorAll('.section-order-row[data-section-key^="custom_"]').forEach(function (row) {
+            var m = row.getAttribute('data-section-key').match(/^custom_(\d+)$/);
+            if (m) max = Math.max(max, parseInt(m[1], 10));
+        });
+        return 'custom_' + (max + 1);
+    }
+    function customSectionRowHtml(secKey) {
+        return '<div class="border rounded p-3 section-order-row bg-light" data-section-key="' + secKey + '">' +
+            '<input type="hidden" name="section_order[]" value="' + secKey + '">' +
+            '<div class="d-flex align-items-start gap-2 flex-wrap">' +
+            '<div class="d-flex flex-column gap-0">' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">↑</button>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">↓</button></div>' +
+            '<div class="form-check form-switch align-self-center">' +
+            '<input class="form-check-input" type="checkbox" name="sections[' + secKey + ']" value="1" checked>' +
+            '<label class="form-check-label">Activer</label></div>' +
+            '<div class="flex-grow-1">' +
+            '<label class="form-label small mb-0">Section personnalisée — Titre</label>' +
+            '<input type="text" class="form-control form-control-sm" name="custom_sections[' + secKey + '][title]" placeholder="Titre de la section">' +
+            '<label class="form-label small mb-0 mt-1">Contenu (HTML / shortcodes)</label>' +
+            '<textarea class="form-control form-control-sm" name="custom_sections[' + secKey + '][content]" rows="3" placeholder="<p>...</p> ou [shortcode]"></textarea></div>' +
+            '<div class="align-self-center"><button type="button" class="btn btn-sm btn-outline-danger section-remove">×</button></div></div></div>';
+    }
+    function builtinSectionRowHtml(secKey) {
+        var label = sectionLabels[secKey] || secKey;
+        return '<div class="border rounded p-2 section-order-row d-flex align-items-center gap-2" data-section-key="' + secKey + '">' +
+            '<input type="hidden" name="section_order[]" value="' + secKey + '">' +
+            '<div class="d-flex flex-column gap-0">' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">↑</button>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">↓</button></div>' +
+            '<div class="form-check form-switch mb-0">' +
+            '<input class="form-check-input" type="checkbox" name="sections[' + secKey + ']" value="1" checked>' +
+            '<label class="form-check-label">' + label + '</label></div>' +
+            '<div class="ms-auto"><button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">×</button></div></div>';
+    }
+    var sectionAddBuiltin = document.getElementById('section-add-builtin');
+    if (sectionAddBuiltin) {
+        sectionAddBuiltin.addEventListener('change', function () {
+            var key = this.value;
+            if (!key || !sectionOrderContainer) return;
+            sectionOrderContainer.insertAdjacentHTML('beforeend', builtinSectionRowHtml(key));
+            this.value = '';
+            var opt = this.querySelector('option[value="' + key + '"]');
+            if (opt) opt.remove();
+        });
+    }
+    if (sectionAddCustomBtn && sectionOrderContainer) {
+        sectionAddCustomBtn.addEventListener('click', function () {
+            var id = nextCustomId();
+            sectionOrderContainer.insertAdjacentHTML('beforeend', customSectionRowHtml(id));
+        });
+        sectionOrderContainer.addEventListener('click', function (e) {
+            var btn = e.target.closest('button');
+            if (!btn) return;
+            var row = btn.closest('.section-order-row');
+            if (!row) return;
+            if (btn.classList.contains('section-remove')) {
+                var key = row.getAttribute('data-section-key');
+                row.remove();
+                if (key && key.indexOf('custom_') !== 0 && sectionAddBuiltin) {
+                    var opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = sectionLabels[key] || key;
+                    sectionAddBuiltin.appendChild(opt);
+                }
+                return;
+            }
+            if (btn.classList.contains('section-move-up') && row.previousElementSibling && row.previousElementSibling.classList.contains('section-order-row')) {
+                sectionOrderContainer.insertBefore(row, row.previousElementSibling);
+            }
+            if (btn.classList.contains('section-move-down') && row.nextElementSibling && row.nextElementSibling.classList.contains('section-order-row')) {
+                sectionOrderContainer.insertBefore(row.nextElementSibling, row);
+            }
+        });
+    }
 
     /* ── Destinations par région (DBR) ─────────── */
     var dbrContainer = document.getElementById('dbr-items-container');

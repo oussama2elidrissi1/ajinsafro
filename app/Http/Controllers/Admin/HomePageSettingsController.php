@@ -83,6 +83,14 @@ class HomePageSettingsController extends Controller
                 'sections.regions' => ['nullable', 'boolean'],
                 'sections.good_spots' => ['nullable', 'boolean'],
                 'sections.promotions' => ['nullable', 'boolean'],
+                'sections.newsletter' => ['nullable', 'boolean'],
+                'sections' => ['nullable', 'array'],
+                'sections.*' => ['nullable'],
+                'section_order' => ['nullable', 'array'],
+                'section_order.*' => ['nullable', 'string', 'max:80'],
+                'custom_sections' => ['nullable', 'array'],
+                'custom_sections.*.title' => ['nullable', 'string', 'max:255'],
+                'custom_sections.*.content' => ['nullable', 'string', 'max:50000'],
 
                 'search.shortcode' => ['nullable', 'string', 'max:1000'],
 
@@ -282,14 +290,21 @@ class HomePageSettingsController extends Controller
                     'cta_url' => $validated['hero']['cta_url'] ?? '',
                     'overlay' => (float) $validated['hero']['overlay'],
                 ],
-                'sections' => [
+                'sections' => array_merge([
                     'search' => (bool) $request->boolean('sections.search', true),
                     'last_minute' => (bool) $request->boolean('sections.last_minute', true),
                     'accommodations' => (bool) $request->boolean('sections.accommodations', true),
                     'regions' => (bool) $request->boolean('sections.regions', true),
                     'good_spots' => (bool) $request->boolean('sections.good_spots', true),
                     'promotions' => (bool) $request->boolean('sections.promotions', true),
-                ],
+                    'newsletter' => (bool) $request->boolean('sections.newsletter', true),
+                ], array_filter(
+                    array_map(fn ($v) => (bool) $v, $request->input('sections', [])),
+                    fn ($_, $k) => str_starts_with((string) $k, 'custom_'),
+                    ARRAY_FILTER_USE_KEY
+                )),
+                'section_order' => $this->normalizeSectionOrder($request->input('section_order', [])),
+                'custom_sections' => $this->normalizeCustomSections($request->input('custom_sections', [])),
                 'search' => [
                     'shortcode' => trim((string)($validated['search']['shortcode'] ?? '[traveler_search]')),
                 ],
@@ -629,7 +644,10 @@ class HomePageSettingsController extends Controller
                 'regions' => true,
                 'good_spots' => true,
                 'promotions' => true,
+                'newsletter' => true,
             ],
+            'section_order' => ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'newsletter'],
+            'custom_sections' => [],
             'search' => [
                 'shortcode' => '[traveler_search]',
             ],
@@ -775,6 +793,45 @@ class HomePageSettingsController extends Controller
             'title'   => trim((string) ($input['title'] ?? self::DESTINATIONS_BY_REGION_DEFAULTS['title'])),
             'items'   => array_values($filtered),
         ];
+    }
+
+    private const BUILTIN_SECTIONS = ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'newsletter'];
+
+    private function normalizeSectionOrder(array $input): array
+    {
+        $order = [];
+        foreach ($input as $key) {
+            $key = trim((string) $key);
+            if ($key === '') {
+                continue;
+            }
+            $order[] = $key;
+        }
+        if (empty($order)) {
+            return self::BUILTIN_SECTIONS;
+        }
+        return array_values(array_unique($order));
+    }
+
+    private function normalizeCustomSections(array $input): array
+    {
+        $out = [];
+        foreach ($input as $id => $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $id = preg_replace('/[^a-z0-9_]/', '', (string) $id);
+            if ($id === '') {
+                continue;
+            }
+            if (strpos($id, 'custom_') !== 0) {
+                $id = 'custom_' . $id;
+            }
+            $title = trim((string) ($item['title'] ?? ''));
+            $content = trim((string) ($item['content'] ?? ''));
+            $out[$id] = ['title' => $title, 'content' => $content];
+        }
+        return $out;
     }
 
     private function wpOptionsTable(): string

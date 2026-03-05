@@ -1843,38 +1843,22 @@ body.aj-has-bg-pattern::after {
    14. PROMOTIONAL BANNERS — "Destinations de ce mois"
    Force visible: section exists in DOM but can be hidden by theme/overflow.
    ========================================================================== */
-#aj-promos,
-.aj-promos,
-.aj-home .aj-promos,
-.aj-home #aj-promos,
-body .aj-home section.aj-promos {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    z-index: 2 !important;
-    padding: 50px 0 !important;
-    min-height: 320px !important;
-    overflow: visible !important;
-    clip: auto !important;
-    transform: none !important;
+.aj-promos {
+    position: relative;
+    z-index: 2;
+    padding: 50px 0;
+    background-color: transparent;
 }
 .aj-promos .aj-section-title { margin-bottom: 24px; }
 
 .aj-promos__grid {
-    display: grid !important;
+    display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
-    min-height: 220px;
-    visibility: visible !important;
-    opacity: 1 !important;
 }
 
-.aj-promos .aj-promo-card,
 .aj-promo-card {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    display: block;
     position: relative;
     border-radius: 12px;
     padding: 24px;
@@ -1885,6 +1869,7 @@ body .aj-home section.aj-promos {
     box-shadow: 0 4px 20px rgba(0,0,0,.08);
     cursor: pointer;
     transition: transform .3s;
+    text-decoration: none;
 }
 .aj-promo-card:hover { transform: translateY(-4px); }
 
@@ -1927,6 +1912,69 @@ body .aj-home section.aj-promos {
     bottom: 0;
     right: 0;
     opacity: .9;
+}
+
+.aj-promo-card--rtl {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.aj-promo-card__deco--cards {
+    display: flex;
+    gap: 0;
+    transform: rotate(-10deg);
+    bottom: -16px;
+    right: -8px;
+}
+
+.aj-deco-card {
+    width: 96px;
+    height: 128px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+.aj-deco-card--green {
+    background: #22c55e;
+    transform: rotate(-15deg) translateY(16px);
+}
+.aj-deco-card--orange {
+    background: #f97316;
+    transform: rotate(-5deg);
+    z-index: 1;
+    margin-left: -48px;
+}
+.aj-deco-card--blue {
+    background: #60a5fa;
+    transform: rotate(5deg) translateY(-8px);
+    z-index: 2;
+    margin-left: -48px;
+}
+
+.aj-promo-card__deco--wallet {
+    top: 16px;
+    right: 16px;
+    bottom: auto;
+    font-size: 4rem;
+}
+.aj-promo-card__deco--wallet i {
+    color: rgba(0,0,0,.15);
+}
+
+.aj-promo-card__deco--box {
+    bottom: 16px;
+    left: 24px;
+    right: auto;
+    font-size: 3.5rem;
+    color: #ffb300;
 }
 
 /* ==========================================================================
@@ -2440,3 +2488,119 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
 .aj-footer-sitewide *::after { box-sizing: border-box; }
 .aj-footer-sitewide a { text-decoration: none; color: inherit; }
 .aj-footer-sitewide img { max-width: 100%; display: block; height: auto; }
+
+/* ==========================================================================
+   VOYAGES PAGE
+   ========================================================================== */
+.aj-voyages-page { background: #f8fafc; }
+
+.aj-voyages-hero {
+    padding: 32px 0 18px;
+}
+
+.aj-voyages-title {
+    font-size: clamp(1.5rem, 2.3vw, 2.1rem);
+    font-weight: 800;
+    color: #0e3a5a;
+}
+
+.aj-voyages-subtitle {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: .98rem;
+}
+
+.aj-voyages-search {
+    margin-top: 18px;
+}
+
+.aj-voyages-results {
+    padding: 12px 0 48px;
+}
+
+.aj-voyages-results__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.aj-voyages-results__count {
+    color: #6b7280;
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.aj-voyages-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.aj-voyages-grid__item .aj-card2 {
+    display: block;
+    height: 100%;
+}
+
+.aj-voyages-image-fallback {
+    width: 100%;
+    height: 100%;
+    min-height: 210px;
+    background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+}
+
+.aj-voyages-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.aj-voyages-pagination .page-numbers {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #334155;
+    font-weight: 600;
+    transition: all .2s ease;
+}
+
+.aj-voyages-pagination .page-numbers.current,
+.aj-voyages-pagination .page-numbers:hover {
+    background: #0083c4;
+    border-color: #0083c4;
+    color: #fff;
+}
+
+.aj-voyages-empty {
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    color: #475569;
+    text-align: center;
+}
+
+@media (max-width: 1024px) {
+    .aj-voyages-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .aj-voyages-results__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .aj-voyages-grid {
+        grid-template-columns: 1fr;
+    }
+}

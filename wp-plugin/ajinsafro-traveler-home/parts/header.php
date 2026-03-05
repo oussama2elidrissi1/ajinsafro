@@ -24,6 +24,12 @@ $social_icons = array(
     'linkedin'  => '<i class="fab fa-linkedin-in"></i>',
 );
 
+$voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
+    ? ajth_get_voyages_page_url()
+    : home_url( '/?post_type=st_tours' );
+
+$is_voyages_page = is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
+
 $title_icon_map = array(
     'packages'     => 'fas fa-suitcase-rolling',
     'package'      => 'fas fa-suitcase-rolling',
@@ -50,10 +56,10 @@ $title_icon_map = array(
 
 $default_menu_items = array(
     array(
-        'label'    => 'Packages',
-        'url'      => '#packages',
+        'label'    => 'Voyages',
+        'url'      => $voyages_page_url,
         'icon'     => 'fas fa-suitcase-rolling',
-        'active'   => true,
+        'active'   => $is_voyages_page,
         'children' => array(),
     ),
     array(

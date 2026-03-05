@@ -49,7 +49,7 @@ add_action( 'plugins_loaded', 'ajth_init' );
  * or on all pages when header is enabled and "site-wide" is on.
  * ────────────────────────────────────────────── */
 function ajth_enqueue_front_assets() {
-    $load = is_front_page() || is_home();
+    $load = is_front_page() || is_home() || is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
 
     if ( ! $load && is_singular() ) {
         global $post;
@@ -131,7 +131,7 @@ add_action( 'wp_head', 'ajth_critical_header_css', 1 );
 
 /* Preload main stylesheet so it loads as early as possible */
 function ajth_preload_styles() {
-    $load = is_front_page() || is_home();
+    $load = is_front_page() || is_home() || is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
     if ( ! $load && is_singular() ) {
         global $post;
         if ( $post && has_shortcode( $post->post_content, 'ajth_homepage' ) ) {
@@ -242,8 +242,9 @@ function ajth_get_header_settings() {
 function ajth_body_class_custom_header( $classes ) {
     $h = ajth_get_header_settings();
     $on_home = is_front_page() || is_home();
+    $on_voyages = is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
 
-    if ( ! empty( $h['enabled'] ) && ( $on_home || ! empty( $h['show_header_sitewide'] ) ) ) {
+    if ( ! empty( $h['enabled'] ) && ( $on_home || $on_voyages || ! empty( $h['show_header_sitewide'] ) ) ) {
         $classes[] = 'aj-custom-header';
     }
     if ( ! empty( $h['show_footer_sitewide'] ) ) {
@@ -263,7 +264,7 @@ add_filter( 'body_class', 'ajth_body_class_custom_header' );
  * On home the template already includes the header.
  * ────────────────────────────────────────────── */
 function ajth_render_header_sitewide() {
-    if ( is_front_page() || is_home() ) {
+    if ( is_front_page() || is_home() || is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) ) {
         return;
     }
     $h = ajth_get_header_settings();
@@ -407,6 +408,66 @@ function ajth_get_destinations_by_region() {
         'items'   => $items,
     );
 }
+
+/* ──────────────────────────────────────────────
+ * Voyages page URL helper
+ * ────────────────────────────────────────────── */
+function ajth_get_voyages_page_url() {
+    $page = get_page_by_path( 'voyages' );
+    if ( $page instanceof WP_Post ) {
+        $url = get_permalink( $page );
+        if ( $url ) {
+            return $url;
+        }
+    }
+
+    $archive = get_post_type_archive_link( 'st_tours' );
+    if ( $archive ) {
+        return $archive;
+    }
+
+    return home_url( '/?post_type=st_tours' );
+}
+
+/* ──────────────────────────────────────────────
+ * Ensure "Voyages" page exists (slug: voyages)
+ * ────────────────────────────────────────────── */
+function ajth_ensure_voyages_page() {
+    if ( get_page_by_path( 'voyages' ) ) {
+        return;
+    }
+
+    wp_insert_post( array(
+        'post_type'    => 'page',
+        'post_status'  => 'publish',
+        'post_title'   => 'Voyages',
+        'post_name'    => 'voyages',
+        'post_content' => '',
+    ) );
+}
+
+/* ──────────────────────────────────────────────
+ * Add Voyages item to WP menu if missing
+ * ────────────────────────────────────────────── */
+function ajth_add_voyages_menu_item( $items, $args ) {
+    if ( empty( $args->theme_location ) || $args->theme_location !== 'primary' ) {
+        return $items;
+    }
+
+    if ( stripos( wp_strip_all_tags( $items ), 'voyage' ) !== false ) {
+        return $items;
+    }
+
+    $url = ajth_get_voyages_page_url();
+    $active = ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) ) ? ' current-menu-item current_page_item aj-active' : '';
+
+    $items .= '<li class="menu-item menu-item-type-custom menu-item-object-custom' . esc_attr( $active ) . '">'
+        . '<a href="' . esc_url( $url ) . '"><i class="fas fa-suitcase-rolling"></i> <span>' . esc_html__( 'Voyages', 'ajinsafro-traveler-home' ) . '</span></a>'
+        . '</li>';
+
+    return $items;
+}
+add_filter( 'wp_nav_menu_items', 'ajth_add_voyages_menu_item', 20, 2 );
 
 function ajth_legacy_settings_to_json() {
     $legacy = get_option( 'ajth_home_settings', array() );
@@ -676,5 +737,7 @@ function ajth_activate() {
     if ( false === get_option( 'ajth_home_settings' ) ) {
         update_option( 'ajth_home_settings', array() );
     }
+
+    ajth_ensure_voyages_page();
 }
 register_activation_hook( __FILE__, 'ajth_activate' );

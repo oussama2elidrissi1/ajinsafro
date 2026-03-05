@@ -28,6 +28,13 @@ class AJTH_Template_Router {
      */
     public function maybe_override_front_page( $template ) {
 
+        if ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) ) {
+            $voyages = AJTH_DIR . 'templates/voyages.php';
+            if ( file_exists( $voyages ) ) {
+                return $voyages;
+            }
+        }
+
         // is_front_page() handles "Your homepage displays → A static page"
         // is_home() handles "Your homepage displays → Your latest posts"
         if ( is_front_page() || is_home() ) {
