@@ -1,6 +1,6 @@
 /**
  * Ajinsafro Traveler Home — home.js
- * Mobile drawer menu + accordion sub-menus + Tab switching + horizontal slider
+ * Mobile drawer menu + accordion sub-menus + Modern search tabs + sliders
  */
 (function(){
     'use strict';
@@ -48,7 +48,6 @@
             if (window.innerWidth >= 1280 && document.body.classList.contains('menu-open')) closeDrawer();
         });
 
-        /* Accordion sub-menus in drawer (mobile) */
         if (navMenu) {
             navMenu.addEventListener('click', function (e) {
                 var li = e.target.closest('li.aj-has-sub, li.menu-item-has-children');
@@ -62,47 +61,70 @@
         }
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDrawer);
-    } else {
-        initDrawer();
+    /* ── Modern Search Tabs ──────────────────────────────────────── */
+    function initSearchTabs() {
+        var tabsContainer = document.getElementById('aj-search-tabs');
+        if (!tabsContainer) return;
+
+        var tabs = tabsContainer.querySelectorAll('.aj-search-tab');
+        var forms = document.querySelectorAll('.aj-search-form');
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var targetId = tab.getAttribute('data-target');
+
+                tabs.forEach(function(t) {
+                    t.classList.remove('aj-search-tab--active');
+                });
+                tab.classList.add('aj-search-tab--active');
+
+                forms.forEach(function(f) {
+                    f.classList.remove('aj-search-form--active');
+                });
+
+                var targetForm = document.getElementById('aj-form-' + targetId);
+                if (targetForm) {
+                    targetForm.classList.add('aj-search-form--active');
+                }
+            });
+        });
     }
 
-    /* ── Tabs ──────────────────────────────────────────────────── */
-    var tabs = document.querySelectorAll('.aj-tab');
-    var postTypeInput = document.querySelector('.aj-search__form input[name="post_type"]');
-    var map = {
-        voyage:'st_tours', hebergement:'st_hotel', activites:'st_activity',
-        location:'st_rental', transport:'st_cars', guide:'st_tours'
-    };
-    tabs.forEach(function(tab){
-        tab.addEventListener('click', function(){
-            tabs.forEach(function(t){ t.classList.remove('aj-tab--on'); });
-            tab.classList.add('aj-tab--on');
-            if (postTypeInput && map[tab.dataset.tab]) {
-                postTypeInput.value = map[tab.dataset.tab];
-            }
-        });
-    });
+    /* ── Generic Slider (prev/next arrows) ──────────────────────── */
+    function initSlider(trackId, prevSelector, nextSelector) {
+        var track = document.getElementById(trackId);
+        if (!track) return;
 
-    /* ── Slider ────────────────────────────────────────────────── */
-    var track = document.getElementById('aj-lm-track');
-    if (track) {
-        var prevBtn = document.querySelector('.aj-arrow--prev');
-        var nextBtn = document.querySelector('.aj-arrow--next');
-
-        function scrollAmt(){
-            var card = track.querySelector('.aj-card');
-            if (!card) return 320;
-            var gap = parseFloat(getComputedStyle(track).gap) || 22;
-            return card.offsetWidth + gap;
+        function scrollAmt() {
+            var item = track.querySelector('.aj-slider-v2__item, .aj-card');
+            if (!item) return 320;
+            var gap = parseFloat(getComputedStyle(track).gap) || 16;
+            return item.offsetWidth + gap;
         }
 
-        if (prevBtn) prevBtn.addEventListener('click', function(){
-            track.scrollBy({ left: -scrollAmt(), behavior:'smooth' });
+        var prevBtn = document.querySelector(prevSelector);
+        var nextBtn = document.querySelector(nextSelector);
+
+        if (prevBtn) prevBtn.addEventListener('click', function() {
+            track.scrollBy({ left: -scrollAmt(), behavior: 'smooth' });
         });
-        if (nextBtn) nextBtn.addEventListener('click', function(){
-            track.scrollBy({ left: scrollAmt(), behavior:'smooth' });
+        if (nextBtn) nextBtn.addEventListener('click', function() {
+            track.scrollBy({ left: scrollAmt(), behavior: 'smooth' });
         });
+    }
+
+    /* ── Init Everything ─────────────────────────────────────────── */
+    function init() {
+        initDrawer();
+        initSearchTabs();
+
+        initSlider('aj-lm-track', '.aj-arrow--prev', '.aj-arrow--next');
+        initSlider('aj-accom-track', '.aj-accom-prev', '.aj-accom-next');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 })();

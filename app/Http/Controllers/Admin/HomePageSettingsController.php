@@ -79,8 +79,10 @@ class HomePageSettingsController extends Controller
 
                 'sections.search' => ['nullable', 'boolean'],
                 'sections.last_minute' => ['nullable', 'boolean'],
+                'sections.accommodations' => ['nullable', 'boolean'],
                 'sections.regions' => ['nullable', 'boolean'],
                 'sections.good_spots' => ['nullable', 'boolean'],
+                'sections.promotions' => ['nullable', 'boolean'],
 
                 'search.shortcode' => ['nullable', 'string', 'max:1000'],
 
@@ -96,9 +98,29 @@ class HomePageSettingsController extends Controller
 
                 'good_spots' => ['nullable', 'array'],
                 'good_spots.*.title' => ['nullable', 'string', 'max:255'],
+                'good_spots.*.subtitle' => ['nullable', 'string', 'max:255'],
+                'good_spots.*.icon' => ['nullable', 'string', 'max:100'],
                 'good_spots.*.image_url' => ['nullable', 'url', 'max:2048'],
                 'good_spots.*.link_url' => ['nullable', 'url', 'max:2048'],
                 'good_spots_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'good_spots_title' => ['nullable', 'string', 'max:255'],
+
+                'accommodations.title' => ['nullable', 'string', 'max:255'],
+                'accommodations.count' => ['nullable', 'integer', 'min:1', 'max:20'],
+
+                'promotions.title' => ['nullable', 'string', 'max:255'],
+                'promotions.items' => ['nullable', 'array'],
+                'promotions.items.*.badge_text' => ['nullable', 'string', 'max:100'],
+                'promotions.items.*.badge_bg' => ['nullable', 'string', 'max:20'],
+                'promotions.items.*.badge_color' => ['nullable', 'string', 'max:20'],
+                'promotions.items.*.title' => ['nullable', 'string', 'max:255'],
+                'promotions.items.*.text' => ['nullable', 'string', 'max:500'],
+                'promotions.items.*.style' => ['nullable', 'string', 'max:20'],
+                'promotions.items.*.url' => ['nullable', 'string', 'max:500'],
+
+                'footer.col1_heading' => ['nullable', 'string', 'max:255'],
+                'footer.col2_heading' => ['nullable', 'string', 'max:255'],
+                'footer.legal_text' => ['nullable', 'string', 'max:1000'],
 
                 'destinations_by_region' => ['nullable', 'array'],
                 'destinations_by_region.enabled' => ['nullable'],
@@ -224,10 +246,30 @@ class HomePageSettingsController extends Controller
 
             $goodSpots[] = [
                 'title' => $title,
+                'subtitle' => trim((string)($currentSpot['subtitle'] ?? '')),
+                'icon' => trim((string)($currentSpot['icon'] ?? '')),
                 'image_url' => $imageUrl,
                 'link_url' => $linkUrl,
             ];
         }
+
+            $promotionItems = [];
+            $promosInput = $validated['promotions']['items'] ?? [];
+            if (is_array($promosInput)) {
+                foreach ($promosInput as $promo) {
+                    $promoTitle = trim((string)($promo['title'] ?? ''));
+                    if ($promoTitle === '') continue;
+                    $promotionItems[] = [
+                        'badge_text'  => trim((string)($promo['badge_text'] ?? '')),
+                        'badge_bg'    => trim((string)($promo['badge_bg'] ?? '#ef4444')),
+                        'badge_color' => trim((string)($promo['badge_color'] ?? '#fff')),
+                        'title'       => $promoTitle,
+                        'text'        => trim((string)($promo['text'] ?? '')),
+                        'style'       => trim((string)($promo['style'] ?? 'blue')),
+                        'url'         => trim((string)($promo['url'] ?? '#')),
+                    ];
+                }
+            }
 
             $payload = [
                 'hero' => [
@@ -243,8 +285,10 @@ class HomePageSettingsController extends Controller
                 'sections' => [
                     'search' => (bool) $request->boolean('sections.search', true),
                     'last_minute' => (bool) $request->boolean('sections.last_minute', true),
+                    'accommodations' => (bool) $request->boolean('sections.accommodations', true),
                     'regions' => (bool) $request->boolean('sections.regions', true),
                     'good_spots' => (bool) $request->boolean('sections.good_spots', true),
+                    'promotions' => (bool) $request->boolean('sections.promotions', true),
                 ],
                 'search' => [
                     'shortcode' => trim((string)($validated['search']['shortcode'] ?? '[traveler_search]')),
@@ -254,8 +298,22 @@ class HomePageSettingsController extends Controller
                     'count' => (int) $validated['last_minute']['count'],
                     'featured_only' => (bool) $request->boolean('last_minute.featured_only', false),
                 ],
+                'accommodations' => [
+                    'title' => trim((string)($validated['accommodations']['title'] ?? 'Découvrez des séjours uniques')),
+                    'count' => (int) ($validated['accommodations']['count'] ?? 4),
+                ],
                 'regions' => $regions,
                 'good_spots' => $goodSpots,
+                'good_spots_title' => trim((string)($validated['good_spots_title'] ?? 'Les bons coins sur votre destination')),
+                'promotions' => [
+                    'title' => trim((string)($validated['promotions']['title'] ?? 'Destinations de ce mois')),
+                    'items' => $promotionItems,
+                ],
+                'footer' => [
+                    'col1_heading' => trim((string)($validated['footer']['col1_heading'] ?? 'En savoir plus')),
+                    'col2_heading' => trim((string)($validated['footer']['col2_heading'] ?? 'Société')),
+                    'legal_text' => trim((string)($validated['footer']['legal_text'] ?? '')),
+                ],
             ];
 
             $optionValue = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -347,6 +405,7 @@ class HomePageSettingsController extends Controller
         'menu_source'           => 'wp_menu',
         'wp_menu_location'      => 'primary',
         'show_header_sitewide'  => false,
+        'show_footer_sitewide'  => true,
         'links'                 => [],
         'lowcost_enabled'       => true,
         'lowcost_text'          => 'Formule low cost',
@@ -384,6 +443,7 @@ class HomePageSettingsController extends Controller
             'header.links.*.children.*.url'   => ['nullable', 'string', 'max:500'],
             'header.links.*.children_json'    => ['nullable', 'string', 'max:2000'],
             'header.show_header_sitewide'     => ['nullable'],
+            'header.show_footer_sitewide'     => ['nullable'],
             'header.lowcost_enabled'    => ['nullable'],
             'header.lowcost_text'       => ['nullable', 'string', 'max:100'],
             'header.lowcost_url'        => ['nullable', 'string', 'max:500'],
@@ -453,6 +513,7 @@ class HomePageSettingsController extends Controller
             'menu_source'           => $h['menu_source'] ?? 'wp_menu',
             'wp_menu_location'      => trim((string) ($h['wp_menu_location'] ?? 'primary')),
             'show_header_sitewide'  => $request->boolean('header.show_header_sitewide'),
+            'show_footer_sitewide'  => $request->boolean('header.show_footer_sitewide'),
             'links'                 => $links,
             'lowcost_enabled'       => $request->boolean('header.lowcost_enabled'),
             'lowcost_text'          => trim((string) ($h['lowcost_text'] ?? 'Formule low cost')),
@@ -524,32 +585,48 @@ class HomePageSettingsController extends Controller
                 'type' => 'image',
                 'image_url' => '',
                 'video_url' => '',
-                'title' => 'Découvrez le Maroc',
-                'subtitle' => 'Voyages, hébergements et activités au meilleur prix',
-                'cta_text' => 'Voir les offres',
+                'title' => 'Partir en vacances au meilleur prix !',
+                'subtitle' => '',
+                'cta_text' => '',
                 'cta_url' => '',
-                'overlay' => 0.35,
+                'overlay' => 0.4,
             ],
             'sections' => [
                 'search' => true,
                 'last_minute' => true,
+                'accommodations' => true,
                 'regions' => true,
                 'good_spots' => true,
+                'promotions' => true,
             ],
             'search' => [
                 'shortcode' => '[traveler_search]',
             ],
             'last_minute' => [
-                'title' => 'Offres de dernière minute',
-                'count' => 6,
+                'title' => 'Cap sur les tendances du moment',
+                'count' => 4,
                 'featured_only' => false,
+            ],
+            'accommodations' => [
+                'title' => 'Découvrez des séjours uniques',
+                'count' => 4,
             ],
             'regions' => [],
             'good_spots' => [
-                ['title' => 'Restaurants', 'image_url' => '', 'link_url' => ''],
-                ['title' => 'Loisirs', 'image_url' => '', 'link_url' => ''],
-                ['title' => 'Que faire ?', 'image_url' => '', 'link_url' => ''],
-                ['title' => 'Shopping', 'image_url' => '', 'link_url' => ''],
+                ['title' => 'Restaurants', 'subtitle' => 'Où manger ?', 'icon' => 'fas fa-utensils', 'image_url' => '', 'link_url' => ''],
+                ['title' => 'Loisirs', 'subtitle' => 'Lorem ipsum dolor sit amet', 'icon' => 'fas fa-icons', 'image_url' => '', 'link_url' => ''],
+                ['title' => 'Que faire ?', 'subtitle' => 'Lorem ipsum dolor sit amet', 'icon' => 'fas fa-map-marked-alt', 'image_url' => '', 'link_url' => ''],
+                ['title' => 'Shopping', 'subtitle' => 'Lorem ipsum dolor sit amet', 'icon' => 'fas fa-shopping-bag', 'image_url' => '', 'link_url' => ''],
+            ],
+            'good_spots_title' => 'Les bons coins sur votre destination',
+            'promotions' => [
+                'title' => 'Destinations de ce mois',
+                'items' => [],
+            ],
+            'footer' => [
+                'col1_heading' => 'En savoir plus',
+                'col2_heading' => 'Société',
+                'legal_text' => "Licence N° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU",
             ],
         ];
 
@@ -594,7 +671,7 @@ class HomePageSettingsController extends Controller
 
     private const DESTINATIONS_BY_REGION_DEFAULTS = [
         'enabled' => true,
-        'title'   => 'Destinations par région',
+        'title'   => 'Nos destinations',
         'items'   => [
             ['label' => 'CAP NORD', 'image_url' => '', 'link_url' => '', 'order' => 1],
             ['label' => 'MAROC MÉDITERRANÉE', 'image_url' => '', 'link_url' => '', 'order' => 2],

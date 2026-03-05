@@ -2,8 +2,9 @@
 /**
  * Shortcode template: [ajth_homepage]
  *
- * Renders hero + search + offres + regions + bons coins + newsletter
- * without get_header/get_footer (the page container supplies those).
+ * Renders: header + hero + search + tendances + séjours + destinations +
+ *          bons coins + promos + footer
+ * Matches the AjinSafro mockup design (index(2).html)
  *
  * Expected variable: $settings (from ajth_get_settings()).
  *
@@ -12,12 +13,21 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 ?>
 
+<div class="aj-bg-pattern" aria-hidden="true">
+    <div class="aj-bg-pattern__texture"></div>
+    <div class="aj-bg-pattern__gradient"></div>
+</div>
+
 <div id="aj-home" class="aj-home">
     <?php include AJTH_DIR . 'parts/header.php'; ?>
     <?php include AJTH_DIR . 'parts/hero.php'; ?>
 
     <?php if ( ! empty( $settings['sections']['last_minute'] ) ) : ?>
         <?php include AJTH_DIR . 'parts/last-minute.php'; ?>
+    <?php endif; ?>
+
+    <?php if ( ! empty( $settings['sections']['accommodations'] ) ) : ?>
+        <?php include AJTH_DIR . 'parts/accommodations.php'; ?>
     <?php endif; ?>
 
     <?php
@@ -31,6 +41,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
     <?php if ( ! empty( $settings['sections']['good_spots'] ) ) : ?>
         <?php include AJTH_DIR . 'parts/good-spots.php'; ?>
+    <?php endif; ?>
+
+    <?php if ( ! empty( $settings['sections']['promotions'] ) ) : ?>
+        <?php include AJTH_DIR . 'parts/promotions.php'; ?>
     <?php endif; ?>
 
     <?php include AJTH_DIR . 'parts/newsletter.php'; ?>

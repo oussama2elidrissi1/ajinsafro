@@ -10,19 +10,20 @@ $hero = isset( $settings['hero'] ) && is_array( $settings['hero'] ) ? $settings[
 $hero_type = ! empty( $hero['type'] ) ? $hero['type'] : 'image';
 $hero_image_url = ! empty( $hero['image_url'] ) ? $hero['image_url'] : '';
 $hero_video_url = ! empty( $hero['video_url'] ) ? $hero['video_url'] : '';
-$hero_title = ! empty( $hero['title'] ) ? $hero['title'] : 'Découvrez le Maroc';
+$hero_title = ! empty( $hero['title'] ) ? $hero['title'] : 'Partir en vacances au meilleur prix !';
 $hero_subtitle = ! empty( $hero['subtitle'] ) ? $hero['subtitle'] : '';
 $hero_cta_text = ! empty( $hero['cta_text'] ) ? $hero['cta_text'] : '';
 $hero_cta_url = ! empty( $hero['cta_url'] ) ? $hero['cta_url'] : '';
 $hero_overlay = isset( $hero['overlay'] ) ? max( 0, min( 1, floatval( $hero['overlay'] ) ) ) : 0.35;
 
 $default_hero_image_url = function_exists( 'get_header_image' ) ? (string) get_header_image() : '';
-$hero_image_source = $hero_image_url !== '' ? $hero_image_url : $default_hero_image_url;
+$fallback_hero_image = 'https://images.unsplash.com/photo-1514890547357-a9ee288728e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80';
+$hero_image_source = $hero_image_url !== '' ? $hero_image_url : ( $default_hero_image_url !== '' ? $default_hero_image_url : $fallback_hero_image );
 $hero_mode = ( $hero_type === 'video' && $hero_video_url !== '' ) ? 'video' : 'image';
 
 $bg = $hero_image_source
     ? 'background-image:url(' . esc_url( $hero_image_source ) . ');'
-    : 'background:linear-gradient(135deg,#c2935a 0%,#8b6914 40%,#d4a04a 100%);';
+    : 'background:linear-gradient(135deg,#0e3a5a 0%,#0083c4 100%);';
 
 $is_mp4_video = ! empty( $hero_video_url ) && preg_match( '/\.mp4(\?.*)?$/i', $hero_video_url );
 
@@ -61,9 +62,10 @@ if ( ! empty( $hero_video_url ) && ! $is_mp4_video ) {
             </p>
         <?php endif; ?>
     </div>
-    <?php if ( ! empty( $settings['sections']['search'] ) ) : ?>
-        <div class="aj-search-float">
-            <?php include AJTH_DIR . 'parts/search.php'; ?>
-        </div>
-    <?php endif; ?>
 </section>
+
+<?php if ( ! empty( $settings['sections']['search'] ) ) : ?>
+    <div class="aj-search-float">
+        <?php include AJTH_DIR . 'parts/search.php'; ?>
+    </div>
+<?php endif; ?>

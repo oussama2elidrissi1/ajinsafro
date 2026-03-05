@@ -64,12 +64,17 @@
                                {{ old('header.enabled', data_get($header, 'enabled')) ? 'checked' : '' }}>
                         <label class="form-check-label" for="hdr_enabled">Activer le header personnalisé</label>
                     </div>
-                    <div class="form-check form-switch">
+                    <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="header[show_header_sitewide]" value="1" id="hdr_sitewide"
                                {{ old('header.show_header_sitewide', data_get($header, 'show_header_sitewide')) ? 'checked' : '' }}>
                         <label class="form-check-label" for="hdr_sitewide">Appliquer le header à toutes les pages WordPress</label>
                     </div>
-                    <p class="small text-muted mt-1 mb-0">Si coché, le header s'affiche sur tout le site (pas seulement la page d'accueil). Le header du thème sera masqué.</p>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="header[show_footer_sitewide]" value="1" id="hdr_footer_sitewide"
+                               {{ old('header.show_footer_sitewide', data_get($header, 'show_footer_sitewide', true)) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="hdr_footer_sitewide">Appliquer le footer personnalisé à toutes les pages</label>
+                    </div>
+                    <p class="small text-muted mt-1 mb-0">Le header et le footer personnalisés remplacent ceux du thème WordPress sur toutes les pages.</p>
                 </div>
             </div>
 
@@ -332,8 +337,8 @@
             <div class="card">
                 <div class="card-header"><h5 class="card-title mb-0">Sections</h5></div>
                 <div class="card-body row g-3">
-                    @foreach(['search' => 'Search', 'last_minute' => 'Offres dernière minute', 'regions' => 'Destinations', 'good_spots' => 'Bons coins'] as $sKey => $sLabel)
-                    <div class="col-md-3">
+                    @foreach(['search' => 'Search', 'last_minute' => 'Tendances du moment', 'accommodations' => 'Séjours uniques', 'regions' => 'Destinations', 'good_spots' => 'Bons coins', 'promotions' => 'Promotions'] as $sKey => $sLabel)
+                    <div class="col-md-2">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="sections[{{ $sKey }}]" value="1"
                                    {{ old("sections.$sKey", data_get($settings, "sections.$sKey")) ? 'checked' : '' }}>
@@ -353,15 +358,15 @@
             </div>
 
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Offres dernière minute</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">Cap sur les tendances du moment</h5></div>
                 <div class="card-body row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Titre</label>
-                        <input type="text" class="form-control" name="last_minute[title]" value="{{ old('last_minute.title', data_get($settings, 'last_minute.title')) }}" required>
+                        <input type="text" class="form-control" name="last_minute[title]" value="{{ old('last_minute.title', data_get($settings, 'last_minute.title', 'Cap sur les tendances du moment')) }}" required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Nombre d'items</label>
-                        <input type="number" class="form-control" min="1" max="20" name="last_minute[count]" value="{{ old('last_minute.count', data_get($settings, 'last_minute.count', 6)) }}" required>
+                        <input type="number" class="form-control" min="1" max="20" name="last_minute[count]" value="{{ old('last_minute.count', data_get($settings, 'last_minute.count', 4)) }}" required>
                     </div>
                     <div class="col-md-3 d-flex align-items-end">
                         <div class="form-check form-switch mb-2">
@@ -369,6 +374,24 @@
                                    {{ old('last_minute.featured_only', data_get($settings, 'last_minute.featured_only')) ? 'checked' : '' }}>
                             <label class="form-check-label">Featured only</label>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Accommodations --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Découvrez des séjours uniques</h5></div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Titre</label>
+                        <input type="text" class="form-control" name="accommodations[title]" value="{{ old('accommodations.title', data_get($settings, 'accommodations.title', 'Découvrez des séjours uniques')) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Nombre d'items</label>
+                        <input type="number" class="form-control" min="1" max="20" name="accommodations[count]" value="{{ old('accommodations.count', data_get($settings, 'accommodations.count', 4)) }}">
+                    </div>
+                    <div class="col-12">
+                        <p class="text-muted small mb-0">Affiche les hôtels et locations (post types: st_hotel, st_rental) les plus récents.</p>
                     </div>
                 </div>
             </div>
@@ -415,21 +438,105 @@
             </div>
 
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Les bons coins (4 items)</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">Les bons coins sur votre destination</h5></div>
                 <div class="card-body vstack gap-3">
+                    <div class="mb-3">
+                        <label class="form-label">Titre de la section</label>
+                        <input type="text" class="form-control" name="good_spots_title" value="{{ old('good_spots_title', data_get($settings, 'good_spots_title', 'Les bons coins sur votre destination')) }}">
+                    </div>
                     @foreach(old('good_spots', data_get($settings, 'good_spots', [])) as $idx => $spot)
                         @if($idx < 4)
                         <div class="border rounded p-3">
                             <h6 class="mb-2">Item {{ $idx + 1 }}</h6>
                             <div class="row g-2">
-                                <div class="col-md-4"><input class="form-control" name="good_spots[{{ $idx }}][title]" value="{{ data_get($spot, 'title') }}" placeholder="Titre"></div>
-                                <div class="col-md-4"><input class="form-control" name="good_spots[{{ $idx }}][image_url]" value="{{ data_get($spot, 'image_url') }}" placeholder="Image URL"></div>
-                                <div class="col-md-4"><input class="form-control" name="good_spots[{{ $idx }}][link_url]" value="{{ data_get($spot, 'link_url') }}" placeholder="Link URL"></div>
-                                <div class="col-12"><input type="file" class="form-control" name="good_spots_files[{{ $idx }}]" accept="image/*"></div>
+                                <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][title]" value="{{ data_get($spot, 'title') }}" placeholder="Titre"></div>
+                                <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][subtitle]" value="{{ data_get($spot, 'subtitle') }}" placeholder="Sous-titre"></div>
+                                <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][icon]" value="{{ data_get($spot, 'icon') }}" placeholder="Icône FA (ex: fas fa-utensils)"></div>
+                                <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][link_url]" value="{{ data_get($spot, 'link_url') }}" placeholder="Link URL"></div>
+                                <div class="col-md-6"><input class="form-control" name="good_spots[{{ $idx }}][image_url]" value="{{ data_get($spot, 'image_url') }}" placeholder="Image URL"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" name="good_spots_files[{{ $idx }}]" accept="image/*"></div>
                             </div>
                         </div>
                         @endif
                     @endforeach
+                </div>
+            </div>
+
+            {{-- Promotions --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Destinations de ce mois (Promotions)</h5></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Titre de la section</label>
+                        <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Destinations de ce mois')) }}">
+                    </div>
+                    <p class="text-muted small mb-3">3 bannières promotionnelles avec un style gradient. Laissez vide pour utiliser le contenu par défaut.</p>
+                    @php
+                        $defaultPromos = [
+                            ['badge_text' => 'Profitez', 'badge_bg' => '#ef4444', 'badge_color' => '#fff', 'title' => "Cartes de\nfidélités", 'text' => "Plus d'espace de voyages pour vous et nos fidèles.", 'style' => 'blue', 'url' => '#'],
+                            ['badge_text' => 'Profitez', 'badge_bg' => '#fff', 'badge_color' => '#f37a1f', 'title' => "Programme\nBztam e-Sfar", 'text' => 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.', 'style' => 'orange', 'url' => '#'],
+                            ['badge_text' => 'احجز الآن', 'badge_bg' => '#ffb300', 'badge_color' => '#0e3a5a', 'title' => 'الحجز بكري', 'text' => 'تجمع الان الودائع للمسافرين إلى وجهاتك و تمتع بخصم إضافي.', 'style' => 'dark-blue', 'url' => '#'],
+                        ];
+                        $promos = old('promotions.items', data_get($settings, 'promotions.items', $defaultPromos));
+                        if (empty($promos)) $promos = $defaultPromos;
+                    @endphp
+                    <div class="vstack gap-3">
+                        @foreach($promos as $pi => $promo)
+                        <div class="border rounded p-3">
+                            <h6 class="mb-2">Promo {{ $pi + 1 }}</h6>
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-0">Titre</label>
+                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][title]" value="{{ data_get($promo, 'title') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-0">Texte badge</label>
+                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][badge_text]" value="{{ data_get($promo, 'badge_text') }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-0">Style</label>
+                                    <select class="form-select form-select-sm" name="promotions[items][{{ $pi }}][style]">
+                                        <option value="blue" {{ data_get($promo, 'style') === 'blue' ? 'selected' : '' }}>Bleu</option>
+                                        <option value="orange" {{ data_get($promo, 'style') === 'orange' ? 'selected' : '' }}>Orange</option>
+                                        <option value="dark-blue" {{ data_get($promo, 'style') === 'dark-blue' ? 'selected' : '' }}>Bleu foncé</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-0">URL</label>
+                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][url]" value="{{ data_get($promo, 'url') }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-0">Badge BG</label>
+                                    <input type="color" class="form-control form-control-sm form-control-color" name="promotions[items][{{ $pi }}][badge_bg]" value="{{ data_get($promo, 'badge_bg', '#ef4444') }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small mb-0">Description</label>
+                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][text]" value="{{ data_get($promo, 'text') }}">
+                                </div>
+                                <input type="hidden" name="promotions[items][{{ $pi }}][badge_color]" value="{{ data_get($promo, 'badge_color', '#fff') }}">
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Footer</h5></div>
+                <div class="card-body row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Colonne 1 — Titre</label>
+                        <input type="text" class="form-control" name="footer[col1_heading]" value="{{ old('footer.col1_heading', data_get($settings, 'footer.col1_heading', 'En savoir plus')) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Colonne 2 — Titre</label>
+                        <input type="text" class="form-control" name="footer[col2_heading]" value="{{ old('footer.col2_heading', data_get($settings, 'footer.col2_heading', 'Société')) }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Mentions légales</label>
+                        <textarea class="form-control" name="footer[legal_text]" rows="3" placeholder="Licence N° ... | RC: ...">{{ old('footer.legal_text', data_get($settings, 'footer.legal_text', "Licence N° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU")) }}</textarea>
+                    </div>
                 </div>
             </div>
 

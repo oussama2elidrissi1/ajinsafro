@@ -1,18 +1,10 @@
 <?php
 /**
- * Part: Search bar (tabs + form)
+ * Part: Modern tabbed search widget
+ * 5 tabs: Voyage, Billet d'avion, Hébergement, Transfert, Activité
  * @package AjinsafroTravelerHome
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
-
-$tabs = array(
-    'voyage'      => 'Voyage',
-    'hebergement' => 'Hébergement',
-    'activites'   => 'Activité',
-    'location'    => 'Location de vacances',
-    'transport'   => 'Transport',
-    'guide'       => 'Votre guide',
-);
 
 $search_shortcode = ! empty( $settings['search']['shortcode'] )
     ? $settings['search']['shortcode']
@@ -27,45 +19,195 @@ if ( preg_match( '/\[([a-zA-Z0-9_\-:]+)/', $search_shortcode, $m ) ) {
 <?php if ( shortcode_exists( $shortcode_tag ) && ! empty( $search_shortcode ) ) : ?>
     <div class="aj-search-native"><?php echo do_shortcode( $search_shortcode ); ?></div>
 <?php else : ?>
-<div class="aj-search-card">
-    <div class="aj-search__tabs">
-        <?php $first = true; foreach ( $tabs as $k => $label ) : ?>
-            <button type="button" class="aj-tab<?php echo $first ? ' aj-tab--on' : ''; ?>" data-tab="<?php echo esc_attr( $k ); ?>"><?php echo esc_html( $label ); ?></button>
-        <?php $first = false; endforeach; ?>
+<div class="aj-search-card" style="border-radius: var(--aj-radius); overflow: hidden; border: 1px solid #f3f4f6;">
+    <div class="aj-search-tabs" id="aj-search-tabs">
+        <button type="button" class="aj-search-tab aj-search-tab--active" data-target="voyage"><i class="fas fa-globe"></i> <span>Voyage</span></button>
+        <button type="button" class="aj-search-tab" data-target="vol"><i class="fas fa-plane"></i> <span>Billet d'avion</span></button>
+        <button type="button" class="aj-search-tab" data-target="hotel"><i class="fas fa-bed"></i> <span>Hébergement</span></button>
+        <button type="button" class="aj-search-tab" data-target="transfert"><i class="fas fa-car"></i> <span>Transfert</span></button>
+        <button type="button" class="aj-search-tab" data-target="activite"><i class="fas fa-camera"></i> <span>Activité</span></button>
     </div>
-    <form class="aj-search__form" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
-        <input type="hidden" name="s" value="">
-        <input type="hidden" name="post_type" value="st_tours">
 
-        <div class="aj-sf">
-            <span class="aj-sf__ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a73a7" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-            <div class="aj-sf__txt"><small>Destination / Hôtel</small><input type="text" name="location_name" placeholder="Où voulez vous partir ?"></div>
+    <div class="aj-search-forms">
+        <!-- FORM: VOYAGE -->
+        <div id="aj-form-voyage" class="aj-search-form aj-search-form--active">
+            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+                <input type="hidden" name="s" value="">
+                <input type="hidden" name="post_type" value="st_tours">
+                <div class="aj-search-form__row">
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--orange"><i class="fas fa-map-marker-alt"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Destination</span>
+                            <input type="text" name="location_name" class="aj-search-field__input" placeholder="Où voulez-vous partir ?">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--blue"><i class="far fa-calendar-alt"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Départ - Retour</span>
+                            <input type="text" name="start" class="aj-search-field__input" placeholder="Ajouter des dates">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--purple"><i class="fas fa-user-friends"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Clients</span>
+                            <div class="aj-search-field__text">
+                                <span>1 Adulte - 0 Enfant</span>
+                                <i class="fas fa-chevron-down aj-search-field__caret"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="aj-search-submit">
+                        <button type="submit" class="aj-search-submit__btn"><i class="fas fa-search"></i> Rechercher</button>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        <i class="aj-sep"></i>
-
-        <div class="aj-sf">
-            <span class="aj-sf__ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a73a7" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-            <div class="aj-sf__txt"><small>Arrivée – Départ</small><input type="text" name="start" placeholder="jj/mm/aaaa – jj/mm/aaaa"></div>
+        <!-- FORM: BILLET D'AVION -->
+        <div id="aj-form-vol" class="aj-search-form">
+            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+                <input type="hidden" name="s" value="">
+                <input type="hidden" name="post_type" value="st_tours">
+                <div class="aj-search-form__row">
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--blue"><i class="fas fa-plane-departure"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Départ</span>
+                            <input type="text" name="departure" class="aj-search-field__input" placeholder="D'où partez-vous ?">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--orange"><i class="fas fa-plane-arrival"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Arrivée</span>
+                            <input type="text" name="arrival" class="aj-search-field__input" placeholder="Où allez-vous ?">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--gray"><i class="far fa-calendar-alt"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Dates</span>
+                            <input type="text" name="start" class="aj-search-field__input" placeholder="jj/mm - jj/mm">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--purple"><i class="fas fa-user"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Passagers</span>
+                            <div class="aj-search-field__text"><span>1 Adulte, Éco</span></div>
+                        </div>
+                    </div>
+                    <div class="aj-search-submit">
+                        <button type="submit" class="aj-search-submit__btn">Chercher</button>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        <i class="aj-sep"></i>
-
-        <div class="aj-sf">
-            <span class="aj-sf__ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a73a7" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-            <div class="aj-sf__txt"><small>Voyageurs</small><input type="text" name="adults" placeholder="1 Adulte · 0 Enfant · 0 Bébé" readonly></div>
+        <!-- FORM: HÉBERGEMENT -->
+        <div id="aj-form-hotel" class="aj-search-form">
+            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+                <input type="hidden" name="s" value="">
+                <input type="hidden" name="post_type" value="st_hotel">
+                <div class="aj-search-form__row">
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon" style="background:#f0fdfa;color:#0d9488;"><i class="fas fa-bed"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Destination</span>
+                            <input type="text" name="location_name" class="aj-search-field__input" placeholder="Ville ou nom d'hôtel">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--blue"><i class="far fa-calendar-check"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Arrivée - Départ</span>
+                            <input type="text" name="start" class="aj-search-field__input" placeholder="Sélectionner dates">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--orange"><i class="fas fa-users"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Voyageurs</span>
+                            <div class="aj-search-field__text"><span>1 Chambre, 2 Adultes</span></div>
+                        </div>
+                    </div>
+                    <div class="aj-search-submit">
+                        <button type="submit" class="aj-search-submit__btn">Chercher</button>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        <i class="aj-sep"></i>
-
-        <div class="aj-sf aj-sf--more">
-            <button type="button" class="aj-more-btn">Plus +</button>
+        <!-- FORM: TRANSFERT -->
+        <div id="aj-form-transfert" class="aj-search-form">
+            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+                <input type="hidden" name="s" value="">
+                <input type="hidden" name="post_type" value="st_cars">
+                <div class="aj-search-form__row">
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--green"><i class="fas fa-map-marker-alt"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Départ</span>
+                            <input type="text" name="pickup" class="aj-search-field__input" placeholder="Lieu de prise en charge">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--red"><i class="fas fa-map-pin"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Destination</span>
+                            <input type="text" name="dropoff" class="aj-search-field__input" placeholder="Lieu de dépôt">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--blue"><i class="far fa-clock"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Quand ?</span>
+                            <input type="text" name="start" class="aj-search-field__input" placeholder="Date et heure">
+                        </div>
+                    </div>
+                    <div class="aj-search-submit">
+                        <button type="submit" class="aj-search-submit__btn">Trouver</button>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        <button type="submit" class="aj-search__btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            Rechercher
-        </button>
-    </form>
+        <!-- FORM: ACTIVITÉ -->
+        <div id="aj-form-activite" class="aj-search-form">
+            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+                <input type="hidden" name="s" value="">
+                <input type="hidden" name="post_type" value="st_activity">
+                <div class="aj-search-form__row">
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--pink"><i class="fas fa-map-marked-alt"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Lieu</span>
+                            <input type="text" name="location_name" class="aj-search-field__input" placeholder="Où et quoi faire ?">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--blue"><i class="far fa-calendar-alt"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Date</span>
+                            <input type="text" name="start" class="aj-search-field__input" placeholder="Quand ?">
+                        </div>
+                    </div>
+                    <div class="aj-search-field">
+                        <div class="aj-search-field__icon aj-search-field__icon--orange"><i class="fas fa-users"></i></div>
+                        <div class="aj-search-field__content">
+                            <span class="aj-search-field__label">Participants</span>
+                            <div class="aj-search-field__text"><span>2 Adultes</span></div>
+                        </div>
+                    </div>
+                    <div class="aj-search-submit">
+                        <button type="submit" class="aj-search-submit__btn">Chercher</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 <?php endif; ?>
