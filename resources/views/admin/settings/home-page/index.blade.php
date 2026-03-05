@@ -96,25 +96,30 @@
                     </div>
                     <h6 class="mt-3 mb-2">Réseaux sociaux</h6>
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Facebook</label>
                             <input type="url" class="form-control" name="header[socials][facebook]"
                                    value="{{ old('header.socials.facebook', data_get($header, 'socials.facebook')) }}" placeholder="https://...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Twitter / X</label>
                             <input type="url" class="form-control" name="header[socials][twitter]"
                                    value="{{ old('header.socials.twitter', data_get($header, 'socials.twitter')) }}" placeholder="https://...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
+                            <label class="form-label">YouTube</label>
+                            <input type="url" class="form-control" name="header[socials][youtube]"
+                                   value="{{ old('header.socials.youtube', data_get($header, 'socials.youtube')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label">Instagram</label>
                             <input type="url" class="form-control" name="header[socials][instagram]"
                                    value="{{ old('header.socials.instagram', data_get($header, 'socials.instagram')) }}" placeholder="https://...">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">YouTube</label>
-                            <input type="url" class="form-control" name="header[socials][youtube]"
-                                   value="{{ old('header.socials.youtube', data_get($header, 'socials.youtube')) }}" placeholder="https://...">
+                        <div class="col-md-4">
+                            <label class="form-label">LinkedIn</label>
+                            <input type="url" class="form-control" name="header[socials][linkedin]"
+                                   value="{{ old('header.socials.linkedin', data_get($header, 'socials.linkedin')) }}" placeholder="https://...">
                         </div>
                     </div>
                 </div>
@@ -192,15 +197,25 @@
                             @foreach(old('header.links', data_get($header, 'links', [])) as $li => $link)
                                 <div class="border rounded p-3 hdr-link-row" data-index="{{ $li }}">
                                     <div class="row g-2 align-items-center mb-2">
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <label class="form-label small mb-0">Texte</label>
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][label]" value="{{ data_get($link, 'label') }}" placeholder="Ex: HOTEL">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <label class="form-label small mb-0">URL</label>
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][url]" value="{{ data_get($link, 'url') }}" placeholder="Ex: /hotel">
                                         </div>
-                                        <div class="col-md-4 d-flex align-items-end">
+                                        <div class="col-md-2">
+                                            <label class="form-label small mb-0">Icône FA</label>
+                                            <input class="form-control form-control-sm" name="header[links][{{ $li }}][icon]" value="{{ data_get($link, 'icon') }}" placeholder="fas fa-hotel">
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end gap-2">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" name="header[links][{{ $li }}][active]" value="1" {{ data_get($link, 'active') ? 'checked' : '' }}>
+                                                <label class="form-check-label small">Actif</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
                                             <button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button>
                                         </div>
                                         <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>
@@ -219,6 +234,31 @@
                             @endforeach
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="hdr-add-link">+ Ajouter un lien</button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Low Cost Button --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Bouton "Formule Low Cost"</h5></div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="header[lowcost_enabled]" value="1" id="hdr_lowcost"
+                               {{ old('header.lowcost_enabled', data_get($header, 'lowcost_enabled', true)) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="hdr_lowcost">Afficher le bouton "Formule Low Cost"</label>
+                    </div>
+                    <p class="small text-muted mb-3">Ce bouton s'affiche à droite de la navbar avec un effet de gradient orange/rouge et une animation.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Texte du bouton</label>
+                            <input type="text" class="form-control" name="header[lowcost_text]"
+                                   value="{{ old('header.lowcost_text', data_get($header, 'lowcost_text', 'Formule low cost')) }}" placeholder="Formule low cost">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">URL du bouton</label>
+                            <input type="text" class="form-control" name="header[lowcost_url]"
+                                   value="{{ old('header.lowcost_url', data_get($header, 'lowcost_url', '#')) }}" placeholder="/low-cost">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -427,9 +467,11 @@
     function newLinkRowHtml(idx) {
         return '<div class="border rounded p-3 hdr-link-row" data-index="' + idx + '">' +
             '<div class="row g-2 align-items-center mb-2">' +
-            '<div class="col-md-3"><label class="form-label small mb-0">Texte</label><input class="form-control form-control-sm" name="header[links][' + idx + '][label]" placeholder="Ex: HOTEL"></div>' +
-            '<div class="col-md-4"><label class="form-label small mb-0">URL</label><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="Ex: /hotel"></div>' +
-            '<div class="col-md-4 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Texte</label><input class="form-control form-control-sm" name="header[links][' + idx + '][label]" placeholder="Ex: HOTEL"></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">URL</label><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="Ex: /hotel"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Icône FA</label><input class="form-control form-control-sm" name="header[links][' + idx + '][icon]" placeholder="fas fa-hotel"></div>' +
+            '<div class="col-md-2 d-flex align-items-end gap-2"><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="header[links][' + idx + '][active]" value="1"><label class="form-check-label small">Actif</label></div></div>' +
+            '<div class="col-md-2 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button></div>' +
             '<div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>' +
             '</div>' +
             '<div class="hdr-children-list ms-3 ps-2 border-start border-2 border-light"><small class="text-muted d-block mb-1">Sous-menus</small></div>' +

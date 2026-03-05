@@ -330,13 +330,14 @@ class HomePageSettingsController extends Controller
     private const HEADER_DEFAULTS = [
         'enabled'               => true,
         'topbar_enabled'        => true,
-        'phone'                 => '(000) 999 - 656 - 888',
+        'phone'                 => '+212 5 39 32 38 74',
         'email'                 => 'contact@ajinsafro.ma',
         'socials'               => [
-            'facebook'  => '',
-            'twitter'   => '',
-            'instagram' => '',
-            'youtube'   => '',
+            'facebook'  => '#',
+            'twitter'   => '#',
+            'instagram' => '#',
+            'youtube'   => '#',
+            'linkedin'  => '#',
         ],
         'navbar_enabled'        => true,
         'logo_url'              => '',
@@ -347,6 +348,9 @@ class HomePageSettingsController extends Controller
         'wp_menu_location'      => 'primary',
         'show_header_sitewide'  => false,
         'links'                 => [],
+        'lowcost_enabled'       => true,
+        'lowcost_text'          => 'Formule low cost',
+        'lowcost_url'           => '#',
     ];
 
     public function updateHeader(Request $request)
@@ -360,6 +364,7 @@ class HomePageSettingsController extends Controller
             'header.socials.twitter'    => ['nullable', 'url', 'max:500'],
             'header.socials.instagram'  => ['nullable', 'url', 'max:500'],
             'header.socials.youtube'    => ['nullable', 'url', 'max:500'],
+            'header.socials.linkedin'   => ['nullable', 'url', 'max:500'],
             'header.navbar_enabled'     => ['nullable'],
             'header.logo_url'           => ['nullable', 'string', 'max:2048'],
             'header.logo_file'          => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:5120'],
@@ -371,11 +376,17 @@ class HomePageSettingsController extends Controller
             'header.links'              => ['nullable', 'array'],
             'header.links.*.label'        => ['nullable', 'string', 'max:120'],
             'header.links.*.url'          => ['nullable', 'string', 'max:500'],
+            'header.links.*.icon'         => ['nullable', 'string', 'max:100'],
+            'header.links.*.active'       => ['nullable'],
+            'header.links.*.highlight'    => ['nullable'],
             'header.links.*.children'     => ['nullable', 'array'],
             'header.links.*.children.*.label' => ['nullable', 'string', 'max:120'],
             'header.links.*.children.*.url'   => ['nullable', 'string', 'max:500'],
             'header.links.*.children_json'    => ['nullable', 'string', 'max:2000'],
             'header.show_header_sitewide'     => ['nullable'],
+            'header.lowcost_enabled'    => ['nullable'],
+            'header.lowcost_text'       => ['nullable', 'string', 'max:100'],
+            'header.lowcost_url'        => ['nullable', 'string', 'max:500'],
         ]);
 
         $h = $validated['header'] ?? [];
@@ -412,7 +423,14 @@ class HomePageSettingsController extends Controller
                     $children[] = ['label' => $cl, 'url' => $cu];
                 }
             }
-            $links[] = ['label' => $label, 'url' => $url, 'children' => $children];
+            $links[] = [
+                'label'     => $label,
+                'url'       => $url,
+                'icon'      => trim((string) ($link['icon'] ?? '')),
+                'active'    => !empty($link['active']),
+                'highlight' => !empty($link['highlight']),
+                'children'  => $children,
+            ];
         }
 
         $payload = [
@@ -425,6 +443,7 @@ class HomePageSettingsController extends Controller
                 'twitter'   => trim((string) ($h['socials']['twitter'] ?? '')),
                 'instagram' => trim((string) ($h['socials']['instagram'] ?? '')),
                 'youtube'   => trim((string) ($h['socials']['youtube'] ?? '')),
+                'linkedin'  => trim((string) ($h['socials']['linkedin'] ?? '')),
             ],
             'navbar_enabled'   => $request->boolean('header.navbar_enabled'),
             'logo_url'         => $logoUrl,
@@ -435,6 +454,9 @@ class HomePageSettingsController extends Controller
             'wp_menu_location'      => trim((string) ($h['wp_menu_location'] ?? 'primary')),
             'show_header_sitewide'  => $request->boolean('header.show_header_sitewide'),
             'links'                 => $links,
+            'lowcost_enabled'       => $request->boolean('header.lowcost_enabled'),
+            'lowcost_text'          => trim((string) ($h['lowcost_text'] ?? 'Formule low cost')),
+            'lowcost_url'           => trim((string) ($h['lowcost_url'] ?? '#')),
         ];
 
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

@@ -45,7 +45,7 @@
             });
         }
         window.addEventListener('resize', function () {
-            if (window.innerWidth >= 1200 && document.body.classList.contains('menu-open')) closeDrawer();
+            if (window.innerWidth >= 1280 && document.body.classList.contains('menu-open')) closeDrawer();
         });
 
         /* Accordion sub-menus in drawer (mobile) */
