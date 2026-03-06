@@ -84,6 +84,8 @@ class HomePageSettingsController extends Controller
                 'sections.good_spots' => ['nullable', 'boolean'],
                 'sections.promotions' => ['nullable', 'boolean'],
                 'sections.newsletter' => ['nullable', 'boolean'],
+                'sections.whatsapp_banner' => ['nullable', 'boolean'],
+                'sections.cruises' => ['nullable', 'boolean'],
                 'sections' => ['nullable', 'array'],
                 'sections.*' => ['nullable'],
                 'section_order' => ['nullable', 'array'],
@@ -125,6 +127,23 @@ class HomePageSettingsController extends Controller
                 'promotions.items.*.text' => ['nullable', 'string', 'max:500'],
                 'promotions.items.*.style' => ['nullable', 'string', 'max:20'],
                 'promotions.items.*.url' => ['nullable', 'string', 'max:500'],
+
+                'whatsapp_banner.enabled' => ['nullable', 'boolean'],
+                'whatsapp_banner.title' => ['nullable', 'string', 'max:255'],
+                'whatsapp_banner.subtitle' => ['nullable', 'string', 'max:500'],
+                'whatsapp_banner.features' => ['nullable', 'array'],
+                'whatsapp_banner.features.*' => ['nullable', 'string', 'max:255'],
+                'whatsapp_banner.button_text' => ['nullable', 'string', 'max:100'],
+                'whatsapp_banner.button_url' => ['nullable', 'string', 'max:500'],
+                'whatsapp_banner.qr_code_url' => ['nullable', 'string', 'max:2048'],
+                'whatsapp_banner_qr_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+
+                'cruises.enabled' => ['nullable', 'boolean'],
+                'cruises.title' => ['nullable', 'string', 'max:255'],
+                'cruises.image_url' => ['nullable', 'string', 'max:2048'],
+                'cruises.button_text' => ['nullable', 'string', 'max:100'],
+                'cruises.button_url' => ['nullable', 'string', 'max:500'],
+                'cruises_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
 
                 'footer.col1_heading' => ['nullable', 'string', 'max:255'],
                 'footer.col2_heading' => ['nullable', 'string', 'max:255'],
@@ -266,6 +285,8 @@ class HomePageSettingsController extends Controller
                     'regions' => (bool) $request->boolean('sections.regions'),
                     'good_spots' => (bool) $request->boolean('sections.good_spots'),
                     'promotions' => (bool) $request->boolean('sections.promotions'),
+                    'whatsapp_banner' => (bool) $request->boolean('sections.whatsapp_banner'),
+                    'cruises' => (bool) $request->boolean('sections.cruises'),
                     'newsletter' => (bool) $request->boolean('sections.newsletter'),
                 ], array_filter(
                     array_map(function ($v) { return (bool) $v; }, $request->input('sections', [])),
@@ -293,6 +314,8 @@ class HomePageSettingsController extends Controller
                     'title' => trim((string)($validated['promotions']['title'] ?? 'Destinations de ce mois')),
                     'items' => $promotionItems,
                 ],
+                'whatsapp_banner' => $this->buildWhatsAppBannerPayload($request, $validated),
+                'cruises' => $this->buildCruisesPayload($request, $validated),
                 'footer' => [
                     'col1_heading' => trim((string)($validated['footer']['col1_heading'] ?? 'En savoir plus')),
                     'col2_heading' => trim((string)($validated['footer']['col2_heading'] ?? 'Société')),
@@ -620,9 +643,11 @@ class HomePageSettingsController extends Controller
                 'regions' => true,
                 'good_spots' => true,
                 'promotions' => true,
+                'whatsapp_banner' => false,
+                'cruises' => false,
                 'newsletter' => true,
             ],
-            'section_order' => ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'newsletter'],
+            'section_order' => ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'],
             'custom_sections' => [],
             'search' => [
                 'shortcode' => '[traveler_search]',
@@ -647,6 +672,22 @@ class HomePageSettingsController extends Controller
             'promotions' => [
                 'title' => 'Destinations de ce mois',
                 'items' => [],
+            ],
+            'whatsapp_banner' => [
+                'enabled' => false,
+                'title' => 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES',
+                'subtitle' => 'Stay informed with satguru travel',
+                'features' => ['Exclusive travel packages', 'Latest news and updates', 'Special offers and promotions'],
+                'button_text' => 'JOIN NOW',
+                'button_url' => '#',
+                'qr_code_url' => '',
+            ],
+            'cruises' => [
+                'enabled' => false,
+                'title' => 'CROISIÈRES',
+                'image_url' => '',
+                'button_text' => 'Découvrir',
+                'button_url' => '#',
             ],
             'footer' => [
                 'col1_heading' => 'En savoir plus',
@@ -771,7 +812,7 @@ class HomePageSettingsController extends Controller
         ];
     }
 
-    private const BUILTIN_SECTIONS = ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'newsletter'];
+    private const BUILTIN_SECTIONS = ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'];
 
     private function normalizeSectionOrder(array $input): array
     {
@@ -808,6 +849,65 @@ class HomePageSettingsController extends Controller
             $out[$id] = ['title' => $title, 'content' => $content];
         }
         return $out;
+    }
+
+    private function buildWhatsAppBannerPayload(Request $request, array $validated): array
+    {
+        $current = $this->readHomeSettings();
+        $qrCodeUrl = trim((string) ($validated['whatsapp_banner']['qr_code_url'] ?? ($current['whatsapp_banner']['qr_code_url'] ?? '')));
+        
+        if ($request->hasFile('whatsapp_banner_qr_file')) {
+            try {
+                $path = $request->file('whatsapp_banner_qr_file')->store('home-settings/whatsapp', 'public');
+                $qrCodeUrl = Storage::disk('public')->url($path);
+            } catch (Throwable $e) {
+                Log::warning('WhatsApp QR code upload failed', ['message' => $e->getMessage()]);
+            }
+        }
+
+        $features = [];
+        $featuresInput = $validated['whatsapp_banner']['features'] ?? [];
+        if (is_array($featuresInput)) {
+            foreach ($featuresInput as $feature) {
+                $f = trim((string) $feature);
+                if ($f !== '') {
+                    $features[] = $f;
+                }
+            }
+        }
+
+        return [
+            'enabled' => (bool) $request->boolean('whatsapp_banner.enabled'),
+            'title' => trim((string) ($validated['whatsapp_banner']['title'] ?? 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES')),
+            'subtitle' => trim((string) ($validated['whatsapp_banner']['subtitle'] ?? 'Stay informed with satguru travel')),
+            'features' => $features,
+            'button_text' => trim((string) ($validated['whatsapp_banner']['button_text'] ?? 'JOIN NOW')),
+            'button_url' => trim((string) ($validated['whatsapp_banner']['button_url'] ?? '#')),
+            'qr_code_url' => $qrCodeUrl,
+        ];
+    }
+
+    private function buildCruisesPayload(Request $request, array $validated): array
+    {
+        $current = $this->readHomeSettings();
+        $imageUrl = trim((string) ($validated['cruises']['image_url'] ?? ($current['cruises']['image_url'] ?? '')));
+        
+        if ($request->hasFile('cruises_image_file')) {
+            try {
+                $path = $request->file('cruises_image_file')->store('home-settings/cruises', 'public');
+                $imageUrl = Storage::disk('public')->url($path);
+            } catch (Throwable $e) {
+                Log::warning('Cruises image upload failed', ['message' => $e->getMessage()]);
+            }
+        }
+
+        return [
+            'enabled' => (bool) $request->boolean('cruises.enabled'),
+            'title' => trim((string) ($validated['cruises']['title'] ?? 'CROISIÈRES')),
+            'image_url' => $imageUrl,
+            'button_text' => trim((string) ($validated['cruises']['button_text'] ?? 'Découvrir')),
+            'button_url' => trim((string) ($validated['cruises']['button_url'] ?? '#')),
+        ];
     }
 
     private function wpOptionsTable(): string

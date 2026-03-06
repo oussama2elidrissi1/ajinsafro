@@ -11,7 +11,7 @@ if ( ! isset( $settings ) || ! is_array( $settings ) ) {
     $settings = ajth_get_settings();
 }
 
-$default_order = array( 'last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'newsletter' );
+$default_order = array( 'last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter' );
 $section_order = ! empty( $settings['section_order'] ) && is_array( $settings['section_order'] )
     ? $settings['section_order']
     : $default_order;
@@ -65,6 +65,12 @@ $dbr = ajth_get_destinations_by_region();
                     break;
                 case 'promotions':
                     include AJTH_DIR . 'parts/promotions.php';
+                    break;
+                case 'whatsapp_banner':
+                    include AJTH_DIR . 'parts/whatsapp-banner.php';
+                    break;
+                case 'cruises':
+                    include AJTH_DIR . 'parts/cruises.php';
                     break;
                 case 'newsletter':
                     include AJTH_DIR . 'parts/newsletter.php';

@@ -1978,7 +1978,185 @@ body.aj-has-bg-pattern::after {
 }
 
 /* ==========================================================================
-   15. FOOTER V2 — Updated with payment images
+   15. WHATSAPP BANNER
+   ========================================================================== */
+.aj-whatsapp-banner {
+    position: relative;
+    padding: 40px 0;
+    background: linear-gradient(135deg, #128c7e 0%, #075e54 100%);
+    margin: 50px 0;
+}
+
+.aj-whatsapp-banner__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.aj-whatsapp-banner__content {
+    flex: 1;
+}
+
+.aj-whatsapp-banner__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.aj-whatsapp-banner__subtitle {
+    font-size: 1.125rem;
+    color: #ffa500;
+    margin: 0 0 20px;
+    font-weight: 600;
+}
+
+.aj-whatsapp-banner__features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px;
+}
+
+.aj-whatsapp-banner__features li {
+    color: #fff;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.aj-whatsapp-banner__features li i {
+    color: #ffa500;
+    font-size: 0.75rem;
+}
+
+.aj-whatsapp-banner__button {
+    display: inline-block;
+    padding: 12px 32px;
+    background: #ffa500;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 30px;
+    text-decoration: none;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+}
+
+.aj-whatsapp-banner__button:hover {
+    background: #ff8c00;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 165, 0, 0.4);
+    color: #fff;
+}
+
+.aj-whatsapp-banner__qr {
+    text-align: center;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.aj-whatsapp-banner__qr-img {
+    width: 150px;
+    height: 150px;
+    display: block;
+    margin: 0 auto 12px;
+}
+
+.aj-whatsapp-banner__qr-text {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #128c7e;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   16. CRUISES SECTION
+   ========================================================================== */
+.aj-cruises {
+    position: relative;
+    padding: 50px 0;
+    background-color: transparent;
+}
+
+.aj-cruises__inner {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    min-height: 300px;
+}
+
+.aj-cruises__image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.aj-cruises__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.aj-cruises__content {
+    position: relative;
+    z-index: 2;
+    padding: 60px 40px;
+    background: linear-gradient(90deg, rgba(14, 58, 90, 0.95) 0%, rgba(14, 58, 90, 0.7) 50%, rgba(14, 58, 90, 0.3) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 300px;
+}
+
+.aj-cruises__title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 24px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.aj-cruises__button {
+    display: inline-block;
+    padding: 14px 40px;
+    background: #0083c4;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 30px;
+    text-decoration: none;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 131, 196, 0.3);
+}
+
+.aj-cruises__button:hover {
+    background: #006ba1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 131, 196, 0.4);
+    color: #fff;
+}
+
+/* ==========================================================================
+   17. FOOTER V2 — Updated with payment images
    ========================================================================== */
 .aj-footer-v2 {
     position: relative;
@@ -2379,8 +2557,36 @@ body.aj-has-bg-pattern::after {
     }
 }
 
-/* Mobile: topbar compact, navbar 64px, hero spacing */
+/* Mobile: topbar compact, navbar 64px, hero spacing, WhatsApp banner, Cruises */
 @media (max-width: 768px) {
+    .aj-whatsapp-banner__inner {
+        flex-direction: column;
+        padding: 24px;
+        text-align: center;
+    }
+    .aj-whatsapp-banner__title {
+        font-size: 1.25rem;
+    }
+    .aj-whatsapp-banner__subtitle {
+        font-size: 1rem;
+    }
+    .aj-whatsapp-banner__features {
+        text-align: left;
+    }
+    .aj-whatsapp-banner__qr {
+        width: 100%;
+        max-width: 200px;
+        margin: 0 auto;
+    }
+    .aj-cruises__content {
+        padding: 40px 24px;
+        text-align: center;
+        align-items: center;
+        background: linear-gradient(180deg, rgba(14, 58, 90, 0.95) 0%, rgba(14, 58, 90, 0.8) 100%);
+    }
+    .aj-cruises__title {
+        font-size: 2rem;
+    }
     .aj-topbar__inner {
         flex-wrap: nowrap;
         gap: 8px;
@@ -2887,5 +3093,34 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
 
     .aj-flight-card__arrow {
         transform: rotate(90deg);
+    }
+
+    .aj-whatsapp-banner__inner {
+        flex-direction: column;
+        padding: 24px;
+        text-align: center;
+    }
+    .aj-whatsapp-banner__title {
+        font-size: 1.25rem;
+    }
+    .aj-whatsapp-banner__subtitle {
+        font-size: 1rem;
+    }
+    .aj-whatsapp-banner__features {
+        text-align: left;
+    }
+    .aj-whatsapp-banner__qr {
+        width: 100%;
+        max-width: 200px;
+        margin: 0 auto;
+    }
+    .aj-cruises__content {
+        padding: 40px 24px;
+        text-align: center;
+        align-items: center;
+        background: linear-gradient(180deg, rgba(14, 58, 90, 0.95) 0%, rgba(14, 58, 90, 0.8) 100%);
+    }
+    .aj-cruises__title {
+        font-size: 2rem;
     }
 }

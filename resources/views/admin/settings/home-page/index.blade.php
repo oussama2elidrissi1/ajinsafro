@@ -371,9 +371,11 @@
                     'regions' => 'Destinations',
                     'good_spots' => 'Bons coins',
                     'promotions' => 'Promotions',
+                    'whatsapp_banner' => 'Bannière WhatsApp',
+                    'cruises' => 'Croisières',
                     'newsletter' => 'Newsletter',
                 ];
-                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'newsletter']));
+                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter']));
                 $sectionOrder = is_array($sectionOrder) ? $sectionOrder : [];
                 $customSections = old('custom_sections', data_get($settings, 'custom_sections', []));
                 $customSections = is_array($customSections) ? $customSections : [];
@@ -621,6 +623,98 @@
                 </div>
             </div>
 
+            {{-- WhatsApp Banner --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Bannière WhatsApp</h5></div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="whatsapp_banner[enabled]" value="1" id="whatsapp_enabled"
+                               {{ old('whatsapp_banner.enabled', data_get($settings, 'whatsapp_banner.enabled')) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="whatsapp_enabled">Activer la bannière WhatsApp</label>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Titre</label>
+                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sous-titre</label>
+                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Stay informed with satguru travel')) }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Caractéristiques (une par ligne)</label>
+                            @php
+                                $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', ['Exclusive travel packages', 'Latest news and updates', 'Special offers and promotions']));
+                                $features = is_array($features) ? $features : [];
+                            @endphp
+                            @foreach(range(0, 2) as $fi)
+                            <input type="text" class="form-control mb-2" name="whatsapp_banner[features][]" value="{{ $features[$fi] ?? '' }}" placeholder="Caractéristique {{ $fi + 1 }}">
+                            @endforeach
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Texte du bouton</label>
+                            <input type="text" class="form-control" name="whatsapp_banner[button_text]" value="{{ old('whatsapp_banner.button_text', data_get($settings, 'whatsapp_banner.button_text', 'JOIN NOW')) }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">URL du bouton</label>
+                            <input type="text" class="form-control" name="whatsapp_banner[button_url]" value="{{ old('whatsapp_banner.button_url', data_get($settings, 'whatsapp_banner.button_url', '#')) }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">QR Code URL</label>
+                            <input type="text" class="form-control" name="whatsapp_banner[qr_code_url]" value="{{ old('whatsapp_banner.qr_code_url', data_get($settings, 'whatsapp_banner.qr_code_url')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Upload QR Code</label>
+                            <input type="file" class="form-control" name="whatsapp_banner_qr_file" accept="image/*">
+                        </div>
+                        @if(data_get($settings, 'whatsapp_banner.qr_code_url'))
+                            <div class="col-12">
+                                <img src="{{ data_get($settings, 'whatsapp_banner.qr_code_url') }}" alt="QR Code" style="max-height:150px">
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Cruises --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Croisières</h5></div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="cruises[enabled]" value="1" id="cruises_enabled"
+                               {{ old('cruises.enabled', data_get($settings, 'cruises.enabled')) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="cruises_enabled">Activer la section Croisières</label>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Titre</label>
+                            <input type="text" class="form-control" name="cruises[title]" value="{{ old('cruises.title', data_get($settings, 'cruises.title', 'CROISIÈRES')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Image URL</label>
+                            <input type="text" class="form-control" name="cruises[image_url]" value="{{ old('cruises.image_url', data_get($settings, 'cruises.image_url')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Upload Image</label>
+                            <input type="file" class="form-control" name="cruises_image_file" accept="image/*">
+                        </div>
+                        @if(data_get($settings, 'cruises.image_url'))
+                            <div class="col-12">
+                                <img src="{{ data_get($settings, 'cruises.image_url') }}" alt="Cruises" style="max-height:200px">
+                            </div>
+                        @endif
+                        <div class="col-md-6">
+                            <label class="form-label">Texte du bouton</label>
+                            <input type="text" class="form-control" name="cruises[button_text]" value="{{ old('cruises.button_text', data_get($settings, 'cruises.button_text', 'Découvrir')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">URL du bouton</label>
+                            <input type="text" class="form-control" name="cruises[button_url]" value="{{ old('cruises.button_url', data_get($settings, 'cruises.button_url', '#')) }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Footer --}}
             <div class="card">
                 <div class="card-header"><h5 class="card-title mb-0">Footer</h5></div>
@@ -840,6 +934,8 @@
         regions: 'Destinations',
         good_spots: 'Bons coins',
         promotions: 'Promotions',
+        whatsapp_banner: 'Bannière WhatsApp',
+        cruises: 'Croisières',
         newsletter: 'Newsletter'
     };
     function nextCustomId() {
