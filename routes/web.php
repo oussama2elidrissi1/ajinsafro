@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
+use App\Http\Controllers\Admin\TaxonomyTermController;
 use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpTourController;
@@ -175,6 +176,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::delete('circuits/voyages/{voyage}/items/{item}', [TravelDayItemController::class, 'destroy'])->name('circuits.voyages.items.destroy');
     Route::post('circuits/voyages/{voyage}/items/reorder', [TravelDayItemController::class, 'reorder'])->name('circuits.voyages.items.reorder');
 
+    Route::get('circuits/taxonomy-terms', [TaxonomyTermController::class, 'index'])->name('circuits.taxonomy-terms.index');
+    Route::post('circuits/taxonomy-terms', [TaxonomyTermController::class, 'store'])->name('circuits.taxonomy-terms.store');
+    Route::match(['put', 'patch'], 'circuits/taxonomy-terms/{termId}', [TaxonomyTermController::class, 'update'])->name('circuits.taxonomy-terms.update')->whereNumber('termId');
+    Route::delete('circuits/taxonomy-terms/{termId}', [TaxonomyTermController::class, 'destroy'])->name('circuits.taxonomy-terms.destroy')->whereNumber('termId');
+
     Route::get('accommodations', [AccommodationsController::class, 'index'])->name('accommodations.index');
     Route::get('accommodations/hotels', [AccommodationsController::class, 'page'])->name('accommodations.hotels')->defaults('submenu', 'hotels');
     Route::get('accommodations/chambres', [AccommodationsController::class, 'page'])->name('accommodations.chambres')->defaults('submenu', 'chambres');
@@ -230,7 +236,6 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('settings/securite', [SettingsController::class, 'page'])->name('settings.securite')->defaults('submenu', 'securite');
     Route::get('settings/home-page', [HomePageSettingsController::class, 'edit'])->name('settings.home-page.edit');
     Route::post('settings/home-page', [HomePageSettingsController::class, 'update'])->name('settings.home-page.update');
-    Route::post('settings/home-page/header', [HomePageSettingsController::class, 'updateHeader'])->name('settings.home-page.update-header');
 
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');

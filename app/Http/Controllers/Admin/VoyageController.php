@@ -68,6 +68,12 @@ class VoyageController extends Controller
                 $tour->adult_price = $tour->getMeta('adult_price');
                 $tour->duration_day = $tour->getMeta('duration_day');
                 $tour->address = $tour->getMeta('address');
+                if (empty($tour->address)) {
+                    $tour->address = $this->repository->getLocationNamesFromMultiLocation($tour->getMeta('multi_location'));
+                }
+                if (empty($tour->address)) {
+                    $tour->address = '-';
+                }
                 $tour->child_price = $tour->getMeta('child_price');
                 return $tour;
             });

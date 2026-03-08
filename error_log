@@ -1,0 +1,5 @@
+[25-Feb-2026 17:23:04 UTC] PHP Fatal error:  Uncaught RuntimeException: A facade root has not been set. in /home/ajinsafronet/public_html/booking/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:352
+Stack trace:
+#0 Command line code(1): Illuminate\Support\Facades\Facade::__callStatic('hasColumn', Array)
+#1 {main}
+  thrown in /home/ajinsafronet/public_html/booking/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php on line 352

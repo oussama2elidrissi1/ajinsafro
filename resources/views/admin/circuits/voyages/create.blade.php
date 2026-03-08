@@ -444,7 +444,7 @@
                         <button type="submit" class="btn btn-primary waves-effect waves-light">
                             <i class="bx bx-save me-1"></i> Créer le tour dans WordPress
                         </button>
-                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
+                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary waves-effect">Annuler</a>
                     </div>
                 </div>
             </div>
