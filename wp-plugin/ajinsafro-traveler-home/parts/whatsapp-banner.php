@@ -13,10 +13,7 @@ $whatsapp = isset( $settings['whatsapp_banner'] ) && is_array( $settings['whatsa
     ? $settings['whatsapp_banner']
     : array();
 
-if ( empty( $whatsapp['enabled'] ) ) {
-    return;
-}
-
+// Banner is shown when this part is included (section enabled in order). Card "Activer la bannière" is optional override.
 $title = ! empty( $whatsapp['title'] ) ? $whatsapp['title'] : 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES';
 $subtitle = ! empty( $whatsapp['subtitle'] ) ? $whatsapp['subtitle'] : 'Stay informed with satguru travel';
 $features = ! empty( $whatsapp['features'] ) && is_array( $whatsapp['features'] ) ? $whatsapp['features'] : array(

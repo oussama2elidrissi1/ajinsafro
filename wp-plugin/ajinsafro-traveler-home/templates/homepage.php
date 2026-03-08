@@ -15,6 +15,13 @@ $default_order = array( 'last_minute', 'accommodations', 'regions', 'good_spots'
 $section_order = ! empty( $settings['section_order'] ) && is_array( $settings['section_order'] )
     ? $settings['section_order']
     : $default_order;
+// Newsletter (footer) always last so nothing appears below the footer
+$newsletter_key = array_search( 'newsletter', $section_order );
+if ( $newsletter_key !== false ) {
+    unset( $section_order[ $newsletter_key ] );
+    $section_order = array_values( $section_order );
+    $section_order[] = 'newsletter';
+}
 $custom_sections = ! empty( $settings['custom_sections'] ) && is_array( $settings['custom_sections'] )
     ? $settings['custom_sections']
     : array();

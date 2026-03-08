@@ -58,7 +58,7 @@
          TAB 1 — HEADER (topbar + navbar)
          ═══════════════════════════════════════════ --}}
     <div class="tab-pane fade {{ ($tab ?? 'header') === 'header' ? 'show active' : '' }}" id="tab-header" role="tabpanel">
-        <form action="{{ route('admin.settings.home-page.update-header') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ url('/admin/settings/home-page/header') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             {{-- Global enabled --}}

@@ -1257,11 +1257,13 @@ body.aj-has-bg-pattern::after {
 .aj-home-wrap {
     position: relative;
     min-height: 100vh;
+    overflow: visible;
 }
 
 .aj-home {
     position: relative;
     z-index: 1;
+    overflow: visible;
 }
 
 /* ==========================================================================
@@ -1846,10 +1848,27 @@ body.aj-has-bg-pattern::after {
 .aj-promos {
     position: relative;
     z-index: 2;
-    padding: 50px 0;
+    padding: 64px 0 56px;
+    margin-top: 32px;
     background-color: transparent;
+    overflow: visible;
+    scroll-margin-top: 24px;
 }
-.aj-promos .aj-section-title { margin-bottom: 24px; }
+
+.aj-promos .aj-container {
+    padding-top: 0;
+}
+
+.aj-promos .aj-section-title {
+    margin: 0 0 28px;
+    padding-top: 4px;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--aj-blue, #0083c4);
+    line-height: 1.35;
+    min-height: 1.35em;
+    display: block;
+}
 
 .aj-promos__grid {
     display: grid;
@@ -1900,11 +1919,11 @@ body.aj-has-bg-pattern::after {
 }
 
 .aj-promo-card__text {
-    font-size: 9px;
-    opacity: .9;
-    line-height: 1.6;
+    font-size: 11px;
+    opacity: .95;
+    line-height: 1.5;
     margin: 0;
-    max-width: 60%;
+    max-width: 65%;
 }
 
 .aj-promo-card__deco {
@@ -1981,10 +2000,14 @@ body.aj-has-bg-pattern::after {
    15. WHATSAPP BANNER
    ========================================================================== */
 .aj-whatsapp-banner {
+    display: block;
+    visibility: visible;
     position: relative;
-    padding: 40px 0;
+    padding: 48px 0;
+    margin-top: 48px;
+    margin-bottom: 24px;
     background: linear-gradient(135deg, #128c7e 0%, #075e54 100%);
-    margin: 50px 0;
+    overflow: visible;
 }
 
 .aj-whatsapp-banner__inner {
@@ -2087,8 +2110,11 @@ body.aj-has-bg-pattern::after {
    ========================================================================== */
 .aj-cruises {
     position: relative;
-    padding: 50px 0;
+    padding: 48px 0;
+    margin-top: 48px;
+    margin-bottom: 24px;
     background-color: transparent;
+    overflow: visible;
 }
 
 .aj-cruises__inner {

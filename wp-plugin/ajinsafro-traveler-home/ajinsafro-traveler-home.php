@@ -323,6 +323,9 @@ function ajth_get_settings() {
             'regions' => true,
             'good_spots' => true,
             'promotions' => true,
+            'whatsapp_banner' => true,
+            'cruises' => true,
+            'newsletter' => true,
         ),
         'search' => array(
             'shortcode' => '[traveler_search]',
@@ -376,6 +379,9 @@ function ajth_get_settings() {
     $settings['sections']['regions'] = ! empty( $settings['sections']['regions'] );
     $settings['sections']['good_spots'] = ! empty( $settings['sections']['good_spots'] );
     $settings['sections']['promotions'] = ! empty( $settings['sections']['promotions'] );
+    $settings['sections']['whatsapp_banner'] = ! empty( $settings['sections']['whatsapp_banner'] );
+    $settings['sections']['cruises'] = ! empty( $settings['sections']['cruises'] );
+    $settings['sections']['newsletter'] = ! empty( $settings['sections']['newsletter'] );
 
     return $settings;
 }
