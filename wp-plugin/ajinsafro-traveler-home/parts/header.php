@@ -176,7 +176,7 @@ $default_menu_items = array(
             <div class="aj-navbar__logo">
                 <?php if ( ! empty( $hdr['logo_url'] ) ) : ?>
                     <a href="<?php echo esc_url( home_url( '/' ) ); ?>">
-                        <img src="<?php echo esc_url( $hdr['logo_url'] ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" class="aj-navbar__logo-img">
+                        <img src="<?php echo esc_url( $hdr['logo_url'] ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" class="aj-navbar__logo-img" loading="eager" fetchpriority="high">
                     </a>
                 <?php else : ?>
                     <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="aj-navbar__brand">

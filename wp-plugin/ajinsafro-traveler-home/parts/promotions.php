@@ -64,7 +64,7 @@ if ( empty( $promos ) ) {
                 $is_rtl = ! empty( $promo['rtl'] );
                 $url = ! empty( $promo['url'] ) ? $promo['url'] : '#';
             ?>
-            <a href="<?php echo esc_url( $url ); ?>" class="aj-promo-card aj-promo-card--<?php echo esc_attr( $style ); ?><?php echo $is_rtl ? ' aj-promo-card--rtl' : ''; ?>">
+            <a href="<?php echo esc_url( $url ); ?>" class="aj-promo-card aj-promo-card--<?php echo esc_attr( $style ); ?><?php echo $is_rtl ? ' aj-promo-card--rtl' : ''; ?>"<?php echo $is_rtl ? ' dir="rtl" lang="ar"' : ''; ?>>
                 <?php if ( ! empty( $promo['badge_text'] ) ) : ?>
                 <span class="aj-promo-card__badge" style="background:<?php echo esc_attr( $promo['badge_bg'] ?? '#ef4444' ); ?>;color:<?php echo esc_attr( $promo['badge_color'] ?? '#fff' ); ?>;">
                     <?php echo esc_html( $promo['badge_text'] ); ?>
@@ -72,7 +72,7 @@ if ( empty( $promos ) ) {
                 <?php endif; ?>
                 <h3 class="aj-promo-card__title"><?php echo nl2br( esc_html( $promo['title'] ?? '' ) ); ?></h3>
                 <?php if ( ! empty( $promo['text'] ) ) : ?>
-                <p class="aj-promo-card__text" <?php echo $is_rtl ? 'dir="rtl"' : ''; ?>><?php echo esc_html( $promo['text'] ); ?></p>
+                <p class="aj-promo-card__text"><?php echo esc_html( $promo['text'] ); ?></p>
                 <?php endif; ?>
 
                 <?php if ( $i === 0 ) : ?>

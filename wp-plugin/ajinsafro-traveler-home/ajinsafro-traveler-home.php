@@ -77,10 +77,10 @@ function ajth_enqueue_front_assets() {
         '6.4.0'
     );
 
-    // Google Fonts - Poppins
+    // Google Fonts - Poppins + Noto Sans Arabic (for RTL promo cards)
     wp_enqueue_style(
         'ajth-google-fonts',
-        'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap',
+        'https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap',
         array(),
         null
     );
@@ -109,8 +109,9 @@ add_action( 'wp_enqueue_scripts', 'ajth_enqueue_front_assets', 5 );
 function ajth_critical_header_css() {
     $h = ajth_get_header_settings();
     $on_home = is_front_page() || is_home();
+    $on_voyages = is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
 
-    $render_header = ! empty( $h['enabled'] ) && ( $on_home || ! empty( $h['show_header_sitewide'] ) );
+    $render_header = ! empty( $h['enabled'] ) && ( $on_home || $on_voyages || ! empty( $h['show_header_sitewide'] ) );
     $render_footer = ! empty( $h['show_footer_sitewide'] );
 
     if ( ! $render_header && ! $render_footer ) {
@@ -118,18 +119,19 @@ function ajth_critical_header_css() {
     }
 
     if ( $render_header ) {
-        $css = 'body.aj-custom-header #header,body.aj-custom-header .site-header,body.aj-custom-header .topbar,body.aj-custom-header .header-main,body.aj-custom-header>header:not(.aj-header),body.aj-custom-header #masthead{display:none!important}.aj-header{width:100%;z-index:1000;position:relative}.aj-topbar{background:#0e3a5a;color:rgba(255,255,255,.9);font-size:11px;line-height:1}.aj-topbar__inner{display:flex;align-items:center;justify-content:space-between;padding:8px 0;gap:16px}.aj-topbar__left,.aj-topbar__right{display:flex;align-items:center;gap:16px}.aj-topbar__socials{display:flex;align-items:center;gap:12px;font-size:14px}.aj-topbar__social-link{color:rgba(255,255,255,.9);transition:color .2s}.aj-topbar__contact{display:flex;align-items:center;gap:16px;padding-left:16px;border-left:1px solid rgba(255,255,255,.2)}.aj-topbar__item{display:inline-flex;align-items:center;gap:8px;color:rgba(255,255,255,.9)}.aj-topbar__selector{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:4px;cursor:pointer}.aj-topbar__flag{width:16px;height:12px;object-fit:cover;border-radius:1px}.aj-topbar__auth{display:flex;align-items:center;gap:8px;padding-left:12px;margin-left:8px;border-left:1px solid rgba(255,255,255,.2)}.aj-topbar__auth-link{padding:6px 12px;color:rgba(255,255,255,.9);font-weight:500;border-radius:4px}.aj-topbar__auth-link--signup{background:#0083c4;color:#fff;border-radius:20px;padding:6px 16px}.aj-navbar{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.06);position:sticky;top:0;z-index:999;border-bottom:1px solid rgba(0,0,0,.05)}.aj-navbar__inner{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:80px}.aj-container{max-width:1280px;margin:0 auto;padding:0 20px;width:100%}.aj-nav-list{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:4px}.aj-nav-list>li>a{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:13px;font-weight:600;color:#374151;text-decoration:none;text-transform:uppercase;letter-spacing:.3px;border-radius:8px;transition:color .2s,background .2s}.aj-nav-list>li>a:hover{color:#0083c4;background:rgba(0,131,196,.06)}.aj-navbar__brand{font-size:1.25rem;font-weight:800;color:#0083c4}.aj-lowcost-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:linear-gradient(135deg,#f37a1f,#ef4444);color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;border-radius:20px;box-shadow:0 4px 12px rgba(243,122,31,.3)}';
+        $css = 'body.aj-custom-header #header,body.aj-custom-header .site-header,body.aj-custom-header .topbar,body.aj-custom-header .header-main,body.aj-custom-header>header:not(.aj-header),body.aj-custom-header #masthead{display:none!important}.aj-header{width:100%;z-index:1000;position:relative;font-family:\'Poppins\',\'Segoe UI\',Roboto,sans-serif}.aj-topbar{background:#0e3a5a;color:rgba(255,255,255,.9);font-size:11px;line-height:1}.aj-topbar__inner{display:flex;align-items:center;justify-content:space-between;padding:8px 0;gap:16px}.aj-topbar__left,.aj-topbar__right{display:flex;align-items:center;gap:16px}.aj-topbar__socials{display:flex;align-items:center;gap:12px;font-size:14px}.aj-topbar__social-link{color:rgba(255,255,255,.9);transition:color .2s}.aj-topbar__contact{display:flex;align-items:center;gap:16px;padding-left:16px;border-left:1px solid rgba(255,255,255,.2)}.aj-topbar__item{display:inline-flex;align-items:center;gap:8px;color:rgba(255,255,255,.9)}.aj-topbar__selector{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:4px;cursor:pointer}.aj-topbar__flag{width:16px;height:12px;object-fit:cover;border-radius:1px}.aj-topbar__auth{display:flex;align-items:center;gap:8px;padding-left:12px;margin-left:8px;border-left:1px solid rgba(255,255,255,.2)}.aj-topbar__auth-link{padding:6px 12px;color:rgba(255,255,255,.9);font-weight:500;border-radius:4px}.aj-topbar__auth-link--signup{background:#0083c4;color:#fff;border-radius:20px;padding:6px 16px}.aj-navbar{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.06);position:sticky;top:0;z-index:999;border-bottom:1px solid rgba(0,0,0,.05)}.aj-navbar__inner{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:80px;padding-left:16px;padding-right:16px}.aj-container{max-width:1280px;margin:0 auto;padding:0 20px;width:100%}.aj-navbar__burger{display:none}.aj-drawer{display:flex;flex:1;min-width:0}.aj-drawer__header,.aj-drawer__auth,.aj-drawer__lowcost{display:none}.aj-navbar__menu{flex:1 1 auto;min-width:0;display:flex;justify-content:center}.aj-nav-list{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:4px}.aj-nav-list>li>a{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:13px;font-weight:600;color:#374151;text-decoration:none;text-transform:uppercase;letter-spacing:.3px;border-radius:8px;transition:color .2s,background .2s}.aj-nav-list>li>a:hover{color:#0083c4;background:rgba(0,131,196,.06)}.aj-navbar__brand{font-size:1.25rem;font-weight:800;color:#0083c4}.aj-navbar__logo-img{max-height:40px;width:auto;height:auto;object-fit:contain;display:block}.aj-lowcost-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:linear-gradient(135deg,#f37a1f,#ef4444);color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;border-radius:20px;box-shadow:0 4px 12px rgba(243,122,31,.3)}';
         echo '<style id="ajth-critical-header">' . $css . '</style>' . "\n";
     }
 
+    $footer_selectors = '#footer,#footer-outer,.site-footer,.footer-wrapper,.footer-widget-area,#colophon,.footer,.st-footer,.footer-top,.footer-bottom,#main-footer,.footer-area,.st-footer-wrap,.footer-wrap,.content-footer,.footer-outer';
     if ( $render_footer ) {
-        $footer_css = 'body.aj-custom-footer #footer,body.aj-custom-footer footer:not(.aj-footer-v2):not(.aj-footer-sitewide footer),body.aj-custom-footer .site-footer,body.aj-custom-footer .footer-wrapper,body.aj-custom-footer .footer-widget-area,body.aj-custom-footer #colophon,body.aj-custom-footer .footer,body.aj-custom-footer .st-footer,body.aj-custom-footer .footer-top,body.aj-custom-footer .footer-bottom{display:none!important}';
+        $footer_css = 'body.aj-custom-footer ' . implode( ',body.aj-custom-footer ', explode( ',', $footer_selectors ) ) . ',body.aj-custom-footer footer:not(.aj-footer-v2):not(.aj-footer-sitewide footer){display:none!important}';
         echo '<style id="ajth-critical-footer">' . $footer_css . '</style>' . "\n";
     }
 }
 add_action( 'wp_head', 'ajth_critical_header_css', 1 );
 
-/* Preload main stylesheet so it loads as early as possible */
+/* Preload main stylesheet and critical fonts so header renders correctly on first paint */
 function ajth_preload_styles() {
     $load = is_front_page() || is_home() || is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
     if ( ! $load && is_singular() ) {
@@ -148,6 +150,8 @@ function ajth_preload_styles() {
         return;
     }
     echo '<link rel="preload" href="' . esc_url( AJTH_URL . 'assets/css/home.css' ) . '?ver=' . esc_attr( AJTH_VERSION ) . '" as="style">' . "\n";
+    echo '<link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" as="style">' . "\n";
+    echo '<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">' . "\n";
 }
 add_action( 'wp_head', 'ajth_preload_styles', 0 );
 
@@ -276,14 +280,9 @@ function ajth_render_header_sitewide() {
 add_action( 'get_header', 'ajth_render_header_sitewide', 5 );
 
 /* ──────────────────────────────────────────────
- * Output custom footer on ALL pages (replaces theme footer).
- * On the homepage the template already includes the footer.
+ * Output custom footer on pages when site-wide footer is enabled.
  * ────────────────────────────────────────────── */
 function ajth_render_footer_sitewide() {
-    $on_home = is_front_page() || is_home();
-    if ( $on_home ) {
-        return;
-    }
     if ( is_singular() ) {
         global $post;
         if ( $post && has_shortcode( $post->post_content, 'ajth_homepage' ) ) {
@@ -351,6 +350,16 @@ function ajth_get_settings() {
             'title' => 'Destinations de ce mois',
             'items' => array(),
         ),
+        'whatsapp_banner' => array(
+            'enabled'   => true,
+            'title'    => 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES',
+            'subtitle' => 'Stay informed with satguru travel',
+            'features' => array( 'Exclusive travel packages', 'Latest news and updates', 'Special offers and promotions' ),
+            'button_text' => 'JOIN NOW',
+            'button_url'  => '#',
+            'qr_code_url' => '',
+        ),
+        'section_order' => array( 'last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter' ),
         'footer' => array(
             'col1_heading' => 'En savoir plus',
             'col2_heading' => 'Société',

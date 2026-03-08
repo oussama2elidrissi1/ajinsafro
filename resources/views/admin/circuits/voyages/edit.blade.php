@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
 @endphp
@@ -4295,3 +4296,5 @@
         })();
     </script>
 @endpush
+=======
+>>>>>>> 3271a6e2f3945354324c4876848dc97132be0acc
