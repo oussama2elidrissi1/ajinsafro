@@ -4266,6 +4266,14 @@
                 form.addEventListener('submit', function(e) {
                     console.log('ðŸš€ FORMULAIRE SOUMIS (intercepté)');
                     
+                    // En mode création (store), ne pas appliquer la vérification flight_options (le store attend flights[] / without_flight)
+                    var voyageId = form.getAttribute('data-voyage-id');
+                    var isCreate = voyageId === '0' || voyageId === '' || voyageId === null;
+                    if (isCreate) {
+                        console.log('âœ… Mode création: soumission autorisée (store)');
+                        return;
+                    }
+                    
                     // DÉSACTIVER le drawer pour éviter qu'il soumette ses duplications
                     var drawer = document.getElementById('day-builder-drawer');
                     var drawerInputsDisabled = [];
