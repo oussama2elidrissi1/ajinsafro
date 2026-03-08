@@ -4323,23 +4323,15 @@
                         console.log('  1. Les inputs ont-ils les bons attributs name?');
                         console.log('  2. Les inputs sont-ils dans le formulaire #edit-voyage-form?');
                         console.log('  3. Les inputs sont-ils disabled?');
-                        
-                        if (!confirm('âš ï¸ ATTENTION: Aucun flight_options détecté!\n\nVoulez-vous quand même envoyer le formulaire?\n(Cliquez sur Cancel pour déboguer)')) {
-                            e.preventDefault();
-                            e.stopImmediatePropagation();
-                            // Réactiver les inputs du drawer
-                            drawerInputsDisabled.forEach(function(el) {
-                                el.removeAttribute('disabled');
-                                el.removeAttribute('data-was-enabled');
-                            });
-                        }
-                    } else if (withoutFlight) {
-                        console.log('âœ… Sans vol activé, soumission OK (aucun flight_options attendu)');
-                    } else {
-                        console.log('âœ… Flight options detectés, soumission OK');
+                        console.warn('Soumission autorisee');
+                        if (false && !confirm('âš ï¸ ATTENTION: Aucun flight_options détecté!\n\nVoulez-vous quand même envoyer le formulaire?\n(Cliquez sur Cancel pour déboguer)')) {
+
                     }
-                    
-                    // Note: Si soumission OK, la page va recharger donc pas besoin de réactiver
+                    if (withoutFlight) {
+                        console.log('Sans vol: soumission OK');
+                    } else {
+                        console.log('Flight options detectes:', count);
+                    }
                 }, true);
                 
                 console.log('âœ… Intercepteur de formulaire installé');
