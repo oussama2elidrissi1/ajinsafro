@@ -27,15 +27,22 @@ $qr_code_url = ! empty( $whatsapp['qr_code_url'] ) ? $whatsapp['qr_code_url'] : 
 ?>
 
 <section class="aj-whatsapp-banner">
+    <!-- Decoration dots top-right -->
+    <div class="aj-whatsapp-banner__dots aj-whatsapp-banner__dots--tr">
+        <span></span><span></span><span></span>
+    </div>
+
     <div class="aj-container">
         <div class="aj-whatsapp-banner__inner">
             <div class="aj-whatsapp-banner__content">
                 <h2 class="aj-whatsapp-banner__title"><?php echo esc_html( $title ); ?></h2>
-                <p class="aj-whatsapp-banner__subtitle"><?php echo esc_html( $subtitle ); ?></p>
+                <div class="aj-whatsapp-banner__subtitle-wrap">
+                    <span class="aj-whatsapp-banner__subtitle"><?php echo esc_html( $subtitle ); ?></span>
+                </div>
                 <?php if ( ! empty( $features ) ) : ?>
                 <ul class="aj-whatsapp-banner__features">
                     <?php foreach ( $features as $feature ) : ?>
-                    <li><i class="fas fa-chevron-right"></i> <?php echo esc_html( $feature ); ?></li>
+                    <li><i class="fas fa-angle-double-right"></i> <?php echo esc_html( $feature ); ?></li>
                     <?php endforeach; ?>
                 </ul>
                 <?php endif; ?>
@@ -43,12 +50,20 @@ $qr_code_url = ! empty( $whatsapp['qr_code_url'] ) ? $whatsapp['qr_code_url'] : 
                     <?php echo esc_html( $button_text ); ?>
                 </a>
             </div>
+
             <?php if ( $qr_code_url ) : ?>
-            <div class="aj-whatsapp-banner__qr">
-                <img src="<?php echo esc_url( $qr_code_url ); ?>" alt="WhatsApp QR Code" class="aj-whatsapp-banner__qr-img">
-                <p class="aj-whatsapp-banner__qr-text">SCAN NOW</p>
+            <div class="aj-whatsapp-banner__qr-wrap">
+                <div class="aj-whatsapp-banner__qr">
+                    <img src="<?php echo esc_url( $qr_code_url ); ?>" alt="WhatsApp QR Code" class="aj-whatsapp-banner__qr-img">
+                </div>
+                <div class="aj-whatsapp-banner__qr-label">SCAN NOW</div>
             </div>
             <?php endif; ?>
         </div>
+    </div>
+
+    <!-- Decoration dots bottom-left -->
+    <div class="aj-whatsapp-banner__dots aj-whatsapp-banner__dots--bl">
+        <span></span><span></span><span></span>
     </div>
 </section>

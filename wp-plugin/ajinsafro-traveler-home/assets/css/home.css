@@ -2006,45 +2006,81 @@ body.aj-has-bg-pattern::after {
     padding: 48px 0;
     margin-top: 48px;
     margin-bottom: 24px;
-    background: linear-gradient(135deg, #128c7e 0%, #075e54 100%);
-    overflow: visible;
+    background: #1a6b3e;
+    overflow: hidden;
+}
+
+/* Decoration dots (top-right / bottom-left) */
+.aj-whatsapp-banner__dots {
+    position: absolute;
+    display: flex;
+    gap: 8px;
+    z-index: 1;
+}
+.aj-whatsapp-banner__dots span {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.5);
+    background: transparent;
+}
+.aj-whatsapp-banner__dots--tr {
+    top: 18px;
+    right: 24px;
+}
+.aj-whatsapp-banner__dots--bl {
+    bottom: 18px;
+    left: 24px;
 }
 
 .aj-whatsapp-banner__inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 40px;
-    padding: 40px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    gap: 48px;
+    padding: 40px 48px;
+    position: relative;
+    z-index: 2;
 }
 
 .aj-whatsapp-banner__content {
     flex: 1;
+    min-width: 0;
 }
 
 .aj-whatsapp-banner__title {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 1.65rem;
+    font-weight: 800;
     color: #fff;
-    margin: 0 0 12px;
+    margin: 0 0 20px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    line-height: 1.3;
 }
 
+/* Slanted orange subtitle badge */
+.aj-whatsapp-banner__subtitle-wrap {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+}
 .aj-whatsapp-banner__subtitle {
-    font-size: 1.125rem;
-    color: #ffa500;
-    margin: 0 0 20px;
-    font-weight: 600;
+    display: inline-block;
+    background: #ffa500;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 6px 20px 6px 16px;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+    letter-spacing: 0.3px;
 }
 
 .aj-whatsapp-banner__features {
     list-style: none;
     padding: 0;
-    margin: 0 0 24px;
+    margin: 0 0 28px;
 }
 
 .aj-whatsapp-banner__features li {
@@ -2053,17 +2089,17 @@ body.aj-has-bg-pattern::after {
     margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .aj-whatsapp-banner__features li i {
     color: #ffa500;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
 }
 
 .aj-whatsapp-banner__button {
     display: inline-block;
-    padding: 12px 32px;
+    padding: 13px 36px;
     background: #ffa500;
     color: #fff;
     font-weight: 700;
@@ -2071,38 +2107,73 @@ body.aj-has-bg-pattern::after {
     border-radius: 30px;
     text-decoration: none;
     transition: all 0.3s;
-    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 4px 16px rgba(255, 165, 0, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .aj-whatsapp-banner__button:hover {
-    background: #ff8c00;
+    background: #e69400;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 165, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(255, 165, 0, 0.5);
     color: #fff;
 }
 
+/* QR code wrapper with orange frame corners */
+.aj-whatsapp-banner__qr-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+}
+
 .aj-whatsapp-banner__qr {
-    text-align: center;
-    padding: 20px;
+    position: relative;
+    padding: 16px;
     background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+/* Orange corner accents */
+.aj-whatsapp-banner__qr::before,
+.aj-whatsapp-banner__qr::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: #ffa500;
+    border-style: solid;
+}
+.aj-whatsapp-banner__qr::before {
+    top: -4px;
+    left: -4px;
+    border-width: 4px 0 0 4px;
+}
+.aj-whatsapp-banner__qr::after {
+    bottom: -4px;
+    right: -4px;
+    border-width: 0 4px 4px 0;
 }
 
 .aj-whatsapp-banner__qr-img {
-    width: 150px;
-    height: 150px;
+    width: 160px;
+    height: 160px;
     display: block;
-    margin: 0 auto 12px;
 }
 
-.aj-whatsapp-banner__qr-text {
-    font-size: 0.875rem;
+.aj-whatsapp-banner__qr-label {
+    margin-top: 0;
+    background: #ffa500;
+    color: #fff;
+    font-size: 0.8rem;
     font-weight: 700;
-    color: #128c7e;
-    margin: 0;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    padding: 6px 24px;
+    border-radius: 0 0 4px 4px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* ==========================================================================
@@ -2591,18 +2662,22 @@ body.aj-has-bg-pattern::after {
         text-align: center;
     }
     .aj-whatsapp-banner__title {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
+    }
+    .aj-whatsapp-banner__subtitle-wrap {
+        justify-content: center;
     }
     .aj-whatsapp-banner__subtitle {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     .aj-whatsapp-banner__features {
         text-align: left;
     }
+    .aj-whatsapp-banner__qr-wrap {
+        align-items: center;
+    }
     .aj-whatsapp-banner__qr {
-        width: 100%;
-        max-width: 200px;
-        margin: 0 auto;
+        max-width: 180px;
     }
     .aj-cruises__content {
         padding: 40px 24px;
@@ -3127,18 +3202,22 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
         text-align: center;
     }
     .aj-whatsapp-banner__title {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
+    }
+    .aj-whatsapp-banner__subtitle-wrap {
+        justify-content: center;
     }
     .aj-whatsapp-banner__subtitle {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     .aj-whatsapp-banner__features {
         text-align: left;
     }
+    .aj-whatsapp-banner__qr-wrap {
+        align-items: center;
+    }
     .aj-whatsapp-banner__qr {
-        width: 100%;
-        max-width: 200px;
-        margin: 0 auto;
+        max-width: 180px;
     }
     .aj-cruises__content {
         padding: 40px 24px;
