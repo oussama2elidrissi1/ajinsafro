@@ -73,12 +73,12 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#price" role="tab">
-                            <i class="bx bx-dollar"></i> <span class="ve-tab-label">Prix</span>
+                            <i class="bx bx-dollar"></i> <span class="ve-tab-label">Prix & Paiement</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#information" role="tab">
-                            <i class="bx bx-info-circle"></i> <span class="ve-tab-label">Info & Paiement</span>
+                            <i class="bx bx-info-circle"></i> <span class="ve-tab-label">Info</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -109,11 +109,6 @@
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#transfers" role="tab">
                             <i class="bx bx-car"></i> <span class="ve-tab-label">Transferts</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#travel-dates" role="tab">
-                            <i class="bx bx-calendar-check"></i> <span class="ve-tab-label">Dates</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -345,10 +340,10 @@
                     <div class="card-body destination-ux-body">
                         <div class="destination-ux-header">
                             <h4 class="destination-ux-title">Tour location</h4>
-                            <p class="destination-ux-helper">Sélectionnez une ou plusieurs destinations pour ce circuit.</p>
+                            <p class="destination-ux-helper">Sélectionnez une ou plusieurs locations pour ce circuit.</p>
                             <div class="destination-ux-badge-wrap">
                                 <span class="badge bg-primary destination-ux-badge" id="locationCountBadge">
-                                    <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} destination(s) sélectionnée(s)</span>
+                                    <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} location(s) sélectionnée(s)</span>
                                 </span>
                             </div>
                         </div>
@@ -497,6 +492,14 @@
                                     <label for="infant_price" class="form-label">Prix Bébé (MAD)</label>
                                     <input type="number" class="form-control" id="infant_price" name="infant_price" value="{{ old('infant_price', $meta['infant_price'] ?? '') }}" step="0.01" min="0">
                                 </div>
+                                <div class="mb-3">
+                                    <label for="commission_adulte" class="form-label">Commission Adulte (MAD)</label>
+                                    <input type="number" class="form-control" id="commission_adulte" name="commission_adulte" value="{{ old('commission_adulte', $meta['commission_adulte'] ?? '') }}" step="0.01" min="0" placeholder="0">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="commission_enfant" class="form-label">Commission Enfant (MAD)</label>
+                                    <input type="number" class="form-control" id="commission_enfant" name="commission_enfant" value="{{ old('commission_enfant', $meta['commission_enfant'] ?? '') }}" step="0.01" min="0" placeholder="0">
+                                </div>
                             </div>
                             
                             <div class="col-lg-4">
@@ -522,6 +525,62 @@
                                 <div class="mb-3">
                                     <label for="calculator_discount_by_people_type" class="form-label">Calculateur réduction</label>
                                     <input type="text" class="form-control" id="calculator_discount_by_people_type" name="calculator_discount_by_people_type" value="{{ old('calculator_discount_by_people_type', $meta['calculator_discount_by_people_type'] ?? '') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Moyens de paiement</h4>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">
+                                        <i class="bx bxl-paypal"></i> PayPal
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">
+                                        OnePay
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">
+                                        OnePay ATM
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu">
+                                        PayU
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">
+                                        PayU Latam
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">
+                                        PayUmoney
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor">
+                                        <i class="bx bx-credit-card"></i> Razorpay
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -563,70 +622,6 @@
                                 <option value="accordion" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'accordion' ? 'selected' : '' }}>Accordéon</option>
                                 <option value="list" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'list' ? 'selected' : '' }}>Liste</option>
                             </select>
-                        </div>
-                    </div>
-                </div>
-                
-                {{-- Section Paiement fusionnée --}}
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Moyens de paiement</h4>
-                        
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">
-                                        <i class="bx bxl-paypal"></i> PayPal
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">
-                                        OnePay
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">
-                                        OnePay ATM
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu">
-                                        PayU
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">
-                                        PayU Latam
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">
-                                        PayUmoney
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor">
-                                        <i class="bx bx-credit-card"></i> Razorpay
-                                    </label>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -696,6 +691,100 @@
                             <label for="ical_url" class="form-label">URL calendrier iCal</label>
                             <input type="text" class="form-control" id="ical_url" name="ical_url" value="{{ old('ical_url', $meta['ical_url'] ?? '') }}" placeholder="https://...">
                         </div>
+
+                        <h5 class="mb-3 mt-4"><i class="bx bx-calendar-check"></i> Dates disponibles (Travelling on)</h5>
+                        <p class="alert alert-info py-2 mb-3 small">
+                            <i class="bx bx-info-circle"></i> <strong>Configuration des dates</strong> —
+                            Ajoutez les dates disponibles pour ce voyage. Seules ces dates seront sélectionnables dans le calendrier sur la page du tour.
+                            Si aucune date n'est configurée, un message "No dates available" sera affiché.
+                        </p>
+                        <div id="travel-dates-container">
+                            @php $datesList = $travelDates ?? collect(); @endphp
+                            @forelse($datesList as $di => $dateItem)
+                            <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
+                                <div class="card-body py-2">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-3">
+                                            <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small mb-1">Places</label>
+                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small mb-1">Prix spécifique</label>
+                                            <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="Prix">
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end pb-2">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
+                                                <label class="form-check-label small">Actif</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end pb-2">
+                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>@endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="alert alert-warning">
+                                Aucune date disponible configurée. Cliquez sur "Ajouter une date" pour commencer.
+                            </div>
+                            @endforelse
+                        </div>
+                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-travel-date">
+                            <i class="bx bx-plus"></i> Ajouter une date
+                        </button>
+                        <script>
+                        (function(){
+                            var container = document.getElementById('travel-dates-container');
+                            var addBtn = document.getElementById('add-travel-date');
+                            if (!container || !addBtn) return;
+                            if (container.dataset.initialized === 'true') return;
+                            container.dataset.initialized = 'true';
+                            addBtn.addEventListener('click', function(){
+                                var rows = container.querySelectorAll('.travel-date-row');
+                                var nextIndex = rows.length;
+                                var html = `
+                                <div class="card mb-2 bg-light travel-date-row" data-index="${nextIndex}">
+                                    <div class="card-body py-2">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-md-3">
+                                                <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                                <input type="date" class="form-control form-control-sm" name="travel_dates[${nextIndex}][date]" required>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small mb-1">Places</label>
+                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small mb-1">Prix spécifique</label>
+                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="Prix">
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end pb-2">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" name="travel_dates[${nextIndex}][is_active]" value="1" checked>
+                                                    <label class="form-check-label small">Actif</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-1 d-flex align-items-end pb-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                                container.insertAdjacentHTML('beforeend', html);
+                            });
+                            container.addEventListener('click', function(e){
+                                if (e.target.classList.contains('remove-travel-date')) {
+                                    var row = e.target.closest('.travel-date-row');
+                                    if (row) row.remove();
+                                }
+                            });
+                        })();
+                        </script>
                     </div>
                 </div>
             </div>
@@ -1470,69 +1559,16 @@
 
 
 
-            {{-- TAB 8: TAXONOMIES --}}
+            {{-- TAB 8: TAXONOMIES (CRUD dynamique) --}}
             <div class="tab-pane" id="taxonomies" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Catégories & Taxonomies</h4>
-                        
-                        <div class="row">
-                            @if(isset($availableTaxonomies['st_tour_type']) && $availableTaxonomies['st_tour_type']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Type de tour</h5>
-                                @foreach($availableTaxonomies['st_tour_type'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="st_tour_type[]" value="{{ $term->term_id }}" id="st_tour_type_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['st_tour_type'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="st_tour_type_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['durations']) && $availableTaxonomies['durations']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Durée</h5>
-                                @foreach($availableTaxonomies['durations'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="durations[]" value="{{ $term->term_id }}" id="durations_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['durations'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="durations_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['language']) && $availableTaxonomies['language']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Langue (language)</h5>
-                                @foreach($availableTaxonomies['language'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="language[]" value="{{ $term->term_id }}" id="language_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['language'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="language_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['languages']) && $availableTaxonomies['languages']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Langues (languages)</h5>
-                                @foreach($availableTaxonomies['languages'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="languages[]" value="{{ $term->term_id }}" id="languages_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['languages'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="languages_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                        </div>
+                        <p class="text-muted small">Gérez les catégories (Type de tour, Durée, Langue). Les cases à cocher assignent les catégories au voyage.</p>
+                        @include('admin.circuits.voyages.partials._taxonomies_crud', [
+                            'availableTaxonomies' => $availableTaxonomies ?? [],
+                            'assignedTaxonomies' => $assignedTaxonomies ?? [],
+                        ])
                     </div>
                 </div>
             </div>
@@ -1590,119 +1626,10 @@
                 </div>
             </div>
 
-            <div class="tab-pane" id="travel-dates" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-3"><i class="bx bx-calendar-check"></i> Dates disponibles (Travelling on)</h4>
-                        <p class="alert alert-info py-2 mb-3 small">
-                            <i class="bx bx-info-circle"></i> <strong>Configuration des dates</strong> "” 
-                            Ajoutez les dates disponibles pour ce voyage. Seules ces dates seront sélectionnables dans le calendrier sur la page du tour. 
-                            Si aucune date n'est configurée, un message "No dates available" sera affiché.
-                        </p>
-
-                        <div id="travel-dates-container">
-                            @php $datesList = $travelDates ?? collect(); @endphp
-                            @forelse($datesList as $di => $dateItem)
-                            <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
-                                <div class="card-body py-2">
-                                    <div class="row g-2 align-items-center">
-                                        <div class="col-md-3">
-                                            <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
-                                            <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small mb-1">Places</label>
-                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small mb-1">Prix spécifique</label>
-                                            <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="Prix">
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end pb-2">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
-                                                <label class="form-check-label small">Actif</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1 d-flex align-items-end pb-2">
-                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>@endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @empty
-                            <div class="alert alert-warning">
-                                Aucune date disponible configurée. Cliquez sur "Ajouter une date" pour commencer.
-                            </div>
-                            @endforelse
-                        </div>
-                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-travel-date">
-                            <i class="bx bx-plus"></i> Ajouter une date
-                        </button>
-
-                        <script>
-                        (function(){
-                            var container = document.getElementById('travel-dates-container');
-                            var addBtn = document.getElementById('add-travel-date');
-                            if (!container || !addBtn) return;
-                            if (container.dataset.initialized === 'true') return;
-                            container.dataset.initialized = 'true';
-
-                            addBtn.addEventListener('click', function(){
-                                var rows = container.querySelectorAll('.travel-date-row');
-                                var nextIndex = rows.length;
-                                var html = `
-                                <div class="card mb-2 bg-light travel-date-row" data-index="${nextIndex}">
-                                    <div class="card-body py-2">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-md-3">
-                                                <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm" name="travel_dates[${nextIndex}][date]" required>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small mb-1">Places</label>
-                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small mb-1">Prix spécifique</label>
-                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="Prix">
-                                            </div>
-                                            <div class="col-md-2 d-flex align-items-end pb-2">
-                                                <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input" name="travel_dates[${nextIndex}][is_active]" value="1" checked>
-                                                    <label class="form-check-label small">Actif</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-1 d-flex align-items-end pb-2">
-                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
-                                container.insertAdjacentHTML('beforeend', html);
-                            });
-
-                            container.addEventListener('click', function(e){
-                                if (e.target.classList.contains('remove-travel-date')) {
-                                    var row = e.target.closest('.travel-date-row');
-                                    if (row) row.remove();
-                                }
-                            });
-                        })();
-                        </script>
-                    </div>
-                </div>
-            </div>
-
-            {{-- TAB ACTIVITÉS "” Gestion du catalogue d'activités --}}
+            {{-- TAB ACTIVITÉS — Gestion du catalogue d'activités (ajout au voyage) --}}
             <div class="tab-pane" id="activities" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        @include('admin.circuits.voyages.partials._under_construction_notice', [
-                            'title' => '⚠️ Section en cours de construction — ne pas modifier',
-                            'tabName' => 'Activités',
-                        ])
-
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                             <h4 class="card-title mb-0">Activités</h4>
                             <button type="button" class="btn btn-primary" id="btn-open-activities-modal" data-bs-toggle="modal" data-bs-target="#activitiesCatalogModal">
@@ -1967,7 +1894,7 @@
                 <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg waves-effect waves-light" id="edit-voyage-submit-btn">
                     <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}
                 </button>
-                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">
+                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg waves-effect">
                     <i class="bx bx-x me-1"></i> Annuler
                 </a>
             </div>
@@ -2091,7 +2018,7 @@
 
             function updateCount() {
                 var n = document.querySelectorAll('.location-checkbox:checked').length;
-                if (countText) countText.textContent = n + ' destination(s) sélectionnée(s)';
+                if (countText) countText.textContent = n + ' location(s) sélectionnée(s)';
             }
 
             function updateChips() {
@@ -4177,8 +4104,11 @@
                     if (!activity) return;
 
                     var row = buildRow(activity);
+                    var emptyRow = rowsContainer.querySelector('.voyage-activities-empty-row');
+                    if (emptyRow) emptyRow.remove();
                     rowsContainer.appendChild(row);
                     reindexRows();
+                    updateEmptyState();
                     refreshCatalog();
 
                     var bsModal = window.bootstrap && window.bootstrap.Modal ? window.bootstrap.Modal.getInstance(modalEl) : null;

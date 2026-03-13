@@ -208,6 +208,8 @@ class WpTourRepository
             'adult_price' => 'adult_price',
             'child_price' => 'child_price',
             'infant_price' => 'infant_price',
+            'commission_adulte' => 'commission_adulte',
+            'commission_enfant' => 'commission_enfant',
             'discount' => 'discount',
             'discount_type' => 'discount_type',
             'discount_by_people_type' => 'discount_by_people_type',
@@ -249,26 +251,25 @@ class WpTourRepository
         ];
 
         foreach ($metaMapping as $inputKey => $metaKey) {
-            if (array_key_exists($inputKey, $data)) {
-                $value = $data[$inputKey];
-                
-                // Skip null/empty except for checkboxes and specific fields
-                if (($value === null || $value === '') && !str_starts_with($inputKey, 'is_') && !str_starts_with($inputKey, 'st_allow_')) {
-                    continue;
-                }
-
-                // Special handling for gallery (array to CSV)
-                if ($inputKey === 'gallery_ids' && is_array($value)) {
-                    $value = implode(',', $value);
-                }
-                
-                // Boolean/checkbox fields: convert to 'on' or ''
-                if (str_starts_with($inputKey, 'is_') || str_starts_with($inputKey, 'st_allow_')) {
-                    $value = !empty($value) ? 'on' : '';
-                }
-
-                $post->setMeta($metaKey, $value);
+            if (!array_key_exists($inputKey, $data)) {
+                continue;
             }
+            $value = $data[$inputKey];
+
+            // Boolean/checkbox fields: convert to 'on' or ''
+            if (str_starts_with($inputKey, 'is_') || str_starts_with($inputKey, 'st_allow_')) {
+                $value = !empty($value) ? 'on' : '';
+                $post->setMeta($metaKey, $value);
+                continue;
+            }
+
+            // Special handling for gallery (array to CSV)
+            if ($inputKey === 'gallery_ids' && is_array($value)) {
+                $value = implode(',', $value);
+            }
+
+            // Toujours enregistrer la valeur (y compris null/'') pour vider les champs quand l'utilisateur les vide
+            $post->setMeta($metaKey, $value === null ? '' : (string) $value);
         }
         
         // HTML/Text fields (tours_include, tours_exclude, tours_highlight, tours_faq)
@@ -404,6 +405,147 @@ class WpTourRepository
     }
 
     /**
+     * Taxonomies supported for tours (terms CRUD).
+     */
+    public const TOUR_TAXONOMIES = ['language', 'languages', 'durations', 'st_tour_type'];
+
+    /**
+     * Get terms for a single taxonomy.
+     *
+     * @param string $taxonomy
+     * @return \Illuminate\Support\Collection
+     */
+    public function getTermsByTaxonomy(string $taxonomy): \Illuminate\Support\Collection
+    {
+        if (!in_array($taxonomy, self::TOUR_TAXONOMIES, true)) {
+            return collect();
+        }
+        try {
+            return \DB::connection('wp')
+                ->table('terms as t')
+                ->join('term_taxonomy as tt', 't.term_id', '=', 'tt.term_id')
+                ->where('tt.taxonomy', $taxonomy)
+                ->select('t.term_id', 't.name', 't.slug')
+                ->orderBy('t.name')
+                ->get();
+        } catch (\Exception $e) {
+            Log::warning("Taxonomy '$taxonomy' terms load failed", ['error' => $e->getMessage()]);
+            return collect();
+        }
+    }
+
+    /**
+     * Create a taxonomy term.
+     *
+     * @param string $name
+     * @param string $taxonomy
+     * @param string $slug
+     * @return object { term_id, name, slug }
+     */
+    public function createTaxonomyTerm(string $name, string $taxonomy, string $slug = ''): object
+    {
+        if (!in_array($taxonomy, self::TOUR_TAXONOMIES, true)) {
+            throw new \InvalidArgumentException("Taxonomy not allowed: {$taxonomy}");
+        }
+        $name = trim($name);
+        if ($name === '') {
+            throw new \InvalidArgumentException('Term name is required.');
+        }
+        $slug = $slug !== '' ? Str::slug($slug) : Str::slug($name);
+        $slug = $this->ensureTermSlugUnique($slug, $taxonomy, null);
+
+        $termId = \DB::connection('wp')->table('terms')->insertGetId([
+            'name' => $name,
+            'slug' => $slug,
+        ]);
+        \DB::connection('wp')->table('term_taxonomy')->insert([
+            'term_id' => $termId,
+            'taxonomy' => $taxonomy,
+            'description' => '',
+            'parent' => 0,
+            'count' => 0,
+        ]);
+
+        return (object) ['term_id' => $termId, 'name' => $name, 'slug' => $slug];
+    }
+
+    /**
+     * Update a taxonomy term.
+     *
+     * @param int $termId
+     * @param string $name
+     * @param string $slug
+     * @return bool
+     */
+    public function updateTaxonomyTerm(int $termId, string $name, string $slug = ''): bool
+    {
+        $name = trim($name);
+        if ($name === '') {
+            throw new \InvalidArgumentException('Term name is required.');
+        }
+        $tt = \DB::connection('wp')->table('term_taxonomy')->where('term_id', $termId)->first();
+        $taxonomy = $tt ? $tt->taxonomy : null;
+        $slug = $slug !== '' ? Str::slug($slug) : Str::slug($name);
+        $slug = $this->ensureTermSlugUnique($slug, $taxonomy, $termId);
+
+        \DB::connection('wp')->table('terms')
+            ->where('term_id', $termId)
+            ->update(['name' => $name, 'slug' => $slug]);
+
+        return true;
+    }
+
+    /**
+     * Delete a taxonomy term (and its term_taxonomy, term_relationships).
+     *
+     * @param int $termId
+     * @return bool
+     */
+    public function deleteTaxonomyTerm(int $termId): bool
+    {
+        $termTaxonomyIds = \DB::connection('wp')->table('term_taxonomy')
+            ->where('term_id', $termId)
+            ->pluck('term_taxonomy_id');
+
+        \DB::connection('wp')->table('term_relationships')
+            ->whereIn('term_taxonomy_id', $termTaxonomyIds)
+            ->delete();
+        \DB::connection('wp')->table('term_taxonomy')->where('term_id', $termId)->delete();
+        \DB::connection('wp')->table('terms')->where('term_id', $termId)->delete();
+
+        return true;
+    }
+
+    /**
+     * Ensure term slug is unique within taxonomy (or globally if taxonomy null).
+     *
+     * @param string $slug
+     * @param string|null $taxonomy
+     * @param int|null $excludeTermId
+     * @return string
+     */
+    protected function ensureTermSlugUnique(string $slug, ?string $taxonomy = null, ?int $excludeTermId = null): string
+    {
+        $base = $slug;
+        $n = 2;
+        while (true) {
+            $q = \DB::connection('wp')->table('terms as t')->where('t.slug', $slug);
+            if ($excludeTermId) {
+                $q->where('t.term_id', '!=', $excludeTermId);
+            }
+            if ($taxonomy) {
+                $q->join('term_taxonomy as tt', 't.term_id', '=', 'tt.term_id')
+                    ->where('tt.taxonomy', $taxonomy);
+            }
+            if (!$q->exists()) {
+                return $slug;
+            }
+            $slug = $base . '-' . $n;
+            $n++;
+        }
+    }
+
+    /**
      * Ensure slug is unique by appending number if needed.
      *
      * @param string $slug
@@ -528,6 +670,32 @@ class WpTourRepository
         preg_match_all('/_(\d+)_/', $multiLocationValue, $matches);
         
         return array_map('intval', $matches[1] ?? []);
+    }
+
+    /**
+     * Get a display string of location names from multi_location meta (for list table Destination column).
+     *
+     * @param string|null $multiLocationValue
+     * @return string
+     */
+    public function getLocationNamesFromMultiLocation(?string $multiLocationValue): string
+    {
+        $ids = $this->parseMultiLocation($multiLocationValue);
+        if (empty($ids)) {
+            return '';
+        }
+        $locations = \DB::connection('wp')
+            ->table('posts')
+            ->where('post_type', 'location')
+            ->whereIn('ID', $ids)
+            ->pluck('post_title', 'ID');
+        $names = [];
+        foreach ($ids as $id) {
+            if (isset($locations[$id])) {
+                $names[] = $locations[$id];
+            }
+        }
+        return implode(', ', $names);
     }
     
     /**

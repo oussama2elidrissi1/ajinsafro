@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
+use App\Http\Controllers\Admin\TaxonomyTermController;
 use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpTourController;
@@ -86,6 +87,22 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('reservations/annulees', [ReservationsController::class, 'page'])->name('reservations.annulees')->defaults('submenu', 'annulees');
     Route::get('reservations/calendrier', [ReservationsController::class, 'page'])->name('reservations.calendrier')->defaults('submenu', 'calendrier');
     Route::get('reservations/paiements', [ReservationsController::class, 'page'])->name('reservations.paiements')->defaults('submenu', 'paiements');
+
+    Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
+    Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
+    Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
+    Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');
+    Route::delete('reservations/{reservation}', [ReservationsController::class, 'destroy'])->name('reservations.destroy');
+    Route::post('reservations/{reservation}/validate', [ReservationsController::class, 'validateReservation'])->name('reservations.validate');
+
+    // CRUD Réservations
+    Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
+    Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
+    Route::get('reservations/{reservation}', [ReservationsController::class, 'show'])->name('reservations.show');
+    Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
+    Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');
+    Route::delete('reservations/{reservation}', [ReservationsController::class, 'destroy'])->name('reservations.destroy');
+    Route::post('reservations/{reservation}/validate', [ReservationsController::class, 'validateReservation'])->name('reservations.validate');
 
     Route::get('customers', [CustomersController::class, 'index'])->name('customers.index');
     Route::get('customers/clients', [CustomersController::class, 'page'])->name('customers.clients')->defaults('submenu', 'clients');
@@ -174,6 +191,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::match(['put', 'patch'], 'circuits/voyages/{voyage}/items/{item}', [TravelDayItemController::class, 'update'])->name('circuits.voyages.items.update');
     Route::delete('circuits/voyages/{voyage}/items/{item}', [TravelDayItemController::class, 'destroy'])->name('circuits.voyages.items.destroy');
     Route::post('circuits/voyages/{voyage}/items/reorder', [TravelDayItemController::class, 'reorder'])->name('circuits.voyages.items.reorder');
+
+    Route::get('circuits/taxonomy-terms', [TaxonomyTermController::class, 'index'])->name('circuits.taxonomy-terms.index');
+    Route::post('circuits/taxonomy-terms', [TaxonomyTermController::class, 'store'])->name('circuits.taxonomy-terms.store');
+    Route::match(['put', 'patch'], 'circuits/taxonomy-terms/{termId}', [TaxonomyTermController::class, 'update'])->name('circuits.taxonomy-terms.update')->whereNumber('termId');
+    Route::delete('circuits/taxonomy-terms/{termId}', [TaxonomyTermController::class, 'destroy'])->name('circuits.taxonomy-terms.destroy')->whereNumber('termId');
 
     Route::get('accommodations', [AccommodationsController::class, 'index'])->name('accommodations.index');
     Route::get('accommodations/hotels', [AccommodationsController::class, 'page'])->name('accommodations.hotels')->defaults('submenu', 'hotels');

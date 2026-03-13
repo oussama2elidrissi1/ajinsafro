@@ -18,12 +18,14 @@ class TravelDeparturePlace extends Model
         'code',
         'is_active',
         'sort_order',
+        'price',
     ];
 
     protected $casts = [
         'travel_id' => 'integer',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'price' => 'decimal:2',
     ];
 
     /**

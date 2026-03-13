@@ -13,7 +13,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class AJTB_Laravel_Repository {
+class AJTB_Laravel_Repository
+{
 
     /**
      * WordPress database instance
@@ -32,7 +33,8 @@ class AJTB_Laravel_Repository {
      *
      * @param int $tour_id Tour/Post ID
      */
-    public function __construct($tour_id) {
+    public function __construct($tour_id)
+    {
         global $wpdb;
         $this->wpdb = $wpdb;
         $this->tour_id = (int) $tour_id;
@@ -44,7 +46,8 @@ class AJTB_Laravel_Repository {
      * @param string $short Short name: tour_days, tour_day_activities, activities, tour_sections, tour_pricing_rules
      * @return string Full table name
      */
-    private function table($short) {
+    private function table($short)
+    {
         return ajtb_table('aj_' . $short);
     }
 
@@ -54,7 +57,8 @@ class AJTB_Laravel_Repository {
      * @param string $table_name Full table name
      * @return bool
      */
-    private function table_exists($table_name) {
+    private function table_exists($table_name)
+    {
         $result = $this->wpdb->get_var(
             $this->wpdb->prepare("SHOW TABLES LIKE %s", $table_name)
         );
@@ -67,7 +71,8 @@ class AJTB_Laravel_Repository {
      * @param string|null $session_token Optional; if set, client activity selections are applied to days
      * @return array
      */
-    public function get_all_data($session_token = null) {
+    public function get_all_data($session_token = null)
+    {
         return [
             'days' => $this->get_days($session_token),
             'sections' => $this->get_sections(),
@@ -86,7 +91,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array { outbound: array|null, inbound: array|null }
      */
-    public function get_voyage_flights_from_db() {
+    public function get_voyage_flights_from_db()
+    {
         return $this->get_tour_flights_for_days();
     }
 
@@ -98,7 +104,8 @@ class AJTB_Laravel_Repository {
      * @param string|null $session_token Optional; apply add/remove flight selections
      * @return array List of flight rows with airline_name, formatted dates, labels, etc.
      */
-    public function get_flights($session_token = null) {
+    public function get_flights($session_token = null)
+    {
         $flights = $this->get_flights_internal();
         if (empty($flights)) {
             return [];
@@ -121,7 +128,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array List of flight rows with airline_name, formatted dates, labels, etc.
      */
-    private function get_flights_internal() {
+    private function get_flights_internal()
+    {
         $table_flights = function_exists('ajtb_flights_table') ? ajtb_flights_table($this->tour_id) : $this->table('tour_flights');
         $table_airlines = $this->table('airlines');
 
@@ -210,7 +218,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array ['outbound' => [rows], 'inbound' => [rows], 'segments_by_day' => [day => [rows]]]
      */
-    private function get_flights_grouped_for_days() {
+    private function get_flights_grouped_for_days()
+    {
         $table_flights = function_exists('ajtb_flights_table') ? ajtb_flights_table($this->tour_id) : $this->table('tour_flights');
         $table_airlines = $this->table('airlines');
         $out = ['outbound' => [], 'inbound' => [], 'segments_by_day' => []];
@@ -340,7 +349,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array ['outbound' => [rows], 'inbound' => [rows], 'segments_by_day' => [day => [rows]]]
      */
-    private function get_tour_flights_for_days() {
+    private function get_tour_flights_for_days()
+    {
         return $this->get_flights_grouped_for_days();
     }
 
@@ -351,7 +361,8 @@ class AJTB_Laravel_Repository {
      * @param int $last_day_number Last day of the tour (inbound attached to this day).
      * @return array ['dayFlights' => [1=>[], 2=>[], ...], 'outbound'=>[], 'inbound'=>[], 'segments_by_day'=>[], '_debug'=>[]]
      */
-    public function get_flights_for_program($last_day_number = 0) {
+    public function get_flights_for_program($last_day_number = 0)
+    {
         $last_day_number = (int) $last_day_number;
         $grouped = $this->get_flights_grouped_for_days();
         $outbound = $grouped['outbound'] ?? [];
@@ -408,7 +419,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array { table, table_exists, tour_id, total_rows, outbound, inbound, segments_keys }
      */
-    public function get_flights_debug_info() {
+    public function get_flights_debug_info()
+    {
         $table = function_exists('ajtb_flights_table') ? ajtb_flights_table($this->tour_id) : $this->table('tour_flights');
         $exists = $this->table_exists($table);
         $info = [
@@ -438,7 +450,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array ['arrival' => array[], 'departure' => array[], 'by_day_direction' => array|null]
      */
-    private function get_tour_transfers() {
+    private function get_tour_transfers()
+    {
         $grouped = $this->get_tour_transfers_grouped();
         $out = ['arrival' => [], 'departure' => []];
         if (!empty($grouped['by_day_direction'])) {
@@ -461,7 +474,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array{by_day_direction: array<int, array{arrival: array, departure: array}}}
      */
-    public function get_tour_transfers_grouped() {
+    public function get_tour_transfers_grouped()
+    {
         $t = $this->table('tour_transfers');
         if (!$this->table_exists($t)) {
             return ['by_day_direction' => []];
@@ -515,7 +529,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array|null
      */
-    private function get_tour_hotel() {
+    private function get_tour_hotel()
+    {
         $hotels = $this->get_tour_hotels();
         return isset($hotels[0]) ? $hotels[0] : null;
     }
@@ -525,7 +540,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array list of hotel rows (each with image_url)
      */
-    private function get_tour_hotels() {
+    private function get_tour_hotels()
+    {
         $grouped = $this->get_tour_hotels_grouped();
         return isset($grouped['all']) ? $grouped['all'] : [];
     }
@@ -537,7 +553,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array{by_day: array<int, array>, all: array}
      */
-    public function get_tour_hotels_grouped() {
+    public function get_tour_hotels_grouped()
+    {
         $t = $this->table('tour_hotels');
         if (!$this->table_exists($t)) {
             return ['by_day' => [], 'all' => []];
@@ -575,7 +592,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array Same structure as get_flights()
      */
-    public function get_raw_flights() {
+    public function get_raw_flights()
+    {
         return $this->get_flights_internal();
     }
 
@@ -587,7 +605,8 @@ class AJTB_Laravel_Repository {
      * @param string $session_token
      * @return array Filtered list for display
      */
-    private function apply_flight_selections(array $flights, $session_token) {
+    private function apply_flight_selections(array $flights, $session_token)
+    {
         $table_sel = $this->table('tour_flight_selections');
         if (!$this->table_exists($table_sel)) {
             if (count($flights) === 1) {
@@ -649,7 +668,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array [['id'=>, 'title'=>], ...]
      */
-    public function get_activities_catalog() {
+    public function get_activities_catalog()
+    {
         $table = $this->table('activities');
         if (!$this->table_exists($table)) {
             return [];
@@ -668,13 +688,35 @@ class AJTB_Laravel_Repository {
      * @param int $per_page Items per page
      * @return array ['items' => [...], 'total' => int, 'page' => int, 'per_page' => int]
      */
-    public function get_activities_for_modal($exclude_ids = [], $search = '', $page = 1, $per_page = 12) {
+    /**
+     * Get activity IDs linked to this tour (present in programme: aj_tour_day_activities).
+     * Used to restrict the frontend modal to only these activities.
+     *
+     * @return int[] Non-empty list of activity_id, or empty if none / table missing
+     */
+    public function get_tour_activity_ids()
+    {
+        $table_activities = $this->table('tour_day_activities');
+        if (!$this->table_exists($table_activities)) {
+            return [];
+        }
+        $ids = $this->wpdb->get_col(
+            $this->wpdb->prepare(
+                "SELECT DISTINCT activity_id FROM {$table_activities} WHERE tour_id = %d AND activity_id > 0",
+                $this->tour_id
+            )
+        );
+        return is_array($ids) ? array_map('intval', $ids) : [];
+    }
+
+    public function get_activities_for_modal($exclude_ids = [], $search = '', $page = 1, $per_page = 12, $allowed_activity_ids = null)
+    {
         $table = $this->table('activities');
-        
+
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('AJTB get_activities_for_modal: table=' . $table . ', exists=' . ($this->table_exists($table) ? 'yes' : 'no'));
         }
-        
+
         if (!$this->table_exists($table)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('AJTB get_activities_for_modal: Table does not exist: ' . $table);
@@ -684,6 +726,16 @@ class AJTB_Laravel_Repository {
 
         $where = [];
         $params = [];
+
+        if ($allowed_activity_ids !== null && is_array($allowed_activity_ids)) {
+            $allowed_activity_ids = array_filter(array_map('intval', $allowed_activity_ids));
+            if (empty($allowed_activity_ids)) {
+                return ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $per_page, 'total_pages' => 0];
+            }
+            $placeholders = implode(',', array_fill(0, count($allowed_activity_ids), '%d'));
+            $where[] = "id IN ($placeholders)";
+            $params = array_merge($params, array_values($allowed_activity_ids));
+        }
 
         if (!empty($exclude_ids) && is_array($exclude_ids)) {
             $placeholders = implode(',', array_fill(0, count($exclude_ids), '%d'));
@@ -709,7 +761,7 @@ class AJTB_Laravel_Repository {
             $count_query = $this->wpdb->prepare($count_query, $params);
         }
         $total = (int) $this->wpdb->get_var($count_query);
-        
+
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('AJTB get_activities_for_modal: total=' . $total . ', count_query=' . $count_query . ', last_error=' . ($this->wpdb->last_error ?: 'none'));
         }
@@ -724,7 +776,7 @@ class AJTB_Laravel_Repository {
                 }
             }
         }
-        
+
         // Build SELECT list with only existing columns
         $select_cols = ['id', 'title', 'description', 'default_duration_minutes', 'location_text'];
         $optional_cols = ['image_id', 'base_price'];
@@ -733,10 +785,10 @@ class AJTB_Laravel_Repository {
                 $select_cols[] = $col;
             }
         }
-        $select_list = implode(', ', array_map(function($col) {
+        $select_list = implode(', ', array_map(function ($col) {
             return "`{$col}`";
         }, $select_cols));
-        
+
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('AJTB get_activities_for_modal: available_columns=' . json_encode($available_columns) . ', select_list=' . $select_list);
         }
@@ -748,17 +800,17 @@ class AJTB_Laravel_Repository {
             $query .= " {$where_sql}";
         }
         $query .= " ORDER BY title ASC LIMIT %d OFFSET %d";
-        
+
         // Always prepare with LIMIT/OFFSET params, merge with WHERE params if any
         $query_params = !empty($params) ? array_merge($params, [$per_page, $offset]) : [$per_page, $offset];
         $query = $this->wpdb->prepare($query, $query_params);
-        
+
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('AJTB get_activities_for_modal: query=' . $query . ', params=' . print_r($query_params, true));
         }
-        
+
         $rows = $this->wpdb->get_results($query, ARRAY_A);
-        
+
         if ($this->wpdb->last_error) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('AJTB get_activities_for_modal: DB error=' . $this->wpdb->last_error . ', query=' . $query);
@@ -766,14 +818,14 @@ class AJTB_Laravel_Repository {
             // Return empty result on error
             return ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $per_page, 'total_pages' => 0];
         }
-        
+
         if (!is_array($rows)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('AJTB get_activities_for_modal: get_results returned non-array: ' . gettype($rows));
             }
             $rows = [];
         }
-        
+
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('AJTB get_activities_for_modal: rows count=' . count($rows));
         }
@@ -784,16 +836,16 @@ class AJTB_Laravel_Repository {
             if (!is_array($row)) {
                 continue;
             }
-            
+
             $image_url = null;
             // Check if image_id column exists and has a value
             if (isset($row['image_id']) && !empty($row['image_id'])) {
                 // Use reliable helper function that works with Laravel-uploaded images
-                $image_url = function_exists('ajtb_get_attachment_image_url') 
+                $image_url = function_exists('ajtb_get_attachment_image_url')
                     ? ajtb_get_attachment_image_url((int) $row['image_id'], 'medium')
                     : wp_get_attachment_image_url((int) $row['image_id'], 'medium');
             }
-            
+
             $items[] = [
                 'id' => isset($row['id']) ? (int) $row['id'] : 0,
                 'title' => isset($row['title']) ? (string) $row['title'] : '',
@@ -819,10 +871,11 @@ class AJTB_Laravel_Repository {
      *
      * @return bool
      */
-    public function has_any_data() {
+    public function has_any_data()
+    {
         $days = $this->get_days();
         $sections = $this->get_sections();
-        
+
         return !empty($days) || !empty($sections);
     }
 
@@ -834,7 +887,8 @@ class AJTB_Laravel_Repository {
      * @param string|null $session_token Optional; apply client add/remove selections
      * @return array
      */
-    public function get_days($session_token = null) {
+    public function get_days($session_token = null)
+    {
         $table_days = $this->table('tour_days');
 
         if (!$this->table_exists($table_days)) {
@@ -939,7 +993,7 @@ class AJTB_Laravel_Repository {
 
             // Attach flights: outbound => day 1, inbound => last day, segments by day_number
             $flights_grouped = $this->get_tour_flights_for_days();
-            $last_day_number = count($days_array) > 0 ? (int) $days_array[ count($days_array) - 1 ]['day'] : 0;
+            $last_day_number = count($days_array) > 0 ? (int) $days_array[count($days_array) - 1]['day'] : 0;
             $outbound = $flights_grouped['outbound'] ?? [];
             $inbound = $flights_grouped['inbound'] ?? [];
             $segments_by_day = $flights_grouped['segments_by_day'] ?? [];
@@ -1013,7 +1067,8 @@ class AJTB_Laravel_Repository {
      * @param string|null $section_key Optional specific section key
      * @return array
      */
-    public function get_sections($section_key = null) {
+    public function get_sections($section_key = null)
+    {
         $table = $this->table('tour_sections');
 
         if (!$this->table_exists($table)) {
@@ -1071,7 +1126,8 @@ class AJTB_Laravel_Repository {
      * @param string $key Section key (overview, inclusions, exclusions, etc.)
      * @return string Section content or empty string
      */
-    public function get_section($key) {
+    public function get_section($key)
+    {
         $table = $this->table('tour_sections');
 
         if (!$this->table_exists($table)) {
@@ -1101,7 +1157,8 @@ class AJTB_Laravel_Repository {
      * @param bool $active_only Only return active rules
      * @return array
      */
-    public function get_pricing_rules($active_only = true) {
+    public function get_pricing_rules($active_only = true)
+    {
         $table = $this->table('tour_pricing_rules');
 
         if (!$this->table_exists($table)) {
@@ -1151,7 +1208,8 @@ class AJTB_Laravel_Repository {
      *
      * @return array|null Current pricing rule or null
      */
-    public function get_current_pricing() {
+    public function get_current_pricing()
+    {
         $rules = $this->get_pricing_rules(true);
 
         if (empty($rules)) {
@@ -1177,9 +1235,10 @@ class AJTB_Laravel_Repository {
      *
      * @return array Array of inclusion items
      */
-    public function get_inclusions() {
+    public function get_inclusions()
+    {
         $content = $this->get_section('inclusions');
-        
+
         if (empty($content)) {
             return [];
         }
@@ -1192,9 +1251,10 @@ class AJTB_Laravel_Repository {
      *
      * @return array Array of exclusion items
      */
-    public function get_exclusions() {
+    public function get_exclusions()
+    {
         $content = $this->get_section('exclusions');
-        
+
         if (empty($content)) {
             return [];
         }
@@ -1207,7 +1267,8 @@ class AJTB_Laravel_Repository {
      *
      * @return string Overview content
      */
-    public function get_overview() {
+    public function get_overview()
+    {
         return $this->get_section('overview');
     }
 
@@ -1217,7 +1278,8 @@ class AJTB_Laravel_Repository {
      * @param string $method Method name
      * @param Exception $e Exception
      */
-    private function log_error($method, $e) {
+    private function log_error($method, $e)
+    {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log(sprintf(
                 'AJTB Laravel Repository [%s]: %s in %s on line %d',

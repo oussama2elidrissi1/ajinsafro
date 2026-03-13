@@ -1,9 +1,9 @@
 <?php
 /**
- * Hotel Card partial – Premium summary.
+ * Hotel Card partial – Listing layout (rating, name, location, room, amenities).
  *
- * @var array $hotel Hotel row (hotel_name, stars, address, room_type, meal_plan, notes, image_url)
- * @var bool  $is_checkout Optional; true = last day (check-out), false = day 1 (check-in)
+ * @var array $hotel Hotel row (hotel_name, stars, address, room_type, meal_plan, notes, image_url, etc.)
+ * @var bool  $is_checkout Optional; true = last day (check-out).
  * @package AjinsafroTourBridge
  */
 
@@ -34,10 +34,12 @@ foreach (['city', 'hotel_city', 'location'] as $key) {
 }
 
 $room_type = isset($hotel['room_type']) ? trim((string) $hotel['room_type']) : '';
-$rooms = isset($hotel['rooms']) ? (int) $hotel['rooms'] : (isset($hotel['room_count']) ? (int) $hotel['room_count'] : 0);
+if ($room_type === '') {
+    $room_type = __('Standard room with 2 Single beds', 'ajinsafro-tour-bridge');
+}
+$rooms = isset($hotel['rooms']) ? (int) $hotel['rooms'] : (isset($hotel['room_count']) ? (int) $hotel['room_count'] : 1);
 $meal_plan = isset($hotel['meal_plan']) ? trim((string) $hotel['meal_plan']) : '';
-$breakfast_included = !empty($hotel['breakfast_included']);
-$notes = isset($hotel['notes']) ? trim((string) $hotel['notes']) : '';
+$breakfast_included = !empty($hotel['breakfast_included']) || stripos($meal_plan, 'breakfast') !== false || stripos($meal_plan, 'petit') !== false || stripos($meal_plan, 'bb') !== false;
 
 $checkin = '';
 $checkout = '';
@@ -69,119 +71,85 @@ foreach (['adults', 'pax_adults', 'guests_adults'] as $key) {
         break;
     }
 }
-
-$header_title = __('Hotel', 'ajinsafro-tour-bridge');
-$header_parts = [];
-if ($nights > 0) {
-    $header_parts[] = $nights . ' ' . _n('nuit', 'nuits', $nights, 'ajinsafro-tour-bridge');
-}
-if ($city !== '') {
-    $header_parts[] = __('a', 'ajinsafro-tour-bridge') . ' ' . $city;
-}
-if (!empty($header_parts)) {
-    $header_title .= ' • ' . implode(' ', $header_parts);
+if ($adults === 0) {
+    $adults = 2;
 }
 
-$status_label = '';
-foreach (['status_label', 'status', 'state'] as $key) {
-    if (!empty($hotel[$key])) {
-        $status_label = trim((string) $hotel[$key]);
-        break;
-    }
-}
-if ($status_label === '') {
-    $status_label = __('Reservation confirmee', 'ajinsafro-tour-bridge');
-}
-
-$info_items = [];
-if ($rooms > 0) {
-    $info_items[] = __('Chambre:', 'ajinsafro-tour-bridge') . ' ' . $rooms;
-} elseif ($room_type !== '') {
-    $info_items[] = __('Chambre:', 'ajinsafro-tour-bridge') . ' ' . $room_type;
-}
-
-if ($breakfast_included || stripos($meal_plan, 'breakfast') !== false || stripos($meal_plan, 'petit') !== false || stripos($meal_plan, 'bb') !== false) {
-    $info_items[] = __('Petit-dejeuner inclus', 'ajinsafro-tour-bridge');
-}
-
-if ($meal_plan !== '' && stripos($meal_plan, 'breakfast') === false && stripos($meal_plan, 'petit') === false && stripos($meal_plan, 'bb') === false) {
-    $info_items[] = __('Repas:', 'ajinsafro-tour-bridge') . ' ' . $meal_plan;
-}
-
+// Static / fallback for listing display
+$rating = isset($hotel['rating']) ? (float) $hotel['rating'] : 4.9;
+$rating_count = isset($hotel['rating_count']) ? (int) $hotel['rating_count'] : 7;
+$rating_label = __('Excellent', 'ajinsafro-tour-bridge');
+$proximity = isset($hotel['proximity']) ? trim((string) $hotel['proximity']) : __('7 minutes walk to Nizami Street', 'ajinsafro-tour-bridge');
+$location_line = $city !== '' ? $city . ' | ' . $proximity : $proximity;
+$room_size = isset($hotel['room_size']) ? trim((string) $hotel['room_size']) : '215 sq.ft';
+$bed_detail = isset($hotel['bed_type']) ? trim((string) $hotel['bed_type']) : __('Single Bed', 'ajinsafro-tour-bridge');
 $date_line = '';
 if ($checkin !== '' || $checkout !== '') {
     $date_line = $checkin !== '' ? $checkin : '—';
     if ($checkout !== '') {
-        $date_line .= ' -> ' . $checkout;
+        $date_line .= ' - ' . $checkout;
     }
 }
-if ($adults > 0) {
-    $date_line .= ($date_line !== '' ? ' • ' : '') . $adults . ' ' . _n('adulte', 'adultes', $adults, 'ajinsafro-tour-bridge');
+if ($nights > 0) {
+    $date_line .= ($date_line !== '' ? ', ' : '') . $nights . ' ' . _n(__('Night', 'ajinsafro-tour-bridge'), __('Nights', 'ajinsafro-tour-bridge'), $nights);
 }
+
+$amenities = [];
+if ($breakfast_included) {
+    $amenities[] = __('Breakfast buffet', 'ajinsafro-tour-bridge');
+}
+$amenities[] = __('Free WiFi', 'ajinsafro-tour-bridge');
+if (isset($hotel['amenities']) && is_array($hotel['amenities'])) {
+    $amenities = array_merge($amenities, $hotel['amenities']);
+}
+$amenities = array_slice(array_unique($amenities), 0, 5);
 ?>
-<div class="ajtb-hotel-card" data-hotel-id="<?php echo esc_attr((int) ($hotel['id'] ?? 0)); ?>">
-    <div class="ajtb-card-head">
-        <div class="ajtb-card-head-left">
-            <span class="ajtb-card-head-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
-                    <rect x="3" y="7" width="18" height="13" rx="2"></rect>
-                    <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path>
-                    <path d="M7 11h3"></path>
-                    <path d="M14 11h3"></path>
-                </svg>
-            </span>
-            <div class="ajtb-card-head-text">
-                <div class="ajtb-card-title"><?php echo esc_html($header_title); ?></div>
-                <?php if ($address !== ''): ?>
-                    <div class="ajtb-card-subtitle"><?php echo esc_html($address); ?></div>
-                <?php endif; ?>
-            </div>
-        </div>
+<div class="ajtb-hotel-card ajtb-hotel-listing-card" data-hotel-id="<?php echo esc_attr((int) ($hotel['id'] ?? 0)); ?>">
+    <div class="ajtb-hotel-listing-card__rating">
+        <span class="ajtb-hotel-rating-badge"><?php echo esc_html(number_format($rating, 1)); ?></span>
+        <span class="ajtb-hotel-rating-text"><strong><?php echo esc_html($rating_label); ?></strong> (<?php echo (int) $rating_count; ?> <?php echo esc_html(_n(__('Rating', 'ajinsafro-tour-bridge'), __('Ratings', 'ajinsafro-tour-bridge'), $rating_count)); ?>)</span>
     </div>
 
-    <div class="ajtb-card-divider"></div>
-
-    <div class="ajtb-hotel-info">
-        <div class="ajtb-hotel-name-row">
-            <span class="ajtb-hotel-avatar" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
-                    <rect x="4" y="7" width="16" height="12" rx="2"></rect>
-                    <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
+    <h3 class="ajtb-hotel-listing-card__name">
+        <?php echo esc_html($name); ?>
+        <?php if ($stars > 0): ?>
+            <span class="ajtb-hotel-stars" aria-hidden="true">
+                <?php echo str_repeat('&#9733;', min(5, $stars)); ?><?php echo str_repeat('&#9734;', max(0, 5 - $stars)); ?>
             </span>
-            <div class="ajtb-hotel-name">
-                <span class="ajtb-hotel-name-text"><?php echo esc_html($name); ?></span>
-                <?php if ($stars > 0): ?>
-                    <span class="ajtb-hotel-stars" aria-hidden="true">
-                        <?php echo str_repeat('&#9733;', min(5, $stars)); ?>
-                    </span>
-                <?php endif; ?>
-            </div>
-        </div>
+        <?php endif; ?>
+    </h3>
 
+    <p class="ajtb-hotel-listing-card__location"><?php echo esc_html($location_line); ?></p>
+
+    <div class="ajtb-hotel-listing-card__meta">
+        <span class="ajtb-hotel-meta-item">
+            <svg class="ajtb-hotel-meta-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <?php echo (int) $rooms; ?> <?php echo esc_html(_n(__('Room', 'ajinsafro-tour-bridge'), __('Rooms', 'ajinsafro-tour-bridge'), $rooms)); ?> | <?php echo (int) $adults; ?> <?php echo esc_html(_n(__('Adult', 'ajinsafro-tour-bridge'), __('Adults', 'ajinsafro-tour-bridge'), $adults)); ?>
+        </span>
         <?php if ($date_line !== ''): ?>
-            <div class="ajtb-hotel-dates"><?php echo esc_html($date_line); ?></div>
-        <?php endif; ?>
-
-        <?php if (!empty($info_items)): ?>
-            <div class="ajtb-card-info">
-                <?php foreach ($info_items as $info): ?>
-                    <div class="ajtb-card-info-item"><?php echo esc_html($info); ?></div>
-                <?php endforeach; ?>
-            </div>
+        <span class="ajtb-hotel-meta-item">
+            <svg class="ajtb-hotel-meta-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <?php echo esc_html($date_line); ?>
+        </span>
         <?php endif; ?>
     </div>
 
-    <?php if ($notes !== ''): ?>
-        <div class="ajtb-card-notes"><?php echo wp_kses_post(nl2br($notes)); ?></div>
+    <div class="ajtb-hotel-listing-card__room">
+        <strong><?php echo esc_html($room_type); ?></strong>
+        <a href="#" class="ajtb-hotel-more-rooms"><?php esc_html_e('More Room Options', 'ajinsafro-tour-bridge'); ?></a>
+    </div>
+    <p class="ajtb-hotel-listing-card__room-detail">(<?php echo esc_html($room_size); ?> | <?php echo esc_html($bed_detail); ?>)</p>
+
+    <?php if ($breakfast_included): ?>
+    <p class="ajtb-hotel-listing-card__meal">
+        <svg class="ajtb-hotel-meal-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+        <?php esc_html_e('Breakfast is included', 'ajinsafro-tour-bridge'); ?>
+    </p>
     <?php endif; ?>
 
-    <div class="ajtb-card-footer">
-        <span class="ajtb-card-status">
-            <?php echo esc_html($status_label); ?>
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" aria-hidden="true">
-                <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-        </span>
-    </div>
+    <ul class="ajtb-hotel-listing-card__amenities">
+        <?php foreach ($amenities as $amenity): ?>
+        <li><svg class="ajtb-hotel-check" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg><?php echo esc_html($amenity); ?></li>
+        <?php endforeach; ?>
+    </ul>
 </div>

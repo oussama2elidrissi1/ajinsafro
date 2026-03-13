@@ -59,7 +59,7 @@ $destinations_label = sprintf(_n('%d destination', '%d destinations', count($nor
 
 do_action('ajtb_before_destinations_section', $tour, $normalized);
 ?>
-<section class="ajtb-section ajtb-destinations-section" id="destinations">
+<section class="ajtb-section ajtb-destinations-section ajtb-tab-panel ajtb-tab-panel-hidden" id="destinations">
     <h2 class="ajtb-section-title">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>

@@ -60,12 +60,12 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#price" role="tab">
-                    <i class="bx bx-dollar"></i> Prix
+                    <i class="bx bx-dollar"></i> Prix & Paiement
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#information" role="tab">
-                    <i class="bx bx-info-circle"></i> Information
+                    <i class="bx bx-info-circle"></i> Info
                 </a>
             </li>
             <li class="nav-item">
@@ -76,11 +76,6 @@
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#media" role="tab">
                     <i class="bx bx-image"></i> Médias
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#payment" role="tab">
-                    <i class="bx bx-credit-card"></i> Paiement
                 </a>
             </li>
             <li class="nav-item">
@@ -381,6 +376,63 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Moyens de paiement</h4>
+                        <p class="text-muted">Cochez les passerelles de paiement disponibles pour ce tour</p>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">
+                                        <i class="bx bxl-paypal"></i> PayPal
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">
+                                        OnePay
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">
+                                        OnePay ATM
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu">
+                                        PayU
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">
+                                        PayU Latam
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">
+                                        PayUmoney
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor">
+                                        <i class="bx bx-credit-card"></i> Razorpay
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {{-- TAB 4: INFORMATION --}}
@@ -521,137 +573,16 @@
                 </div>
             </div>
 
-            {{-- TAB 7: PAYMENT --}}
-            <div class="tab-pane" id="payment" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Moyens de paiement</h4>
-                        <p class="text-muted">Cochez les passerelles de paiement disponibles pour ce tour</p>
-                        
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">
-                                        <i class="bx bxl-paypal"></i> PayPal
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">
-                                        OnePay
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">
-                                        OnePay ATM
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu">
-                                        PayU
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">
-                                        PayU Latam
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">
-                                        PayUmoney
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor">
-                                        <i class="bx bx-credit-card"></i> Razorpay
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- TAB 8: TAXONOMIES --}}
+            {{-- TAB 8: TAXONOMIES (CRUD dynamique) --}}
             <div class="tab-pane" id="taxonomies" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Catégories & Taxonomies</h4>
-                        <p class="text-muted">Ces catégories sont synchronisées avec WordPress</p>
-                        
-                        <div class="row">
-                            @if(isset($availableTaxonomies['st_tour_type']) && $availableTaxonomies['st_tour_type']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Type de tour</h5>
-                                @foreach($availableTaxonomies['st_tour_type'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="st_tour_type[]" value="{{ $term->term_id }}" id="st_tour_type_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['st_tour_type'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="st_tour_type_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['durations']) && $availableTaxonomies['durations']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Durée</h5>
-                                @foreach($availableTaxonomies['durations'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="durations[]" value="{{ $term->term_id }}" id="durations_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['durations'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="durations_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['language']) && $availableTaxonomies['language']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Langue (language)</h5>
-                                @foreach($availableTaxonomies['language'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="language[]" value="{{ $term->term_id }}" id="language_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['language'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="language_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                            
-                            @if(isset($availableTaxonomies['languages']) && $availableTaxonomies['languages']->isNotEmpty())
-                            <div class="col-lg-3">
-                                <h5 class="mb-3">Langues (languages)</h5>
-                                @foreach($availableTaxonomies['languages'] as $term)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="languages[]" value="{{ $term->term_id }}" id="languages_{{ $term->term_id }}" {{ in_array($term->term_id, $assignedTaxonomies['languages'] ?? []) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="languages_{{ $term->term_id }}">
-                                        {{ $term->name }}
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                        </div>
+                        <p class="text-muted small">Gérez les catégories (Type de tour, Durée, Langue). Les cases à cocher assignent les catégories au voyage.</p>
+                        @include('admin.circuits.voyages.partials._taxonomies_crud', [
+                            'availableTaxonomies' => $availableTaxonomies ?? [],
+                            'assignedTaxonomies' => $assignedTaxonomies ?? [],
+                        ])
                     </div>
                 </div>
             </div>
@@ -666,7 +597,7 @@
                             <button type="submit" class="btn btn-primary btn-lg waves-effect waves-light">
                                 <i class="bx bx-save me-1"></i> Enregistrer toutes les modifications
                             </button>
-                            <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
+                            <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg waves-effect">Annuler</a>
                         </div>
                         <div class="text-muted">
                             <small><i class="bx bx-info-circle"></i> Modifications instantanées dans WordPress</small>
