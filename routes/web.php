@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\CircuitsController;
+use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CustomersController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FinanceController;
@@ -88,7 +89,17 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('reservations/paiements', [ReservationsController::class, 'page'])->name('reservations.paiements')->defaults('submenu', 'paiements');
 
     Route::get('customers', [CustomersController::class, 'index'])->name('customers.index');
-    Route::get('customers/clients', [CustomersController::class, 'page'])->name('customers.clients')->defaults('submenu', 'clients');
+    Route::get('customers/clients/trashed', [ClientController::class, 'trashed'])->name('customers.clients.trashed');
+    Route::post('customers/clients/bulk', [ClientController::class, 'bulkAction'])->name('customers.clients.bulk');
+    Route::post('customers/clients/{id}/restore', [ClientController::class, 'restore'])->name('customers.clients.restore')->whereNumber('id');
+    Route::delete('customers/clients/{id}/force', [ClientController::class, 'forceDelete'])->name('customers.clients.force')->whereNumber('id');
+    Route::get('customers/clients', [ClientController::class, 'index'])->name('customers.clients.index');
+    Route::get('customers/clients/create', [ClientController::class, 'create'])->name('customers.clients.create');
+    Route::post('customers/clients', [ClientController::class, 'store'])->name('customers.clients.store');
+    Route::get('customers/clients/{client}', [ClientController::class, 'show'])->name('customers.clients.show');
+    Route::get('customers/clients/{client}/edit', [ClientController::class, 'edit'])->name('customers.clients.edit');
+    Route::match(['put', 'patch'], 'customers/clients/{client}', [ClientController::class, 'update'])->name('customers.clients.update');
+    Route::delete('customers/clients/{client}', [ClientController::class, 'destroy'])->name('customers.clients.destroy');
     Route::get('customers/voyageurs', [CustomersController::class, 'page'])->name('customers.voyageurs')->defaults('submenu', 'voyageurs');
     Route::get('customers/historique', [CustomersController::class, 'page'])->name('customers.historique')->defaults('submenu', 'historique');
     Route::get('customers/avis-clients', [CustomersController::class, 'page'])->name('customers.avis-clients')->defaults('submenu', 'avis-clients');
