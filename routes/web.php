@@ -85,7 +85,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('reservations/en-attente', [ReservationsController::class, 'page'])->name('reservations.en-attente')->defaults('submenu', 'en-attente');
     Route::get('reservations/confirmees', [ReservationsController::class, 'page'])->name('reservations.confirmees')->defaults('submenu', 'confirmees');
     Route::get('reservations/annulees', [ReservationsController::class, 'page'])->name('reservations.annulees')->defaults('submenu', 'annulees');
-    Route::get('reservations/calendrier', [ReservationsController::class, 'page'])->name('reservations.calendrier')->defaults('submenu', 'calendrier');
+    Route::get('reservations/calendrier', [ReservationsController::class, 'calendar'])->name('reservations.calendrier');
+    Route::get('reservations/calendrier/events', [ReservationsController::class, 'calendarEvents'])->name('reservations.calendrier.events');
     Route::get('reservations/paiements', [ReservationsController::class, 'page'])->name('reservations.paiements')->defaults('submenu', 'paiements');
 
     Route::get('customers', [CustomersController::class, 'index'])->name('customers.index');
