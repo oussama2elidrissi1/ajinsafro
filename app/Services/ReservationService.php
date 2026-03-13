@@ -7,14 +7,18 @@ use App\Models\ReservationPassenger;
 use App\Services\WordPressMediaService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class ReservationService
 {
     public function __construct(
-        protected WordPressMediaService $mediaService,
+        private readonly WordPressMediaService $mediaService,
     ) {
     }
 
+    /**
+     * Liste paginée des réservations avec filtres simples.
+     */
     public function list(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
         $query = Reservation::query()->withCount('passengers');
@@ -40,132 +44,8 @@ class ReservationService
         return $query->orderByDesc('created_at')->paginate($perPage);
     }
 
-    public function create(array $data): Reservation
-    {
-        $reservation = new Reservation();
-        $this->fillFromArray($reservation, $data);
-        $reservation->status = $data['status'] ?? Reservation::STATUS_EN_COURS;
-
-        if (!empty($data['payment_receipt']) && $data['payment_receipt'] instanceof UploadedFile) {
-            $reservation->payment_receipt_path = $this->storeReceipt($data['payment_receipt']);
-        }
-
-        $reservation->save();
-
-        $this->syncPassengers($reservation, $data['passengers'] ?? []);
-
-        return $reservation->fresh(['passengers']);
-    }
-
-    public function update(Reservation $reservation, array $data): Reservation
-    {
-        $this->fillFromArray($reservation, $data);
-
-        if (!empty($data['payment_receipt']) && $data['payment_receipt'] instanceof UploadedFile) {
-            $reservation->payment_receipt_path = $this->storeReceipt($data['payment_receipt']);
-        }
-
-        $reservation->save();
-
-        $this->syncPassengers($reservation, $data['passengers'] ?? []);
-
-        return $reservation->fresh(['passengers']);
-    }
-
-    public function validateReservation(Reservation $reservation): Reservation
-    {
-        $reservation->status = Reservation::STATUS_VALIDEE;
-        $reservation->save();
-
-        return $reservation;
-    }
-
-    public function delete(Reservation $reservation): void
-    {
-        $reservation->delete();
-    }
-
-    protected function fillFromArray(Reservation $reservation, array $data): void
-    {
-        $reservation->tour_id = $data['tour_id'] ?? null;
-
-        $reservation->client_mode = $data['client_mode'] ?? 'existing';
-        $reservation->client_external_id = $data['client_mode'] === 'existing'
-            ? ($data['client_external_id'] ?? null)
-            : null;
-
-        // Snapshot client – toujours rempli
-        $reservation->client_first_name = $data['client_first_name'] ?? null;
-        $reservation->client_last_name = $data['client_last_name'] ?? null;
-        $reservation->client_email = $data['client_email'] ?? null;
-        $reservation->client_phone = $data['client_phone'] ?? null;
-        $reservation->client_document_type = $data['client_document_type'] ?? null;
-        $reservation->client_document_number = $data['client_document_number'] ?? null;
-
-        $reservation->payment_type = $data['payment_type'] ?? null;
-        $reservation->notes = $data['notes'] ?? null;
-
-        $passengers = $data['passengers'] ?? [];
-        $reservation->passengers_count = is_array($passengers) ? max(count($passengers), 1) : 1;
-
-        if (!empty($data['status'])) {
-            $reservation->status = $data['status'];
-        }
-    }
-
-    protected function syncPassengers(Reservation $reservation, array $rows): void
-    {
-        $reservation->passengers()->delete();
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $hasData = trim((string) ($row['first_name'] ?? '')) !== ''
-                || trim((string) ($row['last_name'] ?? '')) !== '';
-            if (!$hasData) {
-                continue;
-            }
-
-            $reservation->passengers()->create([
-                'first_name' => $row['first_name'] ?? null,
-                'last_name' => $row['last_name'] ?? null,
-                'type' => $row['type'] ?? null,
-                'birth_date' => $row['birth_date'] ?? null,
-                'document_type' => $row['document_type'] ?? null,
-                'document_number' => $row['document_number'] ?? null,
-            ]);
-        }
-    }
-
-    protected function storeReceipt(UploadedFile $file): string
-    {
-        // On réutilise WordPressMediaService pour stocker dans le répertoire uploads/ajinsafro/reservations
-        $path = $this->mediaService->store($file, 'reservations');
-
-        return $path;
-    }
-}
-
-<?php
-
-namespace App\Services;
-
-use App\Models\Reservation;
-use App\Models\ReservationPassenger;
-use App\Services\WordPressMediaService;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
-
-class ReservationService
-{
-    public function __construct(
-        private readonly WordPressMediaService $mediaService,
-    ) {
-    }
-
     /**
-     * @param array $data Données validées (StoreReservationRequest)
+     * Création d'une réservation (transactionnelle).
      */
     public function create(array $data, ?UploadedFile $paymentReceipt = null): Reservation
     {
@@ -173,7 +53,6 @@ class ReservationService
             $reservation = new Reservation();
             $this->fillReservation($reservation, $data);
 
-            // Statut par défaut
             if (empty($reservation->status)) {
                 $reservation->status = Reservation::STATUS_EN_COURS;
             }
@@ -191,6 +70,9 @@ class ReservationService
         });
     }
 
+    /**
+     * Mise à jour d'une réservation.
+     */
     public function update(Reservation $reservation, array $data, ?UploadedFile $paymentReceipt = null): Reservation
     {
         return DB::transaction(function () use ($reservation, $data, $paymentReceipt) {
@@ -216,6 +98,11 @@ class ReservationService
         return $reservation;
     }
 
+    public function delete(Reservation $reservation): void
+    {
+        $reservation->delete();
+    }
+
     private function fillReservation(Reservation $reservation, array $data): void
     {
         $reservation->tour_id = $data['tour_id'] ?? $reservation->tour_id;
@@ -238,13 +125,12 @@ class ReservationService
         $reservation->notes = $data['notes'] ?? $reservation->notes;
     }
 
+    /**
+     * Stocke le reçu de paiement dans un sous-dossier dédié.
+     */
     private function storeReceipt(Reservation $reservation, UploadedFile $file): string
     {
-        // On réutilise le WordPressMediaService comme helper de stockage disque,
-        // mais dans un sous-dossier spécifique aux reçus de réservations.
-        $originalName = $file->getClientOriginalName();
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'pdf';
-
         $filename = 'reservation-' . $reservation->id . '-' . time() . '.' . $extension;
         $relativePath = 'reservation-receipts/' . date('Y/m') . '/' . $filename;
 
@@ -308,4 +194,5 @@ class ReservationService
         $reservation->save();
     }
 }
+
 

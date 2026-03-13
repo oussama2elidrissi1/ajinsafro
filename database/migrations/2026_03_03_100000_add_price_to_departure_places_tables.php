@@ -12,14 +12,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('voyage_departure_places', function (Blueprint $table) {
-            $table->decimal('price', 12, 2)->nullable()->after('sort_order')->comment('Prix (MAD) pour ce lieu de départ');
-        });
-
-        if (Schema::connection('wp')->hasTable('aj_travel_departure_places')) {
-            Schema::connection('wp')->table('aj_travel_departure_places', function (Blueprint $table) {
-                $table->decimal('price', 12, 2)->nullable()->after('sort_order')->comment('Prix (MAD) pour ce lieu de départ');
+        // Connexion Laravel principale
+        if (! Schema::hasColumn('voyage_departure_places', 'price')) {
+            Schema::table('voyage_departure_places', function (Blueprint $table) {
+                $table->decimal('price', 12, 2)
+                    ->nullable()
+                    ->after('sort_order')
+                    ->comment('Prix (MAD) pour ce lieu de départ');
             });
+        }
+
+        // Connexion WordPress (optionnelle) – on ne tente rien si la connexion n'est pas configurée
+        $wpConfig = config('database.connections.wp');
+        if (!empty($wpConfig['database']) && !empty($wpConfig['username'])) {
+            if (Schema::connection('wp')->hasTable('aj_travel_departure_places')
+                && ! Schema::connection('wp')->hasColumn('aj_travel_departure_places', 'price')) {
+                Schema::connection('wp')->table('aj_travel_departure_places', function (Blueprint $table) {
+                    $table->decimal('price', 12, 2)
+                        ->nullable()
+                        ->after('sort_order')
+                        ->comment('Prix (MAD) pour ce lieu de départ');
+                });
+            }
         }
     }
 
