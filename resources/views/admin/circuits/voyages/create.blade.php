@@ -254,6 +254,7 @@
                 .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 </style>
 
+
                 {{-- Vol 1 --}}
                 <div class="flight-block" data-flight-index="0">
                     <div class="flight-card-view" id="create-flight-0-card-view">

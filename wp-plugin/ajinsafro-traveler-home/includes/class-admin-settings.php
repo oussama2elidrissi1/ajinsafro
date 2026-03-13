@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+
 class AJTH_Admin_Settings {
 
     /** Option key */

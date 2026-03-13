@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\CircuitsController;
+use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CustomersController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FinanceController;
@@ -85,7 +86,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('reservations/en-attente', [ReservationsController::class, 'page'])->name('reservations.en-attente')->defaults('submenu', 'en-attente');
     Route::get('reservations/confirmees', [ReservationsController::class, 'page'])->name('reservations.confirmees')->defaults('submenu', 'confirmees');
     Route::get('reservations/annulees', [ReservationsController::class, 'page'])->name('reservations.annulees')->defaults('submenu', 'annulees');
-    Route::get('reservations/calendrier', [ReservationsController::class, 'page'])->name('reservations.calendrier')->defaults('submenu', 'calendrier');
+    Route::get('reservations/calendrier', [ReservationsController::class, 'calendar'])->name('reservations.calendrier');
+    Route::get('reservations/calendrier/events', [ReservationsController::class, 'calendarEvents'])->name('reservations.calendrier.events');
     Route::get('reservations/paiements', [ReservationsController::class, 'page'])->name('reservations.paiements')->defaults('submenu', 'paiements');
 
     Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
@@ -105,7 +107,17 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::post('reservations/{reservation}/validate', [ReservationsController::class, 'validateReservation'])->name('reservations.validate');
 
     Route::get('customers', [CustomersController::class, 'index'])->name('customers.index');
-    Route::get('customers/clients', [CustomersController::class, 'page'])->name('customers.clients')->defaults('submenu', 'clients');
+    Route::get('customers/clients/trashed', [ClientController::class, 'trashed'])->name('customers.clients.trashed');
+    Route::post('customers/clients/bulk', [ClientController::class, 'bulkAction'])->name('customers.clients.bulk');
+    Route::post('customers/clients/{id}/restore', [ClientController::class, 'restore'])->name('customers.clients.restore')->whereNumber('id');
+    Route::delete('customers/clients/{id}/force', [ClientController::class, 'forceDelete'])->name('customers.clients.force')->whereNumber('id');
+    Route::get('customers/clients', [ClientController::class, 'index'])->name('customers.clients.index');
+    Route::get('customers/clients/create', [ClientController::class, 'create'])->name('customers.clients.create');
+    Route::post('customers/clients', [ClientController::class, 'store'])->name('customers.clients.store');
+    Route::get('customers/clients/{client}', [ClientController::class, 'show'])->name('customers.clients.show');
+    Route::get('customers/clients/{client}/edit', [ClientController::class, 'edit'])->name('customers.clients.edit');
+    Route::match(['put', 'patch'], 'customers/clients/{client}', [ClientController::class, 'update'])->name('customers.clients.update');
+    Route::delete('customers/clients/{client}', [ClientController::class, 'destroy'])->name('customers.clients.destroy');
     Route::get('customers/voyageurs', [CustomersController::class, 'page'])->name('customers.voyageurs')->defaults('submenu', 'voyageurs');
     Route::get('customers/historique', [CustomersController::class, 'page'])->name('customers.historique')->defaults('submenu', 'historique');
     Route::get('customers/avis-clients', [CustomersController::class, 'page'])->name('customers.avis-clients')->defaults('submenu', 'avis-clients');
@@ -252,6 +264,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('settings/securite', [SettingsController::class, 'page'])->name('settings.securite')->defaults('submenu', 'securite');
     Route::get('settings/home-page', [HomePageSettingsController::class, 'edit'])->name('settings.home-page.edit');
     Route::post('settings/home-page', [HomePageSettingsController::class, 'update'])->name('settings.home-page.update');
+    Route::post('settings/home-page/header', [HomePageSettingsController::class, 'updateHeader'])->name('settings.home-page.update-header');
 
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -1,20 +1,21 @@
 <?php
 /**
- * Home Page Template
- * Sections are rendered in the order defined by section_order; each can be enabled/disabled via sections.*
+ * Shortcode template: [ajth_homepage]
+ * Uses same section_order and enable/disable as home.php
  *
  * @package AjinsafroTravelerHome
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-get_header();
-$settings = ajth_get_settings();
+if ( ! isset( $settings ) || ! is_array( $settings ) ) {
+    $settings = ajth_get_settings();
+}
 
 $default_order = array( 'last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises' );
 $section_order = ! empty( $settings['section_order'] ) && is_array( $settings['section_order'] )
     ? $settings['section_order']
     : $default_order;
-// Footer is rendered by wp_footer (ajth_render_footer_sitewide or theme footer), not as a section inside home content.
+// Footer is rendered by wp_footer (ajth_render_footer_sitewide or theme footer), not as a section inside content.
 $newsletter_key = array_search( 'newsletter', $section_order );
 if ( $newsletter_key !== false ) {
     unset( $section_order[ $newsletter_key ] );
@@ -93,5 +94,3 @@ $dbr = ajth_get_destinations_by_region();
         ?>
     </div>
 </div>
-
-<?php get_footer(); ?>

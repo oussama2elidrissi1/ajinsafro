@@ -1,77 +1,82 @@
 <?php
 /**
- * Part: Cap sur les tendances du moment — horizontal card slider
- * Modern card design with ribbon, DHS price, VOIR L'OFFRE button
+ * Part: Découvrez des séjours uniques — Accommodation cards
+ * Displays hotels from st_hotel post type
  * @package AjinsafroTravelerHome
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-$last_minute_settings = isset( $settings['last_minute'] ) && is_array( $settings['last_minute'] )
-    ? $settings['last_minute']
+$accom_settings = isset( $settings['accommodations'] ) && is_array( $settings['accommodations'] )
+    ? $settings['accommodations']
     : array();
 
-$section_title = ! empty( $last_minute_settings['title'] ) ? $last_minute_settings['title'] : 'Cap sur les tendances du moment';
-$items_count = ! empty( $last_minute_settings['count'] ) ? max( 1, intval( $last_minute_settings['count'] ) ) : 6;
-$featured_only = ! empty( $last_minute_settings['featured_only'] );
+$section_title = ! empty( $accom_settings['title'] ) ? $accom_settings['title'] : 'Découvrez des séjours uniques';
+$items_count   = ! empty( $accom_settings['count'] ) ? max( 1, intval( $accom_settings['count'] ) ) : 4;
 
 $query_args = array(
-    'post_type'      => 'st_tours',
+    'post_type'      => array( 'st_hotel', 'st_rental' ),
     'posts_per_page' => $items_count,
     'orderby'        => 'date',
     'order'          => 'DESC',
     'post_status'    => 'publish',
 );
 
-if ( $featured_only ) {
-    $query_args['meta_query'] = array(
-        'relation' => 'OR',
-        array( 'key' => 'is_featured', 'value' => '1', 'compare' => '=' ),
-        array( 'key' => 'st_is_featured', 'value' => 'on', 'compare' => '=' ),
-    );
-}
-
 $q = new WP_Query( $query_args );
 if ( ! $q->have_posts() ) return;
 ?>
 
-<section class="aj-lm" id="aj-offres">
+<section class="aj-accom" id="aj-sejours">
     <div class="aj-container">
         <div class="aj-section-head">
             <h2 class="aj-section-title"><?php echo esc_html( $section_title ); ?></h2>
             <div class="aj-section-arrows">
-                <button type="button" class="aj-section-arrow aj-arrow--prev" aria-label="Précédent"><i class="fas fa-angle-left"></i></button>
-                <button type="button" class="aj-section-arrow aj-arrow--next" aria-label="Suivant"><i class="fas fa-angle-right"></i></button>
+                <button type="button" class="aj-section-arrow aj-accom-prev" aria-label="Précédent"><i class="fas fa-angle-left"></i></button>
+                <button type="button" class="aj-section-arrow aj-accom-next" aria-label="Suivant"><i class="fas fa-angle-right"></i></button>
             </div>
         </div>
 
-        <div class="aj-slider-v2" id="aj-lm-track">
+        <div class="aj-slider-v2" id="aj-accom-track">
             <?php while ( $q->have_posts() ) : $q->the_post();
                 $price      = get_post_meta( get_the_ID(), 'price', true );
                 $sale_price = get_post_meta( get_the_ID(), 'sale_price', true );
                 $avg_rating = get_post_meta( get_the_ID(), 'avg_rating', true );
                 $location   = get_post_meta( get_the_ID(), 'address', true );
-                $duration   = get_post_meta( get_the_ID(), 'duration', true );
-                $excerpt    = get_the_excerpt() ? wp_trim_words( get_the_excerpt(), 18, '…' ) : wp_trim_words( get_the_content(), 18, '…' );
+                $stars      = get_post_meta( get_the_ID(), 'hotel_star', true );
+                $category   = '';
+                $terms = get_the_terms( get_the_ID(), 'hotel_type' );
+                if ( $terms && ! is_wp_error( $terms ) ) {
+                    $category = $terms[0]->name;
+                }
+                if ( empty( $category ) ) {
+                    $category = ( get_post_type() === 'st_rental' ) ? 'Appartement' : 'Hôtel';
+                }
                 $dp = $sale_price ?: $price;
+                $star_count = $stars ? intval( $stars ) : 0;
             ?>
             <div class="aj-slider-v2__item">
                 <a href="<?php the_permalink(); ?>" class="aj-card2 aj-hover-glass" style="text-decoration:none;">
-                    <div class="aj-ribbon"><span>Featured</span></div>
                     <div class="aj-card2__image">
                         <?php if ( has_post_thumbnail() ) : ?>
                             <?php the_post_thumbnail( 'medium_large', array( 'loading' => 'lazy' ) ); ?>
                         <?php else : ?>
                             <div style="width:100%;height:100%;background:linear-gradient(135deg,#ccc,#aaa);"></div>
                         <?php endif; ?>
-                        <?php if ( $duration ) : ?>
-                        <span class="aj-card2__badge aj-card2__badge--info">
-                            <i class="far fa-clock"></i> <?php echo esc_html( $duration ); ?>
-                        </span>
-                        <?php endif; ?>
                     </div>
                     <div class="aj-card2__body">
                         <h3 class="aj-card2__title"><?php the_title(); ?></h3>
-                        <p class="aj-card2__desc"><?php echo esc_html( $excerpt ); ?></p>
+                        <?php if ( $location ) : ?>
+                        <div class="aj-card2__location"><i class="fas fa-map-marker-alt"></i> <?php echo esc_html( $location ); ?></div>
+                        <?php endif; ?>
+                        <div class="aj-card2__meta">
+                            <span class="aj-card2__category"><?php echo esc_html( $category ); ?></span>
+                            <?php if ( $star_count > 0 ) : ?>
+                            <div class="aj-card2__stars">
+                                <?php for ( $s = 0; $s < 5; $s++ ) : ?>
+                                    <i class="<?php echo $s < $star_count ? 'fas' : 'far'; ?> fa-star"></i>
+                                <?php endfor; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
                         <div class="aj-card2__footer">
                             <div>
                                 <?php if ( $dp ) : ?>
@@ -80,7 +85,7 @@ if ( ! $q->have_posts() ) return;
                                     <?php echo esc_html( number_format( floatval( $dp ), 0, ',', ' ' ) ); ?>
                                     <span class="aj-card2__price-currency">DHS</span>
                                 </div>
-                                <span class="aj-card2__price-note">prix par personne</span>
+                                <span class="aj-card2__price-note">prix par personne par nuit</span>
                                 <?php endif; ?>
                             </div>
                             <span class="aj-card2__cta">VOIR L'OFFRE</span>
