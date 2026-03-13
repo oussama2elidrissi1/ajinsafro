@@ -91,6 +91,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('reservations/paiements', [ReservationsController::class, 'page'])->name('reservations.paiements')->defaults('submenu', 'paiements');
 
     Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
+    Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');
     Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
     Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
     Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');

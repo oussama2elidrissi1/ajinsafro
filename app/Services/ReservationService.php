@@ -8,6 +8,7 @@ use App\Services\WordPressMediaService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ReservationService
 {
@@ -47,9 +48,9 @@ class ReservationService
     /**
      * Création d'une réservation (transactionnelle).
      */
-    public function create(array $data, ?UploadedFile $paymentReceipt = null): Reservation
+    public function create(array $data, ?UploadedFile $paymentReceipt = null, ?UploadedFile $visaDocument = null): Reservation
     {
-        return DB::transaction(function () use ($data, $paymentReceipt) {
+        return DB::transaction(function () use ($data, $paymentReceipt, $visaDocument) {
             $reservation = new Reservation();
             $this->fillReservation($reservation, $data);
 
@@ -63,6 +64,10 @@ class ReservationService
                 $reservation->payment_receipt_path = $this->storeReceipt($reservation, $paymentReceipt);
                 $reservation->save();
             }
+            if ($visaDocument instanceof UploadedFile) {
+                $reservation->visa_document_path = $this->storeVisaDocument($reservation, $visaDocument);
+                $reservation->save();
+            }
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
@@ -73,14 +78,18 @@ class ReservationService
     /**
      * Mise à jour d'une réservation.
      */
-    public function update(Reservation $reservation, array $data, ?UploadedFile $paymentReceipt = null): Reservation
+    public function update(Reservation $reservation, array $data, ?UploadedFile $paymentReceipt = null, ?UploadedFile $visaDocument = null): Reservation
     {
-        return DB::transaction(function () use ($reservation, $data, $paymentReceipt) {
+        return DB::transaction(function () use ($reservation, $data, $paymentReceipt, $visaDocument) {
             $this->fillReservation($reservation, $data);
             $reservation->save();
 
             if ($paymentReceipt instanceof UploadedFile) {
                 $reservation->payment_receipt_path = $this->storeReceipt($reservation, $paymentReceipt);
+                $reservation->save();
+            }
+            if ($visaDocument instanceof UploadedFile) {
+                $reservation->visa_document_path = $this->storeVisaDocument($reservation, $visaDocument);
                 $reservation->save();
             }
 
@@ -123,6 +132,24 @@ class ReservationService
         }
 
         $reservation->notes = $data['notes'] ?? $reservation->notes;
+
+        $reservation->visa_ok = isset($data['visa_ok']) ? (bool) $data['visa_ok'] : $reservation->visa_ok;
+        $reservation->visa_notes = $data['visa_notes'] ?? $reservation->visa_notes;
+        $reservation->visa_status = $data['visa_status'] ?? $reservation->visa_status;
+    }
+
+    /**
+     * Stocke un document visa dans un sous-dossier dédié.
+     */
+    private function storeVisaDocument(Reservation $reservation, UploadedFile $file): string
+    {
+        $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'pdf';
+        $filename = 'visa-' . $reservation->id . '-' . time() . '.' . $extension;
+        $directory = 'reservation-visa/' . date('Y/m');
+
+        Storage::disk('public')->putFileAs($directory, $file, $filename);
+
+        return $directory . '/' . $filename;
     }
 
     /**
@@ -132,15 +159,11 @@ class ReservationService
     {
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'pdf';
         $filename = 'reservation-' . $reservation->id . '-' . time() . '.' . $extension;
-        $relativePath = 'reservation-receipts/' . date('Y/m') . '/' . $filename;
+        $directory = 'reservation-receipts/' . date('Y/m');
 
-        $fullPath = $this->mediaService->path($relativePath);
-        if (!is_dir(dirname($fullPath))) {
-            mkdir(dirname($fullPath), 0775, true);
-        }
-        $file->move(dirname($fullPath), basename($fullPath));
+        Storage::disk('public')->putFileAs($directory, $file, $filename);
 
-        return $relativePath;
+        return $directory . '/' . $filename; // utilisé avec asset('storage/'.$path)
     }
 
     /**

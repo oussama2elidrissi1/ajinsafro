@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Reservation extends Model
 {
@@ -22,6 +23,11 @@ class Reservation extends Model
     public const PAYMENT_VIREMENT = 'VIREMENT';
     public const PAYMENT_ESPECE   = 'ESPECE';
 
+    public const VISA_STATUS_NOT_REQUIRED = 'not_required';
+    public const VISA_STATUS_PENDING = 'pending';
+    public const VISA_STATUS_APPROVED = 'approved';
+    public const VISA_STATUS_REJECTED = 'rejected';
+
     protected $fillable = [
         'tour_id',
         'client_mode',
@@ -37,17 +43,32 @@ class Reservation extends Model
         'status',
         'passengers_count',
         'notes',
+        'visa_ok',
+        'visa_notes',
+        'visa_status',
+        'visa_document_path',
     ];
 
     protected $casts = [
         'tour_id'          => 'integer',
         'client_external_id' => 'integer',
         'passengers_count' => 'integer',
+        'visa_ok'          => 'boolean',
     ];
 
     public function passengers(): HasMany
     {
         return $this->hasMany(ReservationPassenger::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class, 'client_external_id');
+    }
+
+    public function tour(): BelongsTo
+    {
+        return $this->belongsTo(Voyage::class, 'tour_id');
     }
 }
 
