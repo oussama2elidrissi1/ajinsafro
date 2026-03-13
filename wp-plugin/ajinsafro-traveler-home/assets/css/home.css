@@ -746,7 +746,7 @@ body.aj-custom-header #masthead {
    3. OFFRES DE DERNIÈRE MINUTE
    ========================================================================== */
 .aj-lm {
-    /* padding: 20px 0 24px; */
+    padding: 20px 0 24px;
     background: transparent;
 }
 
@@ -977,7 +977,7 @@ body.aj-custom-header #masthead {
    5. LES BONS COINS
    ========================================================================== */
 .aj-spots {
-    /* padding: 20px 0 24px; */
+    padding: 20px 0 24px;
     background: transparent;
 }
 
@@ -1856,8 +1856,8 @@ body.aj-has-bg-pattern::after {
 .aj-promos {
     position: relative;
     z-index: 2;
-    /* padding: 20px 0 24px; */
-    /* margin-top: 0; */
+    padding: 20px 0 24px;
+    margin-top: 0;
     background-color: transparent;
     overflow: visible;
     scroll-margin-top: 24px;
@@ -2240,8 +2240,8 @@ body.aj-has-bg-pattern::after {
 .aj-cruises {
     position: relative;
     padding: 20px 0 24px;
-    /* margin-top: 0; */
-    /* margin-bottom: 0; */
+    margin-top: 0;
+    margin-bottom: 0;
     background-color: transparent;
     overflow: visible;
 }
