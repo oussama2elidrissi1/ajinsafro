@@ -208,6 +208,8 @@ class WpTourRepository
             'adult_price' => 'adult_price',
             'child_price' => 'child_price',
             'infant_price' => 'infant_price',
+            'commission_adulte' => 'commission_adulte',
+            'commission_enfant' => 'commission_enfant',
             'discount' => 'discount',
             'discount_type' => 'discount_type',
             'discount_by_people_type' => 'discount_by_people_type',

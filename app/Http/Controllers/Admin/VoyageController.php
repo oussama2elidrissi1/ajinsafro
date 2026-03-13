@@ -330,6 +330,8 @@ class VoyageController extends Controller
             'adult_price' => $wpPost->getMeta('adult_price'),
             'child_price' => $wpPost->getMeta('child_price'),
             'infant_price' => $wpPost->getMeta('infant_price'),
+            'commission_adulte' => $wpPost->getMeta('commission_adulte'),
+            'commission_enfant' => $wpPost->getMeta('commission_enfant'),
             'discount' => $wpPost->getMeta('discount'),
             'discount_type' => $wpPost->getMeta('discount_type'),
             'discount_by_people_type' => $wpPost->getMeta('discount_by_people_type'),
@@ -933,6 +935,7 @@ class VoyageController extends Controller
                 'code' => !empty($placeData['code']) ? trim($placeData['code']) : null,
                 'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
                 'sort_order' => $sortOrder++,
+                'price' => isset($placeData['price']) && $placeData['price'] !== '' ? (float) $placeData['price'] : null,
             ];
             try {
                 if ($placeId) {

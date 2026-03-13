@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> affecda47b80591b2d89f3d475782f8858ef5cdb
 @php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
 @endphp
@@ -113,11 +109,6 @@
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#transfers" role="tab">
                             <i class="bx bx-car"></i> <span class="ve-tab-label">Transferts</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#travel-dates" role="tab">
-                            <i class="bx bx-calendar-check"></i> <span class="ve-tab-label">Dates</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -349,10 +340,10 @@
                     <div class="card-body destination-ux-body">
                         <div class="destination-ux-header">
                             <h4 class="destination-ux-title">Tour location</h4>
-                            <p class="destination-ux-helper">Sélectionnez une ou plusieurs destinations pour ce circuit.</p>
+                            <p class="destination-ux-helper">Sélectionnez une ou plusieurs locations pour ce circuit.</p>
                             <div class="destination-ux-badge-wrap">
                                 <span class="badge bg-primary destination-ux-badge" id="locationCountBadge">
-                                    <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} destination(s) sélectionnée(s)</span>
+                                    <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} location(s) sélectionnée(s)</span>
                                 </span>
                             </div>
                         </div>
@@ -500,6 +491,14 @@
                                 <div class="mb-3">
                                     <label for="infant_price" class="form-label">Prix Bébé (MAD)</label>
                                     <input type="number" class="form-control" id="infant_price" name="infant_price" value="{{ old('infant_price', $meta['infant_price'] ?? '') }}" step="0.01" min="0">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="commission_adulte" class="form-label">Commission Adulte (MAD)</label>
+                                    <input type="number" class="form-control" id="commission_adulte" name="commission_adulte" value="{{ old('commission_adulte', $meta['commission_adulte'] ?? '') }}" step="0.01" min="0" placeholder="0">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="commission_enfant" class="form-label">Commission Enfant (MAD)</label>
+                                    <input type="number" class="form-control" id="commission_enfant" name="commission_enfant" value="{{ old('commission_enfant', $meta['commission_enfant'] ?? '') }}" step="0.01" min="0" placeholder="0">
                                 </div>
                             </div>
                             
@@ -692,6 +691,100 @@
                             <label for="ical_url" class="form-label">URL calendrier iCal</label>
                             <input type="text" class="form-control" id="ical_url" name="ical_url" value="{{ old('ical_url', $meta['ical_url'] ?? '') }}" placeholder="https://...">
                         </div>
+
+                        <h5 class="mb-3 mt-4"><i class="bx bx-calendar-check"></i> Dates disponibles (Travelling on)</h5>
+                        <p class="alert alert-info py-2 mb-3 small">
+                            <i class="bx bx-info-circle"></i> <strong>Configuration des dates</strong> —
+                            Ajoutez les dates disponibles pour ce voyage. Seules ces dates seront sélectionnables dans le calendrier sur la page du tour.
+                            Si aucune date n'est configurée, un message "No dates available" sera affiché.
+                        </p>
+                        <div id="travel-dates-container">
+                            @php $datesList = $travelDates ?? collect(); @endphp
+                            @forelse($datesList as $di => $dateItem)
+                            <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
+                                <div class="card-body py-2">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-3">
+                                            <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small mb-1">Places</label>
+                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small mb-1">Prix spécifique</label>
+                                            <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="Prix">
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end pb-2">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
+                                                <label class="form-check-label small">Actif</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end pb-2">
+                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>@endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="alert alert-warning">
+                                Aucune date disponible configurée. Cliquez sur "Ajouter une date" pour commencer.
+                            </div>
+                            @endforelse
+                        </div>
+                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-travel-date">
+                            <i class="bx bx-plus"></i> Ajouter une date
+                        </button>
+                        <script>
+                        (function(){
+                            var container = document.getElementById('travel-dates-container');
+                            var addBtn = document.getElementById('add-travel-date');
+                            if (!container || !addBtn) return;
+                            if (container.dataset.initialized === 'true') return;
+                            container.dataset.initialized = 'true';
+                            addBtn.addEventListener('click', function(){
+                                var rows = container.querySelectorAll('.travel-date-row');
+                                var nextIndex = rows.length;
+                                var html = `
+                                <div class="card mb-2 bg-light travel-date-row" data-index="${nextIndex}">
+                                    <div class="card-body py-2">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-md-3">
+                                                <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                                <input type="date" class="form-control form-control-sm" name="travel_dates[${nextIndex}][date]" required>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small mb-1">Places</label>
+                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small mb-1">Prix spécifique</label>
+                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="Prix">
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end pb-2">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" name="travel_dates[${nextIndex}][is_active]" value="1" checked>
+                                                    <label class="form-check-label small">Actif</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-1 d-flex align-items-end pb-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                                container.insertAdjacentHTML('beforeend', html);
+                            });
+                            container.addEventListener('click', function(e){
+                                if (e.target.classList.contains('remove-travel-date')) {
+                                    var row = e.target.closest('.travel-date-row');
+                                    if (row) row.remove();
+                                }
+                            });
+                        })();
+                        </script>
                     </div>
                 </div>
             </div>
@@ -1533,119 +1626,10 @@
                 </div>
             </div>
 
-            <div class="tab-pane" id="travel-dates" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-3"><i class="bx bx-calendar-check"></i> Dates disponibles (Travelling on)</h4>
-                        <p class="alert alert-info py-2 mb-3 small">
-                            <i class="bx bx-info-circle"></i> <strong>Configuration des dates</strong> "” 
-                            Ajoutez les dates disponibles pour ce voyage. Seules ces dates seront sélectionnables dans le calendrier sur la page du tour. 
-                            Si aucune date n'est configurée, un message "No dates available" sera affiché.
-                        </p>
-
-                        <div id="travel-dates-container">
-                            @php $datesList = $travelDates ?? collect(); @endphp
-                            @forelse($datesList as $di => $dateItem)
-                            <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
-                                <div class="card-body py-2">
-                                    <div class="row g-2 align-items-center">
-                                        <div class="col-md-3">
-                                            <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
-                                            <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small mb-1">Places</label>
-                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small mb-1">Prix spécifique</label>
-                                            <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="Prix">
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end pb-2">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
-                                                <label class="form-check-label small">Actif</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1 d-flex align-items-end pb-2">
-                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>@endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @empty
-                            <div class="alert alert-warning">
-                                Aucune date disponible configurée. Cliquez sur "Ajouter une date" pour commencer.
-                            </div>
-                            @endforelse
-                        </div>
-                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-travel-date">
-                            <i class="bx bx-plus"></i> Ajouter une date
-                        </button>
-
-                        <script>
-                        (function(){
-                            var container = document.getElementById('travel-dates-container');
-                            var addBtn = document.getElementById('add-travel-date');
-                            if (!container || !addBtn) return;
-                            if (container.dataset.initialized === 'true') return;
-                            container.dataset.initialized = 'true';
-
-                            addBtn.addEventListener('click', function(){
-                                var rows = container.querySelectorAll('.travel-date-row');
-                                var nextIndex = rows.length;
-                                var html = `
-                                <div class="card mb-2 bg-light travel-date-row" data-index="${nextIndex}">
-                                    <div class="card-body py-2">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-md-3">
-                                                <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control form-control-sm" name="travel_dates[${nextIndex}][date]" required>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small mb-1">Places</label>
-                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small mb-1">Prix spécifique</label>
-                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="Prix">
-                                            </div>
-                                            <div class="col-md-2 d-flex align-items-end pb-2">
-                                                <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input" name="travel_dates[${nextIndex}][is_active]" value="1" checked>
-                                                    <label class="form-check-label small">Actif</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-1 d-flex align-items-end pb-2">
-                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
-                                container.insertAdjacentHTML('beforeend', html);
-                            });
-
-                            container.addEventListener('click', function(e){
-                                if (e.target.classList.contains('remove-travel-date')) {
-                                    var row = e.target.closest('.travel-date-row');
-                                    if (row) row.remove();
-                                }
-                            });
-                        })();
-                        </script>
-                    </div>
-                </div>
-            </div>
-
-            {{-- TAB ACTIVITÉS "” Gestion du catalogue d'activités --}}
+            {{-- TAB ACTIVITÉS — Gestion du catalogue d'activités (ajout au voyage) --}}
             <div class="tab-pane" id="activities" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        @include('admin.circuits.voyages.partials._under_construction_notice', [
-                            'title' => '⚠️ Section en cours de construction — ne pas modifier',
-                            'tabName' => 'Activités',
-                        ])
-
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                             <h4 class="card-title mb-0">Activités</h4>
                             <button type="button" class="btn btn-primary" id="btn-open-activities-modal" data-bs-toggle="modal" data-bs-target="#activitiesCatalogModal">
@@ -2034,7 +2018,7 @@
 
             function updateCount() {
                 var n = document.querySelectorAll('.location-checkbox:checked').length;
-                if (countText) countText.textContent = n + ' destination(s) sélectionnée(s)';
+                if (countText) countText.textContent = n + ' location(s) sélectionnée(s)';
             }
 
             function updateChips() {
@@ -4120,8 +4104,11 @@
                     if (!activity) return;
 
                     var row = buildRow(activity);
+                    var emptyRow = rowsContainer.querySelector('.voyage-activities-empty-row');
+                    if (emptyRow) emptyRow.remove();
                     rowsContainer.appendChild(row);
                     reindexRows();
+                    updateEmptyState();
                     refreshCatalog();
 
                     var bsModal = window.bootstrap && window.bootstrap.Modal ? window.bootstrap.Modal.getInstance(modalEl) : null;
@@ -4299,8 +4286,3 @@
         })();
     </script>
 @endpush
-<<<<<<< HEAD
-=======
->>>>>>> 3271a6e2f3945354324c4876848dc97132be0acc
-=======
->>>>>>> affecda47b80591b2d89f3d475782f8858ef5cdb

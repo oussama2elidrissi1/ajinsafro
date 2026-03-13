@@ -56,7 +56,7 @@
                     <input type="hidden" name="term_id" id="taxonomyTermId">
                     <div class="mb-3">
                         <label for="taxonomyTermName" class="form-label">Nom <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="taxonomyTermName" name="name" required>
+                        <input type="text" class="form-control" id="taxonomyTermName" name="name">
                     </div>
                     <div class="mb-3">
                         <label for="taxonomyTermSlug" class="form-label">Slug (optionnel)</label>

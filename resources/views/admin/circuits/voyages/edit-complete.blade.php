@@ -42,7 +42,7 @@
         <strong>Admin aligné avec WordPress Traveler</strong> - Tous les champs ci-dessous écrivent directement dans la DB WordPress (cFdgeZ_postmeta + taxonomies).
     </div>
 
-    <form id="edit-voyage-complete-form" action="{{ route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST">
+    <form action="{{ route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -681,49 +681,5 @@
                 checkbox.addEventListener('change', updateCount);
             });
         });
-
-        // Éviter "An invalid form control with name='...' is not focusable" : retirer required des champs dans modals/onglets cachés avant submit
-        (function() {
-            function stripRequiredFromHiddenInForm(form) {
-                var list = [];
-                if (!form) return list;
-                form.querySelectorAll('input[required], select[required], textarea[required]').forEach(function(el) {
-                    var inHiddenModal = el.closest('.modal') && !el.closest('.modal').classList.contains('show');
-                    var inHiddenOffcanvas = el.closest('.offcanvas') && !el.closest('.offcanvas').classList.contains('show');
-                    var inInactiveTab = el.closest('.tab-pane') && !el.closest('.tab-pane').classList.contains('active');
-                    var inHidden = el.closest('[hidden]');
-                    if (inHiddenModal || inHiddenOffcanvas || inInactiveTab || inHidden) {
-                        list.push(el);
-                        el.removeAttribute('required');
-                        el.setAttribute('data-required-restore', '1');
-                    }
-                });
-                return list;
-            }
-            function restoreRequired(list) {
-                list.forEach(function(el) {
-                    if (el.getAttribute('data-required-restore') === '1') {
-                        el.setAttribute('required', 'required');
-                        el.removeAttribute('data-required-restore');
-                    }
-                });
-            }
-            document.addEventListener('DOMContentLoaded', function() {
-                var form = document.getElementById('edit-voyage-complete-form');
-                var submitBtn = form && form.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.addEventListener('click', function(e) {
-                        var toRestore = stripRequiredFromHiddenInForm(form);
-                        if (toRestore.length > 0) {
-                            e.preventDefault();
-                            e.stopImmediatePropagation();
-                            form.requestSubmit();
-                            setTimeout(function() { restoreRequired(toRestore); }, 100);
-                            return false;
-                        }
-                    }, true);
-                }
-            });
-        })();
     </script>
 @endpush
