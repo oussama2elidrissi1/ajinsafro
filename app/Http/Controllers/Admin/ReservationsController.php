@@ -12,6 +12,8 @@ use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Models\Wp\WpPost;
 use App\Services\ReservationService;
+use App\Services\Wp\WpHeroImageService;
+use App\Services\Wp\WpTourRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +25,7 @@ class ReservationsController extends Controller
 {
     public function __construct(
         protected ReservationService $reservationService,
+        protected WpTourRepository $wpTourRepository,
     ) {
     }
 
@@ -595,45 +598,87 @@ class ReservationsController extends Controller
             // ignore
         }
 
+        // Source de vérité : données du voyage = post WordPress + meta (pas le modèle Laravel Voyage qui peut être désynchronisé)
+        $destination = null;
+        $durationText = null;
+        $priceFrom = null;
+        $displayPrice = null;
+        $currencySymbol = 'DH';
+        $featuredImageUrl = null;
+        $minPeople = null;
+        $maxPeople = null;
+        $status = null;
+
+        if ($wpPost) {
+            $address = $wpPost->getMeta('address');
+            $multiLocation = $wpPost->getMeta('multi_location');
+            $destination = trim((string) $address) !== '' ? $address : $this->wpTourRepository->getLocationNamesFromMultiLocation($multiLocation);
+            if ($destination === '') {
+                $destination = null;
+            }
+
+            $durationDayRaw = $wpPost->getMeta('duration_day');
+            $durationDays = $this->parseDurationDaysForModal($durationDayRaw);
+            $durationText = $durationDays >= 1 ? $durationDays . ' jour' . ($durationDays > 1 ? 's' : '') . ($durationDays >= 2 ? ' / ' . ($durationDays - 1) . ' nuit' . (($durationDays - 1) > 1 ? 's' : '') : '') : null;
+
+            $priceFrom = $this->parsePriceFromMeta($wpPost->getMeta('min_price')) ?? $this->parsePriceFromMeta($wpPost->getMeta('base_price'));
+            $priceOverride = $travelDate->price_override !== null ? (float) $travelDate->price_override : null;
+            $displayPrice = $priceOverride ?? $priceFrom;
+
+            $currencySymbol = $wpPost->getMeta('currency') ?: 'DH';
+            if (is_string($currencySymbol) && strtoupper($currencySymbol) === 'MAD') {
+                $currencySymbol = 'DH';
+            }
+
+            $heroId = (int) $wpPost->getMeta('_tour_hero_image_id') ?: (int) $wpPost->getMeta('_thumbnail_id');
+            if ($heroId > 0) {
+                $featuredImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
+            }
+            $minPeople = $this->parseIntMeta($wpPost->getMeta('min_people'));
+            $maxPeople = $this->parseIntMeta($wpPost->getMeta('max_people'));
+            $status = $wpPost->post_status ?? null;
+        }
+
         $hotelsWithRooms = TourHotel::getAllForTour($wpId)->load('rooms');
         $hotelsPayload = $hotelsWithRooms->map(function ($h) {
+            $rooms = $h->rooms->where('is_active', true)->values()->map(fn ($r) => [
+                'id' => $r->id,
+                'room_type' => $r->room_type,
+                'room_label' => $r->room_label,
+                'room_count' => (int) $r->room_count,
+                'capacity_adults' => (int) $r->capacity_adults,
+                'capacity_children' => (int) $r->capacity_children,
+                'capacity_total' => (int) $r->capacity_total,
+                'supplement' => (float) $r->supplement,
+            ])->all();
             return [
                 'id' => $h->id,
                 'hotel_name' => $h->hotel_name,
                 'check_in_day' => $h->check_in_day,
                 'check_out_day' => $h->check_out_day,
-                'rooms' => $h->rooms->where('is_active', true)->values()->map(fn ($r) => [
-                    'id' => $r->id,
-                    'room_type' => $r->room_type,
-                    'room_label' => $r->room_label,
-                    'room_count' => (int) $r->room_count,
-                    'capacity_adults' => (int) $r->capacity_adults,
-                    'capacity_children' => (int) $r->capacity_children,
-                    'capacity_total' => (int) $r->capacity_total,
-                    'supplement' => (float) $r->supplement,
-                ])->all(),
+                'rooms' => $rooms,
             ];
         })->all();
 
         $basePayload = [
             'travel_date_id' => $travelDate->id,
             'voyage_id' => $voyage?->id,
-            'name' => $wpPost?->post_title ?? $voyage?->name ?? ('Tour #' . $wpId),
-            'slug' => $wpPost?->post_name ?? $voyage?->slug ?? '',
-            'destination' => $voyage?->destination,
+            'name' => $wpPost?->post_title ?? ('Tour #' . $wpId),
+            'slug' => $wpPost?->post_name ?? '',
+            'destination' => $destination,
             'departure_date' => $travelDate->date->format('Y-m-d'),
             'departure_date_formatted' => $travelDate->date->translatedFormat('l j F Y'),
-            'duration_text' => $voyage?->duration_text,
-            'price_from' => $voyage?->price_from,
-            'price_override' => $travelDate->price_override,
-            'currency_symbol' => $voyage?->currency_symbol ?? 'DH',
-            'display_price' => $travelDate->price_override ?? $voyage?->price_from,
-            'status' => $voyage?->status,
-            'description' => $wpPost?->post_content ?? $voyage?->description,
-            'accroche' => $wpPost?->post_excerpt ?? $voyage?->accroche,
-            'featured_image_url' => $voyage?->featured_image_url,
-            'min_people' => $voyage?->min_people,
-            'max_people' => $voyage?->max_people,
+            'duration_text' => $durationText,
+            'price_from' => $priceFrom,
+            'price_override' => $travelDate->price_override !== null ? (float) $travelDate->price_override : null,
+            'currency_symbol' => $currencySymbol,
+            'display_price' => $displayPrice,
+            'status' => $status,
+            'description' => $wpPost?->post_content ?? null,
+            'accroche' => $wpPost?->post_excerpt ?? null,
+            'featured_image_url' => $featuredImageUrl,
+            'min_people' => $minPeople,
+            'max_people' => $maxPeople,
             'seats' => $travelDate->seats,
             'hotels_with_rooms' => $hotelsPayload,
             'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
@@ -644,5 +689,45 @@ class ReservationsController extends Controller
         ];
 
         return response()->json($basePayload);
+    }
+
+    /**
+     * Parse duration_day meta as number of days. Ignore "X hours" to avoid wrong duration.
+     */
+    private function parseDurationDaysForModal(mixed $value): int
+    {
+        if ($value === null || $value === '') {
+            return 1;
+        }
+        $s = is_string($value) ? trim($value) : (string) $value;
+        if (stripos($s, 'hour') !== false) {
+            return 1;
+        }
+        $n = (int) $s;
+        return $n >= 1 && $n <= 365 ? $n : 1;
+    }
+
+    /**
+     * Parse price from meta (numeric).
+     */
+    private function parsePriceFromMeta(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $n = is_numeric($value) ? (float) $value : null;
+        return $n !== null && $n >= 0 ? $n : null;
+    }
+
+    /**
+     * Parse integer from meta.
+     */
+    private function parseIntMeta(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $n = (int) $value;
+        return $n >= 0 ? $n : null;
     }
 }
