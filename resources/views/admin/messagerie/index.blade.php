@@ -145,15 +145,20 @@
 
     function loadMessages() {
         if (!currentChannelId) return;
-        fetch(`/admin/messagerie/channels/${currentChannelId}/messages`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-            .then(r => r.json())
+        const messagesUrl = '{{ url("admin/messagerie/channels") }}/' + currentChannelId + '/messages';
+        fetch(messagesUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+            .then(r => {
+                if (!r.ok) return r.json().then(d => { throw new Error(d.error || 'Erreur chargement'); });
+                return r.json();
+            })
             .then(data => {
                 $messagesContainer.innerHTML = (data.messages || []).map(m => {
                     const time = new Date(m.created_at).toLocaleString('fr-FR');
-                    return `<div class="mb-2"><strong>${escapeHtml(m.sender_name)}</strong> <small class="text-muted">${time}</small><br><span class="text-break">${escapeHtml(m.message)}</span></div>`;
+                    return '<div class="mb-2"><strong>' + escapeHtml(m.sender_name) + '</strong> <small class="text-muted">' + time + '</small><br><span class="text-break">' + escapeHtml(m.message) + '</span></div>';
                 }).join('');
                 $messagesContainer.scrollTop = $messagesContainer.scrollHeight;
-            });
+            })
+            .catch(() => {});
     }
 
     function escapeHtml(s) {
@@ -165,16 +170,30 @@
     function sendMessage() {
         const text = ($messageInput.value || '').trim();
         if (!text || !currentChannelId) return;
-        fetch(`/admin/messagerie/channels/${currentChannelId}/messages`, {
+        const sendUrl = '{{ url("admin/messagerie/channels") }}/' + currentChannelId + '/messages';
+        fetch(sendUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({ message: text })
         })
-            .then(r => r.json())
-            .then(() => {
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().then(data => { throw new Error(data.message || data.error || 'Erreur ' + r.status); });
+                }
+                return r.json();
+            })
+            .then((data) => {
                 $messageInput.value = '';
                 loadMessages();
                 fetchChannels();
+            })
+            .catch(err => {
+                alert(err.message || 'Erreur lors de l\'envoi du message.');
             });
     }
 

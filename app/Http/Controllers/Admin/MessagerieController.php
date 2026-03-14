@@ -78,7 +78,7 @@ class MessagerieController extends Controller
     public function messages(Request $request, ChatChannel $channel): JsonResponse
     {
         $user = $request->user();
-        if (! $channel->members()->where('user_id', $user->id)->exists()) {
+        if (! $channel->members()->where('users.id', $user->id)->exists()) {
             return response()->json(['error' => 'Accès non autorisé'], 403);
         }
         ChatChannelMember::where('channel_id', $channel->id)->where('user_id', $user->id)->update(['last_read_at' => now()]);
@@ -100,7 +100,7 @@ class MessagerieController extends Controller
     public function send(Request $request, ChatChannel $channel): JsonResponse
     {
         $user = $request->user();
-        if (! $channel->members()->where('user_id', $user->id)->exists()) {
+        if (! $channel->members()->where('users.id', $user->id)->exists()) {
             return response()->json(['error' => 'Accès non autorisé'], 403);
         }
         $data = $request->validate(['message' => 'required|string|max:10000']);
@@ -160,7 +160,7 @@ class MessagerieController extends Controller
             }
             $existing = ChatChannel::where('type', ChatChannel::TYPE_RESERVATION)->where('reservation_id', $reservation->id)->first();
             if ($existing) {
-                if (! $existing->members()->where('user_id', $user->id)->exists()) {
+                if (! $existing->members()->where('users.id', $user->id)->exists()) {
                     $existing->channelMembers()->create(['user_id' => $user->id]);
                 }
                 return response()->json(['channel_id' => $existing->id]);
