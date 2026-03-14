@@ -8,7 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('reservations', function (Blueprint $table) {
+        if (! Schema::hasTable('reservations')) {
+            Schema::create('reservations', function (Blueprint $table) {
             $table->id();
 
             // Lien optionnel vers le tour / voyage (wp_posts.ID ou voyages.id selon besoin futur)
@@ -43,9 +44,11 @@ return new class extends Migration
             $table->index('client_external_id');
             $table->index('status');
             $table->index('payment_type');
-        });
+            });
+        }
 
-        Schema::create('reservation_passengers', function (Blueprint $table) {
+        if (! Schema::hasTable('reservation_passengers')) {
+            Schema::create('reservation_passengers', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('reservation_id');
 
@@ -61,7 +64,8 @@ return new class extends Migration
             $table->foreign('reservation_id')
                 ->references('id')->on('reservations')
                 ->onDelete('cascade');
-        });
+            });
+        }
     }
 
     public function down(): void
