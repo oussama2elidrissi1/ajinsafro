@@ -71,6 +71,14 @@
                     </button>
                 </div>
 
+                @can('messagerie.view')
+                <div class="dropdown d-inline-block ms-1">
+                    <a href="{{ route('admin.messagerie.index') }}" class="btn header-item noti-icon waves-effect" title="Messagerie">
+                        <i class="bx bx-message-dots"></i>
+                    </a>
+                </div>
+                @endcan
+
                 <div class="dropdown d-inline-block">
                     <button type="button" class="btn header-item noti-icon waves-effect"
                         id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
