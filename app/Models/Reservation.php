@@ -43,6 +43,8 @@ class Reservation extends Model
         'status',
         'passengers_count',
         'notes',
+        'base_price',
+        'room_supplement_total',
         'visa_ok',
         'visa_notes',
         'visa_status',
@@ -53,8 +55,15 @@ class Reservation extends Model
         'tour_id'          => 'integer',
         'client_external_id' => 'integer',
         'passengers_count' => 'integer',
+        'base_price' => 'decimal:2',
+        'room_supplement_total' => 'decimal:2',
         'visa_ok'          => 'boolean',
     ];
+
+    public function reservationRooms(): HasMany
+    {
+        return $this->hasMany(ReservationRoom::class);
+    }
 
     public function passengers(): HasMany
     {
@@ -69,6 +78,28 @@ class Reservation extends Model
     public function tour(): BelongsTo
     {
         return $this->belongsTo(Voyage::class, 'tour_id');
+    }
+
+    /**
+     * ID du tour WordPress (pour charger les hôtels/chambres via TourHotel).
+     */
+    public function getWpTourId(): ?int
+    {
+        $voyage = $this->tour;
+        return $voyage && $voyage->wp_post_id ? (int) $voyage->wp_post_id : null;
+    }
+
+    /**
+     * Prix total calculé (base + suppléments chambres).
+     */
+    public function getTotalPriceAttribute(): ?float
+    {
+        $base = $this->base_price !== null ? (float) $this->base_price : null;
+        $supp = $this->room_supplement_total !== null ? (float) $this->room_supplement_total : null;
+        if ($base === null && $supp === null) {
+            return null;
+        }
+        return ($base ?? 0) + ($supp ?? 0);
     }
 }
 

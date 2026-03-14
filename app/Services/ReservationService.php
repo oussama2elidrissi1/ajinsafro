@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Reservation;
 use App\Models\ReservationPassenger;
+use App\Models\ReservationRoom;
+use App\Models\TourHotelRoom;
 use App\Services\WordPressMediaService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -70,8 +72,9 @@ class ReservationService
             }
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
+            $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
 
-            return $reservation->fresh(['passengers']);
+            return $reservation->fresh(['passengers', 'reservationRooms']);
         });
     }
 
@@ -94,8 +97,9 @@ class ReservationService
             }
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
+            $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
 
-            return $reservation->fresh(['passengers']);
+            return $reservation->fresh(['passengers', 'reservationRooms']);
         });
     }
 
@@ -132,6 +136,9 @@ class ReservationService
         }
 
         $reservation->notes = $data['notes'] ?? $reservation->notes;
+
+        $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
+        // room_supplement_total est recalculé dans syncReservationRooms
 
         $reservation->visa_ok = isset($data['visa_ok']) ? (bool) $data['visa_ok'] : $reservation->visa_ok;
         $reservation->visa_notes = $data['visa_notes'] ?? $reservation->visa_notes;
@@ -214,6 +221,60 @@ class ReservationService
         }
 
         $reservation->passengers_count = ReservationPassenger::where('reservation_id', $reservation->id)->count() ?: 1;
+        $reservation->save();
+    }
+
+    /**
+     * Synchronise les chambres réservées et recalcule room_supplement_total.
+     *
+     * @param array<int, array{tour_hotel_id?: int, tour_hotel_room_id?: int, room_count?: int}> $hotelRooms
+     */
+    private function syncReservationRooms(Reservation $reservation, array $hotelRooms): void
+    {
+        $keepIds = [];
+        $totalSupplement = 0.0;
+
+        foreach ($hotelRooms as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $tourHotelId = isset($row['tour_hotel_id']) ? (int) $row['tour_hotel_id'] : 0;
+            $tourHotelRoomId = isset($row['tour_hotel_room_id']) ? (int) $row['tour_hotel_room_id'] : 0;
+            $roomCount = max(0, (int) ($row['room_count'] ?? 0));
+            if ($tourHotelId <= 0 || $tourHotelRoomId <= 0 || $roomCount < 1) {
+                continue;
+            }
+
+            $room = TourHotelRoom::find($tourHotelRoomId);
+            $supplementUnit = $room ? (float) $room->supplement : 0.0;
+            $supplementTotal = $supplementUnit * $roomCount;
+            $totalSupplement += $supplementTotal;
+
+            $existing = ReservationRoom::where('reservation_id', $reservation->id)
+                ->where('tour_hotel_id', $tourHotelId)
+                ->where('tour_hotel_room_id', $tourHotelRoomId)
+                ->first();
+
+            if ($existing) {
+                $existing->room_count = $roomCount;
+                $existing->supplement_unit = $supplementUnit;
+                $existing->supplement_total = $supplementTotal;
+                $existing->save();
+                $keepIds[] = $existing->id;
+            } else {
+                $created = $reservation->reservationRooms()->create([
+                    'tour_hotel_id' => $tourHotelId,
+                    'tour_hotel_room_id' => $tourHotelRoomId,
+                    'room_count' => $roomCount,
+                    'supplement_unit' => $supplementUnit,
+                    'supplement_total' => $supplementTotal,
+                ]);
+                $keepIds[] = $created->id;
+            }
+        }
+
+        ReservationRoom::where('reservation_id', $reservation->id)->whereNotIn('id', $keepIds)->delete();
+        $reservation->room_supplement_total = $totalSupplement;
         $reservation->save();
     }
 }

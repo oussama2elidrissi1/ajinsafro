@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
+use App\Models\ReservationRoom;
 use App\Models\Client;
 use App\Models\TravelDate;
 use App\Models\Voyage;
+use App\Models\TourHotel;
+use App\Models\TourHotelRoom;
 use App\Models\Wp\WpPost;
 use App\Services\ReservationService;
 use Illuminate\Http\Request;
@@ -64,7 +67,48 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Enregistrement minimal d'une réservation (version simplifiée).
+     * API JSON : hôtels et chambres pour un voyage (tour_id = Voyage.id).
+     */
+    public function hotelsRooms(Request $request): JsonResponse
+    {
+        $tourId = (int) $request->query('tour_id', 0);
+        if ($tourId <= 0) {
+            return response()->json(['hotels' => [], 'currency' => 'DH']);
+        }
+        $voyage = Voyage::find($tourId);
+        if (!$voyage || !$voyage->wp_post_id) {
+            return response()->json(['hotels' => [], 'currency' => 'DH']);
+        }
+        $wpTourId = (int) $voyage->wp_post_id;
+        $hotels = TourHotel::getAllForTour($wpTourId)->load('rooms');
+        $payload = [
+            'hotels' => $hotels->map(function ($h) {
+                return [
+                    'id' => $h->id,
+                    'hotel_name' => $h->hotel_name,
+                    'check_in_day' => $h->check_in_day,
+                    'check_out_day' => $h->check_out_day,
+                    'rooms' => $h->rooms->where('is_active', true)->values()->map(function ($r) {
+                        return [
+                            'id' => $r->id,
+                            'room_type' => $r->room_type,
+                            'room_label' => $r->room_label,
+                            'capacity_total' => (int) $r->capacity_total,
+                            'capacity_adults' => (int) $r->capacity_adults,
+                            'capacity_children' => (int) $r->capacity_children,
+                            'supplement' => (float) $r->supplement,
+                            'is_default' => (bool) $r->is_default,
+                        ];
+                    })->all(),
+                ];
+            })->all(),
+            'currency' => $voyage->currency ?? 'DH',
+        ];
+        return response()->json($payload);
+    }
+
+    /**
+     * Enregistrement d'une réservation (avec chambres et validation capacité).
      */
     public function store(Request $request)
     {
@@ -80,6 +124,11 @@ class ReservationsController extends Controller
             'client_document_number' => 'nullable|string|max:100',
             'payment_type' => 'nullable|in:CASHPLUS,VIREMENT,ESPECE',
             'payment_receipt' => 'nullable|file|max:5120',
+            'base_price' => 'nullable|numeric|min:0',
+            'hotel_rooms' => 'nullable|array',
+            'hotel_rooms.*.tour_hotel_id' => 'required_with:hotel_rooms.*|nullable|integer',
+            'hotel_rooms.*.tour_hotel_room_id' => 'required_with:hotel_rooms.*|nullable|integer',
+            'hotel_rooms.*.room_count' => 'required_with:hotel_rooms.*|nullable|integer|min:0',
             'visa_ok' => 'nullable|boolean',
             'visa_notes' => 'nullable|string|max:2000',
             'visa_status' => 'nullable|in:not_required,pending,approved,rejected',
@@ -92,6 +141,9 @@ class ReservationsController extends Controller
             'passengers.*.document_type' => 'nullable|string|max:50',
             'passengers.*.document_number' => 'nullable|string|max:100',
         ]);
+
+        $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
+        $this->validateRoomCapacity($request->input('hotel_rooms', []), $totalTravelers);
 
         $data['status'] = Reservation::STATUS_EN_COURS;
         $data['visa_ok'] = $request->boolean('visa_ok');
@@ -112,19 +164,26 @@ class ReservationsController extends Controller
      */
     public function edit(Reservation $reservation): View
     {
-        $reservation->load(['passengers', 'client', 'tour']);
+        $reservation->load(['passengers', 'client', 'tour', 'reservationRooms']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
         $clients = Client::orderByDesc('id')->limit(200)->get(['id', 'client_code', 'full_name', 'email', 'phone']);
+
+        $tourHotelsWithRooms = collect();
+        $wpTourId = $reservation->getWpTourId();
+        if ($wpTourId) {
+            $tourHotelsWithRooms = TourHotel::getAllForTour($wpTourId)->load('rooms');
+        }
 
         return view('admin.reservations.edit', [
             'reservation' => $reservation,
             'voyages' => $voyages,
             'clients' => $clients,
+            'tourHotelsWithRooms' => $tourHotelsWithRooms,
         ]);
     }
 
     /**
-     * Mise à jour d'une réservation.
+     * Mise à jour d'une réservation (avec chambres et validation capacité).
      */
     public function update(Request $request, Reservation $reservation): RedirectResponse
     {
@@ -140,6 +199,11 @@ class ReservationsController extends Controller
             'client_document_number' => 'nullable|string|max:100',
             'payment_type' => 'nullable|in:CASHPLUS,VIREMENT,ESPECE',
             'payment_receipt' => 'nullable|file|max:5120',
+            'base_price' => 'nullable|numeric|min:0',
+            'hotel_rooms' => 'nullable|array',
+            'hotel_rooms.*.tour_hotel_id' => 'required_with:hotel_rooms.*|nullable|integer',
+            'hotel_rooms.*.tour_hotel_room_id' => 'required_with:hotel_rooms.*|nullable|integer',
+            'hotel_rooms.*.room_count' => 'required_with:hotel_rooms.*|nullable|integer|min:0',
             'visa_ok' => 'nullable|boolean',
             'visa_notes' => 'nullable|string|max:2000',
             'visa_status' => 'nullable|in:not_required,pending,approved,rejected',
@@ -154,6 +218,9 @@ class ReservationsController extends Controller
             'passengers.*.document_number' => 'nullable|string|max:100',
         ]);
 
+        $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
+        $this->validateRoomCapacity($request->input('hotel_rooms', []), $totalTravelers);
+
         $data['visa_ok'] = $request->boolean('visa_ok');
 
         $this->reservationService->update(
@@ -166,6 +233,55 @@ class ReservationsController extends Controller
         return redirect()
             ->route('admin.reservations.index')
             ->with('success', 'Réservation mise à jour.');
+    }
+
+    /**
+     * Nombre total de voyageurs : 1 (principal) + accompagnants avec au moins un nom renseigné.
+     */
+    private function computeTotalTravelers(array $passengers): int
+    {
+        $count = 1;
+        foreach ($passengers as $p) {
+            if (!is_array($p)) {
+                continue;
+            }
+            $hasName = (trim((string) ($p['first_name'] ?? '')) !== '') || (trim((string) ($p['last_name'] ?? '')) !== '');
+            if ($hasName) {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    /**
+     * Vérifie que la capacité totale des chambres choisies couvre le nombre de voyageurs.
+     */
+    private function validateRoomCapacity(array $hotelRooms, int $totalTravelers): void
+    {
+        if ($totalTravelers <= 0 || empty($hotelRooms)) {
+            return;
+        }
+        $totalCapacity = 0;
+        foreach ($hotelRooms as $row) {
+            if (!is_array($row) || empty($row['tour_hotel_room_id'])) {
+                continue;
+            }
+            $roomCount = max(0, (int) ($row['room_count'] ?? 0));
+            if ($roomCount < 1) {
+                continue;
+            }
+            $room = TourHotelRoom::find((int) $row['tour_hotel_room_id']);
+            if ($room) {
+                $totalCapacity += (int) $row['room_count'] * (int) $room->capacity_total;
+            }
+        }
+        if ($totalCapacity > 0 && $totalCapacity < $totalTravelers) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hotel_rooms' => [
+                    "La capacité totale des chambres choisies ({$totalCapacity} personne(s)) est insuffisante pour le nombre de voyageurs ({$totalTravelers}). Veuillez ajouter des chambres ou des types à plus grande capacité.",
+                ],
+            ]);
+        }
     }
 
     /**

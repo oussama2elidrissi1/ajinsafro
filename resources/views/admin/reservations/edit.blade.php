@@ -156,6 +156,12 @@
             </div>
         </div>
 
+        @include('admin.reservations.partials._hotel_rooms', [
+            'tourHotelsWithRooms' => $tourHotelsWithRooms ?? collect(),
+            'reservation' => $reservation,
+            'hotelsRoomsUrl' => route('admin.reservations.hotels-rooms'),
+        ])
+
         <div class="card mb-3 border">
             <div class="card-body">
                 <h6 class="card-title mb-3 text-secondary"><i class="bx bx-receipt me-1"></i>Paiement</h6>
