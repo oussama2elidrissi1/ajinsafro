@@ -11,6 +11,7 @@ use App\Models\Voyage;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Models\Wp\WpPost;
+use App\Services\BranchScopeService;
 use App\Services\ReservationService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
@@ -26,6 +27,7 @@ class ReservationsController extends Controller
     public function __construct(
         protected ReservationService $reservationService,
         protected WpTourRepository $wpTourRepository,
+        protected BranchScopeService $branchScope,
     ) {
     }
 
@@ -198,6 +200,11 @@ class ReservationsController extends Controller
 
         $data['status'] = Reservation::STATUS_EN_COURS;
         $data['visa_ok'] = $request->boolean('visa_ok');
+        $user = $request->user();
+        $data['branch_id'] = $user->branch_id;
+        $data['agent_id'] = $user->id;
+        $data['sales_manager_id'] = $user->branch?->manager_user_id;
+        $data['created_by'] = $user->id;
 
         $this->reservationService->create(
             $data,
@@ -213,8 +220,12 @@ class ReservationsController extends Controller
     /**
      * Formulaire d'édition d'une réservation.
      */
-    public function edit(Reservation $reservation): View
+    public function edit(Request $request, Reservation $reservation): View
     {
+        $branchIds = $this->branchScope->visibleBranchIds($request->user());
+        if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
+            abort(403, 'Accès non autorisé à cette réservation.');
+        }
         $reservation->load(['passengers', 'client', 'tour', 'reservationRooms']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
         $clients = Client::orderByDesc('id')->limit(200)->get(['id', 'client_code', 'full_name', 'email', 'phone']);
@@ -238,6 +249,10 @@ class ReservationsController extends Controller
      */
     public function update(Request $request, Reservation $reservation): RedirectResponse
     {
+        $branchIds = $this->branchScope->visibleBranchIds($request->user());
+        if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
+            abort(403, 'Accès non autorisé à cette réservation.');
+        }
         $data = $request->validate([
             'tour_id' => 'required|integer',
             'travel_date_id' => 'nullable|integer',
@@ -274,6 +289,7 @@ class ReservationsController extends Controller
         $this->validateRoomCapacity($request->input('hotel_rooms', []), $totalTravelers);
 
         $data['visa_ok'] = $request->boolean('visa_ok');
+        $data['updated_by'] = $request->user()->id;
 
         $this->reservationService->update(
             $reservation,
@@ -396,7 +412,8 @@ class ReservationsController extends Controller
      */
     protected function renderList(Request $request, ?string $status, ?string $submenu): View
     {
-        $query = Reservation::query()->with(['passengers', 'client', 'tour']);
+        $query = Reservation::query()->with(['passengers', 'client', 'tour', 'branch']);
+        $this->branchScope->scopeReservations($query, $request->user());
 
         if ($status) {
             $query->where('status', $status);

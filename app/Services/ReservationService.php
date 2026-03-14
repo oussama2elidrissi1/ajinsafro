@@ -144,6 +144,22 @@ class ReservationService
         $reservation->visa_ok = isset($data['visa_ok']) ? (bool) $data['visa_ok'] : $reservation->visa_ok;
         $reservation->visa_notes = $data['visa_notes'] ?? $reservation->visa_notes;
         $reservation->visa_status = $data['visa_status'] ?? $reservation->visa_status;
+
+        if (array_key_exists('branch_id', $data)) {
+            $reservation->branch_id = $data['branch_id'];
+        }
+        if (array_key_exists('sales_manager_id', $data)) {
+            $reservation->sales_manager_id = $data['sales_manager_id'];
+        }
+        if (array_key_exists('agent_id', $data)) {
+            $reservation->agent_id = $data['agent_id'];
+        }
+        if (array_key_exists('created_by', $data)) {
+            $reservation->created_by = $data['created_by'];
+        }
+        if (array_key_exists('updated_by', $data)) {
+            $reservation->updated_by = $data['updated_by'];
+        }
     }
 
     /**

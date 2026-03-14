@@ -7,7 +7,10 @@
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
                 <h4 class="page-title mb-0 font-size-18">Modifier la réservation</h4>
-                <div class="page-title-right">
+                <div class="page-title-right d-flex align-items-center gap-2">
+                    <a href="{{ route('admin.messagerie.index') }}?reservation_id={{ $reservation->id }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bx bx-message-dots me-1"></i> Discuter
+                    </a>
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">Réservations</a></li>

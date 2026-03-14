@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\BranchScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,14 +15,19 @@ use Spatie\Permission\Models\Role;
 
 class UserAccessController extends Controller
 {
+    public function __construct(
+        protected BranchScopeService $branchScope
+    ) {}
+
     public function index(Request $request)
     {
         $search = trim((string) $request->query('q', ''));
 
-        $users = User::query()
-            ->with('roles')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($sub) use ($search) {
+        $query = User::query()->with(['roles', 'branch']);
+        $this->branchScope->scopeUsers($query, $request->user());
+        $users = $query
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
                     $sub->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
@@ -52,6 +58,9 @@ class UserAccessController extends Controller
         $user->is_active = (bool) ($data['is_active'] ?? true);
         $user->access_mode = $data['access_mode'];
         $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
+        $user->branch_id = ! empty($data['branch_id']) ? (int) $data['branch_id'] : null;
+        $user->job_title = $data['job_title'] ?? null;
+        $user->user_type = $data['user_type'] ?? null;
         $user->password = Hash::make($data['password']);
         $user->save();
 
@@ -79,6 +88,9 @@ class UserAccessController extends Controller
         $user->is_active = (bool) ($data['is_active'] ?? true);
         $user->access_mode = $data['access_mode'];
         $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
+        $user->branch_id = ! empty($data['branch_id']) ? (int) $data['branch_id'] : null;
+        $user->job_title = $data['job_title'] ?? null;
+        $user->user_type = $data['user_type'] ?? null;
 
         if (! empty($data['password'])) {
             $user->password = Hash::make($data['password']);
@@ -118,6 +130,7 @@ class UserAccessController extends Controller
     {
         $roles = Role::query()->orderBy('name')->get();
         $permissionGroups = $this->permissionGroups();
+        $branches = $this->branchScope->branchesForSelect(request()->user());
 
         $rolePermissionsMap = $roles
             ->mapWithKeys(fn (Role $role) => [$role->name => $role->permissions->pluck('name')->values()->all()])
@@ -128,6 +141,7 @@ class UserAccessController extends Controller
         return [
             'userModel' => $user,
             'roles' => $roles,
+            'branches' => $branches,
             'permissionGroups' => $permissionGroups,
             'rolePermissionsMap' => $rolePermissionsMap,
             'selectedRole' => $selectedRole,
@@ -148,6 +162,9 @@ class UserAccessController extends Controller
             'email' => ['required', 'email', 'max:255', $emailRule],
             'phone' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string'],
+            'branch_id' => ['nullable', 'integer', Rule::exists('branches', 'id')],
+            'job_title' => ['nullable', 'string', 'max:100'],
+            'user_type' => ['nullable', 'string', 'max:50'],
             'is_admin' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'access_mode' => ['required', Rule::in(['role', 'custom'])],

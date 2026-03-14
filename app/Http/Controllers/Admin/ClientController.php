@@ -7,15 +7,21 @@ use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Models\User;
+use App\Services\BranchScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ClientController extends Controller
 {
+    public function __construct(
+        protected BranchScopeService $branchScope
+    ) {}
+
     public function index(Request $request): View
     {
-        $query = Client::query()->with(['assignedTo']);
+        $query = Client::query()->with(['assignedTo', 'branch']);
+        $this->branchScope->scopeClients($query, $request->user());
 
         if ($request->boolean('trashed')) {
             $query->onlyTrashed();
@@ -91,6 +97,7 @@ class ClientController extends Controller
         $data['newsletter_opt_in'] = $request->boolean('newsletter_opt_in');
         $data['sms_opt_in'] = $request->boolean('sms_opt_in');
         $data['whatsapp_opt_in'] = $request->boolean('whatsapp_opt_in');
+        $data['branch_id'] = $request->user()->branch_id;
         Client::create($data);
 
         return redirect()

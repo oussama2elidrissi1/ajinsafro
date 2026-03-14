@@ -143,11 +143,21 @@ return [
             ],
         ],
         [
+            'key' => 'messagerie',
+            'label' => 'Messagerie',
+            'icon' => 'bx bx-message-dots',
+            'permission' => 'messagerie.view',
+            'children' => [
+                ['label' => 'Messages', 'route' => 'admin.messagerie.index', 'permission' => 'messagerie.view'],
+            ],
+        ],
+        [
             'key' => 'settings',
             'label' => 'Paramètres',
             'icon' => 'bx bx-cog',
             'permission' => 'settings.view',
             'children' => [
+                ['label' => 'Agences', 'route' => 'admin.branches.index', 'permission' => 'settings.branches.manage'],
                 ['label' => 'Utilisateurs', 'route' => 'admin.settings.utilisateurs', 'permission' => 'settings.users.manage'],
                 ['label' => 'Rôles & Permissions', 'route' => 'admin.settings.roles-permissions', 'permission' => 'settings.roles.manage'],
                 ['label' => 'Paramètres généraux', 'route' => 'admin.settings.parametres-generaux', 'permission' => 'settings.general.manage'],
@@ -182,6 +192,18 @@ return [
         'admin.settings.roles-permissions.edit' => 'settings.roles.manage',
         'admin.settings.roles-permissions.update' => 'settings.roles.manage',
         'admin.settings.roles-permissions.destroy' => 'settings.roles.manage',
+
+        'admin.branches.index' => 'settings.branches.manage',
+        'admin.branches.create' => 'settings.branches.manage',
+        'admin.branches.store' => 'settings.branches.manage',
+        'admin.branches.edit' => 'settings.branches.manage',
+        'admin.branches.update' => 'settings.branches.manage',
+        'admin.branches.destroy' => 'settings.branches.manage',
+
+        'admin.messagerie.index' => 'messagerie.view',
+        'admin.messagerie.channels' => 'messagerie.view',
+        'admin.messagerie.messages' => 'messagerie.view',
+        'admin.messagerie.send' => 'messagerie.view',
     ],
 
     'route_prefix_permissions' => [
@@ -198,5 +220,7 @@ return [
         'admin.reporting.' => 'reporting.view',
         'admin.wordpress.' => 'wordpress.view',
         'admin.settings.' => 'settings.view',
+        'admin.branches.' => 'settings.branches.manage',
+        'admin.messagerie.' => 'messagerie.view',
     ],
 ];

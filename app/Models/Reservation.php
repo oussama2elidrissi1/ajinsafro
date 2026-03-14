@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Reservation extends Model
 {
@@ -29,6 +29,9 @@ class Reservation extends Model
     public const VISA_STATUS_REJECTED = 'rejected';
 
     protected $fillable = [
+        'branch_id',
+        'sales_manager_id',
+        'agent_id',
         'tour_id',
         'travel_date_id',
         'client_mode',
@@ -80,6 +83,36 @@ class Reservation extends Model
     public function tour(): BelongsTo
     {
         return $this->belongsTo(Voyage::class, 'tour_id');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function salesManager(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sales_manager_id');
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function chatChannels(): HasMany
+    {
+        return $this->hasMany(ChatChannel::class, 'reservation_id');
     }
 
     /**

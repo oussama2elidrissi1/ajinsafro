@@ -25,6 +25,8 @@ use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
+use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\MessagerieController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\TaxonomyTermController;
@@ -272,6 +274,19 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+
+    Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
+    Route::get('branches/create', [BranchController::class, 'create'])->name('branches.create');
+    Route::post('branches', [BranchController::class, 'store'])->name('branches.store');
+    Route::get('branches/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
+    Route::match(['put', 'patch'], 'branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
+    Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+
+    Route::get('messagerie', [MessagerieController::class, 'index'])->name('messagerie.index');
+    Route::get('messagerie/channels', [MessagerieController::class, 'channels'])->name('messagerie.channels');
+    Route::get('messagerie/channels/{channel}/messages', [MessagerieController::class, 'messages'])->name('messagerie.messages');
+    Route::post('messagerie/channels/{channel}/messages', [MessagerieController::class, 'send'])->name('messagerie.send');
+    Route::post('messagerie/channels', [MessagerieController::class, 'createChannel'])->name('messagerie.channels.create');
 
     // WordPress (TravelerWP) – tables cFdgeZ_*
     Route::prefix('wordpress')->name('wordpress.')->group(function () {

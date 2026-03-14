@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -25,6 +27,9 @@ class User extends Authenticatable
         'avatar',
         'phone',
         'address',
+        'branch_id',
+        'job_title',
+        'user_type',
         'is_admin',
         'is_active',
         'access_mode',
@@ -62,5 +67,42 @@ class User extends Authenticatable
             return asset('storage/' . $this->avatar);
         }
         return asset('build/images/users/avatar-2.jpg');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function chatChannels(): BelongsToMany
+    {
+        return $this->belongsToMany(ChatChannel::class, 'chat_channel_members', 'user_id', 'channel_id')
+            ->withPivot('role_in_channel', 'last_read_at')
+            ->withTimestamps();
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('Super Admin') || $this->is_admin;
+    }
+
+    public function isAdminSiege(): bool
+    {
+        return $this->hasRole('Admin Siège');
+    }
+
+    public function isChefCommercial(): bool
+    {
+        return $this->hasRole('Chef Commercial');
+    }
+
+    public function isAgent(): bool
+    {
+        return $this->hasRole('Agent');
+    }
+
+    public function isComptable(): bool
+    {
+        return $this->hasRole('Comptable');
     }
 }
