@@ -207,6 +207,10 @@
                     placeholder.textContent = 'Erreur lors du chargement. Réessayez.';
                 });
         });
+        // Charger les hôtels/chambres au chargement si un voyage est déjà sélectionné (ex: lien Réserver depuis le calendrier)
+        if (tourIdSelect && placeholder && tourIdSelect.value && parseInt(tourIdSelect.value, 10) > 0) {
+            tourIdSelect.dispatchEvent(new Event('change'));
+        }
     } else {
         updateSummary();
         updateTravelersSummary();

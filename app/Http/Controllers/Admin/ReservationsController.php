@@ -569,7 +569,7 @@ class ReservationsController extends Controller
                     'status' => $voyage?->status,
                     'duration_text' => $voyage?->duration_text,
                     'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
-                    'route_reserver' => $voyage ? route('admin.reservations.create', ['tour_id' => $voyage->id]) : route('admin.reservations.create'),
+                    'route_reserver' => $voyage ? route('admin.reservations.create', ['tour_id' => $voyage->id, 'travel_date_id' => $travelDate->id]) : route('admin.reservations.create'),
                     'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
                 ],
             ];
@@ -597,7 +597,7 @@ class ReservationsController extends Controller
             $travelDate = TravelDate::query()->where('is_active', true)->find($travelDateId);
             if ($travelDate) {
                 $wpId = (int) $travelDate->travel_id;
-                $voyage = Voyage::query()->where('wp_post_id', $wpId)->first();
+                $voyage = Voyage::query()->where('wp_post_id', $wpId)->orderBy('id')->first();
             }
         }
 
@@ -610,7 +610,7 @@ class ReservationsController extends Controller
             }
             if ($wpId === null && $wpTravelId > 0) {
                 $wpId = $wpTravelId;
-                $voyage = Voyage::query()->where('wp_post_id', $wpTravelId)->first();
+                $voyage = Voyage::query()->where('wp_post_id', $wpTravelId)->orderBy('id')->first();
             }
             if ($wpId > 0) {
                 $travelDate = TravelDate::query()
@@ -626,7 +626,7 @@ class ReservationsController extends Controller
         }
         if ($wpId === null) {
             $wpId = (int) $travelDate->travel_id;
-            $voyage = $voyage ?? Voyage::query()->where('wp_post_id', $wpId)->first();
+            $voyage = $voyage ?? Voyage::query()->where('wp_post_id', $wpId)->orderBy('id')->first();
         }
 
         $wpPost = null;
