@@ -8,6 +8,7 @@ use App\Models\ReservationRoom;
 use App\Models\Client;
 use App\Models\TravelDate;
 use App\Models\Voyage;
+use App\Models\TravelDate;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Models\Wp\WpPost;
@@ -54,15 +55,24 @@ class ReservationsController extends Controller
 
     /**
      * Formulaire de création de réservation.
+     * Préremplissage depuis le calendrier : tour_id, travel_date_id (optionnel).
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
         $clients = Client::orderByDesc('id')->limit(200)->get(['id', 'client_code', 'full_name', 'email', 'phone']);
 
+        $travelDateId = (int) $request->query('travel_date_id', 0);
+        $selectedTravelDate = null;
+        if ($travelDateId > 0) {
+            $selectedTravelDate = TravelDate::query()->where('is_active', true)->find($travelDateId);
+        }
+
         return view('admin.reservations.create', [
             'voyages' => $voyages,
             'clients' => $clients,
+            'selectedTravelDate' => $selectedTravelDate,
+            'travelDateId' => $travelDateId > 0 ? $travelDateId : null,
         ]);
     }
 
@@ -114,6 +124,7 @@ class ReservationsController extends Controller
     {
         $data = $request->validate([
             'tour_id' => 'required|integer',
+            'travel_date_id' => 'nullable|integer',
             'client_mode' => 'required|in:existing,new',
             'client_external_id' => 'required_if:client_mode,existing|nullable|integer|exists:clients,id',
             'client_first_name' => 'required_if:client_mode,new|nullable|string|max:100',
@@ -189,6 +200,7 @@ class ReservationsController extends Controller
     {
         $data = $request->validate([
             'tour_id' => 'required|integer',
+            'travel_date_id' => 'nullable|integer',
             'client_mode' => 'required|in:existing,new',
             'client_external_id' => 'required_if:client_mode,existing|nullable|integer|exists:clients,id',
             'client_first_name' => 'required_if:client_mode,new|nullable|string|max:100',
@@ -528,45 +540,55 @@ class ReservationsController extends Controller
 
     /**
      * Détails d'un événement calendrier (pour le modal).
-     * Accepte voyage_id (Laravel) ou wp_travel_id (ID tour WordPress) + date.
+     * Priorité : travel_date_id (exact) > voyage_id + date > wp_travel_id + date.
      */
     public function calendarEventDetails(Request $request): JsonResponse
     {
+        $travelDateId = (int) $request->query('travel_date_id', 0);
         $voyageId = (int) $request->query('voyage_id', 0);
         $wpTravelId = (int) $request->query('wp_travel_id', 0);
         $date = $request->query('date', '');
 
-        if ($date === '') {
-            return response()->json(['error' => 'Paramètre date manquant'], 422);
-        }
-
+        $travelDate = null;
         $wpId = null;
         $voyage = null;
-        if ($voyageId > 0) {
-            $voyage = Voyage::query()->find($voyageId);
-            if ($voyage && $voyage->wp_post_id) {
-                $wpId = $voyage->wp_post_id;
+
+        if ($travelDateId > 0) {
+            $travelDate = TravelDate::query()->where('is_active', true)->find($travelDateId);
+            if ($travelDate) {
+                $wpId = (int) $travelDate->travel_id;
+                $voyage = Voyage::query()->where('wp_post_id', $wpId)->first();
             }
         }
-        if ($wpId === null && $wpTravelId > 0) {
-            $wpId = $wpTravelId;
-            $voyage = Voyage::query()->where('wp_post_id', $wpTravelId)->first();
-        }
-        if ($wpId === null) {
-            return response()->json(['error' => 'Voyage introuvable'], 404);
-        }
 
-        $travelDate = TravelDate::query()
-            ->where('travel_id', $wpId)
-            ->where('date', $date)
-            ->where('is_active', true)
-            ->first();
+        if (!$travelDate && $date !== '') {
+            if ($voyageId > 0) {
+                $voyage = Voyage::query()->find($voyageId);
+                if ($voyage && $voyage->wp_post_id) {
+                    $wpId = (int) $voyage->wp_post_id;
+                }
+            }
+            if ($wpId === null && $wpTravelId > 0) {
+                $wpId = $wpTravelId;
+                $voyage = Voyage::query()->where('wp_post_id', $wpTravelId)->first();
+            }
+            if ($wpId > 0) {
+                $travelDate = TravelDate::query()
+                    ->where('travel_id', $wpId)
+                    ->where('date', $date)
+                    ->where('is_active', true)
+                    ->first();
+            }
+        }
 
         if (!$travelDate) {
-            return response()->json(['error' => 'Date de départ introuvable'], 404);
+            return response()->json(['error' => $date === '' ? 'Paramètre date manquant' : 'Date de départ introuvable'], $date === '' ? 422 : 404);
+        }
+        if ($wpId === null) {
+            $wpId = (int) $travelDate->travel_id;
+            $voyage = $voyage ?? Voyage::query()->where('wp_post_id', $wpId)->first();
         }
 
-        // Charger le WP Post (titre/slug/contenu) pour garantir cohérence avec le filtre Voyages.
         $wpPost = null;
         try {
             $wpPost = WpPost::query()->where('ID', $wpId)->first();
@@ -574,56 +596,54 @@ class ReservationsController extends Controller
             // ignore
         }
 
-        if ($voyage) {
-            $payload = [
-                'voyage_id' => $voyage->id,
-                'name' => $wpPost?->post_title ?? $voyage->name,
-                'slug' => $wpPost?->post_name ?? $voyage->slug,
-                'destination' => $voyage->destination,
-                'departure_date' => $travelDate->date->format('Y-m-d'),
-                'departure_date_formatted' => $travelDate->date->translatedFormat('l j F Y'),
-                'duration_text' => $voyage->duration_text,
-                'price_from' => $voyage->price_from,
-                'price_override' => $travelDate->price_override,
-                'currency_symbol' => $voyage->currency_symbol,
-                'display_price' => $travelDate->price_override ?? $voyage->price_from,
-                'status' => $voyage->status,
-                'description' => $wpPost?->post_content ?? $voyage->description,
-                'accroche' => $wpPost?->post_excerpt ?? $voyage->accroche,
-                'featured_image_url' => $voyage->featured_image_url,
-                'min_people' => $voyage->min_people,
-                'max_people' => $voyage->max_people,
-                'seats' => $travelDate->seats,
-                'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
-                'route_reserver' => route('admin.reservations.create', ['tour_id' => $voyage->id]),
-                'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
+        $hotelsWithRooms = TourHotel::getAllForTour($wpId)->load('rooms');
+        $hotelsPayload = $hotelsWithRooms->map(function ($h) {
+            return [
+                'id' => $h->id,
+                'hotel_name' => $h->hotel_name,
+                'check_in_day' => $h->check_in_day,
+                'check_out_day' => $h->check_out_day,
+                'rooms' => $h->rooms->where('is_active', true)->values()->map(fn ($r) => [
+                    'id' => $r->id,
+                    'room_type' => $r->room_type,
+                    'room_label' => $r->room_label,
+                    'room_count' => (int) $r->room_count,
+                    'capacity_adults' => (int) $r->capacity_adults,
+                    'capacity_children' => (int) $r->capacity_children,
+                    'capacity_total' => (int) $r->capacity_total,
+                    'supplement' => (float) $r->supplement,
+                ])->all(),
             ];
-        } else {
-            $payload = [
-                'voyage_id' => null,
-                'name' => $wpPost ? $wpPost->post_title : 'Tour #' . $wpId,
-                'slug' => $wpPost ? $wpPost->post_name : '',
-                'destination' => null,
-                'departure_date' => $travelDate->date->format('Y-m-d'),
-                'departure_date_formatted' => $travelDate->date->translatedFormat('l j F Y'),
-                'duration_text' => null,
-                'price_from' => null,
-                'price_override' => $travelDate->price_override,
-                'currency_symbol' => 'DH',
-                'display_price' => $travelDate->price_override,
-                'status' => null,
-                'description' => $wpPost ? $wpPost->post_content : null,
-                'accroche' => $wpPost ? $wpPost->post_excerpt : null,
-                'featured_image_url' => null,
-                'min_people' => null,
-                'max_people' => null,
-                'seats' => $travelDate->seats,
-                'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
-                'route_reserver' => route('admin.reservations.create'),
-                'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
-            ];
-        }
+        })->all();
 
-        return response()->json($payload);
+        $basePayload = [
+            'travel_date_id' => $travelDate->id,
+            'voyage_id' => $voyage?->id,
+            'name' => $wpPost?->post_title ?? $voyage?->name ?? ('Tour #' . $wpId),
+            'slug' => $wpPost?->post_name ?? $voyage?->slug ?? '',
+            'destination' => $voyage?->destination,
+            'departure_date' => $travelDate->date->format('Y-m-d'),
+            'departure_date_formatted' => $travelDate->date->translatedFormat('l j F Y'),
+            'duration_text' => $voyage?->duration_text,
+            'price_from' => $voyage?->price_from,
+            'price_override' => $travelDate->price_override,
+            'currency_symbol' => $voyage?->currency_symbol ?? 'DH',
+            'display_price' => $travelDate->price_override ?? $voyage?->price_from,
+            'status' => $voyage?->status,
+            'description' => $wpPost?->post_content ?? $voyage?->description,
+            'accroche' => $wpPost?->post_excerpt ?? $voyage?->accroche,
+            'featured_image_url' => $voyage?->featured_image_url,
+            'min_people' => $voyage?->min_people,
+            'max_people' => $voyage?->max_people,
+            'seats' => $travelDate->seats,
+            'hotels_with_rooms' => $hotelsPayload,
+            'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
+            'route_reserver' => $voyage
+                ? route('admin.reservations.create', ['tour_id' => $voyage->id, 'travel_date_id' => $travelDate->id])
+                : route('admin.reservations.create'),
+            'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
+        ];
+
+        return response()->json($basePayload);
     }
 }

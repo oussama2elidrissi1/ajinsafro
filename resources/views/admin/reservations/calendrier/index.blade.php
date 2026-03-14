@@ -35,7 +35,7 @@
                                     <option value="{{ $v->id }}" {{ (int)($selectedVoyageId ?? 0) === $v->id ? 'selected' : '' }}>{{ Str::limit($v->name, 30) }}</option>
                                 @endforeach
                             </select>
-                            
+
                         </div>
                         <div class="col-md-2">
                             <label for="filter-destination" class="form-label small mb-0">Destination</label>
@@ -103,12 +103,12 @@
                     <div class="text-center py-4 text-muted" id="event-detail-loading">
                         <div class="spinner-border spinner-border-sm me-2" role="status"></div> Chargement…
                     </div>
-                    <div id="event-detail-content" style="display: none;"></div>
+                    <div id="event-detail-content" class="event-detail-content" style="display: none;"></div>
                 </div>
                 <div class="modal-footer" id="event-detail-footer" style="display: none;">
                     <button type="button" class="btn btn-outline-secondary" id="btn-modal-print"><i class="bx bx-printer me-1"></i> Imprimer</button>
                     <a href="#" id="btn-modal-consulter" class="btn btn-primary" target="_blank"><i class="bx bx-show me-1"></i> Consulter</a>
-                    <a href="#" id="btn-modal-reserver" class="btn btn-success" target="_blank"><i class="bx bx-calendar-check me-1"></i> Réserver</a>
+                    <a href="#" id="btn-modal-reserver" class="btn btn-success"><i class="bx bx-calendar-check me-1"></i> Réserver</a>
                 </div>
             </div>
         </div>
@@ -125,6 +125,12 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+        function escapeHtml(s) {
+            if (s == null) return '';
+            var div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
         var calendarEl = document.getElementById('reservations-calendar');
         if (!calendarEl || typeof FullCalendar === 'undefined') return;
 
@@ -165,14 +171,17 @@
             eventClick: function (info) {
                 info.jsEvent.preventDefault();
                 var p = info.event.extendedProps || {};
+                var travelDateId = p.travel_date_id;
                 var voyageId = p.voyage_id;
                 var wpTravelId = p.wp_travel_id;
                 var date = p.departure_date;
                 if (!date) return;
-                var qs = 'date=' + encodeURIComponent(date);
-                if (voyageId) qs = 'voyage_id=' + encodeURIComponent(voyageId) + '&' + qs;
-                else if (wpTravelId) qs = 'wp_travel_id=' + encodeURIComponent(wpTravelId) + '&' + qs;
+                var params = { date: date };
+                if (travelDateId) params.travel_date_id = travelDateId;
+                else if (voyageId) params.voyage_id = voyageId;
+                else if (wpTravelId) params.wp_travel_id = wpTravelId;
                 else return;
+                var qs = Object.keys(params).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
                 detailContent.style.display = 'none';
                 detailFooter.style.display = 'none';
                 detailLoading.style.display = 'block';
@@ -187,24 +196,52 @@
                         if (data.error) {
                             detailContent.innerHTML = '<p class="text-danger">' + (data.error || 'Erreur') + '</p>';
                         } else {
+                            document.getElementById('event-detail-modal-label').textContent = data.name || 'Détail de l\'offre';
                             var html = '';
                             if (data.featured_image_url) {
                                 html += '<div class="mb-3"><img src="' + data.featured_image_url + '" alt="" class="img-fluid rounded" style="max-height: 200px; object-fit: cover; width: 100%;"></div>';
                             }
-                            html += '<h6 class="fw-bold">' + (data.name || '') + '</h6>';
-                            html += '<p class="text-muted small mb-2">Départ : <strong>' + (data.departure_date_formatted || data.departure_date) + '</strong></p>';
-                            if (data.destination) html += '<p class="mb-1"><span class="text-muted">Destination :</span> ' + data.destination + '</p>';
-                            if (data.duration_text) html += '<p class="mb-1"><span class="text-muted">Durée :</span> ' + data.duration_text + '</p>';
-                            if (data.display_price != null && data.display_price !== '') html += '<p class="mb-1"><span class="text-muted">Prix :</span> <strong>' + data.display_price + ' ' + (data.currency_symbol || 'DH') + '</strong></p>';
-                            if (data.status) html += '<p class="mb-1"><span class="text-muted">Statut :</span> <span class="badge bg-secondary">' + data.status + '</span></p>';
-                            if (data.accroche) html += '<p class="mb-0 mt-2 small">' + data.accroche + '</p>';
-                            if (data.description) html += '<div class="mt-2 small text-muted">' + data.description.substring(0, 300) + (data.description.length > 300 ? '…' : '') + '</div>';
+                            html += '<div class="mb-3">';
+                            html += '<p class="text-muted small mb-1">Date de départ : <strong>' + (data.departure_date_formatted || data.departure_date) + '</strong></p>';
+                            if (data.destination) html += '<p class="mb-1"><span class="text-muted">Destination :</span> ' + escapeHtml(data.destination) + '</p>';
+                            if (data.duration_text) html += '<p class="mb-1"><span class="text-muted">Durée :</span> ' + escapeHtml(data.duration_text) + '</p>';
+                            if (data.display_price != null && data.display_price !== '') html += '<p class="mb-1"><span class="text-muted">Prix :</span> <strong>' + (typeof data.display_price === 'number' ? data.display_price.toLocaleString('fr-FR') : escapeHtml(String(data.display_price))) + ' ' + (data.currency_symbol || 'DH') + '</strong></p>';
+                            if (data.status) html += '<p class="mb-1"><span class="text-muted">Statut :</span> <span class="badge bg-secondary">' + escapeHtml(data.status) + '</span></p>';
+                            html += '</div>';
+                            if (data.accroche) html += '<p class="small mb-3">' + escapeHtml(data.accroche) + '</p>';
+                            if (data.description) html += '<div class="small text-muted mb-3">' + escapeHtml(data.description.substring(0, 400)) + (data.description.length > 400 ? '…' : '') + '</div>';
+
+                            var hotels = data.hotels_with_rooms || [];
+                            var hasAnyRoom = hotels.some(function(h) { return (h.rooms && h.rooms.length); });
+                            html += '<div class="border-top pt-3 mt-3">';
+                            html += '<h6 class="fw-semibold mb-2">Chambres disponibles</h6>';
+                            if (!hasAnyRoom) {
+                                html += '<p class="text-muted small mb-0">Aucune chambre configurée pour cette offre.</p>';
+                            } else {
+                                hotels.forEach(function(hotel) {
+                                    if (!hotel.rooms || !hotel.rooms.length) return;
+                                    html += '<div class="card mb-2">';
+                                    html += '<div class="card-header py-1 px-2 bg-light small fw-semibold">' + escapeHtml(hotel.hotel_name || 'Hôtel') + '</div>';
+                                    html += '<div class="card-body py-2 px-2">';
+                                    html += '<table class="table table-sm table-bordered mb-0 small">';
+                                    html += '<thead><tr><th>Type</th><th class="text-center">Capacité</th><th class="text-center">Suppl. (DH)</th></tr></thead><tbody>';
+                                    hotel.rooms.forEach(function(r) {
+                                        html += '<tr><td>' + escapeHtml(r.room_type) + (r.room_label ? ' <span class="text-muted">' + escapeHtml(r.room_label) + '</span>' : '') + '</td>';
+                                        html += '<td class="text-center">' + r.capacity_adults + ' ad. / ' + r.capacity_children + ' enf. — ' + r.capacity_total + ' pers.</td>';
+                                        html += '<td class="text-center">' + (r.supplement != null ? r.supplement : '0') + '</td></tr>';
+                                    });
+                                    html += '</tbody></table></div></div>';
+                                });
+                            }
+                            html += '</div>';
+
                             detailContent.innerHTML = html;
                             detailContent.style.display = 'block';
                             document.getElementById('btn-modal-consulter').href = data.route_consulter || '#';
                             document.getElementById('btn-modal-reserver').href = data.route_reserver || '#';
+                            document.getElementById('btn-modal-reserver').removeAttribute('target');
                             detailFooter.style.display = 'flex';
-                            detailContent.dataset.printTitle = data.name + ' - ' + (data.departure_date_formatted || data.departure_date);
+                            detailContent.dataset.printTitle = (data.name || 'Offre') + ' - ' + (data.departure_date_formatted || data.departure_date);
                         }
                     })
                     .catch(function () {

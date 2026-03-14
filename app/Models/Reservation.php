@@ -30,6 +30,7 @@ class Reservation extends Model
 
     protected $fillable = [
         'tour_id',
+        'travel_date_id',
         'client_mode',
         'client_external_id',
         'client_first_name',
@@ -53,6 +54,7 @@ class Reservation extends Model
 
     protected $casts = [
         'tour_id'          => 'integer',
+        'travel_date_id'   => 'integer',
         'client_external_id' => 'integer',
         'passengers_count' => 'integer',
         'base_price' => 'decimal:2',

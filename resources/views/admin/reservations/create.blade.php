@@ -24,6 +24,12 @@
         <div class="card mb-3 border">
             <div class="card-body">
                 <h6 class="card-title mb-3 text-secondary"><i class="bx bx-trip me-1"></i>Informations générales</h6>
+                @if(isset($selectedTravelDate) && $selectedTravelDate)
+                    <div class="alert alert-info py-2 mb-3 small">
+                        <i class="bx bx-calendar me-1"></i> <strong>Date de départ choisie :</strong> {{ $selectedTravelDate->date->translatedFormat('l j F Y') }}
+                    </div>
+                    <input type="hidden" name="travel_date_id" value="{{ $selectedTravelDate->id }}">
+                @endif
                 <div class="row g-2">
                     <div class="col-md-6">
                         <label class="form-label">Voyage à réserver <span class="text-danger">*</span></label>

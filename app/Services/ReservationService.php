@@ -119,6 +119,7 @@ class ReservationService
     private function fillReservation(Reservation $reservation, array $data): void
     {
         $reservation->tour_id = $data['tour_id'] ?? $reservation->tour_id;
+        $reservation->travel_date_id = isset($data['travel_date_id']) && $data['travel_date_id'] !== '' ? (int) $data['travel_date_id'] : null;
         $reservation->client_mode = $data['client_mode'] ?? $reservation->client_mode ?? 'existing';
         $reservation->client_external_id = $data['client_external_id'] ?? $reservation->client_external_id;
 
