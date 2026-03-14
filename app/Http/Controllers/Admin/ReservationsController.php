@@ -257,10 +257,12 @@ class ReservationsController extends Controller
             $voyagesForFilter = $tours->map(fn ($t) => (object) ['id' => $t->ID, 'name' => $t->post_title ?? '']);
         } catch (\Throwable $e) {
             \Log::warning('ReservationsController@calendar: WP tours list failed, fallback to Voyage', ['error' => $e->getMessage()]);
+            // Fallback: on garde un identifiant cohérent avec TravelDate.travel_id => Voyage.wp_post_id (pas Voyage.id)
             $voyagesForFilter = Voyage::query()
+                ->whereNotNull('wp_post_id')
                 ->orderBy('name')
-                ->get(['id', 'name'])
-                ->map(fn ($v) => (object) ['id' => $v->id, 'name' => $v->name]);
+                ->get(['wp_post_id', 'name'])
+                ->map(fn ($v) => (object) ['id' => (int) $v->wp_post_id, 'name' => $v->name]);
         }
 
         $destinations = Voyage::query()
@@ -313,9 +315,12 @@ class ReservationsController extends Controller
         $month = $request->query('month', '');
         $search = trim((string) $request->query('search', ''));
 
+        // 1) Déterminer les tours WP à considérer (source de vérité: wp_posts.ID == TravelDate.travel_id)
+        // Si un voyage est sélectionné, on filtre directement par cet ID WordPress.
         if ($voyageFilter > 0) {
             $wpTourIds = collect([$voyageFilter]);
         } else {
+            // Sinon, on filtre via la table Laravel voyages (métadonnées), mais on retourne toujours des wp_post_id
             $wpTourIds = Voyage::query()
                 ->whereNotNull('wp_post_id')
                 ->when($destination !== '', fn ($q) => $q->where('destination', $destination))
@@ -323,6 +328,7 @@ class ReservationsController extends Controller
                 ->when($budgetMin !== null, fn ($q) => $q->where('price_from', '>=', $budgetMin))
                 ->when($budgetMax !== null, fn ($q) => $q->where('price_from', '<=', $budgetMax))
                 ->when($search !== '', fn ($q) => $q->where(function ($q2) use ($search) {
+                    // NB: on cherche sur les champs Laravel (si non synchronisés, filtre partiel — OK)
                     $q2->where('name', 'like', '%' . $search . '%')
                         ->orWhere('destination', 'like', '%' . $search . '%')
                         ->orWhere('slug', 'like', '%' . $search . '%');
@@ -333,6 +339,8 @@ class ReservationsController extends Controller
         if ($wpTourIds->isEmpty()) {
             return response()->json([]);
         }
+
+        $wpTourIds = $wpTourIds->filter()->map(fn ($id) => (int) $id)->unique()->values();
 
         $travelDatesQuery = TravelDate::query()
             ->where('is_active', true)
@@ -350,41 +358,39 @@ class ReservationsController extends Controller
             return response()->json([]);
         }
 
+        $travelIds = $travelDates->pluck('travel_id')->unique()->filter()->map(fn ($id) => (int) $id)->values();
+
+        // 2) Charger les tours WordPress (titres/slug) pour éviter tout mismatch avec voyages.name (ex: "Brouillon auto")
+        $wpPosts = collect();
+        try {
+            $wpPosts = WpPost::query()
+                ->whereIn('ID', $travelIds)
+                ->get(['ID', 'post_title', 'post_name', 'post_excerpt', 'post_content'])
+                ->keyBy('ID');
+        } catch (\Throwable $e) {
+            // Si WP indisponible ici, on gardera un fallback au niveau du titre.
+        }
+
+        // 3) Charger les voyages Laravel (métadonnées) quand ils existent (destination, price_from, etc.)
         $voyages = Voyage::query()
-            ->whereIn('wp_post_id', $travelDates->pluck('travel_id')->unique()->filter())
+            ->whereIn('wp_post_id', $travelIds)
             ->get()
             ->keyBy('wp_post_id');
-
-        $wpPostIdsMissing = $travelDates->pluck('travel_id')->unique()->filter(fn ($tid) => ! $voyages->has($tid))->values();
-        $wpPosts = collect();
-        if ($wpPostIdsMissing->isNotEmpty()) {
-            try {
-                $wpPosts = WpPost::query()
-                    ->whereIn('ID', $wpPostIdsMissing)
-                    ->get()
-                    ->keyBy('ID');
-            } catch (\Throwable $e) {
-                // ignore
-            }
-        }
 
         $events = [];
         foreach ($travelDates as $travelDate) {
             $voyage = $voyages->get($travelDate->travel_id);
-            $wpPost = $wpPosts->get($travelDate->travel_id);
-            $title = $voyage ? $voyage->name : ($wpPost ? $wpPost->post_title : 'Tour #' . $travelDate->travel_id);
-            if (! $voyage && ! $wpPost) {
-                continue;
-            }
+            $wpPost = $wpPosts->get((int) $travelDate->travel_id);
+            $title = $wpPost ? ($wpPost->post_title ?? '') : ($voyage?->name ?? ('Tour #' . $travelDate->travel_id));
             $dateStr = $travelDate->date?->format('Y-m-d');
             $wpId = $travelDate->travel_id;
             $events[] = [
                 'id' => 'td-' . $travelDate->id,
-                'title' => $title,
+                'title' => $title !== '' ? $title : ('Tour #' . $wpId),
                 'start' => $dateStr,
                 'allDay' => true,
                 'extendedProps' => [
-                    'voyage_id' => $voyage?->id,
+                    'voyage_id' => $voyage?->id, // Laravel id (si existe) – utile pour la réservation
                     'wp_travel_id' => $wpId,
                     'travel_date_id' => $travelDate->id,
                     'departure_date' => $dateStr,
@@ -444,11 +450,19 @@ class ReservationsController extends Controller
             return response()->json(['error' => 'Date de départ introuvable'], 404);
         }
 
+        // Charger le WP Post (titre/slug/contenu) pour garantir cohérence avec le filtre Voyages.
+        $wpPost = null;
+        try {
+            $wpPost = WpPost::query()->where('ID', $wpId)->first();
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
         if ($voyage) {
             $payload = [
                 'voyage_id' => $voyage->id,
-                'name' => $voyage->name,
-                'slug' => $voyage->slug,
+                'name' => $wpPost?->post_title ?? $voyage->name,
+                'slug' => $wpPost?->post_name ?? $voyage->slug,
                 'destination' => $voyage->destination,
                 'departure_date' => $travelDate->date->format('Y-m-d'),
                 'departure_date_formatted' => $travelDate->date->translatedFormat('l j F Y'),
@@ -458,8 +472,8 @@ class ReservationsController extends Controller
                 'currency_symbol' => $voyage->currency_symbol,
                 'display_price' => $travelDate->price_override ?? $voyage->price_from,
                 'status' => $voyage->status,
-                'description' => $voyage->description,
-                'accroche' => $voyage->accroche,
+                'description' => $wpPost?->post_content ?? $voyage->description,
+                'accroche' => $wpPost?->post_excerpt ?? $voyage->accroche,
                 'featured_image_url' => $voyage->featured_image_url,
                 'min_people' => $voyage->min_people,
                 'max_people' => $voyage->max_people,
@@ -469,12 +483,6 @@ class ReservationsController extends Controller
                 'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
             ];
         } else {
-            $wpPost = null;
-            try {
-                $wpPost = WpPost::query()->where('ID', $wpId)->first();
-            } catch (\Throwable $e) {
-                // ignore
-            }
             $payload = [
                 'voyage_id' => null,
                 'name' => $wpPost ? $wpPost->post_title : 'Tour #' . $wpId,
