@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TourHotel extends Model
 {
@@ -49,5 +50,10 @@ class TourHotel extends Model
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
+    }
+
+    public function rooms(): HasMany
+    {
+        return $this->hasMany(TourHotelRoom::class, 'tour_hotel_id')->orderBy('sort_order')->orderBy('id');
     }
 }
