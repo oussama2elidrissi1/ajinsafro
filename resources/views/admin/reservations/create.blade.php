@@ -30,7 +30,7 @@
                         <select name="tour_id" class="form-select" required>
                             <option value="">Sélectionner un voyage…</option>
                             @foreach($voyages as $voyage)
-                                <option value="{{ $voyage->id }}" {{ old('tour_id') == $voyage->id ? 'selected' : '' }}>
+                                <option value="{{ $voyage->id }}" {{ (int) request('tour_id', old('tour_id')) === $voyage->id ? 'selected' : '' }}>
                                     {{ $voyage->name ?? $voyage->slug }}
                                 </option>
                             @endforeach
