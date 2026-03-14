@@ -35,6 +35,7 @@
                                     <option value="{{ $v->id }}" {{ (int)($selectedVoyageId ?? 0) === $v->id ? 'selected' : '' }}>{{ Str::limit($v->name, 30) }}</option>
                                 @endforeach
                             </select>
+                            
                         </div>
                         <div class="col-md-2">
                             <label for="filter-destination" class="form-label small mb-0">Destination</label>
@@ -165,14 +166,19 @@
                 info.jsEvent.preventDefault();
                 var p = info.event.extendedProps || {};
                 var voyageId = p.voyage_id;
+                var wpTravelId = p.wp_travel_id;
                 var date = p.departure_date;
-                if (!voyageId || !date) return;
+                if (!date) return;
+                var qs = 'date=' + encodeURIComponent(date);
+                if (voyageId) qs = 'voyage_id=' + encodeURIComponent(voyageId) + '&' + qs;
+                else if (wpTravelId) qs = 'wp_travel_id=' + encodeURIComponent(wpTravelId) + '&' + qs;
+                else return;
                 detailContent.style.display = 'none';
                 detailFooter.style.display = 'none';
                 detailLoading.style.display = 'block';
                 var modalInstance = new bootstrap.Modal(modal);
                 modalInstance.show();
-                fetch(detailsUrl + '?voyage_id=' + encodeURIComponent(voyageId) + '&date=' + encodeURIComponent(date), {
+                fetch(detailsUrl + '?' + qs, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                 })
                     .then(function (r) { return r.json(); })

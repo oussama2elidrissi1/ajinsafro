@@ -7,6 +7,7 @@ use App\Models\Reservation;
 use App\Models\Client;
 use App\Models\TravelDate;
 use App\Models\Voyage;
+use App\Models\Wp\WpPost;
 use App\Services\ReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -244,12 +245,23 @@ class ReservationsController extends Controller
 
     /**
      * Calendrier des départs (admin).
+     * Le filtre "Voyage" utilise la même source que /admin/circuits/voyages : tous les tours WordPress (WpPost::tours()).
      */
     public function calendar(Request $request): View
     {
-        $voyages = Voyage::query()
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        $voyagesForFilter = collect();
+        try {
+            $tours = WpPost::tours()
+                ->orderBy('post_title')
+                ->get(['ID', 'post_title']);
+            $voyagesForFilter = $tours->map(fn ($t) => (object) ['id' => $t->ID, 'name' => $t->post_title ?? '']);
+        } catch (\Throwable $e) {
+            \Log::warning('ReservationsController@calendar: WP tours list failed, fallback to Voyage', ['error' => $e->getMessage()]);
+            $voyagesForFilter = Voyage::query()
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn ($v) => (object) ['id' => $v->id, 'name' => $v->name]);
+        }
 
         $destinations = Voyage::query()
             ->whereNotNull('destination')
@@ -274,7 +286,7 @@ class ReservationsController extends Controller
         $search = $request->query('search', '');
 
         return view('admin.reservations.calendrier.index', [
-            'voyages' => $voyages,
+            'voyages' => $voyagesForFilter,
             'destinations' => $destinations,
             'statuses' => $statuses,
             'selectedVoyageId' => $selectedVoyageId,
@@ -289,10 +301,11 @@ class ReservationsController extends Controller
 
     /**
      * Événements JSON pour le calendrier des départs (avec filtres).
+     * Le paramètre "voyage" est l'ID du tour WordPress (comme dans le filtre), pour filtrer par travel_id.
      */
     public function calendarEvents(Request $request): JsonResponse
     {
-        $voyageId = (int) $request->query('voyage', 0);
+        $voyageFilter = (int) $request->query('voyage', 0);
         $destination = $request->query('destination', '');
         $status = $request->query('status', '');
         $budgetMin = $request->has('budget_min') && $request->query('budget_min') !== '' ? (float) $request->query('budget_min') : null;
@@ -300,27 +313,30 @@ class ReservationsController extends Controller
         $month = $request->query('month', '');
         $search = trim((string) $request->query('search', ''));
 
-        $voyageIdsWithDates = Voyage::query()
-            ->whereNotNull('wp_post_id')
-            ->when($voyageId > 0, fn ($q) => $q->where('id', $voyageId))
-            ->when($destination !== '', fn ($q) => $q->where('destination', $destination))
-            ->when($status !== '', fn ($q) => $q->where('status', $status))
-            ->when($budgetMin !== null, fn ($q) => $q->where('price_from', '>=', $budgetMin))
-            ->when($budgetMax !== null, fn ($q) => $q->where('price_from', '<=', $budgetMax))
-            ->when($search !== '', fn ($q) => $q->where(function ($q2) use ($search) {
-                $q2->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('destination', 'like', '%' . $search . '%')
-                    ->orWhere('slug', 'like', '%' . $search . '%');
-            }))
-            ->pluck('wp_post_id');
+        if ($voyageFilter > 0) {
+            $wpTourIds = collect([$voyageFilter]);
+        } else {
+            $wpTourIds = Voyage::query()
+                ->whereNotNull('wp_post_id')
+                ->when($destination !== '', fn ($q) => $q->where('destination', $destination))
+                ->when($status !== '', fn ($q) => $q->where('status', $status))
+                ->when($budgetMin !== null, fn ($q) => $q->where('price_from', '>=', $budgetMin))
+                ->when($budgetMax !== null, fn ($q) => $q->where('price_from', '<=', $budgetMax))
+                ->when($search !== '', fn ($q) => $q->where(function ($q2) use ($search) {
+                    $q2->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('destination', 'like', '%' . $search . '%')
+                        ->orWhere('slug', 'like', '%' . $search . '%');
+                }))
+                ->pluck('wp_post_id');
+        }
 
-        if ($voyageIdsWithDates->isEmpty()) {
+        if ($wpTourIds->isEmpty()) {
             return response()->json([]);
         }
 
         $travelDatesQuery = TravelDate::query()
             ->where('is_active', true)
-            ->whereIn('travel_id', $voyageIdsWithDates);
+            ->whereIn('travel_id', $wpTourIds);
 
         if ($month !== '') {
             if (preg_match('/^(\d{4})-(\d{2})$/', $month, $m)) {
@@ -339,32 +355,48 @@ class ReservationsController extends Controller
             ->get()
             ->keyBy('wp_post_id');
 
+        $wpPostIdsMissing = $travelDates->pluck('travel_id')->unique()->filter(fn ($tid) => ! $voyages->has($tid))->values();
+        $wpPosts = collect();
+        if ($wpPostIdsMissing->isNotEmpty()) {
+            try {
+                $wpPosts = WpPost::query()
+                    ->whereIn('ID', $wpPostIdsMissing)
+                    ->get()
+                    ->keyBy('ID');
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+
         $events = [];
         foreach ($travelDates as $travelDate) {
             $voyage = $voyages->get($travelDate->travel_id);
-            if (!$voyage) {
+            $wpPost = $wpPosts->get($travelDate->travel_id);
+            $title = $voyage ? $voyage->name : ($wpPost ? $wpPost->post_title : 'Tour #' . $travelDate->travel_id);
+            if (! $voyage && ! $wpPost) {
                 continue;
             }
             $dateStr = $travelDate->date?->format('Y-m-d');
+            $wpId = $travelDate->travel_id;
             $events[] = [
                 'id' => 'td-' . $travelDate->id,
-                'title' => $voyage->name,
+                'title' => $title,
                 'start' => $dateStr,
                 'allDay' => true,
                 'extendedProps' => [
-                    'voyage_id' => $voyage->id,
-                    'wp_travel_id' => $travelDate->travel_id,
+                    'voyage_id' => $voyage?->id,
+                    'wp_travel_id' => $wpId,
                     'travel_date_id' => $travelDate->id,
                     'departure_date' => $dateStr,
-                    'destination' => $voyage->destination,
-                    'price_from' => $voyage->price_from,
+                    'destination' => $voyage?->destination,
+                    'price_from' => $voyage?->price_from,
                     'price_override' => $travelDate->price_override,
-                    'currency_symbol' => $voyage->currency_symbol,
-                    'status' => $voyage->status,
-                    'duration_text' => $voyage->duration_text,
-                    'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $voyage->id]),
-                    'route_reserver' => route('admin.reservations.create', ['tour_id' => $voyage->id]),
-                    'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $voyage->id]),
+                    'currency_symbol' => $voyage?->currency_symbol ?? 'DH',
+                    'status' => $voyage?->status,
+                    'duration_text' => $voyage?->duration_text,
+                    'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
+                    'route_reserver' => $voyage ? route('admin.reservations.create', ['tour_id' => $voyage->id]) : route('admin.reservations.create'),
+                    'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
                 ],
             ];
         }
@@ -374,23 +406,36 @@ class ReservationsController extends Controller
 
     /**
      * Détails d'un événement calendrier (pour le modal).
+     * Accepte voyage_id (Laravel) ou wp_travel_id (ID tour WordPress) + date.
      */
     public function calendarEventDetails(Request $request): JsonResponse
     {
         $voyageId = (int) $request->query('voyage_id', 0);
+        $wpTravelId = (int) $request->query('wp_travel_id', 0);
         $date = $request->query('date', '');
 
-        if ($voyageId <= 0 || $date === '') {
-            return response()->json(['error' => 'Paramètres manquants'], 422);
+        if ($date === '') {
+            return response()->json(['error' => 'Paramètre date manquant'], 422);
         }
 
-        $voyage = Voyage::query()->find($voyageId);
-        if (!$voyage || !$voyage->wp_post_id) {
+        $wpId = null;
+        $voyage = null;
+        if ($voyageId > 0) {
+            $voyage = Voyage::query()->find($voyageId);
+            if ($voyage && $voyage->wp_post_id) {
+                $wpId = $voyage->wp_post_id;
+            }
+        }
+        if ($wpId === null && $wpTravelId > 0) {
+            $wpId = $wpTravelId;
+            $voyage = Voyage::query()->where('wp_post_id', $wpTravelId)->first();
+        }
+        if ($wpId === null) {
             return response()->json(['error' => 'Voyage introuvable'], 404);
         }
 
         $travelDate = TravelDate::query()
-            ->where('travel_id', $voyage->wp_post_id)
+            ->where('travel_id', $wpId)
             ->where('date', $date)
             ->where('is_active', true)
             ->first();
@@ -399,29 +444,61 @@ class ReservationsController extends Controller
             return response()->json(['error' => 'Date de départ introuvable'], 404);
         }
 
-        $payload = [
-            'voyage_id' => $voyage->id,
-            'name' => $voyage->name,
-            'slug' => $voyage->slug,
-            'destination' => $voyage->destination,
-            'departure_date' => $travelDate->date->format('Y-m-d'),
-            'departure_date_formatted' => $travelDate->date->translatedFormat('l j F Y'),
-            'duration_text' => $voyage->duration_text,
-            'price_from' => $voyage->price_from,
-            'price_override' => $travelDate->price_override,
-            'currency_symbol' => $voyage->currency_symbol,
-            'display_price' => $travelDate->price_override ?? $voyage->price_from,
-            'status' => $voyage->status,
-            'description' => $voyage->description,
-            'accroche' => $voyage->accroche,
-            'featured_image_url' => $voyage->featured_image_url,
-            'min_people' => $voyage->min_people,
-            'max_people' => $voyage->max_people,
-            'seats' => $travelDate->seats,
-            'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $voyage->id]),
-            'route_reserver' => route('admin.reservations.create', ['tour_id' => $voyage->id]),
-            'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $voyage->id]),
-        ];
+        if ($voyage) {
+            $payload = [
+                'voyage_id' => $voyage->id,
+                'name' => $voyage->name,
+                'slug' => $voyage->slug,
+                'destination' => $voyage->destination,
+                'departure_date' => $travelDate->date->format('Y-m-d'),
+                'departure_date_formatted' => $travelDate->date->translatedFormat('l j F Y'),
+                'duration_text' => $voyage->duration_text,
+                'price_from' => $voyage->price_from,
+                'price_override' => $travelDate->price_override,
+                'currency_symbol' => $voyage->currency_symbol,
+                'display_price' => $travelDate->price_override ?? $voyage->price_from,
+                'status' => $voyage->status,
+                'description' => $voyage->description,
+                'accroche' => $voyage->accroche,
+                'featured_image_url' => $voyage->featured_image_url,
+                'min_people' => $voyage->min_people,
+                'max_people' => $voyage->max_people,
+                'seats' => $travelDate->seats,
+                'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
+                'route_reserver' => route('admin.reservations.create', ['tour_id' => $voyage->id]),
+                'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
+            ];
+        } else {
+            $wpPost = null;
+            try {
+                $wpPost = WpPost::query()->where('ID', $wpId)->first();
+            } catch (\Throwable $e) {
+                // ignore
+            }
+            $payload = [
+                'voyage_id' => null,
+                'name' => $wpPost ? $wpPost->post_title : 'Tour #' . $wpId,
+                'slug' => $wpPost ? $wpPost->post_name : '',
+                'destination' => null,
+                'departure_date' => $travelDate->date->format('Y-m-d'),
+                'departure_date_formatted' => $travelDate->date->translatedFormat('l j F Y'),
+                'duration_text' => null,
+                'price_from' => null,
+                'price_override' => $travelDate->price_override,
+                'currency_symbol' => 'DH',
+                'display_price' => $travelDate->price_override,
+                'status' => null,
+                'description' => $wpPost ? $wpPost->post_content : null,
+                'accroche' => $wpPost ? $wpPost->post_excerpt : null,
+                'featured_image_url' => null,
+                'min_people' => null,
+                'max_people' => null,
+                'seats' => $travelDate->seats,
+                'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
+                'route_reserver' => route('admin.reservations.create'),
+                'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
+            ];
+        }
 
         return response()->json($payload);
     }
