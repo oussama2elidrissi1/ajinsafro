@@ -58,23 +58,61 @@ class ReservationsController extends Controller
     /**
      * Formulaire de création de réservation.
      * Préremplissage depuis le calendrier : tour_id, travel_date_id (optionnel).
+     * Le voyage affiché vient du tour_id (Voyage Laravel). Les libellés viennent de WordPress quand disponible.
      */
     public function create(Request $request): View
     {
-        $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
-        $clients = Client::orderByDesc('id')->limit(200)->get(['id', 'client_code', 'full_name', 'email', 'phone']);
-
+        $requestedTourId = (int) $request->query('tour_id', 0);
         $travelDateId = (int) $request->query('travel_date_id', 0);
+
+        $clients = Client::orderByDesc('id')->limit(200)->get(['id', 'client_code', 'full_name', 'email', 'phone']);
+        $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug', 'wp_post_id']);
+        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+            $requestedVoyage = Voyage::find($requestedTourId);
+            if ($requestedVoyage) {
+                $voyages = $voyages->prepend($requestedVoyage)->unique('id')->values();
+            }
+        }
+
+        $wpPostIds = $voyages->pluck('wp_post_id')->filter()->unique()->values()->all();
+        $wpTitles = collect();
+        if (!empty($wpPostIds)) {
+            try {
+                $wpTitles = WpPost::query()
+                    ->whereIn('ID', $wpPostIds)
+                    ->get(['ID', 'post_title'])
+                    ->keyBy('ID');
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+
         $selectedTravelDate = null;
+        $travelDateIncoherent = false;
         if ($travelDateId > 0) {
             $selectedTravelDate = TravelDate::query()->where('is_active', true)->find($travelDateId);
+            if ($selectedTravelDate && $requestedTourId > 0) {
+                $voyageForTour = Voyage::find($requestedTourId);
+                if (!$voyageForTour || (int) $selectedTravelDate->travel_id !== (int) $voyageForTour->wp_post_id) {
+                    $selectedTravelDate = null;
+                    $travelDateIncoherent = true;
+                }
+            }
+        }
+
+        $preselectedTourId = null;
+        if ($requestedTourId > 0 && $voyages->contains('id', $requestedTourId)) {
+            $preselectedTourId = $requestedTourId;
         }
 
         return view('admin.reservations.create', [
             'voyages' => $voyages,
+            'wpTitles' => $wpTitles,
             'clients' => $clients,
             'selectedTravelDate' => $selectedTravelDate,
             'travelDateId' => $travelDateId > 0 ? $travelDateId : null,
+            'preselectedTourId' => $preselectedTourId,
+            'travelDateIncoherent' => $travelDateIncoherent,
         ]);
     }
 

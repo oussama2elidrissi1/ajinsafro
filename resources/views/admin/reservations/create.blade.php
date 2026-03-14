@@ -24,20 +24,34 @@
         <div class="card mb-3 border">
             <div class="card-body">
                 <h6 class="card-title mb-3 text-secondary"><i class="bx bx-trip me-1"></i>Informations générales</h6>
+                @if(isset($travelDateIncoherent) && $travelDateIncoherent)
+                    <div class="alert alert-warning py-2 mb-3 small">
+                        <i class="bx bx-error-circle me-1"></i> La date de départ fournie ne correspond pas au voyage sélectionné. Elle a été ignorée.
+                    </div>
+                @endif
                 @if(isset($selectedTravelDate) && $selectedTravelDate)
                     <div class="alert alert-info py-2 mb-3 small">
                         <i class="bx bx-calendar me-1"></i> <strong>Date de départ choisie :</strong> {{ $selectedTravelDate->date->translatedFormat('l j F Y') }}
                     </div>
                     <input type="hidden" name="travel_date_id" value="{{ $selectedTravelDate->id }}">
                 @endif
+                @php
+                    $selectedTourId = (int) ($preselectedTourId ?? old('tour_id'));
+                    $wpTitles = $wpTitles ?? collect();
+                @endphp
                 <div class="row g-2">
                     <div class="col-md-6">
                         <label class="form-label">Voyage à réserver <span class="text-danger">*</span></label>
-                        <select name="tour_id" class="form-select" required>
+                        <select name="tour_id" class="form-select" required id="select-tour-id">
                             <option value="">Sélectionner un voyage…</option>
                             @foreach($voyages as $voyage)
-                                <option value="{{ $voyage->id }}" {{ (int) request('tour_id', old('tour_id')) === $voyage->id ? 'selected' : '' }}>
-                                    {{ $voyage->name ?? $voyage->slug }}
+                                @php
+                                    $label = $voyage->wp_post_id && $wpTitles->has($voyage->wp_post_id)
+                                        ? ($wpTitles->get($voyage->wp_post_id)->post_title ?? $voyage->name ?? $voyage->slug)
+                                        : ($voyage->name ?? $voyage->slug ?? 'Voyage #' . $voyage->id);
+                                @endphp
+                                <option value="{{ $voyage->id }}" {{ $selectedTourId === (int) $voyage->id ? 'selected' : '' }}>
+                                    {{ $label }}
                                 </option>
                             @endforeach
                         </select>
