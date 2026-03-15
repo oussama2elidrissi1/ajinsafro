@@ -41,11 +41,7 @@ class LoginController extends Controller
 
     /**
      * Send the response after the user was authenticated.
-     * Always redirect to /admin/dashboard (ignore "intended" URL so that
-     * users who hit / before login are not sent back to /).
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * Partners go to partner area, others to admin dashboard.
      */
     protected function sendLoginResponse(Request $request)
     {
@@ -60,5 +56,17 @@ class LoginController extends Controller
         return $request->wantsJson()
             ? new \Illuminate\Http\JsonResponse([], 204)
             : redirect()->to($this->redirectPath());
+    }
+
+    protected function authenticated(Request $request, $user)
+    {
+        if ($user->isPartner()) {
+            $partner = $user->partner;
+            if ($partner && $partner->canAccessPartnerArea()) {
+                return redirect()->route('partner.dashboard');
+            }
+            return redirect()->route('partner.pending');
+        }
+        return null;
     }
 }

@@ -18,19 +18,19 @@ class BranchController extends Controller
 
     public function index(Request $request): View
     {
-        $this->authorize('settings.branches.manage');
+        $this->authorize('settings.view');
         $user = $request->user();
         $query = Branch::query()->orderBy('type')->orderBy('name');
         if (! $this->branchScope->canSeeAllBranches($user)) {
             $query->whereIn('id', $this->branchScope->visibleBranchIds($user) ?? []);
         }
-        $branches = $query->withCount(['users', 'reservations'])->paginate(15);
+        $branches = $query->withCount('users')->paginate(15);
         return view('admin.branches.index', compact('branches'));
     }
 
     public function create(): View
     {
-        $this->authorize('settings.branches.manage');
+        $this->authorize('settings.view');
         $branch = new Branch();
         $users = \App\Models\User::orderBy('name')->get(['id', 'name', 'email', 'branch_id']);
         return view('admin.branches.form', ['branch' => $branch, 'users' => $users, 'isEdit' => false]);
@@ -38,7 +38,7 @@ class BranchController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $this->authorize('settings.branches.manage');
+        $this->authorize('settings.view');
         $data = $request->validate([
             'name' => ['required', 'string', 'max:190'],
             'code' => ['required', 'string', 'max:20', 'unique:branches,code'],
@@ -58,7 +58,7 @@ class BranchController extends Controller
 
     public function edit(Branch $branch): View|RedirectResponse
     {
-        $this->authorize('settings.branches.manage');
+        $this->authorize('settings.view');
         $user = request()->user();
         if (! $this->branchScope->canSeeAllBranches($user) && $branch->id !== $user->branch_id) {
             return redirect()->route('admin.branches.index')->with('error', 'Accès non autorisé.');
@@ -69,7 +69,7 @@ class BranchController extends Controller
 
     public function update(Request $request, Branch $branch): RedirectResponse
     {
-        $this->authorize('settings.branches.manage');
+        $this->authorize('settings.view');
         $user = $request->user();
         if (! $this->branchScope->canSeeAllBranches($user) && $branch->id !== $user->branch_id) {
             return redirect()->route('admin.branches.index')->with('error', 'Accès non autorisé.');
@@ -93,7 +93,7 @@ class BranchController extends Controller
 
     public function destroy(Branch $branch): RedirectResponse
     {
-        $this->authorize('settings.branches.manage');
+        $this->authorize('settings.view');
         $user = request()->user();
         if (! $this->branchScope->canSeeAllBranches($user) && $branch->id !== $user->branch_id) {
             return redirect()->route('admin.branches.index')->with('error', 'Accès non autorisé.');

@@ -70,14 +70,18 @@
                                                     class="mdi mdi-lock me-1"></i> Forgot your password?</a>
                                         </div>
                                     @endif
+
+                                    <div class="mt-4 pt-3 border-top text-center">
+                                        <p class="mb-0 text-muted small">Vous êtes un professionnel ?</p>
+                                        <a href="{{ route('partner.registration.form') }}" class="fw-medium text-primary">Devenir partenaire</a>
+                                    </div>
                                 </form>
                             </div>
 
                         </div>
                     </div>
                     <div class="mt-5 text-center">
-                        <p>Don't have an account ? <a href="{{ route('register') }}" class="fw-medium text-primary"> Signup
-                                now </a> </p>
+                        <p>Don't have an account ? <a href="{{ route('partner.registration.form') }}" class="fw-medium text-primary"> Devenir partenaire </a> </p>
                         <p>©
                             {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by
                             AJINSAFRO

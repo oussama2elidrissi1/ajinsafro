@@ -20,7 +20,7 @@
 
     <div class="row mb-3">
         <div class="col-12 text-end">
-            @can('settings.branches.manage')
+            @can('settings.view')
                 <a href="{{ route('admin.branches.create') }}" class="btn btn-success">
                     <i class="bx bx-plus"></i> Nouvelle agence
                 </a>
@@ -73,7 +73,7 @@
                                         </td>
                                         <td>{{ $branch->city ?? '-' }}</td>
                                         <td>{{ $branch->users_count }}</td>
-                                        <td>{{ $branch->reservations_count }}</td>
+                                        <td>{{ $branch->reservations_count ?? 0 }}</td>
                                         <td>
                                             @if($branch->is_active)
                                                 <span class="badge bg-success">Active</span>
@@ -82,9 +82,9 @@
                                             @endif
                                         </td>
                                         <td class="d-flex gap-1">
-                                            @can('settings.branches.manage')
+                                            @can('settings.view')
                                                 <a href="{{ route('admin.branches.edit', $branch) }}" class="btn btn-sm btn-primary">Modifier</a>
-                                                @if($branch->users_count === 0)
+                                                @if(($branch->users_count ?? 0) === 0)
                                                     <form method="POST" action="{{ route('admin.branches.destroy', $branch) }}" onsubmit="return confirm('Supprimer cette agence ?');">
                                                         @csrf
                                                         @method('DELETE')

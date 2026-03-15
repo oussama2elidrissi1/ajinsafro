@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\ReservationPassenger;
 use App\Models\ReservationRoom;
 use App\Models\TourHotelRoom;
+use App\Services\PartnerCommissionService;
 use App\Services\WordPressMediaService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -16,6 +17,7 @@ class ReservationService
 {
     public function __construct(
         private readonly WordPressMediaService $mediaService,
+        private readonly PartnerCommissionService $commissionService,
     ) {
     }
 
@@ -74,6 +76,9 @@ class ReservationService
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
             $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
 
+            if ($reservation->partner_id) {
+                $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
+            }
             return $reservation->fresh(['passengers', 'reservationRooms']);
         });
     }
@@ -99,6 +104,9 @@ class ReservationService
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
             $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
 
+            if ($reservation->partner_id) {
+                $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
+            }
             return $reservation->fresh(['passengers', 'reservationRooms']);
         });
     }
@@ -107,19 +115,29 @@ class ReservationService
     {
         $reservation->status = Reservation::STATUS_VALIDEE;
         $reservation->save();
-
+        if ($reservation->partner_id) {
+            $this->commissionService->validateCommissionForReservation($reservation);
+        }
         return $reservation;
     }
 
     public function delete(Reservation $reservation): void
     {
+        if ($reservation->partner_id) {
+            $this->commissionService->cancelCommissionForReservation($reservation);
+        }
         $reservation->delete();
     }
 
     private function fillReservation(Reservation $reservation, array $data): void
     {
         $reservation->tour_id = $data['tour_id'] ?? $reservation->tour_id;
-        $reservation->travel_date_id = isset($data['travel_date_id']) && $data['travel_date_id'] !== '' ? (int) $data['travel_date_id'] : null;
+        $travelDateId = $data['travel_date_id'] ?? null;
+        if ($travelDateId !== null && $travelDateId !== '' && $travelDateId !== 'null') {
+            $reservation->travel_date_id = (int) $travelDateId;
+        } else {
+            $reservation->travel_date_id = null;
+        }
         $reservation->client_mode = $data['client_mode'] ?? $reservation->client_mode ?? 'existing';
         $reservation->client_external_id = $data['client_external_id'] ?? $reservation->client_external_id;
 
@@ -141,10 +159,15 @@ class ReservationService
         $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
         // room_supplement_total est recalculé dans syncReservationRooms
 
-        $reservation->visa_ok = isset($data['visa_ok']) ? (bool) $data['visa_ok'] : $reservation->visa_ok;
+        $reservation->visa_ok = array_key_exists('visa_ok', $data)
+            ? (bool) $data['visa_ok']
+            : ($reservation->visa_ok ?? true);
         $reservation->visa_notes = $data['visa_notes'] ?? $reservation->visa_notes;
         $reservation->visa_status = $data['visa_status'] ?? $reservation->visa_status;
 
+        if (array_key_exists('partner_id', $data)) {
+            $reservation->partner_id = $data['partner_id'];
+        }
         if (array_key_exists('branch_id', $data)) {
             $reservation->branch_id = $data['branch_id'];
         }

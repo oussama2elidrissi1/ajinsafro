@@ -29,6 +29,7 @@ class Reservation extends Model
     public const VISA_STATUS_REJECTED = 'rejected';
 
     protected $fillable = [
+        'partner_id',
         'branch_id',
         'sales_manager_id',
         'agent_id',
@@ -83,6 +84,16 @@ class Reservation extends Model
     public function tour(): BelongsTo
     {
         return $this->belongsTo(Voyage::class, 'tour_id');
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
+    }
+
+    public function partnerCommission(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PartnerCommission::class, 'reservation_id');
     }
 
     public function branch(): BelongsTo

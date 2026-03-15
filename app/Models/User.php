@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -74,6 +75,11 @@ class User extends Authenticatable
         return $this->belongsTo(Branch::class);
     }
 
+    public function partner(): HasOne
+    {
+        return $this->hasOne(Partner::class);
+    }
+
     public function chatChannels(): BelongsToMany
     {
         return $this->belongsToMany(ChatChannel::class, 'chat_channel_members', 'user_id', 'channel_id')
@@ -104,5 +110,10 @@ class User extends Authenticatable
     public function isComptable(): bool
     {
         return $this->hasRole('Comptable');
+    }
+
+    public function isPartner(): bool
+    {
+        return $this->hasRole('Partenaire');
     }
 }

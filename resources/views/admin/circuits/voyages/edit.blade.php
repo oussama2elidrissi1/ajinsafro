@@ -525,11 +525,11 @@
                                 <div class="mb-3">
                                     <label for="calculator_discount_by_people_type" class="form-label">Calculateur réduction</label>
                                     <input type="text" class="form-control" id="calculator_discount_by_people_type" name="calculator_discount_by_people_type" value="{{ old('calculator_discount_by_people_type', $meta['calculator_discount_by_people_type'] ?? '') }}">
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
                 <div class="card mt-3">
                     <div class="card-body">
@@ -707,7 +707,7 @@
                                         <div class="col-md-3">
                                             <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
                                             <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
-                                        </div>
+                    </div>
                                         <div class="col-md-2">
                                             <label class="form-label small mb-1">Places</label>
                                             <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
@@ -1569,8 +1569,8 @@
                             'availableTaxonomies' => $availableTaxonomies ?? [],
                             'assignedTaxonomies' => $assignedTaxonomies ?? [],
                         ])
-                    </div>
-                </div>
+                                </div>
+                            </div>
             </div>
 
             {{-- TAB VOLS "” Vol Aller = toujours Jour 1, Vol Retour = toujours Dernier jour (N) "” Laravel voyage_flights --}}

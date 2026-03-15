@@ -25,6 +25,7 @@ return [
                 ['label' => 'Annulées', 'route' => 'admin.reservations.annulees', 'permission' => 'reservations.cancelled.view'],
                 ['label' => 'Calendrier', 'route' => 'admin.reservations.calendrier', 'permission' => 'reservations.calendar.view'],
                 ['label' => 'Paiements', 'route' => 'admin.reservations.paiements', 'permission' => 'reservations.payments.view'],
+                ['label' => 'Messages', 'route' => 'admin.reservations.messages', 'permission' => 'reservations.view'],
             ],
         ],
         [
@@ -113,10 +114,12 @@ return [
         ],
         [
             'key' => 'partners',
-            'label' => 'Partenaires',
+            'label' => 'Réseau partenaires',
             'icon' => 'bx bx-group',
             'permission' => 'partners.view',
             'children' => [
+                ['label' => 'Revendeurs', 'route' => 'admin.partner-accounts.index', 'permission' => 'partners.view'],
+                ['label' => 'Règles de commission', 'route' => 'admin.partner-commission-rules.index', 'permission' => 'partners.view'],
                 ['label' => 'Partenaires', 'route' => 'admin.partners.partenaires', 'permission' => 'partners.list.view'],
                 ['label' => 'Fournisseurs', 'route' => 'admin.partners.fournisseurs', 'permission' => 'partners.suppliers.view'],
                 ['label' => 'Contrats', 'route' => 'admin.partners.contrats', 'permission' => 'partners.contracts.view'],
@@ -157,7 +160,7 @@ return [
             'icon' => 'bx bx-cog',
             'permission' => 'settings.view',
             'children' => [
-                ['label' => 'Agences', 'route' => 'admin.branches.index', 'permission' => 'settings.branches.manage'],
+                ['label' => 'Agences', 'route' => 'admin.branches.index'],
                 ['label' => 'Utilisateurs', 'route' => 'admin.settings.utilisateurs', 'permission' => 'settings.users.manage'],
                 ['label' => 'Rôles & Permissions', 'route' => 'admin.settings.roles-permissions', 'permission' => 'settings.roles.manage'],
                 ['label' => 'Paramètres généraux', 'route' => 'admin.settings.parametres-generaux', 'permission' => 'settings.general.manage'],
@@ -193,17 +196,26 @@ return [
         'admin.settings.roles-permissions.update' => 'settings.roles.manage',
         'admin.settings.roles-permissions.destroy' => 'settings.roles.manage',
 
-        'admin.branches.index' => 'settings.branches.manage',
-        'admin.branches.create' => 'settings.branches.manage',
-        'admin.branches.store' => 'settings.branches.manage',
-        'admin.branches.edit' => 'settings.branches.manage',
-        'admin.branches.update' => 'settings.branches.manage',
-        'admin.branches.destroy' => 'settings.branches.manage',
+        'admin.branches.index' => 'settings.view',
+        'admin.branches.create' => 'settings.view',
+        'admin.branches.store' => 'settings.view',
+        'admin.branches.edit' => 'settings.view',
+        'admin.branches.update' => 'settings.view',
+        'admin.branches.destroy' => 'settings.view',
 
         'admin.messagerie.index' => 'messagerie.view',
         'admin.messagerie.channels' => 'messagerie.view',
         'admin.messagerie.messages' => 'messagerie.view',
         'admin.messagerie.send' => 'messagerie.view',
+
+        'admin.reservations.messages' => 'reservations.view',
+        'admin.reservations.messages.create' => 'reservations.view',
+        'admin.reservations.messages.store' => 'reservations.view',
+        'admin.reservations.messages.show' => 'reservations.view',
+        'admin.reservations.messages.star' => 'reservations.view',
+        'admin.reservations.messages.trash' => 'reservations.view',
+        'admin.reservations.messages.label' => 'reservations.view',
+        'admin.reservations.messages.important' => 'reservations.view',
     ],
 
     'route_prefix_permissions' => [
@@ -217,6 +229,8 @@ return [
         'admin.visa.' => 'visa.view',
         'admin.finance.' => 'finance.view',
         'admin.partners.' => 'partners.view',
+        'admin.partner-accounts.' => 'partners.view',
+        'admin.partner-commission-rules.' => 'partners.view',
         'admin.reporting.' => 'reporting.view',
         'admin.wordpress.' => 'wordpress.view',
         'admin.settings.' => 'settings.view',
