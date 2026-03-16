@@ -16,12 +16,9 @@
                         <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end">
-                        <a class="dropdown-item text-danger" href="{{ route('logout') }}"
-                            onclick="event.preventDefault();document.getElementById('partner-logout-form').submit();">
-                            <i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> Déconnexion
-                        </a>
-                        <form id="partner-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                        <form action="{{ route('logout') }}" method="POST" class="d-inline">
                             @csrf
+                            <button type="submit" class="dropdown-item text-danger border-0 bg-transparent w-100 text-start" style="cursor:pointer;"><i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> Déconnexion</button>
                         </form>
                     </div>
                 </div>
