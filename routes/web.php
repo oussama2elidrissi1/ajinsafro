@@ -66,6 +66,11 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes();
 
+// Allow GET /logout to redirect to login instead of 405 (e.g. bookmark or link opened in new tab)
+Route::get('logout', function () {
+    return redirect()->route('login');
+});
+
 Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
 Route::get('/search', [FrontSearchController::class, 'index'])->name('front.search');
 Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voyages.index');

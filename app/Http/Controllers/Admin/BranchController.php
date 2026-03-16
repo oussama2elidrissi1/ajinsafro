@@ -25,12 +25,16 @@ class BranchController extends Controller
             $query->whereIn('id', $this->branchScope->visibleBranchIds($user) ?? []);
         }
         $branches = $query->withCount('users')->paginate(15);
-        return view('admin.branches.index', compact('branches'));
+        $canCreateBranch = $this->branchScope->canSeeAllBranches($user);
+        return view('admin.branches.index', compact('branches', 'canCreateBranch'));
     }
 
-    public function create(): View
+    public function create(Request $request): View|RedirectResponse
     {
         $this->authorize('settings.view');
+        if (! $this->branchScope->canSeeAllBranches($request->user())) {
+            return redirect()->route('admin.branches.index')->with('error', 'Seuls le siège et les super admins peuvent créer une agence.');
+        }
         $branch = new Branch();
         $users = \App\Models\User::orderBy('name')->get(['id', 'name', 'email', 'branch_id']);
         return view('admin.branches.form', ['branch' => $branch, 'users' => $users, 'isEdit' => false]);
@@ -39,6 +43,9 @@ class BranchController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('settings.view');
+        if (! $this->branchScope->canSeeAllBranches($request->user())) {
+            return redirect()->route('admin.branches.index')->with('error', 'Seuls le siège et les super admins peuvent créer une agence.');
+        }
         $data = $request->validate([
             'name' => ['required', 'string', 'max:190'],
             'code' => ['required', 'string', 'max:20', 'unique:branches,code'],

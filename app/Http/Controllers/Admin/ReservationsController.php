@@ -67,7 +67,9 @@ class ReservationsController extends Controller
         $requestedTourId = (int) $request->query('tour_id', 0);
         $travelDateId = (int) $request->query('travel_date_id', 0);
 
-        $clients = Client::orderByDesc('id')->limit(200)->get(['id', 'client_code', 'full_name', 'email', 'phone']);
+        $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
+        $this->branchScope->scopeClients($clientsQuery, $request->user());
+        $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug', 'wp_post_id']);
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
             $requestedVoyage = Voyage::find($requestedTourId);
@@ -228,7 +230,9 @@ class ReservationsController extends Controller
         }
         $reservation->load(['passengers', 'client', 'tour', 'reservationRooms']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
-        $clients = Client::orderByDesc('id')->limit(200)->get(['id', 'client_code', 'full_name', 'email', 'phone']);
+        $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
+        $this->branchScope->scopeClients($clientsQuery, $request->user());
+        $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone']);
 
         $tourHotelsWithRooms = collect();
         $wpTourId = $reservation->getWpTourId();

@@ -20,11 +20,11 @@
 
     <div class="row mb-3">
         <div class="col-12 text-end">
-            @can('settings.view')
+            @if(($canCreateBranch ?? false))
                 <a href="{{ route('admin.branches.create') }}" class="btn btn-success">
                     <i class="bx bx-plus"></i> Nouvelle agence
                 </a>
-            @endcan
+            @endif
         </div>
     </div>
 

@@ -78,15 +78,19 @@ class ClientController extends Controller
         }
 
         $clients = $query->paginate((int) $request->query('per_page', 15))->withQueryString();
-        $users = User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $usersQuery = User::query()->where('is_active', true)->orderBy('name');
+        $this->branchScope->scopeUsers($usersQuery, $request->user());
+        $users = $usersQuery->get(['id', 'name']);
 
         return view('admin.customers.clients.index', compact('clients', 'users'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $client = new Client();
-        $users = User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $usersQuery = User::query()->where('is_active', true)->orderBy('name');
+        $this->branchScope->scopeUsers($usersQuery, $request->user());
+        $users = $usersQuery->get(['id', 'name']);
         return view('admin.customers.clients.create', compact('client', 'users'));
     }
 
@@ -105,20 +109,34 @@ class ClientController extends Controller
             ->with('success', 'Client créé avec succès.');
     }
 
-    public function show(Client $client): View
+    public function show(Request $request, Client $client): View
     {
+        $branchIds = $this->branchScope->visibleBranchIds($request->user());
+        if ($branchIds !== null && ! in_array((int) $client->branch_id, $branchIds, true)) {
+            abort(403, 'Accès non autorisé à ce client.');
+        }
         $client->load(['assignedTo', 'createdBy', 'updatedBy']);
         return view('admin.customers.clients.show', compact('client'));
     }
 
-    public function edit(Client $client): View
+    public function edit(Request $request, Client $client): View
     {
-        $users = User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $branchIds = $this->branchScope->visibleBranchIds($request->user());
+        if ($branchIds !== null && ! in_array((int) $client->branch_id, $branchIds, true)) {
+            abort(403, 'Accès non autorisé à ce client.');
+        }
+        $usersQuery = User::query()->where('is_active', true)->orderBy('name');
+        $this->branchScope->scopeUsers($usersQuery, $request->user());
+        $users = $usersQuery->get(['id', 'name']);
         return view('admin.customers.clients.edit', compact('client', 'users'));
     }
 
     public function update(UpdateClientRequest $request, Client $client): RedirectResponse
     {
+        $branchIds = $this->branchScope->visibleBranchIds($request->user());
+        if ($branchIds !== null && ! in_array((int) $client->branch_id, $branchIds, true)) {
+            abort(403, 'Accès non autorisé à ce client.');
+        }
         $data = $request->validated();
         $data['visa_required'] = $request->boolean('visa_required');
         $data['newsletter_opt_in'] = $request->boolean('newsletter_opt_in');
@@ -133,6 +151,10 @@ class ClientController extends Controller
 
     public function destroy(Request $request, Client $client): RedirectResponse
     {
+        $branchIds = $this->branchScope->visibleBranchIds($request->user());
+        if ($branchIds !== null && ! in_array((int) $client->branch_id, $branchIds, true)) {
+            abort(403, 'Accès non autorisé à ce client.');
+        }
         $client->delete();
         return redirect()
             ->route('admin.customers.clients.index')
@@ -142,6 +164,7 @@ class ClientController extends Controller
     public function trashed(Request $request): View
     {
         $query = Client::query()->onlyTrashed()->with(['assignedTo']);
+        $this->branchScope->scopeClients($query, $request->user());
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -155,18 +178,22 @@ class ClientController extends Controller
         return view('admin.customers.clients.index', compact('clients', 'users'))->with('trashed', true);
     }
 
-    public function restore(int $id): RedirectResponse
+    public function restore(Request $request, int $id): RedirectResponse
     {
-        $client = Client::onlyTrashed()->findOrFail($id);
+        $query = Client::onlyTrashed()->where('id', $id);
+        $this->branchScope->scopeClients($query, $request->user());
+        $client = $query->firstOrFail();
         $client->restore();
         return redirect()
             ->route('admin.customers.clients.index')
             ->with('success', 'Client restauré.');
     }
 
-    public function forceDelete(int $id): RedirectResponse
+    public function forceDelete(Request $request, int $id): RedirectResponse
     {
-        $client = Client::onlyTrashed()->findOrFail($id);
+        $query = Client::onlyTrashed()->where('id', $id);
+        $this->branchScope->scopeClients($query, $request->user());
+        $client = $query->firstOrFail();
         $client->forceDelete();
         return redirect()
             ->route('admin.customers.clients.index')
@@ -187,6 +214,11 @@ class ClientController extends Controller
             $ids = json_decode($ids, true) ?: [];
         }
         $ids = array_filter(array_map('intval', (array) $ids));
+
+        $allowedQuery = Client::query();
+        $this->branchScope->scopeClients($allowedQuery, $request->user());
+        $allowedIds = $allowedQuery->pluck('id')->toArray();
+        $ids = array_intersect($ids, $allowedIds);
 
         if ($action === 'restore') {
             Client::onlyTrashed()->whereIn('id', $ids)->restore();

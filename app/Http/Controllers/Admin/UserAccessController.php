@@ -72,13 +72,15 @@ class UserAccessController extends Controller
             ->with('success', 'Utilisateur créé avec succès.');
     }
 
-    public function edit(User $user)
+    public function edit(Request $request, User $user)
     {
+        $this->ensureUserInScope($request->user(), $user);
         return view('admin.settings.utilisateurs.form', $this->buildFormPayload($user));
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $this->ensureUserInScope($request->user(), $user);
         $data = $this->validatePayload($request, false, $user);
 
         $user->name = $data['name'];
@@ -107,8 +109,9 @@ class UserAccessController extends Controller
             ->with('success', 'Utilisateur mis à jour.');
     }
 
-    public function toggleActive(User $user): RedirectResponse
+    public function toggleActive(Request $request, User $user): RedirectResponse
     {
+        $this->ensureUserInScope($request->user(), $user);
         $user->is_active = ! $user->is_active;
         $user->save();
 
@@ -117,15 +120,25 @@ class UserAccessController extends Controller
             ->with('success', $user->is_active ? 'Utilisateur activé.' : 'Utilisateur désactivé.');
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse
     {
         if (auth()->id() === $user->id) {
             return redirect()->route('admin.settings.utilisateurs')->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
         }
+        $this->ensureUserInScope($request->user(), $user);
 
         $user->delete();
 
         return redirect()->route('admin.settings.utilisateurs')->with('success', 'Utilisateur supprimé.');
+    }
+
+    private function ensureUserInScope(User $currentUser, User $targetUser): void
+    {
+        $query = User::query()->where('id', $targetUser->id);
+        $this->branchScope->scopeUsers($query, $currentUser);
+        if ($query->doesntExist()) {
+            abort(403, 'Accès non autorisé à cet utilisateur.');
+        }
     }
 
     private function buildFormPayload(User $user): array

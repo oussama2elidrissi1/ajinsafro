@@ -23,7 +23,8 @@ class AjinsafroRolesSeeder extends Seeder
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'accommodations.') || str_starts_with($p, 'operations.')
                 || str_starts_with($p, 'visa.') || str_starts_with($p, 'finance.') || str_starts_with($p, 'reporting.')
-                || str_starts_with($p, 'messagerie.') || str_starts_with($p, 'settings.branches.') || str_starts_with($p, 'settings.users.')
+                || str_starts_with($p, 'messagerie.') || str_starts_with($p, 'settings.view')
+                || str_starts_with($p, 'settings.branches.') || str_starts_with($p, 'settings.users.')
                 || str_starts_with($p, 'settings.general.');
         }));
         $commercial = array_values(array_filter($allPermissions, function (string $p): bool {
@@ -32,7 +33,8 @@ class AjinsafroRolesSeeder extends Seeder
         }));
         $agent = array_values(array_filter($allPermissions, function (string $p): bool {
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
-                || str_starts_with($p, 'circuits.') || str_starts_with($p, 'operations.') || str_starts_with($p, 'visa.');
+                || str_starts_with($p, 'circuits.') || str_starts_with($p, 'operations.') || str_starts_with($p, 'visa.')
+                || str_starts_with($p, 'messagerie.');
         }));
 
         $this->createRole(BranchScopeService::ROLE_SUPER_ADMIN, $allPermissions);
