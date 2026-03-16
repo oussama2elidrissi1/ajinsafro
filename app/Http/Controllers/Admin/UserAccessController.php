@@ -59,6 +59,7 @@ class UserAccessController extends Controller
         $user->access_mode = $data['access_mode'];
         $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
         $user->branch_id = ! empty($data['branch_id']) ? (int) $data['branch_id'] : null;
+        $user->manager_id = ! empty($data['manager_id']) ? (int) $data['manager_id'] : null;
         $user->job_title = $data['job_title'] ?? null;
         $user->user_type = $data['user_type'] ?? null;
         $user->password = Hash::make($data['password']);
@@ -89,6 +90,7 @@ class UserAccessController extends Controller
         $user->access_mode = $data['access_mode'];
         $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
         $user->branch_id = ! empty($data['branch_id']) ? (int) $data['branch_id'] : null;
+        $user->manager_id = array_key_exists('manager_id', $data) ? (empty($data['manager_id']) ? null : (int) $data['manager_id']) : $user->manager_id;
         $user->job_title = $data['job_title'] ?? null;
         $user->user_type = $data['user_type'] ?? null;
 
@@ -138,10 +140,15 @@ class UserAccessController extends Controller
 
         $selectedRole = $user->roles->first()?->name ?? $user->base_role;
 
+        $managersQuery = User::query()->where('is_active', true)->whereNotNull('branch_id');
+        $this->branchScope->scopeUsers($managersQuery, request()->user());
+        $managers = $managersQuery->orderBy('name')->get(['id', 'name', 'email', 'branch_id']);
+
         return [
             'userModel' => $user,
             'roles' => $roles,
             'branches' => $branches,
+            'managers' => $managers,
             'permissionGroups' => $permissionGroups,
             'rolePermissionsMap' => $rolePermissionsMap,
             'selectedRole' => $selectedRole,
@@ -163,6 +170,7 @@ class UserAccessController extends Controller
             'phone' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string'],
             'branch_id' => ['nullable', 'integer', Rule::exists('branches', 'id')],
+            'manager_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
             'job_title' => ['nullable', 'string', 'max:100'],
             'user_type' => ['nullable', 'string', 'max:50'],
             'is_admin' => ['nullable', 'boolean'],

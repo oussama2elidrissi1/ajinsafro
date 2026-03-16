@@ -10,12 +10,23 @@ use Illuminate\Database\Eloquent\Builder;
 
 class BranchScopeService
 {
+    public const ROLE_SUPER_ADMIN = 'super_admin';
+    public const ROLE_SIEGE_ADMIN = 'siege_admin';
+    public const ROLE_BRANCH_ADMIN = 'branch_admin';
+    public const ROLE_CHEF_COMMERCIAL = 'chef_commercial';
+    public const ROLE_COMMERCIAL = 'commercial';
+    public const ROLE_AGENT = 'agent';
+
     /**
-     * Retourne true si l'utilisateur peut tout voir (toutes agences).
+     * Comptes avec accès global (toutes les agences) : super_admin, siege_admin, ou is_admin (legacy).
      */
     public function canSeeAllBranches(User $user): bool
     {
-        return $user->hasRole('Super Admin') || $user->hasRole('Admin Siège') || $user->is_admin;
+        return $user->hasRole(self::ROLE_SUPER_ADMIN)
+            || $user->hasRole(self::ROLE_SIEGE_ADMIN)
+            || $user->hasRole('Super Admin')
+            || $user->hasRole('Admin Siège')
+            || $user->is_admin;
     }
 
     /**
@@ -29,9 +40,36 @@ class BranchScopeService
             return null;
         }
         if ($user->branch_id) {
-            return [$user->branch_id];
+            return [(int) $user->branch_id];
         }
         return [];
+    }
+
+    /**
+     * True si l'utilisateur est un compte agence (accès limité à une agence).
+     */
+    public function isBranchScoped(User $user): bool
+    {
+        return $user->hasRole(self::ROLE_BRANCH_ADMIN)
+            || $user->hasRole(self::ROLE_CHEF_COMMERCIAL)
+            || $user->hasRole(self::ROLE_COMMERCIAL)
+            || $user->hasRole(self::ROLE_AGENT);
+    }
+
+    /**
+     * True si compte siège global (Tanger accès toutes agences).
+     */
+    public function isSiegeAdmin(User $user): bool
+    {
+        return $user->hasRole(self::ROLE_SIEGE_ADMIN) || $user->hasRole('Admin Siège');
+    }
+
+    /**
+     * True si compte principal d'une agence (dont agence Tanger).
+     */
+    public function isBranchAdmin(User $user): bool
+    {
+        return $user->hasRole(self::ROLE_BRANCH_ADMIN);
     }
 
     /**

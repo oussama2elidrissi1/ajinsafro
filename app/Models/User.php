@@ -29,6 +29,7 @@ class User extends Authenticatable
         'phone',
         'address',
         'branch_id',
+        'manager_id',
         'job_title',
         'user_type',
         'is_admin',
@@ -89,22 +90,32 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->hasRole('Super Admin') || $this->is_admin;
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_SUPER_ADMIN) || $this->hasRole('Super Admin') || $this->is_admin;
     }
 
-    public function isAdminSiege(): bool
+    public function isSiegeAdmin(): bool
     {
-        return $this->hasRole('Admin Siège');
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_SIEGE_ADMIN) || $this->hasRole('Admin Siège');
+    }
+
+    public function isBranchAdmin(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_BRANCH_ADMIN);
     }
 
     public function isChefCommercial(): bool
     {
-        return $this->hasRole('Chef Commercial');
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_CHEF_COMMERCIAL) || $this->hasRole('Chef Commercial');
+    }
+
+    public function isCommercial(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL);
     }
 
     public function isAgent(): bool
     {
-        return $this->hasRole('Agent');
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_AGENT) || $this->hasRole('Agent');
     }
 
     public function isComptable(): bool
