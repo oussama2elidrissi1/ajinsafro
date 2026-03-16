@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
-use App\Models\PartnerCommissionRule;
 use App\Models\Voyage;
+use App\Models\Wp\WpPost;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -29,25 +29,14 @@ class CatalogueController extends Controller
         $query->orderBy('name');
         $voyages = $query->paginate(20)->withQueryString();
 
-        $ruleByVoyage = [];
-        foreach ($partner->commissionRules()->where('is_active', true)->get() as $rule) {
-            $key = $rule->voyage_id ?? 'global';
-            if (!isset($ruleByVoyage[$key])) {
-                $ruleByVoyage[$key] = $rule;
-            }
-        }
-        $globalRule = $ruleByVoyage['global'] ?? null;
-
-        // Préparer les valeurs formatées pour l'affichage catalogue
+        // Préparer les valeurs formatées pour l'affichage catalogue (prix & commission)
         /** @var \Illuminate\Support\Collection<int,\App\Models\Voyage> $voyageCollection */
         $voyageCollection = $voyages->getCollection();
-        $formatted = $this->formatCataloguePricing($voyageCollection, $ruleByVoyage, $globalRule);
+        $formatted = $this->formatCataloguePricing($voyageCollection);
         $voyages->setCollection($formatted);
 
         return view('partner.catalogue.index', [
             'voyages' => $voyages,
-            'ruleByVoyage' => $ruleByVoyage,
-            'globalRule' => $globalRule,
         ]);
     }
 
@@ -56,44 +45,56 @@ class CatalogueController extends Controller
      * - catalog_public_price_display
      * - catalog_commission_display
      */
-    protected function formatCataloguePricing(Collection $voyages, array $ruleByVoyage, ?PartnerCommissionRule $globalRule): Collection
+    protected function formatCataloguePricing(Collection $voyages): Collection
     {
-        return $voyages->map(function (Voyage $voyage) use ($ruleByVoyage, $globalRule) {
-            $priceFrom = $voyage->price_from;
+        // Charger les WpPost associés (prix & commissions dans les métas WP)
+        $wpIds = $voyages->pluck('wp_post_id')->filter()->unique()->values()->all();
+        $wpPosts = [];
 
-            // Prix public à partir de price_from (stocké en cents)
-            if ($priceFrom && $priceFrom > 0) {
-                $publicAmount = $priceFrom / 100;
-                $voyage->catalog_public_price_display = number_format($publicAmount, 0, ',', ' ') . ' ' . $voyage->currency_symbol;
+        if (! empty($wpIds)) {
+            /** @var \Illuminate\Support\Collection<int,\App\Models\Wp\WpPost> $posts */
+            $posts = WpPost::query()->whereIn('ID', $wpIds)->get();
+            $wpPosts = $posts->keyBy('ID')->all();
+        }
+
+        return $voyages->map(function (Voyage $voyage) use ($wpPosts) {
+            $wpPostId = (int) ($voyage->wp_post_id ?? 0);
+            $wpPost = $wpPostId && isset($wpPosts[$wpPostId]) ? $wpPosts[$wpPostId] : null;
+
+            $minPrice = null;
+            $basePrice = null;
+            $salePrice = null;
+            $adultCommission = null;
+
+            if ($wpPost) {
+                // Les champs proviennent de l'onglet \"Prix & Paiement\" du CRUD admin (stockés en metas WP)
+                $minPrice = (float) ($wpPost->getMeta('min_price') ?? 0);
+                $basePrice = (float) ($wpPost->getMeta('base_price') ?? 0);
+                $salePrice = (float) ($wpPost->getMeta('sale_price') ?? 0);
+                $adultCommission = (float) ($wpPost->getMeta('commission_adulte') ?? 0);
+            }
+
+            // Prix public : sale_price > base_price > min_price
+            $public = null;
+            if ($salePrice > 0) {
+                $public = $salePrice;
+            } elseif ($basePrice > 0) {
+                $public = $basePrice;
+            } elseif ($minPrice > 0) {
+                $public = $minPrice;
+            }
+
+            if ($public !== null) {
+                $voyage->catalog_public_price_display = number_format($public, 0, ',', ' ') . ' ' . $voyage->currency_symbol;
             } else {
                 $voyage->catalog_public_price_display = '—';
             }
 
-            // Règle de commission applicable : spécifique au voyage, sinon globale
-            /** @var PartnerCommissionRule|null $rule */
-            $rule = $ruleByVoyage[$voyage->id] ?? $globalRule;
-
-            if (! $rule) {
-                $voyage->catalog_commission_display = '—';
-                return $voyage;
-            }
-
-            // Si aucun prix public, on ne peut pas calculer de montant fixe lié au prix
-            if (! $priceFrom || $priceFrom <= 0) {
-                if ($rule->type === PartnerCommissionRule::TYPE_PERCENT) {
-                    $voyage->catalog_commission_display = rtrim(rtrim(number_format((float) $rule->value, 2, ',', ' '), '0'), ',') . ' %';
-                } else {
-                    $voyage->catalog_commission_display = number_format((float) $rule->value, 0, ',', ' ') . ' DH';
-                }
-                return $voyage;
-            }
-
-            if ($rule->type === PartnerCommissionRule::TYPE_FIXED) {
-                // Commission fixe en montant
-                $voyage->catalog_commission_display = number_format((float) $rule->value, 0, ',', ' ') . ' DH';
+            // Commission : commission_adulte (MAD)
+            if ($adultCommission !== null && $adultCommission > 0) {
+                $voyage->catalog_commission_display = number_format($adultCommission, 0, ',', ' ') . ' DH';
             } else {
-                // Commission en pourcentage : affichage en pourcentage (source de vérité)
-                $voyage->catalog_commission_display = rtrim(rtrim(number_format((float) $rule->value, 2, ',', ' '), '0'), ',') . ' %';
+                $voyage->catalog_commission_display = '—';
             }
 
             return $voyage;
