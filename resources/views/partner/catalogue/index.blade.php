@@ -13,12 +13,6 @@
 
     <div class="row">
         @forelse($voyages as $voyage)
-            @php
-                $rule = $ruleByVoyage[$voyage->id] ?? $globalRule;
-                $commissionLabel = $rule
-                    ? ($rule->type === \App\Models\PartnerCommissionRule::TYPE_PERCENT ? $rule->value . ' %' : number_format($rule->value, 0, ',', ' ') . ' DH')
-                    : '—';
-            @endphp
             <div class="col-md-6 col-lg-4 mb-3">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
@@ -27,10 +21,12 @@
                             <p class="text-muted small mb-1">{{ $voyage->destination }}</p>
                         @endif
                         <p class="mb-2">
-                            <strong>Prix public :</strong> {{ $voyage->price_from ? number_format($voyage->price_from, 0, ',', ' ') . ' ' . ($voyage->currency_symbol ?? 'DH') : '—' }}
+                            <strong>Prix public :</strong>
+                            {{ $voyage->catalog_public_price_display ?? '—' }}
                         </p>
                         <p class="mb-0">
-                            <strong>Commission :</strong> <span class="text-success">{{ $commissionLabel }}</span>
+                            <strong>Commission :</strong>
+                            <span class="text-success">{{ $voyage->catalog_commission_display ?? '—' }}</span>
                         </p>
                     </div>
                     <div class="card-footer bg-transparent">
