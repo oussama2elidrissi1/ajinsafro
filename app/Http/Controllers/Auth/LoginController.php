@@ -58,6 +58,10 @@ class LoginController extends Controller
             : redirect()->to($this->redirectPath());
     }
 
+    /**
+     * Redirection après connexion selon le type de compte.
+     * Partenaire → espace partenaire ; admin (tous rôles) → dashboard admin via redirectPath().
+     */
     protected function authenticated(Request $request, $user)
     {
         if ($user->isPartner()) {
@@ -67,6 +71,7 @@ class LoginController extends Controller
             }
             return redirect()->route('partner.pending');
         }
+        // Admin (super_admin, siege_admin, branch_admin, chef_commercial, commercial, agent) : null = use redirectPath() → /admin/dashboard
         return null;
     }
 }

@@ -19,7 +19,7 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        if (! $request->user()->is_admin) {
+        if (! $request->user()->canAccessAdmin()) {
             return redirect('/')->with('error', 'Access denied.');
         }
 

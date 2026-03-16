@@ -66,10 +66,13 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes();
 
-// Allow GET /logout to redirect to login instead of 405 (e.g. bookmark or link opened in new tab)
-Route::get('logout', function () {
+// GET /logout : déconnexion puis redirection vers la page login (évite 405 et boucles)
+Route::get('logout', function (\Illuminate\Http\Request $request) {
+    \Illuminate\Support\Facades\Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
     return redirect()->route('login');
-});
+})->name('logout.get');
 
 Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
 Route::get('/search', [FrontSearchController::class, 'index'])->name('front.search');

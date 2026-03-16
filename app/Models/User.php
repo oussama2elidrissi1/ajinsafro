@@ -127,4 +127,27 @@ class User extends Authenticatable
     {
         return $this->hasRole('Partenaire');
     }
+
+    /**
+     * Whether the user can access the admin area (dashboard, reservations, etc.).
+     * True if is_admin or has any of the Ajinsafro admin roles.
+     */
+    public function canAccessAdmin(): bool
+    {
+        if ($this->is_admin) {
+            return true;
+        }
+        return $this->hasRole([
+            \App\Services\BranchScopeService::ROLE_SUPER_ADMIN,
+            \App\Services\BranchScopeService::ROLE_SIEGE_ADMIN,
+            \App\Services\BranchScopeService::ROLE_BRANCH_ADMIN,
+            \App\Services\BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            \App\Services\BranchScopeService::ROLE_COMMERCIAL,
+            \App\Services\BranchScopeService::ROLE_AGENT,
+            'Super Admin',
+            'Admin Siège',
+            'Chef Commercial',
+            'Agent',
+        ]);
+    }
 }
