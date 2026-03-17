@@ -14,6 +14,6 @@ class DocumentsController extends Controller
         $partner = $request->user()->partner;
         $documents = $partner->documents()->orderBy('type')->get();
         $typeLabels = PartnerDocument::typeLabels();
-        return view('partner.documents.index', compact('documents', 'typeLabels'));
+        return view('partner.v2.documents.index', compact('documents', 'typeLabels'));
     }
 }

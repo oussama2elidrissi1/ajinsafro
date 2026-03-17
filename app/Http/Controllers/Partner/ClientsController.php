@@ -31,7 +31,7 @@ class ClientsController extends Controller
             });
         }
         $clients = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
-        return view('partner.clients.index', compact('clients'));
+        return view('partner.v2.clients.index', compact('clients'));
     }
 
     public function create(): View

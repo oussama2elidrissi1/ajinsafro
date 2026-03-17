@@ -35,7 +35,7 @@ class CatalogueController extends Controller
         $formatted = $this->formatCataloguePricing($voyageCollection);
         $voyages->setCollection($formatted);
 
-        return view('partner.catalogue.index', [
+        return view('partner.v2.catalogue.index', [
             'voyages' => $voyages,
         ]);
     }

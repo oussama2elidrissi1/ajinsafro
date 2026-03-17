@@ -120,6 +120,18 @@ Route::middleware(['auth', 'partner'])->prefix('partner')->name('partner.')->gro
         Route::get('catalogue', [PartnerCatalogueController::class, 'index'])->name('catalogue.index');
         Route::get('commissions', [PartnerCommissionsController::class, 'index'])->name('commissions.index');
         Route::get('documents', [PartnerDocumentsController::class, 'index'])->name('documents.index');
+
+        // Portail partenaire v2: messagerie interne + factures/devis
+        Route::get('messages', [\App\Http\Controllers\Partner\MessagesController::class, 'index'])->name('messages.index');
+        Route::get('messages/channels', [\App\Http\Controllers\Partner\MessagesController::class, 'channels'])->name('messages.channels');
+        Route::post('messages/direct', [\App\Http\Controllers\Partner\MessagesController::class, 'createDirect'])->name('messages.direct');
+        Route::get('messages/channels/{channel}/messages', [\App\Http\Controllers\Partner\MessagesController::class, 'messages'])->name('messages.channel.messages');
+        Route::post('messages/channels/{channel}/send', [\App\Http\Controllers\Partner\MessagesController::class, 'send'])->name('messages.channel.send');
+
+        Route::get('invoices', [\App\Http\Controllers\Partner\InvoicesController::class, 'index'])->name('invoices.index');
+        Route::get('invoices/{reservation}/file', [\App\Http\Controllers\Partner\InvoicesController::class, 'file'])->name('invoices.file');
+
+        Route::get('profile', fn () => view('partner.v2.profile.show', ['partner' => request()->user()->partner]))->name('profile.show');
     });
 });
 

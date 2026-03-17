@@ -23,7 +23,7 @@ class CommissionsController extends Controller
         $totalPaid = (float) $partner->commissions()->where('status', PartnerCommission::STATUS_PAID)->sum('amount');
         $totalPending = (float) $partner->commissions()->whereIn('status', [PartnerCommission::STATUS_CALCULATED, PartnerCommission::STATUS_PENDING])->sum('amount');
 
-        return view('partner.commissions.index', [
+        return view('partner.v2.commissions.index', [
             'commissions' => $commissions,
             'totalValidated' => $totalValidated,
             'totalPaid' => $totalPaid,

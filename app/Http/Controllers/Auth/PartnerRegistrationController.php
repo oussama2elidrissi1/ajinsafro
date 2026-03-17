@@ -10,6 +10,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class PartnerRegistrationController extends Controller
 {
@@ -34,6 +36,10 @@ class PartnerRegistrationController extends Controller
 
         DB::beginTransaction();
         try {
+            // Ensure Spatie role exists (some envs may not have seeded roles yet)
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+            Role::findOrCreate('Partenaire', 'web');
+
             $user = User::create([
                 'name' => $data['nom_responsable'],
                 'email' => $data['email'],

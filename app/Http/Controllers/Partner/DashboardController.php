@@ -39,7 +39,7 @@ class DashboardController extends Controller
             ->with('tour:id,name')
             ->get();
 
-        return view('partner.dashboard', [
+        return view('partner_v2.dashboard.index', [
             'partner' => $partner,
             'reservationsCount' => $reservationsCount,
             'reservationsThisMonth' => $reservationsThisMonth,

@@ -36,7 +36,7 @@ class ReservationsController extends Controller
             $query->where('status', $request->query('status'));
         }
         $reservations = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
-        return view('partner.reservations.index', compact('reservations'));
+        return view('partner.v2.reservations.index', compact('reservations'));
     }
 
     public function create(Request $request): View

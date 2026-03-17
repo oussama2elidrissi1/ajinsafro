@@ -29,6 +29,8 @@ export default defineConfig({
                     'resources/scss/bootstrap.scss',
                     'resources/scss/icons.scss',
                     'resources/scss/app.scss',
+                    'resources/css/partner-v2.css',
+                    'resources/js/partner-v2.js',
                 ],
                 refresh: true
             }
