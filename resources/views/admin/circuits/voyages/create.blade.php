@@ -50,12 +50,12 @@
 
                         <div class="mb-3">
                             <label for="content" class="form-label">Description complète</label>
-                            <textarea class="form-control" id="content" name="content" rows="10" placeholder="Description détaillée du tour">{{ old('content') }}</textarea>
+                            <textarea class="form-control rich-editor" id="content" name="content" rows="10" placeholder="Description détaillée du tour">{{ old('content') }}</textarea>
                         </div>
 
                         <div class="mb-3">
                             <label for="excerpt" class="form-label">Extrait / Accroche</label>
-                            <textarea class="form-control" id="excerpt" name="excerpt" rows="3" placeholder="Texte court pour l'aperçu">{{ old('excerpt') }}</textarea>
+                            <textarea class="form-control rich-editor" id="excerpt" name="excerpt" rows="3" placeholder="Texte court pour l'aperçu">{{ old('excerpt') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -452,7 +452,96 @@
         </div>
     </form>
 @endsection
-@push('script')
+        @push('script')
+    <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
+    <script>
+        (function () {
+            function ensureId(el) {
+                if (el.id) return el.id;
+                var base = 'rich-editor-' + Math.random().toString(36).slice(2);
+                el.id = base;
+                return base;
+            }
+
+            function editorHeightFromRows(el) {
+                var rows = parseInt(el.getAttribute('rows') || '0', 10);
+                if (!rows || rows <= 2) return 160;
+                if (rows <= 4) return 220;
+                return 300;
+            }
+
+            function initOne(el) {
+                if (!el || el.tagName !== 'TEXTAREA') return;
+                if (!el.classList.contains('rich-editor')) return;
+                if (el.dataset.richEditorInitialized === 'true') return;
+
+                var id = ensureId(el);
+                if (window.tinymce && tinymce.get(id)) {
+                    el.dataset.richEditorInitialized = 'true';
+                    return;
+                }
+
+                el.dataset.richEditorInitialized = 'true';
+
+                tinymce.init({
+                    target: el,
+                    height: editorHeightFromRows(el),
+                    plugins: [
+                        "advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
+                        "searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
+                        "save table contextmenu directionality emoticons template paste textcolor"
+                    ],
+                    toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
+                    style_formats: [
+                        {title: 'Bold text', inline: 'b'},
+                        {title: 'Red text', inline: 'span', styles: {color: '#ff0000'}},
+                        {title: 'Red header', block: 'h1', styles: {color: '#ff0000'}},
+                        {title: 'Example 1', inline: 'span', classes: 'example1'},
+                        {title: 'Example 2', inline: 'span', classes: 'example2'},
+                        {title: 'Table styles'},
+                        {title: 'Table row 1', selector: 'tr', classes: 'tablerow1'}
+                    ]
+                });
+            }
+
+            function initAll(root) {
+                var scope = root && root.querySelectorAll ? root : document;
+                scope.querySelectorAll('textarea.rich-editor').forEach(initOne);
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                initAll(document);
+
+                // Init pour éléments ajoutés dynamiquement (programme, sections, etc.)
+                var form = document.querySelector('form');
+                if (form && window.MutationObserver) {
+                    var mo = new MutationObserver(function (mutations) {
+                        mutations.forEach(function (m) {
+                            m.addedNodes && m.addedNodes.forEach(function (node) {
+                                if (!node || node.nodeType !== 1) return;
+                                if (node.matches && node.matches('textarea.rich-editor')) initOne(node);
+                                if (node.querySelectorAll) initAll(node);
+                            });
+                        });
+                    });
+                    mo.observe(form, {childList: true, subtree: true});
+                }
+
+                // Sync contenu TinyMCE -> textarea avant submit
+                if (form) {
+                    form.addEventListener('submit', function () {
+                        if (window.tinymce) tinymce.triggerSave();
+                    });
+                }
+
+                // Ré-init à l'ouverture d'un onglet (si des champs sont rendus après)
+                document.addEventListener('shown.bs.tab', function (e) {
+                    var target = e && e.target ? document.querySelector(e.target.getAttribute('href')) : null;
+                    if (target) initAll(target);
+                });
+            });
+        })();
+    </script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
         // Location search filter for create form (WordPress Traveler behavior)
@@ -651,7 +740,7 @@
                         <div class="mb-0">
                             <label class="form-label">Description</label>
                             <textarea name="tours_program[${programItemIndex}][desc]" 
-                                      class="form-control" 
+                                      class="form-control rich-editor" 
                                       rows="3"
                                       placeholder="Description détaillée de cette étape du programme"></textarea>
                         </div>
