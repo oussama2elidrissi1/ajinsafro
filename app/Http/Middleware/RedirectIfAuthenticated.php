@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Providers\RouteServiceProvider;
+use App\Services\Auth\LoginRedirectService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,22 +31,9 @@ class RedirectIfAuthenticated
 
                 $user = Auth::guard($guard)->user();
 
-                // Accès admin (rôles ou is_admin) → dashboard admin
-                if (method_exists($user, 'canAccessAdmin') && $user->canAccessAdmin()) {
-                    return redirect(RouteServiceProvider::HOME);
-                }
-
-                // Partenaire → espace partenaire
-                if (method_exists($user, 'isPartner') && $user->isPartner()) {
-                    $partner = $user->partner ?? null;
-                    if ($partner && method_exists($partner, 'canAccessPartnerArea') && $partner->canAccessPartnerArea()) {
-                        return redirect()->route('partner.dashboard');
-                    }
-                    return redirect()->route('partner.pending');
-                }
-
-                // Ni admin ni partenaire → page d’accueil publique
-                return redirect('/');
+                /** @var \App\Models\User $user */
+                $dest = app(LoginRedirectService::class)->destinationFor($user);
+                return redirect()->to($dest);
             }
         }
 

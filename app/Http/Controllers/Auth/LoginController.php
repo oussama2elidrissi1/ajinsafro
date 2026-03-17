@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
+use App\Services\Auth\LoginRedirectService;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
@@ -64,14 +65,27 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        if ($user->isPartner()) {
-            $partner = $user->partner;
-            if ($partner && $partner->canAccessPartnerArea()) {
-                return redirect()->route('partner.dashboard');
-            }
-            return redirect()->route('partner.pending');
+        /** @var \App\Models\User $user */
+        $dest = app(LoginRedirectService::class)->destinationFor($user);
+
+        // If destination equals the default redirectPath (HOME), let the trait handle "intended" logic.
+        if ($dest === route('admin.dashboard')) {
+            return null;
         }
-        // Admin (super_admin, siege_admin, branch_admin, chef_commercial, commercial, agent) : null = use redirectPath() → /admin/dashboard
-        return null;
+
+        return redirect()->to($dest);
+    }
+
+    /**
+     * Logout must always redirect to Ajinsafro public website.
+     */
+    public function logout(Request $request)
+    {
+        $this->guard()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->to('https://ajinsafro.net/');
     }
 }

@@ -15,7 +15,7 @@ class PartnerMiddleware
         }
 
         if (! $request->user()->isPartner()) {
-            if ($request->user()->is_admin) {
+            if ($request->user()->canAccessAdmin()) {
                 return redirect()->route('admin.dashboard');
             }
             return redirect('/')->with('error', 'Accès non autorisé.');

@@ -71,7 +71,7 @@ Route::get('logout', function (\Illuminate\Http\Request $request) {
     \Illuminate\Support\Facades\Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
-    return redirect()->route('login');
+    return redirect()->to('https://ajinsafro.net/');
 })->name('logout.get');
 
 Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
