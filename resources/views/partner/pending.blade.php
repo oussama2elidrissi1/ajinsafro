@@ -21,10 +21,7 @@
                             <p class="text-muted mb-4">
                                 Vous recevrez un email dès que votre compte sera activé. Vous pourrez alors accéder à votre espace partenaire (réservations, clients).
                             </p>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-primary">Se déconnecter</button>
-                            </form>
+                            <a href="{{ route('logout.get') }}" class="btn btn-outline-primary">Se déconnecter</a>
                         </div>
                     </div>
                 </div>

@@ -32,13 +32,10 @@
                 </a>
             @endforeach
             <div class="h-px bg-gray-100 my-2"></div>
-            <form action="{{ route('logout') }}" method="POST" class="m-0">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-500 font-medium text-sm transition-colors">
-                    <span class="w-2.5 h-2.5 rounded-full bg-red-200"></span>
-                    Se déconnecter
-                </button>
-            </form>
+            <a href="{{ route('logout.get') }}" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-500 font-medium text-sm transition-colors">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-200"></span>
+                Se déconnecter
+            </a>
         </nav>
     </div>
 </aside>

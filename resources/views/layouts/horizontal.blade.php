@@ -473,10 +473,7 @@
                     <a class="dropdown-item" href="#"><i class="bx bx-lock-open font-size-16 align-middle me-1"></i>
                         Lock screen</a>
                     <div class="dropdown-divider"></div>
-                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="dropdown-item text-danger border-0 bg-transparent w-100 text-start" style="cursor:pointer;"><i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> Logout</button>
-                    </form>
+                    <a class="dropdown-item text-danger" href="{{ route('logout.get') }}"><i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> Logout</a>
                 </div>
             </div>
 

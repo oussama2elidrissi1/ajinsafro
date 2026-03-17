@@ -57,10 +57,7 @@
                     </div>
                     <div class="mt-5 text-center">
                         <p>Not you ? return
-                            <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="fw-medium text-primary border-0 bg-transparent p-0" style="cursor:pointer;text-decoration:underline;">Sign In</button>
-                            </form>
+                            <a href="{{ route('logout.get') }}" class="fw-medium text-primary" style="text-decoration:underline;">Sign In</a>
                         </p>
                         <p>©
                             <script>

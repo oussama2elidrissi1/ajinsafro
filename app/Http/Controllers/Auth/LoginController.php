@@ -86,6 +86,6 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->to('https://ajinsafro.net/');
+        return redirect()->away('https://ajinsafro.net');
     }
 }
