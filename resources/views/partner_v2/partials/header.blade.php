@@ -100,10 +100,7 @@
                         <div class="aj-topbar__partner">
                             <img src="{{ $user->avatar_url }}" alt="Avatar" class="aj-topbar__partner-avatar">
                             <span class="aj-topbar__partner-name">{{ $user->name }}</span>
-                            <form action="{{ route('logout') }}" method="POST" class="aj-topbar__partner-logout">
-                                @csrf
-                                <button type="submit" class="aj-topbar__auth-link aj-topbar__auth-link--signup">Déconnexion</button>
-                            </form>
+                            <a href="{{ route('logout.get') }}" class="aj-topbar__auth-link aj-topbar__auth-link--signup aj-topbar__partner-logout">Déconnexion</a>
                         </div>
                     @endif
                 </div>
