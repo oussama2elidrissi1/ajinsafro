@@ -74,6 +74,8 @@
     (function () {
         const channelsUrl = @json(route('partner.messages.channels'));
         const createDirectUrl = @json(route('partner.messages.direct'));
+        const channelMessagesUrlTpl = @json(route('partner.messages.channel.messages', ['channel' => '__CHANNEL__']));
+        const channelSendUrlTpl = @json(route('partner.messages.channel.send', ['channel' => '__CHANNEL__']));
         const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         let activeChannelId = null;
@@ -130,7 +132,7 @@
             document.getElementById('pm-subtitle').classList.remove('hidden');
             renderChannels(document.getElementById('pm-search').value);
 
-            const res = await fetch(@json(url('/partner/messages/channels')) + '/' + id + '/messages', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
+            const res = await fetch(channelMessagesUrlTpl.replace('__CHANNEL__', String(id)), { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
             const data = await res.json();
             const box = document.getElementById('pm-messages');
             box.innerHTML = '';
@@ -184,7 +186,7 @@
             const msg = ta.value.trim();
             if (!msg) return;
             ta.value = '';
-            const res = await fetch(@json(url('/partner/messages/channels')) + '/' + activeChannelId + '/send', {
+            const res = await fetch(channelSendUrlTpl.replace('__CHANNEL__', String(activeChannelId)), {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
