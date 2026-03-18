@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\PartnerAccountController;
 use App\Http\Controllers\Admin\PartnerCommissionRuleController;
 use App\Http\Controllers\Auth\PartnerRegistrationController;
 use App\Http\Controllers\Admin\TourHotelController;
+use App\Http\Controllers\Admin\HotelBackofficeController;
 use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\TaxonomyTermController;
 use App\Http\Controllers\Admin\ProgramApiController;
@@ -199,6 +200,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::delete('circuits/airlines/ajax/{airline}', [AirlineController::class, 'ajaxDestroy'])->name('circuits.airlines.ajax.destroy');
 
     Route::get('circuits/tour-hotels', [TourHotelController::class, 'index'])->name('circuits.tour-hotels.index');
+    Route::get('circuits/tour-hotels/{tourId}', [TourHotelController::class, 'show'])->name('circuits.tour-hotels.show')->whereNumber('tourId');
     Route::get('circuits/tour-hotels/{tourId}/edit', [TourHotelController::class, 'edit'])->name('circuits.tour-hotels.edit')->whereNumber('tourId');
     Route::match(['put', 'patch'], 'circuits/tour-hotels/{tourId}', [TourHotelController::class, 'update'])->name('circuits.tour-hotels.update')->whereNumber('tourId');
 
@@ -253,6 +255,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('accommodations/chambres', [AccommodationsController::class, 'page'])->name('accommodations.chambres')->defaults('submenu', 'chambres');
     Route::get('accommodations/tarifs-saisonniers', [AccommodationsController::class, 'page'])->name('accommodations.tarifs-saisonniers')->defaults('submenu', 'tarifs-saisonniers');
     Route::get('accommodations/disponibilites', [AccommodationsController::class, 'page'])->name('accommodations.disponibilites')->defaults('submenu', 'disponibilites');
+
+    Route::resource('hotels', HotelBackofficeController::class)->names('hotels');
 
     Route::get('operations', [OperationsController::class, 'index'])->name('operations.index');
     Route::get('operations/planning', [OperationsController::class, 'page'])->name('operations.planning')->defaults('submenu', 'planning');

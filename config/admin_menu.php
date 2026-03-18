@@ -228,6 +228,7 @@ return [
         'admin.operations.' => 'operations.view',
         'admin.visa.' => 'visa.view',
         'admin.finance.' => 'finance.view',
+        'admin.hotels.' => 'accommodations.view',
         'admin.partners.' => 'partners.view',
         'admin.partner-accounts.' => 'partners.view',
         'admin.partner-commission-rules.' => 'partners.view',

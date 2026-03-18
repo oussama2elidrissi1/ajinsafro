@@ -198,7 +198,11 @@ class ReservationsController extends Controller
         ]);
 
         $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
-        $this->validateRoomCapacity($request->input('hotel_rooms', []), $totalTravelers);
+        $this->validateRoomCapacity(
+            (int) $request->input('travel_date_id', 0),
+            (int) $request->input('tour_id', 0),
+            $totalTravelers
+        );
 
         $data['status'] = Reservation::STATUS_EN_COURS;
         $data['visa_ok'] = $request->boolean('visa_ok');
@@ -290,7 +294,11 @@ class ReservationsController extends Controller
         ]);
 
         $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
-        $this->validateRoomCapacity($request->input('hotel_rooms', []), $totalTravelers);
+        $this->validateRoomCapacity(
+            (int) $request->input('travel_date_id', 0),
+            (int) $request->input('tour_id', 0),
+            $totalTravelers
+        );
 
         $data['visa_ok'] = $request->boolean('visa_ok');
         $data['updated_by'] = $request->user()->id;
@@ -326,31 +334,55 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Vérifie que la capacité totale des chambres choisies couvre le nombre de voyageurs.
+     * Vérifie que la capacité disponible sur la date de départ couvre le nombre de voyageurs.
+     * La capacité vient des chambres configurées dans l’hôtel du voyage + l’occupation (stock réel).
      */
-    private function validateRoomCapacity(array $hotelRooms, int $totalTravelers): void
+    private function validateRoomCapacity(int $travelDateId, int $tourId, int $totalTravelers): void
     {
-        if ($totalTravelers <= 0 || empty($hotelRooms)) {
+        if ($totalTravelers <= 0 || $travelDateId <= 0 || $tourId <= 0) {
+            // Si pas de date de départ, on ne peut pas gérer le stock par départ.
             return;
         }
-        $totalCapacity = 0;
-        foreach ($hotelRooms as $row) {
-            if (!is_array($row) || empty($row['tour_hotel_room_id'])) {
-                continue;
-            }
-            $roomCount = max(0, (int) ($row['room_count'] ?? 0));
-            if ($roomCount < 1) {
-                continue;
-            }
-            $room = TourHotelRoom::find((int) $row['tour_hotel_room_id']);
-            if ($room) {
-                $totalCapacity += (int) $row['room_count'] * (int) $room->capacity_total;
+
+        $voyage = \App\Models\Voyage::query()->find($tourId);
+        if (!$voyage || !$voyage->wp_post_id) {
+            return;
+        }
+
+        $wpTourId = (int) $voyage->wp_post_id;
+        $tourHotels = TourHotel::getAllForTour($wpTourId)->load('rooms');
+
+        $totalCapacitySeats = 0;
+        foreach ($tourHotels as $hotel) {
+            foreach ($hotel->rooms->where('is_active', true) as $room) {
+                $cap = (int) ($room->capacity_total ?? 0);
+                $count = (int) ($room->room_count ?? 0);
+                if ($cap > 0 && $count > 0) {
+                    $totalCapacitySeats += $count * $cap;
+                }
             }
         }
-        if ($totalCapacity > 0 && $totalCapacity < $totalTravelers) {
+
+        if ($totalCapacitySeats <= 0) {
+            // Aucune capacité configurée : la réservation sera bloquée plus tard côté service si nécessaire.
+            return;
+        }
+
+        $occupiedSeats = 0;
+        try {
+            $occupiedSeats = (int) \DB::table('tour_room_type_occupancies')
+                ->where('travel_date_id', $travelDateId)
+                ->sum('seats_occupied_total');
+        } catch (\Throwable $e) {
+            // Si la table d’occupation n’existe pas encore, on ne bloque pas ici (le service plantera si nécessaire).
+            return;
+        }
+
+        $availableSeats = max(0, $totalCapacitySeats - $occupiedSeats);
+        if ($availableSeats > 0 && $availableSeats < $totalTravelers) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'hotel_rooms' => [
-                    "La capacité totale des chambres choisies ({$totalCapacity} personne(s)) est insuffisante pour le nombre de voyageurs ({$totalTravelers}). Veuillez ajouter des chambres ou des types à plus grande capacité.",
+                    "Capacité insuffisante sur cette date de départ ({$availableSeats} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
                 ],
             ]);
         }

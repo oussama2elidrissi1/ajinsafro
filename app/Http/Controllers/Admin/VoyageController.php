@@ -731,6 +731,12 @@ class VoyageController extends Controller
             ? $request->input('tour_hotels')
             : ($request->has('tour_hotel') ? [$request->input('tour_hotel', [])] : []);
 
+        // Règle métier : 1 seul hôtel par voyage.
+        // Si le formulaire envoie plusieurs lignes, on conserve uniquement la première.
+        if (is_array($inputHotels) && count($inputHotels) > 1) {
+            $inputHotels = [reset($inputHotels)];
+        }
+
         foreach ($inputHotels as $raw) {
             if (!is_array($raw)) {
                 continue;
@@ -803,8 +809,22 @@ class VoyageController extends Controller
         if (!is_array($tourHotelsInput)) {
             return;
         }
+
+        // Robustesse UI: le formulaire peut envoyer des indices non consécutifs (ex: hi=1 après suppression).
+        // On mappe donc les rooms par tour_hotel_id quand disponible, sinon on fallback sur l'index.
+        $roomsByTourHotelId = [];
+        foreach ($tourHotelsInput as $maybeTourHotel) {
+            if (!is_array($maybeTourHotel)) {
+                continue;
+            }
+            $thId = isset($maybeTourHotel['id']) && $maybeTourHotel['id'] !== '' ? (int) $maybeTourHotel['id'] : 0;
+            if ($thId > 0) {
+                $roomsByTourHotelId[$thId] = $maybeTourHotel['rooms'] ?? [];
+            }
+        }
+
         foreach ($hotelIdsOrdered as $index => $tourHotelId) {
-            $roomsInput = $tourHotelsInput[$index]['rooms'] ?? [];
+            $roomsInput = $roomsByTourHotelId[$tourHotelId] ?? ($tourHotelsInput[$index]['rooms'] ?? []);
             if (!is_array($roomsInput)) {
                 $roomsInput = [];
             }
@@ -830,7 +850,8 @@ class VoyageController extends Controller
                     'capacity_total' => max(1, (int) ($r['capacity_total'] ?? 1)),
                     'supplement' => max(0, (float) ($r['supplement'] ?? 0)),
                     'description' => $r['description'] ?? null,
-                    'is_active' => !isset($r['is_active']) || $r['is_active'] === '' || !empty($r['is_active']),
+                        // Checkbox non cochée => clé absente dans la requête => false
+                        'is_active' => !empty($r['is_active']),
                     'sort_order' => $sortOrder++,
                     'is_default' => !empty($r['is_default']),
                     'notes' => $r['notes'] ?? null,
@@ -839,6 +860,10 @@ class VoyageController extends Controller
                     TourHotelRoom::where('id', $roomId)->update($payload);
                     $keptRoomIds[] = $roomId;
                 } else {
+                    // Sécurité : certaines bases WP existantes n'ont pas de DEFAULT/AUTO_INCREMENT correct sur `id`.
+                    // On force donc un id explicite lors de la création pour éviter l'erreur SQLSTATE: 'id' doesn't have a default value.
+                    $maxId = (int) TourHotelRoom::query()->max('id');
+                    $payload['id'] = $maxId > 0 ? ($maxId + 1) : 1;
                     $room = TourHotelRoom::create($payload);
                     $keptRoomIds[] = $room->id;
                 }
@@ -1031,6 +1056,24 @@ class VoyageController extends Controller
             return;
         }
 
+        // Places calculées à partir des chambres configurées dans l’hôtel du voyage.
+        // La valeur saisie dans l’écran UI n’est plus utilisée.
+        $seatsTotal = 0;
+        try {
+            $tourHotels = TourHotel::getAllForTour($tourId)->load('rooms');
+            foreach ($tourHotels as $hotel) {
+                foreach ($hotel->rooms->where('is_active', true) as $room) {
+                    $cap = (int) ($room->capacity_total ?? 0);
+                    $count = (int) ($room->room_count ?? 0);
+                    if ($cap > 0 && $count > 0) {
+                        $seatsTotal += $count * $cap;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $seatsTotal = 0;
+        }
+
         // Supprimer les anciennes dates
         TravelDate::where('travel_id', $tourId)->delete();
 
@@ -1049,7 +1092,7 @@ class VoyageController extends Controller
                 'travel_id' => $tourId,
                 'date' => $date,
                 'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
-                'seats' => isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : null,
+                'seats' => $seatsTotal,
                 'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? $dateData['price_override'] : null,
             ]);
         }

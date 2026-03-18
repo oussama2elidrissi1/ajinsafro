@@ -12,6 +12,7 @@ class TourHotelRoom extends Model
     protected $table = 'aj_tour_hotel_rooms';
 
     protected $fillable = [
+        'id',
         'tour_hotel_id',
         'room_type',
         'room_label',

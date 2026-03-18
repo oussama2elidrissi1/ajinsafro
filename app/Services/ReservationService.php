@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Reservation;
 use App\Models\ReservationPassenger;
 use App\Models\ReservationRoom;
+use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Services\PartnerCommissionService;
 use App\Services\WordPressMediaService;
@@ -74,7 +75,14 @@ class ReservationService
             }
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
-            $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
+
+            // Stock & allocation progressive uniquement si une date de départ est fournie.
+            if (!empty($reservation->travel_date_id)) {
+                $this->allocateAndSyncReservationRooms($reservation);
+            } else {
+                // Fallback : pas de date => pas de gestion de stock par départ.
+                $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
+            }
 
             if ($reservation->partner_id) {
                 $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
@@ -89,6 +97,9 @@ class ReservationService
     public function update(Reservation $reservation, array $data, ?UploadedFile $paymentReceipt = null, ?UploadedFile $visaDocument = null): Reservation
     {
         return DB::transaction(function () use ($reservation, $data, $paymentReceipt, $visaDocument) {
+            // Revenir à un état neutre avant de recalculer une allocation (passengers_count, travel_date_id, etc.).
+            $this->rollbackReservationAllocations($reservation->id);
+
             $this->fillReservation($reservation, $data);
             $reservation->save();
 
@@ -102,7 +113,12 @@ class ReservationService
             }
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
-            $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
+
+            if (!empty($reservation->travel_date_id)) {
+                $this->allocateAndSyncReservationRooms($reservation);
+            } else {
+                $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
+            }
 
             if ($reservation->partner_id) {
                 $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
@@ -123,10 +139,13 @@ class ReservationService
 
     public function delete(Reservation $reservation): void
     {
-        if ($reservation->partner_id) {
-            $this->commissionService->cancelCommissionForReservation($reservation);
-        }
-        $reservation->delete();
+        DB::transaction(function () use ($reservation) {
+            $this->rollbackReservationAllocations($reservation->id);
+            if ($reservation->partner_id) {
+                $this->commissionService->cancelCommissionForReservation($reservation);
+            }
+            $reservation->delete();
+        });
     }
 
     private function fillReservation(Reservation $reservation, array $data): void
@@ -316,6 +335,286 @@ class ReservationService
         ReservationRoom::where('reservation_id', $reservation->id)->whereNotIn('id', $keepIds)->delete();
         $reservation->room_supplement_total = $totalSupplement;
         $reservation->save();
+    }
+
+    /**
+     * Rollback : retire l'occupation (stock réel) créée par cette réservation.
+     * Utilisé sur update/delete pour recalculer sans accumuler l'occupation.
+     */
+    private function rollbackReservationAllocations(int $reservationId): void
+    {
+        $allocations = DB::table('reservation_room_allocations')
+            ->where('reservation_id', $reservationId)
+            ->select([
+                'travel_date_id',
+                'tour_hotel_id',
+                'tour_hotel_room_id',
+                'seats_allocated',
+            ])
+            ->get();
+
+        if ($allocations->isEmpty()) {
+            // Si aucun enregistrement d'allocation : on laisse reservation_rooms telles quelles.
+            ReservationRoom::query()->where('reservation_id', $reservationId)->delete();
+            return;
+        }
+
+        // Regrouper par (travel_date_id, tour_hotel_room_id) pour éviter des updates multiples.
+        $grouped = $allocations->groupBy(fn ($a) => $a->travel_date_id . '_' . $a->tour_hotel_room_id);
+
+        foreach ($grouped as $key => $rows) {
+            /** @var object $first */
+            $first = $rows->first();
+            $travelDateId = (int) $first->travel_date_id;
+            $tourHotelRoomId = (int) $first->tour_hotel_room_id;
+            $seatsToRollback = (int) $rows->sum(fn ($r) => (int) $r->seats_allocated);
+            if ($seatsToRollback <= 0) {
+                continue;
+            }
+
+            // Lock occupation row si elle existe (elle doit exister si tables sont en place).
+            $occ = DB::table('tour_room_type_occupancies')
+                ->where('travel_date_id', $travelDateId)
+                ->where('tour_hotel_room_id', $tourHotelRoomId)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$occ) {
+                continue;
+            }
+
+            $newVal = max(0, (int) $occ->seats_occupied_total - $seatsToRollback);
+
+            DB::table('tour_room_type_occupancies')
+                ->where('travel_date_id', $travelDateId)
+                ->where('tour_hotel_room_id', $tourHotelRoomId)
+                ->update(['seats_occupied_total' => $newVal]);
+        }
+
+        DB::table('reservation_room_allocations')
+            ->where('reservation_id', $reservationId)
+            ->delete();
+
+        // On supprime les lignes de facturation pour être cohérent avec la nouvelle allocation.
+        ReservationRoom::query()->where('reservation_id', $reservationId)->delete();
+    }
+
+    /**
+     * Allocation progressive + synchronisation des reservation_rooms et de l'occupation.
+     *
+     * Règle facturation (client donné) :
+     * - supplément facturé "par chambre" => seulement quand cette réservation ouvre une chambre supplémentaire.
+     */
+    private function allocateAndSyncReservationRooms(Reservation $reservation): void
+    {
+        $travelDateId = (int) $reservation->travel_date_id;
+        if ($travelDateId <= 0) {
+            // Sécurité : si aucun travel_date_id, fallback.
+            $this->syncReservationRooms($reservation, []);
+            return;
+        }
+
+        $wpTourId = $reservation->getWpTourId();
+        if (!$wpTourId) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hotel_rooms' => ['Voyage associé introuvable (wp_post_id manquant).'],
+            ]);
+        }
+
+        $passengersCount = (int) ($reservation->passengers_count ?? 0);
+        if ($passengersCount <= 0) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hotel_rooms' => ['Nombre de voyageurs invalide.'],
+            ]);
+        }
+
+        $tourHotels = TourHotel::getAllForTour((int) $wpTourId)->load('rooms');
+        if ($tourHotels->isEmpty()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hotel_rooms' => ['Aucun hôtel configuré pour ce voyage.'],
+            ]);
+        }
+
+        // La réservation est par définition sur un seul hôtel (règle métier).
+        // On prend donc le 1er hôtel (en pratique une contrainte WP tour_id_unique doit garantir l’unicité).
+        $tourHotel = $tourHotels->first();
+        $rooms = $tourHotel->rooms->where('is_active', true)->values();
+
+        if ($rooms->isEmpty()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hotel_rooms' => ['Aucune chambre active configurée pour cet hôtel.'],
+            ]);
+        }
+
+        $roomTypes = [];
+        $roomIds = [];
+        $totalCapacitySeats = 0;
+        foreach ($rooms as $room) {
+            $cap = (int) ($room->capacity_total ?? 0);
+            $count = (int) ($room->room_count ?? 0);
+            if ($cap <= 0 || $count <= 0) {
+                continue;
+            }
+            $roomTypes[] = ['tour_hotel_room' => $room, 'tour_hotel_id' => (int) $tourHotel->id];
+            $roomIds[] = (int) $room->id;
+            $totalCapacitySeats += $count * $cap;
+        }
+
+        if (empty($roomTypes) || $totalCapacitySeats <= 0) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hotel_rooms' => ['Capacité totale des chambres = 0.'],
+            ]);
+        }
+
+        $roomIds = array_values(array_unique($roomIds));
+
+        // 1) Assurer l'existence des lignes d'occupation (seats_occupied_total = 0 si nouvelle date).
+        $existingRoomIds = collect();
+        try {
+            $existingRoomIds = DB::table('tour_room_type_occupancies')
+                ->where('travel_date_id', $travelDateId)
+                ->whereIn('tour_hotel_room_id', $roomIds)
+                ->pluck('tour_hotel_room_id');
+        } catch (\Throwable $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hotel_rooms' => ['Tables d’occupation manquantes. Exécute les requêtes SQL nécessaires (tour_room_type_occupancies, reservation_room_allocations).'],
+            ]);
+        }
+
+        $missing = array_values(array_diff($roomIds, $existingRoomIds->map(fn ($v) => (int) $v)->all()));
+        foreach ($missing as $missingRoomId) {
+            $room = $rooms->firstWhere('id', $missingRoomId);
+            if (!$room) {
+                continue;
+            }
+
+            DB::table('tour_room_type_occupancies')->insert([
+                'travel_date_id' => $travelDateId,
+                'tour_hotel_id' => (int) $tourHotel->id,
+                'tour_hotel_room_id' => (int) $missingRoomId,
+                'seats_occupied_total' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // 2) Lock occupation rows pour éviter le surbooking concurrent.
+        $occupancies = DB::table('tour_room_type_occupancies')
+            ->where('travel_date_id', $travelDateId)
+            ->whereIn('tour_hotel_room_id', $roomIds)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('tour_hotel_room_id');
+
+        $remainingSeats = $passengersCount;
+        $allocByRoomId = [];
+        $totalSupplement = 0.0;
+
+        foreach ($rooms as $room) {
+            if ($remainingSeats <= 0) {
+                break;
+            }
+
+            $cap = (int) ($room->capacity_total ?? 0);
+            $count = (int) ($room->room_count ?? 0);
+            if ($cap <= 0 || $count <= 0) {
+                continue;
+            }
+
+            $roomId = (int) $room->id;
+            $typeTotalSeats = $count * $cap;
+            $occupied = (int) (($occupancies[$roomId]->seats_occupied_total ?? 0));
+            $available = $typeTotalSeats - $occupied;
+            if ($available <= 0) {
+                continue;
+            }
+
+            $take = min($remainingSeats, $available);
+            $seatsBefore = $occupied;
+            $seatsAfter = $occupied + (int) $take;
+
+            $roomsConsumedBefore = $seatsBefore > 0 ? intdiv($seatsBefore + $cap - 1, $cap) : 0;
+            $roomsConsumedAfter = $seatsAfter > 0 ? intdiv($seatsAfter + $cap - 1, $cap) : 0;
+            $roomsNewCount = max(0, $roomsConsumedAfter - $roomsConsumedBefore);
+
+            // Persist occupation.
+            DB::table('tour_room_type_occupancies')
+                ->where('travel_date_id', $travelDateId)
+                ->where('tour_hotel_room_id', $roomId)
+                ->update(['seats_occupied_total' => $seatsAfter]);
+
+            // Keep allocation for rollback/debug.
+            $allocByRoomId[$roomId] = [
+                'tour_hotel_id' => (int) $tourHotel->id,
+                'tour_hotel_room_id' => $roomId,
+                'seats_allocated' => (int) $take,
+                'rooms_new_count' => (int) $roomsNewCount,
+                'rooms_total_count_after' => (int) $roomsConsumedAfter,
+                'supplement_unit' => (float) ($room->supplement ?? 0),
+            ];
+
+            if ($roomsNewCount > 0) {
+                $totalSupplement += $roomsNewCount * (float) ($room->supplement ?? 0);
+            }
+
+            $remainingSeats -= (int) $take;
+        }
+
+        if ($remainingSeats > 0) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hotel_rooms' => ['Capacité insuffisante pour cette date de départ (allocation progressive impossible).'],
+            ]);
+        }
+
+        // 3) Synchroniser reservation_rooms et reservation_room_allocations.
+        ReservationRoom::query()->where('reservation_id', $reservation->id)->delete();
+        DB::table('reservation_room_allocations')->where('reservation_id', $reservation->id)->delete();
+
+        foreach ($allocByRoomId as $roomId => $alloc) {
+            DB::table('reservation_room_allocations')->insert([
+                'reservation_id' => (int) $reservation->id,
+                'travel_date_id' => $travelDateId,
+                'tour_hotel_id' => (int) $alloc['tour_hotel_id'],
+                'tour_hotel_room_id' => (int) $alloc['tour_hotel_room_id'],
+                'seats_allocated' => (int) $alloc['seats_allocated'],
+                'rooms_new_count' => (int) $alloc['rooms_new_count'],
+                'rooms_total_count' => (int) $alloc['rooms_total_count_after'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            if ((int) $alloc['rooms_new_count'] > 0) {
+                $reservation->reservationRooms()->create([
+                    'tour_hotel_id' => (int) $alloc['tour_hotel_id'],
+                    'tour_hotel_room_id' => (int) $alloc['tour_hotel_room_id'],
+                    'room_count' => (int) $alloc['rooms_new_count'],
+                    'supplement_unit' => (float) $alloc['supplement_unit'],
+                    'supplement_total' => (float) $alloc['rooms_new_count'] * (float) $alloc['supplement_unit'],
+                ]);
+            }
+        }
+
+        $reservation->room_supplement_total = $totalSupplement;
+        $reservation->save();
+
+        // 4) Recalculer le stock restant côté WP (seats = capacity - occupied).
+        try {
+            $occupiedTotal = DB::table('tour_room_type_occupancies')
+                ->where('travel_date_id', $travelDateId)
+                ->sum('seats_occupied_total');
+
+            $remainingSeats = max(0, (int) $totalCapacitySeats - (int) $occupiedTotal);
+            DB::connection('wp')->table('aj_travel_dates')
+                ->where('id', $travelDateId)
+                ->update(['seats' => $remainingSeats]);
+        } catch (\Throwable $e) {
+            // Best effort : le stock réel reste l’occupation MySQL.
+            \Log::warning('ReservationService@allocate seats update wp failed', [
+                'reservation_id' => $reservation->id,
+                'travel_date_id' => $travelDateId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
 

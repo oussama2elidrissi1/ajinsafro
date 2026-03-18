@@ -710,7 +710,7 @@
                     </div>
                                         <div class="col-md-2">
                                             <label class="form-label small mb-1">Places</label>
-                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
+                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Calculé automatiquement" readonly>
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small mb-1">Prix spécifique</label>
@@ -757,7 +757,7 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label small mb-1">Places</label>
-                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
+                                            <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" value="0" min="0" placeholder="Calculé automatiquement" readonly>
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label small mb-1">Prix spécifique</label>
@@ -3975,6 +3975,13 @@
                         var n = acc.querySelectorAll('.programme-day-card').length;
                         durationInput.value = n > 0 ? n : (durationInput.value || 1);
                     }
+                    // Sécurité: les champs "chambres" doivent être soumis.
+                    // Certaines UIs peuvent temporairement les passer en disabled, ce qui les exclut du payload.
+                    form.querySelectorAll('[name^="tour_hotels["][name*="[rooms]"]').forEach(function(el) {
+                        if (el && el.hasAttribute && el.hasAttribute('disabled')) {
+                            el.removeAttribute('disabled');
+                        }
+                    });
                     // requestSubmit() déclenche la validation HTML5 (required, etc.) avant envoi
                     if (typeof form.requestSubmit === 'function') {
                         form.requestSubmit();
