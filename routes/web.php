@@ -31,12 +31,6 @@ use App\Http\Controllers\Admin\MessagerieController;
 use App\Http\Controllers\Admin\PartnerAccountController;
 use App\Http\Controllers\Admin\PartnerCommissionRuleController;
 use App\Http\Controllers\Auth\PartnerRegistrationController;
-use App\Http\Controllers\Partner\CatalogueController as PartnerCatalogueController;
-use App\Http\Controllers\Partner\ClientsController as PartnerClientsController;
-use App\Http\Controllers\Partner\CommissionsController as PartnerCommissionsController;
-use App\Http\Controllers\Partner\DashboardController as PartnerDashboardController;
-use App\Http\Controllers\Partner\DocumentsController as PartnerDocumentsController;
-use App\Http\Controllers\Partner\ReservationsController as PartnerReservationsController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\TaxonomyTermController;
@@ -71,7 +65,7 @@ Route::get('logout', function (\Illuminate\Http\Request $request) {
     \Illuminate\Support\Facades\Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
-    return redirect()->route('login');
+    return redirect()->away((string) config('app.public_url', 'https://ajinsafro.net'));
 })->name('logout.get');
 
 Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
@@ -99,40 +93,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('lock-screen/activate', [LockScreenController::class, 'lock'])->name('lock-screen.activate');
 });
 
-Route::middleware(['auth', 'partner'])->prefix('partner')->name('partner.')->group(function () {
-    Route::get('en-attente', fn () => view('partner.pending'))->name('pending');
-    Route::middleware('partner.validated')->group(function () {
-        Route::get('dashboard', [PartnerDashboardController::class, 'index'])->name('dashboard');
-        Route::get('reservations', [PartnerReservationsController::class, 'index'])->name('reservations.index');
-        Route::get('reservations/create', [PartnerReservationsController::class, 'create'])->name('reservations.create');
-        Route::post('reservations', [PartnerReservationsController::class, 'store'])->name('reservations.store');
-        Route::get('reservations/{reservation}', [PartnerReservationsController::class, 'show'])->name('reservations.show');
-        Route::get('reservations/{reservation}/edit', [PartnerReservationsController::class, 'edit'])->name('reservations.edit');
-        Route::put('reservations/{reservation}', [PartnerReservationsController::class, 'update'])->name('reservations.update');
-        Route::delete('reservations/{reservation}', [PartnerReservationsController::class, 'destroy'])->name('reservations.destroy');
-        Route::get('clients', [PartnerClientsController::class, 'index'])->name('clients.index');
-        Route::get('clients/create', [PartnerClientsController::class, 'create'])->name('clients.create');
-        Route::post('clients', [PartnerClientsController::class, 'store'])->name('clients.store');
-        Route::get('clients/{client}', [PartnerClientsController::class, 'show'])->name('clients.show');
-        Route::get('clients/{client}/edit', [PartnerClientsController::class, 'edit'])->name('clients.edit');
-        Route::put('clients/{client}', [PartnerClientsController::class, 'update'])->name('clients.update');
-        Route::delete('clients/{client}', [PartnerClientsController::class, 'destroy'])->name('clients.destroy');
-        Route::get('catalogue', [PartnerCatalogueController::class, 'index'])->name('catalogue.index');
-        Route::get('commissions', [PartnerCommissionsController::class, 'index'])->name('commissions.index');
-        Route::get('documents', [PartnerDocumentsController::class, 'index'])->name('documents.index');
-
-        // Portail partenaire v2: messagerie interne + factures/devis
-        Route::get('messages', [\App\Http\Controllers\Partner\MessagesController::class, 'index'])->name('messages.index');
-        Route::get('messages/channels', [\App\Http\Controllers\Partner\MessagesController::class, 'channels'])->name('messages.channels');
-        Route::post('messages/direct', [\App\Http\Controllers\Partner\MessagesController::class, 'createDirect'])->name('messages.direct');
-        Route::get('messages/channels/{channel}/messages', [\App\Http\Controllers\Partner\MessagesController::class, 'messages'])->name('messages.channel.messages');
-        Route::post('messages/channels/{channel}/send', [\App\Http\Controllers\Partner\MessagesController::class, 'send'])->name('messages.channel.send');
-
-        Route::get('invoices', [\App\Http\Controllers\Partner\InvoicesController::class, 'index'])->name('invoices.index');
-        Route::get('invoices/{reservation}/file', [\App\Http\Controllers\Partner\InvoicesController::class, 'file'])->name('invoices.file');
-
-        Route::get('profile', fn () => view('partner.v2.profile.show', ['partner' => request()->user()->partner]))->name('profile.show');
-    });
+// Legacy partner URLs under /partner/... are redirected to the dedicated subdomain portal.
+Route::prefix('partner')->group(function () {
+    Route::get('{any?}', function (?string $any = null) {
+        $partnerUrl = rtrim((string) config('app.partner_url', 'https://partenaire.ajinsafro.net'), '/');
+        $path = $any ? '/' . ltrim($any, '/') : '/dashboard';
+        return redirect()->away($partnerUrl . $path);
+    })->where('any', '.*');
 });
 
 Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->prefix('admin')->name('admin.')->group(function () {

@@ -33,8 +33,26 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
+            // Public website (ajinsafro.net)
+            $publicDomain = config('app.public_domain');
+            $publicRoutes = Route::middleware('web');
+            if (is_string($publicDomain) && $publicDomain !== '') {
+                $publicRoutes->domain($publicDomain);
+            }
+            $publicRoutes->group(base_path('routes/public.php'));
+
+            // Internal back-office (booking.ajinsafro.net)
+            $adminDomain = config('app.admin_domain');
+            $adminRoutes = Route::middleware('web');
+            if (is_string($adminDomain) && $adminDomain !== '') {
+                $adminRoutes->domain($adminDomain);
+            }
+            $adminRoutes->group(base_path('routes/admin.php'));
+
+            // Partner portal on dedicated subdomain
             Route::middleware('web')
-                ->group(base_path('routes/web.php'));
+                ->domain(config('app.partner_domain', 'partenaire.ajinsafro.net'))
+                ->group(base_path('routes/partner.php'));
         });
     }
 }

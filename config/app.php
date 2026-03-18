@@ -57,6 +57,27 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Ajinsafro portals (multi-subdomain)
+    |--------------------------------------------------------------------------
+    |
+    | Used to generate absolute redirects between admin and partner portals.
+    |
+    */
+
+    'admin_url' => env('ADMIN_URL', env('APP_URL', 'http://localhost')),
+
+    'admin_domain' => env('ADMIN_DOMAIN', ''),
+
+    'partner_url' => env('PARTNER_URL', 'https://partenaire.ajinsafro.net'),
+
+    'partner_domain' => env('PARTNER_DOMAIN', 'partenaire.ajinsafro.net'),
+
+    'public_url' => env('PUBLIC_URL', 'https://ajinsafro.net'),
+
+    'public_domain' => env('PUBLIC_DOMAIN', ''),
+
     'asset_url' => env('ASSET_URL'),
 
     /*

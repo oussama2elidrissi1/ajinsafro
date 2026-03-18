@@ -13,12 +13,9 @@
                     <span class="text-[9px] text-[#ffb300] font-semibold uppercase tracking-wider">{{ auth()->user()->partner?->partner_type_label ?? 'Partenaire' }}</span>
                 </div>
             </div>
-            <form action="{{ route('logout') }}" method="POST" class="m-0">
-                @csrf
-                <button type="submit" class="bg-white/10 hover:bg-white/15 text-white px-3 py-2 rounded-lg text-[11px] font-bold transition-colors">
-                    Déconnexion
-                </button>
-            </form>
+            <a href="{{ route('logout.get') }}" class="bg-white/10 hover:bg-white/15 text-white px-3 py-2 rounded-lg text-[11px] font-bold transition-colors">
+                Déconnexion
+            </a>
         </div>
     </div>
 </div>
