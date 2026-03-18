@@ -50,6 +50,8 @@
     }
 
     $user = request()->user();
+    $partnerDomain = (string) config('app.partner_domain', 'partenaire.ajinsafro.net');
+    $isPartnerHost = $partnerDomain !== '' && strcasecmp((string) request()->getHost(), $partnerDomain) === 0;
 @endphp
 
 @if(!empty($hdr['enabled']))
@@ -100,7 +102,14 @@
                         <div class="aj-topbar__partner">
                             <img src="{{ $user->avatar_url }}" alt="Avatar" class="aj-topbar__partner-avatar">
                             <span class="aj-topbar__partner-name">{{ $user->name }}</span>
-                            <a href="{{ route('logout.get') }}" class="aj-topbar__auth-link aj-topbar__auth-link--signup aj-topbar__partner-logout">Déconnexion</a>
+                            @if($isPartnerHost)
+                                <form method="POST" action="{{ route('partner.logout') }}" class="inline">
+                                    @csrf
+                                    <button type="submit" class="aj-topbar__auth-link aj-topbar__auth-link--signup aj-topbar__partner-logout">Déconnexion</button>
+                                </form>
+                            @else
+                                <a href="{{ route('logout.get') }}" class="aj-topbar__auth-link aj-topbar__auth-link--signup aj-topbar__partner-logout">Déconnexion</a>
+                            @endif
                         </div>
                     @endif
                 </div>

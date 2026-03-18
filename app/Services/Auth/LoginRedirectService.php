@@ -12,22 +12,26 @@ class LoginRedirectService
      */
     public function destinationFor(User $user): string
     {
-        // Partner area
+        $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+        $partnerUrl = rtrim((string) config('app.partner_url', 'https://partenaire.ajinsafro.net'), '/');
+        $publicUrl = rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/');
+
+        // Partner area (dedicated subdomain)
         if ($user->isPartner()) {
             $partner = $user->partner;
             if ($partner && method_exists($partner, 'canAccessPartnerArea') && $partner->canAccessPartnerArea()) {
-                return route('partner.dashboard');
+                return $partnerUrl . '/dashboard';
             }
-            return route('partner.pending');
+            return $partnerUrl . '/en-attente';
         }
 
-        // Admin (HQ + branches + commercial roles + comptable)
+        // Admin (HQ + branches + commercial roles + comptable) stays on booking/back-office domain
         if ($user->canAccessAdmin() || $user->isComptable()) {
-            return route('admin.dashboard');
+            return $adminUrl . '/admin/dashboard';
         }
 
         // Default fallback: public website homepage
-        return 'https://ajinsafro.net/';
+        return $publicUrl . '/';
     }
 }
 

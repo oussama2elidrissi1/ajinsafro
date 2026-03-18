@@ -68,12 +68,16 @@ class LoginController extends Controller
         /** @var \App\Models\User $user */
         $dest = app(LoginRedirectService::class)->destinationFor($user);
 
-        // If destination equals the default redirectPath (HOME), let the trait handle "intended" logic.
-        if ($dest === route('admin.dashboard')) {
+        $destHost = (string) parse_url($dest, PHP_URL_HOST);
+        $sameHost = $destHost !== '' && strcasecmp($destHost, $request->getHost()) === 0;
+
+        // Only let the trait handle "intended" logic when staying on the same host.
+        if ($sameHost && str_ends_with(parse_url($dest, PHP_URL_PATH) ?? '', '/admin/dashboard')) {
             return null;
         }
 
-        return redirect()->to($dest);
+        // Cross-subdomain redirects must be absolute.
+        return redirect()->away($dest);
     }
 
     /**
@@ -86,6 +90,6 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->away('https://ajinsafro.net');
+        return redirect()->away((string) config('app.public_url', 'https://ajinsafro.net'));
     }
 }

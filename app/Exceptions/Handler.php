@@ -40,23 +40,37 @@ class Handler extends ExceptionHandler
             return response()->json(['message' => $exception->getMessage()], 401);
         }
 
+        $loginUrl = $this->loginUrlForHost((string) $request->getHost());
         return redirect()
-            ->guest(route('login'))
+            ->guest($loginUrl)
             ->with('error', 'Votre session a expiré, veuillez vous reconnecter.');
+    }
+
+    private function loginUrlForHost(string $host): string
+    {
+        $partnerDomain = (string) config('app.partner_domain', 'partenaire.ajinsafro.net');
+        if ($host !== '' && strcasecmp($host, $partnerDomain) === 0) {
+            return rtrim((string) config('app.partner_url', 'https://partenaire.ajinsafro.net'), '/') . '/login';
+        }
+
+        $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+        return $adminUrl . '/login';
     }
 
     public function render($request, Throwable $e)
     {
         // CSRF token mismatch / 419 Page Expired
         if ($e instanceof TokenMismatchException) {
+            $loginUrl = $this->loginUrlForHost((string) $request->getHost());
             return redirect()
-                ->guest(route('login'))
+                ->guest($loginUrl)
                 ->with('error', 'Votre session a expiré, veuillez vous reconnecter.');
         }
 
         if ($e instanceof HttpExceptionInterface && $e->getStatusCode() === 419) {
+            $loginUrl = $this->loginUrlForHost((string) $request->getHost());
             return redirect()
-                ->guest(route('login'))
+                ->guest($loginUrl)
                 ->with('error', 'Votre session a expiré, veuillez vous reconnecter.');
         }
 

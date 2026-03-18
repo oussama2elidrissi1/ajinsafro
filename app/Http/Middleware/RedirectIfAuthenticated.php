@@ -33,7 +33,7 @@ class RedirectIfAuthenticated
 
                 /** @var \App\Models\User $user */
                 $dest = app(LoginRedirectService::class)->destinationFor($user);
-                return redirect()->to($dest);
+                return redirect()->away($dest);
             }
         }
 
