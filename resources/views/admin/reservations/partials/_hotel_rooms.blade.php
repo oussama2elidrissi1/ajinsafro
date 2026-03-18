@@ -10,7 +10,10 @@
 <div class="card mb-3 border" id="reservation-hotel-card">
     <div class="card-body">
         <h6 class="card-title mb-3 text-secondary"><i class="bx bx-hotel me-1"></i>Hôtel et chambres</h6>
-        <p class="text-muted small mb-3">Choisissez le type et le nombre de chambres pour chaque hôtel du voyage. La capacité totale des chambres doit couvrir le nombre de voyageurs.</p>
+        <p class="text-muted small mb-3">
+            L’allocation des chambres et la gestion des places sont automatiques (calcul côté serveur).
+            Vous choisissez uniquement les passagers et la date de départ.
+        </p>
 
         <div class="row g-2 mb-3">
             <div class="col-md-4">
@@ -61,10 +64,17 @@
                                                 </td>
                                                 <td class="text-center">{{ $room->capacity_total }} pers.</td>
                                                 <td class="text-center">{{ number_format((float)$room->supplement, 0, ',', ' ') }} DH</td>
-                                                <td class="text-center">
+                                            <td class="text-center">
                                                     <input type="hidden" name="hotel_rooms[{{ $idx }}][tour_hotel_id]" value="{{ $hotel->id }}">
                                                     <input type="hidden" name="hotel_rooms[{{ $idx }}][tour_hotel_room_id]" value="{{ $room->id }}">
-                                                    <input type="number" name="hotel_rooms[{{ $idx }}][room_count]" class="form-control form-control-sm text-center reservation-room-count" value="{{ $roomCount }}" min="0" data-room-supplement="{{ $room->supplement }}" data-room-capacity="{{ $room->capacity_total }}">
+                                                <input type="number"
+                                                       name="hotel_rooms[{{ $idx }}][room_count]"
+                                                       class="form-control form-control-sm text-center reservation-room-count"
+                                                       value="{{ $roomCount }}"
+                                                       min="0"
+                                                       readonly
+                                                       data-room-supplement="{{ $room->supplement }}"
+                                                       data-room-capacity="{{ $room->capacity_total }}">
                                                 </td>
                                                 <td class="text-end reservation-room-total">@if($roomCount > 0){{ number_format($roomCount * (float)$room->supplement, 0, ',', ' ') }} DH@else—@endif</td>
                                             </tr>
@@ -97,7 +107,7 @@
                 </div>
             </div>
             <div id="reservation-capacity-error" class="alert alert-danger mt-2 d-none" role="alert">
-                La capacité totale des chambres est insuffisante pour le nombre de voyageurs. Ajoutez des chambres ou des types à plus grande capacité.
+                La capacité sur cette date de départ est insuffisante.
             </div>
         </div>
     </div>
@@ -130,42 +140,25 @@
     }
 
     function updateSummary() {
-        var totalCapacity = 0, totalSupplement = 0;
-        document.querySelectorAll('.reservation-room-row').forEach(function(tr) {
-            var count = parseInt(tr.querySelector('.reservation-room-count')?.value || '0', 10) || 0;
-            var cap = parseInt(tr.getAttribute('data-capacity') || '0', 10) || 0;
-            var sup = parseFloat(tr.getAttribute('data-supplement') || '0') || 0;
-            totalCapacity += count * cap;
-            totalSupplement += count * sup;
-            var totalCell = tr.querySelector('.reservation-room-total');
-            if (totalCell) totalCell.textContent = count > 0 ? (count * sup).toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' DH' : '—';
-        });
+        // Les totaux (places + suppléments) sont recalculés côté serveur lors de l'enregistrement.
+        // On affiche uniquement le prix de base tant que l'allocation n'a pas été faite.
         var capEl = document.getElementById('reservation-total-capacity');
         var supEl = document.getElementById('reservation-total-supplement');
-        if (capEl) capEl.textContent = totalCapacity;
-        if (supEl) supEl.textContent = totalSupplement.toLocaleString('fr-FR', {maximumFractionDigits: 0});
-        var basePrice = parseFloat(document.querySelector('input[name="base_price"]')?.value || '0') || 0;
-        var grandTotal = basePrice + totalSupplement;
         var gtEl = document.getElementById('reservation-grand-total');
-        if (gtEl) gtEl.textContent = grandTotal > 0 ? grandTotal.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' DH' : '—';
-        var travelers = countTravelers();
+        if (capEl) capEl.textContent = '—';
+        if (supEl) supEl.textContent = '—';
+
+        var basePrice = parseFloat(document.querySelector('input[name="base_price"]')?.value || '0') || 0;
+        if (gtEl) gtEl.textContent = basePrice > 0 ? basePrice.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' DH' : '—';
+
         var errEl = document.getElementById('reservation-capacity-error');
-        if (errEl) {
-            if (totalCapacity > 0 && totalCapacity < travelers) errEl.classList.remove('d-none');
-            else errEl.classList.add('d-none');
-        }
+        if (errEl) errEl.classList.add('d-none');
+
         if (summaryBlock && document.querySelector('.reservation-hotel-block')) summaryBlock.classList.remove('d-none');
     }
 
     if (container) {
-        container.addEventListener('input', function(e) {
-            if (e.target.classList.contains('reservation-room-count')) {
-                updateSummary();
-            }
-        });
-        container.addEventListener('change', function(e) {
-            if (e.target.classList.contains('reservation-room-count')) updateSummary();
-        });
+        // room_count est readonly : pas de recalcul côté client ici.
     }
     document.querySelector('input[name="base_price"]')?.addEventListener('input', updateSummary);
 
@@ -193,7 +186,7 @@
                     (data.hotels || []).forEach(function(h) {
                         html += '<div class="card mb-2 reservation-hotel-block" data-tour-hotel-id="' + h.id + '"><div class="card-header bg-light py-2"><strong>' + (h.hotel_name || 'Hôtel') + '</strong></div><div class="card-body py-2"><table class="table table-sm table-bordered mb-0"><thead><tr><th>Type de chambre</th><th class="text-center">Capacité</th><th class="text-center">Supplément unitaire</th><th class="text-center">Nombre de chambres</th><th class="text-end">Supplément total</th></tr></thead><tbody>';
                         (h.rooms || []).forEach(function(room) {
-                            html += '<tr class="reservation-room-row" data-capacity="' + room.capacity_total + '" data-supplement="' + room.supplement + '"><td>' + room.room_type + (room.room_label ? ' — ' + room.room_label : '') + (room.supplement === 0 ? ' <span class="badge bg-success ms-1">Standard</span>' : '') + '</td><td class="text-center">' + room.capacity_total + ' pers.</td><td class="text-center">' + room.supplement + ' DH</td><td class="text-center"><input type="hidden" name="hotel_rooms[' + idx + '][tour_hotel_id]" value="' + h.id + '"><input type="hidden" name="hotel_rooms[' + idx + '][tour_hotel_room_id]" value="' + room.id + '"><input type="number" name="hotel_rooms[' + idx + '][room_count]" class="form-control form-control-sm text-center reservation-room-count" value="0" min="0" data-room-supplement="' + room.supplement + '" data-room-capacity="' + room.capacity_total + '"></td><td class="text-end reservation-room-total">—</td></tr>';
+                            html += '<tr class="reservation-room-row" data-capacity="' + room.capacity_total + '" data-supplement="' + room.supplement + '"><td>' + room.room_type + (room.room_label ? ' — ' + room.room_label : '') + (room.supplement === 0 ? ' <span class="badge bg-success ms-1">Standard</span>' : '') + '</td><td class="text-center">' + room.capacity_total + ' pers.</td><td class="text-center">' + room.supplement + ' DH</td><td class="text-center"><input type="hidden" name="hotel_rooms[' + idx + '][tour_hotel_id]" value="' + h.id + '"><input type="hidden" name="hotel_rooms[' + idx + '][tour_hotel_room_id]" value="' + room.id + '"><input type="number" name="hotel_rooms[' + idx + '][room_count]" class="form-control form-control-sm text-center reservation-room-count" value="0" min="0" readonly data-room-supplement="' + room.supplement + '" data-room-capacity="' + room.capacity_total + '"></td><td class="text-end reservation-room-total">—</td></tr>';
                             idx++;
                         });
                         html += '</tbody></table></div></div>';
