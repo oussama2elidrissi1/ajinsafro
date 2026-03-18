@@ -45,6 +45,43 @@ function ajth_init() {
 add_action( 'plugins_loaded', 'ajth_init' );
 
 /* ──────────────────────────────────────────────
+ * Public login entrypoint (/login)
+ * ──────────────────────────────────────────────
+ *
+ * WordPress only serves as a public entrypoint.
+ * Real authentication remains centralized in Laravel (booking subdomain).
+ *
+ * ajinsafro.net/login  ->  booking.ajinsafro.net/login
+ */
+function ajth_public_login_redirect() {
+    if ( is_admin() || wp_doing_ajax() ) {
+        return;
+    }
+
+    $path = '';
+    if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+        $path = wp_parse_url( esc_url_raw( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH );
+    }
+    $path = is_string( $path ) ? rtrim( $path, '/' ) : '';
+
+    if ( $path !== '/login' ) {
+        return;
+    }
+
+    // Central login on Laravel booking domain.
+    $dest = 'https://booking.ajinsafro.net/login';
+
+    // Preserve optional ?next=... for analytics/UX (not required by Laravel).
+    if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
+        $dest .= '?' . ltrim( (string) $_SERVER['QUERY_STRING'], '?' );
+    }
+
+    wp_safe_redirect( $dest, 302 );
+    exit;
+}
+add_action( 'template_redirect', 'ajth_public_login_redirect', 0 );
+
+/* ──────────────────────────────────────────────
  * Enqueue front-end assets on home page, pages with [ajth_homepage],
  * or on all pages when header is enabled and "site-wide" is on.
  * ────────────────────────────────────────────── */
