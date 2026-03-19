@@ -56,6 +56,10 @@ Auth::routes();
 Route::post('auth/public-login', [\App\Http\Controllers\Auth\PublicLoginController::class, 'store'])
     ->middleware('guest')
     ->name('auth.public-login');
+Route::get('auth/public-login', function () {
+    $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+    return redirect()->away($adminUrl . '/login');
+})->name('auth.public-login.get');
 
 // GET /logout: session close + redirect to public website
 Route::get('logout', function (\Illuminate\Http\Request $request) {
