@@ -47,6 +47,7 @@ class LoginController extends Controller
     protected function sendLoginResponse(Request $request)
     {
         $request->session()->regenerate();
+        $request->session()->forget('url.intended');
 
         $this->clearLoginAttempts($request);
 
@@ -54,9 +55,13 @@ class LoginController extends Controller
             return $response;
         }
 
+        /** @var \App\Models\User $user */
+        $user = $this->guard()->user();
+        $dest = app(LoginRedirectService::class)->destinationFor($user);
+
         return $request->wantsJson()
             ? new \Illuminate\Http\JsonResponse([], 204)
-            : redirect()->to($this->redirectPath());
+            : redirect()->away($dest);
     }
 
     /**
@@ -67,16 +72,9 @@ class LoginController extends Controller
     {
         /** @var \App\Models\User $user */
         $dest = app(LoginRedirectService::class)->destinationFor($user);
+        $request->session()->forget('url.intended');
 
-        $destHost = (string) parse_url($dest, PHP_URL_HOST);
-        $sameHost = $destHost !== '' && strcasecmp($destHost, $request->getHost()) === 0;
-
-        // Only let the trait handle "intended" logic when staying on the same host.
-        if ($sameHost && str_ends_with(parse_url($dest, PHP_URL_PATH) ?? '', '/admin/dashboard')) {
-            return null;
-        }
-
-        // Cross-subdomain redirects must be absolute.
+        // Always use central role-based destination, never "/" or intended fallback.
         return redirect()->away($dest);
     }
 
