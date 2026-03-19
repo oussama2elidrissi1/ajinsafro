@@ -142,6 +142,7 @@
     var roomsEditor = document.getElementById('hotels-rooms-editor');
     var roomsHintEl = document.getElementById('hotels-rooms-hint');
     var roomsAddBtn = document.getElementById('hotels-rooms-add-btn');
+    var targetHotelRowCache = null;
     var createdRowForAdd = null;
     var hadHotelBeforeOpen = false;
 
@@ -179,6 +180,7 @@
         if (wrap) wrap.style.display = 'none';
         if (prev) prev.src = '';
         clearRoomsEditor();
+        targetHotelRowCache = null;
     }
 
     function escHtml(s) {
@@ -322,6 +324,7 @@
     function syncRoomsEditorFromCurrentDay() {
         var tourHotelRow = getTourHotelRowForCurrentDrawer();
         ensureRoomsAddButtonState(tourHotelRow);
+        targetHotelRowCache = tourHotelRow;
         renderRoomsEditorFromTourHotelRow(tourHotelRow);
     }
 
@@ -831,6 +834,22 @@
             syncRoomsEditorFromCurrentDay();
         });
     }
+
+    // Propagation automatique des chambres au moment du submit du formulaire principal.
+    // But: même si l'utilisateur oublie de cliquer "Confirmer" dans le drawer, les inputs rooms
+    // seront correctement écrits dans le formulaire avant que Laravel ne fasse le traitement.
+    (function bindRoomsToMainSubmit() {
+        var mainForm = document.getElementById('edit-voyage-form');
+        if (!mainForm) return;
+        if (mainForm.dataset.roomsPropagatorBound === '1') return;
+        mainForm.dataset.roomsPropagatorBound = '1';
+        mainForm.addEventListener('submit', function() {
+            var tourHotelRow = targetHotelRowCache || getTourHotelRowForCurrentDrawer();
+            if (!tourHotelRow || !roomsEditor) return;
+            if (!roomsEditor.querySelector('.hotels-room-editor-row')) return;
+            applyRoomsEditorToTourHotelRow(tourHotelRow);
+        }, true);
+    })();
 
     refreshUI();
 })();
