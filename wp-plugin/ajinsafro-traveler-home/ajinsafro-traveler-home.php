@@ -45,34 +45,27 @@ function ajth_init() {
 add_action( 'plugins_loaded', 'ajth_init' );
 
 /* ──────────────────────────────────────────────
- * Public login entrypoint (/login)
+ * Public login UI bridge (ajinsafro.net/login)
  * ──────────────────────────────────────────────
  *
- * WordPress remains the public entrypoint URL:
- *   https://ajinsafro.net/login
- *
- * Real authentication page remains in Laravel:
- *   https://booking.ajinsafro.net/login
+ * Keeps the Ajinsafro visual page as-is and posts credentials to Laravel.
+ * No WordPress native authentication is used.
  */
-function ajth_public_login_redirect() {
-    if ( is_admin() || wp_doing_ajax() ) {
+function ajth_enqueue_public_login_bridge() {
+    if ( is_admin() ) {
         return;
     }
-
-    $path = '';
-    if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-        $path = wp_parse_url( esc_url_raw( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH );
+    if ( function_exists( 'is_page' ) && is_page( 'login' ) ) {
+        wp_enqueue_script(
+            'ajth-public-login-bridge',
+            AJTH_URL . 'assets/js/public-login-bridge.js',
+            array(),
+            AJTH_VERSION,
+            true
+        );
     }
-    $path = is_string( $path ) ? rtrim( $path, '/' ) : '';
-
-    if ( $path !== '/login' ) {
-        return;
-    }
-
-    wp_safe_redirect( 'https://booking.ajinsafro.net/login', 302 );
-    exit;
 }
-add_action( 'template_redirect', 'ajth_public_login_redirect', 0 );
+add_action( 'wp_enqueue_scripts', 'ajth_enqueue_public_login_bridge', 6 );
 
 /* ──────────────────────────────────────────────
  * Enqueue front-end assets on home page, pages with [ajth_homepage],
