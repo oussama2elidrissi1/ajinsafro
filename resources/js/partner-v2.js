@@ -123,8 +123,8 @@ function initAjinsafroDrawer() {
 
   if (navMenu) {
     navMenu.addEventListener("click", (e) => {
-      const li = e.target.closest("li.aj-has-sub");
-      if (!li || !li.querySelector(".aj-sub-menu")) return;
+      const li = e.target.closest("li.aj-has-sub, li.menu-item-has-children");
+      if (!li || !li.querySelector(".aj-sub-menu, .sub-menu")) return;
       const link = li.querySelector(":scope > a");
       if (link && link.contains(e.target) && window.innerWidth < 1280) {
         e.preventDefault();
