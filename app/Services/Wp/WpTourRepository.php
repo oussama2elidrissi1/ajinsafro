@@ -194,6 +194,7 @@ class WpTourRepository
             'hide_adult_in_booking_form' => 'hide_adult_in_booking_form',
             'max_people' => 'max_people',
             'min_people' => 'min_people',
+            'places' => 'places',
             
             // CONTACT
             'contact_email' => 'contact_email',

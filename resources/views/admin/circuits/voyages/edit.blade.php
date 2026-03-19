@@ -182,7 +182,13 @@
                                 
                                 <div class="mb-3">
                                     <label for="max_people" class="form-label">Nombre max. personnes</label>
-                                    <input type="number" class="form-control" id="max_people" name="max_people" value="{{ old('max_people', $meta['max_people'] ?? '') }}" min="1">
+                                    <input type="number" class="form-control bg-light" id="max_people" name="max_people" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
+                                    <small class="text-muted">Calculé automatiquement à partir des chambres de l'hôtel (onglet Hôtels).</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="places_display" class="form-label">Places</label>
+                                    <input type="number" class="form-control bg-light" id="places_display" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['places'] ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
+                                    <small class="text-muted">Total des places (identique au nombre max. personnes).</small>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -3890,9 +3896,8 @@
                         var n = acc.querySelectorAll('.programme-day-card').length;
                         durationInput.value = n > 0 ? n : (durationInput.value || 1);
                     }
-                    // Sécurité: les champs "chambres" doivent être soumis.
-                    // Certaines UIs peuvent temporairement les passer en disabled, ce qui les exclut du payload.
-                    form.querySelectorAll('[name^="tour_hotels["][name*="[rooms]"]').forEach(function(el) {
+                    // Sécurité: tous les champs Hôtels (hôtel + chambres) doivent être soumis.
+                    form.querySelectorAll('[name^="tour_hotels["]').forEach(function(el) {
                         if (el && el.hasAttribute && el.hasAttribute('disabled')) {
                             el.removeAttribute('disabled');
                         }

@@ -1,8 +1,25 @@
 @php
     $lastDayNumber = isset($lastDayNumber) ? $lastDayNumber : (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1)));
     $hotelsList = $tourHotels->isEmpty() ? [null] : $tourHotels->all();
+    $otherHotels = $otherTourHotelsForCopy ?? collect();
+    $otherTitles = $otherTourTitles ?? [];
 @endphp
 <div id="tour-hotels-wrapper">
+    @if($otherHotels->isNotEmpty())
+    <div class="mb-3 p-3 bg-light rounded">
+        <label class="form-label small mb-1">Choisir un hôtel existant</label>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <select class="form-select form-select-sm" id="copy-from-hotel-select" style="max-width: 380px;">
+                <option value="">— Créer un nouvel hôtel / modifier ci-dessous —</option>
+                @foreach($otherHotels as $oh)
+                    <option value="{{ $oh->tour_id }}">{{ \Str::limit($oh->hotel_name ?: 'Hôtel #'.$oh->tour_id, 40) }} — {{ \Str::limit($otherTitles[$oh->tour_id] ?? 'Voyage '.$oh->tour_id, 35) }}</option>
+                @endforeach
+            </select>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="copy-from-hotel-btn">Charger</button>
+        </div>
+        <small class="text-muted">Charger les données d’un hôtel existant pour les réutiliser sur ce voyage (sans quitter la page).</small>
+    </div>
+    @endif
     <div id="tour-hotels-container">
         @foreach($hotelsList as $hi => $h)
         @php $hid = 'tour_hotel_image_id_' . $hi; $himg = optional($h)->image_id; $himgUrl = $himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$himg) : ''; @endphp
@@ -463,5 +480,91 @@
             });
         }
     });
+
+    // Choisir un hôtel existant : charger les données dans la première ligne
+    var copySelect = document.getElementById('copy-from-hotel-select');
+    var copyBtn = document.getElementById('copy-from-hotel-btn');
+    if (copySelect && copyBtn) {
+        var dataUrlBase = '{{ url("admin/circuits/tour-hotels") }}';
+        copyBtn.addEventListener('click', function(){
+            var tourId = copySelect.value;
+            if (!tourId) return;
+            fetch(dataUrlBase + '/' + tourId + '/data', { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r){ return r.json(); })
+                .then(function(data){
+                    var firstRow = container.querySelector('.tour-hotel-row[data-index="0"]');
+                    if (!firstRow) return;
+                    var setVal = function(nameSuffix, val) {
+                        var inp = firstRow.querySelector('[name="tour_hotels[0][' + nameSuffix + ']"]');
+                        if (inp && val !== undefined && val !== null) {
+                            if (inp.type === 'checkbox') inp.checked = !!val;
+                            else inp.value = val;
+                        }
+                    };
+                    var h = data.hotel || {};
+                    setVal('hotel_name', h.hotel_name);
+                    setVal('stars', h.stars);
+                    setVal('address', h.address);
+                    setVal('room_type', h.room_type);
+                    setVal('meal_plan', h.meal_plan);
+                    setVal('notes', h.notes);
+                    setVal('image_id', h.image_id);
+                    setVal('check_in_day', h.check_in_day);
+                    setVal('check_out_day', h.check_out_day);
+                    setVal('is_optional', h.is_optional ? '1' : '');
+                    var roomsCont = firstRow.querySelector('.tour-hotel-rooms-container');
+                    if (roomsCont && Array.isArray(data.rooms)) {
+                        var roomRows = roomsCont.querySelectorAll('.tour-room-row');
+                        var need = data.rooms.length;
+                        if (need < 1) need = 1;
+                        while (roomRows.length > need) {
+                            if (roomRows.length <= 1) break;
+                            roomRows[roomRows.length - 1].remove();
+                            roomRows = roomsCont.querySelectorAll('.tour-room-row');
+                        }
+                        var addRoomBtn = firstRow.querySelector('.tour-add-room');
+                        while (roomRows.length < need && addRoomBtn) {
+                            addRoomBtn.click();
+                            roomRows = roomsCont.querySelectorAll('.tour-room-row');
+                        }
+                        roomRows = roomsCont.querySelectorAll('.tour-room-row');
+                        data.rooms.forEach(function(room, ri){
+                            var row = roomRows[ri];
+                            if (!row) return;
+                            var idx = row.getAttribute('data-room-index');
+                            if (idx === null) idx = String(ri);
+                            var setRoom = function(suffix, val) {
+                                var inps = row.querySelectorAll('[name]');
+                                for (var n = 0; n < inps.length; n++) {
+                                    var name = inps[n].name || '';
+                                    if (name.indexOf('[rooms][' + idx + '][' + suffix + ']') !== -1) {
+                                        if (inps[n].tagName === 'SELECT') inps[n].value = val || '';
+                                        else if (inps[n].type === 'checkbox') inps[n].checked = !!val;
+                                        else inps[n].value = val !== undefined && val !== null ? val : '';
+                                        return;
+                                    }
+                                }
+                            };
+                            setRoom('room_type', room.room_type);
+                            setRoom('room_label', room.room_label);
+                            setRoom('room_code', room.room_code);
+                            setRoom('room_count', room.room_count);
+                            setRoom('capacity_adults', room.capacity_adults);
+                            setRoom('capacity_children', room.capacity_children);
+                            setRoom('capacity_total', room.capacity_total);
+                            setRoom('supplement', room.supplement);
+                            setRoom('description', room.description);
+                            setRoom('notes', room.notes);
+                            var defInp = row.querySelector('[name*="[is_default]"]');
+                            if (defInp) defInp.checked = !!room.is_default;
+                            var actInp = row.querySelector('[name*="[is_active]"]');
+                            if (actInp) actInp.checked = room.is_active !== false;
+                        });
+                    }
+                    copySelect.value = '';
+                })
+                .catch(function(){ alert('Impossible de charger l\'hôtel.'); });
+        });
+    }
 })();
 </script>

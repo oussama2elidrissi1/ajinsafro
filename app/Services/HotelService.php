@@ -137,11 +137,34 @@ class HotelService
         $keepIds = [];
 
         foreach ($rows as $position => $row) {
-            if (! is_array($row) || empty($row['name'])) {
+            if (! is_array($row)) {
                 continue;
             }
+
+            $id = isset($row['id']) ? (int) $row['id'] : 0;
+
+            // Si c'est une MAJ (id existant), on autorise l'absence de `name`
+            // (sinon on perd les updates de capacité/prix quand le champ Type est vide côté UI).
+            $existingRoom = null;
+            if ($id > 0) {
+                $existingRoom = HotelRoomType::where('hotel_id', $hotel->id)->where('id', $id)->first();
+                if (! $existingRoom) {
+                    $id = 0; // traiter comme création
+                }
+            }
+
+            // Pour une CREATION, `name` doit être présent.
+            if ($id === 0 && empty($row['name'])) {
+                continue;
+            }
+
+            $roomName = !empty($row['name']) ? $row['name'] : ($existingRoom?->name ?? '');
+            if (trim((string) $roomName) === '') {
+                continue;
+            }
+
             $payload = [
-                'name' => $row['name'],
+                'name' => $roomName,
                 'code' => $row['code'] ?? null,
                 'capacity_adults' => (int) ($row['capacity_adults'] ?? 2),
                 'capacity_children' => (int) ($row['capacity_children'] ?? 0),
@@ -152,14 +175,10 @@ class HotelService
                 'position' => $position,
             ];
 
-            $id = isset($row['id']) ? (int) $row['id'] : 0;
             if ($id > 0) {
-                $room = HotelRoomType::where('hotel_id', $hotel->id)->where('id', $id)->first();
-                if ($room) {
-                    $room->update($payload);
-                    $keepIds[] = $room->id;
-                    continue;
-                }
+                $existingRoom->update($payload);
+                $keepIds[] = $existingRoom->id;
+                continue;
             }
 
             $room = $hotel->roomTypes()->create($payload);
