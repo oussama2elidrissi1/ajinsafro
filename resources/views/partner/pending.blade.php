@@ -1,30 +1,31 @@
-@extends('layouts.master-without-nav')
-@section('title')
-    Compte en attente
-@endsection
+@extends('partner_v2.layouts.guest')
+
+@section('title', 'Compte en attente')
+
 @section('content')
-    <div class="account-pages my-5 pt-sm-5">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-6 col-xl-5">
-                    <div class="card overflow-hidden">
-                        <div class="card-body text-center p-5">
-                            <div class="avatar-lg mx-auto mb-4">
-                                <span class="avatar-title rounded-circle bg-warning bg-opacity-10 text-warning font-size-24">
-                                    <i class="bx bx-time-five"></i>
-                                </span>
-                            </div>
-                            <h4 class="mb-3">Compte en cours de validation</h4>
-                            <p class="text-muted mb-4">
-                                Votre demande d’inscription a bien été reçue. <strong>Votre compte partenaire doit être validé par un administrateur.</strong>
-                            </p>
-                            <p class="text-muted mb-4">
-                                Vous recevrez un email dès que votre compte sera activé. Vous pourrez alors accéder à votre espace partenaire (réservations, clients).
-                            </p>
-                            <a href="{{ route('logout.get') }}" class="btn btn-outline-primary">Se déconnecter</a>
-                        </div>
-                    </div>
+    <div class="w-full max-w-xl">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 sm:px-8 py-6 border-b border-gray-100">
+                <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Compte en cours de validation</h1>
+                <p class="mt-1 text-sm text-gray-600">Votre accès partenaire sera activé dès validation administrative.</p>
+            </div>
+
+            <div class="px-6 sm:px-8 py-6">
+                <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Votre demande d’inscription a bien été reçue. <strong>Votre compte partenaire doit être validé par un administrateur.</strong>
                 </div>
+
+                <p class="text-sm text-gray-600 mb-6">
+                    Vous recevrez un email dès que votre compte sera activé. Vous pourrez alors accéder à votre espace partenaire
+                    (réservations, clients, factures et messagerie).
+                </p>
+
+                <form method="POST" action="{{ route('partner.logout') }}">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50">
+                        Se déconnecter
+                    </button>
+                </form>
             </div>
         </div>
     </div>
