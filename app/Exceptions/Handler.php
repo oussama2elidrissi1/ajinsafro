@@ -48,13 +48,8 @@ class Handler extends ExceptionHandler
 
     private function loginUrlForHost(string $host): string
     {
-        $partnerDomain = (string) config('app.partner_domain', 'partenaire.ajinsafro.net');
-        if ($host !== '' && strcasecmp($host, $partnerDomain) === 0) {
-            return rtrim((string) config('app.partner_url', 'https://partenaire.ajinsafro.net'), '/') . '/login';
-        }
-
-        $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
-        return $adminUrl . '/login';
+        // Single public entrypoint (WordPress UI) for all expired sessions.
+        return rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/login';
     }
 
     public function render($request, Throwable $e)
