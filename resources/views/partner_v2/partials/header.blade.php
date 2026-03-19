@@ -1,5 +1,5 @@
 @php
-    /** Header settings are managed in Laravel admin: /admin/settings/home-page (tab Header) */
+    // Source of truth: wp-plugin/ajinsafro-traveler-home/parts/header.php
     $defaults = [
         'enabled' => true,
         'topbar_enabled' => true,
@@ -15,8 +15,8 @@
         'navbar_enabled' => true,
         'logo_url' => '',
         'show_auth_links' => true,
-        'login_url' => '/login',
-        'signup_url' => '/register',
+        'login_url' => rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/login',
+        'signup_url' => rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/register',
         'menu_source' => 'laravel_links',
         'links' => [],
         'lowcost_enabled' => true,
@@ -28,6 +28,7 @@
     $decoded = is_string($raw) && $raw !== '' ? json_decode($raw, true) : null;
     $hdr = is_array($decoded) ? array_replace_recursive($defaults, $decoded) : $defaults;
 
+    $socials = isset($hdr['socials']) && is_array($hdr['socials']) ? $hdr['socials'] : [];
     $socialIcons = [
         'facebook'  => '<i class="fab fa-facebook-f"></i>',
         'twitter'   => '<i class="fab fa-twitter"></i>',
@@ -36,166 +37,204 @@
         'linkedin'  => '<i class="fab fa-linkedin-in"></i>',
     ];
 
-    $navLinks = is_array(data_get($hdr, 'links')) ? data_get($hdr, 'links') : [];
-    if (empty($navLinks)) {
-        // Default public menu (anchors kept, as on public homepage)
-        $navLinks = [
-            ['label' => 'Voyages', 'url' => url('/voyages'), 'icon' => 'fas fa-suitcase-rolling', 'children' => []],
-            ['label' => 'Hébergement', 'url' => '#hebergement', 'icon' => 'fas fa-hotel', 'children' => []],
-            ['label' => 'Activités', 'url' => '#activites', 'icon' => 'fas fa-camera', 'children' => []],
-            ['label' => 'Transfert', 'url' => '#transfert', 'icon' => 'fas fa-car-side', 'children' => []],
-            ['label' => 'Hajj & Omra', 'url' => '#hajj-omra', 'icon' => 'fas fa-kaaba', 'children' => []],
-            ['label' => 'Votre guide', 'url' => '#guide', 'icon' => 'fas fa-map-signs', 'children' => []],
-        ];
-    }
-
     $user = request()->user();
-    $partnerDomain = (string) config('app.partner_domain', 'partenaire.ajinsafro.net');
-    $isPartnerHost = $partnerDomain !== '' && strcasecmp((string) request()->getHost(), $partnerDomain) === 0;
+    $voyagesPageUrl = url('/voyages');
+    $defaultMenuItems = [
+        ['label' => 'Voyages', 'url' => $voyagesPageUrl, 'icon' => 'fas fa-suitcase-rolling', 'active' => false, 'children' => []],
+        ['label' => 'Hébergement', 'url' => '#hebergement', 'icon' => 'fas fa-hotel', 'active' => false, 'children' => []],
+        ['label' => 'Activités', 'url' => '#activites', 'icon' => 'fas fa-camera', 'active' => false, 'children' => []],
+        ['label' => 'Transfert', 'url' => '#transfert', 'icon' => 'fas fa-car-side', 'active' => false, 'children' => []],
+        ['label' => 'Hajj & Omra', 'url' => '#hajj-omra', 'icon' => 'fas fa-kaaba', 'active' => false, 'children' => []],
+        ['label' => 'Votre guide', 'url' => '#guide', 'icon' => 'fas fa-map-signs', 'active' => false, 'children' => []],
+    ];
 @endphp
 
 @if(!empty($hdr['enabled']))
 <header class="aj-header" id="aj-header">
     @if(!empty($hdr['topbar_enabled']))
-        <div class="aj-topbar">
-            <div class="aj-container aj-topbar__inner">
-                <div class="aj-topbar__left">
-                    <div class="aj-topbar__socials">
-                        @foreach($socialIcons as $key => $icon)
-                            @php $url = (string) data_get($hdr, "socials.$key", ''); @endphp
-                            @if($url !== '' && $url !== '#')
-                                <a href="{{ $url }}" class="aj-topbar__social-link" target="_blank" rel="noopener noreferrer" aria-label="{{ ucfirst($key) }}">
-                                    {!! $icon !!}
-                                </a>
-                            @endif
-                        @endforeach
-                    </div>
-                    <div class="aj-topbar__contact">
-                        @if(!empty($hdr['email']))
-                            <span class="aj-topbar__item">
-                                <i class="far fa-envelope"></i>
-                                {{ $hdr['email'] }}
-                            </span>
+    <div class="aj-topbar">
+        <div class="aj-container aj-topbar__inner">
+            <div class="aj-topbar__left">
+                <div class="aj-topbar__socials">
+                    @foreach($socialIcons as $key => $icon)
+                        @php $socialUrl = !empty($socials[$key]) ? (string) $socials[$key] : ''; @endphp
+                        @if($socialUrl !== '')
+                            <a href="{{ $socialUrl }}" class="aj-topbar__social-link" target="_blank" rel="noopener noreferrer" aria-label="{{ ucfirst($key) }}">
+                                {!! $icon !!}
+                            </a>
                         @endif
-                        @if(!empty($hdr['phone']))
-                            <span class="aj-topbar__item">
-                                <i class="fas fa-phone"></i>
-                                {{ $hdr['phone'] }}
-                            </span>
-                        @endif
-                    </div>
+                    @endforeach
                 </div>
-
-                <div class="aj-topbar__right">
-                    <div class="aj-topbar__selector" id="aj-lang-selector">
-                        <img src="https://upload.wikimedia.org/wikipedia/en/c/c3/Flag_of_France.svg" alt="FR" class="aj-topbar__flag">
-                        <span>FR</span>
-                        <i class="fas fa-chevron-down aj-topbar__caret"></i>
-                    </div>
-                    <div class="aj-topbar__selector" id="aj-currency-selector">
-                        <span>MAD</span>
-                        <i class="fas fa-chevron-down aj-topbar__caret"></i>
-                    </div>
-
-                    {{-- Partner user block (keeps public look, adds partner context) --}}
-                    @if($user)
-                        <div class="aj-topbar__partner">
-                            <img src="{{ $user->avatar_url }}" alt="Avatar" class="aj-topbar__partner-avatar">
-                            <span class="aj-topbar__partner-name">{{ $user->name }}</span>
-                            @if($isPartnerHost)
-                                <form method="POST" action="{{ route('partner.logout') }}" class="inline">
-                                    @csrf
-                                    <button type="submit" class="aj-topbar__auth-link aj-topbar__auth-link--signup aj-topbar__partner-logout">Déconnexion</button>
-                                </form>
-                            @else
-                                <a href="{{ route('logout.get') }}" class="aj-topbar__auth-link aj-topbar__auth-link--signup aj-topbar__partner-logout">Déconnexion</a>
-                            @endif
-                        </div>
+                <div class="aj-topbar__contact">
+                    @if(!empty($hdr['email']))
+                        <span class="aj-topbar__item">
+                            <i class="far fa-envelope"></i>
+                            {{ $hdr['email'] }}
+                        </span>
+                    @endif
+                    @if(!empty($hdr['phone']))
+                        <span class="aj-topbar__item">
+                            <i class="fas fa-phone"></i>
+                            {{ $hdr['phone'] }}
+                        </span>
                     @endif
                 </div>
             </div>
+
+            <div class="aj-topbar__right">
+                <div class="aj-topbar__selector" id="aj-lang-selector">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/c/c3/Flag_of_France.svg" alt="FR" class="aj-topbar__flag">
+                    <span>FR</span>
+                    <i class="fas fa-chevron-down aj-topbar__caret"></i>
+                </div>
+
+                <div class="aj-topbar__selector" id="aj-currency-selector">
+                    <span>MAD</span>
+                    <i class="fas fa-chevron-down aj-topbar__caret"></i>
+                </div>
+
+                @if(!empty($hdr['show_auth_links']))
+                <div class="aj-topbar__auth">
+                    @if($user)
+                        <span class="aj-topbar__auth-link d-inline-flex align-items-center gap-2">
+                            <img src="{{ $user->avatar_url }}" alt="Avatar" class="rounded-circle" style="width:24px;height:24px;object-fit:cover;">
+                            <span>{{ $user->name }}</span>
+                        </span>
+                        <form method="POST" action="{{ route('partner.logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="aj-topbar__auth-link aj-topbar__auth-link--signup border-0">
+                                {{ __('SE DÉCONNECTER') }}
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ !empty($hdr['login_url']) ? $hdr['login_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/login') }}" class="aj-topbar__auth-link">
+                            {{ __('SE CONNECTER') }}
+                        </a>
+                        <a href="{{ !empty($hdr['signup_url']) ? $hdr['signup_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/register') }}" class="aj-topbar__auth-link aj-topbar__auth-link--signup">
+                            {{ __("S'INSCRIRE") }}
+                        </a>
+                    @endif
+                </div>
+                @endif
+            </div>
         </div>
+    </div>
     @endif
 
     @if(!empty($hdr['navbar_enabled']))
-        <nav class="aj-navbar" id="aj-navbar">
-            <div class="aj-container aj-navbar__inner">
-                <div class="aj-navbar__logo">
-                    @php $logo = (string) data_get($hdr, 'logo_url', ''); @endphp
+    <nav class="aj-navbar" id="aj-navbar">
+        <div class="aj-container aj-navbar__inner">
+            <div class="aj-navbar__logo">
+                @if(!empty($hdr['logo_url']))
                     <a href="{{ url('/') }}">
-                        <img
-                            src="{{ $logo !== '' ? $logo : URL::asset('build/images/logo-dark.png') }}"
-                            alt="AjinSafro"
-                            class="aj-navbar__logo-img"
-                            loading="eager"
-                            fetchpriority="high"
-                        >
+                        <img src="{{ $hdr['logo_url'] }}" alt="{{ config('app.name', 'Ajinsafro') }}" class="aj-navbar__logo-img" loading="eager" fetchpriority="high">
                     </a>
+                @else
+                    <a href="{{ url('/') }}">
+                        <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="{{ config('app.name', 'Ajinsafro') }}" class="aj-navbar__logo-img" loading="eager" fetchpriority="high">
+                    </a>
+                @endif
+            </div>
+
+            <button type="button" class="aj-navbar__burger aj-header__toggle" id="aj-burger" aria-label="Menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="aj-drawer aj-header__drawer" id="aj-drawer" aria-hidden="true">
+                <div class="aj-drawer__header">
+                    <span class="aj-drawer__title">{{ __('Menu') }}</span>
+                    <button type="button" class="aj-drawer__close" id="aj-drawer-close" aria-label="{{ __('Fermer') }}">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
 
-                <button type="button" class="aj-navbar__burger aj-header__toggle" id="aj-burger" aria-label="Menu" aria-expanded="false">
-                    <i class="fas fa-bars"></i>
-                </button>
-
-                <div class="aj-drawer aj-header__drawer" id="aj-drawer" aria-hidden="true">
-                    <div class="aj-drawer__header">
-                        <span class="aj-drawer__title">Menu</span>
-                        <button type="button" class="aj-drawer__close" id="aj-drawer-close" aria-label="Fermer">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-
-                    <div class="aj-navbar__menu" id="aj-nav-menu">
-                        <ul class="aj-nav-list">
-                            @foreach($navLinks as $link)
-                                @php
-                                    $label = (string) data_get($link, 'label', '');
-                                    $url = (string) data_get($link, 'url', '#');
-                                    $icon = (string) data_get($link, 'icon', '');
-                                    $children = is_array(data_get($link, 'children')) ? data_get($link, 'children') : [];
-                                    $hasSub = !empty($children);
-                                    $highlight = (bool) data_get($link, 'highlight', false);
-                                @endphp
-                                <li class="{{ $hasSub ? 'aj-has-sub' : '' }}{{ $highlight ? ' aj-highlight' : '' }}">
-                                    <a href="{{ $url }}" class="{{ $highlight ? 'aj-nav-highlight' : '' }}">
-                                        @if($icon !== '')
-                                            <i class="{{ $icon }}"></i>
-                                        @endif
-                                        <span>{{ $label }}</span>
-                                        @if($hasSub)
-                                            <i class="fas fa-chevron-down aj-caret"></i>
-                                        @endif
-                                    </a>
-                                    @if($hasSub)
-                                        <ul class="aj-sub-menu">
-                                            @foreach($children as $child)
-                                                <li>
-                                                    <a href="{{ data_get($child, 'url', '#') }}">
-                                                        @if(!empty($child['icon']))
-                                                            <i class="{{ $child['icon'] }}"></i>
-                                                        @endif
-                                                        {{ data_get($child, 'label', '') }}
-                                                    </a>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-
-                    @if(!empty($hdr['lowcost_enabled']))
-                        <div class="aj-navbar__lowcost aj-header__lowcost--desktop">
-                            <a href="{{ data_get($hdr, 'lowcost_url', '#') }}" class="aj-lowcost-btn aj-lowcost-btn--animate">
-                                <i class="fas fa-fire aj-lowcost-btn__icon"></i>
-                                <span>{{ data_get($hdr, 'lowcost_text', 'Formule low cost') }}</span>
-                            </a>
+                @if(!empty($hdr['show_auth_links']))
+                <div class="aj-drawer__auth aj-header__auth--mobile">
+                    @if($user)
+                        <div class="aj-auth-link aj-auth-link--block d-inline-flex align-items-center gap-2">
+                            <img src="{{ $user->avatar_url }}" alt="Avatar" class="rounded-circle" style="width:24px;height:24px;object-fit:cover;">
+                            <span>{{ $user->name }}</span>
                         </div>
+                        <form method="POST" action="{{ route('partner.logout') }}">
+                            @csrf
+                            <button type="submit" class="aj-auth-link aj-auth-link--block border-0 bg-transparent text-start w-100">
+                                {{ __('Se déconnecter') }}
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ !empty($hdr['login_url']) ? $hdr['login_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/login') }}" class="aj-auth-link aj-auth-link--block">{{ __('Se connecter') }}</a>
+                        <a href="{{ !empty($hdr['signup_url']) ? $hdr['signup_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/register') }}" class="aj-auth-link aj-auth-link--signup aj-auth-link--block">{{ __("S'inscrire") }}</a>
                     @endif
                 </div>
+                @endif
+
+                <div class="aj-navbar__menu" id="aj-nav-menu">
+                    @php
+                        $navLinks = !empty($hdr['links']) && is_array($hdr['links']) ? $hdr['links'] : [];
+                        if (empty($navLinks)) {
+                            $navLinks = $defaultMenuItems;
+                        }
+                    @endphp
+                    <ul class="aj-nav-list">
+                        @foreach($navLinks as $link)
+                            @php
+                                $label = !empty($link['label']) ? (string) $link['label'] : '';
+                                $url = !empty($link['url']) ? (string) $link['url'] : '#';
+                                $icon = !empty($link['icon']) ? (string) $link['icon'] : '';
+                                $children = !empty($link['children']) && is_array($link['children']) ? $link['children'] : [];
+                                $hasSub = !empty($children);
+                                $isActive = !empty($link['active']);
+                                $isHighlight = !empty($link['highlight']);
+                            @endphp
+                            <li class="{{ $hasSub ? 'aj-has-sub' : '' }}{{ $isActive ? ' aj-active' : '' }}{{ $isHighlight ? ' aj-highlight' : '' }}">
+                                <a href="{{ $url }}" class="{{ $isHighlight ? 'aj-nav-highlight' : '' }}">
+                                    @if($icon)
+                                        <i class="{{ $icon }}"></i>
+                                    @endif
+                                    <span>{{ $label }}</span>
+                                    @if($hasSub)
+                                        <i class="fas fa-chevron-down aj-caret"></i>
+                                    @endif
+                                </a>
+                                @if($hasSub)
+                                    <ul class="aj-sub-menu">
+                                        @foreach($children as $child)
+                                            <li>
+                                                <a href="{{ !empty($child['url']) ? $child['url'] : '#' }}">
+                                                    @if(!empty($child['icon']))
+                                                        <i class="{{ $child['icon'] }}"></i>
+                                                    @endif
+                                                    {{ !empty($child['label']) ? $child['label'] : '' }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                @if(!empty($hdr['lowcost_enabled']))
+                <div class="aj-drawer__lowcost">
+                    <a href="{{ !empty($hdr['lowcost_url']) ? $hdr['lowcost_url'] : '#' }}" class="aj-lowcost-btn">
+                        <i class="fas fa-fire"></i>
+                        <span>{{ !empty($hdr['lowcost_text']) ? $hdr['lowcost_text'] : 'Formule low cost' }}</span>
+                    </a>
+                </div>
+                @endif
             </div>
-        </nav>
+
+            @if(!empty($hdr['lowcost_enabled']))
+            <div class="aj-navbar__lowcost aj-header__lowcost--desktop">
+                <a href="{{ !empty($hdr['lowcost_url']) ? $hdr['lowcost_url'] : '#' }}" class="aj-lowcost-btn aj-lowcost-btn--animate">
+                    <i class="fas fa-fire aj-lowcost-btn__icon"></i>
+                    <span>{{ !empty($hdr['lowcost_text']) ? $hdr['lowcost_text'] : 'Formule low cost' }}</span>
+                </a>
+            </div>
+            @endif
+        </div>
+    </nav>
     @endif
 </header>
 @endif
