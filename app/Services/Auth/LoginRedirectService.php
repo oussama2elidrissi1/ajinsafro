@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Models\User;
+use App\Services\BranchScopeService;
 
 class LoginRedirectService
 {
@@ -29,7 +30,9 @@ class LoginRedirectService
             $partnerDomain = (string) config('app.partner_domain', 'partenaire.ajinsafro.net');
             $partnerUrl = 'https://' . $partnerDomain;
         }
-        $publicUrl = $this->normalizeBaseUrl((string) config('app.public_url', 'https://ajinsafro.net'));
+        if ($adminUrl === '') {
+            $adminUrl = rtrim((string) config('app.url', 'https://booking.ajinsafro.net'), '/');
+        }
 
         // Partner area (dedicated subdomain)
         if ($user->isPartner()) {
@@ -40,13 +43,36 @@ class LoginRedirectService
             return $partnerUrl . '/en-attente';
         }
 
-        // Admin (HQ + branches + commercial roles + comptable) stays on booking/back-office domain
-        if ($user->canAccessAdmin() || $user->isComptable()) {
+        // Explicit mapping for admin roles.
+        if ($user->hasRole([
+            BranchScopeService::ROLE_SUPER_ADMIN,
+            BranchScopeService::ROLE_SIEGE_ADMIN,
+            BranchScopeService::ROLE_BRANCH_ADMIN,
+            'Super Admin',
+            'Admin Siège',
+        ]) || $user->isComptable() || $user->is_admin) {
             return $adminUrl . '/admin/dashboard';
         }
 
-        // Default fallback: public website homepage
-        return $publicUrl . '/';
+        // Commercial roles
+        if ($user->hasRole([
+            BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            BranchScopeService::ROLE_COMMERCIAL,
+            'Chef Commercial',
+        ])) {
+            return $adminUrl . '/commercial/dashboard';
+        }
+
+        // Agent role
+        if ($user->hasRole([
+            BranchScopeService::ROLE_AGENT,
+            'Agent',
+        ])) {
+            return $adminUrl . '/agent/dashboard';
+        }
+
+        // Safe fallback: always back-office admin dashboard (never booking root).
+        return $adminUrl . '/admin/dashboard';
     }
 }
 

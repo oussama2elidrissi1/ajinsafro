@@ -18,6 +18,7 @@ class PublicLoginController extends Controller
         if (Auth::check()) {
             /** @var \App\Models\User $alreadyConnected */
             $alreadyConnected = $request->user();
+            $request->session()->forget('url.intended');
             return redirect()->away($redirectService->destinationFor($alreadyConnected));
         }
 
@@ -62,6 +63,7 @@ class PublicLoginController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->forget('url.intended');
 
         /** @var \App\Models\User $user */
         $user = $request->user();
