@@ -157,8 +157,8 @@ $default_menu_items = array(
                     <?php if ( is_user_logged_in() ) : ?>
                         <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="aj-topbar__auth-link"><?php esc_html_e( 'SE DÉCONNECTER', 'ajinsafro-traveler-home' ); ?></a>
                     <?php else : ?>
-                        <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : wp_login_url() ); ?>" class="aj-topbar__auth-link"><?php esc_html_e( 'SE CONNECTER', 'ajinsafro-traveler-home' ); ?></a>
-                        <a href="<?php echo esc_url( ! empty( $hdr['signup_url'] ) ? $hdr['signup_url'] : wp_registration_url() ); ?>" class="aj-topbar__auth-link aj-topbar__auth-link--signup"><?php esc_html_e( "S'INSCRIRE", 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : home_url( '/login/' ) ); ?>" class="aj-topbar__auth-link"><?php esc_html_e( 'SE CONNECTER', 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( ! empty( $hdr['signup_url'] ) ? $hdr['signup_url'] : home_url( '/register/' ) ); ?>" class="aj-topbar__auth-link aj-topbar__auth-link--signup"><?php esc_html_e( "S'INSCRIRE", 'ajinsafro-traveler-home' ); ?></a>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
@@ -204,8 +204,8 @@ $default_menu_items = array(
                     <?php if ( is_user_logged_in() ) : ?>
                         <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="aj-auth-link aj-auth-link--block"><?php esc_html_e( 'Se déconnecter', 'ajinsafro-traveler-home' ); ?></a>
                     <?php else : ?>
-                        <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : wp_login_url() ); ?>" class="aj-auth-link aj-auth-link--block"><?php esc_html_e( 'Se connecter', 'ajinsafro-traveler-home' ); ?></a>
-                        <a href="<?php echo esc_url( ! empty( $hdr['signup_url'] ) ? $hdr['signup_url'] : wp_registration_url() ); ?>" class="aj-auth-link aj-auth-link--signup aj-auth-link--block"><?php esc_html_e( "S'inscrire", 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : home_url( '/login/' ) ); ?>" class="aj-auth-link aj-auth-link--block"><?php esc_html_e( 'Se connecter', 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( ! empty( $hdr['signup_url'] ) ? $hdr['signup_url'] : home_url( '/register/' ) ); ?>" class="aj-auth-link aj-auth-link--signup aj-auth-link--block"><?php esc_html_e( "S'inscrire", 'ajinsafro-traveler-home' ); ?></a>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
