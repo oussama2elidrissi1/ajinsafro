@@ -20,7 +20,8 @@ class PartnerMiddleware
                 $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
                 return redirect()->away($adminUrl . '/admin/dashboard');
             }
-            return redirect('/')->with('error', 'Accès non autorisé.');
+            $publicUrl = rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/');
+            return redirect()->away($publicUrl . '/')->with('error', 'Accès non autorisé.');
         }
 
         if (isset($request->user()->is_active) && ! $request->user()->is_active) {

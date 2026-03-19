@@ -55,7 +55,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'https://ajinsafro.net'),
 
     /*
     |--------------------------------------------------------------------------
@@ -66,9 +66,9 @@ return [
     |
     */
 
-    'admin_url' => env('ADMIN_URL', env('APP_URL', 'http://localhost')),
+    'admin_url' => env('ADMIN_URL', 'https://booking.ajinsafro.net'),
 
-    'admin_domain' => env('ADMIN_DOMAIN', ''),
+    'admin_domain' => env('ADMIN_DOMAIN', 'booking.ajinsafro.net'),
 
     'partner_url' => env('PARTNER_URL', 'https://partenaire.ajinsafro.net'),
 
@@ -76,7 +76,7 @@ return [
 
     'public_url' => env('PUBLIC_URL', 'https://ajinsafro.net'),
 
-    'public_domain' => env('PUBLIC_DOMAIN', ''),
+    'public_domain' => env('PUBLIC_DOMAIN', 'ajinsafro.net'),
 
     'asset_url' => env('ASSET_URL'),
 
