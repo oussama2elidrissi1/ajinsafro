@@ -16,16 +16,19 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->user()) {
-            return redirect()->route('login');
+            $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+            return redirect()->away($adminUrl . '/login');
         }
 
         if (! $request->user()->canAccessAdmin()) {
-            return redirect('/')->with('error', 'Access denied.');
+            $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+            return redirect()->away($adminUrl . '/admin/dashboard')->with('error', 'Access denied.');
         }
 
         if (isset($request->user()->is_active) && ! $request->user()->is_active) {
             auth()->logout();
-            return redirect()->route('login')->with('error', 'Your account is disabled.');
+            $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+            return redirect()->away($adminUrl . '/login')->with('error', 'Your account is disabled.');
         }
 
         return $next($request);
