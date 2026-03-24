@@ -1,0 +1,52 @@
+/**
+ * Calendrier réservations — correctifs affichage portail agent (Bootstrap / app.min.css chargés après Tailwind).
+ * Toutes les règles sont scopées sous .agent-portal-main pour ne pas modifier l’admin classique.
+ */
+
+.agent-portal-main .ajin-cal-shell {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Grille 7 colonnes explicite (évite tout conflit d’utilitaires display/grid) */
+.agent-portal-main .ajin-cal-shell .ajin-cal-weekdays,
+.agent-portal-main .ajin-cal-shell #ajin-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  width: 100%;
+}
+
+.agent-portal-main .ajin-cal-shell #ajin-cal-grid {
+  align-content: start;
+  background-color: #e5e7eb;
+  min-height: 28rem;
+}
+
+@media (min-width: 640px) {
+  .agent-portal-main .ajin-cal-shell #ajin-cal-grid {
+    min-height: 32rem;
+  }
+}
+
+.agent-portal-main .ajin-cal-shell .ajin-cal-day {
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .agent-portal-main .ajin-cal-shell .ajin-cal-day {
+    min-height: 120px;
+  }
+}
+
+.agent-portal-main .ajin-cal-shell #ajin-cal-root {
+  width: 100%;
+  min-width: 0;
+}
+
+.agent-portal-main .ajin-cal-shell .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}

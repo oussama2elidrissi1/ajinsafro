@@ -3,6 +3,8 @@
 
 @source "../views/**/*.blade.php";
 @source "../js/**/*.js";
+/* Utilitaires uniquement générés dans admin-reservations-calendar.js (DOM dynamique) */
+@source inline("min-h-[100px] sm:min-h-[120px] p-1.5 sm:p-2 hover:bg-[#e6f3fa]/30 text-[#0083c4] text-[10px] text-[#f37a1f] group-hover:text-[#0083c4] text-[9px] bg-blue-50 border-blue-100");
 
 @theme {
   --font-family-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
