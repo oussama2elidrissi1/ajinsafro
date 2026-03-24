@@ -62,6 +62,69 @@ class Setting extends Model
         if (empty($path)) {
             return null;
         }
-        return Storage::disk('public')->url($path);
+
+        $normalized = self::normalizePublicDiskPath($path);
+        if ($normalized === null) {
+            return null;
+        }
+
+        if (!Storage::disk('public')->exists($normalized)) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($normalized);
+    }
+
+    /**
+     * Public URL for brand logo with resilient fallback.
+     */
+    public static function brandLogoUrl(string $variant = 'dark'): string
+    {
+        $url = self::storageUrl(self::getValue('brand_logo'));
+        if ($url) {
+            return $url;
+        }
+
+        return match ($variant) {
+            'light' => asset('build/images/logo-light.png'),
+            'sm' => asset('build/images/logo-sm.png'),
+            default => asset('build/images/logo-dark.png'),
+        };
+    }
+
+    /**
+     * Normalize any stored logo/file value to a relative path on the public disk.
+     * Example output: front/brand/logo.png
+     */
+    public static function normalizePublicDiskPath(?string $path): ?string
+    {
+        if (!is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        $value = trim($path);
+
+        // If a full URL was stored, keep only the path segment.
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            $urlPath = parse_url($value, PHP_URL_PATH);
+            $value = is_string($urlPath) ? $urlPath : $value;
+        }
+
+        $value = str_replace('\\', '/', $value);
+        $value = ltrim($value, '/');
+
+        foreach (['storage/app/public/', 'public/storage/', 'storage/', 'public/'] as $prefix) {
+            if (str_starts_with($value, $prefix)) {
+                $value = substr($value, strlen($prefix));
+                break;
+            }
+        }
+
+        $value = ltrim($value, '/');
+        if ($value === '') {
+            return null;
+        }
+
+        return $value;
     }
 }

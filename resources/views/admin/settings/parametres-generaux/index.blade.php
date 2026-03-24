@@ -55,13 +55,14 @@
                         <div class="mb-3 row">
                             <label for="brand_logo" class="col-md-3 col-form-label">Logo (image)</label>
                             <div class="col-md-9">
-                                @if(!empty($settings['brand_logo']))
-                                    @php $logoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($settings['brand_logo']); @endphp
-                                    <div class="mb-2">
-                                        <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail" style="max-height: 60px;">
-                                        <span class="text-muted small d-block">Logo actuel</span>
-                                    </div>
-                                @endif
+                                @php
+                                    $hasCustomLogo = !empty($settings['brand_logo']) && \App\Models\Setting::storageUrl($settings['brand_logo']);
+                                    $logoUrl = $hasCustomLogo ? \App\Models\Setting::storageUrl($settings['brand_logo']) : \App\Models\Setting::brandLogoUrl();
+                                @endphp
+                                <div class="mb-2">
+                                    <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail" style="max-height: 60px;">
+                                    <span class="text-muted small d-block">{{ $hasCustomLogo ? 'Logo actuel' : 'Logo par défaut' }}</span>
+                                </div>
                                 <input class="form-control" type="file" name="brand_logo" id="brand_logo" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp">
                                 <small class="text-muted">Laisser vide pour conserver l’image actuelle. Stockage : storage/app/public/front/brand/</small>
                             </div>
