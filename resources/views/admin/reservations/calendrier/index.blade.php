@@ -25,6 +25,7 @@
 @endphp
 
 @section('content')
+    @include('admin.reservations.calendrier.partials.tailwind-safelist')
     <div class="partner-v2">
     <div class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
@@ -42,7 +43,7 @@
 
     @include('admin.reservations.calendrier.partials.filters')
 
-    <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden mb-6">
+    <div class="ajin-cal-shell bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden mb-6 w-full min-w-0">
         <div class="p-4 sm:p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/50">
             <h2 class="font-bold text-lg text-[#0e3a5a] flex items-center gap-2">
                 <i class="far fa-calendar-alt text-[#0083c4]"></i>
@@ -59,7 +60,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-7 border-b border-gray-100 bg-gray-50 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-center">
+        <div class="ajin-cal-weekdays grid grid-cols-7 border-b border-gray-100 bg-gray-50 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-center">
             <div class="py-3 text-gray-500">Lun</div>
             <div class="py-3 text-gray-500">Mar</div>
             <div class="py-3 text-gray-500">Mer</div>
@@ -86,6 +87,12 @@
 @endsection
 
 @push('css')
-    @vite(['resources/css/partner-v2.css'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    @php
+        $useAgentShell = \App\Services\View\AgentPortalLayout::shouldUse(auth()->user());
+    @endphp
+    @unless($useAgentShell)
+        @vite(['resources/css/partner-v2.css'])
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    @endunless
+    @vite(['resources/css/ajin-calendar-agent.css'])
 @endpush
