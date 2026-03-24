@@ -80,7 +80,7 @@ class Setting extends Model
      */
     public static function brandLogoUrl(string $variant = 'dark'): string
     {
-        $url = self::storageUrl(self::getValue('brand_logo'));
+        $url = self::storageUrl(self::resolvedBrandLogoPath());
         if ($url) {
             return $url;
         }
@@ -90,6 +90,24 @@ class Setting extends Model
             'sm' => asset('build/images/logo-sm.png'),
             default => asset('build/images/logo-dark.png'),
         };
+    }
+
+    /**
+     * Resolve a valid branding logo path from settings or storage fallback.
+     */
+    public static function resolvedBrandLogoPath(): ?string
+    {
+        $stored = self::normalizePublicDiskPath(self::getValue('brand_logo'));
+        if ($stored && Storage::disk('public')->exists($stored)) {
+            return $stored;
+        }
+
+        $files = collect(Storage::disk('public')->files('front/brand'))
+            ->filter(fn (string $file) => preg_match('/\.(png|jpe?g|gif|svg|webp)$/i', $file) === 1)
+            ->sortByDesc(fn (string $file) => Storage::disk('public')->lastModified($file))
+            ->values();
+
+        return $files->first() ?: null;
     }
 
     /**
