@@ -1,7 +1,10 @@
 @php
     $adminBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $adminBrandLogo = \App\Models\Setting::getValue('brand_logo');
-    $adminBrandLogoUrl = \App\Models\Setting::storageUrl($adminBrandLogo);
+    $adminBrandLogoUrl = null;
+    if (!empty($adminBrandLogo) && \Illuminate\Support\Facades\Storage::disk('public')->exists($adminBrandLogo)) {
+        $adminBrandLogoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($adminBrandLogo);
+    }
     $user = auth()->user();
     $homeRoute = \Illuminate\Support\Facades\Route::has('agent.dashboard') ? route('agent.dashboard') : route('admin.dashboard');
 @endphp
@@ -24,6 +27,23 @@
                                 <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
                             @else
                                 <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
+                            @endif
+                        </span>
+                    </a>
+
+                    <a href="{{ $homeRoute }}" class="logo logo-light">
+                        <span class="logo-sm">
+                            @if($adminBrandLogoUrl)
+                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
+                            @else
+                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
+                            @endif
+                        </span>
+                        <span class="logo-lg">
+                            @if($adminBrandLogoUrl)
+                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
+                            @else
+                                <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
                             @endif
                         </span>
                     </a>
