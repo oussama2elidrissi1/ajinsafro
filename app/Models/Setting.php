@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 
 class Setting extends Model
@@ -72,7 +73,8 @@ class Setting extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($normalized);
+        $baseUrl = rtrim((string) config('app.admin_url', config('app.url', URL::to('/'))), '/');
+        return $baseUrl . '/storage/' . ltrim($normalized, '/');
     }
 
     /**
