@@ -1,10 +1,8 @@
 @php
     $adminBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
-    $adminBrandLogo = \App\Models\Setting::getValue('brand_logo');
-    $adminBrandLogoUrl = null;
-    if (!empty($adminBrandLogo) && \Illuminate\Support\Facades\Storage::disk('public')->exists($adminBrandLogo)) {
-        $adminBrandLogoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($adminBrandLogo);
-    }
+    $adminBrandLogoSmUrl = \App\Models\Setting::brandLogoUrl('sm');
+    $adminBrandLogoDarkUrl = \App\Models\Setting::brandLogoUrl('dark');
+    $adminBrandLogoLightUrl = \App\Models\Setting::brandLogoUrl('light');
     $user = auth()->user();
     $homeRoute = \Illuminate\Support\Facades\Route::has('agent.dashboard') ? route('agent.dashboard') : route('admin.dashboard');
 @endphp
@@ -16,35 +14,19 @@
                 <div class="navbar-brand-box">
                     <a href="{{ $homeRoute }}" class="logo logo-dark">
                         <span class="logo-sm">
-                            @if($adminBrandLogoUrl)
-                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
-                            @else
-                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
-                            @endif
+                            <img src="{{ $adminBrandLogoSmUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
                         </span>
                         <span class="logo-lg">
-                            @if($adminBrandLogoUrl)
-                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
-                            @else
-                                <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
-                            @endif
+                            <img src="{{ $adminBrandLogoDarkUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
                         </span>
                     </a>
 
                     <a href="{{ $homeRoute }}" class="logo logo-light">
                         <span class="logo-sm">
-                            @if($adminBrandLogoUrl)
-                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
-                            @else
-                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
-                            @endif
+                            <img src="{{ $adminBrandLogoSmUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
                         </span>
                         <span class="logo-lg">
-                            @if($adminBrandLogoUrl)
-                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
-                            @else
-                                <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
-                            @endif
+                            <img src="{{ $adminBrandLogoLightUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
                         </span>
                     </a>
                 </div>

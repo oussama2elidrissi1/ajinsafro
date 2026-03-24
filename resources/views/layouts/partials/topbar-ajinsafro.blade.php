@@ -1,7 +1,8 @@
 @php
     $adminBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
-    $adminBrandLogo = \App\Models\Setting::getValue('brand_logo');
-    $adminBrandLogoUrl = \App\Models\Setting::storageUrl($adminBrandLogo);
+    $adminBrandLogoSmUrl = \App\Models\Setting::brandLogoUrl('sm');
+    $adminBrandLogoDarkUrl = \App\Models\Setting::brandLogoUrl('dark');
+    $adminBrandLogoLightUrl = \App\Models\Setting::brandLogoUrl('light');
 @endphp
 
 <header id="page-topbar">
@@ -208,35 +209,19 @@
                 <div class="navbar-brand-box">
                     <a href="{{ route('admin.dashboard') }}" class="logo logo-dark">
                         <span class="logo-sm">
-                            @if($adminBrandLogoUrl)
-                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
-                            @else
-                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" class="admin-brand-logo-sm">
-                            @endif
+                            <img src="{{ $adminBrandLogoSmUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
                         </span>
                         <span class="logo-lg">
-                            @if($adminBrandLogoUrl)
-                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
-                            @else
-                                <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="" class="admin-brand-logo">
-                            @endif
+                            <img src="{{ $adminBrandLogoDarkUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
                         </span>
                     </a>
 
                     <a href="{{ route('admin.dashboard') }}" class="logo logo-light">
                         <span class="logo-sm">
-                            @if($adminBrandLogoUrl)
-                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
-                            @else
-                                <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" class="admin-brand-logo-sm">
-                            @endif
+                            <img src="{{ $adminBrandLogoSmUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo-sm">
                         </span>
                         <span class="logo-lg">
-                            @if($adminBrandLogoUrl)
-                                <img src="{{ $adminBrandLogoUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
-                            @else
-                                <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="" class="admin-brand-logo">
-                            @endif
+                            <img src="{{ $adminBrandLogoLightUrl }}" alt="{{ $adminBrandName }}" class="admin-brand-logo">
                         </span>
                     </a>
                 </div>
