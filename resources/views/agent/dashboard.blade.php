@@ -1,4 +1,4 @@
-@extends('layouts.portal-v2-agent')
+@extends('layouts.master-ajinsafro')
 
 @section('title', 'Tableau de bord')
 
