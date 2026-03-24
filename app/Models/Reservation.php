@@ -86,6 +86,11 @@ class Reservation extends Model
         return $this->belongsTo(Voyage::class, 'tour_id');
     }
 
+    public function travelDate(): BelongsTo
+    {
+        return $this->belongsTo(TravelDate::class, 'travel_date_id');
+    }
+
     public function partner(): BelongsTo
     {
         return $this->belongsTo(Partner::class);

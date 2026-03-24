@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
+use App\Models\User;
 use App\Models\ReservationRoom;
 use App\Models\Client;
 use App\Models\TravelDate;
@@ -15,6 +16,8 @@ use App\Services\BranchScopeService;
 use App\Services\ReservationService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -507,6 +510,8 @@ class ReservationsController extends Controller
         $budgetMax = $request->query('budget_max', '');
         $month = $request->query('month', '');
         $search = $request->query('search', '');
+        $dateFrom = $request->query('date_from', '');
+        $dateTo = $request->query('date_to', '');
 
         return view('admin.reservations.calendrier.index', [
             'voyages' => $voyagesForFilter,
@@ -519,12 +524,14 @@ class ReservationsController extends Controller
             'budgetMax' => $budgetMax,
             'month' => $month,
             'search' => $search,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
         ]);
     }
 
     /**
-     * Événements JSON pour le calendrier des départs (avec filtres).
-     * Le paramètre "voyage" est l'ID du tour WordPress (comme dans le filtre), pour filtrer par travel_id.
+     * Événements JSON pour le calendrier : dates de départ (offres) + réservations liées.
+     * Le paramètre "voyage" est l'ID tour WordPress (TravelDate.travel_id).
      */
     public function calendarEvents(Request $request): JsonResponse
     {
@@ -535,13 +542,12 @@ class ReservationsController extends Controller
         $budgetMax = $request->has('budget_max') && $request->query('budget_max') !== '' ? (float) $request->query('budget_max') : null;
         $month = $request->query('month', '');
         $search = trim((string) $request->query('search', ''));
+        $dateFrom = trim((string) $request->query('date_from', ''));
+        $dateTo = trim((string) $request->query('date_to', ''));
 
-        // 1) Déterminer les tours WP à considérer (source de vérité: wp_posts.ID == TravelDate.travel_id)
-        // Si un voyage est sélectionné, on filtre directement par cet ID WordPress.
         if ($voyageFilter > 0) {
             $wpTourIds = collect([$voyageFilter]);
         } else {
-            // Sinon, on filtre via la table Laravel voyages (métadonnées), mais on retourne toujours des wp_post_id
             $wpTourIds = Voyage::query()
                 ->whereNotNull('wp_post_id')
                 ->when($destination !== '', fn ($q) => $q->where('destination', $destination))
@@ -549,7 +555,6 @@ class ReservationsController extends Controller
                 ->when($budgetMin !== null, fn ($q) => $q->where('price_from', '>=', $budgetMin))
                 ->when($budgetMax !== null, fn ($q) => $q->where('price_from', '<=', $budgetMax))
                 ->when($search !== '', fn ($q) => $q->where(function ($q2) use ($search) {
-                    // NB: on cherche sur les champs Laravel (si non synchronisés, filtre partiel — OK)
                     $q2->where('name', 'like', '%' . $search . '%')
                         ->orWhere('destination', 'like', '%' . $search . '%')
                         ->orWhere('slug', 'like', '%' . $search . '%');
@@ -563,40 +568,49 @@ class ReservationsController extends Controller
 
         $wpTourIds = $wpTourIds->filter()->map(fn ($id) => (int) $id)->unique()->values();
 
+        $applyTravelDateWindow = function (Builder $q) use ($month, $dateFrom, $dateTo): void {
+            if ($dateFrom !== '' && $dateTo !== '') {
+                try {
+                    $df = Carbon::parse($dateFrom)->toDateString();
+                    $dt = Carbon::parse($dateTo)->toDateString();
+                    $q->whereBetween('date', [$df, $dt]);
+                } catch (\Throwable $e) {
+                    // ignore invalid
+                }
+            } elseif ($month !== '' && preg_match('/^(\d{4})-(\d{2})$/', $month, $m)) {
+                $q->whereYear('date', (int) $m[1])
+                    ->whereMonth('date', (int) $m[2]);
+            } else {
+                $q->whereYear('date', now()->year)
+                    ->whereMonth('date', now()->month);
+            }
+        };
+
         $travelDatesQuery = TravelDate::query()
             ->where('is_active', true)
             ->whereIn('travel_id', $wpTourIds);
 
-        if ($month !== '') {
-            if (preg_match('/^(\d{4})-(\d{2})$/', $month, $m)) {
-                $travelDatesQuery->whereYear('date', (int) $m[1])
-                    ->whereMonth('date', (int) $m[2]);
-            }
-        }
+        $applyTravelDateWindow($travelDatesQuery);
 
         $travelDates = $travelDatesQuery->orderBy('date')->get();
-        if ($travelDates->isEmpty()) {
-            return response()->json([]);
-        }
 
         $travelIds = $travelDates->pluck('travel_id')->unique()->filter()->map(fn ($id) => (int) $id)->values();
 
-        // 2) Charger les tours WordPress (titres/slug) pour éviter tout mismatch avec voyages.name (ex: "Brouillon auto")
         $wpPosts = collect();
-        try {
-            $wpPosts = WpPost::query()
-                ->whereIn('ID', $travelIds)
-                ->get(['ID', 'post_title', 'post_name', 'post_excerpt', 'post_content'])
-                ->keyBy('ID');
-        } catch (\Throwable $e) {
-            // Si WP indisponible ici, on gardera un fallback au niveau du titre.
+        if ($travelIds->isNotEmpty()) {
+            try {
+                $wpPosts = WpPost::query()
+                    ->whereIn('ID', $travelIds)
+                    ->get(['ID', 'post_title', 'post_name', 'post_excerpt', 'post_content'])
+                    ->keyBy('ID');
+            } catch (\Throwable $e) {
+                // ignore
+            }
         }
 
-        // 3) Charger les voyages Laravel (métadonnées) quand ils existent (destination, price_from, etc.)
-        $voyages = Voyage::query()
-            ->whereIn('wp_post_id', $travelIds)
-            ->get()
-            ->keyBy('wp_post_id');
+        $voyages = $travelIds->isNotEmpty()
+            ? Voyage::query()->whereIn('wp_post_id', $travelIds)->get()->keyBy('wp_post_id')
+            : collect();
 
         $events = [];
         foreach ($travelDates as $travelDate) {
@@ -611,7 +625,8 @@ class ReservationsController extends Controller
                 'start' => $dateStr,
                 'allDay' => true,
                 'extendedProps' => [
-                    'voyage_id' => $voyage?->id, // Laravel id (si existe) – utile pour la réservation
+                    'kind' => 'departure',
+                    'voyage_id' => $voyage?->id,
                     'wp_travel_id' => $wpId,
                     'travel_date_id' => $travelDate->id,
                     'departure_date' => $dateStr,
@@ -628,7 +643,115 @@ class ReservationsController extends Controller
             ];
         }
 
+        $reservationQuery = Reservation::query()
+            ->with(['tour:id,name,wp_post_id'])
+            ->whereNotNull('travel_date_id')
+            ->whereHas('travelDate', function (Builder $q) use ($wpTourIds, $applyTravelDateWindow) {
+                $q->where('is_active', true)->whereIn('travel_id', $wpTourIds);
+                $applyTravelDateWindow($q);
+            });
+
+        $this->scopeReservationAccessForCalendar($reservationQuery, $request->user());
+
+        if ($search !== '') {
+            $reservationQuery->where(function (Builder $q) use ($search) {
+                $q->where('client_first_name', 'like', '%' . $search . '%')
+                    ->orWhere('client_last_name', 'like', '%' . $search . '%')
+                    ->orWhere('client_email', 'like', '%' . $search . '%')
+                    ->orWhere('client_phone', 'like', '%' . $search . '%')
+                    ->orWhereHas('tour', fn (Builder $q2) => $q2->where('name', 'like', '%' . $search . '%'));
+            });
+        }
+
+        foreach ($reservationQuery->orderBy('id')->get() as $reservation) {
+            $td = $reservation->travelDate;
+            if (! $td || ! $td->date) {
+                continue;
+            }
+            $dateStr = $td->date->format('Y-m-d');
+            $client = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
+            $tourName = $reservation->tour?->name ?? 'Voyage';
+            $chip = '#' . $reservation->id . ' · ' . ($client !== '' ? $client : 'Client');
+            $events[] = [
+                'id' => 'res-' . $reservation->id,
+                'title' => $chip,
+                'start' => $dateStr,
+                'allDay' => true,
+                'extendedProps' => [
+                    'kind' => 'reservation',
+                    'reservation_id' => $reservation->id,
+                    'reservation_status' => $reservation->status,
+                    'client_label' => $client,
+                    'tour_name' => $tourName,
+                    'travel_date_id' => $td->id,
+                    'wp_travel_id' => $td->travel_id,
+                    'voyage_id' => $reservation->tour_id,
+                    'departure_date' => $dateStr,
+                    'route_reservation' => route('admin.reservations.edit', $reservation),
+                ],
+            ];
+        }
+
         return response()->json($events);
+    }
+
+    /**
+     * Détail JSON d'une réservation (modale calendrier).
+     */
+    public function calendarReservationDetails(Request $request): JsonResponse
+    {
+        $id = (int) $request->query('id', 0);
+        if ($id <= 0) {
+            return response()->json(['error' => 'Paramètre id manquant'], 422);
+        }
+
+        $query = Reservation::query()
+            ->with(['tour:id,name,wp_post_id', 'travelDate', 'client:id,full_name,email,phone', 'branch:id,name'])
+            ->whereKey($id);
+
+        $this->scopeReservationAccessForCalendar($query, $request->user());
+
+        $reservation = $query->first();
+        if (! $reservation) {
+            return response()->json(['error' => 'Réservation introuvable ou accès refusé'], 404);
+        }
+
+        $td = $reservation->travelDate;
+        $departure = $td?->date?->format('Y-m-d');
+        $departureFormatted = $td?->date?->translatedFormat('l j F Y');
+
+        return response()->json([
+            'kind' => 'reservation',
+            'id' => $reservation->id,
+            'status' => $reservation->status,
+            'client' => trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''))
+                ?: ($reservation->client?->full_name ?? '—'),
+            'email' => $reservation->client_email ?: $reservation->client?->email,
+            'phone' => $reservation->client_phone ?: $reservation->client?->phone,
+            'tour_name' => $reservation->tour?->name ?? '—',
+            'branch' => $reservation->branch?->name,
+            'departure_date' => $departure,
+            'departure_date_formatted' => $departureFormatted,
+            'payment_type' => $reservation->payment_type,
+            'total_price' => $reservation->total_price,
+            'route_edit' => route('admin.reservations.edit', $reservation),
+        ]);
+    }
+
+    /**
+     * Réservations : même périmètre agence + pour commercial / chef / agent : dossiers liés au compte.
+     */
+    private function scopeReservationAccessForCalendar(Builder $query, User $user): void
+    {
+        $this->branchScope->scopeReservations($query, $user);
+        if ($user->isCommercial() || $user->isChefCommercial() || $user->isAgent()) {
+            $uid = $user->id;
+            $query->where(function (Builder $q) use ($uid) {
+                $q->where('agent_id', $uid)
+                    ->orWhere('sales_manager_id', $uid)
+                    ->orWhere('created_by', $uid);
+            });
+        }
     }
 
     /**
