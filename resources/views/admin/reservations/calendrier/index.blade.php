@@ -12,6 +12,16 @@
         $initialYear = now()->year;
         $initialMonth0 = now()->month - 1;
     }
+    $ajinCalendarConfig = [
+        'eventsUrl' => route('admin.reservations.calendrier.events'),
+        'detailsUrl' => route('admin.reservations.calendrier.event-details'),
+        'reservationDetailsUrl' => route('admin.reservations.calendrier.reservation-details'),
+        'createUrl' => route('admin.reservations.create'),
+        'initialYear' => $initialYear,
+        'initialMonth0' => $initialMonth0,
+        'dateFrom' => $dateFrom ?? '',
+        'dateTo' => $dateTo ?? '',
+    ];
 @endphp
 
 @section('content')
@@ -69,16 +79,7 @@
     @include('admin.reservations.calendrier.partials.modals')
 
     <script>
-        window.AJIN_CALENDAR_CONFIG = @json([
-            'eventsUrl' => route('admin.reservations.calendrier.events'),
-            'detailsUrl' => route('admin.reservations.calendrier.event-details'),
-            'reservationDetailsUrl' => route('admin.reservations.calendrier.reservation-details'),
-            'createUrl' => route('admin.reservations.create'),
-            'initialYear' => $initialYear,
-            'initialMonth0' => $initialMonth0,
-            'dateFrom' => $dateFrom ?? '',
-            'dateTo' => $dateTo ?? '',
-        ]);
+        window.AJIN_CALENDAR_CONFIG = @json($ajinCalendarConfig);
     </script>
     @vite(['resources/js/admin-reservations-calendar.js'])
     </div>
