@@ -22,7 +22,7 @@ class SettingsController extends Controller
 
         if ($submenu === 'parametres-generaux') {
             $storedLogoPath = Setting::getValue('brand_logo');
-            $normalizedLogoPath = Setting::normalizePublicDiskPath($storedLogoPath);
+            $normalizedLogoPath = Setting::resolvedBrandLogoPath();
             if ($storedLogoPath !== $normalizedLogoPath && $normalizedLogoPath !== null) {
                 Setting::setValue('brand_logo', $normalizedLogoPath);
             }
