@@ -60,7 +60,7 @@ class LoginRedirectService
             BranchScopeService::ROLE_COMMERCIAL,
             'Chef Commercial',
         ])) {
-            return $adminUrl . '/commercial/dashboard';
+            return $adminUrl . '/agent/dashboard';
         }
 
         // Agent role
