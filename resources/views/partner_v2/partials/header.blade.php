@@ -47,6 +47,9 @@
         ['label' => 'Hajj & Omra', 'url' => '#hajj-omra', 'icon' => 'fas fa-kaaba', 'active' => false, 'children' => []],
         ['label' => 'Votre guide', 'url' => '#guide', 'icon' => 'fas fa-map-signs', 'active' => false, 'children' => []],
     ];
+
+    /** When false (e.g. espace agent sur booking), use logout GET route instead of partner.logout. */
+    $portalLogoutUsesPartner = $portalLogoutUsesPartner ?? true;
 @endphp
 
 @if(!empty($hdr['enabled']))
@@ -100,12 +103,18 @@
                             <img src="{{ $user->avatar_url }}" alt="Avatar" class="rounded-circle" style="width:24px;height:24px;object-fit:cover;">
                             <span>{{ $user->name }}</span>
                         </span>
-                        <form method="POST" action="{{ route('partner.logout') }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="aj-topbar__auth-link aj-topbar__auth-link--signup border-0">
+                        @if($portalLogoutUsesPartner)
+                            <form method="POST" action="{{ route('partner.logout') }}" class="d-inline">
+                                @csrf
+                                <button type="submit" class="aj-topbar__auth-link aj-topbar__auth-link--signup border-0">
+                                    {{ __('SE DÉCONNECTER') }}
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('logout.get') }}" class="aj-topbar__auth-link aj-topbar__auth-link--signup">
                                 {{ __('SE DÉCONNECTER') }}
-                            </button>
-                        </form>
+                            </a>
+                        @endif
                     @else
                         <a href="{{ !empty($hdr['login_url']) ? $hdr['login_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/login') }}" class="aj-topbar__auth-link">
                             {{ __('SE CONNECTER') }}
@@ -155,12 +164,16 @@
                             <img src="{{ $user->avatar_url }}" alt="Avatar" class="rounded-circle" style="width:24px;height:24px;object-fit:cover;">
                             <span>{{ $user->name }}</span>
                         </div>
-                        <form method="POST" action="{{ route('partner.logout') }}">
-                            @csrf
-                            <button type="submit" class="aj-auth-link aj-auth-link--block border-0 bg-transparent text-start w-100">
-                                {{ __('Se déconnecter') }}
-                            </button>
-                        </form>
+                        @if($portalLogoutUsesPartner)
+                            <form method="POST" action="{{ route('partner.logout') }}">
+                                @csrf
+                                <button type="submit" class="aj-auth-link aj-auth-link--block border-0 bg-transparent text-start w-100">
+                                    {{ __('Se déconnecter') }}
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('logout.get') }}" class="aj-auth-link aj-auth-link--block">{{ __('Se déconnecter') }}</a>
+                        @endif
                     @else
                         <a href="{{ !empty($hdr['login_url']) ? $hdr['login_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/login') }}" class="aj-auth-link aj-auth-link--block">{{ __('Se connecter') }}</a>
                         <a href="{{ !empty($hdr['signup_url']) ? $hdr['signup_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/register') }}" class="aj-auth-link aj-auth-link--signup aj-auth-link--block">{{ __("S'inscrire") }}</a>

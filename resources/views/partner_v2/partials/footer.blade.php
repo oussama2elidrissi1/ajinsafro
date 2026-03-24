@@ -5,6 +5,10 @@
         'legal_text' => "Licence N° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU",
     ];
 
+    $messageUrl = Route::has('partner.messages.index')
+        ? route('partner.messages.index')
+        : (Route::has('admin.messagerie.index') ? route('admin.messagerie.index') : '#');
+
     $footerCols = [
         [
             'heading' => $footerDefaults['col1_heading'],
@@ -17,13 +21,13 @@
         ],
         [
             'heading' => $footerDefaults['col2_heading'],
-            'links' => [
+            'links' => array_values(array_filter([
                 ['label' => 'Emplois', 'url' => '#'],
                 ['label' => 'Forum', 'url' => '#'],
                 ['label' => 'Devenez-Partenaire', 'url' => url('/devenir-partenaire')],
-                ['label' => 'Laissez-nous un message', 'url' => route('partner.messages.index')],
+                $messageUrl !== '#' ? ['label' => 'Laissez-nous un message', 'url' => $messageUrl] : null,
                 ['label' => 'Contact', 'url' => '#'],
-            ],
+            ])),
         ],
     ];
 
