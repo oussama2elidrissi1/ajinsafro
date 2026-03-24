@@ -98,7 +98,9 @@
                                         @endif
                                     </td>
                                     <td class="text-end">
-                                        <a href="{{ route('admin.circuits.tour-hotels.show', $hotel->tour_id) }}" class="btn btn-sm btn-outline-primary">Voir</a>
+                                        @if(\Illuminate\Support\Facades\Route::has('admin.circuits.tour-hotels.show'))
+    <a href="{{ route('admin.circuits.tour-hotels.show', $hotel->tour_id) }}" class="btn btn-sm btn-outline-primary">Voir</a>
+@endif
                                         <a href="{{ route('admin.circuits.tour-hotels.edit', $hotel->tour_id) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
                                         <a href="{{ route('admin.circuits.voyages.edit', $hotel->tour_id) }}" class="btn btn-sm btn-soft-primary">Voyage</a>
                                     </td>

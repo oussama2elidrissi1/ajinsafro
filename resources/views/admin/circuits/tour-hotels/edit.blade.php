@@ -8,8 +8,10 @@
                 <h4 class="page-title mb-0 font-size-18">Gérer l'hôtel du circuit</h4>
                 <div class="d-flex align-items-center gap-2">
                     @if($hotel)
-                        <a href="{{ route('admin.circuits.tour-hotels.show', $tour->ID) }}" class="btn btn-outline-secondary btn-sm">Voir</a>
-                    @endif
+    @if(\Illuminate\Support\Facades\Route::has('admin.circuits.tour-hotels.show'))
+        <a href="{{ route('admin.circuits.tour-hotels.show', $tour->ID) }}" class="btn btn-outline-secondary btn-sm">Voir</a>
+    @endif
+@endif
                     <a href="{{ route('admin.circuits.tour-hotels.index') }}" class="btn btn-outline-secondary btn-sm">Retour</a>
                 </div>
             </div>
