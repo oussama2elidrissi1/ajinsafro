@@ -43,8 +43,10 @@ $deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : '';
             <aside class="aj-theme__left">
                 <?php if ( $left_img ) : ?>
                     <div class="aj-theme__left-media">
-                        <img src="<?php echo esc_url( $left_img ); ?>" alt="<?php echo esc_attr( $eyebrow ); ?>" loading="lazy">
+                        <img src="<?php echo esc_url( $left_img ); ?>" alt="<?php echo esc_attr( $eyebrow ); ?>" loading="lazy" onerror="this.closest('.aj-theme__left-media').classList.add('is-missing');this.remove();">
                     </div>
+                <?php else : ?>
+                    <div class="aj-theme__left-media is-missing"></div>
                 <?php endif; ?>
                 <div class="aj-theme__left-content">
                     <p class="aj-theme__eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
@@ -63,7 +65,7 @@ $deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : '';
                     <?php endif; ?>
                 </div>
                 <?php if ( $deco_img ) : ?>
-                    <img class="aj-theme__deco" src="<?php echo esc_url( $deco_img ); ?>" alt="" loading="lazy" aria-hidden="true">
+                    <img class="aj-theme__deco" src="<?php echo esc_url( $deco_img ); ?>" alt="" loading="lazy" aria-hidden="true" onerror="this.style.display='none';">
                 <?php endif; ?>
             </aside>
 
@@ -96,7 +98,8 @@ $deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : '';
                     <article class="aj-slider-v2__item aj-theme-card">
                         <div class="aj-theme-card__media">
                             <?php if ( $img ) : ?>
-                                <img src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy">
+                                <img src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&this.nextElementSibling.classList.remove('aj-theme-card__placeholder--hidden');">
+                                <div class="aj-theme-card__placeholder aj-theme-card__placeholder--hidden"></div>
                             <?php else : ?>
                                 <div class="aj-theme-card__placeholder"></div>
                             <?php endif; ?>

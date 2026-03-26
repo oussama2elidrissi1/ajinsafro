@@ -779,6 +779,7 @@ class HomePageSettingsController extends Controller
             $settings['holiday_theme'] ?? [],
             $defaults['holiday_theme']
         );
+        $settings['holiday_theme'] = $this->canonicalizeHolidayThemeImageUrls($settings['holiday_theme']);
 
         $settings['sections']['holiday_theme'] = (bool) ($settings['holiday_theme']['enabled'] ?? false);
 
@@ -1145,6 +1146,21 @@ class HomePageSettingsController extends Controller
         return $merged;
     }
 
+    private function canonicalizeHolidayThemeImageUrls(array $theme): array
+    {
+        $theme['left_image_url'] = $this->normalizeImageUrl((string) ($theme['left_image_url'] ?? ''));
+        $theme['deco_image_url'] = $this->normalizeImageUrl((string) ($theme['deco_image_url'] ?? ''));
+        $items = is_array($theme['items'] ?? null) ? $theme['items'] : [];
+        foreach ($items as $idx => $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $items[$idx]['image_url'] = $this->normalizeImageUrl((string) ($item['image_url'] ?? ''));
+        }
+        $theme['items'] = $items;
+        return $theme;
+    }
+
     private function truthy($value): bool
     {
         if (is_bool($value)) {
@@ -1188,17 +1204,50 @@ class HomePageSettingsController extends Controller
         if ($value === '') {
             return '';
         }
+        $managedStorageBase = rtrim($this->managedStorageBaseUrl(), '/');
+        $publicBase = rtrim((string) config('app.public_url'), '/');
+
+        // Fix historical wrong host URLs for Laravel-managed media.
+        if (
+            preg_match('#^https?://#i', $value) &&
+            $managedStorageBase !== '' &&
+            str_contains($value, '/storage/home-settings/')
+        ) {
+            if ($publicBase !== '' && str_starts_with($value, $publicBase . '/storage/')) {
+                $value = $managedStorageBase . substr($value, strlen($publicBase . '/storage'));
+            }
+        }
+
         if (preg_match('#^https?://#i', $value)) {
             return $value;
         }
         if (str_starts_with($value, '//')) {
             return 'https:' . $value;
         }
+        if ($managedStorageBase !== '' && str_starts_with($value, '/storage/')) {
+            return $managedStorageBase . substr($value, strlen('/storage'));
+        }
+        if ($managedStorageBase !== '' && str_starts_with($value, 'storage/')) {
+            return $managedStorageBase . '/' . substr($value, strlen('storage/'));
+        }
         $base = rtrim((string) config('app.url'), '/');
         if ($base === '') {
             return $value;
         }
         return $base . '/' . ltrim($value, '/');
+    }
+
+    private function managedStorageBaseUrl(): string
+    {
+        $publicDiskUrl = rtrim((string) config('filesystems.disks.public.url'), '/');
+        if ($publicDiskUrl !== '') {
+            return $publicDiskUrl;
+        }
+        $adminUrl = rtrim((string) config('app.admin_url'), '/');
+        if ($adminUrl !== '') {
+            return $adminUrl . '/storage';
+        }
+        return rtrim((string) config('app.url'), '/') . '/storage';
     }
 
     private function wpOptionsTable(): string
