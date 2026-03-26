@@ -1188,6 +1188,12 @@ class HomePageSettingsController extends Controller
 
     private function sanitizeHolidayThemeUploadInputs(Request $request): void
     {
+        // If any non-file payload sneaks in with same name, neutralize it.
+        $rawInput = $request->input('holiday_theme_item_files', []);
+        if (!is_array($rawInput)) {
+            $request->merge(['holiday_theme_item_files' => []]);
+        }
+
         $itemFiles = $request->file('holiday_theme_item_files', []);
         $cleanFiles = [];
         if (is_array($itemFiles)) {
@@ -1250,13 +1256,13 @@ class HomePageSettingsController extends Controller
 
     private function managedStorageBaseUrl(): string
     {
-        $publicDiskUrl = rtrim((string) config('filesystems.disks.public.url'), '/');
-        if ($publicDiskUrl !== '') {
-            return $publicDiskUrl;
-        }
         $adminUrl = rtrim((string) config('app.admin_url'), '/');
         if ($adminUrl !== '') {
             return $adminUrl . '/storage';
+        }
+        $publicDiskUrl = rtrim((string) config('filesystems.disks.public.url'), '/');
+        if ($publicDiskUrl !== '') {
+            return $publicDiskUrl;
         }
         return rtrim((string) config('app.url'), '/') . '/storage';
     }
