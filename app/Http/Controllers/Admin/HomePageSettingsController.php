@@ -67,7 +67,7 @@ class HomePageSettingsController extends Controller
                 ]);
             }
 
-            $validated = $request->validate([
+            $rules = [
                 'hero.type' => ['required', Rule::in(['image', 'video'])],
                 'hero.image_url' => ['nullable', 'url', 'max:2048'],
                 'hero.video_url' => ['nullable', 'string'],
@@ -169,7 +169,6 @@ class HomePageSettingsController extends Controller
                 'holiday_theme_item_files' => ['nullable', 'array'],
                 'holiday_theme_left_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
                 'holiday_theme_deco_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
-                'holiday_theme_item_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
 
                 'footer.col1_heading' => ['nullable', 'string', 'max:255'],
                 'footer.col2_heading' => ['nullable', 'string', 'max:255'],
@@ -184,7 +183,19 @@ class HomePageSettingsController extends Controller
                 'destinations_by_region.items.*.link_url' => ['nullable', 'string', 'max:2048'],
                 'destinations_by_region.items.*.order' => ['nullable', 'integer', 'min:0'],
                 'destinations_by_region_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
-            ], [
+            ];
+
+            // Validate only real uploaded files for holiday_theme items (skip empty indexes).
+            $itemFiles = $request->file('holiday_theme_item_files', []);
+            if (is_array($itemFiles)) {
+                foreach ($itemFiles as $index => $file) {
+                    if ($file instanceof UploadedFile && $file->isValid()) {
+                        $rules["holiday_theme_item_files.$index"] = ['image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'];
+                    }
+                }
+            }
+
+            $validated = $request->validate($rules, [
                 'hero_video_file.max' => 'Vidéo trop grande (max 50MB). Utilisez une URL YouTube/Vimeo.',
                 'hero_video_file.uploaded' => 'Upload vidéo échoué (limite serveur). Augmentez upload_max_filesize/post_max_size/max_execution_time ou utilisez un lien vidéo.',
                 'hero_video_file.mimetypes' => 'Le fichier vidéo doit être un MP4/M4V/MOV valide.',
