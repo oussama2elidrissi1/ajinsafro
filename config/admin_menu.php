@@ -25,7 +25,6 @@ return [
                 ['label' => 'Annulées', 'route' => 'admin.reservations.annulees', 'permission' => 'reservations.cancelled.view'],
                 ['label' => 'Calendrier', 'route' => 'admin.reservations.calendrier', 'permission' => 'reservations.calendar.view'],
                 ['label' => 'Paiements', 'route' => 'admin.reservations.paiements', 'permission' => 'reservations.payments.view'],
-                ['label' => 'Messages', 'route' => 'admin.reservations.messages', 'permission' => 'reservations.view'],
             ],
         ],
         [
@@ -34,7 +33,7 @@ return [
             'icon' => 'bx bx-user',
             'permission' => 'customers.view',
             'children' => [
-                ['label' => 'Clients', 'route' => 'admin.customers.clients.index', 'permission' => 'customers.clients.view'],
+                ['label' => 'Clients', 'route' => 'admin.customers.clients', 'permission' => 'customers.clients.view'],
                 ['label' => 'Voyageurs', 'route' => 'admin.customers.voyageurs', 'permission' => 'customers.travelers.view'],
                 ['label' => 'Historique', 'route' => 'admin.customers.historique', 'permission' => 'customers.history.view'],
                 ['label' => 'Avis clients', 'route' => 'admin.customers.avis-clients', 'permission' => 'customers.reviews.view'],
@@ -114,12 +113,10 @@ return [
         ],
         [
             'key' => 'partners',
-            'label' => 'Réseau partenaires',
+            'label' => 'Partenaires',
             'icon' => 'bx bx-group',
             'permission' => 'partners.view',
             'children' => [
-                ['label' => 'Revendeurs', 'route' => 'admin.partner-accounts.index', 'permission' => 'partners.view'],
-                ['label' => 'Règles de commission', 'route' => 'admin.partner-commission-rules.index', 'permission' => 'partners.view'],
                 ['label' => 'Partenaires', 'route' => 'admin.partners.partenaires', 'permission' => 'partners.list.view'],
                 ['label' => 'Fournisseurs', 'route' => 'admin.partners.fournisseurs', 'permission' => 'partners.suppliers.view'],
                 ['label' => 'Contrats', 'route' => 'admin.partners.contrats', 'permission' => 'partners.contracts.view'],
@@ -146,21 +143,11 @@ return [
             ],
         ],
         [
-            'key' => 'messagerie',
-            'label' => 'Messagerie',
-            'icon' => 'bx bx-message-dots',
-            'permission' => 'messagerie.view',
-            'children' => [
-                ['label' => 'Messages', 'route' => 'admin.messagerie.index', 'permission' => 'messagerie.view'],
-            ],
-        ],
-        [
             'key' => 'settings',
             'label' => 'Paramètres',
             'icon' => 'bx bx-cog',
             'permission' => 'settings.view',
             'children' => [
-                ['label' => 'Agences', 'route' => 'admin.branches.index'],
                 ['label' => 'Utilisateurs', 'route' => 'admin.settings.utilisateurs', 'permission' => 'settings.users.manage'],
                 ['label' => 'Rôles & Permissions', 'route' => 'admin.settings.roles-permissions', 'permission' => 'settings.roles.manage'],
                 ['label' => 'Paramètres généraux', 'route' => 'admin.settings.parametres-generaux', 'permission' => 'settings.general.manage'],
@@ -195,27 +182,6 @@ return [
         'admin.settings.roles-permissions.edit' => 'settings.roles.manage',
         'admin.settings.roles-permissions.update' => 'settings.roles.manage',
         'admin.settings.roles-permissions.destroy' => 'settings.roles.manage',
-
-        'admin.branches.index' => 'settings.view',
-        'admin.branches.create' => 'settings.view',
-        'admin.branches.store' => 'settings.view',
-        'admin.branches.edit' => 'settings.view',
-        'admin.branches.update' => 'settings.view',
-        'admin.branches.destroy' => 'settings.view',
-
-        'admin.messagerie.index' => 'messagerie.view',
-        'admin.messagerie.channels' => 'messagerie.view',
-        'admin.messagerie.messages' => 'messagerie.view',
-        'admin.messagerie.send' => 'messagerie.view',
-
-        'admin.reservations.messages' => 'reservations.view',
-        'admin.reservations.messages.create' => 'reservations.view',
-        'admin.reservations.messages.store' => 'reservations.view',
-        'admin.reservations.messages.show' => 'reservations.view',
-        'admin.reservations.messages.star' => 'reservations.view',
-        'admin.reservations.messages.trash' => 'reservations.view',
-        'admin.reservations.messages.label' => 'reservations.view',
-        'admin.reservations.messages.important' => 'reservations.view',
     ],
 
     'route_prefix_permissions' => [
@@ -230,12 +196,8 @@ return [
         'admin.finance.' => 'finance.view',
         'admin.hotels.' => 'accommodations.view',
         'admin.partners.' => 'partners.view',
-        'admin.partner-accounts.' => 'partners.view',
-        'admin.partner-commission-rules.' => 'partners.view',
         'admin.reporting.' => 'reporting.view',
         'admin.wordpress.' => 'wordpress.view',
         'admin.settings.' => 'settings.view',
-        'admin.branches.' => 'settings.branches.manage',
-        'admin.messagerie.' => 'messagerie.view',
     ],
 ];

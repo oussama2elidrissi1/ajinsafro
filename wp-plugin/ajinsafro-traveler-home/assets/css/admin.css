@@ -56,27 +56,3 @@
 #ajth-add-region {
     margin-top: 8px;
 }
-
-.ajth-theme-item-row {
-    background: #fff;
-    border: 1px solid #d8e3ec;
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-}
-
-.ajth-theme-item-row h4 {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0 0 10px;
-    font-size: 14px;
-}
-
-.ajth-theme-item-row p {
-    margin: 0 0 8px;
-}
-
-#ajth-add-theme-item {
-    margin-bottom: 12px;
-}
