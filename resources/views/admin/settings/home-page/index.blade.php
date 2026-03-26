@@ -373,9 +373,10 @@
                     'promotions' => 'Promotions',
                     'whatsapp_banner' => 'Bannière WhatsApp',
                     'cruises' => 'Croisières',
+                    'holiday_theme' => 'Holidayz / Voyages par thème',
                     'newsletter' => 'Newsletter',
                 ];
-                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter']));
+                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter']));
                 $sectionOrder = is_array($sectionOrder) ? $sectionOrder : [];
                 $customSections = old('custom_sections', data_get($settings, 'custom_sections', []));
                 $customSections = is_array($customSections) ? $customSections : [];
@@ -715,6 +716,124 @@
                 </div>
             </div>
 
+            {{-- Holiday Theme --}}
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Holidayz / Holidays by Theme / Voyages par thème</h5></div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="holiday_theme[enabled]" value="1" id="holiday_theme_enabled"
+                               {{ old('holiday_theme.enabled', data_get($settings, 'holiday_theme.enabled')) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="holiday_theme_enabled">Activer la section Holidayz</label>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Eyebrow</label>
+                            <input type="text" class="form-control" name="holiday_theme[eyebrow]" value="{{ old('holiday_theme.eyebrow', data_get($settings, 'holiday_theme.eyebrow')) }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Titre ligne 1</label>
+                            <input type="text" class="form-control" name="holiday_theme[title_line_1]" value="{{ old('holiday_theme.title_line_1', data_get($settings, 'holiday_theme.title_line_1')) }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Titre ligne 2</label>
+                            <input type="text" class="form-control" name="holiday_theme[title_line_2]" value="{{ old('holiday_theme.title_line_2', data_get($settings, 'holiday_theme.title_line_2')) }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Titre ligne 3</label>
+                            <input type="text" class="form-control" name="holiday_theme[title_line_3]" value="{{ old('holiday_theme.title_line_3', data_get($settings, 'holiday_theme.title_line_3')) }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Sous-titre</label>
+                            <input type="text" class="form-control" name="holiday_theme[subtitle]" value="{{ old('holiday_theme.subtitle', data_get($settings, 'holiday_theme.subtitle')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Image principale gauche (URL)</label>
+                            <input type="text" class="form-control" name="holiday_theme[left_image_url]" value="{{ old('holiday_theme.left_image_url', data_get($settings, 'holiday_theme.left_image_url')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Upload image principale</label>
+                            <input type="file" class="form-control" name="holiday_theme_left_image_file" accept="image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Image décorative (URL)</label>
+                            <input type="text" class="form-control" name="holiday_theme[deco_image_url]" value="{{ old('holiday_theme.deco_image_url', data_get($settings, 'holiday_theme.deco_image_url')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Upload image décorative</label>
+                            <input type="file" class="form-control" name="holiday_theme_deco_image_file" accept="image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Texte du bouton</label>
+                            <input type="text" class="form-control" name="holiday_theme[button_text]" value="{{ old('holiday_theme.button_text', data_get($settings, 'holiday_theme.button_text')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Lien du bouton</label>
+                            <input type="text" class="form-control" name="holiday_theme[button_url]" value="{{ old('holiday_theme.button_url', data_get($settings, 'holiday_theme.button_url')) }}" placeholder="https://...">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Cartes du slider</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="holiday-theme-add-item">Ajouter une carte</button>
+                    </div>
+
+                    @php
+                        $holidayItems = old('holiday_theme.items', data_get($settings, 'holiday_theme.items', []));
+                        $holidayItems = is_array($holidayItems) ? $holidayItems : [];
+                    @endphp
+                    <div id="holiday-theme-items-container" class="vstack gap-2">
+                        @foreach($holidayItems as $idx => $item)
+                            <div class="border rounded p-2 holiday-theme-row" data-index="{{ $idx }}">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto d-flex flex-column gap-0">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-theme-move-up" title="Monter">↑</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-theme-move-down" title="Descendre">↓</button>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input type="hidden" class="holiday-theme-order" name="holiday_theme[items][{{ $idx }}][order]" value="{{ data_get($item, 'order', $idx + 1) }}">
+                                        <span class="badge bg-primary holiday-theme-order-display">{{ data_get($item, 'order', $idx + 1) }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Titre <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][title]" value="{{ data_get($item, 'title') }}" placeholder="Ex: Escapades Nature">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Image URL</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][image_url]" value="{{ data_get($item, 'image_url') }}" placeholder="https://...">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Upload image</label>
+                                        <input type="file" class="form-control form-control-sm holiday-theme-file" name="holiday_theme_item_files[{{ $idx }}]" accept="image/*">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Tags</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][tags]" value="{{ is_array(data_get($item, 'tags')) ? implode(', ', data_get($item, 'tags')) : data_get($item, 'tags') }}" placeholder="Famille, Safari, Luxe">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Texte bouton</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][button_text]" value="{{ data_get($item, 'button_text') }}" placeholder="Voir plus">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Lien bouton</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][button_url]" value="{{ data_get($item, 'button_url') }}" placeholder="https://...">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-check form-switch mt-4">
+                                            <input class="form-check-input" type="checkbox" name="holiday_theme[items][{{ $idx }}][active]" value="1" {{ old("holiday_theme.items.$idx.active", data_get($item, 'active', true)) ? 'checked' : '' }}>
+                                            <label class="form-check-label">Actif</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto ms-auto">
+                                        <button type="button" class="btn btn-sm btn-outline-danger holiday-theme-remove">×</button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             {{-- Footer --}}
             <div class="card">
                 <div class="card-header"><h5 class="card-title mb-0">Footer</h5></div>
@@ -936,6 +1055,7 @@
         promotions: 'Promotions',
         whatsapp_banner: 'Bannière WhatsApp',
         cruises: 'Croisières',
+        holiday_theme: 'Holidayz / Voyages par thème',
         newsletter: 'Newsletter'
     };
     function nextCustomId() {
@@ -1071,6 +1191,83 @@
                 if (row && row.nextElementSibling) {
                     dbrContainer.insertBefore(row.nextElementSibling, row);
                     dbrRenumber();
+                }
+            }
+        });
+    }
+
+    /* ── Holiday Theme repeater ─────────── */
+    var holidayThemeContainer = document.getElementById('holiday-theme-items-container');
+    var holidayThemeAddBtn = document.getElementById('holiday-theme-add-item');
+
+    function holidayThemeRowHtml(idx, order) {
+        order = order || idx + 1;
+        return '<div class="border rounded p-2 holiday-theme-row" data-index="' + idx + '">' +
+            '<div class="row g-2 align-items-center">' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary holiday-theme-move-up" title="Monter">↑</button><button type="button" class="btn btn-sm btn-outline-secondary holiday-theme-move-down" title="Descendre">↓</button></div>' +
+            '<div class="col-auto"><input type="hidden" class="holiday-theme-order" name="holiday_theme[items][' + idx + '][order]" value="' + order + '"><span class="badge bg-primary holiday-theme-order-display">' + order + '</span></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Titre <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][title]" placeholder="Ex: Escapades Nature"></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][image_url]" placeholder="https://..."></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Upload image</label><input type="file" class="form-control form-control-sm holiday-theme-file" name="holiday_theme_item_files[' + idx + ']" accept="image/*"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Tags</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][tags]" placeholder="Famille, Safari, Luxe"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Texte bouton</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][button_text]" placeholder="Voir plus"></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Lien bouton</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][button_url]" placeholder="https://..."></div>' +
+            '<div class="col-md-2"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" name="holiday_theme[items][' + idx + '][active]" value="1" checked><label class="form-check-label">Actif</label></div></div>' +
+            '<div class="col-auto ms-auto"><button type="button" class="btn btn-sm btn-outline-danger holiday-theme-remove">×</button></div>' +
+            '</div></div>';
+    }
+
+    function holidayThemeRenumber() {
+        if (!holidayThemeContainer) return;
+        var rows = holidayThemeContainer.querySelectorAll('.holiday-theme-row');
+        rows.forEach(function (row, i) {
+            row.setAttribute('data-index', i);
+            var orderInp = row.querySelector('.holiday-theme-order');
+            var orderDisp = row.querySelector('.holiday-theme-order-display');
+            if (orderInp) {
+                orderInp.name = 'holiday_theme[items][' + i + '][order]';
+                orderInp.value = i + 1;
+            }
+            if (orderDisp) orderDisp.textContent = i + 1;
+
+            row.querySelectorAll('input[name^="holiday_theme[items]"]').forEach(function (inp) {
+                inp.name = inp.name.replace(/holiday_theme\[items\]\[\d+\]/, 'holiday_theme[items][' + i + ']');
+            });
+            row.querySelectorAll('input[name^="holiday_theme_item_files"]').forEach(function (inp) {
+                inp.name = 'holiday_theme_item_files[' + i + ']';
+            });
+        });
+    }
+
+    if (holidayThemeAddBtn && holidayThemeContainer) {
+        holidayThemeAddBtn.addEventListener('click', function () {
+            var idx = holidayThemeContainer.querySelectorAll('.holiday-theme-row').length;
+            holidayThemeContainer.insertAdjacentHTML('beforeend', holidayThemeRowHtml(idx, idx + 1));
+        });
+
+        holidayThemeContainer.addEventListener('click', function (e) {
+            var btn = e.target.closest('button');
+            if (!btn) return;
+
+            if (btn.classList.contains('holiday-theme-remove')) {
+                var row = btn.closest('.holiday-theme-row');
+                if (row) {
+                    row.remove();
+                    holidayThemeRenumber();
+                }
+            }
+            if (btn.classList.contains('holiday-theme-move-up')) {
+                var row = btn.closest('.holiday-theme-row');
+                if (row && row.previousElementSibling) {
+                    holidayThemeContainer.insertBefore(row, row.previousElementSibling);
+                    holidayThemeRenumber();
+                }
+            }
+            if (btn.classList.contains('holiday-theme-move-down')) {
+                var row = btn.closest('.holiday-theme-row');
+                if (row && row.nextElementSibling) {
+                    holidayThemeContainer.insertBefore(row.nextElementSibling, row);
+                    holidayThemeRenumber();
                 }
             }
         });
