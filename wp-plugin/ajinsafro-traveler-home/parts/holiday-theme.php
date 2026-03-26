@@ -6,17 +6,42 @@
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-$theme = isset( $settings['holiday_theme'] ) && is_array( $settings['holiday_theme'] )
-    ? $settings['holiday_theme']
-    : array();
+$theme = isset( $settings['holiday_theme'] ) ? $settings['holiday_theme'] : array();
+if ( is_string( $theme ) ) {
+    $decoded_theme = json_decode( $theme, true );
+    $theme = is_array( $decoded_theme ) ? $decoded_theme : array();
+}
+if ( ! is_array( $theme ) ) {
+    $theme = array();
+}
 
-if ( empty( $theme['enabled'] ) ) {
+if ( function_exists( 'ajth_truthy' ) ) {
+    $theme_enabled = ajth_truthy( $theme['enabled'] ?? false );
+} else {
+    $theme_enabled = ! empty( $theme['enabled'] );
+}
+if ( ! $theme_enabled ) {
     return;
 }
 
-$items = isset( $theme['items'] ) && is_array( $theme['items'] ) ? $theme['items'] : array();
+$items = isset( $theme['items'] ) ? $theme['items'] : array();
+if ( is_string( $items ) ) {
+    $decoded_items = json_decode( $items, true );
+    $items = is_array( $decoded_items ) ? $decoded_items : array();
+}
+$items = is_array( $items ) ? $items : array();
 $items = array_values( array_filter( $items, function( $it ) {
-    return ! empty( $it['active'] ) && ! empty( $it['title'] );
+    if ( ! is_array( $it ) ) {
+        return false;
+    }
+    $title = trim( (string) ( $it['title'] ?? '' ) );
+    if ( $title === '' ) {
+        return false;
+    }
+    if ( function_exists( 'ajth_truthy' ) ) {
+        return ajth_truthy( $it['active'] ?? true );
+    }
+    return ! empty( $it['active'] );
 } ) );
 
 if ( empty( $items ) ) {

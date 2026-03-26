@@ -10,6 +10,7 @@
     $menuItems = collect(config('admin_menu.items', []))
         ->filter(fn ($section) => in_array($section['key'] ?? '', $allowedSections, true))
         ->values();
+    $isManagerPortal = $user?->hasRole([\App\Services\BranchScopeService::ROLE_MANAGER, 'Manager']);
 @endphp
 
 <div class="vertical-menu">
@@ -29,7 +30,7 @@
 
         <div id="sidebar-menu">
             <ul class="metismenu list-unstyled" id="side-menu">
-                <li class="menu-title">Espace Agent</li>
+                <li class="menu-title">{{ $isManagerPortal ? 'Espace Manager' : 'Espace Agent' }}</li>
 
                 <li>
                     <a href="{{ route('agent.dashboard') }}" class="waves-effect {{ $currentRoute === 'agent.dashboard' ? 'active' : '' }}">

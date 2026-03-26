@@ -27,6 +27,23 @@ $social_icons = array(
 $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
     ? ajth_get_voyages_page_url()
     : home_url( '/?post_type=st_tours' );
+$public_login_url = home_url( '/login/' );
+$public_signup_url = home_url( '/register/' );
+$maintenance_url = function_exists( 'ajth_get_maintenance_url' ) ? ajth_get_maintenance_url() : home_url( '/maintenance/' );
+$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url ) {
+    $url_value = trim( (string) $url );
+    $is_placeholder = (
+        $url_value === '' ||
+        $url_value === '#' ||
+        strpos( $url_value, '#' ) === 0 ||
+        $url_value === 'javascript:void(0)' ||
+        $url_value === 'javascript:void(0);'
+    );
+    if ( $is_placeholder && function_exists( 'ajth_is_under_construction_label' ) && ajth_is_under_construction_label( $label ) ) {
+        return $maintenance_url;
+    }
+    return $url_value !== '' ? $url_value : '#';
+};
 
 $is_voyages_page = is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
 
@@ -64,35 +81,35 @@ $default_menu_items = array(
     ),
     array(
         'label'    => 'Hébergement',
-        'url'      => '#hebergement',
+        'url'      => $maintenance_url,
         'icon'     => 'fas fa-hotel',
         'active'   => false,
         'children' => array(),
     ),
     array(
         'label'    => 'Activités',
-        'url'      => '#activites',
+        'url'      => $maintenance_url,
         'icon'     => 'fas fa-camera',
         'active'   => false,
         'children' => array(),
     ),
     array(
         'label'    => 'Transfert',
-        'url'      => '#transfert',
+        'url'      => $maintenance_url,
         'icon'     => 'fas fa-car-side',
         'active'   => false,
         'children' => array(),
     ),
     array(
         'label'    => 'Hajj & Omra',
-        'url'      => '#hajj-omra',
+        'url'      => $maintenance_url,
         'icon'     => 'fas fa-kaaba',
         'active'   => false,
         'children' => array(),
     ),
     array(
         'label'    => 'Votre guide',
-        'url'      => '#guide',
+        'url'      => $maintenance_url,
         'icon'     => 'fas fa-map-signs',
         'active'   => false,
         'children' => array(),
@@ -157,8 +174,8 @@ $default_menu_items = array(
                     <?php if ( is_user_logged_in() ) : ?>
                         <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="aj-topbar__auth-link"><?php esc_html_e( 'SE DÉCONNECTER', 'ajinsafro-traveler-home' ); ?></a>
                     <?php else : ?>
-                        <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : wp_login_url() ); ?>" class="aj-topbar__auth-link"><?php esc_html_e( 'SE CONNECTER', 'ajinsafro-traveler-home' ); ?></a>
-                        <a href="<?php echo esc_url( ! empty( $hdr['signup_url'] ) ? $hdr['signup_url'] : wp_registration_url() ); ?>" class="aj-topbar__auth-link aj-topbar__auth-link--signup"><?php esc_html_e( "S'INSCRIRE", 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( $public_login_url ); ?>" class="aj-topbar__auth-link"><?php esc_html_e( 'SE CONNECTER', 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( $public_signup_url ); ?>" class="aj-topbar__auth-link aj-topbar__auth-link--signup"><?php esc_html_e( "S'INSCRIRE", 'ajinsafro-traveler-home' ); ?></a>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
@@ -204,8 +221,8 @@ $default_menu_items = array(
                     <?php if ( is_user_logged_in() ) : ?>
                         <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="aj-auth-link aj-auth-link--block"><?php esc_html_e( 'Se déconnecter', 'ajinsafro-traveler-home' ); ?></a>
                     <?php else : ?>
-                        <a href="<?php echo esc_url( ! empty( $hdr['login_url'] ) ? $hdr['login_url'] : wp_login_url() ); ?>" class="aj-auth-link aj-auth-link--block"><?php esc_html_e( 'Se connecter', 'ajinsafro-traveler-home' ); ?></a>
-                        <a href="<?php echo esc_url( ! empty( $hdr['signup_url'] ) ? $hdr['signup_url'] : wp_registration_url() ); ?>" class="aj-auth-link aj-auth-link--signup aj-auth-link--block"><?php esc_html_e( "S'inscrire", 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( $public_login_url ); ?>" class="aj-auth-link aj-auth-link--block"><?php esc_html_e( 'Se connecter', 'ajinsafro-traveler-home' ); ?></a>
+                        <a href="<?php echo esc_url( $public_signup_url ); ?>" class="aj-auth-link aj-auth-link--signup aj-auth-link--block"><?php esc_html_e( "S'inscrire", 'ajinsafro-traveler-home' ); ?></a>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
@@ -262,7 +279,10 @@ $default_menu_items = array(
                     <ul class="aj-nav-list">
                         <?php foreach ( $nav_links as $link ) :
                             $label    = ! empty( $link['label'] ) ? $link['label'] : '';
-                            $url      = ! empty( $link['url'] ) ? $link['url'] : '#';
+                            $url      = $resolve_menu_url(
+                                ! empty( $link['label'] ) ? $link['label'] : '',
+                                ! empty( $link['url'] ) ? $link['url'] : ''
+                            );
                             $icon     = ! empty( $link['icon'] ) ? $link['icon'] : '';
                             $children = ! empty( $link['children'] ) && is_array( $link['children'] ) ? $link['children'] : array();
                             $has_sub  = ! empty( $children );
@@ -293,7 +313,7 @@ $default_menu_items = array(
                                         $child_icon = ! empty( $child['icon'] ) ? $child['icon'] : '';
                                     ?>
                                         <li>
-                                            <a href="<?php echo esc_url( ! empty( $child['url'] ) ? $child['url'] : '#' ); ?>">
+                                            <a href="<?php echo esc_url( $resolve_menu_url( ! empty( $child['label'] ) ? $child['label'] : '', ! empty( $child['url'] ) ? $child['url'] : '' ) ); ?>">
                                                 <?php if ( $child_icon ) : ?>
                                                     <i class="<?php echo esc_attr( $child_icon ); ?>"></i>
                                                 <?php endif; ?>
@@ -312,7 +332,7 @@ $default_menu_items = array(
                 <!-- Low Cost Button (inside drawer for mobile) -->
                 <?php if ( ! empty( $hdr['lowcost_enabled'] ) ) : ?>
                 <div class="aj-drawer__lowcost">
-                    <a href="<?php echo esc_url( ! empty( $hdr['lowcost_url'] ) ? $hdr['lowcost_url'] : '#' ); ?>" class="aj-lowcost-btn">
+                    <a href="<?php echo esc_url( $resolve_menu_url( 'Formule low cost', ! empty( $hdr['lowcost_url'] ) ? $hdr['lowcost_url'] : '' ) ); ?>" class="aj-lowcost-btn">
                         <i class="fas fa-fire"></i>
                         <span><?php echo esc_html( ! empty( $hdr['lowcost_text'] ) ? $hdr['lowcost_text'] : 'Formule low cost' ); ?></span>
                     </a>
@@ -323,7 +343,7 @@ $default_menu_items = array(
             <!-- Low Cost Button (Desktop) -->
             <?php if ( ! empty( $hdr['lowcost_enabled'] ) ) : ?>
             <div class="aj-navbar__lowcost aj-header__lowcost--desktop">
-                <a href="<?php echo esc_url( ! empty( $hdr['lowcost_url'] ) ? $hdr['lowcost_url'] : '#' ); ?>" class="aj-lowcost-btn aj-lowcost-btn--animate">
+                <a href="<?php echo esc_url( $resolve_menu_url( 'Formule low cost', ! empty( $hdr['lowcost_url'] ) ? $hdr['lowcost_url'] : '' ) ); ?>" class="aj-lowcost-btn aj-lowcost-btn--animate">
                     <i class="fas fa-fire aj-lowcost-btn__icon"></i>
                     <span><?php echo esc_html( ! empty( $hdr['lowcost_text'] ) ? $hdr['lowcost_text'] : 'Formule low cost' ); ?></span>
                 </a>

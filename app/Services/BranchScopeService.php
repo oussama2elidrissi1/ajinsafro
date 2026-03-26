@@ -14,6 +14,7 @@ class BranchScopeService
     public const ROLE_SIEGE_ADMIN = 'siege_admin';
     public const ROLE_BRANCH_ADMIN = 'branch_admin';
     public const ROLE_CHEF_COMMERCIAL = 'chef_commercial';
+    public const ROLE_MANAGER = 'manager';
     public const ROLE_COMMERCIAL = 'commercial';
     public const ROLE_AGENT = 'agent';
 
@@ -52,6 +53,7 @@ class BranchScopeService
     {
         return $user->hasRole(self::ROLE_BRANCH_ADMIN)
             || $user->hasRole(self::ROLE_CHEF_COMMERCIAL)
+            || $user->hasRole(self::ROLE_MANAGER)
             || $user->hasRole(self::ROLE_COMMERCIAL)
             || $user->hasRole(self::ROLE_AGENT);
     }
