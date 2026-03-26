@@ -8,6 +8,7 @@
     $brandName = \App\Models\Setting::getValue('brand_name');
     $brandLogo = \App\Models\Setting::getValue('brand_logo');
     $brandLogoUrl = $brandLogo ? \App\Models\Setting::storageUrl($brandLogo) : null;
+    $maintenanceUrl = route('front.maintenance');
 @endphp
 {{-- Dark topbar + semi-transparent header (TravelerWP-like) --}}
 <div class="fixed top-0 left-0 right-0 z-50">
@@ -61,12 +62,12 @@
             {{-- Nav center (mobile: toggled; desktop: always visible) --}}
             <nav id="front-nav" class="hidden lg:flex flex-col lg:flex-row items-center gap-1 w-full lg:w-auto order-last lg:order-none py-4 lg:py-0 border-t lg:border-t-0 border-gray-200" aria-label="Main">
                 <a href="{{ route('front.home') }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100">Home</a>
-                <a href="#" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Hotel <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
-                <a href="#" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Tour <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
-                <a href="#" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Activity <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
-                <a href="#" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Rental <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
-                <a href="#" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Car <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
-                <a href="#" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Pages <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
+                <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Hotel <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
+                <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Tour <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
+                <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Activity <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
+                <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Rental <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
+                <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Car <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
+                <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Pages <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
             </nav>
 
             {{-- Actions right --}}
@@ -77,13 +78,13 @@
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                     </button>
                 </div>
-                <a href="#" class="p-2 rounded-md text-gray-600 hover:bg-gray-100" aria-label="Cart">
+                <a href="{{ $maintenanceUrl }}" class="p-2 rounded-md text-gray-600 hover:bg-gray-100" aria-label="Cart">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 </a>
-                <a href="#" class="p-2 rounded-md text-gray-600 hover:bg-gray-100" aria-label="Account">
+                <a href="{{ $maintenanceUrl }}" class="p-2 rounded-md text-gray-600 hover:bg-gray-100" aria-label="Account">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 </a>
-                <a href="#" class="inline-flex items-center px-4 py-2 rounded-lg bg-brand text-white font-medium hover:bg-brand-dark transition">Become a host</a>
+                <a href="{{ $maintenanceUrl }}" class="inline-flex items-center px-4 py-2 rounded-lg bg-brand text-white font-medium hover:bg-brand-dark transition">Become a host</a>
             </div>
         </div>
     </header>

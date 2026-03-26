@@ -3,6 +3,7 @@
     $adminBrandLogoSmUrl = \App\Models\Setting::brandLogoUrl('sm');
     $adminBrandLogoDarkUrl = \App\Models\Setting::brandLogoUrl('dark');
     $adminBrandLogoLightUrl = \App\Models\Setting::brandLogoUrl('light');
+    $maintenanceUrl = route('front.maintenance');
 @endphp
 
 <header id="page-topbar">
@@ -95,12 +96,12 @@
                                     <h6 class="m-0"> Notifications </h6>
                                 </div>
                                 <div class="col-auto">
-                                    <a href="#!" class="small"> View All</a>
+                                    <a href="{{ $maintenanceUrl }}" class="small"> View All</a>
                                 </div>
                             </div>
                         </div>
                         <div data-simplebar style="max-height: 230px;">
-                            <a href="" class="text-reset notification-item">
+                            <a href="{{ $maintenanceUrl }}" class="text-reset notification-item">
                                 <div class="d-flex align-items-start">
                                     <div class="avatar-xs me-3">
                                         <span class="avatar-title bg-primary rounded-circle font-size-16">
@@ -116,7 +117,7 @@
                                     </div>
                                 </div>
                             </a>
-                            <a href="" class="text-reset notification-item">
+                            <a href="{{ $maintenanceUrl }}" class="text-reset notification-item">
                                 <div class="d-flex align-items-start">
                                     <img src="{{ URL::asset('build/images/users/avatar-3.jpg') }}" class="me-3 rounded-circle avatar-xs"
                                         alt="user-pic">
@@ -129,7 +130,7 @@
                                     </div>
                                 </div>
                             </a>
-                            <a href="" class="text-reset notification-item">
+                            <a href="{{ $maintenanceUrl }}" class="text-reset notification-item">
                                 <div class="d-flex align-items-start">
                                     <div class="avatar-xs me-3">
                                         <span class="avatar-title bg-success rounded-circle font-size-16">
@@ -146,7 +147,7 @@
                                 </div>
                             </a>
 
-                            <a href="" class="text-reset notification-item">
+                            <a href="{{ $maintenanceUrl }}" class="text-reset notification-item">
                                 <div class="d-flex align-items-start">
                                     <img src="{{ URL::asset('build/images/users/avatar-4.jpg') }}" class="me-3 rounded-circle avatar-xs"
                                         alt="user-pic">
@@ -161,7 +162,7 @@
                             </a>
                         </div>
                         <div class="p-2 border-top d-grid">
-                            <a class="btn btn-sm btn-link font-size-14 " href="javascript:void(0)">
+                            <a class="btn btn-sm btn-link font-size-14 " href="{{ $maintenanceUrl }}">
                                 <i class="mdi mdi-arrow-right-circle me-1"></i> View More..
                             </a>
                         </div>
@@ -181,10 +182,10 @@
                         <a class="dropdown-item" href="{{ route('admin.profile.edit') }}"><i
                                 class="bx bx-user font-size-16 align-middle me-1"></i>
                             My Profile</a>
-                        <a class="dropdown-item" href="#"><i
+                        <a class="dropdown-item" href="{{ $maintenanceUrl }}"><i
                                 class="bx bx-wallet font-size-16 align-middle me-1"></i> My
                             Wallet</a>
-                        <a class="dropdown-item d-block" href="#"><span
+                        <a class="dropdown-item d-block" href="{{ $maintenanceUrl }}"><span
                                 class="badge bg-success float-end">11</span><i
                                 class="bx bx-wrench font-size-16 align-middle me-1"></i> Settings</a>
                         <a class="dropdown-item" href="{{ route('lock-screen.activate') }}"><i
@@ -337,19 +338,19 @@
                                         <div class="px-lg-2">
                                             <div class="row g-0">
                                                 <div class="col">
-                                                    <a class="dropdown-icon-item" href="#">
+                                                    <a class="dropdown-icon-item" href="{{ $maintenanceUrl }}">
                                                         <img src="{{ URL::asset('build/images/brands/github.png') }}" alt="Github">
                                                         <span>GitHub</span>
                                                     </a>
                                                 </div>
                                                 <div class="col">
-                                                    <a class="dropdown-icon-item" href="#">
+                                                    <a class="dropdown-icon-item" href="{{ $maintenanceUrl }}">
                                                         <img src="{{ URL::asset('build/images/brands/bitbucket.png') }}" alt="bitbucket">
                                                         <span>Bitbucket</span>
                                                     </a>
                                                 </div>
                                                 <div class="col">
-                                                    <a class="dropdown-icon-item" href="#">
+                                                    <a class="dropdown-icon-item" href="{{ $maintenanceUrl }}">
                                                         <img src="{{ URL::asset('build/images/brands/dribbble.png') }}" alt="dribbble">
                                                         <span>Dribbble</span>
                                                     </a>
@@ -358,20 +359,20 @@
 
                                             <div class="row g-0">
                                                 <div class="col">
-                                                    <a class="dropdown-icon-item" href="#">
+                                                    <a class="dropdown-icon-item" href="{{ $maintenanceUrl }}">
                                                         <img src="{{ URL::asset('build/images/brands/dropbox.png') }}" alt="dropbox">
                                                         <span>Dropbox</span>
                                                     </a>
                                                 </div>
                                                 <div class="col">
-                                                    <a class="dropdown-icon-item" href="#">
+                                                    <a class="dropdown-icon-item" href="{{ $maintenanceUrl }}">
                                                         <img src="{{ URL::asset('build/images/brands/mail_chimp.png') }}"
                                                             alt="mail_chimp">
                                                         <span>Mail Chimp</span>
                                                     </a>
                                                 </div>
                                                 <div class="col">
-                                                    <a class="dropdown-icon-item" href="#">
+                                                    <a class="dropdown-icon-item" href="{{ $maintenanceUrl }}">
                                                         <img src="{{ URL::asset('build/images/brands/slack.png') }}" alt="slack">
                                                         <span>Slack</span>
                                                     </a>
@@ -395,7 +396,7 @@
                                                             </h5>
                                                             <p>At vero eos accusamus et iusto odio.</p>
                                                             <div class="mb-4">
-                                                                <a href="#" class="btn btn-success btn-sm">View
+                                                                <a href="{{ $maintenanceUrl }}" class="btn btn-success btn-sm">View
                                                                     more</a>
                                                             </div>
                                                         </div>
