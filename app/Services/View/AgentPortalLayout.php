@@ -35,8 +35,10 @@ final class AgentPortalLayout
 
         return $user->hasRole([
             BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            BranchScopeService::ROLE_MANAGER,
             BranchScopeService::ROLE_COMMERCIAL,
             'Chef Commercial',
+            'Manager',
             BranchScopeService::ROLE_AGENT,
             'Agent',
         ]);

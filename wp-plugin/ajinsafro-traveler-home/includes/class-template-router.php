@@ -27,6 +27,21 @@ class AJTH_Template_Router {
      * @return string
      */
     public function maybe_override_front_page( $template ) {
+        // Handle maintenance page
+        if ( is_page( 'maintenance' ) ) {
+            $maintenance = AJTH_DIR . 'templates/maintenance.php';
+            if ( file_exists( $maintenance ) ) {
+                return $maintenance;
+            }
+        }
+
+        // Handle login page
+        if ( is_page( 'login' ) ) {
+            $login = AJTH_DIR . 'templates/login.php';
+            if ( file_exists( $login ) ) {
+                return $login;
+            }
+        }
 
         // Handle vols page
         if ( is_page( 'vols' ) ) {

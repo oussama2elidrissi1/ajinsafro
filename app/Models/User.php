@@ -108,6 +108,11 @@ class User extends Authenticatable
         return $this->hasRole(\App\Services\BranchScopeService::ROLE_CHEF_COMMERCIAL) || $this->hasRole('Chef Commercial');
     }
 
+    public function isManager(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_MANAGER) || $this->hasRole('Manager');
+    }
+
     public function isCommercial(): bool
     {
         return $this->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL);
@@ -142,11 +147,13 @@ class User extends Authenticatable
             \App\Services\BranchScopeService::ROLE_SIEGE_ADMIN,
             \App\Services\BranchScopeService::ROLE_BRANCH_ADMIN,
             \App\Services\BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            \App\Services\BranchScopeService::ROLE_MANAGER,
             \App\Services\BranchScopeService::ROLE_COMMERCIAL,
             \App\Services\BranchScopeService::ROLE_AGENT,
             'Super Admin',
             'Admin Siège',
             'Chef Commercial',
+            'Manager',
             'Agent',
         ]);
     }

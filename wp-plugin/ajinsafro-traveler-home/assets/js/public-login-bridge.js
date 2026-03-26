@@ -53,8 +53,7 @@
       if (loginInput && !loginInput.value) loginInput.value = loginPrefill;
     }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+    form.addEventListener('submit', function () {
 
       const loginInput = first(form, [
         'input[type="email"]',
@@ -75,26 +74,35 @@
       const login = (loginInput?.value || '').trim();
       const password = passInput?.value || '';
       const remember = !!rememberInput?.checked;
-
-      const postForm = document.createElement('form');
-      postForm.method = 'POST';
-      postForm.action = 'https://booking.ajinsafro.net/auth/public-login';
-
-      function add(name, value) {
-        const i = document.createElement('input');
-        i.type = 'hidden';
-        i.name = name;
-        i.value = String(value ?? '');
-        postForm.appendChild(i);
+      // Normalize any custom form to standard WordPress fields.
+      // WP expects: log / pwd / rememberme.
+      function ensureHidden(name, value) {
+        let input = form.querySelector('input[type="hidden"][name="' + name + '"]');
+        if (!input) {
+          input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = name;
+          form.appendChild(input);
+        }
+        input.value = String(value ?? '');
       }
 
-      add('login', login);
-      add('password', password);
-      if (remember) add('remember', '1');
-      add('source', 'wp_public_login_ui');
+      if (login !== '') {
+        ensureHidden('log', login);
+      }
+      if (password !== '') {
+        ensureHidden('pwd', password);
+      }
+      if (remember) {
+        ensureHidden('rememberme', 'forever');
+      }
 
-      document.body.appendChild(postForm);
-      postForm.submit();
+      // Safety net: if some old config still points to Laravel public-login,
+      // force the native WordPress endpoint.
+      const action = (form.getAttribute('action') || '').trim();
+      if (/\/wp-login\.php\/?$/i.test(action)) {
+        form.setAttribute('action', '/login');
+      }
     });
   });
 })();

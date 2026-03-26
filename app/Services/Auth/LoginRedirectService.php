@@ -57,8 +57,10 @@ class LoginRedirectService
         // Commercial roles
         if ($user->hasRole([
             BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            BranchScopeService::ROLE_MANAGER,
             BranchScopeService::ROLE_COMMERCIAL,
             'Chef Commercial',
+            'Manager',
         ])) {
             return $adminUrl . '/agent/dashboard';
         }
@@ -71,8 +73,8 @@ class LoginRedirectService
             return $adminUrl . '/agent/dashboard';
         }
 
-        // Safe fallback: always back-office admin dashboard (never booking root).
-        return $adminUrl . '/admin/dashboard';
+        // Fallback for users without back-office roles (e.g. WP-only synced accounts).
+        return rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/');
     }
 }
 
