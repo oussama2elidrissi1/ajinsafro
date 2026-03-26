@@ -754,6 +754,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Upload image principale</label>
                             <input type="file" class="form-control" name="holiday_theme_left_image_file" accept="image/*">
+                            @error('holiday_theme_left_image_file') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Image décorative (URL)</label>
@@ -762,6 +763,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Upload image décorative</label>
                             <input type="file" class="form-control" name="holiday_theme_deco_image_file" accept="image/*">
+                            @error('holiday_theme_deco_image_file') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Texte du bouton</label>
@@ -770,6 +772,20 @@
                         <div class="col-md-6">
                             <label class="form-label">Lien du bouton</label>
                             <input type="text" class="form-control" name="holiday_theme[button_url]" value="{{ old('holiday_theme.button_url', data_get($settings, 'holiday_theme.button_url')) }}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-block">Preview image principale</label>
+                            <img src="{{ data_get($settings, 'holiday_theme.left_image_url') ?: 'https://via.placeholder.com/420x240?text=No+Image' }}"
+                                 alt="Holiday Theme left"
+                                 class="img-fluid rounded border holiday-theme-left-preview"
+                                 style="max-height:180px;object-fit:cover;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-block">Preview image décorative</label>
+                            <img src="{{ data_get($settings, 'holiday_theme.deco_image_url') ?: 'https://via.placeholder.com/420x240?text=No+Image' }}"
+                                 alt="Holiday Theme deco"
+                                 class="img-fluid rounded border holiday-theme-deco-preview"
+                                 style="max-height:180px;object-fit:cover;">
                         </div>
                     </div>
 
@@ -805,6 +821,7 @@
                                     <div class="col-md-2">
                                         <label class="form-label small mb-0">Upload image</label>
                                         <input type="file" class="form-control form-control-sm holiday-theme-file" name="holiday_theme_item_files[{{ $idx }}]" accept="image/*">
+                                        @error("holiday_theme_item_files.$idx") <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label small mb-0">Tags</label>
@@ -826,6 +843,12 @@
                                     </div>
                                     <div class="col-auto ms-auto">
                                         <button type="button" class="btn btn-sm btn-outline-danger holiday-theme-remove">×</button>
+                                    </div>
+                                    <div class="col-12">
+                                        <img src="{{ data_get($item, 'image_url') ?: 'https://via.placeholder.com/320x180?text=No+Image' }}"
+                                             alt="Card preview"
+                                             class="img-fluid rounded border holiday-theme-card-preview"
+                                             style="max-height:120px;object-fit:cover;">
                                     </div>
                                 </div>
                             </div>
@@ -1214,6 +1237,7 @@
             '<div class="col-md-3"><label class="form-label small mb-0">Lien bouton</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][button_url]" placeholder="https://..."></div>' +
             '<div class="col-md-2"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" name="holiday_theme[items][' + idx + '][active]" value="1" checked><label class="form-check-label">Actif</label></div></div>' +
             '<div class="col-auto ms-auto"><button type="button" class="btn btn-sm btn-outline-danger holiday-theme-remove">×</button></div>' +
+            '<div class="col-12"><img src="https://via.placeholder.com/320x180?text=No+Image" alt="Card preview" class="img-fluid rounded border holiday-theme-card-preview" style="max-height:120px;object-fit:cover;"></div>' +
             '</div></div>';
     }
 
@@ -1243,6 +1267,8 @@
         holidayThemeAddBtn.addEventListener('click', function () {
             var idx = holidayThemeContainer.querySelectorAll('.holiday-theme-row').length;
             holidayThemeContainer.insertAdjacentHTML('beforeend', holidayThemeRowHtml(idx, idx + 1));
+            var rows = holidayThemeContainer.querySelectorAll('.holiday-theme-row');
+            bindHolidayThemeCardPreview(rows[rows.length - 1]);
         });
 
         holidayThemeContainer.addEventListener('click', function (e) {
@@ -1272,6 +1298,63 @@
             }
         });
     }
+
+    function resolvePreviewUrl(value) {
+        var raw = (value || '').trim();
+        if (!raw) return 'https://via.placeholder.com/320x180?text=No+Image';
+        return raw;
+    }
+
+    function bindHolidayThemeCardPreview(row) {
+        if (!row) return;
+        var urlInput = row.querySelector('input[name*="[image_url]"]');
+        var fileInput = row.querySelector('.holiday-theme-file');
+        var preview = row.querySelector('.holiday-theme-card-preview');
+        if (!preview) return;
+
+        if (urlInput) {
+            urlInput.addEventListener('input', function () {
+                preview.src = resolvePreviewUrl(urlInput.value);
+            });
+        }
+        if (fileInput) {
+            fileInput.addEventListener('change', function () {
+                var file = fileInput.files && fileInput.files[0];
+                if (file) {
+                    preview.src = URL.createObjectURL(file);
+                } else if (urlInput) {
+                    preview.src = resolvePreviewUrl(urlInput.value);
+                }
+            });
+        }
+    }
+
+    function bindHolidayThemeTopPreview(urlSelector, fileSelector, previewSelector) {
+        var urlInput = document.querySelector(urlSelector);
+        var fileInput = document.querySelector(fileSelector);
+        var preview = document.querySelector(previewSelector);
+        if (!preview) return;
+
+        if (urlInput) {
+            urlInput.addEventListener('input', function () {
+                preview.src = resolvePreviewUrl(urlInput.value);
+            });
+        }
+        if (fileInput) {
+            fileInput.addEventListener('change', function () {
+                var file = fileInput.files && fileInput.files[0];
+                if (file) {
+                    preview.src = URL.createObjectURL(file);
+                } else if (urlInput) {
+                    preview.src = resolvePreviewUrl(urlInput.value);
+                }
+            });
+        }
+    }
+
+    bindHolidayThemeTopPreview('input[name="holiday_theme[left_image_url]"]', 'input[name="holiday_theme_left_image_file"]', '.holiday-theme-left-preview');
+    bindHolidayThemeTopPreview('input[name="holiday_theme[deco_image_url]"]', 'input[name="holiday_theme_deco_image_file"]', '.holiday-theme-deco-preview');
+    document.querySelectorAll('.holiday-theme-row').forEach(bindHolidayThemeCardPreview);
 
     if (form && saveButton) {
         var saveLabel = saveButton.querySelector('.save-label');
