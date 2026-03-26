@@ -69,6 +69,7 @@ Route::get('logout', function (\Illuminate\Http\Request $request) {
 })->name('logout.get');
 
 Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
+Route::get('/maintenance', fn () => view('front.maintenance'))->name('front.maintenance');
 Route::get('/search', [FrontSearchController::class, 'index'])->name('front.search');
 Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voyages.index');
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
