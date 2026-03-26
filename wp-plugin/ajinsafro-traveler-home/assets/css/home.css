@@ -2552,6 +2552,9 @@ body.aj-has-bg-pattern::after {
     height: 180px;
     background: #dbe7f3;
 }
+.aj-theme__left-media.is-missing {
+    background: linear-gradient(135deg, #dce8f4, #afc3d8);
+}
 .aj-theme__left-media img {
     width: 100%;
     height: 100%;
@@ -2646,6 +2649,9 @@ body.aj-has-bg-pattern::after {
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, #cdd8e3, #9fb4cb);
+}
+.aj-theme-card__placeholder--hidden {
+    display: none;
 }
 .aj-theme-card__body {
     padding: 14px;
