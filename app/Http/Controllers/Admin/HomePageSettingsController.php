@@ -34,6 +34,8 @@ class HomePageSettingsController extends Controller
     public function update(Request $request)
     {
         try {
+            $this->sanitizeHolidayThemeUploadInputs($request);
+
             $videoFile = $request->file('hero_video_file');
             $hasVideoUpload = $videoFile instanceof UploadedFile;
             $phpUploadError = $_FILES['hero_video_file']['error'] ?? null;
@@ -164,6 +166,7 @@ class HomePageSettingsController extends Controller
                 'holiday_theme.items.*.button_url' => ['nullable', 'string', 'max:2048'],
                 'holiday_theme.items.*.order' => ['nullable', 'integer', 'min:0'],
                 'holiday_theme.items.*.active' => ['nullable'],
+                'holiday_theme_item_files' => ['nullable', 'array'],
                 'holiday_theme_left_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
                 'holiday_theme_deco_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
                 'holiday_theme_item_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
@@ -192,7 +195,7 @@ class HomePageSettingsController extends Controller
         $heroImageUrl = $validated['hero']['image_url'] ?? ($current['hero']['image_url'] ?? '');
         if ($request->hasFile('hero.image_file')) {
             $heroImagePath = $request->file('hero.image_file')->store('home-settings/hero', 'public');
-            $heroImageUrl = Storage::disk('public')->url($heroImagePath);
+            $heroImageUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($heroImagePath));
         }
 
             $currentHeroVideoUrl = (string) ($current['hero']['video_url'] ?? '');
@@ -214,7 +217,7 @@ class HomePageSettingsController extends Controller
                         $fileName = $safeBaseName . '-' . now()->format('YmdHis') . '-' . bin2hex(random_bytes(4)) . '.' . $extension;
                         $heroVideoPath = Storage::disk('public')->putFileAs('home-settings/hero', $uploadedVideo, $fileName);
                         if ($heroVideoPath !== false) {
-                            $heroVideoUrl = Storage::disk('public')->url($heroVideoPath);
+                            $heroVideoUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($heroVideoPath));
                             $videoOk = true;
                         }
                     } catch (Throwable $ve) {
@@ -235,7 +238,7 @@ class HomePageSettingsController extends Controller
 
             if ($request->hasFile("regions_files.$index")) {
                 $path = $request->file("regions_files.$index")->store('home-settings/regions', 'public');
-                $imageUrl = Storage::disk('public')->url($path);
+                $imageUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
             }
 
             if ($title === '' && $imageUrl === '' && $linkUrl === '') {
@@ -260,7 +263,7 @@ class HomePageSettingsController extends Controller
 
             if ($request->hasFile("good_spots_files.$i")) {
                 $path = $request->file("good_spots_files.$i")->store('home-settings/good-spots', 'public');
-                $imageUrl = Storage::disk('public')->url($path);
+                $imageUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
             }
 
             $goodSpots[] = [
@@ -502,7 +505,7 @@ class HomePageSettingsController extends Controller
         $logoUrl = trim((string) ($h['logo_url'] ?? ''));
         if ($request->hasFile('header.logo_file')) {
             $path = $request->file('header.logo_file')->store('home-settings/header', 'public');
-            $logoUrl = Storage::disk('public')->url($path);
+            $logoUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
         }
 
         $links = [];
@@ -841,7 +844,7 @@ class HomePageSettingsController extends Controller
             $imageUrl = trim((string) ($item['image_url'] ?? ''));
             if ($request->hasFile("destinations_by_region_files.{$idx}")) {
                 $path = $request->file("destinations_by_region_files.{$idx}")->store('home-settings/destinations-by-region', 'public');
-                $imageUrl = Storage::disk('public')->url($path);
+                $imageUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
             }
             $order = isset($item['order']) ? (int) $item['order'] : ($idx + 1);
             $filtered[] = [
@@ -922,7 +925,7 @@ class HomePageSettingsController extends Controller
         if ($request->hasFile('whatsapp_banner_qr_file')) {
             try {
                 $path = $request->file('whatsapp_banner_qr_file')->store('home-settings/whatsapp', 'public');
-                $qrCodeUrl = Storage::disk('public')->url($path);
+                $qrCodeUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
             } catch (Throwable $e) {
                 Log::warning('WhatsApp QR code upload failed', ['message' => $e->getMessage()]);
             }
@@ -958,7 +961,7 @@ class HomePageSettingsController extends Controller
         if ($request->hasFile('cruises_image_file')) {
             try {
                 $path = $request->file('cruises_image_file')->store('home-settings/cruises', 'public');
-                $imageUrl = Storage::disk('public')->url($path);
+                $imageUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
             } catch (Throwable $e) {
                 Log::warning('Cruises image upload failed', ['message' => $e->getMessage()]);
             }
@@ -995,16 +998,16 @@ class HomePageSettingsController extends Controller
             $raw = [];
         }
 
-        $leftImageUrl = trim((string) ($raw['left_image_url'] ?? data_get($current, 'holiday_theme.left_image_url', '')));
+        $leftImageUrl = $this->normalizeImageUrl((string) ($raw['left_image_url'] ?? data_get($current, 'holiday_theme.left_image_url', '')));
         if ($request->hasFile('holiday_theme_left_image_file')) {
             $path = $request->file('holiday_theme_left_image_file')->store('home-settings/holiday-theme', 'public');
-            $leftImageUrl = Storage::disk('public')->url($path);
+            $leftImageUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
         }
 
-        $decoImageUrl = trim((string) ($raw['deco_image_url'] ?? data_get($current, 'holiday_theme.deco_image_url', '')));
+        $decoImageUrl = $this->normalizeImageUrl((string) ($raw['deco_image_url'] ?? data_get($current, 'holiday_theme.deco_image_url', '')));
         if ($request->hasFile('holiday_theme_deco_image_file')) {
             $path = $request->file('holiday_theme_deco_image_file')->store('home-settings/holiday-theme', 'public');
-            $decoImageUrl = Storage::disk('public')->url($path);
+            $decoImageUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
         }
 
         $itemsRaw = $raw['items'] ?? [];
@@ -1027,10 +1030,11 @@ class HomePageSettingsController extends Controller
             }
 
             $existing = $currentItems[$index] ?? [];
-            $imageUrl = trim((string) ($item['image_url'] ?? ($existing['image_url'] ?? '')));
-            if ($request->hasFile("holiday_theme_item_files.$index")) {
-                $path = $request->file("holiday_theme_item_files.$index")->store('home-settings/holiday-theme/items', 'public');
-                $imageUrl = Storage::disk('public')->url($path);
+            $imageUrl = $this->normalizeImageUrl((string) ($item['image_url'] ?? ($existing['image_url'] ?? '')));
+            $itemFile = $request->file("holiday_theme_item_files.$index");
+            if ($itemFile instanceof UploadedFile && $itemFile->isValid()) {
+                $path = $itemFile->store('home-settings/holiday-theme/items', 'public');
+                $imageUrl = $this->toAbsoluteAssetUrl(Storage::disk('public')->url($path));
             }
 
             $tagsRaw = $item['tags'] ?? [];
@@ -1077,8 +1081,8 @@ class HomePageSettingsController extends Controller
             'title_line_2' => trim((string) ($raw['title_line_2'] ?? $defaults['title_line_2'])),
             'title_line_3' => trim((string) ($raw['title_line_3'] ?? $defaults['title_line_3'])),
             'subtitle' => trim((string) ($raw['subtitle'] ?? $defaults['subtitle'])),
-            'left_image_url' => $leftImageUrl,
-            'deco_image_url' => $decoImageUrl,
+            'left_image_url' => $this->normalizeImageUrl($leftImageUrl),
+            'deco_image_url' => $this->normalizeImageUrl($decoImageUrl),
             'button_text' => trim((string) ($raw['button_text'] ?? $defaults['button_text'])),
             'button_url' => trim((string) ($raw['button_url'] ?? $defaults['button_url'])),
             'items' => $items,
@@ -1122,7 +1126,7 @@ class HomePageSettingsController extends Controller
 
             $items[] = [
                 'title' => $title,
-                'image_url' => trim((string) ($item['image_url'] ?? '')),
+                'image_url' => $this->normalizeImageUrl((string) ($item['image_url'] ?? '')),
                 'tags' => $tags,
                 'button_text' => trim((string) ($item['button_text'] ?? '')),
                 'button_url' => trim((string) ($item['button_url'] ?? '')),
@@ -1153,6 +1157,48 @@ class HomePageSettingsController extends Controller
             return in_array(strtolower(trim($value)), ['1', 'true', 'on', 'yes'], true);
         }
         return !empty($value);
+    }
+
+    private function sanitizeHolidayThemeUploadInputs(Request $request): void
+    {
+        $itemFiles = $request->file('holiday_theme_item_files', []);
+        $cleanFiles = [];
+        if (is_array($itemFiles)) {
+            foreach ($itemFiles as $idx => $file) {
+                if ($file instanceof UploadedFile && $file->isValid()) {
+                    $cleanFiles[$idx] = $file;
+                }
+            }
+        }
+        $request->files->set('holiday_theme_item_files', $cleanFiles);
+    }
+
+    private function normalizeImageUrl(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        return $this->toAbsoluteAssetUrl($value);
+    }
+
+    private function toAbsoluteAssetUrl(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $value)) {
+            return $value;
+        }
+        if (str_starts_with($value, '//')) {
+            return 'https:' . $value;
+        }
+        $base = rtrim((string) config('app.url'), '/');
+        if ($base === '') {
+            return $value;
+        }
+        return $base . '/' . ltrim($value, '/');
     }
 
     private function wpOptionsTable(): string
