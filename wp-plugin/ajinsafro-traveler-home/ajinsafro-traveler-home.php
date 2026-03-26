@@ -172,9 +172,8 @@ function ajth_preload_styles() {
     if ( ! $load ) {
         return;
     }
+    // Keep preload list minimal to avoid "preloaded but not used" warnings.
     echo '<link rel="preload" href="' . esc_url( AJTH_URL . 'assets/css/home.css' ) . '?ver=' . esc_attr( AJTH_VERSION ) . '" as="style">' . "\n";
-    echo '<link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" as="style">' . "\n";
-    echo '<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">' . "\n";
 }
 add_action( 'wp_head', 'ajth_preload_styles', 0 );
 
@@ -342,6 +341,7 @@ function ajth_get_settings() {
             'search' => true,
             'last_minute' => true,
             'accommodations' => true,
+            'holiday_theme' => true,
             'regions' => true,
             'good_spots' => true,
             'promotions' => true,
@@ -360,6 +360,19 @@ function ajth_get_settings() {
         'accommodations' => array(
             'title' => 'Découvrez des séjours uniques',
             'count' => 4,
+        ),
+        'holiday_theme' => array(
+            'enabled' => true,
+            'eyebrow' => 'Voyages par theme',
+            'title_line_1' => 'Explorez',
+            'title_line_2' => 'nos categories',
+            'title_line_3' => 'inspirantes',
+            'subtitle' => 'Des idees de voyages selon vos envies du moment.',
+            'left_image_url' => '',
+            'deco_image_url' => '',
+            'button_text' => 'Voir plus',
+            'button_url' => '',
+            'items' => array(),
         ),
         'regions' => array(),
         'good_spots' => array(
@@ -382,7 +395,7 @@ function ajth_get_settings() {
             'button_url'  => '#',
             'qr_code_url' => '',
         ),
-        'section_order' => array( 'last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter' ),
+        'section_order' => array( 'last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter' ),
         'footer' => array(
             'col1_heading' => 'En savoir plus',
             'col2_heading' => 'Société',
@@ -395,27 +408,163 @@ function ajth_get_settings() {
     }
 
     $raw = get_option( 'aj_home_settings', '{}' );
-    $saved = is_string( $raw ) ? json_decode( $raw, true ) : array();
+    if ( is_array( $raw ) ) {
+        $saved = $raw;
+    } elseif ( is_string( $raw ) && $raw !== '' ) {
+        $saved = json_decode( $raw, true );
+    } else {
+        $saved = array();
+    }
 
     if ( ! is_array( $saved ) || empty( $saved ) ) {
         $saved = ajth_legacy_settings_to_json();
     }
 
     $settings = array_replace_recursive( $defaults, $saved );
+    $settings['holiday_theme'] = ajth_normalize_holiday_theme( $settings['holiday_theme'] ?? array(), $defaults['holiday_theme'] );
 
     $settings['hero']['overlay'] = max( 0, min( 1, floatval( $settings['hero']['overlay'] ) ) );
     $settings['last_minute']['count'] = max( 1, intval( $settings['last_minute']['count'] ) );
     $settings['sections']['search'] = ! empty( $settings['sections']['search'] );
     $settings['sections']['last_minute'] = ! empty( $settings['sections']['last_minute'] );
     $settings['sections']['accommodations'] = ! empty( $settings['sections']['accommodations'] );
+    $settings['sections']['holiday_theme'] = ! empty( $settings['sections']['holiday_theme'] );
     $settings['sections']['regions'] = ! empty( $settings['sections']['regions'] );
     $settings['sections']['good_spots'] = ! empty( $settings['sections']['good_spots'] );
     $settings['sections']['promotions'] = ! empty( $settings['sections']['promotions'] );
     $settings['sections']['whatsapp_banner'] = ! empty( $settings['sections']['whatsapp_banner'] );
     $settings['sections']['cruises'] = ! empty( $settings['sections']['cruises'] );
     $settings['sections']['newsletter'] = ! empty( $settings['sections']['newsletter'] );
+    $settings['sections']['holiday_theme'] = ! empty( $settings['holiday_theme']['enabled'] );
 
+    // Normalize section order: keep unique valid keys and guarantee new sections once.
+    $allowed_sections = array(
+        'search',
+        'last_minute',
+        'accommodations',
+        'holiday_theme',
+        'regions',
+        'good_spots',
+        'promotions',
+        'whatsapp_banner',
+        'cruises',
+        'newsletter',
+    );
+    $normalized_order = array();
+    if ( ! empty( $settings['section_order'] ) && is_array( $settings['section_order'] ) ) {
+        foreach ( $settings['section_order'] as $key ) {
+            $key = is_string( $key ) ? trim( $key ) : '';
+            if ( $key === '' ) {
+                continue;
+            }
+            if ( strpos( $key, 'custom_' ) === 0 ) {
+                if ( ! in_array( $key, $normalized_order, true ) ) {
+                    $normalized_order[] = $key;
+                }
+                continue;
+            }
+            if ( in_array( $key, $allowed_sections, true ) && ! in_array( $key, $normalized_order, true ) ) {
+                $normalized_order[] = $key;
+            }
+        }
+    }
+    if ( ! empty( $settings['holiday_theme']['enabled'] ) && ! in_array( 'holiday_theme', $normalized_order, true ) ) {
+        $insert_after = array_search( 'accommodations', $normalized_order, true );
+        if ( $insert_after === false ) {
+            $normalized_order[] = 'holiday_theme';
+        } else {
+            array_splice( $normalized_order, $insert_after + 1, 0, array( 'holiday_theme' ) );
+        }
+    }
+    if ( ! in_array( 'whatsapp_banner', $normalized_order, true ) ) {
+        $normalized_order[] = 'whatsapp_banner';
+    }
+    if ( ! in_array( 'cruises', $normalized_order, true ) ) {
+        $normalized_order[] = 'cruises';
+    }
+    $settings['section_order'] = $normalized_order;
     return $settings;
+}
+
+function ajth_normalize_holiday_theme( $theme, $default_theme = array() ) {
+    if ( ! is_array( $theme ) ) {
+        if ( is_string( $theme ) && $theme !== '' ) {
+            $decoded = json_decode( $theme, true );
+            if ( is_array( $decoded ) ) {
+                $theme = $decoded;
+            } else {
+                $theme = array();
+            }
+        } else {
+            $theme = array();
+        }
+    }
+
+    $merged = array_replace_recursive( is_array( $default_theme ) ? $default_theme : array(), $theme );
+    $enabled_value = $merged['enabled'] ?? false;
+    $merged['enabled'] = ajth_truthy( $enabled_value );
+
+    $items = $merged['items'] ?? array();
+    if ( is_string( $items ) && $items !== '' ) {
+        $decoded = json_decode( $items, true );
+        if ( is_array( $decoded ) ) {
+            $items = $decoded;
+        }
+    }
+    if ( ! is_array( $items ) ) {
+        $items = array();
+    }
+
+    $normalized_items = array();
+    foreach ( $items as $item ) {
+        if ( ! is_array( $item ) ) {
+            continue;
+        }
+        $title = isset( $item['title'] ) ? trim( (string) $item['title'] ) : '';
+        if ( $title === '' ) {
+            continue;
+        }
+        $active_value = $item['active'] ?? true;
+        $active = ajth_truthy( $active_value );
+        $tags = $item['tags'] ?? array();
+        if ( is_string( $tags ) ) {
+            $parts = preg_split( '/[\r\n,]+/', $tags );
+            $parts = is_array( $parts ) ? $parts : array();
+            $tags = array_values( array_filter( array_map( 'trim', $parts ) ) );
+        } elseif ( is_array( $tags ) ) {
+            $tags = array_values( array_filter( array_map( function( $t ) {
+                return trim( (string) $t );
+            }, $tags ) ) );
+        } else {
+            $tags = array();
+        }
+        $normalized_items[] = array(
+            'title' => $title,
+            'image_url' => isset( $item['image_url'] ) ? (string) $item['image_url'] : '',
+            'tags' => $tags,
+            'button_text' => isset( $item['button_text'] ) ? (string) $item['button_text'] : '',
+            'button_url' => isset( $item['button_url'] ) ? (string) $item['button_url'] : '',
+            'order' => isset( $item['order'] ) ? intval( $item['order'] ) : 999,
+            'active' => $active,
+        );
+    }
+
+    $merged['items'] = $normalized_items;
+    return $merged;
+}
+
+function ajth_truthy( $value ) {
+    if ( is_bool( $value ) ) {
+        return $value;
+    }
+    if ( is_int( $value ) || is_float( $value ) ) {
+        return (int) $value === 1;
+    }
+    if ( is_string( $value ) ) {
+        $v = strtolower( trim( $value ) );
+        return in_array( $v, array( '1', 'true', 'on', 'yes' ), true );
+    }
+    return ! empty( $value );
 }
 
 /* ──────────────────────────────────────────────
@@ -776,28 +925,6 @@ class AJTH_Nav_Walker extends Walker_Nav_Menu {
         $output .= apply_filters( 'walker_nav_menu_start_el', $item_output, $item, $depth, $args );
     }
 }
-
-function ajth_debug_dump_home_settings_footer() {
-    if ( ! current_user_can( 'manage_options' ) ) {
-        return;
-    }
-
-    if ( ! isset( $_GET['ajdebug'] ) || '1' !== (string) $_GET['ajdebug'] ) {
-        return;
-    }
-
-    if ( function_exists( 'wp_cache_delete' ) ) {
-        wp_cache_delete( 'aj_home_settings', 'options' );
-    }
-
-    echo '<div style="margin:24px auto;max-width:1200px;padding:12px;border:1px dashed #b91c1c;background:#fff;">';
-    echo '<strong>AJ DEBUG — get_option(\'aj_home_settings\')</strong>';
-    echo '<pre style="white-space:pre-wrap;word-break:break-word;max-height:380px;overflow:auto;">';
-    var_dump( get_option( 'aj_home_settings' ) );
-    echo '</pre>';
-    echo '</div>';
-}
-add_action( 'wp_footer', 'ajth_debug_dump_home_settings_footer', 9999 );
 
 /* ──────────────────────────────────────────────
  * Activation: set default options if not present
