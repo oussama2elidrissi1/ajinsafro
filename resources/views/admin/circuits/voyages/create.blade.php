@@ -30,7 +30,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.circuits.voyages.store') }}" method="POST">
+    <form id="create-voyage-form" action="{{ route('admin.circuits.voyages.store') }}" method="POST">
         @csrf
         <div class="row">
             <div class="col-lg-8">
@@ -50,12 +50,12 @@
 
                         <div class="mb-3">
                             <label for="content" class="form-label">Description complète</label>
-                            <textarea class="form-control rich-editor" id="content" name="content" rows="10" placeholder="Description détaillée du tour">{{ old('content') }}</textarea>
+                            <textarea class="form-control" id="content" name="content" rows="10" placeholder="Description détaillée du tour">{{ old('content') }}</textarea>
                         </div>
 
                         <div class="mb-3">
                             <label for="excerpt" class="form-label">Extrait / Accroche</label>
-                            <textarea class="form-control rich-editor" id="excerpt" name="excerpt" rows="3" placeholder="Texte court pour l'aperçu">{{ old('excerpt') }}</textarea>
+                            <textarea class="form-control" id="excerpt" name="excerpt" rows="3" placeholder="Texte court pour l'aperçu">{{ old('excerpt') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -254,7 +254,6 @@
                 .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 </style>
 
-
                 {{-- Vol 1 --}}
                 <div class="flight-block" data-flight-index="0">
                     <div class="flight-card-view" id="create-flight-0-card-view">
@@ -445,103 +444,14 @@
                         <button type="submit" class="btn btn-primary waves-effect waves-light">
                             <i class="bx bx-save me-1"></i> Créer le tour dans WordPress
                         </button>
-                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary waves-effect">Annuler</a>
+                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-secondary waves-effect">Annuler</a>
                     </div>
                 </div>
             </div>
         </div>
     </form>
 @endsection
-        @push('script')
-    <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
-    <script>
-        (function () {
-            function ensureId(el) {
-                if (el.id) return el.id;
-                var base = 'rich-editor-' + Math.random().toString(36).slice(2);
-                el.id = base;
-                return base;
-            }
-
-            function editorHeightFromRows(el) {
-                var rows = parseInt(el.getAttribute('rows') || '0', 10);
-                if (!rows || rows <= 2) return 160;
-                if (rows <= 4) return 220;
-                return 300;
-            }
-
-            function initOne(el) {
-                if (!el || el.tagName !== 'TEXTAREA') return;
-                if (!el.classList.contains('rich-editor')) return;
-                if (el.dataset.richEditorInitialized === 'true') return;
-
-                var id = ensureId(el);
-                if (window.tinymce && tinymce.get(id)) {
-                    el.dataset.richEditorInitialized = 'true';
-                    return;
-                }
-
-                el.dataset.richEditorInitialized = 'true';
-
-                tinymce.init({
-                    target: el,
-                    height: editorHeightFromRows(el),
-                    plugins: [
-                        "advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
-                        "searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
-                        "save table contextmenu directionality emoticons template paste textcolor"
-                    ],
-                    toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
-                    style_formats: [
-                        {title: 'Bold text', inline: 'b'},
-                        {title: 'Red text', inline: 'span', styles: {color: '#ff0000'}},
-                        {title: 'Red header', block: 'h1', styles: {color: '#ff0000'}},
-                        {title: 'Example 1', inline: 'span', classes: 'example1'},
-                        {title: 'Example 2', inline: 'span', classes: 'example2'},
-                        {title: 'Table styles'},
-                        {title: 'Table row 1', selector: 'tr', classes: 'tablerow1'}
-                    ]
-                });
-            }
-
-            function initAll(root) {
-                var scope = root && root.querySelectorAll ? root : document;
-                scope.querySelectorAll('textarea.rich-editor').forEach(initOne);
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                initAll(document);
-
-                // Init pour éléments ajoutés dynamiquement (programme, sections, etc.)
-                var form = document.querySelector('form');
-                if (form && window.MutationObserver) {
-                    var mo = new MutationObserver(function (mutations) {
-                        mutations.forEach(function (m) {
-                            m.addedNodes && m.addedNodes.forEach(function (node) {
-                                if (!node || node.nodeType !== 1) return;
-                                if (node.matches && node.matches('textarea.rich-editor')) initOne(node);
-                                if (node.querySelectorAll) initAll(node);
-                            });
-                        });
-                    });
-                    mo.observe(form, {childList: true, subtree: true});
-                }
-
-                // Sync contenu TinyMCE -> textarea avant submit
-                if (form) {
-                    form.addEventListener('submit', function () {
-                        if (window.tinymce) tinymce.triggerSave();
-                    });
-                }
-
-                // Ré-init à l'ouverture d'un onglet (si des champs sont rendus après)
-                document.addEventListener('shown.bs.tab', function (e) {
-                    var target = e && e.target ? document.querySelector(e.target.getAttribute('href')) : null;
-                    if (target) initAll(target);
-                });
-            });
-        })();
-    </script>
+@push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
         // Location search filter for create form (WordPress Traveler behavior)
@@ -740,7 +650,7 @@
                         <div class="mb-0">
                             <label class="form-label">Description</label>
                             <textarea name="tours_program[${programItemIndex}][desc]" 
-                                      class="form-control rich-editor" 
+                                      class="form-control" 
                                       rows="3"
                                       placeholder="Description détaillée de cette étape du programme"></textarea>
                         </div>
@@ -870,5 +780,49 @@
 
         // Initialize hidden input
         updateHeroGalleryHidden();
+
+        // Éviter "An invalid form control with name='...' is not focusable" : retirer required des champs dans modals/onglets cachés avant submit
+        (function() {
+            function stripRequiredFromHiddenInForm(form) {
+                var list = [];
+                if (!form) return list;
+                form.querySelectorAll('input[required], select[required], textarea[required]').forEach(function(el) {
+                    var inHiddenModal = el.closest('.modal') && !el.closest('.modal').classList.contains('show');
+                    var inHiddenOffcanvas = el.closest('.offcanvas') && !el.closest('.offcanvas').classList.contains('show');
+                    var inInactiveTab = el.closest('.tab-pane') && !el.closest('.tab-pane').classList.contains('active');
+                    var inHidden = el.closest('[hidden]');
+                    if (inHiddenModal || inHiddenOffcanvas || inInactiveTab || inHidden) {
+                        list.push(el);
+                        el.removeAttribute('required');
+                        el.setAttribute('data-required-restore', '1');
+                    }
+                });
+                return list;
+            }
+            function restoreRequired(list) {
+                list.forEach(function(el) {
+                    if (el.getAttribute('data-required-restore') === '1') {
+                        el.setAttribute('required', 'required');
+                        el.removeAttribute('data-required-restore');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                var form = document.getElementById('create-voyage-form');
+                var submitBtn = form && form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', function(e) {
+                        var toRestore = stripRequiredFromHiddenInForm(form);
+                        if (toRestore.length > 0) {
+                            e.preventDefault();
+                            e.stopImmediatePropagation();
+                            form.requestSubmit();
+                            setTimeout(function() { restoreRequired(toRestore); }, 100);
+                            return false;
+                        }
+                    }, true);
+                }
+            });
+        })();
     </script>
 @endpush

@@ -8,7 +8,7 @@
     $brandName = \App\Models\Setting::getValue('brand_name');
     $brandLogo = \App\Models\Setting::getValue('brand_logo');
     $brandLogoUrl = $brandLogo ? \App\Models\Setting::storageUrl($brandLogo) : null;
-    $maintenanceUrl = route('front.maintenance');
+    $maintenanceUrl = rtrim(config('app.frontend_url', 'https://ajinsafro.net'), '/') . '/maintenance';
 @endphp
 {{-- Dark topbar + semi-transparent header (TravelerWP-like) --}}
 <div class="fixed top-0 left-0 right-0 z-50">

@@ -3,7 +3,7 @@
     $adminBrandLogoSmUrl = \App\Models\Setting::brandLogoUrl('sm');
     $adminBrandLogoDarkUrl = \App\Models\Setting::brandLogoUrl('dark');
     $adminBrandLogoLightUrl = \App\Models\Setting::brandLogoUrl('light');
-    $maintenanceUrl = route('front.maintenance');
+    $maintenanceUrl = rtrim(config('app.frontend_url', 'https://ajinsafro.net'), '/') . '/maintenance';
 @endphp
 
 <header id="page-topbar">

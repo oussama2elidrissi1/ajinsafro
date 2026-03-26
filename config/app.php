@@ -76,6 +76,8 @@ return [
 
     'public_url' => env('PUBLIC_URL', 'https://ajinsafro.net'),
 
+    'frontend_url' => env('FRONTEND_URL', 'https://ajinsafro.net'),
+
     'public_domain' => env('PUBLIC_DOMAIN', 'ajinsafro.net'),
 
     'asset_url' => env('ASSET_URL'),

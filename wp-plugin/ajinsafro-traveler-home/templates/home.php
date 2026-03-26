@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 get_header();
 $settings = ajth_get_settings();
 
-$default_order = array( 'last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises' );
+$default_order = array( 'last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises' );
 $section_order = ! empty( $settings['section_order'] ) && is_array( $settings['section_order'] )
     ? $settings['section_order']
     : $default_order;
@@ -37,17 +37,12 @@ $dbr = ajth_get_destinations_by_region();
         if ( ! in_array( 'whatsapp_banner', $section_order ) ) {
             $section_order[] = 'whatsapp_banner';
         }
-        $section_order = array_values( array_unique( $section_order ) );
         foreach ( $section_order as $key ) {
             // WhatsApp banner: show by default when section key is missing; otherwise respect sections.whatsapp_banner or whatsapp_banner.enabled
             if ( $key === 'whatsapp_banner' ) {
                 $enabled = ! array_key_exists( 'whatsapp_banner', $sections )
                     || ! empty( $sections['whatsapp_banner'] )
                     || ! empty( $settings['whatsapp_banner']['enabled'] );
-            } elseif ( $key === 'holiday_theme' ) {
-                $enabled = array_key_exists( 'holiday_theme', $sections )
-                    ? ! empty( $sections['holiday_theme'] )
-                    : ! empty( $settings['holiday_theme']['enabled'] );
             } else {
                 $enabled = isset( $sections[ $key ] ) && $sections[ $key ];
             }
@@ -73,9 +68,6 @@ $dbr = ajth_get_destinations_by_region();
                     break;
                 case 'accommodations':
                     include AJTH_DIR . 'parts/accommodations.php';
-                    break;
-                case 'holiday_theme':
-                    include AJTH_DIR . 'parts/holiday-theme.php';
                     break;
                 case 'regions':
                     if ( ! empty( $dbr['enabled'] ) && ! empty( $dbr['items'] ) ) {
