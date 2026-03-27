@@ -19,6 +19,9 @@ if ( empty( $cruises['enabled'] ) ) {
 
 $title = ! empty( $cruises['title'] ) ? $cruises['title'] : 'CROISIÈRES';
 $image_url = ! empty( $cruises['image_url'] ) ? $cruises['image_url'] : '';
+if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+    $image_url = ajth_normalize_storage_url( $image_url );
+}
 $button_text = ! empty( $cruises['button_text'] ) ? $cruises['button_text'] : 'Découvrir';
 $button_url = ! empty( $cruises['button_url'] ) ? $cruises['button_url'] : '#';
 ?>

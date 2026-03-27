@@ -63,6 +63,11 @@ $button_text = ! empty( $theme['button_text'] ) ? $theme['button_text'] : '';
 $button_url = ! empty( $theme['button_url'] ) ? $theme['button_url'] : '';
 $left_img = ! empty( $theme['left_image_url'] ) ? $theme['left_image_url'] : ( ! empty( $theme['left_image'] ) ? $theme['left_image'] : '' );
 $deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : ( ! empty( $theme['deco_image'] ) ? $theme['deco_image'] : '' );
+
+if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+    $left_img = ajth_normalize_storage_url( $left_img );
+    $deco_img = ajth_normalize_storage_url( $deco_img );
+}
 ?>
 
 <section class="aj-theme" id="aj-theme">
@@ -109,6 +114,9 @@ $deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : ( !
                 <div class="aj-slider-v2 aj-theme-track" id="aj-theme-track">
                     <?php foreach ( $items as $item ) :
                         $img = ! empty( $item['image_url'] ) ? $item['image_url'] : ( ! empty( $item['image'] ) ? $item['image'] : '' );
+                        if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+                            $img = ajth_normalize_storage_url( $img );
+                        }
                         $title = ! empty( $item['title'] ) ? $item['title'] : '';
                         $badge = ! empty( $item['badge'] ) ? $item['badge'] : '';
                         $description = ! empty( $item['description'] ) ? $item['description'] : '';

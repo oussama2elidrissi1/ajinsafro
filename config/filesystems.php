@@ -39,7 +39,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('PUBLIC_STORAGE_URL', env('ADMIN_URL', env('APP_URL')).'/storage'),
+            'url' => env('PUBLIC_STORAGE_URL', env('ADMIN_URL', 'https://booking.ajinsafro.net').'/storage'),
             'visibility' => 'public',
             'throw' => false,
         ],
