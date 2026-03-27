@@ -19,6 +19,14 @@ final class AgentPortalLayout
             return false;
         }
 
+        // Manager must always use agent/commercial portal UI.
+        if ($user->hasRole([
+            BranchScopeService::ROLE_MANAGER,
+            'Manager',
+        ])) {
+            return true;
+        }
+
         if ($user->isPartner()) {
             return false;
         }
