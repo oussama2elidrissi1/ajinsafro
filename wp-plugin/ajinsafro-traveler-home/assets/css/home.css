@@ -1955,6 +1955,24 @@ body.aj-has-bg-pattern::after {
     background-position: center;
 }
 
+/* Visuel seul (maquette image = carte) */
+.aj-promo-card--visual {
+    padding: 0;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+    cursor: default;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    border-radius: 16px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+}
+
+.aj-promo-card--visual:hover {
+    transform: translateY(-4px);
+}
+
 .aj-promo-card--image .aj-promo-card__title,
 .aj-promo-card--image .aj-promo-card__text {
     text-shadow: 0 1px 2px rgba(0,0,0,.35);

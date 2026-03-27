@@ -143,32 +143,16 @@ class HomePageSettingsController extends Controller
                 'holiday_theme_item_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
 
                 'promotions.title' => ['nullable', 'string', 'max:255'],
-                'promotions.items' => ['nullable', 'array'],
-                'promotions.items.*.badge_text' => ['nullable', 'string', 'max:100'],
-                'promotions.items.*.badge_bg' => ['nullable', 'string', 'max:20'],
-                'promotions.items.*.badge_color' => ['nullable', 'string', 'max:20'],
-                'promotions.items.*.title' => ['nullable', 'string', 'max:255'],
-                'promotions.items.*.text' => ['nullable', 'string', 'max:500'],
-                'promotions.items.*.style' => ['nullable', 'string', 'max:20'],
-                'promotions.items.*.url' => ['nullable', 'string', 'max:500'],
-                'promotions.items.*.display_type' => ['nullable', Rule::in(['css', 'image'])],
-                'promotions.items.*.background_color' => ['nullable', 'string', 'max:30'],
-                'promotions.items.*.background_gradient' => ['nullable', 'string', 'max:255'],
-                'promotions.items.*.image_url' => ['nullable', 'string', 'max:2048'],
-                'promotions.items.*.overlay_enabled' => ['nullable', 'boolean'],
-                'promotions.items.*.overlay_opacity' => ['nullable', 'numeric', 'min:0', 'max:1'],
-                'promotions.items.*.text_color' => ['nullable', 'string', 'max:30'],
-                'promotions.items.*.button_label' => ['nullable', 'string', 'max:120'],
-                'promotions.items.*.locale' => ['nullable', 'array'],
-                'promotions.items.*.locale.fr' => ['nullable', 'array'],
-                'promotions.items.*.locale.ar' => ['nullable', 'array'],
-                'promotions.items.*.locale.fr.badge' => ['nullable', 'string', 'max:100'],
-                'promotions.items.*.locale.fr.title' => ['nullable', 'string', 'max:255'],
-                'promotions.items.*.locale.fr.description' => ['nullable', 'string', 'max:500'],
-                'promotions.items.*.locale.ar.badge' => ['nullable', 'string', 'max:100'],
-                'promotions.items.*.locale.ar.title' => ['nullable', 'string', 'max:255'],
-                'promotions.items.*.locale.ar.description' => ['nullable', 'string', 'max:500'],
-                'promotions_image_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'promotions.images' => ['nullable', 'array'],
+                'promotions.images.0' => ['nullable', 'string', 'max:2048'],
+                'promotions.images.1' => ['nullable', 'string', 'max:2048'],
+                'promotions.images.2' => ['nullable', 'string', 'max:2048'],
+                'promotion_image_1' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'promotion_image_2' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'promotion_image_3' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'promotion_remove_1' => ['nullable', 'boolean'],
+                'promotion_remove_2' => ['nullable', 'boolean'],
+                'promotion_remove_3' => ['nullable', 'boolean'],
 
                 'whatsapp_banner.enabled' => ['nullable', 'boolean'],
                 'whatsapp_banner.title' => ['nullable', 'string', 'max:255'],
@@ -291,57 +275,6 @@ class HomePageSettingsController extends Controller
             ];
         }
 
-            $promotionItems = [];
-            $promosInput = $validated['promotions']['items'] ?? [];
-            if (is_array($promosInput)) {
-                foreach ($promosInput as $promoIndex => $promo) {
-                    $promoTitle = trim((string)($promo['title'] ?? ''));
-                    if ($promoTitle === '') continue;
-
-                    $imageUrl = trim((string)($promo['image_url'] ?? ''));
-                    if ($request->hasFile("promotions_image_files.$promoIndex")) {
-                        $path = $request->file("promotions_image_files.$promoIndex")->store('home-settings/promotions', 'public');
-                        $imageUrl = Storage::disk('public')->url($path);
-                    }
-                    $imageUrl = $this->normalizeMediaUrl($imageUrl);
-
-                    $displayType = trim((string)($promo['display_type'] ?? 'css'));
-                    if (!in_array($displayType, ['css', 'image'], true)) {
-                        $displayType = 'css';
-                    }
-
-                    $promotionItems[] = [
-                        'badge_text'  => trim((string)($promo['badge_text'] ?? '')),
-                        'badge_bg'    => trim((string)($promo['badge_bg'] ?? '#ef4444')),
-                        'badge_color' => trim((string)($promo['badge_color'] ?? '#fff')),
-                        'title'       => $promoTitle,
-                        'text'        => trim((string)($promo['text'] ?? '')),
-                        'style'       => trim((string)($promo['style'] ?? 'blue')),
-                        'url'         => trim((string)($promo['url'] ?? '#')),
-                        'display_type' => $displayType,
-                        'background_color' => trim((string)($promo['background_color'] ?? '')),
-                        'background_gradient' => trim((string)($promo['background_gradient'] ?? '')),
-                        'image_url' => $imageUrl,
-                        'overlay_enabled' => (bool)($promo['overlay_enabled'] ?? false),
-                        'overlay_opacity' => max(0, min(1, (float)($promo['overlay_opacity'] ?? 0.35))),
-                        'text_color' => trim((string)($promo['text_color'] ?? '#ffffff')),
-                        'button_label' => trim((string)($promo['button_label'] ?? '')),
-                        'locale' => [
-                            'fr' => [
-                                'badge' => trim((string) data_get($promo, 'locale.fr.badge', '')),
-                                'title' => trim((string) data_get($promo, 'locale.fr.title', '')),
-                                'description' => trim((string) data_get($promo, 'locale.fr.description', '')),
-                            ],
-                            'ar' => [
-                                'badge' => trim((string) data_get($promo, 'locale.ar.badge', '')),
-                                'title' => trim((string) data_get($promo, 'locale.ar.title', '')),
-                                'description' => trim((string) data_get($promo, 'locale.ar.description', '')),
-                            ],
-                        ],
-                    ];
-                }
-            }
-
             $payload = [
                 'hero' => [
                     'type' => $validated['hero']['type'],
@@ -387,10 +320,7 @@ class HomePageSettingsController extends Controller
                 'regions' => $regions,
                 'good_spots' => $goodSpots,
                 'good_spots_title' => trim((string)($validated['good_spots_title'] ?? 'Les bons coins sur votre destination')),
-                'promotions' => [
-                    'title' => trim((string)($validated['promotions']['title'] ?? 'Destinations de ce mois')),
-                    'items' => $promotionItems,
-                ],
+                'promotions' => $this->buildPromotionsPayload($request, $validated, $current),
                 'whatsapp_banner' => $this->buildWhatsAppBannerPayload($request, $validated),
                 'cruises' => $this->buildCruisesPayload($request, $validated),
                 'footer' => [
@@ -762,7 +692,7 @@ class HomePageSettingsController extends Controller
             'good_spots_title' => 'Les bons coins sur votre destination',
             'promotions' => [
                 'title' => 'Destinations de ce mois',
-                'items' => [],
+                'images' => ['', '', ''],
             ],
             'whatsapp_banner' => [
                 'enabled' => false,
@@ -861,7 +791,89 @@ class HomePageSettingsController extends Controller
             $settings['good_spots'][] = $defaults['good_spots'][count($settings['good_spots'])];
         }
 
+        $settings = $this->normalizePromotionsForRead($settings);
+
         return $settings;
+    }
+
+    /**
+     * Normalize promotions: new shape is { title, images[3] }.
+     * Migrates legacy `items[].image_url` into `images` when `images` is empty.
+     */
+    private function normalizePromotionsForRead(array $settings): array
+    {
+        $defaults = [
+            'title' => 'Destinations de ce mois',
+            'images' => ['', '', ''],
+        ];
+        $promo = $settings['promotions'] ?? [];
+        if (!is_array($promo)) {
+            $promo = [];
+        }
+        $title = trim((string) ($promo['title'] ?? $defaults['title']));
+        $images = isset($promo['images']) && is_array($promo['images']) ? array_values($promo['images']) : ['', '', ''];
+        while (count($images) < 3) {
+            $images[] = '';
+        }
+        $images = array_slice($images, 0, 3);
+        for ($i = 0; $i < 3; $i++) {
+            $images[$i] = $this->normalizeMediaUrl(trim((string) ($images[$i] ?? '')));
+        }
+        $hasAnyImage = false;
+        foreach ($images as $u) {
+            if ($u !== '') {
+                $hasAnyImage = true;
+                break;
+            }
+        }
+        if (!$hasAnyImage && !empty($promo['items']) && is_array($promo['items'])) {
+            $slot = 0;
+            foreach ($promo['items'] as $item) {
+                if ($slot >= 3) {
+                    break;
+                }
+                if (!is_array($item)) {
+                    continue;
+                }
+                $url = trim((string) ($item['image_url'] ?? ''));
+                if ($url !== '') {
+                    $images[$slot] = $this->normalizeMediaUrl($url);
+                    $slot++;
+                }
+            }
+        }
+        $settings['promotions'] = [
+            'title' => $title !== '' ? $title : $defaults['title'],
+            'images' => $images,
+        ];
+
+        return $settings;
+    }
+
+    private function buildPromotionsPayload(Request $request, array $validated, array $current): array
+    {
+        $defaultTitle = 'Destinations de ce mois';
+        $title = trim((string) ($validated['promotions']['title'] ?? ($current['promotions']['title'] ?? $defaultTitle)));
+        $images = ['', '', ''];
+        for ($i = 0; $i < 3; $i++) {
+            $n = $i + 1;
+            if ($request->hasFile("promotion_image_{$n}")) {
+                $path = $request->file("promotion_image_{$n}")->store('home-settings/promotions', 'public');
+                $images[$i] = $this->normalizeMediaUrl(Storage::disk('public')->url($path));
+                continue;
+            }
+            if ($request->boolean("promotion_remove_{$n}")) {
+                $images[$i] = '';
+                continue;
+            }
+            $posted = trim((string) ($request->input("promotions.images.$i", '')));
+            $images[$i] = $posted !== '' ? $this->normalizeMediaUrl($posted) : '';
+        }
+
+        return [
+            'title' => $title !== '' ? $title : $defaultTitle,
+            'images' => $images,
+        ];
     }
 
     /* ──────────────────────────────────────────────────────────────────

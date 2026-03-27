@@ -428,7 +428,7 @@ function ajth_get_settings() {
         'good_spots_title' => 'Les bons coins sur votre destination',
         'promotions' => array(
             'title' => 'Destinations de ce mois',
-            'items' => array(),
+            'images' => array( '', '', '' ),
         ),
         'whatsapp_banner' => array(
             'enabled'   => true,
