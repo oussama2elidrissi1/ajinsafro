@@ -1934,6 +1934,36 @@ body.aj-has-bg-pattern::after {
     max-width: 65%;
 }
 
+.aj-promo-card__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    color: inherit;
+    border: 1px solid rgba(255,255,255,.45);
+    background: rgba(0,0,0,.12);
+    backdrop-filter: blur(1px);
+}
+
+.aj-promo-card--image {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+.aj-promo-card--image .aj-promo-card__title,
+.aj-promo-card--image .aj-promo-card__text {
+    text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+
+.aj-promo-card--image .aj-promo-card__text {
+    max-width: 100%;
+}
+
 .aj-promo-card__deco {
     position: absolute;
     bottom: 0;

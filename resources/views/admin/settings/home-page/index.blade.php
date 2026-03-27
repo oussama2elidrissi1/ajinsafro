@@ -575,9 +575,9 @@
                     <p class="text-muted small mb-3">3 bannières promotionnelles avec un style gradient. Laissez vide pour utiliser le contenu par défaut.</p>
                     @php
                         $defaultPromos = [
-                            ['badge_text' => 'Profitez', 'badge_bg' => '#ef4444', 'badge_color' => '#fff', 'title' => "Cartes de\nfidélités", 'text' => "Plus d'espace de voyages pour vous et nos fidèles.", 'style' => 'blue', 'url' => '#'],
-                            ['badge_text' => 'Profitez', 'badge_bg' => '#fff', 'badge_color' => '#f37a1f', 'title' => "Programme\nBztam e-Sfar", 'text' => 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.', 'style' => 'orange', 'url' => '#'],
-                            ['badge_text' => 'احجز الآن', 'badge_bg' => '#ffb300', 'badge_color' => '#0e3a5a', 'title' => 'الحجز بكري', 'text' => 'تجمع الان الودائع للمسافرين إلى وجهاتك و تمتع بخصم إضافي.', 'style' => 'dark-blue', 'url' => '#'],
+                            ['badge_text' => 'Profitez', 'badge_bg' => '#ef4444', 'badge_color' => '#fff', 'title' => "Cartes de\nfidélités", 'text' => "Plus d'espace de voyages pour vous et nos fidèles.", 'style' => 'blue', 'url' => '#', 'display_type' => 'css', 'background_color' => '', 'background_gradient' => '', 'image_url' => '', 'overlay_enabled' => false, 'overlay_opacity' => 0.35, 'text_color' => '#ffffff', 'button_label' => ''],
+                            ['badge_text' => 'Profitez', 'badge_bg' => '#fff', 'badge_color' => '#f37a1f', 'title' => "Programme\nBztam e-Sfar", 'text' => 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.', 'style' => 'orange', 'url' => '#', 'display_type' => 'css', 'background_color' => '', 'background_gradient' => '', 'image_url' => '', 'overlay_enabled' => false, 'overlay_opacity' => 0.35, 'text_color' => '#ffffff', 'button_label' => ''],
+                            ['badge_text' => 'احجز الآن', 'badge_bg' => '#ffb300', 'badge_color' => '#0e3a5a', 'title' => 'الحجز بكري', 'text' => 'تجمع الان الودائع للمسافرين إلى وجهاتك و تمتع بخصم إضافي.', 'style' => 'dark-blue', 'url' => '#', 'display_type' => 'css', 'background_color' => '', 'background_gradient' => '', 'image_url' => '', 'overlay_enabled' => false, 'overlay_opacity' => 0.35, 'text_color' => '#ffffff', 'button_label' => ''],
                         ];
                         $promos = old('promotions.items', data_get($settings, 'promotions.items', $defaultPromos));
                         if (empty($promos)) $promos = $defaultPromos;
@@ -586,7 +586,15 @@
                         @foreach($promos as $pi => $promo)
                         <div class="border rounded p-3">
                             <h6 class="mb-2">Promo {{ $pi + 1 }}</h6>
+                            @php $promoDisplayType = data_get($promo, 'display_type', 'css'); @endphp
                             <div class="row g-2">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-0">Type d'affichage</label>
+                                    <select class="form-select form-select-sm promo-display-type" name="promotions[items][{{ $pi }}][display_type]" data-promo-index="{{ $pi }}">
+                                        <option value="css" {{ $promoDisplayType === 'css' ? 'selected' : '' }}>Style CSS</option>
+                                        <option value="image" {{ $promoDisplayType === 'image' ? 'selected' : '' }}>Image de fond</option>
+                                    </select>
+                                </div>
                                 <div class="col-md-3">
                                     <label class="form-label small mb-0">Titre</label>
                                     <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][title]" value="{{ data_get($promo, 'title') }}">
@@ -614,6 +622,57 @@
                                 <div class="col-12">
                                     <label class="form-label small mb-0">Description</label>
                                     <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][text]" value="{{ data_get($promo, 'text') }}">
+                                </div>
+                                <div class="col-md-4 promo-css-only promo-css-only-{{ $pi }}">
+                                    <label class="form-label small mb-0">Couleur de fond</label>
+                                    <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][background_color]" value="{{ data_get($promo, 'background_color') }}" placeholder="#0ea5e9">
+                                </div>
+                                <div class="col-md-8 promo-css-only promo-css-only-{{ $pi }}">
+                                    <label class="form-label small mb-0">Gradient (CSS)</label>
+                                    <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][background_gradient]" value="{{ data_get($promo, 'background_gradient') }}" placeholder="linear-gradient(135deg, #42a5f5, #0277bd)">
+                                </div>
+                                <div class="col-md-6 promo-image-only promo-image-only-{{ $pi }}">
+                                    <label class="form-label small mb-0">Image de fond URL</label>
+                                    <input class="form-control form-control-sm promo-image-url" data-promo-index="{{ $pi }}" name="promotions[items][{{ $pi }}][image_url]" value="{{ data_get($promo, 'image_url') }}" placeholder="https://...">
+                                </div>
+                                <div class="col-md-6 promo-image-only promo-image-only-{{ $pi }}">
+                                    <label class="form-label small mb-0">Upload image de fond</label>
+                                    <input type="file" class="form-control form-control-sm promo-image-file" data-promo-index="{{ $pi }}" name="promotions_image_files[{{ $pi }}]" accept="image/*">
+                                </div>
+                                <div class="col-md-2 promo-image-only promo-image-only-{{ $pi }}">
+                                    <div class="form-check form-switch mt-4">
+                                        <input class="form-check-input promo-overlay-enabled" data-promo-index="{{ $pi }}" type="checkbox" name="promotions[items][{{ $pi }}][overlay_enabled]" value="1" {{ data_get($promo, 'overlay_enabled') ? 'checked' : '' }}>
+                                        <label class="form-check-label small">Overlay</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 promo-image-only promo-image-only-{{ $pi }}">
+                                    <label class="form-label small mb-0">Opacité overlay</label>
+                                    <input type="range" class="form-range promo-overlay-opacity" data-promo-index="{{ $pi }}" min="0" max="1" step="0.05" name="promotions[items][{{ $pi }}][overlay_opacity]" value="{{ data_get($promo, 'overlay_opacity', 0.35) }}">
+                                    <small class="text-muted">Valeur: <span class="promo-overlay-opacity-value" id="promo-overlay-opacity-value-{{ $pi }}">{{ data_get($promo, 'overlay_opacity', 0.35) }}</span></small>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-0">Couleur texte</label>
+                                    <input type="color" class="form-control form-control-sm form-control-color promo-text-color" data-promo-index="{{ $pi }}" name="promotions[items][{{ $pi }}][text_color]" value="{{ data_get($promo, 'text_color', '#ffffff') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-0">Label bouton (optionnel)</label>
+                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][button_label]" value="{{ data_get($promo, 'button_label') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small mb-0">Locale FR — titre (optionnel)</label>
+                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][locale][fr][title]" value="{{ data_get($promo, 'locale.fr.title') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small mb-0">Locale AR — titre (optionnel)</label>
+                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][locale][ar][title]" value="{{ data_get($promo, 'locale.ar.title') }}">
+                                </div>
+                                <div class="col-12">
+                                    <div class="border rounded p-2 promo-preview" id="promo-preview-{{ $pi }}" data-default-style="{{ data_get($promo, 'style', 'blue') }}">
+                                        <small class="text-muted d-block mb-1">Aperçu rapide</small>
+                                        <div class="promo-preview-badge" id="promo-preview-badge-{{ $pi }}">{{ data_get($promo, 'badge_text', 'Badge') }}</div>
+                                        <div class="promo-preview-title" id="promo-preview-title-{{ $pi }}">{{ data_get($promo, 'title', 'Titre') }}</div>
+                                        <div class="promo-preview-text" id="promo-preview-text-{{ $pi }}">{{ data_get($promo, 'text', 'Description') }}</div>
+                                    </div>
                                 </div>
                                 <input type="hidden" name="promotions[items][{{ $pi }}][badge_color]" value="{{ data_get($promo, 'badge_color', '#fff') }}">
                             </div>
@@ -745,6 +804,41 @@
 
     </div>{{-- /.tab-content --}}
 @endsection
+
+@push('css')
+<style>
+.promo-preview {
+    position: relative;
+    border-radius: 12px;
+    min-height: 150px;
+    padding: 14px;
+    color: #fff;
+    background: linear-gradient(135deg, #42a5f5, #0277bd);
+    background-size: cover;
+    background-position: center;
+}
+.promo-preview-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.25);
+    margin-bottom: 8px;
+}
+.promo-preview-title {
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 4px;
+}
+.promo-preview-text {
+    font-size: .8rem;
+    line-height: 1.3;
+    max-width: 80%;
+}
+</style>
+@endpush
 
 @push('script')
 <script>
@@ -920,10 +1014,90 @@
         if (overlay && overlayValue) overlayValue.textContent = overlay.value;
     }
 
+    function promoDefaultGradient(style) {
+        if (style === 'orange') return 'linear-gradient(135deg, #ff9800, #ef6c00)';
+        if (style === 'dark-blue') return 'linear-gradient(135deg, #0288d1, #01579b)';
+        return 'linear-gradient(135deg, #42a5f5, #0277bd)';
+    }
+
+    function togglePromoFields(index) {
+        var typeSelect = document.querySelector('.promo-display-type[data-promo-index="' + index + '"]');
+        if (!typeSelect) return;
+        var isImage = typeSelect.value === 'image';
+        document.querySelectorAll('.promo-css-only-' + index).forEach(function (el) { el.style.display = isImage ? 'none' : ''; });
+        document.querySelectorAll('.promo-image-only-' + index).forEach(function (el) { el.style.display = isImage ? '' : 'none'; });
+    }
+
+    function updatePromoPreview(index) {
+        var preview = document.getElementById('promo-preview-' + index);
+        if (!preview) return;
+        var type = (document.querySelector('.promo-display-type[data-promo-index="' + index + '"]') || {}).value || 'css';
+        var style = (document.querySelector('select[name="promotions[items][' + index + '][style]"]') || {}).value || preview.getAttribute('data-default-style') || 'blue';
+        var bgColor = (document.querySelector('input[name="promotions[items][' + index + '][background_color]"]') || {}).value || '';
+        var bgGradient = (document.querySelector('input[name="promotions[items][' + index + '][background_gradient]"]') || {}).value || '';
+        var imageUrl = (document.querySelector('input[name="promotions[items][' + index + '][image_url]"]') || {}).value || '';
+        var overlayEnabled = (document.querySelector('.promo-overlay-enabled[data-promo-index="' + index + '"]') || {}).checked;
+        var overlayOpacity = parseFloat(((document.querySelector('.promo-overlay-opacity[data-promo-index="' + index + '"]') || {}).value || '0.35'));
+        var textColor = (document.querySelector('.promo-text-color[data-promo-index="' + index + '"]') || {}).value || '#ffffff';
+        var badgeValue = (document.querySelector('input[name="promotions[items][' + index + '][badge_text]"]') || {}).value || 'Badge';
+        var titleValue = (document.querySelector('input[name="promotions[items][' + index + '][title]"]') || {}).value || 'Titre';
+        var textValue = (document.querySelector('input[name="promotions[items][' + index + '][text]"]') || {}).value || 'Description';
+
+        var previewBadge = document.getElementById('promo-preview-badge-' + index);
+        var previewTitle = document.getElementById('promo-preview-title-' + index);
+        var previewText = document.getElementById('promo-preview-text-' + index);
+        if (previewBadge) previewBadge.textContent = badgeValue;
+        if (previewTitle) previewTitle.textContent = titleValue;
+        if (previewText) previewText.textContent = textValue;
+
+        preview.style.color = textColor;
+        preview.style.backgroundImage = '';
+        preview.style.backgroundColor = '';
+
+        if (type === 'image' && imageUrl) {
+            var overlayAlpha = overlayEnabled ? Math.max(0, Math.min(1, overlayOpacity)) : 0;
+            preview.style.backgroundImage = 'linear-gradient(rgba(0,0,0,' + overlayAlpha + '), rgba(0,0,0,' + overlayAlpha + ')), url("' + imageUrl.replace(/"/g, '\\"') + '")';
+            preview.style.backgroundSize = 'cover';
+            preview.style.backgroundPosition = 'center';
+        } else {
+            var gradient = bgGradient || promoDefaultGradient(style);
+            preview.style.backgroundImage = gradient;
+            if (bgColor) {
+                preview.style.backgroundColor = bgColor;
+            }
+        }
+    }
+
     if (heroType) heroType.addEventListener('change', toggleHeroFields);
     if (overlay) overlay.addEventListener('input', syncOverlayValue);
     toggleHeroFields();
     syncOverlayValue();
+
+    document.querySelectorAll('.promo-display-type').forEach(function (el) {
+        var idx = el.getAttribute('data-promo-index');
+        togglePromoFields(idx);
+        updatePromoPreview(idx);
+        el.addEventListener('change', function () {
+            togglePromoFields(idx);
+            updatePromoPreview(idx);
+        });
+    });
+    document.querySelectorAll('[name^="promotions[items]"]').forEach(function (el) {
+        var match = el.name.match(/promotions\[items\]\[(\d+)\]/);
+        if (!match) return;
+        var idx = match[1];
+        el.addEventListener('input', function () { updatePromoPreview(idx); });
+        el.addEventListener('change', function () { updatePromoPreview(idx); });
+    });
+    document.querySelectorAll('.promo-overlay-opacity').forEach(function (el) {
+        var idx = el.getAttribute('data-promo-index');
+        var valueNode = document.getElementById('promo-overlay-opacity-value-' + idx);
+        if (valueNode) valueNode.textContent = el.value;
+        el.addEventListener('input', function () {
+            if (valueNode) valueNode.textContent = el.value;
+            updatePromoPreview(idx);
+        });
+    });
 
     /* ── Ordre des sections + sections personnalisées ─────────── */
     var sectionOrderContainer = document.getElementById('section-order-container');

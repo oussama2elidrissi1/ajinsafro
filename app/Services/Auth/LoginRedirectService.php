@@ -34,6 +34,14 @@ class LoginRedirectService
             $adminUrl = rtrim((string) config('app.url', 'https://booking.ajinsafro.net'), '/');
         }
 
+        // Manager uses the same portal entrypoint as agent/commercial.
+        if ($user->hasRole([
+            BranchScopeService::ROLE_MANAGER,
+            'Manager',
+        ])) {
+            return $adminUrl . '/agent/dashboard';
+        }
+
         // Partner area (dedicated subdomain)
         if ($user->isPartner()) {
             $partner = $user->partner;

@@ -127,6 +127,24 @@ class HomePageSettingsController extends Controller
                 'promotions.items.*.text' => ['nullable', 'string', 'max:500'],
                 'promotions.items.*.style' => ['nullable', 'string', 'max:20'],
                 'promotions.items.*.url' => ['nullable', 'string', 'max:500'],
+                'promotions.items.*.display_type' => ['nullable', Rule::in(['css', 'image'])],
+                'promotions.items.*.background_color' => ['nullable', 'string', 'max:30'],
+                'promotions.items.*.background_gradient' => ['nullable', 'string', 'max:255'],
+                'promotions.items.*.image_url' => ['nullable', 'string', 'max:2048'],
+                'promotions.items.*.overlay_enabled' => ['nullable', 'boolean'],
+                'promotions.items.*.overlay_opacity' => ['nullable', 'numeric', 'min:0', 'max:1'],
+                'promotions.items.*.text_color' => ['nullable', 'string', 'max:30'],
+                'promotions.items.*.button_label' => ['nullable', 'string', 'max:120'],
+                'promotions.items.*.locale' => ['nullable', 'array'],
+                'promotions.items.*.locale.fr' => ['nullable', 'array'],
+                'promotions.items.*.locale.ar' => ['nullable', 'array'],
+                'promotions.items.*.locale.fr.badge' => ['nullable', 'string', 'max:100'],
+                'promotions.items.*.locale.fr.title' => ['nullable', 'string', 'max:255'],
+                'promotions.items.*.locale.fr.description' => ['nullable', 'string', 'max:500'],
+                'promotions.items.*.locale.ar.badge' => ['nullable', 'string', 'max:100'],
+                'promotions.items.*.locale.ar.title' => ['nullable', 'string', 'max:255'],
+                'promotions.items.*.locale.ar.description' => ['nullable', 'string', 'max:500'],
+                'promotions_image_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
 
                 'whatsapp_banner.enabled' => ['nullable', 'boolean'],
                 'whatsapp_banner.title' => ['nullable', 'string', 'max:255'],
@@ -252,9 +270,21 @@ class HomePageSettingsController extends Controller
             $promotionItems = [];
             $promosInput = $validated['promotions']['items'] ?? [];
             if (is_array($promosInput)) {
-                foreach ($promosInput as $promo) {
+                foreach ($promosInput as $promoIndex => $promo) {
                     $promoTitle = trim((string)($promo['title'] ?? ''));
                     if ($promoTitle === '') continue;
+
+                    $imageUrl = trim((string)($promo['image_url'] ?? ''));
+                    if ($request->hasFile("promotions_image_files.$promoIndex")) {
+                        $path = $request->file("promotions_image_files.$promoIndex")->store('home-settings/promotions', 'public');
+                        $imageUrl = Storage::disk('public')->url($path);
+                    }
+
+                    $displayType = trim((string)($promo['display_type'] ?? 'css'));
+                    if (!in_array($displayType, ['css', 'image'], true)) {
+                        $displayType = 'css';
+                    }
+
                     $promotionItems[] = [
                         'badge_text'  => trim((string)($promo['badge_text'] ?? '')),
                         'badge_bg'    => trim((string)($promo['badge_bg'] ?? '#ef4444')),
@@ -263,6 +293,26 @@ class HomePageSettingsController extends Controller
                         'text'        => trim((string)($promo['text'] ?? '')),
                         'style'       => trim((string)($promo['style'] ?? 'blue')),
                         'url'         => trim((string)($promo['url'] ?? '#')),
+                        'display_type' => $displayType,
+                        'background_color' => trim((string)($promo['background_color'] ?? '')),
+                        'background_gradient' => trim((string)($promo['background_gradient'] ?? '')),
+                        'image_url' => $imageUrl,
+                        'overlay_enabled' => (bool)($promo['overlay_enabled'] ?? false),
+                        'overlay_opacity' => max(0, min(1, (float)($promo['overlay_opacity'] ?? 0.35))),
+                        'text_color' => trim((string)($promo['text_color'] ?? '#ffffff')),
+                        'button_label' => trim((string)($promo['button_label'] ?? '')),
+                        'locale' => [
+                            'fr' => [
+                                'badge' => trim((string) data_get($promo, 'locale.fr.badge', '')),
+                                'title' => trim((string) data_get($promo, 'locale.fr.title', '')),
+                                'description' => trim((string) data_get($promo, 'locale.fr.description', '')),
+                            ],
+                            'ar' => [
+                                'badge' => trim((string) data_get($promo, 'locale.ar.badge', '')),
+                                'title' => trim((string) data_get($promo, 'locale.ar.title', '')),
+                                'description' => trim((string) data_get($promo, 'locale.ar.description', '')),
+                            ],
+                        ],
                     ];
                 }
             }
