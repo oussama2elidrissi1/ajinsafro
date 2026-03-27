@@ -406,7 +406,7 @@ function ajth_get_settings() {
             'count' => 4,
         ),
         'holiday_theme' => array(
-            'enabled' => false,
+            'enabled' => true,
             'eyebrow' => 'Voyages par theme',
             'title_line_1' => '',
             'title_line_2' => '',
@@ -507,7 +507,7 @@ function ajth_normalize_holiday_theme_settings( $theme, array $defaults ): array
         $theme = array();
     }
     $theme = array_replace_recursive( $defaults, $theme );
-    $theme['enabled'] = ajth_truthy( $theme['enabled'] ?? false );
+    $theme['enabled'] = ajth_truthy( $theme['enabled'] ?? true );
 
     $items = $theme['items'] ?? array();
     if ( ( ! is_array( $items ) || empty( $items ) ) && ! empty( $theme['cards'] ) && is_array( $theme['cards'] ) ) {
