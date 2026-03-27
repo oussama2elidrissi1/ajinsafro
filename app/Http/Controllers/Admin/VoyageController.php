@@ -729,7 +729,6 @@ class VoyageController extends Controller
     private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): void
     {
         $items = [];
-<<<<<<< HEAD
         $inputHotels = $request->has('tour_hotels') && is_array($request->input('tour_hotels'))
             ? $request->input('tour_hotels')
             : ($request->has('tour_hotel') ? [$request->input('tour_hotel', [])] : []);
@@ -761,7 +760,6 @@ class VoyageController extends Controller
             }
             if ($checkOutDay < $checkInDay) {
                 $checkOutDay = $checkInDay;
-=======
         if ($request->has('tour_hotels') && is_array($request->input('tour_hotels'))) {
             foreach ($request->input('tour_hotels') as $raw) {
                 if (!is_array($raw)) {
@@ -800,7 +798,6 @@ class VoyageController extends Controller
                     'notes' => $raw['notes'] ?? null,
                     'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
                 ];
->>>>>>> 5b5bdafe3a43954cb9cb54b42f268eb061b8fb11
             }
         } elseif ($request->has('tour_hotel')) {
             $raw = $request->input('tour_hotel', []);
@@ -823,7 +820,6 @@ class VoyageController extends Controller
         $contentKeys = ['hotel_name', 'stars', 'address', 'room_type', 'meal_plan', 'notes', 'image_id'];
         foreach ($items as $data) {
             $content = array_intersect_key($data, array_flip($contentKeys));
-<<<<<<< HEAD
             $hasContent = (bool) array_filter($content, fn ($v) => $v !== null && $v !== '');
             // Ne pas utiliser `&&` ici : en PHP, l'expression retourne un booléen et non le modèle.
             $existingHotel = $id
@@ -958,11 +954,9 @@ class VoyageController extends Controller
                 }
             }
             TourHotelRoom::where('tour_hotel_id', $tourHotelId)->whereNotIn('id', $keptRoomIds)->delete();
-=======
             if (array_filter($content, fn ($v) => $v !== null && $v !== '')) {
                 TourHotel::create(array_merge($data, ['tour_id' => $tourId, 'sort_order' => $sortOrder++]));
             }
->>>>>>> 5b5bdafe3a43954cb9cb54b42f268eb061b8fb11
         }
     }
 
@@ -1405,7 +1399,6 @@ class VoyageController extends Controller
                 }
             }
 
-<<<<<<< HEAD
             // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row par jour + chambres par hôtel
             $hotelIdsOrdered = $this->syncTourHotels($id, $request);
             $this->syncTourHotelRooms($id, $request, $hotelIdsOrdered);
@@ -1414,10 +1407,8 @@ class VoyageController extends Controller
             $totalPlaces = $this->computeTourTotalPlacesFromRooms($id);
             $this->repository->updateTour($id, ['max_people' => $totalPlaces, 'places' => $totalPlaces]);
 
-=======
             // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row par jour
             $this->syncTourHotels($id, $request);
->>>>>>> 5b5bdafe3a43954cb9cb54b42f268eb061b8fb11
             $this->syncTourTransfers($id, $request, $lastDayNumber);
 
             // Synchroniser les lieux de départ et les dates disponibles
