@@ -25,6 +25,9 @@ if ( ! $theme_enabled ) {
 }
 
 $items = isset( $theme['items'] ) ? $theme['items'] : array();
+if ( ( ! is_array( $items ) || empty( $items ) ) && isset( $theme['cards'] ) && is_array( $theme['cards'] ) ) {
+    $items = $theme['cards'];
+}
 if ( is_string( $items ) ) {
     $decoded_items = json_decode( $items, true );
     $items = is_array( $decoded_items ) ? $decoded_items : array();
@@ -58,8 +61,8 @@ $eyebrow = ! empty( $theme['eyebrow'] ) ? $theme['eyebrow'] : 'Voyages par theme
 $subtitle = ! empty( $theme['subtitle'] ) ? $theme['subtitle'] : '';
 $button_text = ! empty( $theme['button_text'] ) ? $theme['button_text'] : '';
 $button_url = ! empty( $theme['button_url'] ) ? $theme['button_url'] : '';
-$left_img = ! empty( $theme['left_image_url'] ) ? $theme['left_image_url'] : '';
-$deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : '';
+$left_img = ! empty( $theme['left_image_url'] ) ? $theme['left_image_url'] : ( ! empty( $theme['left_image'] ) ? $theme['left_image'] : '' );
+$deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : ( ! empty( $theme['deco_image'] ) ? $theme['deco_image'] : '' );
 ?>
 
 <section class="aj-theme" id="aj-theme">
@@ -105,8 +108,10 @@ $deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : '';
 
                 <div class="aj-slider-v2 aj-theme-track" id="aj-theme-track">
                     <?php foreach ( $items as $item ) :
-                        $img = ! empty( $item['image_url'] ) ? $item['image_url'] : '';
+                        $img = ! empty( $item['image_url'] ) ? $item['image_url'] : ( ! empty( $item['image'] ) ? $item['image'] : '' );
                         $title = ! empty( $item['title'] ) ? $item['title'] : '';
+                        $badge = ! empty( $item['badge'] ) ? $item['badge'] : '';
+                        $description = ! empty( $item['description'] ) ? $item['description'] : '';
                         $btn_text = ! empty( $item['button_text'] ) ? $item['button_text'] : esc_html__( 'Voir plus', 'ajinsafro-traveler-home' );
                         $btn_url = ! empty( $item['button_url'] ) ? $item['button_url'] : '#';
                         $raw_tags = $item['tags'] ?? array();
@@ -130,7 +135,13 @@ $deco_img = ! empty( $theme['deco_image_url'] ) ? $theme['deco_image_url'] : '';
                             <?php endif; ?>
                         </div>
                         <div class="aj-theme-card__body">
+                            <?php if ( $badge !== '' ) : ?>
+                                <span class="aj-theme-card__badge"><?php echo esc_html( $badge ); ?></span>
+                            <?php endif; ?>
                             <h4 class="aj-theme-card__title"><?php echo esc_html( $title ); ?></h4>
+                            <?php if ( $description !== '' ) : ?>
+                                <p class="aj-theme-card__desc"><?php echo esc_html( $description ); ?></p>
+                            <?php endif; ?>
                             <?php if ( ! empty( $tags ) ) : ?>
                                 <div class="aj-theme-card__tags">
                                     <?php foreach ( array_slice( $tags, 0, 4 ) as $tag ) : ?>

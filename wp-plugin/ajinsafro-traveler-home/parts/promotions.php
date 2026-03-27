@@ -84,7 +84,19 @@ if ( empty( $promos ) ) {
 
         <div class="aj-promos__grid">
             <?php foreach ( $promos as $i => $promo ) :
-                $style = ! empty( $promo['style'] ) ? $promo['style'] : 'blue';
+                $fallback = $default_promos[ $i ] ?? $default_promos[0];
+                if ( ! is_array( $promo ) ) {
+                    $promo = array();
+                }
+                $promo = array_merge( $fallback, $promo );
+
+                $allowed_styles = array( 'blue', 'orange', 'dark-blue' );
+                $style_raw = isset( $promo['style'] ) ? trim( (string) $promo['style'] ) : '';
+                $style = in_array( $style_raw, $allowed_styles, true ) ? $style_raw : (string) ( $fallback['style'] ?? 'blue' );
+                if ( ! in_array( $style, $allowed_styles, true ) ) {
+                    $style = 'blue';
+                }
+
                 $is_rtl = ! empty( $promo['rtl'] );
                 $url = ! empty( $promo['url'] ) ? $promo['url'] : '#';
                 $display_type = isset( $promo['display_type'] ) && in_array( $promo['display_type'], array( 'css', 'image' ), true )
