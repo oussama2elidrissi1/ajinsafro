@@ -2,6 +2,9 @@
 /**
  * Part: Voyages par theme (left promo + right slider cards)
  *
+ * IMPORTANT: This section should ALWAYS display if there are valid cards,
+ * even if images are missing. Cards with missing images show a gradient placeholder.
+ *
  * @package AjinsafroTravelerHome
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -16,9 +19,9 @@ if ( ! is_array( $theme ) ) {
 }
 
 if ( function_exists( 'ajth_truthy' ) ) {
-    $theme_enabled = ajth_truthy( $theme['enabled'] ?? false );
+    $theme_enabled = ajth_truthy( $theme['enabled'] ?? true );
 } else {
-    $theme_enabled = ! empty( $theme['enabled'] );
+    $theme_enabled = isset( $theme['enabled'] ) ? ! empty( $theme['enabled'] ) : true;
 }
 if ( ! $theme_enabled ) {
     return;
@@ -33,6 +36,7 @@ if ( is_string( $items ) ) {
     $items = is_array( $decoded_items ) ? $decoded_items : array();
 }
 $items = is_array( $items ) ? $items : array();
+
 $items = array_values( array_filter( $items, function( $it ) {
     if ( ! is_array( $it ) ) {
         return false;
@@ -41,10 +45,20 @@ $items = array_values( array_filter( $items, function( $it ) {
     if ( $title === '' ) {
         return false;
     }
+    $active = $it['active'] ?? true;
     if ( function_exists( 'ajth_truthy' ) ) {
-        return ajth_truthy( $it['active'] ?? true );
+        return ajth_truthy( $active );
     }
-    return ! empty( $it['active'] );
+    if ( is_bool( $active ) ) {
+        return $active;
+    }
+    if ( $active === 1 || $active === '1' || $active === 'true' || $active === 'on' ) {
+        return true;
+    }
+    if ( $active === 0 || $active === '0' || $active === 'false' || $active === 'off' ) {
+        return false;
+    }
+    return true;
 } ) );
 
 if ( empty( $items ) ) {
@@ -112,7 +126,17 @@ if ( function_exists( 'ajth_normalize_storage_url' ) ) {
                 </div>
 
                 <div class="aj-slider-v2 aj-theme-track" id="aj-theme-track">
-                    <?php foreach ( $items as $item ) :
+                    <?php 
+                    $placeholder_gradients = array(
+                        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                        'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                    );
+                    $card_index = 0;
+                    foreach ( $items as $item ) :
                         $img = ! empty( $item['image_url'] ) ? $item['image_url'] : ( ! empty( $item['image'] ) ? $item['image'] : '' );
                         if ( function_exists( 'ajth_normalize_storage_url' ) ) {
                             $img = ajth_normalize_storage_url( $img );
@@ -132,14 +156,20 @@ if ( function_exists( 'ajth_normalize_storage_url' ) ) {
                             $tags = preg_split( '/[\r\n,]+/', $raw_tags );
                             $tags = array_values( array_filter( array_map( 'trim', (array) $tags ) ) );
                         }
+                        $fallback_gradient = $placeholder_gradients[ $card_index % count( $placeholder_gradients ) ];
+                        $card_index++;
                     ?>
                     <article class="aj-slider-v2__item aj-theme-card">
                         <div class="aj-theme-card__media">
                             <?php if ( $img ) : ?>
-                                <img src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&this.nextElementSibling.classList.remove('aj-theme-card__placeholder--hidden');">
-                                <div class="aj-theme-card__placeholder aj-theme-card__placeholder--hidden"></div>
+                                <img src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy" onerror="this.style.display='none';var p=this.nextElementSibling;if(p){p.classList.remove('aj-theme-card__placeholder--hidden');p.style.background='<?php echo esc_attr( $fallback_gradient ); ?>';}">
+                                <div class="aj-theme-card__placeholder aj-theme-card__placeholder--hidden" style="background:<?php echo esc_attr( $fallback_gradient ); ?>;">
+                                    <i class="fas fa-image aj-theme-card__placeholder-icon"></i>
+                                </div>
                             <?php else : ?>
-                                <div class="aj-theme-card__placeholder"></div>
+                                <div class="aj-theme-card__placeholder" style="background:<?php echo esc_attr( $fallback_gradient ); ?>;">
+                                    <i class="fas fa-image aj-theme-card__placeholder-icon"></i>
+                                </div>
                             <?php endif; ?>
                         </div>
                         <div class="aj-theme-card__body">

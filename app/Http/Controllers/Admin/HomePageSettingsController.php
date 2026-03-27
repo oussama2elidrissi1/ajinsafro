@@ -740,7 +740,7 @@ class HomePageSettingsController extends Controller
                 'count' => 4,
             ],
             'holiday_theme' => [
-                'enabled' => false,
+                'enabled' => true,
                 'eyebrow' => 'Voyages par theme',
                 'title_line_1' => '',
                 'title_line_2' => '',
