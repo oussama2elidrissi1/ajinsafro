@@ -118,6 +118,28 @@ class HomePageSettingsController extends Controller
                 'accommodations.title' => ['nullable', 'string', 'max:255'],
                 'accommodations.count' => ['nullable', 'integer', 'min:1', 'max:20'],
 
+                'holiday_theme.enabled' => ['nullable', 'boolean'],
+                'holiday_theme.eyebrow' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.title_line_1' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.title_line_2' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.title_line_3' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.subtitle' => ['nullable', 'string', 'max:1000'],
+                'holiday_theme.left_image_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.deco_image_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.button_text' => ['nullable', 'string', 'max:120'],
+                'holiday_theme.button_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.items' => ['nullable', 'array'],
+                'holiday_theme.items.*.title' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.items.*.image_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.items.*.button_text' => ['nullable', 'string', 'max:120'],
+                'holiday_theme.items.*.button_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.items.*.tags' => ['nullable', 'string', 'max:1000'],
+                'holiday_theme.items.*.active' => ['nullable', 'boolean'],
+                'holiday_theme.items.*.order' => ['nullable', 'integer', 'min:0'],
+                'holiday_theme_left_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'holiday_theme_deco_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'holiday_theme_item_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+
                 'promotions.title' => ['nullable', 'string', 'max:255'],
                 'promotions.items' => ['nullable', 'array'],
                 'promotions.items.*.badge_text' => ['nullable', 'string', 'max:100'],
@@ -332,6 +354,7 @@ class HomePageSettingsController extends Controller
                     'search' => (bool) $request->boolean('sections.search'),
                     'last_minute' => (bool) $request->boolean('sections.last_minute'),
                     'accommodations' => (bool) $request->boolean('sections.accommodations'),
+                    'holiday_theme' => (bool) ($request->boolean('sections.holiday_theme') || $request->boolean('holiday_theme.enabled')),
                     'regions' => (bool) $request->boolean('sections.regions'),
                     'good_spots' => (bool) $request->boolean('sections.good_spots'),
                     'promotions' => (bool) $request->boolean('sections.promotions'),
@@ -357,6 +380,7 @@ class HomePageSettingsController extends Controller
                     'title' => trim((string)($validated['accommodations']['title'] ?? 'Découvrez des séjours uniques')),
                     'count' => (int) ($validated['accommodations']['count'] ?? 4),
                 ],
+                'holiday_theme' => $this->buildHolidayThemePayload($request, $validated),
                 'regions' => $regions,
                 'good_spots' => $goodSpots,
                 'good_spots_title' => trim((string)($validated['good_spots_title'] ?? 'Les bons coins sur votre destination')),
@@ -690,6 +714,7 @@ class HomePageSettingsController extends Controller
                 'search' => true,
                 'last_minute' => true,
                 'accommodations' => true,
+                'holiday_theme' => true,
                 'regions' => true,
                 'good_spots' => true,
                 'promotions' => true,
@@ -697,7 +722,7 @@ class HomePageSettingsController extends Controller
                 'cruises' => false,
                 'newsletter' => true,
             ],
-            'section_order' => ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'],
+            'section_order' => ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'],
             'custom_sections' => [],
             'search' => [
                 'shortcode' => '[traveler_search]',
@@ -710,6 +735,19 @@ class HomePageSettingsController extends Controller
             'accommodations' => [
                 'title' => 'Découvrez des séjours uniques',
                 'count' => 4,
+            ],
+            'holiday_theme' => [
+                'enabled' => false,
+                'eyebrow' => 'Voyages par theme',
+                'title_line_1' => '',
+                'title_line_2' => '',
+                'title_line_3' => '',
+                'subtitle' => '',
+                'left_image_url' => '',
+                'deco_image_url' => '',
+                'button_text' => '',
+                'button_url' => '',
+                'items' => [],
             ],
             'regions' => [],
             'good_spots' => [
@@ -862,7 +900,7 @@ class HomePageSettingsController extends Controller
         ];
     }
 
-    private const BUILTIN_SECTIONS = ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'];
+    private const BUILTIN_SECTIONS = ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'];
 
     private function normalizeSectionOrder(array $input): array
     {
@@ -934,6 +972,65 @@ class HomePageSettingsController extends Controller
             'button_text' => trim((string) ($validated['whatsapp_banner']['button_text'] ?? 'JOIN NOW')),
             'button_url' => trim((string) ($validated['whatsapp_banner']['button_url'] ?? '#')),
             'qr_code_url' => $qrCodeUrl,
+        ];
+    }
+
+    private function buildHolidayThemePayload(Request $request, array $validated): array
+    {
+        $current = $this->readHomeSettings();
+        $input = $validated['holiday_theme'] ?? [];
+
+        $leftImageUrl = trim((string) ($input['left_image_url'] ?? data_get($current, 'holiday_theme.left_image_url', '')));
+        $decoImageUrl = trim((string) ($input['deco_image_url'] ?? data_get($current, 'holiday_theme.deco_image_url', '')));
+
+        if ($request->hasFile('holiday_theme_left_image_file')) {
+            $path = $request->file('holiday_theme_left_image_file')->store('home-settings/holiday-theme', 'public');
+            $leftImageUrl = Storage::disk('public')->url($path);
+        }
+        if ($request->hasFile('holiday_theme_deco_image_file')) {
+            $path = $request->file('holiday_theme_deco_image_file')->store('home-settings/holiday-theme', 'public');
+            $decoImageUrl = Storage::disk('public')->url($path);
+        }
+
+        $items = [];
+        $itemsInput = $input['items'] ?? [];
+        if (is_array($itemsInput)) {
+            foreach ($itemsInput as $idx => $item) {
+                $title = trim((string) ($item['title'] ?? ''));
+                if ($title === '') {
+                    continue;
+                }
+                $imageUrl = trim((string) ($item['image_url'] ?? ''));
+                if ($request->hasFile("holiday_theme_item_files.$idx")) {
+                    $path = $request->file("holiday_theme_item_files.$idx")->store('home-settings/holiday-theme/items', 'public');
+                    $imageUrl = Storage::disk('public')->url($path);
+                }
+                $items[] = [
+                    'title' => $title,
+                    'image_url' => $imageUrl,
+                    'button_text' => trim((string) ($item['button_text'] ?? 'Voir plus')),
+                    'button_url' => trim((string) ($item['button_url'] ?? '#')),
+                    'tags' => trim((string) ($item['tags'] ?? '')),
+                    'active' => (bool) ($item['active'] ?? true),
+                    'order' => isset($item['order']) ? (int) $item['order'] : (int) $idx,
+                ];
+            }
+        }
+
+        usort($items, static fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+
+        return [
+            'enabled' => (bool) $request->boolean('holiday_theme.enabled'),
+            'eyebrow' => trim((string) ($input['eyebrow'] ?? 'Voyages par theme')),
+            'title_line_1' => trim((string) ($input['title_line_1'] ?? '')),
+            'title_line_2' => trim((string) ($input['title_line_2'] ?? '')),
+            'title_line_3' => trim((string) ($input['title_line_3'] ?? '')),
+            'subtitle' => trim((string) ($input['subtitle'] ?? '')),
+            'left_image_url' => $leftImageUrl,
+            'deco_image_url' => $decoImageUrl,
+            'button_text' => trim((string) ($input['button_text'] ?? '')),
+            'button_url' => trim((string) ($input['button_url'] ?? '')),
+            'items' => array_values($items),
         ];
     }
 
