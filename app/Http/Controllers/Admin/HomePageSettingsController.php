@@ -130,6 +130,8 @@ class HomePageSettingsController extends Controller
                 'holiday_theme.button_url' => ['nullable', 'string', 'max:2048'],
                 'holiday_theme.items' => ['nullable', 'array'],
                 'holiday_theme.items.*.title' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.items.*.badge' => ['nullable', 'string', 'max:120'],
+                'holiday_theme.items.*.description' => ['nullable', 'string', 'max:1000'],
                 'holiday_theme.items.*.image_url' => ['nullable', 'string', 'max:2048'],
                 'holiday_theme.items.*.button_text' => ['nullable', 'string', 'max:120'],
                 'holiday_theme.items.*.button_url' => ['nullable', 'string', 'max:2048'],
@@ -301,6 +303,7 @@ class HomePageSettingsController extends Controller
                         $path = $request->file("promotions_image_files.$promoIndex")->store('home-settings/promotions', 'public');
                         $imageUrl = Storage::disk('public')->url($path);
                     }
+                    $imageUrl = $this->normalizeMediaUrl($imageUrl);
 
                     $displayType = trim((string)($promo['display_type'] ?? 'css'));
                     if (!in_array($displayType, ['css', 'image'], true)) {
@@ -803,12 +806,55 @@ class HomePageSettingsController extends Controller
 
         $settings = array_replace_recursive($defaults, $decoded);
 
+        $holidayItems = data_get($settings, 'holiday_theme.items', []);
+        if (!is_array($holidayItems) || empty($holidayItems)) {
+            $legacyCards = data_get($settings, 'holiday_theme.cards', []);
+            if (is_array($legacyCards) && !empty($legacyCards)) {
+                data_set($settings, 'holiday_theme.items', $legacyCards);
+                $holidayItems = $legacyCards;
+            }
+        }
+        if (is_array($holidayItems)) {
+            $normalizedHolidayItems = [];
+            foreach ($holidayItems as $idx => $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $imageUrl = trim((string)($item['image_url'] ?? $item['image'] ?? ''));
+                $normalizedHolidayItems[] = [
+                    'title' => trim((string)($item['title'] ?? '')),
+                    'badge' => trim((string)($item['badge'] ?? '')),
+                    'description' => trim((string)($item['description'] ?? '')),
+                    'image_url' => $this->normalizeMediaUrl($imageUrl),
+                    'button_text' => trim((string)($item['button_text'] ?? 'Voir plus')),
+                    'button_url' => trim((string)($item['button_url'] ?? '#')),
+                    'tags' => is_array($item['tags'] ?? null) ? implode(', ', $item['tags']) : trim((string)($item['tags'] ?? '')),
+                    'active' => (bool)($item['active'] ?? true),
+                    'order' => isset($item['order']) ? (int)$item['order'] : (int)$idx,
+                ];
+            }
+            usort($normalizedHolidayItems, static fn ($a, $b) => ((int)($a['order'] ?? 0)) <=> ((int)($b['order'] ?? 0)));
+            data_set($settings, 'holiday_theme.items', $normalizedHolidayItems);
+        }
+
         if (!isset($settings['regions']) || !is_array($settings['regions'])) {
             $settings['regions'] = [];
         }
 
         if (!isset($settings['good_spots']) || !is_array($settings['good_spots'])) {
             $settings['good_spots'] = $defaults['good_spots'];
+        }
+
+        if (!isset($settings['section_order']) || !is_array($settings['section_order'])) {
+            $settings['section_order'] = $defaults['section_order'];
+        }
+        if (!in_array('holiday_theme', $settings['section_order'], true)) {
+            $after = array_search('accommodations', $settings['section_order'], true);
+            if ($after === false) {
+                array_unshift($settings['section_order'], 'holiday_theme');
+            } else {
+                array_splice($settings['section_order'], $after + 1, 0, ['holiday_theme']);
+            }
         }
 
         while (count($settings['good_spots']) < 4) {
@@ -1005,13 +1051,17 @@ class HomePageSettingsController extends Controller
                     $path = $request->file("holiday_theme_item_files.$idx")->store('home-settings/holiday-theme/items', 'public');
                     $imageUrl = Storage::disk('public')->url($path);
                 }
+                $imageUrl = $this->normalizeMediaUrl($imageUrl);
                 $items[] = [
                     'title' => $title,
+                    'badge' => trim((string) ($item['badge'] ?? '')),
+                    'description' => trim((string) ($item['description'] ?? '')),
                     'image_url' => $imageUrl,
+                    'image' => $imageUrl,
                     'button_text' => trim((string) ($item['button_text'] ?? 'Voir plus')),
                     'button_url' => trim((string) ($item['button_url'] ?? '#')),
                     'tags' => trim((string) ($item['tags'] ?? '')),
-                    'active' => (bool) ($item['active'] ?? true),
+                    'active' => (bool) ($item['active'] ?? false),
                     'order' => isset($item['order']) ? (int) $item['order'] : (int) $idx,
                 ];
             }
@@ -1026,12 +1076,28 @@ class HomePageSettingsController extends Controller
             'title_line_2' => trim((string) ($input['title_line_2'] ?? '')),
             'title_line_3' => trim((string) ($input['title_line_3'] ?? '')),
             'subtitle' => trim((string) ($input['subtitle'] ?? '')),
-            'left_image_url' => $leftImageUrl,
-            'deco_image_url' => $decoImageUrl,
+            'left_image_url' => $this->normalizeMediaUrl($leftImageUrl),
+            'deco_image_url' => $this->normalizeMediaUrl($decoImageUrl),
             'button_text' => trim((string) ($input['button_text'] ?? '')),
             'button_url' => trim((string) ($input['button_url'] ?? '')),
             'items' => array_values($items),
         ];
+    }
+
+    private function normalizeMediaUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+        if (preg_match('#^(?:https?:)?//#i', $url) || str_starts_with($url, 'data:')) {
+            return $url;
+        }
+        $base = rtrim((string) config('app.url', ''), '/');
+        if ($base === '') {
+            return $url;
+        }
+        return $base . '/' . ltrim($url, '/');
     }
 
     private function buildCruisesPayload(Request $request, array $validated): array

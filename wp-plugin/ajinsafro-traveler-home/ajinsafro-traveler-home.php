@@ -471,6 +471,9 @@ function ajth_normalize_holiday_theme_settings( $theme, array $defaults ): array
     $theme['enabled'] = ajth_truthy( $theme['enabled'] ?? false );
 
     $items = $theme['items'] ?? array();
+    if ( ( ! is_array( $items ) || empty( $items ) ) && ! empty( $theme['cards'] ) && is_array( $theme['cards'] ) ) {
+        $items = $theme['cards'];
+    }
     if ( is_string( $items ) ) {
         $decoded = json_decode( $items, true );
         $items = is_array( $decoded ) ? $decoded : array();
@@ -493,6 +496,14 @@ function ajth_normalize_holiday_theme_settings( $theme, array $defaults ): array
             continue;
         }
         $item['title'] = $title;
+        $image_url = trim( (string) ( $item['image_url'] ?? '' ) );
+        if ( $image_url === '' ) {
+            $image_url = trim( (string) ( $item['image'] ?? '' ) );
+        }
+        $item['image_url'] = $image_url;
+        $item['image'] = $image_url;
+        $item['badge'] = trim( (string) ( $item['badge'] ?? '' ) );
+        $item['description'] = trim( (string) ( $item['description'] ?? '' ) );
         $item['active'] = ajth_truthy( $item['active'] ?? true );
         $item['order'] = isset( $item['order'] ) ? (int) $item['order'] : (int) $idx;
         $normalized[] = $item;

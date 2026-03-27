@@ -577,6 +577,14 @@
                                         <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][title]" value="{{ data_get($item, 'title') }}">
                                     </div>
                                     <div class="col-md-2">
+                                        <label class="form-label small mb-0">Badge</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][badge]" value="{{ data_get($item, 'badge') }}" placeholder="Nouveau">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Description</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][description]" value="{{ data_get($item, 'description') }}" placeholder="Texte court">
+                                    </div>
+                                    <div class="col-md-2">
                                         <label class="form-label small mb-0">Image URL</label>
                                         <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][image_url]" value="{{ data_get($item, 'image_url') }}">
                                     </div>
@@ -605,6 +613,15 @@
                                     <div class="col-auto">
                                         <input type="hidden" class="holiday-order" name="holiday_theme[items][{{ $idx }}][order]" value="{{ data_get($item, 'order', $idx) }}">
                                         <button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">×</button>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="holiday-preview border rounded p-2 d-flex align-items-center gap-2">
+                                            <div class="holiday-preview__img" style="width:64px;height:44px;border-radius:8px;background:#e7edf5 center/cover no-repeat; background-image:url('{{ e((string) data_get($item, 'image_url', '')) }}');"></div>
+                                            <div>
+                                                <div class="holiday-preview__title fw-bold small">{{ data_get($item, 'title', 'Titre') }}</div>
+                                                <div class="holiday-preview__meta text-muted small">{{ data_get($item, 'badge', '') }}</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -951,6 +968,9 @@
     font-size: .8rem;
     line-height: 1.3;
     max-width: 80%;
+}
+.holiday-preview__img {
+    flex: 0 0 64px;
 }
 </style>
 @endpush
@@ -1314,6 +1334,8 @@
             '<div class="row g-2 align-items-center">' +
             '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">↑</button><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">↓</button></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Titre</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][title]"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Badge</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][badge]" placeholder="Nouveau"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Description</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][description]" placeholder="Texte court"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][image_url]"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Upload</label><input type="file" class="form-control form-control-sm" name="holiday_theme_item_files[' + idx + ']" accept="image/*"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Btn texte</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][button_text]" value="Voir plus"></div>' +
@@ -1321,7 +1343,23 @@
             '<div class="col-md-2"><label class="form-label small mb-0">Tags</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][tags]" placeholder="plage, famille, luxe"></div>' +
             '<div class="col-auto"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" name="holiday_theme[items][' + idx + '][active]" value="1" checked><label class="form-check-label small">Actif</label></div></div>' +
             '<div class="col-auto"><input type="hidden" class="holiday-order" name="holiday_theme[items][' + idx + '][order]" value="' + idx + '"><button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">×</button></div>' +
+            '<div class="col-12"><div class="holiday-preview border rounded p-2 d-flex align-items-center gap-2"><div class="holiday-preview__img" style="width:64px;height:44px;border-radius:8px;background:#e7edf5 center/cover no-repeat;"></div><div><div class="holiday-preview__title fw-bold small">Titre</div><div class="holiday-preview__meta text-muted small"></div></div></div></div>' +
             '</div></div>';
+    }
+    function updateHolidayPreview(row) {
+        if (!row) return;
+        var title = row.querySelector('input[name*="[title]"]');
+        var badge = row.querySelector('input[name*="[badge]"]');
+        var image = row.querySelector('input[name*="[image_url]"]');
+        var previewTitle = row.querySelector('.holiday-preview__title');
+        var previewMeta = row.querySelector('.holiday-preview__meta');
+        var previewImg = row.querySelector('.holiday-preview__img');
+        if (previewTitle) previewTitle.textContent = (title && title.value) ? title.value : 'Titre';
+        if (previewMeta) previewMeta.textContent = (badge && badge.value) ? badge.value : '';
+        if (previewImg) {
+            var val = image && image.value ? image.value.trim() : '';
+            previewImg.style.backgroundImage = val ? 'url("' + val.replace(/"/g, '\\"') + '")' : 'none';
+        }
     }
     function holidayRenumber() {
         if (!holidayContainer) return;
@@ -1341,9 +1379,12 @@
         });
     }
     if (holidayAddBtn && holidayContainer) {
+        holidayContainer.querySelectorAll('.holiday-row').forEach(function (row) { updateHolidayPreview(row); });
         holidayAddBtn.addEventListener('click', function () {
             var idx = holidayContainer.querySelectorAll('.holiday-row').length;
             holidayContainer.insertAdjacentHTML('beforeend', holidayRowHtml(idx));
+            var rows = holidayContainer.querySelectorAll('.holiday-row');
+            updateHolidayPreview(rows[rows.length - 1]);
         });
         holidayContainer.addEventListener('click', function (e) {
             if (e.target.classList.contains('holiday-remove')) {
@@ -1364,6 +1405,10 @@
                     holidayRenumber();
                 }
             }
+        });
+        holidayContainer.addEventListener('input', function (e) {
+            var row = e.target.closest('.holiday-row');
+            if (row) updateHolidayPreview(row);
         });
     }
 
