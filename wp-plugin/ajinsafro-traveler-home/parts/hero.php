@@ -10,6 +10,11 @@ $hero = isset( $settings['hero'] ) && is_array( $settings['hero'] ) ? $settings[
 $hero_type = ! empty( $hero['type'] ) ? $hero['type'] : 'image';
 $hero_image_url = ! empty( $hero['image_url'] ) ? $hero['image_url'] : '';
 $hero_video_url = ! empty( $hero['video_url'] ) ? $hero['video_url'] : '';
+
+if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+    $hero_image_url = ajth_normalize_storage_url( $hero_image_url );
+    $hero_video_url = ajth_normalize_storage_url( $hero_video_url );
+}
 $hero_title = ! empty( $hero['title'] ) ? $hero['title'] : 'Partir en vacances au meilleur prix !';
 $hero_subtitle = ! empty( $hero['subtitle'] ) ? $hero['subtitle'] : '';
 $hero_cta_text = ! empty( $hero['cta_text'] ) ? $hero['cta_text'] : '';

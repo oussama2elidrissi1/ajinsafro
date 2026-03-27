@@ -1093,7 +1093,10 @@ class HomePageSettingsController extends Controller
         if (preg_match('#^(?:https?:)?//#i', $url) || str_starts_with($url, 'data:')) {
             return $url;
         }
-        $base = rtrim((string) config('app.url', ''), '/');
+        $base = rtrim((string) config('app.admin_url', 'https://booking.ajinsafro.net'), '/');
+        if ($base === '') {
+            $base = rtrim((string) config('app.url', ''), '/');
+        }
         if ($base === '') {
             return $url;
         }

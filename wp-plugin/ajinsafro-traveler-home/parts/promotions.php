@@ -103,6 +103,9 @@ if ( empty( $promos ) ) {
                     ? $promo['display_type']
                     : 'css';
                 $image_url = ! empty( $promo['image_url'] ) ? $promo['image_url'] : '';
+                if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+                    $image_url = ajth_normalize_storage_url( $image_url );
+                }
                 $is_image_mode = $display_type === 'image' && $image_url !== '';
                 $overlay_enabled = ! empty( $promo['overlay_enabled'] );
                 $overlay_opacity = isset( $promo['overlay_opacity'] ) ? (float) $promo['overlay_opacity'] : 0.35;

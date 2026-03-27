@@ -14,6 +14,10 @@ if ( empty( $hdr['enabled'] ) ) {
     return;
 }
 
+if ( function_exists( 'ajth_normalize_storage_url' ) && ! empty( $hdr['logo_url'] ) ) {
+    $hdr['logo_url'] = ajth_normalize_storage_url( $hdr['logo_url'] );
+}
+
 $socials = isset( $hdr['socials'] ) && is_array( $hdr['socials'] ) ? $hdr['socials'] : array();
 
 $social_icons = array(

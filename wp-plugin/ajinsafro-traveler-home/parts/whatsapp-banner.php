@@ -24,6 +24,9 @@ $features = ! empty( $whatsapp['features'] ) && is_array( $whatsapp['features'] 
 $button_text = ! empty( $whatsapp['button_text'] ) ? $whatsapp['button_text'] : 'JOIN NOW';
 $button_url = ! empty( $whatsapp['button_url'] ) ? $whatsapp['button_url'] : '#';
 $qr_code_url = ! empty( $whatsapp['qr_code_url'] ) ? $whatsapp['qr_code_url'] : '';
+if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+    $qr_code_url = ajth_normalize_storage_url( $qr_code_url );
+}
 ?>
 
 <section class="aj-whatsapp-banner">

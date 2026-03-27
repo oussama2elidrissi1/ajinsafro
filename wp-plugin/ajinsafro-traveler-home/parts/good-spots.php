@@ -34,6 +34,9 @@ $section_title = ! empty( $settings['good_spots_title'] )
         <div class="aj-spots2__grid">
             <?php foreach ( array_slice( $spots, 0, 4 ) as $i => $sp ) :
                 $img = ! empty( $sp['image_url'] ) ? $sp['image_url'] : ( $defs[ $i ]['image_url'] ?? '' );
+                if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+                    $img = ajth_normalize_storage_url( $img );
+                }
                 $t   = ! empty( $sp['title'] ) ? $sp['title'] : $defs[ $i ]['title'];
                 $sub = ! empty( $sp['subtitle'] ) ? $sp['subtitle'] : ( $defs[ $i ]['subtitle'] ?? '' );
                 $u   = ! empty( $sp['link_url'] ) ? $sp['link_url'] : '#';

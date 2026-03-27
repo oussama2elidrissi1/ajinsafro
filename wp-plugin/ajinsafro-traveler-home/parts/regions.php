@@ -15,6 +15,9 @@ if ( empty( $regions ) ) return;
         <div class="aj-regions__grid">
             <?php foreach ( $regions as $r ) :
                 $img = ! empty($r['image_url']) ? $r['image_url'] : '';
+                if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+                    $img = ajth_normalize_storage_url( $img );
+                }
                 $t   = ! empty($r['title']) ? $r['title'] : '';
                 $u   = ! empty($r['link_url'])   ? $r['link_url']   : '#';
             ?>

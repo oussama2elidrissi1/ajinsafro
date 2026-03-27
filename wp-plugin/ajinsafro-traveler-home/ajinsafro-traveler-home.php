@@ -244,6 +244,45 @@ function ajth_get_header_settings() {
 }
 
 /**
+ * Normalize storage URLs to point to the correct domain (booking.ajinsafro.net).
+ *
+ * The Laravel admin stores images in storage/app/public and generates URLs
+ * using Storage::disk('public')->url(). If APP_URL or ADMIN_URL is misconfigured,
+ * URLs may point to ajinsafro.net/storage/... instead of booking.ajinsafro.net/storage/...
+ *
+ * This helper fixes those URLs so images load correctly on the front-end.
+ *
+ * @param string $url The URL to normalize.
+ * @return string The normalized URL.
+ */
+function ajth_normalize_storage_url( string $url ): string {
+    $url = trim( $url );
+    if ( $url === '' ) {
+        return '';
+    }
+
+    $booking_host = 'booking.ajinsafro.net';
+    $wrong_patterns = array(
+        '#^https?://ajinsafro\.net/storage/#i',
+        '#^https?://www\.ajinsafro\.net/storage/#i',
+        '#^//ajinsafro\.net/storage/#i',
+    );
+
+    foreach ( $wrong_patterns as $pattern ) {
+        if ( preg_match( $pattern, $url ) ) {
+            $url = preg_replace( $pattern, 'https://' . $booking_host . '/storage/', $url );
+            break;
+        }
+    }
+
+    if ( preg_match( '#^storage/#', $url ) ) {
+        $url = 'https://' . $booking_host . '/' . $url;
+    }
+
+    return $url;
+}
+
+/**
  * Keep front auth links on native WP endpoints by default.
  * Prevents accidental routing to custom /login flows that break username/email auth.
  */
