@@ -758,25 +758,26 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'Rejoignez notre chaîne WhatsApp')) }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Sous-titre</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Stay informed with satguru travel')) }}">
+                            <label class="form-label">Texte court (description)</label>
+                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Recevez nos offres, actus et inspirations voyage.')) }}">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Caractéristiques (une par ligne)</label>
+                            <label class="form-label">Ligne meta (3 segments, affichés « A • B • C »)</label>
+                            <p class="text-muted small mb-2">Une ligne par segment ; laisser vide pour masquer la ligne.</p>
                             @php
-                                $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', ['Exclusive travel packages', 'Latest news and updates', 'Special offers and promotions']));
+                                $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', ['Promos', 'Nouveautés', 'Conseils']));
                                 $features = is_array($features) ? $features : [];
                             @endphp
                             @foreach(range(0, 2) as $fi)
-                            <input type="text" class="form-control mb-2" name="whatsapp_banner[features][]" value="{{ $features[$fi] ?? '' }}" placeholder="Caractéristique {{ $fi + 1 }}">
+                            <input type="text" class="form-control mb-2" name="whatsapp_banner[features][]" value="{{ $features[$fi] ?? '' }}" placeholder="Segment {{ $fi + 1 }}">
                             @endforeach
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Texte du bouton</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[button_text]" value="{{ old('whatsapp_banner.button_text', data_get($settings, 'whatsapp_banner.button_text', 'JOIN NOW')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[button_text]" value="{{ old('whatsapp_banner.button_text', data_get($settings, 'whatsapp_banner.button_text', 'Rejoindre')) }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">URL du bouton</label>

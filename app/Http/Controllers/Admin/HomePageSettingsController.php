@@ -696,10 +696,10 @@ class HomePageSettingsController extends Controller
             ],
             'whatsapp_banner' => [
                 'enabled' => false,
-                'title' => 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES',
-                'subtitle' => 'Stay informed with satguru travel',
-                'features' => ['Exclusive travel packages', 'Latest news and updates', 'Special offers and promotions'],
-                'button_text' => 'JOIN NOW',
+                'title' => 'Rejoignez notre chaîne WhatsApp',
+                'subtitle' => 'Recevez nos offres, actus et inspirations voyage.',
+                'features' => ['Promos', 'Nouveautés', 'Conseils'],
+                'button_text' => 'Rejoindre',
                 'button_url' => '#',
                 'qr_code_url' => '',
             ],
@@ -1024,10 +1024,10 @@ class HomePageSettingsController extends Controller
 
         return [
             'enabled' => (bool) $request->boolean('whatsapp_banner.enabled'),
-            'title' => trim((string) ($validated['whatsapp_banner']['title'] ?? 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES')),
-            'subtitle' => trim((string) ($validated['whatsapp_banner']['subtitle'] ?? 'Stay informed with satguru travel')),
+            'title' => trim((string) ($validated['whatsapp_banner']['title'] ?? 'Rejoignez notre chaîne WhatsApp')),
+            'subtitle' => trim((string) ($validated['whatsapp_banner']['subtitle'] ?? 'Recevez nos offres, actus et inspirations voyage.')),
             'features' => $features,
-            'button_text' => trim((string) ($validated['whatsapp_banner']['button_text'] ?? 'JOIN NOW')),
+            'button_text' => trim((string) ($validated['whatsapp_banner']['button_text'] ?? 'Rejoindre')),
             'button_url' => trim((string) ($validated['whatsapp_banner']['button_url'] ?? '#')),
             'qr_code_url' => $qrCodeUrl,
         ];
