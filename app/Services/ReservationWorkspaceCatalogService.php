@@ -27,6 +27,8 @@ class ReservationWorkspaceCatalogService
     ) {}
 
     /**
+     * meta inclut notamment : wp_tour_count, laravel_voyage_matched, package_rows, vol_rows, hebergement_rows, total_rows.
+     *
      * @return array{rows: Collection<int, array<string, mixed>>, meta: array<string, int|bool>}
      */
     public function buildRows(User $user): array
@@ -38,6 +40,9 @@ class ReservationWorkspaceCatalogService
             'wp_tour_count' => 0,
             'laravel_voyage_matched' => 0,
             'package_rows' => 0,
+            'vol_rows' => 0,
+            'hebergement_rows' => 0,
+            'total_rows' => 0,
         ];
 
         try {
@@ -175,11 +180,18 @@ class ReservationWorkspaceCatalogService
 
         $finalRows = $rows->unique(fn ($r) => $r['type'].'-'.$r['code'])->values();
 
+        $meta['vol_rows'] = $finalRows->where('type', 'vol')->count();
+        $meta['hebergement_rows'] = $finalRows->where('type', 'hebergement')->count();
+        $meta['total_rows'] = $finalRows->count();
+
         if (config('app.debug')) {
             Log::debug('ReservationWorkspaceCatalog built', [
                 'wp_tour_count' => $meta['wp_tour_count'],
                 'laravel_voyage_matched' => $meta['laravel_voyage_matched'],
-                'total_rows' => $finalRows->count(),
+                'package_rows' => $meta['package_rows'],
+                'vol_rows' => $meta['vol_rows'],
+                'hebergement_rows' => $meta['hebergement_rows'],
+                'total_rows' => $meta['total_rows'],
             ]);
         }
 

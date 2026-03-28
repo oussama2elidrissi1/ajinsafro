@@ -113,12 +113,27 @@
             @if(!empty($catalogMeta['wp_connection_failed']))
                 <p class="text-red-800 font-semibold">Connexion WordPress indisponible — aucune ligne catalogue.</p>
             @else
+                <p class="text-[11px] text-amber-900/90 mb-2 leading-relaxed">
+                    <strong>wp_tours</strong> = nombre de tours WordPress (comme Circuits / voyages). <strong>total_rows</strong> = packages + vols + hébergements dans le tableau.
+                </p>
                 <p class="font-mono leading-relaxed">
                     wp_tours={{ (int) ($catalogMeta['wp_tour_count'] ?? 0) }},
                     laravel_matched={{ (int) ($catalogMeta['laravel_voyage_matched'] ?? 0) }},
-                    package_rows={{ (int) ($catalogMeta['package_rows'] ?? 0) }},
-                    total_rows={{ (int) ($catalogTotalCount ?? $catalogRows->count()) }}
+                    packages={{ (int) ($catalogMeta['package_rows'] ?? 0) }},
+                    vols={{ (int) ($catalogMeta['vol_rows'] ?? 0) }},
+                    hébergements={{ (int) ($catalogMeta['hebergement_rows'] ?? 0) }},
+                    total_rows={{ (int) ($catalogMeta['total_rows'] ?? ($catalogTotalCount ?? $catalogRows->count())) }}
                 </p>
+                @php
+                    $p = (int) ($catalogMeta['package_rows'] ?? 0);
+                    $v = (int) ($catalogMeta['vol_rows'] ?? 0);
+                    $h = (int) ($catalogMeta['hebergement_rows'] ?? 0);
+                    $chk = $p + $v + $h;
+                    $tot = (int) ($catalogMeta['total_rows'] ?? $catalogRows->count());
+                @endphp
+                @if($chk === $tot && $p > 0)
+                    <p class="text-[11px] text-emerald-800 mt-2 font-medium">Vérification : {{ $p }} + {{ $v }} + {{ $h }} = {{ $tot }} (cohérent).</p>
+                @endif
             @endif
         </div>
     @endif
