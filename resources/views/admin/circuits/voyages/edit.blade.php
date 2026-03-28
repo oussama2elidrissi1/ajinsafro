@@ -1883,24 +1883,6 @@
 
         <aside class="col-12 ve-edit-sidebar order-2">
             <div class="ve-sticky-sidebar">
-                <div class="card ve-sidebar-card ve-actions-card">
-                    <div class="card-body">
-                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-bolt-circle text-primary"></i> Actions</h5>
-                        <div class="d-grid gap-2">
-                            <button type="submit" form="edit-voyage-form" class="btn btn-primary">
-                                <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}
-                            </button>
-                            <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary">
-                                <i class="bx bx-x me-1"></i> Annuler
-                            </a>
-                            @if(!$isCreate)
-                                <button type="submit" form="delete-voyage-form" class="btn btn-danger">
-                                    <i class="bx bx-trash me-1"></i> Supprimer
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                </div>
                 <div class="card ve-sidebar-card">
                     <div class="card-body">
                         <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-pulse text-primary"></i> Résumé</h5>
@@ -1964,6 +1946,14 @@
                         </div>
                     </div>
                 </div>
+                @if (!$isCreate)
+                <div class="card ve-sidebar-card ve-danger-card">
+                    <div class="card-body">
+                        <h5 class="ve-sidebar-title mb-2 fw-bold text-danger"><i class="bx bx-error-circle"></i> Zone dangereuse</h5>
+                        <p class="small text-muted mb-0">Suppression définitive disponible via le bouton <strong>Supprimer</strong> dans l’en-tête.</p>
+                    </div>
+                </div>
+                @endif
             </div>
         </aside>
 
@@ -1979,37 +1969,13 @@
         ])
 
         </div>{{-- /.ve-shell --}}
-
-        <div class="ve-form-bottom-spacer"></div>
     </form>
-
     @if (!$isCreate)
-    <div class="ve-shell ve-danger-shell">
-        <div class="ve-danger-zone ve-danger-zone--compact">
-            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
-                <div>
-                    <h5 class="mb-1"><i class="bx bx-error-circle"></i> Zone dangereuse</h5>
-                    <p class="mb-0 small">Suppression définitive du tour WordPress (irréversible).</p>
-                </div>
-                <form id="delete-voyage-form" action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="mb-0 flex-shrink-0" onsubmit="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger"><i class="bx bx-trash me-1"></i> Supprimer ce tour</button>
-                </form>
-            </div>
-        </div>
-    </div>
+    <form id="delete-voyage-form" action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="d-none" onsubmit="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.');">
+        @csrf
+        @method('DELETE')
+    </form>
     @endif
-
-    <div class="ve-save-bar">
-        <div class="ve-save-inner">
-            <div class="text-muted d-none d-md-block ve-save-hint"><small><i class="bx bx-zap me-1"></i> WordPress + Laravel</small></div>
-            <div class="d-flex align-items-center gap-2 flex-wrap ve-save-actions">
-                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg"><i class="bx bx-x me-1"></i> Annuler</a>
-                <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg" id="edit-voyage-submit-btn"><i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}</button>
-            </div>
-        </div>
-    </div>
 </div>{{-- /.voyage-edit-page --}}
 @endsection
 @push('script')

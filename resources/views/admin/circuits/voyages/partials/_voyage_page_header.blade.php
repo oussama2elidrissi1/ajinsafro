@@ -12,7 +12,7 @@
             <li><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
             <li class="active">{{ $isCreate ? 'Créer' : Str::limit($voyage->post_title ?? $voyage->name ?? '', 48) }}</li>
         </ul>
-        <div class="ve-header-actions d-none d-md-flex">
+        <div class="ve-header-actions d-flex flex-wrap">
             <a href="{{ $cancelUrl }}" class="btn btn-outline-light btn-sm ve-header-btn"><i class="bx bx-x me-1"></i> Annuler</a>
             @if(!$isCreate)
                 <button type="submit" form="{{ $deleteFormId }}" class="btn btn-danger btn-sm ve-header-btn ve-header-btn--danger">

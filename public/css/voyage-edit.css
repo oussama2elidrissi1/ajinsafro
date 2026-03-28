@@ -1048,6 +1048,9 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
     padding: 8px 16px;
     font-weight: 600;
 }
+.voyage-edit-page .ve-header-actions {
+    gap: 8px;
+}
 .voyage-edit-page .ve-header-btn--danger {
     border-color: rgba(255, 255, 255, 0.75);
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.22);
@@ -1142,13 +1145,6 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
 .voyage-edit-page .ve-sidebar-card {
     box-shadow: var(--ve-card-shadow);
 }
-.voyage-edit-page .ve-actions-card .btn {
-    min-height: 42px;
-    font-weight: 600;
-}
-.voyage-edit-page .ve-actions-card .btn i {
-    vertical-align: -1px;
-}
 .voyage-edit-page .ve-sidebar-title i {
     vertical-align: -2px;
 }
@@ -1158,15 +1154,18 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
 .voyage-edit-page .ve-rich-field textarea.rich-editor {
     min-height: 140px;
 }
-.voyage-edit-page .ve-form-bottom-spacer {
-    height: 88px;
-}
+.voyage-edit-page .ve-form-bottom-spacer { height: 0; }
 .voyage-edit-page .ve-tab-zone-hint {
     line-height: 1.45;
 }
 .voyage-edit-page .ve-media-thumb {
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
-.voyage-edit-page .page-content {
-    overflow-x: hidden;
+.voyage-edit-page .page-content { overflow-x: hidden; }
+
+/* Cleanup: actions are only in header now */
+.voyage-edit-page .ve-save-bar { display: none !important; }
+.voyage-edit-page .ve-danger-card {
+    border: 1px dashed rgba(239, 68, 68, 0.35);
+    background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
 }
