@@ -44,8 +44,8 @@
         </div>
     @endif
 
-        <div class="row g-4 ve-edit-layout">
-            <div class="col-12 ve-edit-main">
+        <div class="ve-page-layout">
+        <div class="ve-main-col">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Informations principales</h4>
@@ -71,161 +71,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <aside class="col-12 ve-edit-sidebar">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Paramètres & Prix</h4>
-
-                        <div class="mb-3">
-                            <label for="post_status" class="form-label">Statut</label>
-                            <select class="form-select" id="post_status" name="post_status">
-                                <option value="publish" {{ old('post_status') === 'publish' ? 'selected' : '' }}>Publié</option>
-                                <option value="draft" {{ old('post_status') === 'draft' ? 'selected' : '' }}>Brouillon</option>
-                                <option value="pending" {{ old('post_status') === 'pending' ? 'selected' : '' }}>En attente</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="destination" class="form-label">Destination</label>
-                            <input type="text" class="form-control" id="destination" name="destination" value="{{ old('destination') }}" placeholder="Ex : Dubaï, EAU">
-                        </div>
-                        
-                        <hr class="my-4">
-                        
-                        <h5 class="mb-2" style="font-size: 16px; font-weight: 600; color: #23282d;">Tour location</h5>
-                        <p class="text-muted mb-3" style="font-size: 13px;">Select one or more location for your tour</p>
-                        
-                        <div class="mb-3">
-                            <input 
-                                type="text" 
-                                id="locationSearchCreate" 
-                                class="form-control" 
-                                placeholder="Type to search"
-                                style="font-size: 14px; padding: 6px 12px; border: 1px solid #ddd; border-radius: 3px;"
-                            >
-                        </div>
-                        
-                        <div class="wp-location-box" id="locationTreeContainer" style="border: 1px solid #ccd0d4; background: #fff; padding: 12px; max-height: 300px; overflow-y: auto; border-radius: 3px;">
-                            @if(!empty($locationsTree))
-                                @include('admin.circuits.voyages.partials.location-tree', [
-                                    'locations' => $locationsTree, 
-                                    'selectedIds' => $selectedLocationIds ?? []
-                                ])
-                            @else
-                                <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible</p>
-                            @endif
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="duration_text" class="form-label">Durée</label>
-                            <input type="text" class="form-control" id="duration_text" name="duration_text" value="{{ old('duration_text') }}" placeholder="Ex : 7 jours / 6 nuits">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="adult_price" class="form-label">Prix Adulte (MAD)</label>
-                            <input type="number" class="form-control" id="adult_price" name="adult_price" value="{{ old('adult_price') }}" step="0.01" min="0" placeholder="5000">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="child_price" class="form-label">Prix Enfant (MAD)</label>
-                            <input type="number" class="form-control" id="child_price" name="child_price" value="{{ old('child_price') }}" step="0.01" min="0" placeholder="3000">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="min_price" class="form-label">Prix Minimum (MAD)</label>
-                            <input type="number" class="form-control" id="min_price" name="min_price" value="{{ old('min_price') }}" step="0.01" min="0">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="min_people" class="form-label">Nombre min. de personnes</label>
-                            <input type="number" class="form-control" id="min_people" name="min_people" value="{{ old('min_people') }}" min="1" placeholder="2">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="max_people" class="form-label">Nombre max. de personnes</label>
-                            <input type="number" class="form-control" id="max_people" name="max_people" value="{{ old('max_people') }}" min="1" placeholder="15">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="hero_image_id" class="form-label">Image principale du voyage (Hero / Cover)</label>
-                            <input type="number" class="form-control" id="hero_image_id" name="hero_image_id" value="{{ old('hero_image_id') }}" placeholder="Ex. 14434" min="0">
-                        </div>
-
-                        {{-- Galerie Hero (5 images) --}}
-                        <div class="mb-4 p-3 border rounded bg-light">
-                            <h5 class="mb-2" style="font-size: 14px; font-weight: 600;">Galerie Hero (5 images)</h5>
-                            @php
-                                $hero_gallery_ids = old('hero_gallery_ids', []);
-                                if (!is_array($hero_gallery_ids)) {
-                                    $hero_gallery_ids = is_string($hero_gallery_ids) ? explode(',', $hero_gallery_ids) : [];
-                                }
-                                $hero_gallery_ids = array_filter(array_map('trim', $hero_gallery_ids));
-                                $hero_gallery_ids = array_slice($hero_gallery_ids, 0, 5);
-                                while (count($hero_gallery_ids) < 5) {
-                                    $hero_gallery_ids[] = '';
-                                }
-                            @endphp
-                            <input type="hidden" name="hero_gallery_ids" id="hero_gallery_ids" value="{{ implode(',', array_filter($hero_gallery_ids)) }}">
-                            <div id="hero-gallery-container" class="row g-2">
-                                @for($i = 0; $i < 5; $i++)
-                                    @php
-                                        $img_id = $hero_gallery_ids[$i] ?? '';
-                                        $img_url = $img_id ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $img_id) : '';
-                                    @endphp
-                                    <div class="col-6 col-md-4">
-                                        <div class="hero-gallery-item border rounded p-2 bg-white" data-index="{{ $i }}" style="font-size: 12px;">
-                                            <label class="form-label small mb-1 d-block">
-                                                Image {{ $i === 0 ? 'Principale' : ($i + 1) }}
-                                            </label>
-                                            <div class="hero-gallery-preview-wrap mb-2" style="width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f8f9fa; display: {{ $img_url ? 'block' : 'none' }};">
-                                                <img src="{{ $img_url }}" alt="Preview {{ $i + 1 }}" class="hero-gallery-preview" style="width: 100%; height: 100%; object-fit: cover;">
-                                            </div>
-                                            <div class="hero-gallery-placeholder mb-2" style="width: 100%; height: 100px; border: 2px dashed #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; {{ $img_url ? 'display: none;' : '' }}">
-                                                <span class="text-muted" style="font-size: 11px;">Aucune image</span>
-                                            </div>
-                                            <div class="d-flex gap-1 flex-wrap">
-                                                <button type="button" class="btn btn-outline-primary btn-sm hero-gallery-upload-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;">
-                                                    <i class="bx bx-upload"></i> Upload
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm hero-gallery-choose-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;">
-                                                    <i class="bx bx-images"></i> Choisir
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger btn-sm hero-gallery-remove-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;" {{ !$img_id ? 'disabled' : '' }}>
-                                                    <i class="bx bx-trash"></i>
-                                                </button>
-                                            </div>
-                                            <input type="hidden" class="hero-gallery-id-input" data-index="{{ $i }}" value="{{ $img_id }}">
-                                        </div>
-                                    </div>
-                                @endfor
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
-                            <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id') }}" placeholder="14434">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
-                            <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids') }}" placeholder="14435,14436,14437">
-                        </div>
-                        
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_featured">
-                                Tour à la une (Featured)
-                            </label>
-                        </div>
-                        
-                        <hr>
-                    </div>
-                </div>
-            </aside>
-        </div>
-
         {{-- Vols — Flight cards (même style qu’édition) --}}
         @php
             $airlines = $airlines ?? collect();
@@ -233,8 +78,6 @@
             $flightDash = '—';
             $createWithoutFlight = old('without_flight', false);
         @endphp
-        <div class="row mt-3" id="create-flights-row">
-            <div class="col-12">
                 <div class="mb-3 p-3 rounded border bg-light">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="create-no-flights-toggle" name="without_flight_toggle"
@@ -384,13 +227,7 @@
                     <button type="button" class="btn btn-outline-primary" id="create-flight2-add-btn"><i class="bx bx-plus"></i> Ajouter un 2ème vol</button>
                 </div>
                 </div>
-            </div>
-        </div>
-        
-
         {{-- Tour Program Section --}}
-        <div class="row">
-            <div class="col-12">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Tour Program</h4>
@@ -426,11 +263,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-12">
                 <div class="card" id="activities">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Activités</h4>
@@ -447,9 +279,179 @@
                         @include('admin.circuits.voyages.partials._availability_notice')
                     </div>
                 </div>
-            </div>
-        </div>
+        </div>{{-- /.ve-main-col --}}
 
+        <aside class="ve-sidebar-col">
+            <div class="ve-sticky-sidebar">
+
+                {{-- ── ACTIONS (unique zone : créer / annuler) ── --}}
+                <div class="card ve-sidebar-card ve-actions-card">
+                    <div class="card-body">
+                        <button type="submit" form="create-voyage-form" class="btn btn-primary">
+                            <i class="bx bx-plus-circle"></i> Créer le tour
+                        </button>
+                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary">
+                            <i class="bx bx-x"></i> Annuler
+                        </a>
+                    </div>
+                </div>
+
+                {{-- ── PARAMÈTRES & PRIX ── --}}
+                <div class="card ve-sidebar-card">
+                    <div class="card-body">
+                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> Paramètres & Prix</h5>
+
+                        <div class="mb-3">
+                            <label for="post_status" class="form-label">Statut</label>
+                            <select class="form-select" id="post_status" name="post_status">
+                                <option value="publish" {{ old('post_status') === 'publish' ? 'selected' : '' }}>Publié</option>
+                                <option value="draft" {{ old('post_status') === 'draft' ? 'selected' : '' }}>Brouillon</option>
+                                <option value="pending" {{ old('post_status') === 'pending' ? 'selected' : '' }}>En attente</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="destination" class="form-label">Destination</label>
+                            <input type="text" class="form-control" id="destination" name="destination" value="{{ old('destination') }}" placeholder="Ex : Dubaï, EAU">
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h5 class="mb-2" style="font-size: 16px; font-weight: 600; color: #23282d;">Tour location</h5>
+                        <p class="text-muted mb-3" style="font-size: 13px;">Select one or more location for your tour</p>
+                        
+                        <div class="mb-3">
+                            <input 
+                                type="text" 
+                                id="locationSearchCreate" 
+                                class="form-control" 
+                                placeholder="Type to search"
+                                style="font-size: 14px; padding: 6px 12px; border: 1px solid #ddd; border-radius: 3px;"
+                            >
+                        </div>
+                        
+                        <div class="wp-location-box" id="locationTreeContainer" style="border: 1px solid #ccd0d4; background: #fff; padding: 12px; max-height: 300px; overflow-y: auto; border-radius: 3px;">
+                            @if(!empty($locationsTree))
+                                @include('admin.circuits.voyages.partials.location-tree', [
+                                    'locations' => $locationsTree, 
+                                    'selectedIds' => $selectedLocationIds ?? []
+                                ])
+                            @else
+                                <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible</p>
+                            @endif
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="duration_text" class="form-label">Durée</label>
+                            <input type="text" class="form-control" id="duration_text" name="duration_text" value="{{ old('duration_text') }}" placeholder="Ex : 7 jours / 6 nuits">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="adult_price" class="form-label">Prix Adulte (MAD)</label>
+                            <input type="number" class="form-control" id="adult_price" name="adult_price" value="{{ old('adult_price') }}" step="0.01" min="0" placeholder="5000">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="child_price" class="form-label">Prix Enfant (MAD)</label>
+                            <input type="number" class="form-control" id="child_price" name="child_price" value="{{ old('child_price') }}" step="0.01" min="0" placeholder="3000">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="min_price" class="form-label">Prix Minimum (MAD)</label>
+                            <input type="number" class="form-control" id="min_price" name="min_price" value="{{ old('min_price') }}" step="0.01" min="0">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="min_people" class="form-label">Nombre min. de personnes</label>
+                            <input type="number" class="form-control" id="min_people" name="min_people" value="{{ old('min_people') }}" min="1" placeholder="2">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="max_people" class="form-label">Nombre max. de personnes</label>
+                            <input type="number" class="form-control" id="max_people" name="max_people" value="{{ old('max_people') }}" min="1" placeholder="15">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="hero_image_id" class="form-label">Image principale du voyage (Hero / Cover)</label>
+                            <input type="number" class="form-control" id="hero_image_id" name="hero_image_id" value="{{ old('hero_image_id') }}" placeholder="Ex. 14434" min="0">
+                        </div>
+
+                        {{-- Galerie Hero (5 images) --}}
+                        <div class="mb-4 p-3 border rounded bg-light">
+                            <h5 class="mb-2" style="font-size: 14px; font-weight: 600;">Galerie Hero (5 images)</h5>
+                            @php
+                                $hero_gallery_ids = old('hero_gallery_ids', []);
+                                if (!is_array($hero_gallery_ids)) {
+                                    $hero_gallery_ids = is_string($hero_gallery_ids) ? explode(',', $hero_gallery_ids) : [];
+                                }
+                                $hero_gallery_ids = array_filter(array_map('trim', $hero_gallery_ids));
+                                $hero_gallery_ids = array_slice($hero_gallery_ids, 0, 5);
+                                while (count($hero_gallery_ids) < 5) {
+                                    $hero_gallery_ids[] = '';
+                                }
+                            @endphp
+                            <input type="hidden" name="hero_gallery_ids" id="hero_gallery_ids" value="{{ implode(',', array_filter($hero_gallery_ids)) }}">
+                            <div id="hero-gallery-container" class="row g-2">
+                                @for($i = 0; $i < 5; $i++)
+                                    @php
+                                        $img_id = $hero_gallery_ids[$i] ?? '';
+                                        $img_url = $img_id ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $img_id) : '';
+                                    @endphp
+                                    <div class="col-6 col-md-4">
+                                        <div class="hero-gallery-item border rounded p-2 bg-white" data-index="{{ $i }}" style="font-size: 12px;">
+                                            <label class="form-label small mb-1 d-block">
+                                                Image {{ $i === 0 ? 'Principale' : ($i + 1) }}
+                                            </label>
+                                            <div class="hero-gallery-preview-wrap mb-2" style="width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f8f9fa; display: {{ $img_url ? 'block' : 'none' }};">
+                                                <img src="{{ $img_url }}" alt="Preview {{ $i + 1 }}" class="hero-gallery-preview" style="width: 100%; height: 100%; object-fit: cover;">
+                                            </div>
+                                            <div class="hero-gallery-placeholder mb-2" style="width: 100%; height: 100px; border: 2px dashed #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; {{ $img_url ? 'display: none;' : '' }}">
+                                                <span class="text-muted" style="font-size: 11px;">Aucune image</span>
+                                            </div>
+                                            <div class="d-flex gap-1 flex-wrap">
+                                                <button type="button" class="btn btn-outline-primary btn-sm hero-gallery-upload-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;">
+                                                    <i class="bx bx-upload"></i> Upload
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm hero-gallery-choose-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;">
+                                                    <i class="bx bx-images"></i> Choisir
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm hero-gallery-remove-btn" data-index="{{ $i }}" style="font-size: 10px; padding: 2px 6px;" {{ !$img_id ? 'disabled' : '' }}>
+                                                    <i class="bx bx-trash"></i>
+                                                </button>
+                                            </div>
+                                            <input type="hidden" class="hero-gallery-id-input" data-index="{{ $i }}" value="{{ $img_id }}">
+                                        </div>
+                                    </div>
+                                @endfor
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
+                            <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id') }}" placeholder="14434">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
+                            <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids') }}" placeholder="14435,14436,14437">
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_featured">
+                                Tour à la une (Featured)
+                            </label>
+                        </div>
+                        
+                        <hr>
+                    </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        </div>{{-- /.ve-page-layout --}}
         </div>{{-- /.ve-shell --}}
     </form>
 </div>{{-- /.voyage-edit-page --}}

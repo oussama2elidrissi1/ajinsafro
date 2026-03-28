@@ -12,17 +12,6 @@
             <li><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
             <li class="active">{{ $isCreate ? 'Créer' : Str::limit($voyage->post_title ?? $voyage->name ?? '', 48) }}</li>
         </ul>
-        <div class="ve-header-actions d-flex flex-wrap">
-            <a href="{{ $cancelUrl }}" class="btn btn-outline-light btn-sm ve-header-btn"><i class="bx bx-x me-1"></i> Annuler</a>
-            @if(!$isCreate)
-                <button type="submit" form="{{ $deleteFormId }}" class="btn btn-danger btn-sm ve-header-btn ve-header-btn--danger">
-                    <i class="bx bx-trash me-1"></i> Supprimer
-                </button>
-            @endif
-            <button type="submit" form="{{ $formId }}" class="btn btn-light btn-sm ve-header-btn ve-header-btn--primary fw-semibold">
-                <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}
-            </button>
-        </div>
     </div>
     <div class="ve-header-grid">
         <div class="ve-header-main">

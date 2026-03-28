@@ -63,8 +63,8 @@
         @endif
 
         <div class="ve-shell">
-        <div class="row g-4 align-items-start ve-edit-layout">
-        <div class="col-12 ve-edit-main order-1">
+        <div class="ve-page-layout">
+        <div class="ve-main-col">
         <p class="ve-tab-zone-hint text-muted small mb-2 d-none d-lg-flex align-items-center gap-2"><i class="bx bx-folder-open"></i><span>Onglets : Basique, Info, Disponibilité, Médias… défilez pour Vols, Hôtels, Programme.</span></p>
 
         {{-- ===== Modern Tab Navigation (scrollable, sticky) ===== --}}
@@ -1879,10 +1879,24 @@
 
         </div>{{-- /.tab-content --}}
 
-        </div>{{-- /.ve-edit-main --}}
+        </div>{{-- /.ve-main-col --}}
 
-        <aside class="col-12 ve-edit-sidebar order-2">
+        <aside class="ve-sidebar-col">
             <div class="ve-sticky-sidebar">
+
+                {{-- ── ACTIONS (unique zone : enregistrer / annuler / supprimer) ── --}}
+                <div class="card ve-sidebar-card ve-actions-card">
+                    <div class="card-body">
+                        <button type="submit" form="edit-voyage-form" class="btn btn-primary">
+                            <i class="bx bx-save"></i> Enregistrer
+                        </button>
+                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary">
+                            <i class="bx bx-x"></i> Annuler
+                        </a>
+                    </div>
+                </div>
+
+                {{-- ── RÉSUMÉ ── --}}
                 <div class="card ve-sidebar-card">
                     <div class="card-body">
                         <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-pulse text-primary"></i> Résumé</h5>
@@ -1946,18 +1960,24 @@
                         </div>
                     </div>
                 </div>
+                {{-- ── ZONE DANGEREUSE (edit uniquement) ── --}}
                 @if (!$isCreate)
-                <div class="card ve-sidebar-card ve-danger-card">
+                <div class="card ve-sidebar-card ve-danger-zone-card">
                     <div class="card-body">
-                        <h5 class="ve-sidebar-title mb-2 fw-bold text-danger"><i class="bx bx-error-circle"></i> Zone dangereuse</h5>
-                        <p class="small text-muted mb-0">Suppression définitive disponible via le bouton <strong>Supprimer</strong> dans l’en-tête.</p>
+                        <p class="ve-danger-zone-title"><i class="bx bx-error-circle"></i> Zone dangereuse</p>
+                        <p class="ve-danger-zone-text">Supprimer définitivement ce tour et toutes ses données. Action irréversible.</p>
+                        <button type="submit" form="delete-voyage-form" class="btn btn-outline-danger btn-sm"
+                            onclick="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.')">
+                            <i class="bx bx-trash"></i> Supprimer ce voyage
+                        </button>
                     </div>
                 </div>
                 @endif
+
             </div>
         </aside>
 
-        </div>{{-- /.row --}}
+        </div>{{-- /.ve-page-layout --}}
 
         @include('admin.circuits.voyages.components.DayBuilderDrawer', [
             'activitiesCatalog' => $activitiesCatalog,
@@ -1971,7 +1991,7 @@
         </div>{{-- /.ve-shell --}}
     </form>
     @if (!$isCreate)
-    <form id="delete-voyage-form" action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="d-none" onsubmit="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.');">
+    <form id="delete-voyage-form" action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
     </form>
