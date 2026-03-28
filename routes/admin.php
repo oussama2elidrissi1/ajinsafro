@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\ReportingController;
 use App\Http\Controllers\Admin\ReservationMessageController;
 use App\Http\Controllers\Admin\ReservationsController;
+use App\Http\Controllers\Admin\ReservationWorkspaceController;
 use App\Http\Controllers\Admin\RoleAccessController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TaxonomyTermController;
@@ -102,6 +103,13 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/en-attente', [ReservationsController::class, 'page'])->name('reservations.en-attente')->defaults('submenu', 'en-attente');
         Route::get('reservations/confirmees', [ReservationsController::class, 'page'])->name('reservations.confirmees')->defaults('submenu', 'confirmees');
         Route::get('reservations/annulees', [ReservationsController::class, 'page'])->name('reservations.annulees')->defaults('submenu', 'annulees');
+
+        Route::get('reservations/workspace', [ReservationWorkspaceController::class, 'index'])->name('reservations.workspace');
+        Route::post('reservations/workspace', [ReservationWorkspaceController::class, 'store'])->name('reservations.workspace.store');
+        Route::get('reservations/workspace/prestation/participants', [ReservationWorkspaceController::class, 'prestationParticipants'])->name('reservations.workspace.prestation.participants');
+        Route::get('reservations/workspace/prestation/pdf', [ReservationWorkspaceController::class, 'prestationPdf'])->name('reservations.workspace.prestation.pdf');
+        Route::get('reservations/workspace/reservation/{reservation}/pdf', [ReservationWorkspaceController::class, 'reservationPdf'])->name('reservations.workspace.reservation.pdf');
+
         Route::get('reservations/calendrier', [ReservationsController::class, 'calendar'])->name('reservations.calendrier');
         Route::get('reservations/calendrier/events', [ReservationsController::class, 'calendarEvents'])->name('reservations.calendrier.events');
         Route::get('reservations/calendrier/event-details', [ReservationsController::class, 'calendarEventDetails'])->name('reservations.calendrier.event-details');

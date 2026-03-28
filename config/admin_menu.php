@@ -19,6 +19,7 @@ return [
             'icon' => 'bx bx-calendar-check',
             'permission' => 'reservations.view',
             'children' => [
+                ['label' => 'Espace réservation (catalogue)', 'route' => 'admin.reservations.workspace', 'permission' => 'reservations.view'],
                 ['label' => 'Toutes les réservations', 'route' => 'admin.reservations.toutes', 'permission' => 'reservations.all.view'],
                 ['label' => 'En attente', 'route' => 'admin.reservations.en-attente', 'permission' => 'reservations.pending.view'],
                 ['label' => 'Confirmées', 'route' => 'admin.reservations.confirmees', 'permission' => 'reservations.confirmed.view'],

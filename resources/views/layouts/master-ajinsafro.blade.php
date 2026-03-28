@@ -68,6 +68,7 @@
     <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
 
     @include('layouts.head-css')
+    @stack('styles')
 </head>
 
 <body data-layout="detached" data-topbar="colored">

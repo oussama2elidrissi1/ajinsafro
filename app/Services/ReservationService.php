@@ -176,6 +176,14 @@ class ReservationService
         $reservation->notes = $data['notes'] ?? $reservation->notes;
 
         $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
+        if (array_key_exists('paid_amount', $data)) {
+            $reservation->paid_amount = $data['paid_amount'] !== '' && $data['paid_amount'] !== null
+                ? (float) $data['paid_amount']
+                : null;
+        }
+        if (array_key_exists('prestation_type', $data)) {
+            $reservation->prestation_type = $data['prestation_type'] ?: null;
+        }
         // room_supplement_total est recalculé dans syncReservationRooms
 
         $reservation->visa_ok = array_key_exists('visa_ok', $data)

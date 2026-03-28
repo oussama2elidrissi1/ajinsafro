@@ -170,4 +170,26 @@ class BranchScopeService
             ->orderBy('name')
             ->get();
     }
+
+    /**
+     * Restreint une requête réservations pour le portail agent/commercial/manager
+     * (aligné sur {@see AgentPortalLayout::shouldUse} et {@see portalOwnershipUserIds}).
+     */
+    public function constrainReservationQueryForPortalUser(Builder $query, User $user): void
+    {
+        if (! \App\Services\View\AgentPortalLayout::shouldUse($user)) {
+            return;
+        }
+        $ids = $this->portalOwnershipUserIds($user);
+        if ($ids === []) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+        $query->where(function (Builder $q) use ($ids) {
+            $q->whereIn('agent_id', $ids)
+                ->orWhereIn('sales_manager_id', $ids)
+                ->orWhereIn('created_by', $ids);
+        });
+    }
 }

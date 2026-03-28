@@ -34,6 +34,7 @@ class Reservation extends Model
         'sales_manager_id',
         'agent_id',
         'tour_id',
+        'prestation_type',
         'travel_date_id',
         'client_mode',
         'client_external_id',
@@ -49,6 +50,7 @@ class Reservation extends Model
         'passengers_count',
         'notes',
         'base_price',
+        'paid_amount',
         'room_supplement_total',
         'visa_ok',
         'visa_notes',
@@ -62,6 +64,7 @@ class Reservation extends Model
         'client_external_id' => 'integer',
         'passengers_count' => 'integer',
         'base_price' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
         'room_supplement_total' => 'decimal:2',
         'visa_ok'          => 'boolean',
     ];
@@ -74,6 +77,11 @@ class Reservation extends Model
     public function passengers(): HasMany
     {
         return $this->hasMany(ReservationPassenger::class);
+    }
+
+    public function extras(): HasMany
+    {
+        return $this->hasMany(ReservationExtra::class);
     }
 
     public function client(): BelongsTo
