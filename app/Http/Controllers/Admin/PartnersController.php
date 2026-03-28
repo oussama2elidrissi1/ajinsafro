@@ -18,3 +18,4 @@ class PartnersController extends Controller
         return view('admin.partners.' . $submenu . '.index');
     }
 }
+
