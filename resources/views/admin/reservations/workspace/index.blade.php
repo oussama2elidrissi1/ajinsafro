@@ -1,6 +1,27 @@
 @php
     use App\Services\View\AgentPortalLayout;
+    use Carbon\Carbon;
     $usePortalTailwind = AgentPortalLayout::shouldUse(auth()->user());
+
+    $workspaceCalendarEvents = $catalogRows->map(function ($r) {
+        if (empty($r['departure_date'])) {
+            return null;
+        }
+        $name = (string) ($r['name'] ?? '');
+        if (function_exists('mb_strlen') && mb_strlen($name) > 36) {
+            $name = mb_substr($name, 0, 34).'…';
+        }
+        return [
+            'title' => ($r['code'] ?? '').' — '.$name,
+            'start' => Carbon::parse($r['departure_date'])->format('Y-m-d'),
+            'type' => $r['type'] ?? 'package',
+            'code' => $r['code'] ?? '',
+            'voyage_id' => (int) ($r['voyage_id'] ?? 0),
+            'travel_date_id' => $r['travel_date_id'] ?? '',
+            'prestation_type' => $r['type'] ?? 'package',
+            'label' => ($r['name'] ?? '').' ('.($r['code'] ?? '').')',
+        ];
+    })->filter()->values()->all();
 @endphp
 @extends('layouts.master-ajinsafro')
 
@@ -29,7 +50,8 @@
                         }
                     },
                     boxShadow: {
-                        custom: '0 4px 20px rgba(0,0,0,0.08)',
+                        custom: '0 4px 24px rgba(14,58,90,0.06)',
+                        'ws-bar': '0 8px 32px rgba(0,131,196,0.08)',
                     },
                 }
             }
@@ -37,152 +59,124 @@
     </script>
 @endif
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .ws-ring-pulse { animation: wsPulse 1.6s ease-out 1; }
+    @keyframes wsPulse {
+        0% { box-shadow: 0 0 0 0 rgba(0, 131, 196, 0.45); }
+        100% { box-shadow: 0 0 0 12px rgba(0, 131, 196, 0); }
+    }
+    #ws-catalog-table thead th { position: sticky; top: 0; z-index: 1; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); }
+</style>
 @endpush
 
 @section('content')
-<div class="fade-in">
-    <div id="page-header-workspace" class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-brand-dark">Réservations</h1>
-            <p class="text-sm text-gray-500 mt-1">Catalogue packages, vols et hébergements — même flux que l’espace agent.</p>
+<div class="fade-in max-w-[1680px] mx-auto pb-10">
+    {{-- En-tête --}}
+    <div class="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-gradient-to-br from-white via-[#f8fcfe] to-[#e6f3fa]/50 shadow-custom mb-8 px-5 sm:px-8 py-6 sm:py-8">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-blue/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div class="min-w-0">
+                <p class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-brand-blue/80 mb-2">Catalogue réservable</p>
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-dark tracking-tight">Espace réservation</h1>
+                <p class="text-sm text-gray-600 mt-2 max-w-2xl leading-relaxed">
+                    Tous les voyages Laravel (table <span class="font-mono text-xs bg-white/80 px-1 rounded">voyages</span>), avec packages, vols et hébergements liés. Filtres, liste ou calendrier, puis participants, PDF ou nouvelle réservation.
+                </p>
+                <div class="flex flex-wrap gap-2 sm:gap-3 mt-5">
+                    <span class="inline-flex items-center gap-2 rounded-xl bg-white/90 border border-brand-blue/15 px-3 py-2 text-xs font-semibold text-brand-dark shadow-sm">
+                        <i class="fas fa-suitcase-rolling text-brand-blue"></i>
+                        {{ $catalogPackageCount ?? $catalogRows->where('type', 'package')->count() }} voyage(s)
+                    </span>
+                    <span class="inline-flex items-center gap-2 rounded-xl bg-white/90 border border-gray-200/80 px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm">
+                        <i class="fas fa-layer-group text-brand-orange"></i>
+                        {{ $catalogTotalCount ?? $catalogRows->count() }} ligne(s) prestation
+                    </span>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+                <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm hover:border-brand-blue/40 hover:text-brand-blue transition-all">
+                    <i class="fas fa-route"></i> Circuits / voyages
+                </a>
+                <a href="{{ route('admin.reservations.toutes') }}" class="inline-flex items-center justify-center gap-2 text-sm font-bold text-white bg-brand-dark hover:bg-brand-blue rounded-xl px-5 py-3 shadow-ws-bar transition-colors">
+                    <i class="fas fa-list-ul"></i> Toutes les réservations
+                </a>
+            </div>
         </div>
-        <a href="{{ route('admin.reservations.toutes') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-blue hover:text-brand-dark border border-brand-blue/20 rounded-xl px-4 py-2 bg-white shadow-sm">
-            <i class="fas fa-list"></i> Toutes les réservations
-        </a>
     </div>
 
     @if(session('success'))
-        <div class="mb-4 rounded-xl border border-green-200 bg-green-50 text-green-800 px-4 py-3 text-sm">{{ session('success') }}</div>
+        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm">{{ session('success') }}</div>
     @endif
 
     <div id="reservations-main-content" class="space-y-6">
-        <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-custom border border-gray-100 flex flex-wrap items-center gap-3">
-            <div class="flex-1 min-w-[200px] w-full sm:w-auto relative shrink-0">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" id="ws-filter-search" placeholder="Rechercher (nom, code...)" class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-brand-blue focus:bg-white text-brand-dark font-medium placeholder-gray-400">
+        {{-- Filtres --}}
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-custom border border-gray-100/90 flex flex-col xl:flex-row xl:flex-wrap xl:items-center gap-4">
+            <div class="flex-1 min-w-[220px] relative">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="ws-filter-search" placeholder="Rechercher par nom, code, sous-titre…" autocomplete="off"
+                    class="w-full pl-11 pr-4 py-3 bg-gray-50/90 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue focus:bg-white text-brand-dark font-medium placeholder-gray-400 transition-all">
             </div>
-            <select id="ws-filter-type" class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-brand-blue text-brand-dark font-medium cursor-pointer flex-1 sm:flex-none">
-                <option value="all">Tous les types</option>
-                <option value="package">Packages</option>
-                <option value="vol">Vols</option>
-                <option value="hebergement">Hébergements</option>
-            </select>
-            <div class="relative flex items-center bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 focus-within:border-brand-blue focus-within:bg-white transition-colors flex-1 sm:flex-none min-w-[220px]">
-                <i class="far fa-calendar-alt text-brand-blue mr-2"></i>
-                <input type="text" id="ws-date-range-picker" placeholder="Du… au…" class="bg-transparent border-none outline-none text-brand-dark font-medium text-sm w-full cursor-pointer placeholder-gray-400">
+            <div class="flex flex-col sm:flex-row gap-3 flex-1 min-w-0">
+                <select id="ws-filter-type" class="sm:min-w-[160px] bg-gray-50/90 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue text-brand-dark font-semibold cursor-pointer">
+                    <option value="all">Tous les types</option>
+                    <option value="package">Packages</option>
+                    <option value="vol">Vols</option>
+                    <option value="hebergement">Hébergements</option>
+                </select>
+                <div class="relative flex items-center flex-1 min-w-[200px] bg-gray-50/90 border border-gray-100 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-brand-blue/25 focus-within:border-brand-blue focus-within:bg-white transition-all">
+                    <i class="far fa-calendar-alt text-brand-blue mr-3 shrink-0"></i>
+                    <input type="text" id="ws-date-range-picker" readonly placeholder="Plage de dates de départ…" class="bg-transparent border-none outline-none text-brand-dark font-medium text-sm w-full cursor-pointer placeholder-gray-400">
+                </div>
             </div>
-            <div class="flex items-center bg-gray-100 rounded-xl p-1 shrink-0 ml-auto">
-                <button type="button" id="btn-view-calendar" class="px-3 py-1.5 rounded-lg text-gray-500 hover:text-brand-blue font-bold text-xs flex items-center gap-2 transition-all">
-                    <i class="far fa-calendar-alt"></i> <span class="hidden sm:inline">Calendrier</span>
-                </button>
-                <button type="button" id="btn-view-list" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-brand-blue font-bold text-xs flex items-center gap-2 transition-all">
-                    <i class="fas fa-list"></i> <span class="hidden sm:inline">Liste</span>
-                </button>
+            <div class="flex items-center justify-between sm:justify-end gap-3 xl:ml-auto">
+                <span class="text-xs text-gray-500 font-medium whitespace-nowrap"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogRows->count() }} affichée(s)</span>
+                <div class="inline-flex bg-gray-100/90 rounded-xl p-1 border border-gray-100">
+                    <button type="button" id="btn-view-calendar" class="px-3 sm:px-4 py-2 rounded-lg text-gray-500 hover:text-brand-blue font-bold text-xs flex items-center gap-2 transition-all">
+                        <i class="far fa-calendar-alt"></i><span class="hidden sm:inline">Calendrier</span>
+                    </button>
+                    <button type="button" id="btn-view-list" class="px-3 sm:px-4 py-2 rounded-lg bg-white shadow-md text-brand-blue font-bold text-xs flex items-center gap-2 border border-gray-100/80">
+                        <i class="fas fa-list"></i><span class="hidden sm:inline">Liste</span>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div id="reservations-list-view" class="bg-white rounded-2xl shadow-custom border border-gray-100 relative pb-6">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
-                <h3 class="font-bold text-lg text-brand-dark flex items-center gap-2">
-                    <i class="fas fa-list text-brand-blue"></i> Prestations
-                </h3>
-                <div class="text-xs text-gray-500 font-medium"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogRows->count() }}</div>
+        {{-- Tableau --}}
+        <div id="reservations-list-view" class="bg-white rounded-2xl shadow-custom border border-gray-100/90 overflow-hidden">
+            <div class="px-5 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-gradient-to-r from-gray-50/80 to-white">
+                <h2 class="font-bold text-lg text-brand-dark flex items-center gap-2">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-light text-brand-blue"><i class="fas fa-th-list text-sm"></i></span>
+                    Prestations réservables
+                </h2>
+                <p class="text-xs text-gray-500">Statistiques = dossiers sur le <strong class="text-brand-dark">voyage</strong> (toutes dates confondues).</p>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse whitespace-nowrap min-w-[900px]" id="ws-catalog-table">
+            <div class="overflow-x-auto max-h-[min(70vh,900px)] overflow-y-auto">
+                <table class="w-full text-left border-collapse min-w-[920px]" id="ws-catalog-table">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                            <th class="py-4 px-6">ID &amp; type</th>
-                            <th class="py-4 px-6">Prestation</th>
-                            <th class="py-4 px-6">Départ</th>
-                            <th class="py-4 px-6 text-center">Statistiques</th>
-                            <th class="py-4 px-6 text-right">Actions</th>
+                        <tr class="text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                            <th class="py-3.5 px-5 sm:px-6">ID &amp; type</th>
+                            <th class="py-3.5 px-5 sm:px-6">Prestation</th>
+                            <th class="py-3.5 px-5 sm:px-6">Départ</th>
+                            <th class="py-3.5 px-4 text-center">Statistiques</th>
+                            <th class="py-3.5 px-5 sm:px-6 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-sm">
+                    <tbody class="text-sm">
                         @forelse($catalogRows as $row)
-                            @php
-                                $q = ['voyage_id' => $row['voyage_id']];
-                                if (! empty($row['travel_date_id'])) {
-                                    $q['travel_date_id'] = $row['travel_date_id'];
-                                }
-                                $participantsUrl = route('admin.reservations.workspace.prestation.participants', $q);
-                                $pdfUrl = route('admin.reservations.workspace.prestation.pdf', $q);
-                                $depLabel = $row['departure_date']
-                                    ? \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y')
-                                    : '—';
-                                $typeKey = $row['type'];
-                                $badgeClass = match ($typeKey) {
-                                    'package' => 'bg-orange-50 text-brand-orange border-orange-100',
-                                    'vol' => 'bg-blue-50 text-brand-blue border-blue-100',
-                                    default => 'bg-yellow-50 text-yellow-600 border-yellow-100',
-                                };
-                                $typeShort = match ($typeKey) {
-                                    'package' => 'Package',
-                                    'vol' => 'Vol',
-                                    default => 'Hébergement',
-                                };
-                                $stats = $row['stats'] ?? ['validee' => 0, 'en_cours' => 0, 'annulee' => 0];
-                            @endphp
-                            <tr class="hover:bg-gray-50 transition-colors ws-catalog-row"
-                                data-type="{{ $typeKey }}"
-                                data-code="{{ $row['code'] }}"
-                                data-name="{{ e($row['name']) }}"
-                                data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}">
-                                <td class="py-4 px-6 align-middle">
-                                    <span class="text-xs font-bold text-gray-500 block mb-1">{{ $row['code'] }}</span>
-                                    <span class="px-2 py-0.5 {{ $badgeClass }} text-[9px] font-bold rounded uppercase tracking-wide border">{{ $typeShort }}</span>
-                                </td>
-                                <td class="py-4 px-6 align-middle">
-                                    <p class="font-bold text-brand-dark text-sm">{{ $row['name'] }}</p>
-                                    @if(!empty($row['subtitle']))
-                                        <p class="text-[10px] text-gray-500 mt-0.5">{{ $row['subtitle'] }}</p>
-                                    @endif
-                                </td>
-                                <td class="py-4 px-6 align-middle">
-                                    <p class="text-xs font-bold text-gray-700">{{ $depLabel }}</p>
-                                </td>
-                                <td class="py-4 px-6 text-center align-middle">
-                                    <div class="flex items-center justify-center gap-2 text-xs font-bold">
-                                        <div class="flex items-center gap-1.5 bg-green-50 text-green-600 px-2 py-1 rounded border border-green-100" title="Confirmées">
-                                            <i class="fas fa-check-circle"></i> <span>{{ $stats['validee'] }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1.5 bg-yellow-50 text-yellow-600 px-2 py-1 rounded border border-yellow-100" title="En attente">
-                                            <i class="fas fa-hourglass-half"></i> <span>{{ $stats['en_cours'] }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1.5 bg-red-50 text-red-500 px-2 py-1 rounded border border-red-100" title="Annulées">
-                                            <i class="fas fa-times-circle"></i> <span>{{ $stats['annulee'] }}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6 text-right align-middle">
-                                    <div class="flex items-center justify-end gap-2 flex-wrap">
-                                        <a href="{{ $participantsUrl }}" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-brand-blue hover:text-white transition-colors flex items-center justify-center border border-gray-200" title="Participants">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ $pdfUrl }}" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center border border-gray-200" title="PDF prestation">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </a>
-                                        @can('reservations.view')
-                                            <button type="button"
-                                                class="btn-show-add-reservation bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center justify-center gap-1.5"
-                                                data-type="{{ $typeKey }}"
-                                                data-name="{{ $row['name'] }} ({{ $row['code'] }})"
-                                                data-tour-id="{{ $row['voyage_id'] }}"
-                                                data-travel-date-id="{{ $row['travel_date_id'] ?? '' }}">
-                                                @if($typeKey === 'vol')
-                                                    <i class="fas fa-user-plus text-sm"></i> Ajouter
-                                                @else
-                                                    <i class="fas fa-plus-circle text-sm"></i> Réserver
-                                                @endif
-                                            </button>
-                                        @endcan
-                                    </div>
-                                </td>
-                            </tr>
+                            @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row])
                         @empty
                             <tr>
-                                <td colspan="5" class="py-12 text-center text-gray-500 text-sm">Aucune prestation à afficher (vérifiez les départs ou vols à venir).</td>
+                                <td colspan="5" class="py-16 px-6">
+                                    <div class="max-w-md mx-auto text-center">
+                                        <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-4 text-2xl">
+                                            <i class="fas fa-inbox"></i>
+                                        </div>
+                                        <p class="text-brand-dark font-bold text-lg mb-2">Aucun voyage dans le catalogue</p>
+                                        <p class="text-gray-500 text-sm mb-6">Créez ou synchronisez des fiches dans la table Laravel <strong>voyages</strong>, ou ouvrez les circuits WordPress pour les lier.</p>
+                                        <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
+                                            <i class="fas fa-plus-circle"></i> Gérer les voyages
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -190,39 +184,32 @@
             </div>
         </div>
 
-        <div id="reservations-calendar-view" class="bg-white p-5 rounded-2xl shadow-custom border border-gray-100 hidden">
-            <div id="workspace-calendar" class="w-full min-h-[520px]"></div>
+        {{-- Calendrier --}}
+        <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 hidden">
+            <p class="text-sm text-gray-600 mb-4">Cliquez sur un événement pour ouvrir le formulaire <strong>Réserver</strong> de la ligne correspondante (retour automatique en vue liste).</p>
+            <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace"></div>
         </div>
     </div>
 
-    <div id="add-reservation-view" class="w-full space-y-6 hidden mt-6">
-        <div class="flex items-center gap-4 bg-white p-5 rounded-2xl shadow-custom border border-gray-100">
-            <button type="button" id="btn-back-from-add-reservation" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-brand-light text-gray-500 hover:text-brand-blue flex items-center justify-center transition-colors border border-gray-200 shadow-sm" title="Retour">
+    {{-- Formulaire réservation --}}
+    <div id="add-reservation-view" class="w-full space-y-6 hidden mt-10">
+        <div class="flex items-center gap-4 bg-white p-5 sm:p-6 rounded-2xl shadow-custom border border-gray-100">
+            <button type="button" id="btn-back-from-add-reservation" class="w-11 h-11 rounded-full bg-gray-50 hover:bg-brand-light text-gray-500 hover:text-brand-blue flex items-center justify-center transition-colors border border-gray-200 shadow-sm shrink-0" title="Retour au catalogue">
                 <i class="fas fa-arrow-left"></i>
             </button>
             <div>
                 <h2 class="text-xl font-bold text-brand-dark flex items-center gap-2">
                     <i class="fas fa-user-plus text-brand-blue"></i> Nouvelle réservation
                 </h2>
-                <p class="text-xs text-gray-500 mt-1 font-medium">Pour : <span id="add-res-prestation-name" class="text-brand-dark font-bold">—</span></p>
+                <p class="text-xs text-gray-500 mt-1 font-medium">Prestation : <span id="add-res-prestation-name" class="text-brand-dark font-bold">—</span></p>
             </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-custom border border-gray-100">
+        <div class="bg-white p-5 sm:p-8 rounded-2xl shadow-custom border border-gray-100">
             @include('admin.reservations.workspace.partials.form', ['clients' => $clients])
         </div>
     </div>
 </div>
 
-{{-- @json() ne doit pas envelopper une expression avec des ")" (ex. ?? '') : le compilateur Blade coupe trop tôt. --}}
-@php
-    $workspaceCalendarEvents = $catalogRows->map(function ($r) {
-        return [
-            'title' => ($r['code'] ?? '').' — '.($r['name'] ?? ''),
-            'start' => $r['departure_date'] ? \Carbon\Carbon::parse($r['departure_date'])->format('Y-m-d') : null,
-            'type' => $r['type'] ?? 'package',
-        ];
-    })->filter(fn ($e) => ! empty($e['start']))->values()->all();
-@endphp
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
@@ -245,17 +232,29 @@ document.addEventListener('DOMContentLoaded', function () {
     var calEl = document.getElementById('workspace-calendar');
     var calJson = document.getElementById('workspace-calendar-json');
     var calendar = null;
+    var btnList = document.getElementById('btn-view-list');
+    var btnCal = document.getElementById('btn-view-calendar');
+    var listView = document.getElementById('reservations-list-view');
+    var calView = document.getElementById('reservations-calendar-view');
+
     if (calEl && calJson && typeof FullCalendar !== 'undefined') {
         var raw = [];
         try { raw = JSON.parse(calJson.textContent || '[]'); } catch (e) {}
-        var colors = { package: '#f37a1f', vol: '#0083c4', hebergement: '#ffb300' };
+        var colors = { package: '#f37a1f', vol: '#0083c4', hebergement: '#d97706' };
         var events = raw.map(function (e) {
             return {
                 title: e.title,
                 start: e.start,
                 backgroundColor: colors[e.type] || '#0083c4',
                 borderColor: colors[e.type] || '#0083c4',
-                textColor: e.type === 'hebergement' ? '#374151' : '#fff'
+                textColor: e.type === 'hebergement' ? '#1f2937' : '#fff',
+                extendedProps: {
+                    code: e.code,
+                    voyage_id: e.voyage_id,
+                    travel_date_id: e.travel_date_id,
+                    prestation_type: e.prestation_type,
+                    label: e.label
+                }
             };
         });
         calendar = new FullCalendar.Calendar(calEl, {
@@ -264,27 +263,38 @@ document.addEventListener('DOMContentLoaded', function () {
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
             buttonText: { today: "Aujourd'hui", month: 'Mois', week: 'Semaine' },
             events: events,
-            height: 'auto'
+            height: 'auto',
+            eventClick: function (info) {
+                info.jsEvent.preventDefault();
+                var p = info.event.extendedProps || {};
+                var code = String(p.code || '');
+                if (btnList) btnList.click();
+                var safe = code.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                var row = code ? document.querySelector('tr.ws-catalog-row[data-row-code="' + safe + '"]') : null;
+                if (row) {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    row.classList.add('ws-ring-pulse');
+                    setTimeout(function () { row.classList.remove('ws-ring-pulse'); }, 1800);
+                }
+                var btn = code ? document.querySelector('.btn-show-add-reservation[data-row-code="' + safe + '"]') : null;
+                if (btn) btn.click();
+            }
         });
     }
 
-    var btnList = document.getElementById('btn-view-list');
-    var btnCal = document.getElementById('btn-view-calendar');
-    var listView = document.getElementById('reservations-list-view');
-    var calView = document.getElementById('reservations-calendar-view');
     if (btnList && btnCal && listView && calView) {
         btnList.addEventListener('click', function () {
-            btnList.classList.add('bg-white', 'shadow-sm', 'text-brand-blue');
+            btnList.classList.add('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
             btnList.classList.remove('text-gray-500');
-            btnCal.classList.remove('bg-white', 'shadow-sm', 'text-brand-blue');
+            btnCal.classList.remove('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
             btnCal.classList.add('text-gray-500');
             listView.classList.remove('hidden');
             calView.classList.add('hidden');
         });
         btnCal.addEventListener('click', function () {
-            btnCal.classList.add('bg-white', 'shadow-sm', 'text-brand-blue');
+            btnCal.classList.add('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
             btnCal.classList.remove('text-gray-500');
-            btnList.classList.remove('bg-white', 'shadow-sm', 'text-brand-blue');
+            btnList.classList.remove('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
             btnList.classList.add('text-gray-500');
             listView.classList.add('hidden');
             calView.classList.remove('hidden');
@@ -297,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (searchEl) searchEl.addEventListener('input', applyWsFilters);
     if (typeEl) typeEl.addEventListener('change', applyWsFilters);
 
-    function applyWsFilters() {
+    window.applyWsFilters = function applyWsFilters() {
         var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
         var t = typeEl ? typeEl.value : 'all';
         var rows = document.querySelectorAll('#ws-catalog-table tbody tr.ws-catalog-row');
@@ -313,8 +323,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
             if (ok && q) {
-                var blob = (tr.getAttribute('data-name') + ' ' + tr.getAttribute('data-code')).toLowerCase();
-                if (blob.indexOf(q) === -1) ok = false;
+                var n = (tr.getAttribute('data-name') || '') + ' ' + (tr.getAttribute('data-code') || '');
+                if (n.toLowerCase().indexOf(q) === -1) ok = false;
             }
             if (ok && range) {
                 var dep = tr.getAttribute('data-dep');
@@ -329,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         var c = document.getElementById('ws-row-visible-count');
         if (c) c.textContent = String(visible);
-    }
+    };
 });
 </script>
 @endpush

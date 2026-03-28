@@ -36,6 +36,8 @@ class ReservationWorkspaceController extends Controller
 
         return view('admin.reservations.workspace.index', [
             'catalogRows' => $rows,
+            'catalogPackageCount' => $rows->where('type', 'package')->count(),
+            'catalogTotalCount' => $rows->count(),
             'clients' => $clients,
         ]);
     }
