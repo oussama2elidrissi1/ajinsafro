@@ -2013,6 +2013,11 @@
 </div>{{-- /.voyage-edit-page --}}
 @endsection
 @push('script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.body.classList.add('voyage-layout-page');
+        });
+    </script>
     <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>

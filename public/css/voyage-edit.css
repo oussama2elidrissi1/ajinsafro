@@ -35,6 +35,37 @@
     box-sizing: border-box;
 }
 
+/* ---------- Parent containers override (root cause: outer wrappers too narrow) ---------- */
+body.voyage-layout-page[data-layout="detached"] .container-fluid {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+body.voyage-layout-page[data-layout="detached"] .main-content {
+    width: 100% !important;
+}
+body.voyage-layout-page[data-layout="detached"] .page-content {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+body.voyage-layout-page.partner-v2 main > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+body.voyage-layout-page.partner-v2 .agent-portal-main {
+    max-width: none !important;
+    width: auto !important;
+    flex: 1 1 auto !important;
+}
+@media (min-width: 1200px) {
+    body.voyage-layout-page.partner-v2 main > div {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+    }
+}
+
 /* ---------- Page Background ---------- */
 .voyage-edit-page .page-content {
     background: var(--ve-page-bg) !important;
