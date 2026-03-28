@@ -2,23 +2,37 @@
 @section('title')
     Créer un tour WordPress
 @endsection
+@push('css')
+    <link href="{{ URL::asset('css/voyage-edit.css') }}" rel="stylesheet" type="text/css" />
+@endpush
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Créer un tour WordPress</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
-                        <li class="breadcrumb-item active">Créer</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
+@php
+    $isCreate = true;
+    $voyageHeader = (object) [
+        'ID' => 0,
+        'post_title' => '',
+        'post_status' => old('post_status', 'draft'),
+        'post_modified' => '',
+        'name' => '',
+    ];
+    $veDestinationCreate = old('destination') ? trim((string) old('destination')) : null;
+@endphp
+<div class="voyage-edit-page">
+    <div class="ve-shell">
+        @include('admin.circuits.voyages.partials._voyage_page_header', [
+            'isCreate' => true,
+            'voyage' => $voyageHeader,
+            'veWpId' => 0,
+            'laravelV' => null,
+            'vePriceLabel' => null,
+            'veDestination' => $veDestinationCreate,
+            'formId' => 'create-voyage-form',
+        ])
     </div>
 
+    <form id="create-voyage-form" action="{{ route('admin.circuits.voyages.store') }}" method="POST">
+        @csrf
+        <div class="ve-shell">
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <ul class="mb-0">
@@ -30,10 +44,8 @@
         </div>
     @endif
 
-    <form id="create-voyage-form" action="{{ route('admin.circuits.voyages.store') }}" method="POST">
-        @csrf
-        <div class="row">
-            <div class="col-lg-8">
+        <div class="row g-4 ve-edit-layout">
+            <div class="col-12 ve-edit-main">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Informations principales</h4>
@@ -61,7 +73,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-4">
+            <aside class="col-12 ve-edit-sidebar">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Paramètres & Prix</h4>
@@ -211,7 +223,7 @@
                         <hr>
                     </div>
                 </div>
-            </div>
+            </aside>
         </div>
 
         {{-- Vols — Flight cards (même style qu’édition) --}}
@@ -438,19 +450,20 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary waves-effect waves-light">
-                            <i class="bx bx-save me-1"></i> Créer le tour dans WordPress
-                        </button>
-                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary waves-effect">Annuler</a>
-                    </div>
-                </div>
+        <div class="ve-form-bottom-spacer"></div>
+        </div>{{-- /.ve-shell --}}
+    </form>
+
+    <div class="ve-save-bar">
+        <div class="ve-save-inner">
+            <div class="text-muted d-none d-md-block ve-save-hint"><small><i class="bx bx-zap me-1"></i> WordPress</small></div>
+            <div class="d-flex align-items-center gap-2 flex-wrap ve-save-actions">
+                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg"><i class="bx bx-x me-1"></i> Annuler</a>
+                <button type="submit" form="create-voyage-form" class="btn btn-primary btn-lg"><i class="bx bx-save me-1"></i> Créer le tour</button>
             </div>
         </div>
-    </form>
+    </div>
+</div>{{-- /.voyage-edit-page --}}
 @endsection
 @push('script')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>

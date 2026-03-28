@@ -25,47 +25,15 @@
 @endpush
 @section('content')
 <div class="voyage-edit-page">
-    @php $currentStatus = old('post_status', $voyage->post_status ?? 'draft'); @endphp
     <div class="ve-shell">
-        <div class="ve-page-header">
-            <ul class="ve-breadcrumb">
-                <li><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i> Admin</a></li>
-                <li><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-                <li><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
-                <li class="active">{{ $isCreate ? 'Créer' : Str::limit($voyage->post_title ?? $voyage->name, 40) }}</li>
-            </ul>
-            <div class="ve-header-grid">
-                <div class="ve-header-main">
-                    <div class="d-flex flex-wrap align-items-start gap-3 mb-2">
-                        <h1 class="ve-page-title mb-0">{{ $isCreate ? 'Créer un tour WordPress' : ($voyage->post_title ?? $voyage->name) }}</h1>
-                        <span class="ve-status-badge status-{{ $currentStatus }} align-self-center">
-                            <span class="status-dot"></span>
-                            {{ $currentStatus === 'publish' ? 'Publié' : ($currentStatus === 'draft' ? 'Brouillon' : 'En attente') }}
-                        </span>
-                    </div>
-                    <div class="ve-header-meta-line">
-                        @if(!$isCreate)
-                            <span class="ve-meta-pill"><i class="bx bx-hash"></i> WP #{{ $veWpId }}</span>
-                            @if($laravelV)<span class="ve-meta-pill"><i class="bx bx-data"></i> Laravel #{{ $laravelV->id }}</span>@endif
-                            <span class="ve-meta-pill ve-meta-pill--muted"><i class="bx bx-time"></i> {{ $voyage->post_modified ? \Carbon\Carbon::parse($voyage->post_modified)->locale('fr')->translatedFormat('d M Y H:i') : '—' }}</span>
-                        @else
-                            <span class="ve-meta-pill ve-meta-pill--muted">Nouveau tour</span>
-                        @endif
-                    </div>
-                </div>
-                <div class="ve-header-aside">
-                    @if($vePriceLabel)
-                        <div class="ve-header-stat"><span class="ve-header-stat-label">Prix</span><span class="ve-header-stat-value">{{ $vePriceLabel }}</span></div>
-                    @endif
-                    @if($veDestination)
-                        <div class="ve-header-stat"><span class="ve-header-stat-label">Destination</span><span class="ve-header-stat-value ve-header-stat-value--sm">{{ Str::limit($veDestination, 52) }}</span></div>
-                    @endif
-                    @if(!$vePriceLabel && !$veDestination)
-                        <p class="ve-header-placeholder mb-0 small">Renseignez prix et destination pour un résumé ici.</p>
-                    @endif
-                </div>
-            </div>
-        </div>
+        @include('admin.circuits.voyages.partials._voyage_page_header', [
+            'isCreate' => $isCreate,
+            'voyage' => $voyage,
+            'veWpId' => $veWpId,
+            'laravelV' => $laravelV,
+            'vePriceLabel' => $vePriceLabel,
+            'veDestination' => $veDestination,
+        ])
     </div>
 
     <div class="ve-shell">
@@ -95,7 +63,7 @@
 
         <div class="ve-shell">
         <div class="row g-4 align-items-start ve-edit-layout">
-        <div class="col-12 col-xl-8 ve-edit-main order-1">
+        <div class="col-12 ve-edit-main order-1">
         <p class="ve-tab-zone-hint text-muted small mb-2 d-none d-lg-flex align-items-center gap-2"><i class="bx bx-folder-open"></i><span>Onglets : Basique, Info, Disponibilité, Médias… défilez pour Vols, Hôtels, Programme.</span></p>
 
         {{-- ===== Modern Tab Navigation (scrollable, sticky) ===== --}}
@@ -1912,7 +1880,7 @@
 
         </div>{{-- /.ve-edit-main --}}
 
-        <aside class="col-12 col-xl-4 ve-edit-sidebar order-2">
+        <aside class="col-12 ve-edit-sidebar order-2">
             <div class="ve-sticky-sidebar">
                 <div class="card ve-sidebar-card">
                     <div class="card-body">
@@ -1996,18 +1964,8 @@
         <div class="ve-form-bottom-spacer"></div>
     </form>
 
-    <div class="ve-save-bar">
-        <div class="ve-save-inner">
-            <div class="text-muted d-none d-md-block ve-save-hint"><small><i class="bx bx-zap me-1"></i> WordPress + Laravel</small></div>
-            <div class="d-flex align-items-center gap-2 flex-wrap ve-save-actions">
-                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg"><i class="bx bx-x me-1"></i> Annuler</a>
-                <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg" id="edit-voyage-submit-btn"><i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}</button>
-            </div>
-        </div>
-    </div>
-
     @if (!$isCreate)
-    <div class="ve-shell">
+    <div class="ve-shell ve-danger-shell">
         <div class="ve-danger-zone ve-danger-zone--compact">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
                 <div>
@@ -2023,6 +1981,16 @@
         </div>
     </div>
     @endif
+
+    <div class="ve-save-bar">
+        <div class="ve-save-inner">
+            <div class="text-muted d-none d-md-block ve-save-hint"><small><i class="bx bx-zap me-1"></i> WordPress + Laravel</small></div>
+            <div class="d-flex align-items-center gap-2 flex-wrap ve-save-actions">
+                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg"><i class="bx bx-x me-1"></i> Annuler</a>
+                <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg" id="edit-voyage-submit-btn"><i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}</button>
+            </div>
+        </div>
+    </div>
 </div>{{-- /.voyage-edit-page --}}
 @endsection
 @push('script')
