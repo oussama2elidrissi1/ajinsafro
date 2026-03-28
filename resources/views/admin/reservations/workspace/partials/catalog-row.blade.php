@@ -39,6 +39,9 @@
     data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}">
     <td class="py-4 px-5 sm:px-6 align-middle">
         <span class="text-xs font-bold text-gray-500 block mb-1.5 font-mono tracking-tight">{{ $row['code'] }}</span>
+        @if($typeKey === 'package' && $hasLaravel && !empty($row['voyage_id']))
+            <span class="block text-[9px] text-gray-400 font-mono mb-1">Laravel voyages.id = {{ $row['voyage_id'] }}</span>
+        @endif
         <span class="inline-flex px-2 py-0.5 {{ $badgeClass }} text-[9px] font-bold rounded-md uppercase tracking-wide border">{{ $typeShort }}</span>
         @if($typeKey === 'package' && ! $hasLaravel)
             <span class="block mt-1.5 text-[9px] font-bold text-amber-800 uppercase tracking-wide">Non lié Laravel</span>

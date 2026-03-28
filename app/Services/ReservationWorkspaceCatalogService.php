@@ -16,9 +16,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Catalogue workspace : une ligne « package » par tour WordPress (même liste que /admin/circuits/voyages),
- * enrichie par la fiche Laravel {@see Voyage} quand `wp_post_id` correspond.
- * Vols & hébergements : uniquement pour les voyages Laravel liés.
+ * Catalogue workspace : une ligne « package » par tour WordPress (même liste que /admin/circuits/voyages).
+ * Libellé et code package = toujours {@see WpPost} (post_title, #ID) ; Laravel enrichit seulement réservations / départs / stats via `wp_post_id`.
+ * Vols & hébergements : lignes supplémentaires ; sous-titre = titre WP du tour quand disponible.
  */
 class ReservationWorkspaceCatalogService
 {
@@ -46,7 +46,7 @@ class ReservationWorkspaceCatalogService
         ];
 
         try {
-            $wpTours = AdminWpTourCatalogQuery::baseQuery()->get();
+            $wpTours = AdminWpTourCatalogQuery::allToursOrdered();
         } catch (\Throwable $e) {
             Log::warning('ReservationWorkspaceCatalog: WP indisponible', ['error' => $e->getMessage()]);
             $meta['wp_connection_failed'] = true;
@@ -56,11 +56,16 @@ class ReservationWorkspaceCatalogService
 
         $meta['wp_tour_count'] = $wpTours->count();
 
-        $wpIds = $wpTours->pluck('ID')->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $wpTourIdsOrdered = $wpTours->pluck('ID')->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $wpIds = $wpTourIdsOrdered;
+
+        $wpPostTitleById = $wpTours->keyBy(fn (WpPost $p) => (int) $p->ID)
+            ->map(fn (WpPost $p) => trim((string) $p->post_title) ?: 'Tour #'.(int) $p->ID);
 
         $voyagesByWp = collect();
+        $laravelDuplicatesByWpPostId = [];
         if ($wpIds !== []) {
-            $voyagesByWp = Voyage::query()
+            $voyagesRaw = Voyage::query()
                 ->whereIn('wp_post_id', $wpIds)
                 ->with([
                     'departures' => function ($q) {
@@ -68,13 +73,37 @@ class ReservationWorkspaceCatalogService
                             ->orderBy('start_date');
                     },
                 ])
-                ->orderBy('name')
-                ->get()
+                ->orderBy('id')
+                ->get();
+
+            $laravelDuplicatesByWpPostId = $voyagesRaw
+                ->groupBy(fn (Voyage $v) => (int) $v->wp_post_id)
+                ->filter(fn ($group) => $group->count() > 1)
+                ->map(fn ($group) => $group->pluck('id')->map(fn ($id) => (int) $id)->values()->all())
+                ->all();
+
+            if ($laravelDuplicatesByWpPostId !== []) {
+                Log::warning('ReservationWorkspaceCatalog: plusieurs lignes voyages pour le même wp_post_id', [
+                    'duplicates' => $laravelDuplicatesByWpPostId,
+                    'note' => 'Une seule fiche Laravel est retenue par wp_post_id (priorité au plus petit voyages.id).',
+                ]);
+            }
+
+            $voyagesByWp = $voyagesRaw
                 ->unique('wp_post_id')
                 ->keyBy(fn (Voyage $v) => (int) $v->wp_post_id);
         }
 
         $meta['laravel_voyage_matched'] = $voyagesByWp->count();
+
+        if (config('app.debug')) {
+            $laravelWpIds = $voyagesByWp->keys()->map(fn ($k) => (int) $k)->values()->all();
+            sort($laravelWpIds);
+            $meta['wp_tour_ids'] = $wpTourIdsOrdered;
+            $meta['laravel_wp_post_ids_matched'] = $laravelWpIds;
+            $meta['wp_tour_ids_without_laravel'] = array_values(array_diff($wpTourIdsOrdered, $laravelWpIds));
+            $meta['laravel_duplicates_wp_post_id'] = $laravelDuplicatesByWpPostId;
+        }
 
         $laravelIdsForExtras = $voyagesByWp->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
         $statsByTour = $this->batchReservationStatsByTour($user, $laravelIdsForExtras);
@@ -97,11 +126,15 @@ class ReservationWorkspaceCatalogService
             $travelDateId = $voyage ? $this->resolveTravelDateId($voyage, $startDate) : null;
             $tourId = $voyage ? (int) $voyage->id : null;
 
+            $wpDisplayTitle = $wpPostTitleById->get($wpId) ?? (trim((string) $wp->post_title) ?: 'Tour #'.$wpId);
+
             $rows->push([
                 'type' => 'package',
-                'code' => $voyage ? 'PKG-'.$tourId : 'WP-'.$wpId,
-                'name' => $voyage?->name ?: (trim((string) $wp->post_title) ?: 'Tour #'.$wpId),
-                'subtitle' => $voyage ? ($pick['is_past'] && $dep ? 'Dernier départ enregistré' : null) : 'Pas de fiche Laravel — liez wp_post_id dans la table voyages pour réserver',
+                'code' => '#'.$wpId,
+                'name' => $wpDisplayTitle,
+                'subtitle' => $voyage
+                    ? (($pick['is_past'] && $dep) ? 'Dernier départ enregistré' : null)
+                    : ('Pas de fiche Laravel — renseignez voyages.wp_post_id = '.$wpId.' pour réserver / stats.'),
                 'voyage_id' => $tourId,
                 'wp_post_id' => $wpId,
                 'laravel_synced' => $voyage !== null,
@@ -129,11 +162,12 @@ class ReservationWorkspaceCatalogService
             }
             $tourId = (int) $voyage->id;
             $label = trim(($flight->flight_number ?: 'Vol').' · '.$flight->from_label.' → '.$flight->to_label);
+            $wpPid = $voyage->wp_post_id ? (int) $voyage->wp_post_id : null;
             $rows->push([
                 'type' => 'vol',
                 'code' => 'VOL-'.$flight->id,
                 'name' => $label,
-                'subtitle' => $voyage->name,
+                'subtitle' => $wpPid ? ($wpPostTitleById->get($wpPid) ?: $voyage->name) : $voyage->name,
                 'voyage_id' => $tourId,
                 'wp_post_id' => $voyage->wp_post_id ? (int) $voyage->wp_post_id : null,
                 'laravel_synced' => true,
@@ -158,12 +192,14 @@ class ReservationWorkspaceCatalogService
             $pick = $this->pickDepartureForDisplay($departures, $today);
             $startDate = $pick['departure']?->start_date;
 
-            foreach (TourHotel::getAllForTour((int) $voyage->wp_post_id) as $hotel) {
+            $wpPidHotel = (int) $voyage->wp_post_id;
+            $tourWpTitle = $wpPostTitleById->get($wpPidHotel) ?: $voyage->name;
+            foreach (TourHotel::getAllForTour($wpPidHotel) as $hotel) {
                 $rows->push([
                     'type' => 'hebergement',
                     'code' => 'HOT-'.$hotel->id,
                     'name' => $hotel->hotel_name ?: 'Hébergement',
-                    'subtitle' => $voyage->name,
+                    'subtitle' => $tourWpTitle,
                     'voyage_id' => $tourId,
                     'wp_post_id' => (int) $voyage->wp_post_id,
                     'laravel_synced' => true,
@@ -187,6 +223,10 @@ class ReservationWorkspaceCatalogService
         if (config('app.debug')) {
             Log::debug('ReservationWorkspaceCatalog built', [
                 'wp_tour_count' => $meta['wp_tour_count'],
+                'wp_tour_ids' => $meta['wp_tour_ids'] ?? [],
+                'laravel_wp_post_ids_matched' => $meta['laravel_wp_post_ids_matched'] ?? [],
+                'wp_tour_ids_without_laravel' => $meta['wp_tour_ids_without_laravel'] ?? [],
+                'laravel_duplicates_wp_post_id' => $meta['laravel_duplicates_wp_post_id'] ?? [],
                 'laravel_voyage_matched' => $meta['laravel_voyage_matched'],
                 'package_rows' => $meta['package_rows'],
                 'vol_rows' => $meta['vol_rows'],

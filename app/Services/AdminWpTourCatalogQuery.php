@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Wp\WpPost;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
  * Source unique de vérité pour la liste des tours affichés dans l’admin « Circuits / voyages »
@@ -11,6 +12,9 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * La page /admin/circuits/voyages lit cette query (paginée) ; le workspace la consomme en liste complète.
  * Les réservations Laravel restent liées à {@see \App\Models\Voyage} via `wp_post_id` → `posts.ID`.
+ *
+ * Les lignes « package » du workspace doivent toujours afficher le titre et l’ID WordPress comme ici ;
+ * Laravel n’enrichit que les actions (réservations, départs, stats), jamais l’identité du tour.
  */
 final class AdminWpTourCatalogQuery
 {
@@ -23,5 +27,13 @@ final class AdminWpTourCatalogQuery
         return WpPost::query()
             ->tours()
             ->orderByDesc('ID');
+    }
+
+    /**
+     * @return EloquentCollection<int, WpPost>
+     */
+    public static function allToursOrdered(): EloquentCollection
+    {
+        return static::baseQuery()->get();
     }
 }

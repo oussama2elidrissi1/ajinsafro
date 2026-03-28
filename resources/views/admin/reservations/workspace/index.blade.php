@@ -134,6 +134,19 @@
                 @if($chk === $tot && $p > 0)
                     <p class="text-[11px] text-emerald-800 mt-2 font-medium">Vérification : {{ $p }} + {{ $v }} + {{ $h }} = {{ $tot }} (cohérent).</p>
                 @endif
+                @if(!empty($catalogMeta['wp_tour_ids']))
+                    <p class="text-[10px] font-mono mt-2 break-all text-amber-950/90"><span class="font-sans font-bold text-amber-800">IDs WP (ordre Circuits / voyages, desc ID)</span> : {{ implode(', ', $catalogMeta['wp_tour_ids']) }}</p>
+                @endif
+                @if(!empty($catalogMeta['laravel_wp_post_ids_matched']))
+                    <p class="text-[10px] font-mono mt-1 break-all text-amber-950/90"><span class="font-sans font-bold text-amber-800">wp_post_id Laravel liés</span> : {{ implode(', ', $catalogMeta['laravel_wp_post_ids_matched']) }}</p>
+                @endif
+                @if(!empty($catalogMeta['wp_tour_ids_without_laravel']))
+                    <p class="text-[10px] font-mono mt-1 break-all text-amber-900"><span class="font-sans font-bold">Tours WP sans fiche Laravel</span> : {{ implode(', ', $catalogMeta['wp_tour_ids_without_laravel']) }}</p>
+                @endif
+                @if(!empty($catalogMeta['laravel_duplicates_wp_post_id']))
+                    <p class="text-[10px] mt-2 text-red-800 font-semibold">Doublons voyages.wp_post_id (plusieurs lignes Laravel) :</p>
+                    <pre class="text-[10px] font-mono mt-1 overflow-x-auto bg-white/60 rounded-lg p-2 border border-red-100">{{ json_encode($catalogMeta['laravel_duplicates_wp_post_id'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                @endif
             @endif
         </div>
     @endif
