@@ -125,35 +125,41 @@
 
     <div id="reservations-main-content" class="space-y-6">
         {{-- Filtres --}}
-        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-custom border border-gray-100/90 flex flex-col xl:flex-row xl:flex-wrap xl:items-center gap-4">
-            <div class="flex-1 min-w-[220px] relative">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                <input type="text" id="ws-filter-search" placeholder="Rechercher par nom, code, sous-titre…" autocomplete="off"
-                    class="w-full pl-11 pr-4 py-3 bg-gray-50/90 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue focus:bg-white text-brand-dark font-medium placeholder-gray-400 transition-all">
-            </div>
-            <div class="flex flex-col sm:flex-row gap-3 flex-1 min-w-0">
-                <select id="ws-filter-type" class="sm:min-w-[160px] bg-gray-50/90 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue text-brand-dark font-semibold cursor-pointer">
-                    <option value="all">Tous les types</option>
-                    <option value="package">Packages</option>
-                    <option value="vol">Vols</option>
-                    <option value="hebergement">Hébergements</option>
-                </select>
-                <div class="relative flex items-center flex-1 min-w-[200px] bg-gray-50/90 border border-gray-100 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-brand-blue/25 focus-within:border-brand-blue focus-within:bg-white transition-all">
-                    <i class="far fa-calendar-alt text-brand-blue mr-3 shrink-0"></i>
-                    <input type="text" id="ws-date-range-picker" readonly placeholder="Plage de dates de départ…" class="bg-transparent border-none outline-none text-brand-dark font-medium text-sm w-full cursor-pointer placeholder-gray-400">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-custom border border-gray-100/90 space-y-3">
+            <div class="flex flex-col xl:flex-row xl:flex-wrap xl:items-center gap-4">
+                <div class="flex-1 min-w-[220px] relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="ws-filter-search" placeholder="Rechercher par nom, code, sous-titre…" autocomplete="off"
+                        class="w-full pl-11 pr-4 py-3 bg-gray-50/90 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue focus:bg-white text-brand-dark font-medium placeholder-gray-400 transition-all">
                 </div>
-            </div>
-            <div class="flex items-center justify-between sm:justify-end gap-3 xl:ml-auto">
-                <span class="text-xs text-gray-500 font-medium whitespace-nowrap"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogRows->count() }} affichée(s)</span>
-                <div class="inline-flex bg-gray-100/90 rounded-xl p-1 border border-gray-100">
-                    <button type="button" id="btn-view-calendar" class="px-3 sm:px-4 py-2 rounded-lg text-gray-500 hover:text-brand-blue font-bold text-xs flex items-center gap-2 transition-all">
-                        <i class="far fa-calendar-alt"></i><span class="hidden sm:inline">Calendrier</span>
-                    </button>
-                    <button type="button" id="btn-view-list" class="px-3 sm:px-4 py-2 rounded-lg bg-white shadow-md text-brand-blue font-bold text-xs flex items-center gap-2 border border-gray-100/80">
-                        <i class="fas fa-list"></i><span class="hidden sm:inline">Liste</span>
+                <div class="flex flex-col sm:flex-row gap-3 flex-1 min-w-0">
+                    <select id="ws-filter-type" class="sm:min-w-[160px] bg-gray-50/90 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue text-brand-dark font-semibold cursor-pointer">
+                        <option value="all">Tous les types</option>
+                        <option value="package">Packages</option>
+                        <option value="vol">Vols</option>
+                        <option value="hebergement">Hébergements</option>
+                    </select>
+                    <div class="relative flex items-center flex-1 min-w-[200px] bg-gray-50/90 border border-gray-100 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-brand-blue/25 focus-within:border-brand-blue focus-within:bg-white transition-all">
+                        <i class="far fa-calendar-alt text-brand-blue mr-3 shrink-0"></i>
+                        <input type="text" id="ws-date-range-picker" readonly placeholder="Plage de dates de départ…" class="bg-transparent border-none outline-none text-brand-dark font-medium text-sm w-full cursor-pointer placeholder-gray-400">
+                    </div>
+                    <button type="button" id="ws-filters-reset" class="shrink-0 px-4 py-3 rounded-xl text-sm font-bold text-brand-blue border border-brand-blue/30 bg-white hover:bg-brand-light/80 transition-colors" title="Effacer recherche, type et dates">
+                        Réinitialiser
                     </button>
                 </div>
+                <div class="flex items-center justify-between sm:justify-end gap-3 xl:ml-auto">
+                    <span class="text-xs text-gray-500 font-medium whitespace-nowrap"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogRows->count() }} affichée(s)</span>
+                    <div class="inline-flex bg-gray-100/90 rounded-xl p-1 border border-gray-100">
+                        <button type="button" id="btn-view-calendar" class="px-3 sm:px-4 py-2 rounded-lg text-gray-500 hover:text-brand-blue font-bold text-xs flex items-center gap-2 transition-all">
+                            <i class="far fa-calendar-alt"></i><span class="hidden sm:inline">Calendrier</span>
+                        </button>
+                        <button type="button" id="btn-view-list" class="px-3 sm:px-4 py-2 rounded-lg bg-white shadow-md text-brand-blue font-bold text-xs flex items-center gap-2 border border-gray-100/80">
+                            <i class="fas fa-list"></i><span class="hidden sm:inline">Liste</span>
+                        </button>
+                    </div>
+                </div>
             </div>
+            <p class="text-[11px] text-gray-500">La plage de dates filtre sur les lignes qui ont une <strong>date de départ</strong> ; les voyages sans date (—) restent affichés. Utilisez <strong>Réinitialiser</strong> si le tableau semble incomplet.</p>
         </div>
 
         {{-- Tableau --}}
@@ -320,15 +326,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var searchEl = document.getElementById('ws-filter-search');
     var typeEl = document.getElementById('ws-filter-type');
+    var rangeInput = document.getElementById('ws-date-range-picker');
+    var resetBtn = document.getElementById('ws-filters-reset');
     if (searchEl) searchEl.addEventListener('input', applyWsFilters);
     if (typeEl) typeEl.addEventListener('change', applyWsFilters);
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            if (searchEl) searchEl.value = '';
+            if (typeEl) typeEl.value = 'all';
+            if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();
+            applyWsFilters();
+        });
+    }
 
     window.applyWsFilters = function applyWsFilters() {
         var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
         var t = typeEl ? typeEl.value : 'all';
         var rows = document.querySelectorAll('#ws-catalog-table tbody tr.ws-catalog-row');
         var visible = 0;
-        var rangeInput = document.getElementById('ws-date-range-picker');
         var range = null;
         if (rangeInput && rangeInput._flatpickr && rangeInput._flatpickr.selectedDates.length === 2) {
             var a = rangeInput._flatpickr.selectedDates[0];
@@ -339,13 +354,14 @@ document.addEventListener('DOMContentLoaded', function () {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
             if (ok && q) {
-                var n = (tr.getAttribute('data-name') || '') + ' ' + (tr.getAttribute('data-code') || '');
-                if (n.toLowerCase().indexOf(q) === -1) ok = false;
+                var blob = (tr.getAttribute('data-search') || '')
+                    + ' ' + (tr.getAttribute('data-name') || '')
+                    + ' ' + (tr.getAttribute('data-code') || '');
+                if (blob.toLowerCase().indexOf(q) === -1) ok = false;
             }
             if (ok && range) {
                 var dep = tr.getAttribute('data-dep');
-                if (!dep) ok = false;
-                else {
+                if (dep) {
                     var d = new Date(dep + 'T12:00:00');
                     if (d < range.start || d > range.end) ok = false;
                 }
@@ -356,6 +372,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var c = document.getElementById('ws-row-visible-count');
         if (c) c.textContent = String(visible);
     };
+
+    applyWsFilters();
 });
 </script>
 @endpush

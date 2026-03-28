@@ -24,12 +24,18 @@
     };
     $stats = $row['stats'] ?? ['validee' => 0, 'en_cours' => 0, 'annulee' => 0];
     $isPast = ! empty($row['departure_is_past']);
+    $wsSearchBlob = \Illuminate\Support\Str::lower(trim(
+        ($row['name'] ?? '')
+        . ' ' . ($row['code'] ?? '')
+        . ' ' . ($row['subtitle'] ?? '')
+    ));
 @endphp
 <tr class="ws-catalog-row group border-b border-gray-100/80 last:border-0 hover:bg-gradient-to-r hover:from-[#e6f3fa]/40 hover:to-transparent transition-colors {{ $hasLaravel ? '' : 'bg-amber-50/20' }}"
     data-type="{{ $typeKey }}"
     data-row-code="{{ $row['code'] }}"
     data-code="{{ $row['code'] }}"
     data-name="{{ $row['name'] }}"
+    data-search="{{ e($wsSearchBlob) }}"
     data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}">
     <td class="py-4 px-5 sm:px-6 align-middle">
         <span class="text-xs font-bold text-gray-500 block mb-1.5 font-mono tracking-tight">{{ $row['code'] }}</span>
