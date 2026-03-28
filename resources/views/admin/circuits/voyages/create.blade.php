@@ -74,6 +74,19 @@
             </div>
 
             <aside class="col-12 ve-edit-sidebar">
+                <div class="card ve-sidebar-card ve-actions-card">
+                    <div class="card-body">
+                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-bolt-circle text-primary"></i> Actions</h5>
+                        <div class="d-grid gap-2">
+                            <button type="submit" form="create-voyage-form" class="btn btn-primary">
+                                <i class="bx bx-save me-1"></i> Créer le tour
+                            </button>
+                            <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary">
+                                <i class="bx bx-x me-1"></i> Annuler
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Paramètres & Prix</h4>

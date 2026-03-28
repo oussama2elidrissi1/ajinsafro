@@ -33,6 +33,7 @@
             'laravelV' => $laravelV,
             'vePriceLabel' => $vePriceLabel,
             'veDestination' => $veDestination,
+            'deleteFormId' => 'delete-voyage-form',
         ])
     </div>
 
@@ -1882,6 +1883,24 @@
 
         <aside class="col-12 ve-edit-sidebar order-2">
             <div class="ve-sticky-sidebar">
+                <div class="card ve-sidebar-card ve-actions-card">
+                    <div class="card-body">
+                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-bolt-circle text-primary"></i> Actions</h5>
+                        <div class="d-grid gap-2">
+                            <button type="submit" form="edit-voyage-form" class="btn btn-primary">
+                                <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}
+                            </button>
+                            <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary">
+                                <i class="bx bx-x me-1"></i> Annuler
+                            </a>
+                            @if(!$isCreate)
+                                <button type="submit" form="delete-voyage-form" class="btn btn-danger">
+                                    <i class="bx bx-trash me-1"></i> Supprimer
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
                 <div class="card ve-sidebar-card">
                     <div class="card-body">
                         <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-pulse text-primary"></i> Résumé</h5>
@@ -1972,7 +1991,7 @@
                     <h5 class="mb-1"><i class="bx bx-error-circle"></i> Zone dangereuse</h5>
                     <p class="mb-0 small">Suppression définitive du tour WordPress (irréversible).</p>
                 </div>
-                <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="mb-0 flex-shrink-0" onsubmit="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.');">
+                <form id="delete-voyage-form" action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="mb-0 flex-shrink-0" onsubmit="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.');">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger"><i class="bx bx-trash me-1"></i> Supprimer ce tour</button>

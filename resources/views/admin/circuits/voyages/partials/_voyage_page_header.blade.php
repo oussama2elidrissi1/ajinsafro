@@ -2,6 +2,7 @@
     $formId = $formId ?? 'edit-voyage-form';
     $currentStatus = $currentStatus ?? old('post_status', $voyage->post_status ?? 'draft');
     $cancelUrl = $cancelUrl ?? route('admin.circuits.voyages.index');
+    $deleteFormId = $deleteFormId ?? 'delete-voyage-form';
 @endphp
 <div class="ve-page-header">
     <div class="ve-header-topbar">
@@ -13,6 +14,11 @@
         </ul>
         <div class="ve-header-actions d-none d-md-flex">
             <a href="{{ $cancelUrl }}" class="btn btn-outline-light btn-sm ve-header-btn"><i class="bx bx-x me-1"></i> Annuler</a>
+            @if(!$isCreate)
+                <button type="submit" form="{{ $deleteFormId }}" class="btn btn-danger btn-sm ve-header-btn ve-header-btn--danger">
+                    <i class="bx bx-trash me-1"></i> Supprimer
+                </button>
+            @endif
             <button type="submit" form="{{ $formId }}" class="btn btn-light btn-sm ve-header-btn ve-header-btn--primary fw-semibold">
                 <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}
             </button>
@@ -28,7 +34,7 @@
                 </span>
             </div>
             @if($isCreate)
-                <p class="ve-page-subtitle mb-2">Complétez les champs puis enregistrez. Les onglets permettent d&rsquo;affiner prix, médias et programme.</p>
+                <p class="ve-page-subtitle mb-2">Complétez les champs puis enregistrez. Vous pourrez ensuite enrichir prix, médias et programme.</p>
             @endif
             <div class="ve-header-meta-line">
                 @if(!$isCreate)
