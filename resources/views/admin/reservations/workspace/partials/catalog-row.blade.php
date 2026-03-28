@@ -8,105 +8,135 @@
     $participantsUrl = $hasLaravel ? route('admin.reservations.workspace.prestation.participants', $q) : '#';
     $pdfUrl = $hasLaravel ? route('admin.reservations.workspace.prestation.pdf', $q) : '#';
     $editTourUrl = $wpPostId ? route('admin.circuits.voyages.edit', $wpPostId) : null;
-    $depLabel = $row['departure_date']
+    $hasDepDate = ! empty($row['departure_date']);
+    $depLabel = $hasDepDate
         ? \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y')
         : '—';
     $typeKey = $row['type'] ?? 'package';
     $badgeClass = match ($typeKey) {
-        'package' => 'bg-orange-50 text-brand-orange border-orange-100',
-        'vol' => 'bg-blue-50 text-brand-blue border-blue-100',
-        default => 'bg-amber-50 text-amber-700 border-amber-100',
+        'package' => 'bg-orange-50 text-brand-orange border-orange-200/80',
+        'vol' => 'bg-blue-50 text-brand-blue border-blue-200/80',
+        default => 'bg-amber-50 text-amber-800 border-amber-200/80',
     };
     $typeShort = match ($typeKey) {
         'package' => 'Package',
         'vol' => 'Vol',
         default => 'Hébergement',
     };
+    $rowAccent = match ($typeKey) {
+        'package' => 'border-l-[3px] border-l-orange-400',
+        'vol' => 'border-l-[3px] border-l-brand-blue',
+        default => 'border-l-[3px] border-l-amber-500',
+    };
     $stats = $row['stats'] ?? ['validee' => 0, 'en_cours' => 0, 'annulee' => 0];
     $isPast = ! empty($row['departure_is_past']);
+    $isUpcoming = $hasDepDate && ! $isPast;
     $wsSearchBlob = \Illuminate\Support\Str::lower(trim(
         ($row['name'] ?? '')
         . ' ' . ($row['code'] ?? '')
         . ' ' . ($row['subtitle'] ?? '')
     ));
+    $reserveLabel = $typeKey === 'vol' ? 'Réserver vol' : 'Réserver';
 @endphp
-<tr class="ws-catalog-row group border-b border-gray-100/80 last:border-0 hover:bg-gradient-to-r hover:from-[#e6f3fa]/40 hover:to-transparent transition-colors {{ $hasLaravel ? '' : 'bg-amber-50/20' }}"
+<tr class="ws-catalog-row group border-b border-gray-100/90 last:border-0 hover:bg-slate-50/80 transition-colors {{ $rowAccent }} {{ $hasLaravel ? '' : 'bg-amber-50/25' }}"
     data-type="{{ $typeKey }}"
     data-row-code="{{ $row['code'] }}"
     data-code="{{ $row['code'] }}"
     data-name="{{ $row['name'] }}"
     data-search="{{ e($wsSearchBlob) }}"
     data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}">
-    <td class="py-4 px-5 sm:px-6 align-middle">
-        <span class="text-xs font-bold text-gray-500 block mb-1.5 font-mono tracking-tight">{{ $row['code'] }}</span>
+    {{-- Réf. & type --}}
+    <td class="py-3.5 px-4 sm:px-5 align-top w-[120px] sm:w-[132px]">
+        <span class="text-xs font-extrabold text-brand-dark block font-mono tracking-tight leading-tight">{{ $row['code'] }}</span>
         @if($typeKey === 'package' && $hasLaravel && !empty($row['voyage_id']))
-            <span class="block text-[9px] text-gray-400 font-mono mb-1">Laravel voyages.id = {{ $row['voyage_id'] }}</span>
+            <span class="block text-[9px] text-slate-400 font-mono mt-1">Laravel #{{ $row['voyage_id'] }}</span>
         @endif
-        <span class="inline-flex px-2 py-0.5 {{ $badgeClass }} text-[9px] font-bold rounded-md uppercase tracking-wide border">{{ $typeShort }}</span>
+        <span class="inline-flex mt-2 px-2 py-0.5 {{ $badgeClass }} text-[9px] font-extrabold rounded-md uppercase tracking-wide border">{{ $typeShort }}</span>
         @if($typeKey === 'package' && ! $hasLaravel)
-            <span class="block mt-1.5 text-[9px] font-bold text-amber-800 uppercase tracking-wide">Non lié Laravel</span>
+            <span class="block mt-2 text-[9px] font-bold text-amber-800 uppercase tracking-wide leading-snug">Non lié Laravel</span>
         @endif
     </td>
-    <td class="py-4 px-5 sm:px-6 align-middle min-w-[200px]">
-        <p class="font-bold text-brand-dark text-sm leading-snug">{{ $row['name'] }}</p>
+    {{-- Prestation --}}
+    <td class="py-3.5 px-4 sm:px-5 align-top min-w-0 max-w-[min(100vw,420px)]">
+        <p class="font-bold text-brand-dark text-sm leading-snug line-clamp-3 sm:line-clamp-2" title="{{ e($row['name']) }}">{{ $row['name'] }}</p>
         @if(!empty($row['subtitle']))
-            <p class="text-[11px] text-gray-500 mt-1">{{ $row['subtitle'] }}</p>
+            <p class="text-[11px] text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{{ $row['subtitle'] }}</p>
         @endif
         @if($editTourUrl && $typeKey === 'package' && ! $hasLaravel)
-            <a href="{{ $editTourUrl }}" class="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-brand-blue hover:underline">
-                <i class="fas fa-external-link-alt text-[10px]"></i> Ouvrir dans Circuits / voyages
+            <a href="{{ $editTourUrl }}" class="inline-flex items-center gap-1.5 mt-2 text-[11px] font-bold text-brand-blue hover:underline">
+                <i class="fas fa-external-link-alt text-[10px]"></i> Circuits / voyages
             </a>
         @endif
     </td>
-    <td class="py-4 px-5 sm:px-6 align-middle whitespace-nowrap">
-        <p class="text-xs font-semibold text-gray-800">{{ $depLabel }}</p>
-        @if($isPast && $row['departure_date'])
-            <span class="inline-block mt-1 text-[9px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">Passé</span>
-        @endif
+    {{-- Départ --}}
+    <td class="py-3.5 px-4 sm:px-5 align-top whitespace-nowrap w-[130px]">
+        <p class="text-xs font-semibold text-slate-800">{{ $depLabel }}</p>
+        <div class="flex flex-wrap gap-1 mt-1.5">
+            @if($hasDepDate && $isPast)
+                <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">Passé</span>
+            @elseif($isUpcoming)
+                <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">À venir</span>
+            @elseif(! $hasDepDate)
+                <span class="text-[10px] text-slate-400 font-medium">Aucune date</span>
+            @endif
+        </div>
     </td>
-    <td class="py-4 px-4 align-middle text-center">
-        <div class="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold border border-emerald-100/80" title="Confirmées">
-                <i class="fas fa-check-circle text-[10px] opacity-80"></i>{{ $stats['validee'] }}
+    {{-- Stats --}}
+    <td class="py-3.5 px-3 align-middle text-center w-[150px] sm:w-[168px]">
+        <div class="inline-flex flex-col sm:flex-row flex-wrap items-center justify-center gap-1.5">
+            <span class="inline-flex items-center gap-1 min-w-[3.25rem] justify-center bg-emerald-50 text-emerald-800 px-2 py-1 rounded-lg text-[10px] font-bold border border-emerald-200/90 shadow-sm" title="Confirmées">
+                <i class="fas fa-check-circle text-[9px] opacity-90"></i>{{ $stats['validee'] }}
             </span>
-            <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-800 px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold border border-amber-100/80" title="En attente">
-                <i class="fas fa-hourglass-half text-[10px] opacity-80"></i>{{ $stats['en_cours'] }}
+            <span class="inline-flex items-center gap-1 min-w-[3.25rem] justify-center bg-amber-50 text-amber-900 px-2 py-1 rounded-lg text-[10px] font-bold border border-amber-200/90 shadow-sm" title="En attente">
+                <i class="fas fa-hourglass-half text-[9px] opacity-90"></i>{{ $stats['en_cours'] }}
             </span>
-            <span class="inline-flex items-center gap-1 bg-red-50 text-red-600 px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold border border-red-100/80" title="Annulées">
-                <i class="fas fa-times-circle text-[10px] opacity-80"></i>{{ $stats['annulee'] }}
+            <span class="inline-flex items-center gap-1 min-w-[3.25rem] justify-center bg-red-50 text-red-700 px-2 py-1 rounded-lg text-[10px] font-bold border border-red-200/90 shadow-sm" title="Annulées">
+                <i class="fas fa-times-circle text-[9px] opacity-90"></i>{{ $stats['annulee'] }}
             </span>
         </div>
     </td>
-    <td class="py-4 px-5 sm:px-6 align-middle text-right">
-        <div class="inline-flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">
+    {{-- Actions --}}
+    <td class="py-3.5 px-3 sm:px-4 align-middle text-right">
+        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-end gap-2 min-w-0 sm:min-w-[280px]">
             @if($hasLaravel)
-                <a href="{{ $participantsUrl }}" class="ws-action-btn w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:bg-brand-blue hover:text-white hover:border-brand-blue border border-gray-200/80 shadow-sm flex items-center justify-center transition-all" title="Voir les participants">
-                    <i class="fas fa-eye text-sm"></i>
+                <a href="{{ $participantsUrl }}"
+                   class="ws-action-link inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-[11px] font-bold text-slate-600 shadow-sm hover:border-brand-blue hover:bg-brand-blue hover:text-white transition-all order-1 sm:order-none">
+                    <i class="fas fa-eye text-xs"></i>
+                    <span class="hidden sm:inline">Participants</span>
                 </a>
-                <a href="{{ $pdfUrl }}" class="ws-action-btn w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:bg-red-500 hover:text-white hover:border-red-500 border border-gray-200/80 shadow-sm flex items-center justify-center transition-all" title="Télécharger le PDF">
-                    <i class="fas fa-file-pdf text-sm"></i>
+                <a href="{{ $pdfUrl }}"
+                   class="ws-action-link inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-2.5 py-2 text-[11px] font-bold text-red-700 shadow-sm hover:bg-red-600 hover:text-white hover:border-red-600 transition-all order-2 sm:order-none">
+                    <i class="fas fa-file-pdf text-xs"></i>
+                    <span class="hidden sm:inline">PDF</span>
                 </a>
             @else
-                <span class="w-9 h-9 rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-gray-300 cursor-not-allowed" title="Liez une fiche Laravel (voyages.wp_post_id)"><i class="fas fa-eye text-sm"></i></span>
-                <span class="w-9 h-9 rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-gray-300 cursor-not-allowed" title="Liez une fiche Laravel"><i class="fas fa-file-pdf text-sm"></i></span>
+                <span class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 px-2.5 py-2 text-[10px] font-semibold text-slate-300 cursor-not-allowed order-1" title="Liez voyages.wp_post_id">
+                    <i class="fas fa-eye"></i><span class="hidden sm:inline">Participants</span>
+                </span>
+                <span class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 px-2.5 py-2 text-[10px] font-semibold text-slate-300 cursor-not-allowed order-2" title="Liez voyages.wp_post_id">
+                    <i class="fas fa-file-pdf"></i><span class="hidden sm:inline">PDF</span>
+                </span>
             @endif
             @can('reservations.view')
                 @if($hasLaravel)
                     <button type="button"
-                        class="btn-show-add-reservation inline-flex items-center gap-1.5 bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold shadow-md shadow-emerald-500/20 border border-emerald-400/30 transition-all"
+                        class="btn-show-add-reservation inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 py-2.5 text-[11px] sm:text-xs font-extrabold shadow-md shadow-emerald-500/25 border border-emerald-400/40 transition-all order-3 sm:order-none sm:ml-0"
                         data-row-code="{{ $row['code'] }}"
                         data-type="{{ $typeKey }}"
                         data-name="{{ $row['name'] }} ({{ $row['code'] }})"
                         data-tour-id="{{ $row['voyage_id'] }}"
                         data-travel-date-id="{{ $row['travel_date_id'] ?? '' }}">
                         @if($typeKey === 'vol')
-                            <i class="fas fa-user-plus"></i><span class="hidden sm:inline">Ajouter</span><span class="sm:hidden">+</span>
+                            <i class="fas fa-plane-departure text-xs"></i>
                         @else
-                            <i class="fas fa-plus-circle"></i><span class="hidden sm:inline">Réserver</span><span class="sm:hidden">+</span>
+                            <i class="fas fa-suitcase-rolling text-xs"></i>
                         @endif
+                        <span>{{ $reserveLabel }}</span>
                     </button>
                 @else
-                    <button type="button" disabled class="inline-flex items-center gap-1.5 bg-gray-200 text-gray-500 px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold cursor-not-allowed border border-gray-200" title="Créez une ligne dans la table voyages avec wp_post_id = {{ $wpPostId }}">
+                    <button type="button" disabled
+                        class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-200 text-slate-500 px-3 py-2.5 text-[11px] font-bold cursor-not-allowed border border-slate-200 order-3"
+                        title="Créez voyages.wp_post_id = {{ $wpPostId }}">
                         <i class="fas fa-link"></i><span class="hidden sm:inline">Lier d’abord</span>
                     </button>
                 @endif

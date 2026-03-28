@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Reservation;
 use App\Models\ReservationExtra;
+use App\Models\TravelDate;
 use App\Models\Voyage;
+use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
 use App\Services\ReservationService;
 use App\Services\ReservationWorkspaceCatalogService;
@@ -234,9 +236,16 @@ class ReservationWorkspaceController extends Controller
         $this->branchScope->constrainReservationQueryForPortalUser($q, $request->user());
         $reservations = $q->orderByDesc('created_at')->limit(200)->get();
 
+        $wpTourTitle = $this->resolveWpTourTitle($voyage->wp_post_id);
+        $prestationDisplayTitle = $wpTourTitle ?? $voyage->name;
+        $travelDateLabel = $this->resolveTravelDateLabel($travelDateId);
+
         return view('admin.reservations.workspace.participants', [
             'voyage' => $voyage,
             'travelDateId' => $travelDateId,
+            'travelDateLabel' => $travelDateLabel,
+            'wpTourTitle' => $wpTourTitle,
+            'prestationDisplayTitle' => $prestationDisplayTitle,
             'reservations' => $reservations,
         ]);
     }
@@ -262,14 +271,21 @@ class ReservationWorkspaceController extends Controller
         $this->branchScope->constrainReservationQueryForPortalUser($q, $request->user());
         $reservations = $q->orderByDesc('created_at')->limit(500)->get();
 
+        $wpTourTitle = $this->resolveWpTourTitle($voyage->wp_post_id);
+        $prestationDisplayTitle = $wpTourTitle ?? $voyage->name;
+        $travelDateLabel = $this->resolveTravelDateLabel($travelDateId);
+
         $pdf = Pdf::loadView('admin.reservations.workspace.pdf.prestation', [
             'voyage' => $voyage,
             'travelDateId' => $travelDateId,
+            'travelDateLabel' => $travelDateLabel,
+            'wpTourTitle' => $wpTourTitle,
+            'prestationDisplayTitle' => $prestationDisplayTitle,
             'reservations' => $reservations,
             'generatedAt' => now(),
         ]);
 
-        $filename = 'prestation-'.$voyage->id.($travelDateId ? '-td'.$travelDateId : '').'.pdf';
+        $filename = 'fiche-prestation-voyage-'.$voyage->id.($travelDateId ? '-td'.$travelDateId : '').'.pdf';
 
         return $pdf->download($filename);
     }
@@ -287,6 +303,35 @@ class ReservationWorkspaceController extends Controller
         ]);
 
         return $pdf->download('reservation-'.$reservation->id.'.pdf');
+    }
+
+    private function resolveWpTourTitle(mixed $wpPostId): ?string
+    {
+        $id = $wpPostId !== null && $wpPostId !== '' ? (int) $wpPostId : 0;
+        if ($id <= 0) {
+            return null;
+        }
+        try {
+            $title = WpPost::query()->tours()->where('ID', $id)->value('post_title');
+            $title = $title !== null ? trim((string) $title) : '';
+
+            return $title !== '' ? $title : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function resolveTravelDateLabel(?int $travelDateId): ?string
+    {
+        if (! $travelDateId) {
+            return null;
+        }
+        $td = TravelDate::query()->find($travelDateId);
+        if (! $td || ! $td->date) {
+            return null;
+        }
+
+        return $td->date->format('d/m/Y');
     }
 
     private function authorizeWorkspace(Request $request): void

@@ -66,6 +66,26 @@
         100% { box-shadow: 0 0 0 12px rgba(0, 131, 196, 0); }
     }
     #ws-catalog-table thead th { position: sticky; top: 0; z-index: 1; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); }
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    @media (min-width: 640px) {
+        .sm\:line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    }
 </style>
 @endpush
 
@@ -199,15 +219,15 @@
                 </h2>
                 <p class="text-xs text-gray-500">Statistiques = dossiers sur le <strong class="text-brand-dark">voyage</strong> (toutes dates confondues).</p>
             </div>
-            <div class="overflow-x-auto max-h-[min(70vh,900px)] overflow-y-auto">
-                <table class="w-full text-left border-collapse min-w-[920px]" id="ws-catalog-table">
+            <div class="overflow-x-auto max-h-[min(72vh,920px)] overflow-y-auto -mx-px">
+                <table class="w-full text-left border-collapse min-w-[1040px]" id="ws-catalog-table">
                     <thead>
                         <tr class="text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                            <th class="py-3.5 px-5 sm:px-6">ID &amp; type</th>
-                            <th class="py-3.5 px-5 sm:px-6">Prestation</th>
-                            <th class="py-3.5 px-5 sm:px-6">Départ</th>
-                            <th class="py-3.5 px-4 text-center">Statistiques</th>
-                            <th class="py-3.5 px-5 sm:px-6 text-right">Actions</th>
+                            <th class="py-3.5 px-4 sm:px-5 w-[120px]">Réf. &amp; type</th>
+                            <th class="py-3.5 px-4 sm:px-5 min-w-[200px]">Prestation</th>
+                            <th class="py-3.5 px-4 sm:px-5 w-[130px]">Départ</th>
+                            <th class="py-3.5 px-3 text-center w-[168px]">Statistiques</th>
+                            <th class="py-3.5 px-3 sm:px-4 text-right min-w-[280px]">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm">
