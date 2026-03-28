@@ -28,7 +28,9 @@ class ReservationWorkspaceController extends Controller
     {
         $this->authorizeWorkspace($request);
 
-        $rows = $this->catalog->buildRows($request->user());
+        $catalog = $this->catalog->buildRows($request->user());
+        $rows = $catalog['rows'];
+        $catalogMeta = $catalog['meta'];
 
         $clientsQuery = Client::query()->orderByDesc('id')->limit(300);
         $this->branchScope->scopeClients($clientsQuery, $request->user());
@@ -36,7 +38,8 @@ class ReservationWorkspaceController extends Controller
 
         return view('admin.reservations.workspace.index', [
             'catalogRows' => $rows,
-            'catalogPackageCount' => $rows->where('type', 'package')->count(),
+            'catalogMeta' => $catalogMeta,
+            'catalogPackageCount' => (int) ($catalogMeta['wp_tour_count'] ?? $rows->where('type', 'package')->count()),
             'catalogTotalCount' => $rows->count(),
             'clients' => $clients,
         ]);

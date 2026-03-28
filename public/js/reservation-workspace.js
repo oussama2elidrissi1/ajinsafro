@@ -238,6 +238,11 @@
     }
 
     function showAddReservation(btn) {
+        var tourId = (btn.getAttribute('data-tour-id') || '').trim();
+        if (!tourId) {
+            alert('Ce tour n’est pas encore lié à une fiche voyage dans Laravel. Ouvrez « Circuits / voyages », enregistrez la fiche pour créer la liaison (wp_post_id).');
+            return;
+        }
         var main = document.getElementById('reservations-main-content');
         var add = document.getElementById('add-reservation-view');
         if (!main || !add) return;

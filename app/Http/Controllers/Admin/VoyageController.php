@@ -19,6 +19,7 @@ use App\Models\TravelDeparturePlace;
 use App\Models\TravelDepartureFlight;
 use App\Models\VoyageDeparturePlace;
 use App\Models\TravelDate;
+use App\Services\AdminWpTourCatalogQuery;
 use App\Services\VoyageFlightService;
 use App\Services\VoyageFlightOptionService;
 use App\Services\Wp\ProgramJsonService;
@@ -29,6 +30,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -60,9 +62,14 @@ class VoyageController extends Controller
     {
         $wpConnectionFailed = false;
         try {
-            $tours = WpPost::tours()
-                ->orderByDesc('ID')
-                ->paginate(20);
+            $tours = AdminWpTourCatalogQuery::baseQuery()->paginate(20);
+
+            if (config('app.debug')) {
+                Log::debug('VoyageController@index WP catalog', [
+                    'total_wp_tours' => $tours->total(),
+                    'per_page' => $tours->perPage(),
+                ]);
+            }
 
             $tours->getCollection()->transform(function ($tour) {
                 $tour->adult_price = $tour->getMeta('adult_price');

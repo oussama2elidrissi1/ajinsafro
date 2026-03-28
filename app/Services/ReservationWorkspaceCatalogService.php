@@ -9,13 +9,16 @@ use App\Models\TravelDate;
 use App\Models\User;
 use App\Models\Voyage;
 use App\Models\VoyageFlight;
+use App\Models\Wp\WpPost;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
- * Catalogue « workspace » : une ligne package par voyage Laravel, plus vols & hébergements liés.
- * Aligné sur la table voyages (circuits) — pas de filtre « départs futurs uniqués » pour la liste des voyages.
+ * Catalogue workspace : une ligne « package » par tour WordPress (même liste que /admin/circuits/voyages),
+ * enrichie par la fiche Laravel {@see Voyage} quand `wp_post_id` correspond.
+ * Vols & hébergements : uniquement pour les voyages Laravel liés.
  */
 class ReservationWorkspaceCatalogService
 {
@@ -24,16 +27,36 @@ class ReservationWorkspaceCatalogService
     ) {}
 
     /**
-     * @return Collection<int, array<string, mixed>>
+     * @return array{rows: Collection<int, array<string, mixed>>, meta: array<string, int|bool>}
      */
-    public function buildRows(User $user): Collection
+    public function buildRows(User $user): array
     {
         $today = Carbon::today();
         $rows = collect();
+        $meta = [
+            'wp_connection_failed' => false,
+            'wp_tour_count' => 0,
+            'laravel_voyage_matched' => 0,
+            'package_rows' => 0,
+        ];
 
-        $voyages = $this->queryVoyagesForCatalog()->get();
-        if ($voyages->isEmpty()) {
-            $voyages = Voyage::query()
+        try {
+            $wpTours = AdminWpTourCatalogQuery::baseQuery()->get();
+        } catch (\Throwable $e) {
+            Log::warning('ReservationWorkspaceCatalog: WP indisponible', ['error' => $e->getMessage()]);
+            $meta['wp_connection_failed'] = true;
+
+            return ['rows' => collect(), 'meta' => $meta];
+        }
+
+        $meta['wp_tour_count'] = $wpTours->count();
+
+        $wpIds = $wpTours->pluck('ID')->map(fn ($id) => (int) $id)->unique()->values()->all();
+
+        $voyagesByWp = collect();
+        if ($wpIds !== []) {
+            $voyagesByWp = Voyage::query()
+                ->whereIn('wp_post_id', $wpIds)
                 ->with([
                     'departures' => function ($q) {
                         $q->whereIn('status', [Departure::STATUS_OPEN, Departure::STATUS_FULL])
@@ -41,43 +64,57 @@ class ReservationWorkspaceCatalogService
                     },
                 ])
                 ->orderBy('name')
-                ->get();
+                ->get()
+                ->unique('wp_post_id')
+                ->keyBy(fn (Voyage $v) => (int) $v->wp_post_id);
         }
 
-        $tourIds = $voyages->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
-        $statsByTour = $this->batchReservationStatsByTour($user, $tourIds);
+        $meta['laravel_voyage_matched'] = $voyagesByWp->count();
 
-        foreach ($voyages as $voyage) {
-            $departures = $voyage->departures instanceof EloquentCollection
-                ? $voyage->departures
-                : collect($voyage->departures ?? []);
-            $pick = $this->pickDepartureForDisplay($departures, $today);
-            /** @var Departure|null $dep */
+        $laravelIdsForExtras = $voyagesByWp->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $statsByTour = $this->batchReservationStatsByTour($user, $laravelIdsForExtras);
+
+        foreach ($wpTours as $wp) {
+            if (! $wp instanceof WpPost) {
+                continue;
+            }
+            $wpId = (int) $wp->ID;
+            /** @var Voyage|null $voyage */
+            $voyage = $voyagesByWp->get($wpId);
+
+            $departures = $voyage
+                ? ($voyage->departures instanceof EloquentCollection ? $voyage->departures : collect($voyage->departures ?? []))
+                : collect();
+            $pick = $voyage ? $this->pickDepartureForDisplay($departures, $today) : ['departure' => null, 'is_past' => false];
             $dep = $pick['departure'];
             $departureId = $dep?->id;
             $startDate = $dep?->start_date;
-            $travelDateId = $this->resolveTravelDateId($voyage, $startDate);
-            $tourId = (int) $voyage->id;
+            $travelDateId = $voyage ? $this->resolveTravelDateId($voyage, $startDate) : null;
+            $tourId = $voyage ? (int) $voyage->id : null;
 
             $rows->push([
                 'type' => 'package',
-                'code' => 'PKG-'.$tourId,
-                'name' => $voyage->name ?: 'Voyage #'.$tourId,
-                'subtitle' => $pick['is_past'] && $dep ? 'Dernier départ enregistré' : null,
+                'code' => $voyage ? 'PKG-'.$tourId : 'WP-'.$wpId,
+                'name' => $voyage?->name ?: (trim((string) $wp->post_title) ?: 'Tour #'.$wpId),
+                'subtitle' => $voyage ? ($pick['is_past'] && $dep ? 'Dernier départ enregistré' : null) : 'Pas de fiche Laravel — liez wp_post_id dans la table voyages pour réserver',
                 'voyage_id' => $tourId,
+                'wp_post_id' => $wpId,
+                'laravel_synced' => $voyage !== null,
                 'departure_id' => $departureId,
                 'flight_id' => null,
                 'tour_hotel_wp_id' => null,
                 'travel_date_id' => $travelDateId,
                 'departure_date' => $startDate,
                 'departure_is_past' => $pick['is_past'],
-                'stats' => $statsByTour[$tourId] ?? $this->emptyStats(),
+                'stats' => $tourId ? ($statsByTour[$tourId] ?? $this->emptyStats()) : $this->emptyStats(),
             ]);
         }
 
+        $meta['package_rows'] = $rows->count();
+
         $flightQuery = VoyageFlight::query()
             ->with('voyage')
-            ->whereIn('voyage_id', $tourIds ?: [0])
+            ->whereIn('voyage_id', $laravelIdsForExtras ?: [0])
             ->orderBy('departure_date');
 
         foreach ($flightQuery->get() as $flight) {
@@ -93,6 +130,8 @@ class ReservationWorkspaceCatalogService
                 'name' => $label,
                 'subtitle' => $voyage->name,
                 'voyage_id' => $tourId,
+                'wp_post_id' => $voyage->wp_post_id ? (int) $voyage->wp_post_id : null,
+                'laravel_synced' => true,
                 'departure_id' => null,
                 'flight_id' => (int) $flight->id,
                 'tour_hotel_wp_id' => null,
@@ -103,7 +142,7 @@ class ReservationWorkspaceCatalogService
             ]);
         }
 
-        foreach ($voyages as $voyage) {
+        foreach ($voyagesByWp as $voyage) {
             if (! $voyage->wp_post_id) {
                 continue;
             }
@@ -121,6 +160,8 @@ class ReservationWorkspaceCatalogService
                     'name' => $hotel->hotel_name ?: 'Hébergement',
                     'subtitle' => $voyage->name,
                     'voyage_id' => $tourId,
+                    'wp_post_id' => (int) $voyage->wp_post_id,
+                    'laravel_synced' => true,
                     'departure_id' => $pick['departure']?->id,
                     'flight_id' => null,
                     'tour_hotel_wp_id' => (int) $hotel->id,
@@ -132,32 +173,20 @@ class ReservationWorkspaceCatalogService
             }
         }
 
-        return $rows->unique(fn ($r) => $r['type'].'-'.$r['code'])->values();
+        $finalRows = $rows->unique(fn ($r) => $r['type'].'-'.$r['code'])->values();
+
+        if (config('app.debug')) {
+            Log::debug('ReservationWorkspaceCatalog built', [
+                'wp_tour_count' => $meta['wp_tour_count'],
+                'laravel_voyage_matched' => $meta['laravel_voyage_matched'],
+                'total_rows' => $finalRows->count(),
+            ]);
+        }
+
+        return ['rows' => $finalRows, 'meta' => $meta];
     }
 
     /**
-     * Même périmètre que la gestion circuits : tous les enregistrements voyages utiles à la réservation.
-     */
-    private function queryVoyagesForCatalog()
-    {
-        return Voyage::query()
-            ->with([
-                'departures' => function ($q) {
-                    $q->whereIn('status', [Departure::STATUS_OPEN, Departure::STATUS_FULL])
-                        ->orderBy('start_date');
-                },
-            ])
-            ->where(function ($q) {
-                $q->whereIn('status', ['publish', 'actif', 'draft', 'pending'])
-                    ->orWhereNull('status')
-                    ->orWhere('status', '');
-            })
-            ->orderBy('name');
-    }
-
-    /**
-     * Prochain départ ouvert / complet à venir ; sinon dernier départ passé (pour contexte).
-     *
      * @return array{departure: ?Departure, is_past: bool}
      */
     private function pickDepartureForDisplay(Collection $departures, Carbon $today): array
@@ -181,8 +210,6 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Statistiques agrégées par voyage (toutes dates) — évite des compteurs vides liés à travel_date_id.
-     *
      * @param  array<int>  $tourIds
      * @return array<int, array{validee: int, en_cours: int, annulee: int}>
      */

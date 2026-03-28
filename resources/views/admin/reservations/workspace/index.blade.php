@@ -4,7 +4,7 @@
     $usePortalTailwind = AgentPortalLayout::shouldUse(auth()->user());
 
     $workspaceCalendarEvents = $catalogRows->map(function ($r) {
-        if (empty($r['departure_date'])) {
+        if (empty($r['departure_date']) || empty($r['voyage_id'])) {
             return null;
         }
         $name = (string) ($r['name'] ?? '');
@@ -16,7 +16,7 @@
             'start' => Carbon::parse($r['departure_date'])->format('Y-m-d'),
             'type' => $r['type'] ?? 'package',
             'code' => $r['code'] ?? '',
-            'voyage_id' => (int) ($r['voyage_id'] ?? 0),
+            'voyage_id' => (int) $r['voyage_id'],
             'travel_date_id' => $r['travel_date_id'] ?? '',
             'prestation_type' => $r['type'] ?? 'package',
             'label' => ($r['name'] ?? '').' ('.($r['code'] ?? '').')',
@@ -79,7 +79,7 @@
                 <p class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-brand-blue/80 mb-2">Catalogue réservable</p>
                 <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-dark tracking-tight">Espace réservation</h1>
                 <p class="text-sm text-gray-600 mt-2 max-w-2xl leading-relaxed">
-                    Tous les voyages Laravel (table <span class="font-mono text-xs bg-white/80 px-1 rounded">voyages</span>), avec packages, vols et hébergements liés. Filtres, liste ou calendrier, puis participants, PDF ou nouvelle réservation.
+                    Même catalogue que <strong>Circuits / voyages</strong> (tours WordPress <span class="font-mono text-xs bg-white/80 px-1 rounded">st_tours</span>), enrichi par la fiche Laravel quand <span class="font-mono text-xs bg-white/80 px-1 rounded">voyages.wp_post_id</span> correspond. Vols et hébergements en lignes supplémentaires pour les voyages liés.
                 </p>
                 <div class="flex flex-wrap gap-2 sm:gap-3 mt-5">
                     <span class="inline-flex items-center gap-2 rounded-xl bg-white/90 border border-brand-blue/15 px-3 py-2 text-xs font-semibold text-brand-dark shadow-sm">
@@ -105,6 +105,22 @@
 
     @if(session('success'))
         <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm">{{ session('success') }}</div>
+    @endif
+
+    @if(config('app.debug') && isset($catalogMeta))
+        <div class="mb-6 rounded-2xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-xs text-amber-950 shadow-sm">
+            <p class="font-bold uppercase tracking-wide text-amber-800 mb-1">Debug catalogue (APP_DEBUG)</p>
+            @if(!empty($catalogMeta['wp_connection_failed']))
+                <p class="text-red-800 font-semibold">Connexion WordPress indisponible — aucune ligne catalogue.</p>
+            @else
+                <p class="font-mono leading-relaxed">
+                    wp_tours={{ (int) ($catalogMeta['wp_tour_count'] ?? 0) }},
+                    laravel_matched={{ (int) ($catalogMeta['laravel_voyage_matched'] ?? 0) }},
+                    package_rows={{ (int) ($catalogMeta['package_rows'] ?? 0) }},
+                    total_rows={{ (int) ($catalogTotalCount ?? $catalogRows->count()) }}
+                </p>
+            @endif
+        </div>
     @endif
 
     <div id="reservations-main-content" class="space-y-6">
