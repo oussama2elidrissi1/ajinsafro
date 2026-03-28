@@ -196,6 +196,43 @@
                         </table>
                     </div>
                 @endif
+                @if(!empty($catalogMeta['package_departure_debug']))
+                    @if(!empty($catalogMeta['package_departure_source_doc']))
+                        <p class="text-[10px] text-slate-700 mt-3 mb-1 leading-snug">{{ $catalogMeta['package_departure_source_doc'] }}</p>
+                    @endif
+                    <p class="text-[10px] font-bold text-amber-900 mb-1">Départs packages (Disponibilité = <code class="font-mono">aj_travel_dates</code> / <code class="font-mono">TravelDate</code>)</p>
+                    <div class="overflow-x-auto max-h-56 overflow-y-auto border border-amber-200/80 rounded-lg bg-white/70">
+                        <table class="w-full text-[9px] font-mono">
+                            <thead class="bg-amber-100/80 text-left">
+                                <tr>
+                                    <th class="p-1.5">WP ID</th>
+                                    <th class="p-1.5">Laravel #</th>
+                                    <th class="p-1.5">Dates actives (liste)</th>
+                                    <th class="p-1.5">ID retenu</th>
+                                    <th class="p-1.5">Date affichée</th>
+                                    <th class="p-1.5">Passé</th>
+                                    <th class="p-1.5">Flags</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($catalogMeta['package_departure_debug'] as $dd)
+                                    <tr class="border-t border-amber-100">
+                                        <td class="p-1.5 align-top">{{ $dd['wp_post_id'] ?? '' }}</td>
+                                        <td class="p-1.5 align-top">{{ $dd['laravel_voyage_id'] ?? '—' }}</td>
+                                        <td class="p-1.5 align-top break-all max-w-[140px]">{{ !empty($dd['active_travel_dates_ymd']) ? implode(', ', $dd['active_travel_dates_ymd']) : '—' }}</td>
+                                        <td class="p-1.5 align-top">{{ $dd['picked_travel_date_id'] ?? '—' }}</td>
+                                        <td class="p-1.5 align-top font-bold">{{ $dd['picked_date_ymd'] ?? '—' }}</td>
+                                        <td class="p-1.5 align-top">{{ !empty($dd['workspace_display_is_past']) ? 'oui' : 'non' }}</td>
+                                        <td class="p-1.5 align-top">
+                                            @if(!empty($dd['no_laravel_voyage']))<span class="text-amber-800">sans Laravel</span>@endif
+                                            @if(!empty($dd['no_availability_rows']))<span class="text-red-800">aucune dispo</span>@endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             @endif
         </div>
     @endif

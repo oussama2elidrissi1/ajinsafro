@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\Log;
 /**
  * Catalogue workspace : une ligne « package » par tour WordPress (même liste que /admin/circuits/voyages).
  * Titre / code = WordPress. Prix package = même source que Circuits / voyages : meta WP {@see WpPost::getMeta('adult_price')}.
- * Si absent, repli {@see Voyage::price_from}. Départs / stats = Laravel {@see Voyage::departures()}.
+ * Si absent, repli {@see Voyage::price_from}.
+ * Date de départ package = section « Disponibilité » du CRUD voyage : {@see TravelDate} (wp.aj_travel_dates, travel_id = wp_post_id),
+ * synchronisée par {@see VoyageController::syncTravelDates()} depuis le formulaire travel_dates[*].
+ * Vols / hébergements : {@see Voyage::departures()} inchangé pour l’alignement date ↔ travel_date_id.
  */
 class ReservationWorkspaceCatalogService
 {
@@ -119,7 +122,19 @@ class ReservationWorkspaceCatalogService
         $laravelIdsForExtras = $voyagesByWp->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
         $statsByTour = $this->batchReservationStatsByTour($user, $laravelIdsForExtras);
 
+        $wpIdsWithLaravel = $voyagesByWp->keys()->map(fn ($k) => (int) $k)->values()->all();
+        $travelDatesByWpTourId = collect();
+        if ($wpIdsWithLaravel !== []) {
+            $travelDatesByWpTourId = TravelDate::query()
+                ->whereIn('travel_id', $wpIdsWithLaravel)
+                ->where('is_active', true)
+                ->orderBy('date')
+                ->get()
+                ->groupBy(fn (TravelDate $td) => (int) $td->travel_id);
+        }
+
         $packagePriceDebug = [];
+        $packageDepartureDebug = [];
 
         foreach ($wpTours as $wp) {
             if (! $wp instanceof WpPost) {
@@ -129,24 +144,16 @@ class ReservationWorkspaceCatalogService
             /** @var Voyage|null $voyage */
             $voyage = $voyagesByWp->get($wpId);
 
-            $departures = $voyage
-                ? ($voyage->departures instanceof EloquentCollection ? $voyage->departures : collect($voyage->departures ?? []))
-                : collect();
+            $tdColl = collect();
+            if ($voyage && (int) $voyage->wp_post_id > 0) {
+                $tdColl = $travelDatesByWpTourId->get((int) $voyage->wp_post_id) ?? collect();
+            }
+            $pickTd = $this->pickTravelDateForPackageDisplay($tdColl, $today);
+            $pickedTd = $pickTd['travelDate'];
 
-            $pickDisplay = $voyage ? $this->pickPackageDepartureForWorkspace($departures, $today) : [
-                'departure' => null,
-                'is_past' => false,
-                'is_canceled' => false,
-            ];
-            $pickBooking = $voyage ? $this->pickDepartureForDisplay($departures, $today) : ['departure' => null, 'is_past' => false];
-            $bookingDep = $pickBooking['departure'];
-            $displayDep = $pickDisplay['departure'];
-
-            $departureId = $displayDep?->id;
-            $startDate = $displayDep?->start_date;
-            $travelDateId = ($voyage && $bookingDep)
-                ? $this->resolveTravelDateId($voyage, $bookingDep->start_date)
-                : null;
+            $departureId = null;
+            $startDate = $pickedTd?->date;
+            $travelDateId = $pickedTd?->id;
             $tourId = $voyage ? (int) $voyage->id : null;
 
             $wpDisplayTitle = $wpPostTitleById->get($wpId) ?? (trim((string) $wp->post_title) ?: 'Tour #'.$wpId);
@@ -163,6 +170,21 @@ class ReservationWorkspaceCatalogService
                     'laravel_price_from' => $voyage?->price_from,
                     'price_label_final' => $priceLabel,
                     'price_source' => $this->resolvePackagePriceSource($adultPriceRaw, $voyage, $priceLabel),
+                ];
+                $packageDepartureDebug[] = [
+                    'wp_post_id' => $wpId,
+                    'laravel_voyage_id' => $voyage?->id,
+                    'storage' => 'wp.aj_travel_dates (model TravelDate), travel_id = voyages.wp_post_id',
+                    'active_travel_dates_ymd' => $tdColl
+                        ->map(fn (TravelDate $d) => $d->date?->format('Y-m-d'))
+                        ->filter()
+                        ->values()
+                        ->all(),
+                    'picked_travel_date_id' => $pickedTd?->id,
+                    'picked_date_ymd' => $startDate?->format('Y-m-d'),
+                    'workspace_display_is_past' => $pickTd['is_past'],
+                    'no_laravel_voyage' => $voyage === null,
+                    'no_availability_rows' => $voyage !== null && $tdColl->isEmpty(),
                 ];
             }
 
@@ -181,8 +203,8 @@ class ReservationWorkspaceCatalogService
                 'tour_hotel_wp_id' => null,
                 'travel_date_id' => $travelDateId,
                 'departure_date' => $startDate,
-                'departure_is_past' => $pickDisplay['is_past'],
-                'departure_is_canceled' => $pickDisplay['is_canceled'],
+                'departure_is_past' => $pickTd['is_past'],
+                'departure_is_canceled' => false,
                 'price_label' => $priceLabel,
                 'voyage_destination' => $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
                 'stats' => $tourId ? ($statsByTour[$tourId] ?? $this->emptyStats()) : $this->emptyStats(),
@@ -191,8 +213,13 @@ class ReservationWorkspaceCatalogService
 
         if (config('app.debug')) {
             $meta['package_price_debug'] = $packagePriceDebug;
+            $meta['package_departure_debug'] = $packageDepartureDebug;
+            $meta['package_departure_source_doc'] = 'Disponibilité CRUD → request travel_dates → VoyageController::syncTravelDates → TravelDate (wp.aj_travel_dates)';
             Log::debug('Workspace package prices (alignés sur VoyageController@index adult_price meta)', [
                 'packages' => $packagePriceDebug,
+            ]);
+            Log::debug('Workspace package départs (Disponibilité = aj_travel_dates)', [
+                'packages' => $packageDepartureDebug,
             ]);
         }
 
@@ -310,39 +337,32 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * @return array{departure: ?Departure, is_past: bool, is_canceled: bool}
+     * Dates actives de la section Disponibilité (CRUD) : {@see TravelDate}.
+     *
+     * @return array{travelDate: ?TravelDate, is_past: bool}
      */
-    private function pickPackageDepartureForWorkspace(Collection $departures, Carbon $today): array
+    private function pickTravelDateForPackageDisplay(Collection $travelDates, Carbon $today): array
     {
-        $bookable = $departures->filter(fn ($d) => $d instanceof Departure
-            && in_array($d->status, [Departure::STATUS_OPEN, Departure::STATUS_FULL], true)
-            && $d->start_date
-        )->sortBy(fn (Departure $d) => $d->start_date->timestamp);
+        $sorted = $travelDates->filter(fn ($d) => $d instanceof TravelDate && $d->date)
+            ->sortBy(fn (TravelDate $d) => $d->date->timestamp);
 
-        $future = $bookable->first(fn (Departure $d) => ! $d->start_date->lt($today));
+        if ($sorted->isEmpty()) {
+            return ['travelDate' => null, 'is_past' => false];
+        }
+
+        $future = $sorted->first(fn (TravelDate $d) => ! $d->date->lt($today));
         if ($future) {
-            return ['departure' => $future, 'is_past' => false, 'is_canceled' => false];
+            return ['travelDate' => $future, 'is_past' => false];
         }
 
-        $pastBookable = $bookable->filter(fn (Departure $d) => $d->start_date->lt($today))->sortByDesc(fn (Departure $d) => $d->start_date->timestamp)->first();
-        if ($pastBookable) {
-            return ['departure' => $pastBookable, 'is_past' => true, 'is_canceled' => false];
-        }
+        $past = $sorted->filter(fn (TravelDate $d) => $d->date->lt($today))
+            ->sortByDesc(fn (TravelDate $d) => $d->date->timestamp)
+            ->first();
 
-        $canceled = $departures->filter(fn ($d) => $d instanceof Departure
-            && $d->status === Departure::STATUS_CANCELED
-            && $d->start_date
-        )->sortByDesc(fn (Departure $d) => $d->start_date->timestamp)->first();
-
-        if ($canceled) {
-            return [
-                'departure' => $canceled,
-                'is_past' => $canceled->start_date->lt($today),
-                'is_canceled' => true,
-            ];
-        }
-
-        return ['departure' => null, 'is_past' => false, 'is_canceled' => false];
+        return [
+            'travelDate' => $past,
+            'is_past' => $past !== null,
+        ];
     }
 
     /**

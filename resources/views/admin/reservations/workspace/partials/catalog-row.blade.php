@@ -81,7 +81,7 @@
                             <span class="ml-1.5 align-middle inline-flex text-[8px] font-bold uppercase text-red-700 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-md">Annulé</span>
                         @endif
                     @else
-                        <span class="text-slate-400 font-medium"> Aucune date planifiée</span>
+                        <span class="text-slate-400 font-medium"> Aucune date</span>
                     @endif
                 </p>
                 <p class="text-[11px] leading-snug border-t border-slate-200/80 pt-1.5 mt-0.5">
