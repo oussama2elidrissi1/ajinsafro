@@ -35,7 +35,10 @@
         ($row['name'] ?? '')
         . ' ' . ($row['code'] ?? '')
         . ' ' . ($row['subtitle'] ?? '')
+        . ' ' . ($row['voyage_destination'] ?? '')
+        . ' ' . ($row['price_label'] ?? '')
     ));
+    $pkgDepCanceled = $typeKey === 'package' && ! empty($row['departure_is_canceled']);
     $reserveLabel = $typeKey === 'vol' ? 'Réserver vol' : 'Réserver';
 @endphp
 <tr class="ws-catalog-row group border-b border-gray-100/90 last:border-0 hover:bg-slate-50/80 transition-colors {{ $rowAccent }} {{ $hasLaravel ? '' : 'bg-amber-50/25' }}"
@@ -62,6 +65,40 @@
         @if(!empty($row['subtitle']))
             <p class="text-[11px] text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{{ $row['subtitle'] }}</p>
         @endif
+        @if($typeKey === 'package' && $hasLaravel)
+            <div class="mt-2.5 space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 shadow-sm/30">
+                @if(!empty($row['voyage_destination']))
+                    <p class="text-[11px] text-slate-600 leading-snug flex items-start gap-2">
+                        <i class="fas fa-map-marker-alt text-brand-blue mt-0.5 text-[10px] shrink-0 opacity-90"></i>
+                        <span>{{ $row['voyage_destination'] }}</span>
+                    </p>
+                @endif
+                <p class="text-[11px] leading-snug">
+                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Départ</span>
+                    @if($hasDepDate)
+                        <span class="font-semibold text-brand-dark"> {{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}</span>
+                        @if($pkgDepCanceled)
+                            <span class="ml-1.5 align-middle inline-flex text-[8px] font-bold uppercase text-red-700 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-md">Annulé</span>
+                        @endif
+                    @else
+                        <span class="text-slate-400 font-medium"> Aucune date planifiée</span>
+                    @endif
+                </p>
+                <p class="text-[11px] leading-snug border-t border-slate-200/80 pt-1.5 mt-0.5">
+                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Prix</span>
+                    @if(!empty($row['price_label']))
+                        <span class="font-semibold text-brand-dark"> À partir de {{ $row['price_label'] }}</span>
+                    @else
+                        <span class="text-slate-400 font-medium"> Sur demande</span>
+                    @endif
+                </p>
+            </div>
+        @elseif($typeKey === 'package' && ! $hasLaravel)
+            <div class="mt-2.5 rounded-xl border border-dashed border-amber-200 bg-amber-50/50 px-3 py-2 text-[11px] text-amber-900/90">
+                <span class="text-[9px] font-extrabold uppercase tracking-wide text-amber-800">Départ &amp; prix</span>
+                <span class="text-slate-600"> — liez <span class="font-mono text-[10px]">voyages.wp_post_id</span> pour afficher départ (Laravel) et tarif.</span>
+            </div>
+        @endif
         @if($editTourUrl && $typeKey === 'package' && ! $hasLaravel)
             <a href="{{ $editTourUrl }}" class="inline-flex items-center gap-1.5 mt-2 text-[11px] font-bold text-brand-blue hover:underline">
                 <i class="fas fa-external-link-alt text-[10px]"></i> Circuits / voyages
@@ -72,11 +109,16 @@
     <td class="py-3.5 px-4 sm:px-5 align-top whitespace-nowrap w-[130px]">
         <p class="text-xs font-semibold text-slate-800">{{ $depLabel }}</p>
         <div class="flex flex-wrap gap-1 mt-1.5">
-            @if($hasDepDate && $isPast)
+            @if($pkgDepCanceled)
+                <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide text-red-800 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-md">Départ annulé</span>
+            @endif
+            @if($hasDepDate && $isPast && ! $pkgDepCanceled)
                 <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">Passé</span>
-            @elseif($isUpcoming)
+            @elseif($isUpcoming && ! $pkgDepCanceled)
                 <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">À venir</span>
-            @elseif(! $hasDepDate)
+            @elseif(! $hasDepDate && $typeKey === 'package' && $hasLaravel)
+                <span class="text-[10px] text-slate-400 font-medium">—</span>
+            @elseif(! $hasDepDate && $typeKey !== 'package')
                 <span class="text-[10px] text-slate-400 font-medium">Aucune date</span>
             @endif
         </div>

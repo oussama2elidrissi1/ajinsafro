@@ -17,8 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Catalogue workspace : une ligne « package » par tour WordPress (même liste que /admin/circuits/voyages).
- * Libellé et code package = toujours {@see WpPost} (post_title, #ID) ; Laravel enrichit seulement réservations / départs / stats via `wp_post_id`.
- * Vols & hébergements : lignes supplémentaires ; sous-titre = titre WP du tour quand disponible.
+ * Titre / code = WordPress ; enrichissement Laravel : {@see Voyage::price_from}, {@see Voyage::departures()}, stats.
  */
 class ReservationWorkspaceCatalogService
 {
@@ -27,9 +26,7 @@ class ReservationWorkspaceCatalogService
     ) {}
 
     /**
-     * meta inclut notamment : wp_tour_count, laravel_voyage_matched, package_rows, vol_rows, hebergement_rows, total_rows.
-     *
-     * @return array{rows: Collection<int, array<string, mixed>>, meta: array<string, int|bool>}
+     * @return array{rows: Collection<int, array<string, mixed>>, meta: array<string, int|bool|array>}
      */
     public function buildRows(User $user): array
     {
@@ -69,8 +66,7 @@ class ReservationWorkspaceCatalogService
                 ->whereIn('wp_post_id', $wpIds)
                 ->with([
                     'departures' => function ($q) {
-                        $q->whereIn('status', [Departure::STATUS_OPEN, Departure::STATUS_FULL])
-                            ->orderBy('start_date');
+                        $q->orderBy('start_date');
                     },
                 ])
                 ->orderBy('id')
@@ -119,11 +115,21 @@ class ReservationWorkspaceCatalogService
             $departures = $voyage
                 ? ($voyage->departures instanceof EloquentCollection ? $voyage->departures : collect($voyage->departures ?? []))
                 : collect();
-            $pick = $voyage ? $this->pickDepartureForDisplay($departures, $today) : ['departure' => null, 'is_past' => false];
-            $dep = $pick['departure'];
-            $departureId = $dep?->id;
-            $startDate = $dep?->start_date;
-            $travelDateId = $voyage ? $this->resolveTravelDateId($voyage, $startDate) : null;
+
+            $pickDisplay = $voyage ? $this->pickPackageDepartureForWorkspace($departures, $today) : [
+                'departure' => null,
+                'is_past' => false,
+                'is_canceled' => false,
+            ];
+            $pickBooking = $voyage ? $this->pickDepartureForDisplay($departures, $today) : ['departure' => null, 'is_past' => false];
+            $bookingDep = $pickBooking['departure'];
+            $displayDep = $pickDisplay['departure'];
+
+            $departureId = $displayDep?->id;
+            $startDate = $displayDep?->start_date;
+            $travelDateId = ($voyage && $bookingDep)
+                ? $this->resolveTravelDateId($voyage, $bookingDep->start_date)
+                : null;
             $tourId = $voyage ? (int) $voyage->id : null;
 
             $wpDisplayTitle = $wpPostTitleById->get($wpId) ?? (trim((string) $wp->post_title) ?: 'Tour #'.$wpId);
@@ -133,7 +139,7 @@ class ReservationWorkspaceCatalogService
                 'code' => '#'.$wpId,
                 'name' => $wpDisplayTitle,
                 'subtitle' => $voyage
-                    ? (($pick['is_past'] && $dep) ? 'Dernier départ enregistré' : null)
+                    ? null
                     : ('Pas de fiche Laravel — renseignez voyages.wp_post_id = '.$wpId.' pour réserver / stats.'),
                 'voyage_id' => $tourId,
                 'wp_post_id' => $wpId,
@@ -143,7 +149,10 @@ class ReservationWorkspaceCatalogService
                 'tour_hotel_wp_id' => null,
                 'travel_date_id' => $travelDateId,
                 'departure_date' => $startDate,
-                'departure_is_past' => $pick['is_past'],
+                'departure_is_past' => $pickDisplay['is_past'],
+                'departure_is_canceled' => $pickDisplay['is_canceled'],
+                'price_label' => $this->formatVoyagePriceLabel($voyage),
+                'voyage_destination' => $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
                 'stats' => $tourId ? ($statsByTour[$tourId] ?? $this->emptyStats()) : $this->emptyStats(),
             ]);
         }
@@ -259,6 +268,56 @@ class ReservationWorkspaceCatalogService
             'departure' => $past,
             'is_past' => $past !== null,
         ];
+    }
+
+    /**
+     * @return array{departure: ?Departure, is_past: bool, is_canceled: bool}
+     */
+    private function pickPackageDepartureForWorkspace(Collection $departures, Carbon $today): array
+    {
+        $bookable = $departures->filter(fn ($d) => $d instanceof Departure
+            && in_array($d->status, [Departure::STATUS_OPEN, Departure::STATUS_FULL], true)
+            && $d->start_date
+        )->sortBy(fn (Departure $d) => $d->start_date->timestamp);
+
+        $future = $bookable->first(fn (Departure $d) => ! $d->start_date->lt($today));
+        if ($future) {
+            return ['departure' => $future, 'is_past' => false, 'is_canceled' => false];
+        }
+
+        $pastBookable = $bookable->filter(fn (Departure $d) => $d->start_date->lt($today))->sortByDesc(fn (Departure $d) => $d->start_date->timestamp)->first();
+        if ($pastBookable) {
+            return ['departure' => $pastBookable, 'is_past' => true, 'is_canceled' => false];
+        }
+
+        $canceled = $departures->filter(fn ($d) => $d instanceof Departure
+            && $d->status === Departure::STATUS_CANCELED
+            && $d->start_date
+        )->sortByDesc(fn (Departure $d) => $d->start_date->timestamp)->first();
+
+        if ($canceled) {
+            return [
+                'departure' => $canceled,
+                'is_past' => $canceled->start_date->lt($today),
+                'is_canceled' => true,
+            ];
+        }
+
+        return ['departure' => null, 'is_past' => false, 'is_canceled' => false];
+    }
+
+    private function formatVoyagePriceLabel(?Voyage $voyage): ?string
+    {
+        if (! $voyage || $voyage->price_from === null || (int) $voyage->price_from <= 0) {
+            return null;
+        }
+
+        $cur = trim((string) ($voyage->currency ?? ''));
+        if ($cur === '') {
+            $cur = 'MAD';
+        }
+
+        return number_format((float) $voyage->price_from, 0, ',', ' ').' '.$cur;
     }
 
     /**
