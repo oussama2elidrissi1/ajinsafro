@@ -1,6 +1,20 @@
 
 @php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
+    $laravelV = $laravelVoyage ?? null;
+    $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
+    $veAdultRaw = $meta['adult_price'] ?? (method_exists($voyage, 'getMeta') ? $voyage->getMeta('adult_price') : null);
+    $vePriceLabel = null;
+    if ($veAdultRaw !== null && $veAdultRaw !== '') {
+        $vePriceLabel = is_numeric($veAdultRaw)
+            ? number_format((float) $veAdultRaw, 0, ',', ' ').' MAD'
+            : trim((string) $veAdultRaw);
+    } elseif ($laravelV && $laravelV->price_from !== null && (float) $laravelV->price_from > 0) {
+        $cur = trim((string) ($laravelV->currency ?? ''));
+        $vePriceLabel = number_format((float) $laravelV->price_from, 0, ',', ' ').' '.($cur !== '' ? $cur : 'MAD');
+    }
+    $veDestination = ($laravelV && trim((string) ($laravelV->destination ?? '')) !== '') ? trim((string) $laravelV->destination) : null;
+    $veDatesCount = isset($travelDates) && $travelDates instanceof \Illuminate\Support\Collection ? $travelDates->count() : 0;
 @endphp
 @extends('layouts.master-ajinsafro')
 @section('title')
@@ -11,36 +25,56 @@
 @endpush
 @section('content')
 <div class="voyage-edit-page">
-    {{-- ===== Redesigned Page Header ===== --}}
     @php $currentStatus = old('post_status', $voyage->post_status ?? 'draft'); @endphp
-    <div class="ve-page-header">
-        <ul class="ve-breadcrumb">
-            <li><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i> Admin</a></li>
-            <li><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-            <li><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
-            <li class="active">{{ $isCreate ? 'Créer' : Str::limit($voyage->post_title ?? $voyage->name, 40) }}</li>
-        </ul>
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-            <div>
-                <h1 class="ve-page-title">{{ $isCreate ? 'Créer un tour WordPress' : ($voyage->post_title ?? $voyage->name) }}</h1>
-                @if(!$isCreate)
-                    <p class="ve-page-subtitle">ID #{{ $voyage->ID }} &mdash; Dernière modification {{ $voyage->post_modified ? \Carbon\Carbon::parse($voyage->post_modified)->diffForHumans() : 'N/A' }}</p>
-                @endif
+    <div class="ve-shell">
+        <div class="ve-page-header">
+            <ul class="ve-breadcrumb">
+                <li><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i> Admin</a></li>
+                <li><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
+                <li><a href="{{ route('admin.circuits.voyages.index') }}">Tours</a></li>
+                <li class="active">{{ $isCreate ? 'Créer' : Str::limit($voyage->post_title ?? $voyage->name, 40) }}</li>
+            </ul>
+            <div class="ve-header-grid">
+                <div class="ve-header-main">
+                    <div class="d-flex flex-wrap align-items-start gap-3 mb-2">
+                        <h1 class="ve-page-title mb-0">{{ $isCreate ? 'Créer un tour WordPress' : ($voyage->post_title ?? $voyage->name) }}</h1>
+                        <span class="ve-status-badge status-{{ $currentStatus }} align-self-center">
+                            <span class="status-dot"></span>
+                            {{ $currentStatus === 'publish' ? 'Publié' : ($currentStatus === 'draft' ? 'Brouillon' : 'En attente') }}
+                        </span>
+                    </div>
+                    <div class="ve-header-meta-line">
+                        @if(!$isCreate)
+                            <span class="ve-meta-pill"><i class="bx bx-hash"></i> WP #{{ $veWpId }}</span>
+                            @if($laravelV)<span class="ve-meta-pill"><i class="bx bx-data"></i> Laravel #{{ $laravelV->id }}</span>@endif
+                            <span class="ve-meta-pill ve-meta-pill--muted"><i class="bx bx-time"></i> {{ $voyage->post_modified ? \Carbon\Carbon::parse($voyage->post_modified)->locale('fr')->translatedFormat('d M Y H:i') : '—' }}</span>
+                        @else
+                            <span class="ve-meta-pill ve-meta-pill--muted">Nouveau tour</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="ve-header-aside">
+                    @if($vePriceLabel)
+                        <div class="ve-header-stat"><span class="ve-header-stat-label">Prix</span><span class="ve-header-stat-value">{{ $vePriceLabel }}</span></div>
+                    @endif
+                    @if($veDestination)
+                        <div class="ve-header-stat"><span class="ve-header-stat-label">Destination</span><span class="ve-header-stat-value ve-header-stat-value--sm">{{ Str::limit($veDestination, 52) }}</span></div>
+                    @endif
+                    @if(!$vePriceLabel && !$veDestination)
+                        <p class="ve-header-placeholder mb-0 small">Renseignez prix et destination pour un résumé ici.</p>
+                    @endif
+                </div>
             </div>
-            <span class="ve-status-badge status-{{ $currentStatus }}">
-                <span class="status-dot"></span>
-                {{ $currentStatus === 'publish' ? 'Publié' : ($currentStatus === 'draft' ? 'Brouillon' : 'En attente') }}
-            </span>
         </div>
     </div>
 
+    <div class="ve-shell">
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <ul class="mb-0">
@@ -51,12 +85,18 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+    </div>
 
     <form action="{{ $isCreate ? route('admin.circuits.voyages.store') : route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST" id="edit-voyage-form" data-voyage-id="{{ $voyage->ID ?? 0 }}">
         @csrf
         @if (!$isCreate)
             @method('PUT')
         @endif
+
+        <div class="ve-shell">
+        <div class="row g-4 align-items-start ve-edit-layout">
+        <div class="col-12 col-xl-8 ve-edit-main order-1">
+        <p class="ve-tab-zone-hint text-muted small mb-2 d-none d-lg-flex align-items-center gap-2"><i class="bx bx-folder-open"></i><span>Onglets : Basique, Info, Disponibilité, Médias… défilez pour Vols, Hôtels, Programme.</span></p>
 
         {{-- ===== Modern Tab Navigation (scrollable, sticky) ===== --}}
         <div class="ve-tabs-wrapper">
@@ -128,99 +168,25 @@
 
         <div class="tab-content ve-tab-content pt-4">
             <div class="tab-pane active" id="basic" role="tabpanel">
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-body">
-                                <h4 class="card-title mb-4">Informations principales</h4>
-                                
-                                <div class="mb-3">
-                                    <label for="title" class="form-label">Titre du tour <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="title" name="title" value="{{ old('title', $voyage->post_title) }}" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="slug" class="form-label">Slug (URL)</label>
-                                    <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug', $voyage->post_name) }}">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="content" class="form-label">Description complète</label>
-                                    <textarea class="form-control rich-editor" id="content" name="content" rows="10">{{ old('content', $voyage->post_content) }}</textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="excerpt" class="form-label">Extrait / Accroche</label>
-                                    <textarea class="form-control rich-editor" id="excerpt" name="excerpt" rows="3">{{ old('excerpt', $voyage->post_excerpt) }}</textarea>
-                                </div>
-                            </div>
+                <div class="card ve-pane-card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-2">Informations principales</h4>
+                        <p class="text-muted small mb-4">Publication et capacités : voir la colonne de droite.</p>
+                        <div class="mb-4">
+                            <label for="title" class="form-label">Titre du tour <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="title" name="title" value="{{ old('title', $voyage->post_title) }}" required>
                         </div>
-                    </div>
-
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h4 class="card-title mb-4">Paramètres généraux</h4>
-
-                                <div class="mb-3">
-                                    <label for="post_status" class="form-label">Statut</label>
-                                    <select class="form-select" id="post_status" name="post_status">
-                                        <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>Publié</option>
-                                        <option value="draft" {{ old('post_status', $voyage->post_status) === 'draft' ? 'selected' : '' }}>Brouillon</option>
-                                        <option value="pending" {{ old('post_status', $voyage->post_status) === 'pending' ? 'selected' : '' }}>En attente</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="duration_day" class="form-label">Durée (jours)</label>
-                                    <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="min_people" class="form-label">Nombre min. personnes</label>
-                                    <input type="number" class="form-control" id="min_people" name="min_people" value="{{ old('min_people', $meta['min_people'] ?? '') }}" min="1">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="max_people" class="form-label">Nombre max. personnes</label>
-                                    <input type="number" class="form-control bg-light" id="max_people" name="max_people" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
-                                    <small class="text-muted">Calculé automatiquement à partir des chambres de l'hôtel (onglet Hôtels).</small>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="places_display" class="form-label">Places</label>
-                                    <input type="number" class="form-control bg-light" id="places_display" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['places'] ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
-                                    <small class="text-muted">Total des places (identique au nombre max. personnes).</small>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="tour_price_by" class="form-label">Tarification par</label>
-                                    <select class="form-select" id="tour_price_by" name="tour_price_by">
-                                        <option value="">-- Sélectionner --</option>
-                                        <option value="person" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'person' ? 'selected' : '' }}>Par personne</option>
-                                        <option value="group" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'group' ? 'selected' : '' }}>Par groupe</option>
-                                        <option value="fixed" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'fixed' ? 'selected' : '' }}>Prix fixe</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured', $meta['is_featured'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_featured">
-                                        Tour Ã  la une (Featured)
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="hide_adult_in_booking_form" name="hide_adult_in_booking_form" value="1" {{ old('hide_adult_in_booking_form', $meta['hide_adult_in_booking_form'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="hide_adult_in_booking_form">
-                                        Masquer champ adulte dans formulaire
-                                    </label>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="st_tour_external_booking" class="form-label">Lien réservation externe</label>
-                                    <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
-                                </div>
-                            </div>
+                        <div class="mb-4">
+                            <label for="slug" class="form-label">Slug (URL)</label>
+                            <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug', $voyage->post_name) }}">
+                        </div>
+                        <div class="mb-4 ve-rich-field">
+                            <label for="content" class="form-label">Description complète</label>
+                            <textarea class="form-control rich-editor" id="content" name="content" rows="10">{{ old('content', $voyage->post_content) }}</textarea>
+                        </div>
+                        <div class="mb-0 ve-rich-field">
+                            <label for="excerpt" class="form-label">Extrait / Accroche</label>
+                            <textarea class="form-control rich-editor" id="excerpt" name="excerpt" rows="3">{{ old('excerpt', $voyage->post_excerpt) }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -653,38 +619,36 @@
 
             {{-- TAB 4: INFORMATION --}}
             <div class="tab-pane" id="information" role="tabpanel">
-                <div class="card">
+                <div class="card ve-pane-card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Contenu du tour</h4>
-                        
-                        <div class="mb-3">
-                            <label for="tours_include" class="form-label">Ce qui est inclus</label>
-                            <textarea class="form-control rich-editor" id="tours_include" name="tours_include" rows="6">{{ old('tours_include', $meta['tours_include'] ?? '') }}</textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="tours_exclude" class="form-label">Ce qui n'est pas inclus</label>
-                            <textarea class="form-control rich-editor" id="tours_exclude" name="tours_exclude" rows="6">{{ old('tours_exclude', $meta['tours_exclude'] ?? '') }}</textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="tours_highlight" class="form-label">Points forts</label>
-                            <textarea class="form-control rich-editor" id="tours_highlight" name="tours_highlight" rows="6">{{ old('tours_highlight', $meta['tours_highlight'] ?? '') }}</textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="tours_faq" class="form-label">FAQ</label>
-                            <textarea class="form-control rich-editor" id="tours_faq" name="tours_faq" rows="6">{{ old('tours_faq', $meta['tours_faq'] ?? '') }}</textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="tours_program_style" class="form-label">Style du programme</label>
-                            <select class="form-select" id="tours_program_style" name="tours_program_style">
-                                <option value="">Défaut</option>
-                                <option value="tab" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'tab' ? 'selected' : '' }}>Onglets</option>
-                                <option value="accordion" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'accordion' ? 'selected' : '' }}>Accordéon</option>
-                                <option value="list" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'list' ? 'selected' : '' }}>Liste</option>
-                            </select>
+                        <h4 class="card-title mb-2">Contenu du tour</h4>
+                        <p class="text-muted small mb-4">Blocs affichés sur la fiche publique.</p>
+                        <div class="row g-4">
+                            <div class="col-12 col-xl-6 ve-rich-field mb-0">
+                                <label for="tours_include" class="form-label">Ce qui est inclus</label>
+                                <textarea class="form-control rich-editor" id="tours_include" name="tours_include" rows="6">{{ old('tours_include', $meta['tours_include'] ?? '') }}</textarea>
+                            </div>
+                            <div class="col-12 col-xl-6 ve-rich-field mb-0">
+                                <label for="tours_exclude" class="form-label">Ce qui n'est pas inclus</label>
+                                <textarea class="form-control rich-editor" id="tours_exclude" name="tours_exclude" rows="6">{{ old('tours_exclude', $meta['tours_exclude'] ?? '') }}</textarea>
+                            </div>
+                            <div class="col-12 col-xl-6 ve-rich-field mb-0">
+                                <label for="tours_highlight" class="form-label">Points forts</label>
+                                <textarea class="form-control rich-editor" id="tours_highlight" name="tours_highlight" rows="6">{{ old('tours_highlight', $meta['tours_highlight'] ?? '') }}</textarea>
+                            </div>
+                            <div class="col-12 col-xl-6 ve-rich-field mb-0">
+                                <label for="tours_faq" class="form-label">FAQ</label>
+                                <textarea class="form-control rich-editor" id="tours_faq" name="tours_faq" rows="6">{{ old('tours_faq', $meta['tours_faq'] ?? '') }}</textarea>
+                            </div>
+                            <div class="col-12">
+                                <label for="tours_program_style" class="form-label">Style du programme (front)</label>
+                                <select class="form-select" id="tours_program_style" name="tours_program_style" style="max-width:22rem;">
+                                    <option value="">Défaut</option>
+                                    <option value="tab" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'tab' ? 'selected' : '' }}>Onglets</option>
+                                    <option value="accordion" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'accordion' ? 'selected' : '' }}>Accordéon</option>
+                                    <option value="list" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'list' ? 'selected' : '' }}>Liste</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -692,10 +656,11 @@
 
             {{-- TAB 5: AVAILABILITY --}}
             <div class="tab-pane" id="availability" role="tabpanel">
-                <div class="card">
+                <div class="card ve-pane-card">
                     <div class="card-body">
-                        @include('admin.circuits.voyages.partials._availability_notice')
-                        <h4 class="card-title mb-4">Disponibilité & Réservation</h4>
+                        <h4 class="card-title mb-2">Disponibilité & Réservation</h4>
+                        <p class="text-muted small mb-3">Dates de départ, réservation et annulation. Les dates sont enregistrées avec le tour.</p>
+                        <div class="alert alert-info border-0 small mb-4 py-3"><i class="bx bx-calendar-check me-1"></i> <strong>Départs</strong> : une ligne par date — bouton <strong>+ Ajouter une date</strong>, <strong>×</strong> pour supprimer. Places = capacité hôtels (lecture seule).</div>
                         
                         <div class="mb-3">
                             <label for="tours_booking_period" class="form-label">Période de réservation</label>
@@ -766,34 +731,27 @@
                             @forelse($datesList as $di => $dateItem)
                             <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
                                 <div class="card-body py-2">
-                                    <div class="row g-2 align-items-center">
-                                        <div class="col-md-3">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-6 col-md-3">
                                             <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
                                             <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
-
                                         </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small mb-1">Places</label>
-                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
-
-                    </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small mb-1">Places</label>
-                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Calculé automatiquement" readonly>
-
+                                        <div class="col-6 col-md-2">
+                                            <label class="form-label small mb-1">Places <span class="text-muted fw-normal">(auto)</span></label>
+                                            <input type="number" class="form-control form-control-sm bg-light" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? 0) }}" readonly title="Recalculé à l'enregistrement (hôtels)">
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <label class="form-label small mb-1">Prix spécifique</label>
-                                            <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="Prix">
+                                            <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="—">
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-end pb-2">
-                                            <div class="form-check">
+                                        <div class="col-6 col-md-2">
+                                            <div class="form-check mb-0 pb-1">
                                                 <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
                                                 <label class="form-check-label small">Actif</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-1 d-flex align-items-end pb-2">
-                                            @if($di > 0)<button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>@endif
+                                        <div class="col-12 col-md-1 text-md-end">
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer cette date">×</button>
                                         </div>
                                     </div>
                                 </div>
@@ -804,7 +762,7 @@
                             </div>
                             @endforelse
                         </div>
-                        <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="add-travel-date">
+                        <button type="button" class="btn btn-primary btn-sm mb-4" id="add-travel-date">
                             <i class="bx bx-plus"></i> Ajouter une date
                         </button>
                         <script>
@@ -820,30 +778,26 @@
                                 var html = `
                                 <div class="card mb-2 bg-light travel-date-row" data-index="${nextIndex}">
                                     <div class="card-body py-2">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-md-3">
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-6 col-md-3">
                                                 <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
                                                 <input type="date" class="form-control form-control-sm" name="travel_dates[${nextIndex}][date]" required>
                                             </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small mb-1">Places</label>
-
-                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
-
-                                            <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" value="0" min="0" placeholder="Calculé automatiquement" readonly>
-
+                                            <div class="col-6 col-md-2">
+                                                <label class="form-label small mb-1">Places <span class="text-muted fw-normal">(auto)</span></label>
+                                                <input type="number" class="form-control form-control-sm bg-light" name="travel_dates[${nextIndex}][seats]" value="0" readonly>
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-6 col-md-2">
                                                 <label class="form-label small mb-1">Prix spécifique</label>
-                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="Prix">
+                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="—">
                                             </div>
-                                            <div class="col-md-2 d-flex align-items-end pb-2">
-                                                <div class="form-check">
+                                            <div class="col-6 col-md-2">
+                                                <div class="form-check mb-0 pb-1">
                                                     <input type="checkbox" class="form-check-input" name="travel_dates[${nextIndex}][is_active]" value="1" checked>
                                                     <label class="form-check-label small">Actif</label>
                                                 </div>
                                             </div>
-                                            <div class="col-md-1 d-flex align-items-end pb-2">
+                                            <div class="col-12 col-md-1 text-md-end">
                                                 <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
                                             </div>
                                         </div>
@@ -864,19 +818,22 @@
             </div>
 
             <div class="tab-pane" id="media" role="tabpanel">
-                <div class="card">
+                <div class="card ve-pane-card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Images & Vidéos</h4>
+                        <h4 class="card-title mb-2">Images & Vidéos</h4>
+                        <p class="text-muted small mb-4">Hero, à la une WordPress et galerie.</p>
 
-                        {{-- Section 1 : Image principale (Hero / Cover) "” Upload ou médiathèque --}}
-                        <div class="mb-4 p-3 border rounded bg-light">
-                            <h5 class="mb-2">Image principale du voyage (Hero / Cover)</h5>
+                        {{-- Section 1 : Image principale (Hero / Cover) --}}
+                        <div class="mb-4 p-3 p-md-4 border rounded-3 bg-light ve-media-section">
+                            <h5 class="mb-3">Image principale (Hero / Cover)</h5>
                             <input type="hidden" name="hero_image_id" id="hero_image_id" value="{{ old('hero_image_id', $meta['hero_image_id'] ?? '') }}">
-                            <div class="d-flex flex-wrap align-items-start gap-3">
-                                <div id="hero-image-preview-wrap" class="border rounded overflow-hidden bg-white" style="width: 200px; min-height: 120px; display: {{ ($heroImageUrl ?? '') ? 'block' : 'none' }};">
-                                    <img id="hero-image-preview" src="{{ $heroImageUrl ?? '' }}" alt="Hero" class="img-fluid" style="max-height: 200px; object-fit: cover;">
+                            <div class="row g-4 align-items-start ve-media-hero-grid">
+                                <div class="col-auto">
+                                <div id="hero-image-preview-wrap" class="border rounded-3 overflow-hidden bg-white shadow-sm ve-media-thumb" style="width: 220px; min-height: 140px; display: {{ ($heroImageUrl ?? '') ? 'block' : 'none' }};">
+                                    <img id="hero-image-preview" src="{{ $heroImageUrl ?? '' }}" alt="Hero" class="img-fluid w-100" style="max-height: 220px; object-fit: cover;">
                                 </div>
-                                <div class="flex-grow-1">
+                                </div>
+                                <div class="col min-w-0">
                                     <div class="mb-2">
                                         <button type="button" class="btn btn-outline-primary btn-sm me-2" id="hero-upload-btn">
                                             <i class="bx bx-upload"></i> Uploader une image
@@ -1951,52 +1908,119 @@
                 </div>
             </div>
 
-            {{-- Drawer Ajouter un élément (Vols / Transferts / Hôtels / Activités) --}}
-            @include('admin.circuits.voyages.components.DayBuilderDrawer', [
-                'activitiesCatalog' => $activitiesCatalog,
-                'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
-                'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
-                'lastDayNumber' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1),
-                'airlines' => $airlines ?? collect(),
-                'programDays' => $programDays ?? collect()
-            ])
-        </div>
+        </div>{{-- /.tab-content --}}
 
-        {{-- Spacer for sticky save bar --}}
-        <div style="height: 20px;"></div>
+        </div>{{-- /.ve-edit-main --}}
+
+        <aside class="col-12 col-xl-4 ve-edit-sidebar order-2">
+            <div class="ve-sticky-sidebar">
+                <div class="card ve-sidebar-card">
+                    <div class="card-body">
+                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-pulse text-primary"></i> Résumé</h5>
+                        <ul class="list-unstyled small mb-0 ve-summary-list">
+                            <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">WordPress</span><span class="fw-semibold font-monospace">#{{ $veWpId ?: '—' }}</span></li>
+                            @if($laravelV)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Laravel</span><span class="fw-semibold font-monospace">#{{ $laravelV->id }}</span></li>@endif
+                            <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Dates départ</span><span class="fw-semibold">{{ $veDatesCount }}</span></li>
+                            @if($vePriceLabel)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Prix</span><span class="fw-semibold text-truncate ms-1" style="max-width:55%">{{ $vePriceLabel }}</span></li>@endif
+                            @if($veDestination)<li class="d-flex justify-content-between py-2"><span class="text-muted">Destination</span><span class="fw-semibold text-end small" style="max-width:55%">{{ Str::limit($veDestination, 40) }}</span></li>@endif
+                        </ul>
+                    </div>
+                </div>
+                <div class="card ve-sidebar-card">
+                    <div class="card-body">
+                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> Paramètres généraux</h5>
+                        <div class="mb-3">
+                            <label for="post_status" class="form-label">Statut</label>
+                            <select class="form-select" id="post_status" name="post_status">
+                                <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>Publié</option>
+                                <option value="draft" {{ old('post_status', $voyage->post_status) === 'draft' ? 'selected' : '' }}>Brouillon</option>
+                                <option value="pending" {{ old('post_status', $voyage->post_status) === 'pending' ? 'selected' : '' }}>En attente</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="duration_day" class="form-label">Durée (jours)</label>
+                            <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="min_people" class="form-label">Min. personnes</label>
+                            <input type="number" class="form-control" id="min_people" name="min_people" value="{{ old('min_people', $meta['min_people'] ?? '') }}" min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="max_people" class="form-label">Max. personnes</label>
+                            <input type="number" class="form-control bg-light" id="max_people" name="max_people" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
+                            <small class="text-muted">Via chambres (Hôtels)</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="places_display" class="form-label">Places</label>
+                            <input type="number" class="form-control bg-light" id="places_display" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['places'] ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tour_price_by" class="form-label">Tarification par</label>
+                            <select class="form-select" id="tour_price_by" name="tour_price_by">
+                                <option value="">-- Sélectionner --</option>
+                                <option value="person" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'person' ? 'selected' : '' }}>Par personne</option>
+                                <option value="group" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'group' ? 'selected' : '' }}>Par groupe</option>
+                                <option value="fixed" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'fixed' ? 'selected' : '' }}>Prix fixe</option>
+                            </select>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured', $meta['is_featured'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_featured">Tour à la une</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="hide_adult_in_booking_form" name="hide_adult_in_booking_form" value="1" {{ old('hide_adult_in_booking_form', $meta['hide_adult_in_booking_form'] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="hide_adult_in_booking_form">Masquer champ adulte</label>
+                        </div>
+                        <div class="mb-0">
+                            <label for="st_tour_external_booking" class="form-label">Lien réservation externe</label>
+                            <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        </div>{{-- /.row --}}
+
+        @include('admin.circuits.voyages.components.DayBuilderDrawer', [
+            'activitiesCatalog' => $activitiesCatalog,
+            'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
+            'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
+            'lastDayNumber' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1),
+            'airlines' => $airlines ?? collect(),
+            'programDays' => $programDays ?? collect()
+        ])
+
+        </div>{{-- /.ve-shell --}}
+
+        <div class="ve-form-bottom-spacer"></div>
     </form>
 
-    {{-- ===== Sticky Save Bar (Fixed bottom, glassmorphism) ===== --}}
     <div class="ve-save-bar">
         <div class="ve-save-inner">
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-                <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg waves-effect waves-light" id="edit-voyage-submit-btn">
-                    <i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}
-                </button>
-                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg waves-effect">
-                    <i class="bx bx-x me-1"></i> Annuler
-                </a>
-            </div>
-            <div class="text-muted d-none d-md-block">
-                <small><i class="bx bx-zap me-1"></i> Modifications instantanées dans WordPress</small>
+            <div class="text-muted d-none d-md-block ve-save-hint"><small><i class="bx bx-zap me-1"></i> WordPress + Laravel</small></div>
+            <div class="d-flex align-items-center gap-2 flex-wrap ve-save-actions">
+                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg"><i class="bx bx-x me-1"></i> Annuler</a>
+                <button type="submit" form="edit-voyage-form" class="btn btn-primary btn-lg" id="edit-voyage-submit-btn"><i class="bx bx-save me-1"></i> {{ $isCreate ? 'Créer le tour' : 'Enregistrer' }}</button>
             </div>
         </div>
     </div>
 
-    {{-- ===== Delete Zone (redesigned) ===== --}}
     @if (!$isCreate)
-    <div class="ve-danger-zone">
-        <h5><i class="bx bx-error-circle"></i> Zone dangereuse</h5>
-        <p>Cette action supprimera definitivement le tour de WordPress. Elle est irreversible.</p>
-        <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}"
-              method="POST"
-              onsubmit="return confirm('ATTENTION : Supprimer definitivement ce tour de WordPress ?\n\nCette action est irreversible.');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-danger waves-effect waves-light">
-                <i class="bx bx-trash me-1"></i> Supprimer ce tour definitivement
-            </button>
-        </form>
+    <div class="ve-shell">
+        <div class="ve-danger-zone ve-danger-zone--compact">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
+                <div>
+                    <h5 class="mb-1"><i class="bx bx-error-circle"></i> Zone dangereuse</h5>
+                    <p class="mb-0 small">Suppression définitive du tour WordPress (irréversible).</p>
+                </div>
+                <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="mb-0 flex-shrink-0" onsubmit="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger"><i class="bx bx-trash me-1"></i> Supprimer ce tour</button>
+                </form>
+            </div>
+        </div>
     </div>
     @endif
 </div>{{-- /.voyage-edit-page --}}

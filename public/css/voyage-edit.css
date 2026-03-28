@@ -501,9 +501,23 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 0 24px;
+    flex-wrap: wrap;
+}
+.voyage-edit-page .ve-save-bar .ve-save-actions {
+    margin-left: auto;
+}
+@media (max-width: 576px) {
+    .voyage-edit-page .ve-save-bar .ve-save-actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: stretch;
+    }
+    .voyage-edit-page .ve-save-bar .ve-save-actions .btn {
+        flex: 1;
+    }
 }
 .voyage-edit-page .ve-save-bar .btn-lg {
     padding: 12px 32px;
@@ -536,6 +550,14 @@
     color: #991b1b;
     font-size: 0.875rem;
     margin: 0 0 16px 0;
+}
+.voyage-edit-page .ve-danger-zone--compact {
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+}
+.voyage-edit-page .ve-danger-zone--compact p {
+    margin: 0;
+    color: #7f1d1d;
 }
 
 /* ---------- Accordion (Programme) ---------- */
@@ -918,4 +940,119 @@
 }
 .voyage-edit-page .ve-save-bar .text-muted i {
     color: var(--ve-primary);
+}
+
+/* ---------- Layout shell & header (SaaS edit) ---------- */
+.voyage-edit-page .ve-shell {
+    width: 100%;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+@media (min-width: 768px) {
+    .voyage-edit-page .ve-shell {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+.voyage-edit-page .ve-header-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+}
+@media (min-width: 768px) {
+    .voyage-edit-page .ve-header-grid {
+        grid-template-columns: 1fr minmax(200px, 320px);
+        align-items: start;
+    }
+}
+.voyage-edit-page .ve-header-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+.voyage-edit-page .ve-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.95);
+}
+.voyage-edit-page .ve-meta-pill--muted {
+    opacity: 0.85;
+    font-weight: 500;
+}
+.voyage-edit-page .ve-header-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.voyage-edit-page .ve-header-stat {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.voyage-edit-page .ve-header-stat-label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.75;
+    margin-bottom: 4px;
+}
+.voyage-edit-page .ve-header-stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+    word-break: break-word;
+}
+.voyage-edit-page .ve-header-stat-value--sm {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.voyage-edit-page .ve-header-placeholder {
+    font-size: 0.8rem;
+    opacity: 0.75;
+    color: #fff;
+}
+.voyage-edit-page .ve-sticky-sidebar {
+    position: sticky;
+    top: 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.voyage-edit-page .ve-sidebar-card {
+    box-shadow: var(--ve-card-shadow);
+}
+.voyage-edit-page .ve-sidebar-title i {
+    vertical-align: -2px;
+}
+.voyage-edit-page .ve-pane-card {
+    margin-bottom: 1.25rem;
+}
+.voyage-edit-page .ve-rich-field textarea.rich-editor {
+    min-height: 140px;
+}
+.voyage-edit-page .ve-form-bottom-spacer {
+    height: 88px;
+}
+.voyage-edit-page .ve-tab-zone-hint {
+    line-height: 1.45;
+}
+.voyage-edit-page .ve-media-thumb {
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+.voyage-edit-page .page-content {
+    overflow-x: hidden;
 }
