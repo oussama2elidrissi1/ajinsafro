@@ -29,7 +29,7 @@
 
 /* ---------- Page shell : pleine largeur zone contenu, pas de bande vide incohérente ---------- */
 .voyage-edit-page {
-    --ve-shell-max: min(100% - 0px, 1400px);
+    --ve-shell-max: 100%;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -953,11 +953,11 @@
 /* ---------- Layout shell & header (SaaS edit) ---------- */
 .voyage-edit-page .ve-shell {
     width: 100%;
-    max-width: var(--ve-shell-max);
+    max-width: none;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 18px;
+    padding-right: 18px;
 }
 .voyage-edit-page .ve-danger-shell {
     margin-top: 1.25rem;
@@ -965,25 +965,41 @@
 }
 @media (min-width: 768px) {
     .voyage-edit-page .ve-shell {
-        padding-left: 20px;
-        padding-right: 20px;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+@media (min-width: 1400px) {
+    .voyage-edit-page .ve-shell {
+        padding-left: 32px;
+        padding-right: 32px;
     }
 }
 /* Grille : formulaire fluide + colonne droite fixe (desktop), empilé (mobile) */
 @media (min-width: 992px) {
     .voyage-edit-page .ve-edit-layout.row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
-        gap: 1.5rem;
+        grid-template-columns: minmax(0, 2.25fr) minmax(320px, 1fr);
+        gap: 1.25rem;
         margin-left: 0;
         margin-right: 0;
         --bs-gutter-x: 0;
         --bs-gutter-y: 0;
+        align-items: start;
     }
     .voyage-edit-page .ve-edit-layout.row > [class*="col-"] {
         width: 100% !important;
         max-width: none !important;
         flex: none !important;
+        min-width: 0;
+    }
+    .voyage-edit-page .ve-edit-main {
+        min-width: 0;
+    }
+    .voyage-edit-page .ve-edit-sidebar {
+        min-width: 0;
+        max-width: 460px;
+        justify-self: end;
     }
 }
 .voyage-edit-page .ve-header-topbar {
