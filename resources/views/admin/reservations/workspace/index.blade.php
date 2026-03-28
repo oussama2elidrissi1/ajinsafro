@@ -167,6 +167,35 @@
                     <p class="text-[10px] mt-2 text-red-800 font-semibold">Doublons voyages.wp_post_id (plusieurs lignes Laravel) :</p>
                     <pre class="text-[10px] font-mono mt-1 overflow-x-auto bg-white/60 rounded-lg p-2 border border-red-100">{{ json_encode($catalogMeta['laravel_duplicates_wp_post_id'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                 @endif
+                @if(!empty($catalogMeta['package_price_debug']))
+                    <p class="text-[10px] font-bold text-amber-900 mt-3 mb-1">Prix packages (meta WP <code class="font-mono">adult_price</code> = colonne Prix Adulte Circuits / voyages)</p>
+                    <div class="overflow-x-auto max-h-48 overflow-y-auto border border-amber-200/80 rounded-lg bg-white/70">
+                        <table class="w-full text-[9px] font-mono">
+                            <thead class="bg-amber-100/80 text-left">
+                                <tr>
+                                    <th class="p-1.5">WP ID</th>
+                                    <th class="p-1.5">meta brut</th>
+                                    <th class="p-1.5">parsé</th>
+                                    <th class="p-1.5">Laravel price_from</th>
+                                    <th class="p-1.5">Affiché</th>
+                                    <th class="p-1.5">Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($catalogMeta['package_price_debug'] as $d)
+                                    <tr class="border-t border-amber-100">
+                                        <td class="p-1.5 align-top">{{ $d['wp_post_id'] ?? '' }}</td>
+                                        <td class="p-1.5 align-top break-all max-w-[100px]">{{ is_scalar($d['adult_price_meta_raw'] ?? null) ? $d['adult_price_meta_raw'] : json_encode($d['adult_price_meta_raw']) }}</td>
+                                        <td class="p-1.5 align-top">{{ $d['parsed_wp_adult'] ?? '—' }}</td>
+                                        <td class="p-1.5 align-top">{{ $d['laravel_price_from'] ?? '—' }}</td>
+                                        <td class="p-1.5 align-top font-bold">{{ $d['price_label_final'] ?? '—' }}</td>
+                                        <td class="p-1.5 align-top">{{ $d['price_source'] ?? '' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             @endif
         </div>
     @endif

@@ -85,18 +85,27 @@
                     @endif
                 </p>
                 <p class="text-[11px] leading-snug border-t border-slate-200/80 pt-1.5 mt-0.5">
-                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Prix</span>
+                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Prix adulte</span>
                     @if(!empty($row['price_label']))
-                        <span class="font-semibold text-brand-dark"> À partir de {{ $row['price_label'] }}</span>
+                        <span class="font-semibold text-brand-dark"> {{ $row['price_label'] }}</span>
                     @else
                         <span class="text-slate-400 font-medium"> Sur demande</span>
                     @endif
                 </p>
             </div>
         @elseif($typeKey === 'package' && ! $hasLaravel)
-            <div class="mt-2.5 rounded-xl border border-dashed border-amber-200 bg-amber-50/50 px-3 py-2 text-[11px] text-amber-900/90">
-                <span class="text-[9px] font-extrabold uppercase tracking-wide text-amber-800">Départ &amp; prix</span>
-                <span class="text-slate-600"> — liez <span class="font-mono text-[10px]">voyages.wp_post_id</span> pour afficher départ (Laravel) et tarif.</span>
+            <div class="mt-2.5 space-y-2">
+                @if(!empty($row['price_label']))
+                    <div class="rounded-xl border border-slate-100 bg-white px-3 py-2 text-[11px] shadow-sm">
+                        <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Prix adulte</span>
+                        <span class="font-semibold text-brand-dark"> {{ $row['price_label'] }}</span>
+                        <span class="text-[9px] text-slate-400 block mt-0.5">Source WordPress · liez Laravel pour départs et réservation.</span>
+                    </div>
+                @endif
+                <div class="rounded-xl border border-dashed border-amber-200 bg-amber-50/50 px-3 py-2 text-[11px] text-amber-900/90">
+                    <span class="text-[9px] font-extrabold uppercase tracking-wide text-amber-800">Départ</span>
+                    <span class="text-slate-600"> — liez <span class="font-mono text-[10px]">voyages.wp_post_id</span> pour afficher les départs Laravel.</span>
+                </div>
             </div>
         @endif
         @if($editTourUrl && $typeKey === 'package' && ! $hasLaravel)

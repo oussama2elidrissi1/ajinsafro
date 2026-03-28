@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Voyage;
 use App\Models\VoyageFlight;
 use App\Models\Wp\WpPost;
+use App\Models\Wp\WpPostMeta;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -17,7 +18,8 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Catalogue workspace : une ligne « package » par tour WordPress (même liste que /admin/circuits/voyages).
- * Titre / code = WordPress ; enrichissement Laravel : {@see Voyage::price_from}, {@see Voyage::departures()}, stats.
+ * Titre / code = WordPress. Prix package = même source que Circuits / voyages : meta WP {@see WpPost::getMeta('adult_price')}.
+ * Si absent, repli {@see Voyage::price_from}. Départs / stats = Laravel {@see Voyage::departures()}.
  */
 class ReservationWorkspaceCatalogService
 {
@@ -58,6 +60,19 @@ class ReservationWorkspaceCatalogService
 
         $wpPostTitleById = $wpTours->keyBy(fn (WpPost $p) => (int) $p->ID)
             ->map(fn (WpPost $p) => trim((string) $p->post_title) ?: 'Tour #'.(int) $p->ID);
+
+        /** Même clé que {@see VoyageController::index} : postmeta meta_key = adult_price */
+        $adultPriceMetaByPostId = [];
+        if ($wpIds !== []) {
+            $adultPriceMetaByPostId = WpPostMeta::query()
+                ->whereIn('post_id', $wpIds)
+                ->where('meta_key', 'adult_price')
+                ->orderBy('meta_id')
+                ->get()
+                ->groupBy(fn (WpPostMeta $m) => (int) $m->post_id)
+                ->map(fn ($group) => $group->last()->meta_value)
+                ->all();
+        }
 
         $voyagesByWp = collect();
         $laravelDuplicatesByWpPostId = [];
@@ -104,6 +119,8 @@ class ReservationWorkspaceCatalogService
         $laravelIdsForExtras = $voyagesByWp->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
         $statsByTour = $this->batchReservationStatsByTour($user, $laravelIdsForExtras);
 
+        $packagePriceDebug = [];
+
         foreach ($wpTours as $wp) {
             if (! $wp instanceof WpPost) {
                 continue;
@@ -134,6 +151,21 @@ class ReservationWorkspaceCatalogService
 
             $wpDisplayTitle = $wpPostTitleById->get($wpId) ?? (trim((string) $wp->post_title) ?: 'Tour #'.$wpId);
 
+            $adultPriceRaw = $adultPriceMetaByPostId[$wpId] ?? $wp->getMeta('adult_price');
+            $priceLabel = $this->formatPackagePriceLabel($adultPriceRaw, $voyage);
+
+            if (config('app.debug')) {
+                $packagePriceDebug[] = [
+                    'wp_post_id' => $wpId,
+                    'title' => mb_substr($wpDisplayTitle, 0, 80),
+                    'adult_price_meta_raw' => $adultPriceRaw,
+                    'parsed_wp_adult' => $this->parseWpAdultPriceToFloat($adultPriceRaw),
+                    'laravel_price_from' => $voyage?->price_from,
+                    'price_label_final' => $priceLabel,
+                    'price_source' => $this->resolvePackagePriceSource($adultPriceRaw, $voyage, $priceLabel),
+                ];
+            }
+
             $rows->push([
                 'type' => 'package',
                 'code' => '#'.$wpId,
@@ -151,9 +183,16 @@ class ReservationWorkspaceCatalogService
                 'departure_date' => $startDate,
                 'departure_is_past' => $pickDisplay['is_past'],
                 'departure_is_canceled' => $pickDisplay['is_canceled'],
-                'price_label' => $this->formatVoyagePriceLabel($voyage),
+                'price_label' => $priceLabel,
                 'voyage_destination' => $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
                 'stats' => $tourId ? ($statsByTour[$tourId] ?? $this->emptyStats()) : $this->emptyStats(),
+            ]);
+        }
+
+        if (config('app.debug')) {
+            $meta['package_price_debug'] = $packagePriceDebug;
+            Log::debug('Workspace package prices (alignés sur VoyageController@index adult_price meta)', [
+                'packages' => $packagePriceDebug,
             ]);
         }
 
@@ -304,6 +343,77 @@ class ReservationWorkspaceCatalogService
         }
 
         return ['departure' => null, 'is_past' => false, 'is_canceled' => false];
+    }
+
+    /**
+     * Colonne « Prix Adulte » Circuits / voyages : {@see VoyageController::index} applique `$tour->getMeta('adult_price')`.
+     * Même meta `postmeta.meta_key = adult_price`, format identique à la vue (`number_format` + MAD).
+     */
+    private function formatPackagePriceLabel(mixed $adultPriceMetaRaw, ?Voyage $voyage): ?string
+    {
+        $wpAmount = $this->parseWpAdultPriceToFloat($adultPriceMetaRaw);
+        if ($wpAmount !== null && $wpAmount > 0) {
+            return number_format($wpAmount, 0, ',', ' ').' MAD';
+        }
+
+        return $this->formatVoyagePriceLabel($voyage);
+    }
+
+    private function parseWpAdultPriceToFloat(mixed $raw): ?float
+    {
+        if ($raw === null) {
+            return null;
+        }
+        if (is_int($raw) || is_float($raw)) {
+            $f = (float) $raw;
+
+            return $f > 0 ? $f : null;
+        }
+        $s = trim((string) $raw);
+        if ($s === '') {
+            return null;
+        }
+        if (preg_match('/^[aOs]:/i', $s)) {
+            $u = @unserialize($s, ['allowed_classes' => false]);
+            if (is_numeric($u)) {
+                $f = (float) $u;
+
+                return $f > 0 ? $f : null;
+            }
+            if (is_array($u)) {
+                foreach (['price', 'adult_price', 'adult', 'value'] as $k) {
+                    if (isset($u[$k]) && is_numeric($u[$k])) {
+                        $f = (float) $u[$k];
+
+                        return $f > 0 ? $f : null;
+                    }
+                }
+            }
+
+            return null;
+        }
+        $s = str_replace("\xc2\xa0", '', $s);
+        $s = preg_replace('/\s+/', '', $s);
+        $s = str_replace(',', '.', $s);
+        if (! is_numeric($s)) {
+            return null;
+        }
+        $f = (float) $s;
+
+        return $f > 0 ? $f : null;
+    }
+
+    private function resolvePackagePriceSource(mixed $adultPriceRaw, ?Voyage $voyage, ?string $finalLabel): string
+    {
+        $wp = $this->parseWpAdultPriceToFloat($adultPriceRaw);
+        if ($wp !== null && $wp > 0) {
+            return 'wp_postmeta.adult_price';
+        }
+        if ($voyage && $voyage->price_from !== null && (int) $voyage->price_from > 0 && $finalLabel !== null) {
+            return 'laravel.voyages.price_from';
+        }
+
+        return 'none';
     }
 
     private function formatVoyagePriceLabel(?Voyage $voyage): ?string
