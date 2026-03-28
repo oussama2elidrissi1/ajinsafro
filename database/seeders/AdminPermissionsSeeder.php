@@ -35,7 +35,13 @@ class AdminPermissionsSeeder extends Seeder
             array_values(config('admin_menu.route_prefix_permissions', []))
         );
 
-        $permissions = array_values(array_unique(array_filter($permissions)));
+        $permissions = array_values(array_unique(array_filter(array_merge($permissions, [
+            'reservations.create',
+            'reservations.store',
+            'reservations.edit',
+            'reservations.update',
+            'reservations.destroy',
+        ]))));
 
         foreach ($permissions as $permissionName) {
             Permission::findOrCreate($permissionName, 'web');

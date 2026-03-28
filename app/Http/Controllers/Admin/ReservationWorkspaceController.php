@@ -42,7 +42,8 @@ class ReservationWorkspaceController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->can('reservations.create'), 403);
+        // Même périmètre que les routes admin.reservations.* (middleware → reservations.view).
+        abort_unless($request->user()->can('reservations.view'), 403);
         $request->validate([
             'prestation_type' => 'required|in:package,vol,hebergement',
             'tour_id' => 'required|integer|exists:voyages,id',

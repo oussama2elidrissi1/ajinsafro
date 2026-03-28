@@ -163,7 +163,7 @@
                                         <a href="{{ $pdfUrl }}" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center border border-gray-200" title="PDF prestation">
                                             <i class="fas fa-file-pdf"></i>
                                         </a>
-                                        @can('reservations.create')
+                                        @can('reservations.view')
                                             <button type="button"
                                                 class="btn-show-add-reservation bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center justify-center gap-1.5"
                                                 data-type="{{ $typeKey }}"

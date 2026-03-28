@@ -215,7 +215,7 @@
 
     <div class="pt-4 flex justify-end gap-3 border-t border-gray-100">
         <button type="button" id="btn-cancel-add-reservation" class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 border border-transparent">Annuler</button>
-        @can('reservations.create')
+        @can('reservations.view')
             <button type="submit" class="bg-[#0083c4] hover:bg-[#0e3a5a] text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center gap-2">
                 <i class="fas fa-save"></i> Confirmer la réservation
             </button>
