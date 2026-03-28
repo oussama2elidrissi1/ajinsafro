@@ -213,15 +213,17 @@
     </div>
 </div>
 
-<script type="application/json" id="workspace-calendar-json">@json(
-    $catalogRows->map(function ($r) {
+{{-- @json() ne doit pas envelopper une expression avec des ")" (ex. ?? '') : le compilateur Blade coupe trop tôt. --}}
+@php
+    $workspaceCalendarEvents = $catalogRows->map(function ($r) {
         return [
             'title' => ($r['code'] ?? '').' — '.($r['name'] ?? ''),
             'start' => $r['departure_date'] ? \Carbon\Carbon::parse($r['departure_date'])->format('Y-m-d') : null,
             'type' => $r['type'] ?? 'package',
         ];
-    })->filter(fn ($e) => ! empty($e['start']))->values()
-)</script>
+    })->filter(fn ($e) => ! empty($e['start']))->values()->all();
+@endphp
+<script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
 @push('scripts')
