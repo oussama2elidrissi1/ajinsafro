@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\BranchScopeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -14,7 +15,20 @@ class ProfileController extends Controller
      */
     public function edit()
     {
-        return view('admin.profile.edit', ['user' => auth()->user()]);
+        $user = auth()->user();
+        $managerTeamPreview = null;
+        if ($user && $user->isManager()) {
+            $direct = app(BranchScopeService::class)->portalDirectReports($user);
+            $managerTeamPreview = [
+                'members' => $direct,
+                'count' => $direct->count(),
+            ];
+        }
+
+        return view('admin.profile.edit', [
+            'user' => $user,
+            'managerTeamPreview' => $managerTeamPreview,
+        ]);
     }
 
     /**

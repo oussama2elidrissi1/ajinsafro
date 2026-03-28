@@ -133,4 +133,41 @@ class BranchScopeService
         }
         return collect();
     }
+
+    /**
+     * IDs utilisateurs pour le périmètre réservations/clients du portail agent :
+     * agent → lui seul ; manager → lui + équipe directe (même agence si renseignée).
+     *
+     * @return list<int>
+     */
+    public function portalOwnershipUserIds(User $user): array
+    {
+        if ($user->isManager()) {
+            return User::query()
+                ->where('manager_id', $user->id)
+                ->when($user->branch_id, fn (Builder $q) => $q->where('branch_id', $user->branch_id))
+                ->pluck('id')
+                ->push($user->id)
+                ->unique()
+                ->sort()
+                ->values()
+                ->all();
+        }
+
+        return [$user->id];
+    }
+
+    /**
+     * Membres directs de l'équipe (sans le manager).
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     */
+    public function portalDirectReports(User $manager)
+    {
+        return User::query()
+            ->where('manager_id', $manager->id)
+            ->when($manager->branch_id, fn (Builder $q) => $q->where('branch_id', $manager->branch_id))
+            ->orderBy('name')
+            ->get();
+    }
 }

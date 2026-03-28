@@ -37,6 +37,13 @@
         </div>
     @endif
 
+    @php
+        $useAgentPortal = \App\Services\View\AgentPortalLayout::shouldUse($user);
+    @endphp
+    @if($useAgentPortal && !empty($managerTeamPreview ?? null))
+        @include('admin.profile.partials.manager-portal-summary', ['user' => $user, 'managerTeamPreview' => $managerTeamPreview])
+    @endif
+
     <div class="row">
         <div class="col-md-12 col-xl-4">
             <div class="card">
