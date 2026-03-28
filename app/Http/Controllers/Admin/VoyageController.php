@@ -723,127 +723,68 @@ class VoyageController extends Controller
     }
 
     /**
-     * Sync hotels for tour: replace all by request data (tour_hotels array or single tour_hotel).
-     * Writes day_number, is_optional, sort_order for multi-day circuits.
+     * Sync hotels for tour: replace all by request data (tour_hotels[] or tour_hotel).
+     * Règle métier : un seul hôtel par voyage (premier élément conservé si plusieurs).
      */
-    private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): void
-    {
-        $items = [];
-        $inputHotels = $request->has('tour_hotels') && is_array($request->input('tour_hotels'))
-            ? $request->input('tour_hotels')
-            : ($request->has('tour_hotel') ? [$request->input('tour_hotel', [])] : []);
+private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): void
+{
+    $items = [];
 
-        // Règle métier : 1 seul hôtel par voyage.
-        // Si le formulaire envoie plusieurs lignes, on conserve uniquement la première.
-        if (is_array($inputHotels) && count($inputHotels) > 1) {
-            $inputHotels = [reset($inputHotels)];
-        }
+    $inputHotels = $request->has('tour_hotels') && is_array($request->input('tour_hotels'))
+        ? $request->input('tour_hotels')
+        : ($request->has('tour_hotel') ? [$request->input('tour_hotel', [])] : []);
 
-        foreach ($inputHotels as $raw) {
-            if (!is_array($raw)) {
-                continue;
-            }
-            $checkInDay = isset($raw['check_in_day']) && $raw['check_in_day'] !== '' ? max(1, (int) $raw['check_in_day']) : null;
-            $checkOutDay = isset($raw['check_out_day']) && $raw['check_out_day'] !== '' ? max(1, (int) $raw['check_out_day']) : null;
-            $oldDayNumber = isset($raw['day_number']) && $raw['day_number'] !== '' ? max(1, (int) $raw['day_number']) : null;
-            if (!$checkInDay && $oldDayNumber) {
-                $checkInDay = $oldDayNumber;
-            }
-            if (!$checkOutDay && $oldDayNumber) {
-                $checkOutDay = $oldDayNumber;
-            }
-            if (!$checkInDay) {
-                $checkInDay = 1;
-            }
-            if (!$checkOutDay) {
-                $checkOutDay = 1;
-            }
-            if ($checkOutDay < $checkInDay) {
-                $checkOutDay = $checkInDay;
-        if ($request->has('tour_hotels') && is_array($request->input('tour_hotels'))) {
-            foreach ($request->input('tour_hotels') as $raw) {
-                if (!is_array($raw)) {
-                    continue;
-                }
-                // Nouveau format : check_in_day / check_out_day
-                $checkInDay = isset($raw['check_in_day']) && $raw['check_in_day'] !== '' ? max(1, (int) $raw['check_in_day']) : null;
-                $checkOutDay = isset($raw['check_out_day']) && $raw['check_out_day'] !== '' ? max(1, (int) $raw['check_out_day']) : null;
-                
-                // Compatibilité ancien format : si check_in/out vides mais day_number existe, utiliser day_number pour les deux
-                $oldDayNumber = isset($raw['day_number']) && $raw['day_number'] !== '' ? max(1, (int) $raw['day_number']) : null;
-                if (!$checkInDay && $oldDayNumber) {
-                    $checkInDay = $oldDayNumber;
-                }
-                if (!$checkOutDay && $oldDayNumber) {
-                    $checkOutDay = $oldDayNumber;
-                }
-                // Valeurs par défaut
-                if (!$checkInDay) $checkInDay = 1;
-                if (!$checkOutDay) $checkOutDay = 1;
-                // S'assurer que check_out >= check_in
-                if ($checkOutDay < $checkInDay) {
-                    $checkOutDay = $checkInDay;
-                }
-                
-                $items[] = [
-                    'check_in_day' => $checkInDay,
-                    'check_out_day' => $checkOutDay,
-                    'day_number' => $oldDayNumber ?? $checkInDay, // Garder pour compatibilité
-                    'is_optional' => !empty($raw['is_optional']) ? 1 : 0,
-                    'hotel_name' => $raw['hotel_name'] ?? null,
-                    'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
-                    'address' => $raw['address'] ?? null,
-                    'room_type' => $raw['room_type'] ?? null,
-                    'meal_plan' => $raw['meal_plan'] ?? null,
-                    'notes' => $raw['notes'] ?? null,
-                    'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
-                ];
-            }
-        } elseif ($request->has('tour_hotel')) {
-            $raw = $request->input('tour_hotel', []);
-            $items[] = [
-                'check_in_day' => 1,
-                'check_out_day' => 1,
-                'day_number' => 1,
-                'is_optional' => 0,
-                'hotel_name' => $raw['hotel_name'] ?? null,
-                'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
-                'address' => $raw['address'] ?? null,
-                'room_type' => $raw['room_type'] ?? null,
-                'meal_plan' => $raw['meal_plan'] ?? null,
-                'notes' => $raw['notes'] ?? null,
-                'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
-            ];
-        }
-        TourHotel::where('tour_id', $tourId)->delete();
-        $sortOrder = 0;
-        $contentKeys = ['hotel_name', 'stars', 'address', 'room_type', 'meal_plan', 'notes', 'image_id'];
-        foreach ($items as $data) {
-            $content = array_intersect_key($data, array_flip($contentKeys));
-            $hasContent = (bool) array_filter($content, fn ($v) => $v !== null && $v !== '');
-            // Ne pas utiliser `&&` ici : en PHP, l'expression retourne un booléen et non le modèle.
-            $existingHotel = $id
-                ? TourHotel::where('tour_id', $tourId)->where('id', $id)->first()
-                : null;
-            // Ne pas ignorer une ligne qui a un id existant (sinon on supprimerait l'hôtel et on perdrait les chambres)
-            if (!$hasContent && !$existingHotel) {
-                continue;
-            }
-            $payload = array_merge($data, ['tour_id' => $tourId, 'sort_order' => $sortOrder++]);
-            if ($existingHotel) {
-                $existingHotel->update($payload);
-                $hotelIdsOrdered[] = $existingHotel->id;
-            } else {
-                $hotel = TourHotel::create($payload);
-                $hotelIdsOrdered[] = $hotel->id;
-            }
-        }
-        $keptIds = $hotelIdsOrdered;
-        TourHotel::where('tour_id', $tourId)->whereNotIn('id', $keptIds)->delete();
-
-        return $hotelIdsOrdered;
+    // Règle métier : 1 seul hôtel par voyage
+    if (is_array($inputHotels) && count($inputHotels) > 1) {
+        $inputHotels = [reset($inputHotels)];
     }
 
+    foreach ($inputHotels as $raw) {
+        if (!is_array($raw)) continue;
+
+        $checkInDay = isset($raw['check_in_day']) && $raw['check_in_day'] !== '' ? max(1, (int) $raw['check_in_day']) : null;
+        $checkOutDay = isset($raw['check_out_day']) && $raw['check_out_day'] !== '' ? max(1, (int) $raw['check_out_day']) : null;
+
+        $oldDayNumber = isset($raw['day_number']) && $raw['day_number'] !== '' ? max(1, (int) $raw['day_number']) : null;
+
+        if (!$checkInDay && $oldDayNumber) $checkInDay = $oldDayNumber;
+        if (!$checkOutDay && $oldDayNumber) $checkOutDay = $oldDayNumber;
+
+        if (!$checkInDay) $checkInDay = 1;
+        if (!$checkOutDay) $checkOutDay = 1;
+
+        if ($checkOutDay < $checkInDay) {
+            $checkOutDay = $checkInDay;
+        }
+
+        $items[] = [
+            'check_in_day' => $checkInDay,
+            'check_out_day' => $checkOutDay,
+            'day_number' => $oldDayNumber ?? $checkInDay,
+            'is_optional' => !empty($raw['is_optional']) ? 1 : 0,
+            'hotel_name' => $raw['hotel_name'] ?? null,
+            'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
+            'address' => $raw['address'] ?? null,
+            'room_type' => $raw['room_type'] ?? null,
+            'meal_plan' => $raw['meal_plan'] ?? null,
+            'notes' => $raw['notes'] ?? null,
+            'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
+        ];
+    }
+
+    TourHotel::where('tour_id', $tourId)->delete();
+
+    $sortOrder = 0;
+
+    foreach ($items as $data) {
+        $payload = array_merge($data, [
+            'tour_id' => $tourId,
+            'sort_order' => $sortOrder++
+        ]);
+
+        TourHotel::create($payload);
+    }
+}
     /**
      * Sync rooms for each tour hotel. Expects hotel ids in same order as tour_hotels request array.
      */
@@ -957,6 +898,13 @@ class VoyageController extends Controller
             if (array_filter($content, fn ($v) => $v !== null && $v !== '')) {
                 TourHotel::create(array_merge($data, ['tour_id' => $tourId, 'sort_order' => $sortOrder++]));
             }
+
+            $payload = array_merge($data, [
+                'tour_id' => $tourId,
+                'sort_order' => $sortOrder++
+            ]);
+
+            TourHotel::create($payload);
         }
     }
 

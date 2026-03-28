@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 
->>>>>>> 5625a04cedc77063d74a44d2afad68cabd0d23e7
 @php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
 @endphp
