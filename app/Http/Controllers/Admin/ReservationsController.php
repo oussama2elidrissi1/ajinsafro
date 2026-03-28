@@ -227,6 +227,20 @@ class ReservationsController extends Controller
     }
 
     /**
+     * Fiche réservation : redirige vers l’édition (même périmètre d’accès que {@see edit}).
+     * La route est utilisée après création (workspace), liens « Ouvrir », etc.
+     */
+    public function show(Request $request, Reservation $reservation): RedirectResponse
+    {
+        $branchIds = $this->branchScope->visibleBranchIds($request->user());
+        if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
+            abort(403, 'Accès non autorisé à cette réservation.');
+        }
+
+        return redirect()->route('admin.reservations.edit', $reservation);
+    }
+
+    /**
      * Formulaire d'édition d'une réservation.
      */
     public function edit(Request $request, Reservation $reservation): View
