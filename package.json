@@ -9,9 +9,13 @@
     },
     "devDependencies": {
         "@popperjs/core": "^2.11.6",
+        "@tailwindcss/postcss": "^4.2.1",
+        "autoprefixer": "^10.4.27",
         "axios": "^1.6.1",
         "laravel-vite-plugin": "^0.7.2",
+        "postcss": "^8.5.8",
         "sass": "^1.56.1",
+        "tailwindcss": "^4.2.1",
         "vite": "^4.0.0"
     },
     "dependencies": {
@@ -40,6 +44,7 @@
         "datatables.net-select-bs4": "^1.7.0",
         "dragula": "^3.7.3",
         "dropzone": "^5.5.1",
+        "flatpickr": "^4.6.13",
         "flot-charts": "^0.8.3",
         "flot.curvedlines": "^1.1.1",
         "fullcalendar": "^6.1.15",

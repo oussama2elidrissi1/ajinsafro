@@ -45,6 +45,7 @@ class AdminPermissionsSeeder extends Seeder
         $managerRole = Role::findOrCreate('Manager', 'web');
         $agentRole = Role::findOrCreate('Agent', 'web');
         $accountantRole = Role::findOrCreate('Comptable', 'web');
+        Role::findOrCreate('Partenaire', 'web');
 
         $adminRole->syncPermissions(Permission::query()->pluck('name')->all());
 

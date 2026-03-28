@@ -84,6 +84,18 @@
                 <label class="form-label small">Notes</label>
                 <textarea class="form-control form-control-sm" id="day-builder-hotel-notes" rows="2" placeholder="Notes"></textarea>
             </div>
+            <div class="col-12 mt-3 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+                    <label class="form-label small mb-0 fw-semibold">Chambres de l'hôtel</label>
+                    <span class="text-muted small" id="hotels-rooms-hint">—</span>
+                </div>
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="btn btn-sm btn-soft-primary d-none" id="hotels-rooms-add-btn">
+                        <i class="bx bx-plus"></i> Ajouter une chambre
+                    </button>
+                </div>
+                <div id="hotels-rooms-editor" class="d-none"></div>
+            </div>
             <div class="col-12">
                 <label class="form-label small">Image</label>
                 <input type="hidden" id="day_builder_hotel_image" value="">
@@ -127,6 +139,13 @@
     var confirmBtnText = document.getElementById('hotels-confirm-btn-text');
     var cancelBtn = document.getElementById('hotels-manager-cancel-btn');
 
+    var roomsEditor = document.getElementById('hotels-rooms-editor');
+    var roomsHintEl = document.getElementById('hotels-rooms-hint');
+    var roomsAddBtn = document.getElementById('hotels-rooms-add-btn');
+    var targetHotelRowCache = null;
+    var createdRowForAdd = null;
+    var hadHotelBeforeOpen = false;
+
     var formFields = {
         is_optional: document.getElementById('day-builder-hotel-is_optional'),
         hotel_name: document.getElementById('day-builder-hotel-name'),
@@ -160,6 +179,201 @@
         var prev = document.getElementById('day_builder_hotel_image_preview');
         if (wrap) wrap.style.display = 'none';
         if (prev) prev.src = '';
+        clearRoomsEditor();
+        targetHotelRowCache = null;
+    }
+
+    function escHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, function(ch) {
+            return ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[ch]);
+        });
+    }
+
+    function clearRoomsEditor() {
+        if (roomsEditor) roomsEditor.innerHTML = '';
+        if (roomsEditor) roomsEditor.classList.add('d-none');
+        if (roomsHintEl) roomsHintEl.textContent = '—';
+    }
+
+    function getRoomsFromTourHotelRow(tourHotelRow) {
+        if (!tourHotelRow) return [];
+        var roomRows = Array.from(tourHotelRow.querySelectorAll('.tour-room-row'));
+        return roomRows.map(function(roomEl) {
+            var ri = roomEl.getAttribute('data-room-index') || '';
+            var typeSel = roomEl.querySelector('select[name$="[room_type]"]');
+            var options = typeSel ? Array.from(typeSel.options).map(function(o) { return { value: o.value, label: o.textContent }; }) : [];
+
+            var getInput = function(sel) {
+                var el = roomEl.querySelector(sel);
+                return el ? el.value : '';
+            };
+            var getChecked = function(sel) {
+                var el = roomEl.querySelector(sel);
+                return el ? !!el.checked : false;
+            };
+
+            return {
+                roomIndex: ri,
+                room_type: getInput('select[name$="[room_type]"]') || (typeSel ? typeSel.value : ''),
+                room_count: getInput('input[name$="[room_count]"]'),
+                capacity_adults: getInput('input[name$="[capacity_adults]"]'),
+                capacity_children: getInput('input[name$="[capacity_children]"]'),
+                capacity_total: getInput('input[name$="[capacity_total]"]'),
+                supplement: getInput('input[name$="[supplement]"]'),
+                room_code: getInput('input[name$="[room_code]"]'),
+                room_label: getInput('input[name$="[room_label]"]'),
+                description: getInput('input[name$="[description]"]'),
+                notes: (roomEl.querySelector('textarea[name$="[notes]"]') ? roomEl.querySelector('textarea[name$="[notes]"]').value : ''),
+                is_active: getChecked('input[name$="[is_active]"]'),
+                is_default: getChecked('input[name$="[is_default]"]'),
+                roomTypeOptions: options
+            };
+        });
+    }
+
+    function renderRoomsEditorFromTourHotelRow(tourHotelRow) {
+        if (!roomsEditor) return;
+        clearRoomsEditor();
+        if (!tourHotelRow) return;
+
+        var rooms = getRoomsFromTourHotelRow(tourHotelRow);
+        if (!rooms.length) return;
+
+        roomsHintEl && (roomsHintEl.textContent = rooms.length + ' type(s)');
+        roomsEditor.classList.remove('d-none');
+
+        roomsEditor.innerHTML = rooms.map(function(r) {
+            var optionsHtml = (r.roomTypeOptions && r.roomTypeOptions.length)
+                ? r.roomTypeOptions.map(function(o) {
+                    var selected = String(o.value) === String(r.room_type) ? 'selected' : '';
+                    return '<option value="' + escHtml(o.value) + '" ' + selected + '>' + escHtml(o.label) + '</option>';
+                }).join('')
+                : '';
+
+            return '' +
+                '<div class="border rounded p-2 mb-2 hotels-room-editor-row" data-room-index="' + escHtml(r.roomIndex) + '">' +
+                '  <div class="d-flex align-items-center justify-content-between mb-2 gap-2 flex-wrap">' +
+                '    <div class="fw-semibold small">Chambre ' + escHtml(Number(r.roomIndex) + 1) + '</div>' +
+                '    <div class="d-flex align-items-center gap-3 flex-wrap">' +
+                '      <div class="form-check m-0">' +
+                '        <input class="form-check-input hotels-room-is_active" type="checkbox" ' + (r.is_active ? 'checked' : '') + ' />' +
+                '        <label class="form-check-label small">Actif</label>' +
+                '      </div>' +
+                '      <div class="form-check m-0">' +
+                '        <input class="form-check-input hotels-room-is_default" type="checkbox" ' + (r.is_default ? 'checked' : '') + ' />' +
+                '        <label class="form-check-label small">Défaut</label>' +
+                '      </div>' +
+                '    </div>' +
+                '  </div>' +
+                '  <div class="row g-2">' +
+                '    <div class="col-12 col-md-3">' +
+                '      <label class="form-label small">Type</label>' +
+                '      <select class="form-select form-select-sm hotels-room-type">' + optionsHtml + '</select>' +
+                '    </div>' +
+                '    <div class="col-6 col-md-2">' +
+                '      <label class="form-label small">Nb ch.</label>' +
+                '      <input type="number" min="1" class="form-control form-control-sm hotels-room-count" value="' + escHtml(r.room_count) + '" />' +
+                '    </div>' +
+                '    <div class="col-6 col-md-2">' +
+                '      <label class="form-label small">Suppl. (DH)</label>' +
+                '      <input type="number" min="0" step="0.01" class="form-control form-control-sm hotels-room-supplement" value="' + escHtml(r.supplement) + '" />' +
+                '    </div>' +
+                '    <div class="col-4 col-md-2">' +
+                '      <label class="form-label small">Cap. ad.</label>' +
+                '      <input type="number" min="0" class="form-control form-control-sm hotels-room-cap-adults" value="' + escHtml(r.capacity_adults) + '" />' +
+                '    </div>' +
+                '    <div class="col-4 col-md-2">' +
+                '      <label class="form-label small">Cap. enf.</label>' +
+                '      <input type="number" min="0" class="form-control form-control-sm hotels-room-cap-children" value="' + escHtml(r.capacity_children) + '" />' +
+                '    </div>' +
+                '    <div class="col-4 col-md-2">' +
+                '      <label class="form-label small">Cap. tot.</label>' +
+                '      <input type="number" min="1" class="form-control form-control-sm hotels-room-cap-total" value="' + escHtml(r.capacity_total) + '" />' +
+                '    </div>' +
+                '    <div class="col-6 col-md-3">' +
+                '      <label class="form-label small">Code</label>' +
+                '      <input type="text" class="form-control form-control-sm hotels-room-code" value="' + escHtml(r.room_code) + '" />' +
+                '    </div>' +
+                '    <div class="col-6 col-md-3">' +
+                '      <label class="form-label small">Libellé</label>' +
+                '      <input type="text" class="form-control form-control-sm hotels-room-label" value="' + escHtml(r.room_label) + '" />' +
+                '    </div>' +
+                '    <div class="col-12 col-md-6">' +
+                '      <label class="form-label small">Description</label>' +
+                '      <input type="text" class="form-control form-control-sm hotels-room-description" value="' + escHtml(r.description) + '" />' +
+                '    </div>' +
+                '    <div class="col-12">' +
+                '      <label class="form-label small">Notes internes</label>' +
+                '      <textarea class="form-control form-control-sm hotels-room-notes" rows="1">' + escHtml(r.notes) + '</textarea>' +
+                '    </div>' +
+                '  </div>' +
+                '</div>';
+        }).join('');
+
+        // Restaurer le selected value (car on a injecté optionsHtml seulement)
+        Array.from(roomsEditor.querySelectorAll('.hotels-room-editor-row')).forEach(function(rowDiv) {
+            var typeSelect = rowDiv.querySelector('.hotels-room-type');
+            // Le select possède déjà l'option sélectionnée via optionsHtml
+            if (typeSelect) typeSelect.value = rowDiv.querySelector('.hotels-room-type').value;
+        });
+
+        // Ajuster valeurs de selects/inputs si besoin
+        // Les valeurs sont déjà initialisées côté HTML.
+    }
+
+    function syncRoomsEditorFromCurrentDay() {
+        var tourHotelRow = getTourHotelRowForCurrentDrawer();
+        ensureRoomsAddButtonState(tourHotelRow);
+        targetHotelRowCache = tourHotelRow;
+        renderRoomsEditorFromTourHotelRow(tourHotelRow);
+    }
+
+    function ensureRoomsAddButtonState(tourHotelRow) {
+        if (!roomsAddBtn) return;
+        // On autorise toujours l'ajout si on a une ligne d'hôtel (sinon, le clic n'a pas de cible)
+        var canAdd = !!tourHotelRow;
+        roomsAddBtn.classList.toggle('d-none', !canAdd);
+    }
+
+    function applyRoomsEditorToTourHotelRow(tourHotelRow) {
+        if (!tourHotelRow || !roomsEditor) return;
+        var editorRows = Array.from(roomsEditor.querySelectorAll('.hotels-room-editor-row'));
+        if (!editorRows.length) return;
+
+        editorRows.forEach(function(edRow) {
+            var ri = edRow.getAttribute('data-room-index');
+            var mainRoomEl = tourHotelRow.querySelector('.tour-room-row[data-room-index="' + ri + '"]');
+            if (!mainRoomEl) return;
+
+            var setSelect = function(sel, value) {
+                var el = mainRoomEl.querySelector(sel);
+                if (el && typeof value !== 'undefined') el.value = value;
+            };
+            var setInput = function(sel, value) {
+                var el = mainRoomEl.querySelector(sel);
+                if (el && value !== null && value !== undefined) el.value = value;
+            };
+            var setChecked = function(sel, checked) {
+                var el = mainRoomEl.querySelector(sel);
+                if (el) el.checked = !!checked;
+            };
+            setSelect('select[name$="[room_type]"]', edRow.querySelector('.hotels-room-type').value);
+            setInput('input[name$="[room_count]"]', edRow.querySelector('.hotels-room-count').value);
+            setInput('input[name$="[capacity_adults]"]', edRow.querySelector('.hotels-room-cap-adults').value);
+            setInput('input[name$="[capacity_children]"]', edRow.querySelector('.hotels-room-cap-children').value);
+            setInput('input[name$="[capacity_total]"]', edRow.querySelector('.hotels-room-cap-total').value);
+            setInput('input[name$="[supplement]"]', edRow.querySelector('.hotels-room-supplement').value);
+            setInput('input[name$="[room_code]"]', edRow.querySelector('.hotels-room-code').value);
+            setInput('input[name$="[room_label]"]', edRow.querySelector('.hotels-room-label').value);
+            setInput('input[name$="[description]"]', edRow.querySelector('.hotels-room-description').value);
+            setChecked('input[name$="[is_active]"]', edRow.querySelector('.hotels-room-is_active').checked);
+            setChecked('input[name$="[is_default]"]', edRow.querySelector('.hotels-room-is_default').checked);
+            var notesTa = edRow.querySelector('.hotels-room-notes');
+            if (notesTa) {
+                var notesEl = mainRoomEl.querySelector('textarea[name$="[notes]"]');
+                if (notesEl) notesEl.value = notesTa.value;
+            }
+        });
     }
 
     function fillFormFromHotel(hotelId) {
@@ -364,12 +578,44 @@
             } else {
                 clearForm();
             }
+            createdRowForAdd = null;
+            hadHotelBeforeOpen = true;
         } else {
             // Mode ajout : formulaire vide
+            hadHotelBeforeOpen = !!getTourHotelRowForCurrentDrawer();
+            createdRowForAdd = null;
+
+            // Pré-créer une ligne hôtel si aucun hôtel n'est encore présent pour ce jour,
+            // afin que l'éditeur de chambres ait une source DOM.
+            if (!hadHotelBeforeOpen) {
+                var container = document.getElementById('tour-hotels-container');
+                var addBtnPage = document.getElementById('tour-add-hotel');
+                if (container && addBtnPage) {
+                    addBtnPage.click();
+                    var rows = container.querySelectorAll('.tour-hotel-row');
+                    var newRow = rows[rows.length - 1];
+                    if (newRow) {
+                        var idx = newRow.getAttribute('data-index');
+                        setRowData(newRow, idx, day.number, {
+                            is_optional: false,
+                            hotel_name: '',
+                            stars: '',
+                            room_type: '',
+                            address: '',
+                            meal_plan: '',
+                            notes: '',
+                            image_id: ''
+                        });
+                        createdRowForAdd = newRow;
+                    }
+                }
+            }
+
             clearForm();
         }
         
         if (formWrap) formWrap.style.display = 'block';
+        syncRoomsEditorFromCurrentDay();
     }
 
     function getTourHotelRowForDay(dayNumber) {
@@ -396,6 +642,19 @@
             }
         }
         return null;
+    }
+
+    function getTourHotelRowByHotelId(hotelId) {
+        if (!hotelId && hotelId !== 0) return null;
+        var container = document.getElementById('tour-hotels-container');
+        if (!container) return null;
+        return container.querySelector('.tour-hotel-row[data-hotel-id="' + String(hotelId) + '"]');
+    }
+
+    function getTourHotelRowForCurrentDrawer() {
+        var day = getDrawerDay();
+        var hotelId = (window.dayItemsManager && day.index !== '') ? window.dayItemsManager.getHotel(day.index) : null;
+        return getTourHotelRowByHotelId(hotelId) || getTourHotelRowForDay(day.number);
     }
 
     function setRowData(row, idx, dayNumber, data) {
@@ -465,6 +724,15 @@
 
     if (cancelBtn && formWrap) cancelBtn.addEventListener('click', function() {
         formWrap.style.display = 'none';
+        if (createdRowForAdd && !hadHotelBeforeOpen) {
+            var rm = createdRowForAdd.querySelector && createdRowForAdd.querySelector('.tour-remove-row');
+            if (rm && typeof rm.click === 'function') {
+                rm.click();
+            } else if (createdRowForAdd && typeof createdRowForAdd.remove === 'function') {
+                createdRowForAdd.remove();
+            }
+            createdRowForAdd = null;
+        }
     });
 
     if (removeBtn) {
@@ -481,7 +749,7 @@
             window.dayItemsManager.syncToForm(day.index);
             
             // Optionnel : retirer aussi la ligne du formulaire principal si elle existe
-            var existingRow = getTourHotelRowForDay(day.number);
+            var existingRow = getTourHotelRowForCurrentDrawer();
             if (existingRow) {
                 var removeBtnRow = existingRow.querySelector('.tour-remove-hotel');
                 if (removeBtnRow) {
@@ -512,22 +780,26 @@
             var hotelInfo = getHotelForDay(day.index, day.number);
             var existingRow = getTourHotelRowForDay(day.number);
             var newHotelId = null;
+            var targetRow = existingRow;
             
             if (hotelInfo && hotelInfo.id && window.tourHotelsData && window.tourHotelsData[hotelInfo.id]) {
                 // Mettre à jour un hôtel existant avec ID
                 updateTourHotelRowByHotelId(String(hotelInfo.id), data);
                 newHotelId = parseInt(hotelInfo.id, 10);
+                targetRow = getTourHotelRowByHotelId(String(hotelInfo.id));
             } else if (existingRow) {
                 // Mettre à jour une ligne existante sans ID encore
                 var idx = existingRow.getAttribute('data-index');
                 var rowHotelId = existingRow.getAttribute('data-hotel-id');
                 setRowData(existingRow, idx, day.number, data);
                 if (rowHotelId) newHotelId = parseInt(rowHotelId, 10);
+                targetRow = existingRow;
             } else {
                 // Créer une nouvelle ligne
                 addTourHotelRowAndLinkDay(day.number, data);
                 // Le nouvel hôtel n'aura pas d'ID immédiatement, mais on peut le lier plus tard
                 // Pour l'instant, on ne met pas à jour dayItemsManager avec un ID
+                targetRow = getTourHotelRowForCurrentDrawer();
             }
             
             // Mettre à jour dayItemsManager si on a un ID
@@ -535,6 +807,12 @@
                 window.dayItemsManager.setHotel(day.index, newHotelId);
                 window.dayItemsManager.syncToForm(day.index);
             }
+
+            // Appliquer les modifications des chambres vers les inputs du formulaire principal
+            if (targetRow) {
+                applyRoomsEditorToTourHotelRow(targetRow);
+            }
+            createdRowForAdd = null;
             
             // Déclencher la mise à jour de l'UI
             document.dispatchEvent(new CustomEvent('day-builder:item-count-changed', { detail: { dayIndex: day.index } }));
@@ -542,6 +820,36 @@
             if (formWrap) formWrap.style.display = 'none';
         });
     }
+
+    if (roomsAddBtn) {
+        roomsAddBtn.addEventListener('click', function() {
+            var day = getDrawerDay();
+            if (day.index === '') return;
+            var tourHotelRow = getTourHotelRowForCurrentDrawer();
+            if (!tourHotelRow) return;
+            var addRoomBtn = tourHotelRow.querySelector('.tour-add-room');
+            if (!addRoomBtn) return;
+            addRoomBtn.click();
+            // Re-synchroniser l'éditeur après ajout côté DOM principal
+            syncRoomsEditorFromCurrentDay();
+        });
+    }
+
+    // Propagation automatique des chambres au moment du submit du formulaire principal.
+    // But: même si l'utilisateur oublie de cliquer "Confirmer" dans le drawer, les inputs rooms
+    // seront correctement écrits dans le formulaire avant que Laravel ne fasse le traitement.
+    (function bindRoomsToMainSubmit() {
+        var mainForm = document.getElementById('edit-voyage-form');
+        if (!mainForm) return;
+        if (mainForm.dataset.roomsPropagatorBound === '1') return;
+        mainForm.dataset.roomsPropagatorBound = '1';
+        mainForm.addEventListener('submit', function() {
+            var tourHotelRow = targetHotelRowCache || getTourHotelRowForCurrentDrawer();
+            if (!tourHotelRow || !roomsEditor) return;
+            if (!roomsEditor.querySelector('.hotels-room-editor-row')) return;
+            applyRoomsEditorToTourHotelRow(tourHotelRow);
+        }, true);
+    })();
 
     refreshUI();
 })();

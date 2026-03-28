@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
+use App\Services\Auth\LoginRedirectService;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
@@ -41,15 +42,12 @@ class LoginController extends Controller
 
     /**
      * Send the response after the user was authenticated.
-     * Always redirect to /admin/dashboard (ignore "intended" URL so that
-     * users who hit / before login are not sent back to /).
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * Partners go to partner area, others to admin dashboard.
      */
     protected function sendLoginResponse(Request $request)
     {
         $request->session()->regenerate();
+        $request->session()->forget('url.intended');
 
         $this->clearLoginAttempts($request);
 
@@ -57,8 +55,39 @@ class LoginController extends Controller
             return $response;
         }
 
+        /** @var \App\Models\User $user */
+        $user = $this->guard()->user();
+        $dest = app(LoginRedirectService::class)->destinationFor($user);
+
         return $request->wantsJson()
             ? new \Illuminate\Http\JsonResponse([], 204)
-            : redirect()->to($this->redirectPath());
+            : redirect()->away($dest);
+    }
+
+    /**
+     * Redirection après connexion selon le type de compte.
+     * Partenaire → espace partenaire ; admin (tous rôles) → dashboard admin via redirectPath().
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        /** @var \App\Models\User $user */
+        $dest = app(LoginRedirectService::class)->destinationFor($user);
+        $request->session()->forget('url.intended');
+
+        // Always use central role-based destination, never "/" or intended fallback.
+        return redirect()->away($dest);
+    }
+
+    /**
+     * Logout must always redirect to Ajinsafro public website.
+     */
+    public function logout(Request $request)
+    {
+        $this->guard()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->away((string) config('app.public_url', 'https://ajinsafro.net'));
     }
 }

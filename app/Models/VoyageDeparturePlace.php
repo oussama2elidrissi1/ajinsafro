@@ -15,12 +15,14 @@ class VoyageDeparturePlace extends Model
         'code',
         'is_active',
         'sort_order',
+        'price',
     ];
 
     protected $casts = [
         'voyage_id' => 'integer',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'price' => 'decimal:2',
     ];
 
     public function voyage(): BelongsTo

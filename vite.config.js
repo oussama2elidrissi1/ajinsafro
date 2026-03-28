@@ -29,6 +29,10 @@ export default defineConfig({
                     'resources/scss/bootstrap.scss',
                     'resources/scss/icons.scss',
                     'resources/scss/app.scss',
+                    'resources/css/partner-v2.css',
+                    'resources/css/ajin-calendar-agent.css',
+                    'resources/js/partner-v2.js',
+                    'resources/js/admin-reservations-calendar.js',
                 ],
                 refresh: true
             }

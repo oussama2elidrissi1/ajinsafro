@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 
 class Setting extends Model
@@ -62,6 +63,88 @@ class Setting extends Model
         if (empty($path)) {
             return null;
         }
-        return Storage::disk('public')->url($path);
+
+        $normalized = self::normalizePublicDiskPath($path);
+        if ($normalized === null) {
+            return null;
+        }
+
+        if (!Storage::disk('public')->exists($normalized)) {
+            return null;
+        }
+
+        $baseUrl = rtrim((string) config('app.admin_url', config('app.url', URL::to('/'))), '/');
+        return $baseUrl . '/storage/' . ltrim($normalized, '/');
+    }
+
+    /**
+     * Public URL for brand logo with resilient fallback.
+     */
+    public static function brandLogoUrl(string $variant = 'dark'): string
+    {
+        $url = self::storageUrl(self::resolvedBrandLogoPath());
+        if ($url) {
+            return $url;
+        }
+
+        return match ($variant) {
+            'light' => asset('build/images/logo-light.png'),
+            'sm' => asset('build/images/logo-sm.png'),
+            default => asset('build/images/logo-dark.png'),
+        };
+    }
+
+    /**
+     * Resolve a valid branding logo path from settings or storage fallback.
+     */
+    public static function resolvedBrandLogoPath(): ?string
+    {
+        $stored = self::normalizePublicDiskPath(self::getValue('brand_logo'));
+        if ($stored && Storage::disk('public')->exists($stored)) {
+            return $stored;
+        }
+
+        $files = collect(Storage::disk('public')->files('front/brand'))
+            ->filter(fn (string $file) => preg_match('/\.(png|jpe?g|gif|svg|webp)$/i', $file) === 1)
+            ->sortByDesc(fn (string $file) => Storage::disk('public')->lastModified($file))
+            ->values();
+
+        return $files->first() ?: null;
+    }
+
+    /**
+     * Normalize any stored logo/file value to a relative path on the public disk.
+     * Example output: front/brand/logo.png
+     */
+    public static function normalizePublicDiskPath(?string $path): ?string
+    {
+        if (!is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        $value = trim($path);
+
+        // If a full URL was stored, keep only the path segment.
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            $urlPath = parse_url($value, PHP_URL_PATH);
+            $value = is_string($urlPath) ? $urlPath : $value;
+        }
+
+        $value = str_replace('\\', '/', $value);
+        $value = ltrim($value, '/');
+
+        foreach (['storage/app/public/', 'public/storage/', 'storage/', 'public/'] as $prefix) {
+            if (str_starts_with($value, $prefix)) {
+                $value = substr($value, strlen($prefix));
+                break;
+            }
+        }
+
+        $value = ltrim($value, '/');
+        if ($value === '') {
+            return null;
+        }
+
+        return $value;
     }
 }

@@ -1,12 +1,32 @@
 @php
     $lastDayNumber = isset($lastDayNumber) ? $lastDayNumber : (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1)));
     $hotelsList = $tourHotels->isEmpty() ? [null] : $tourHotels->all();
+    $otherHotels = $otherTourHotelsForCopy ?? collect();
+    $otherTitles = $otherTourTitles ?? [];
 @endphp
 <div id="tour-hotels-wrapper">
+    @if($otherHotels->isNotEmpty())
+    <div class="mb-3 p-3 bg-light rounded">
+        <label class="form-label small mb-1">Choisir un hôtel existant</label>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <select class="form-select form-select-sm" id="copy-from-hotel-select" style="max-width: 380px;">
+                <option value="">— Créer un nouvel hôtel / modifier ci-dessous —</option>
+                @foreach($otherHotels as $oh)
+                    <option value="{{ $oh->tour_id }}">{{ \Str::limit($oh->hotel_name ?: 'Hôtel #'.$oh->tour_id, 40) }} — {{ \Str::limit($otherTitles[$oh->tour_id] ?? 'Voyage '.$oh->tour_id, 35) }}</option>
+                @endforeach
+            </select>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="copy-from-hotel-btn">Charger</button>
+        </div>
+        <small class="text-muted">Charger les données d’un hôtel existant pour les réutiliser sur ce voyage (sans quitter la page).</small>
+    </div>
+    @endif
     <div id="tour-hotels-container">
         @foreach($hotelsList as $hi => $h)
         @php $hid = 'tour_hotel_image_id_' . $hi; $himg = optional($h)->image_id; $himgUrl = $himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$himg) : ''; @endphp
         <div class="card mb-3 tour-hotel-row" data-index="{{ $hi }}" data-hotel-id="{{ optional($h)->id ?? '' }}">
+            @if(optional($h)->id)
+            <input type="hidden" name="tour_hotels[{{ $hi }}][id]" value="{{ $h->id }}">
+            @endif
             <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                 <strong>Hôtel {{ $hi + 1 }}</strong>
                 @if($hi > 0)<button type="button" class="btn btn-sm btn-outline-danger tour-remove-row" data-target=".tour-hotel-row" aria-label="Supprimer">×</button>@endif
@@ -88,6 +108,106 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Chambres de l'hôtel --}}
+                    <div class="col-12 mt-3 border-top pt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0 fw-semibold">Chambres de l'hôtel</label>
+                            <button type="button" class="btn btn-sm btn-soft-primary tour-add-room" data-hotel-index="{{ $hi }}"><i class="bx bx-plus"></i> Ajouter une chambre</button>
+                        </div>
+                        <div class="tour-hotel-rooms-container" data-hotel-index="{{ $hi }}">
+                            @php $roomTypes = ['Single' => 'Single', 'Double' => 'Double', 'Twin' => 'Twin', 'Triple' => 'Triple', 'Quadruple' => 'Quadruple', 'Suite' => 'Suite', 'Family Room' => 'Family Room', 'Chambre communicante' => 'Chambre communicante', 'Autre' => 'Autre']; $roomsList = old("tour_hotels.{$hi}.rooms", $h && $h->rooms ? $h->rooms->all() : []); if (empty($roomsList)) $roomsList = [null]; @endphp
+                            @foreach($roomsList as $ri => $room)
+                            @php
+                                $room = is_object($room) ? $room : (is_array($room) ? (object)$room : null);
+                                $roomId = optional($room)->id ?? '';
+                                $roomTypeVal = old("tour_hotels.{$hi}.rooms.{$ri}.room_type", optional($room)->room_type ?? '');
+                                $roomLabelVal = old("tour_hotels.{$hi}.rooms.{$ri}.room_label", optional($room)->room_label ?? '');
+                                $roomCodeVal = old("tour_hotels.{$hi}.rooms.{$ri}.room_code", optional($room)->room_code ?? '');
+                                $roomCountVal = old("tour_hotels.{$hi}.rooms.{$ri}.room_count", optional($room)->room_count ?? 1);
+                                $capAdultsVal = old("tour_hotels.{$hi}.rooms.{$ri}.capacity_adults", optional($room)->capacity_adults ?? 0);
+                                $capChildrenVal = old("tour_hotels.{$hi}.rooms.{$ri}.capacity_children", optional($room)->capacity_children ?? 0);
+                                $capTotalVal = old("tour_hotels.{$hi}.rooms.{$ri}.capacity_total", optional($room)->capacity_total ?? 1);
+                                $supplementVal = old("tour_hotels.{$hi}.rooms.{$ri}.supplement", optional($room)->supplement ?? 0);
+                                $descVal = old("tour_hotels.{$hi}.rooms.{$ri}.description", optional($room)->description ?? '');
+                                $notesVal = old("tour_hotels.{$hi}.rooms.{$ri}.notes", optional($room)->notes ?? '');
+                                $isActiveVal = old("tour_hotels.{$hi}.rooms.{$ri}.is_active", optional($room)->is_active ?? true);
+                                $isDefaultVal = old("tour_hotels.{$hi}.rooms.{$ri}.is_default", optional($room)->is_default ?? false);
+                            @endphp
+                            <div class="card mb-2 tour-room-row" data-hotel-index="{{ $hi }}" data-room-index="{{ $ri }}">
+                                <div class="card-body py-2">
+                                    @if($roomId)<input type="hidden" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][id]" value="{{ $roomId }}">@endif
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Type</label>
+                                            <select class="form-select form-select-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_type]">
+                                                @foreach($roomTypes as $k => $v)
+                                                <option value="{{ $k }}" {{ $roomTypeVal == $k ? 'selected' : '' }}>{{ $v }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">Nb ch.</label>
+                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_count]" value="{{ $roomCountVal }}" min="1">
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">Cap. ad.</label>
+                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][capacity_adults]" value="{{ $capAdultsVal }}" min="0">
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">Cap. enf.</label>
+                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][capacity_children]" value="{{ $capChildrenVal }}" min="0">
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">Cap. tot.</label>
+                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][capacity_total]" value="{{ $capTotalVal }}" min="1">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Supplément (DH)</label>
+                                            <input type="number" class="form-control form-control-sm tour-room-supplement" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][supplement]" value="{{ $supplementVal }}" min="0" step="0.01" data-room-index="{{ $ri }}">
+                                            @if((float)$supplementVal == 0)<span class="badge bg-success ms-1">Standard</span>@endif
+                                        </div>
+                                        <div class="col-md-1">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][is_default]" value="1" {{ $isDefaultVal ? 'checked' : '' }}>
+                                                <label class="form-check-label small">Défaut</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <button type="button" class="btn btn-sm btn-outline-danger tour-remove-room" data-hotel-index="{{ $hi }}" data-room-index="{{ $ri }}" aria-label="Supprimer la chambre">×</button>
+                                        </div>
+                                    </div>
+                                    <div class="row g-2 mt-1">
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Code / Réf.</label>
+                                            <input type="text" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_code]" value="{{ $roomCodeVal }}" placeholder="Ex. DBL-STD">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Libellé</label>
+                                            <input type="text" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_label]" value="{{ $roomLabelVal }}" placeholder="Optionnel">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Description</label>
+                                            <input type="text" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][description]" value="{{ $descVal }}" placeholder="Courte description">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check mt-2">
+                                                <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][is_active]" value="1" {{ $isActiveVal ? 'checked' : '' }}>
+                                                <label class="form-check-label small">Actif</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-1">
+                                        <div class="col-12">
+                                            <label class="form-label small">Notes internes</label>
+                                            <textarea class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][notes]" rows="1" placeholder="Optionnel">{{ $notesVal }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -114,6 +234,8 @@
         clone.setAttribute('data-index', nextIndex);
         clone.removeAttribute('data-hotel-id'); // nouveau row, pas d'id
         clone.querySelector('.card-header strong').textContent = 'Hôtel ' + (nextIndex + 1);
+        // Supprimer l'id hôtel caché (nouvel hôtel)
+        clone.querySelectorAll('input[name^="tour_hotels["][name*="[id]"]').forEach(function(inp){ if (inp.name.indexOf('[rooms]') === -1) inp.remove(); });
         clone.querySelectorAll('[name]').forEach(function(inp){
             if (inp.name && inp.name.indexOf('tour_hotels[') === 0)
                 inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + nextIndex + ']');
@@ -129,9 +251,27 @@
             }
             if (inp.name && inp.name.indexOf('[day_number]') !== -1) { inp.value = '1'; return; } // Compatibilité ancien format
             if (inp.name && inp.name.indexOf('[is_optional]') !== -1) { inp.checked = false; return; }
+            if (inp.name && inp.name.indexOf('[rooms]') !== -1) {
+                // Chambres : garder le même index room pour le nouveau hi, mais supprimer les id chambres
+                if (inp.name.indexOf('[id]') !== -1 && inp.name.indexOf('[rooms]') !== -1) { inp.remove(); return; }
+                if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
+                if (inp.tagName === 'TEXTAREA') inp.value = '';
+                if (inp.type === 'checkbox') { inp.checked = (inp.name.indexOf('is_default') !== -1 ? false : true); }
+                return;
+            }
             if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
             if (inp.tagName === 'TEXTAREA') inp.value = '';
         });
+        // Mettre à jour data-hotel-index dans la section chambres du clone
+        var roomsContainer = clone.querySelector('.tour-hotel-rooms-container');
+        if (roomsContainer) {
+            roomsContainer.setAttribute('data-hotel-index', nextIndex);
+            clone.querySelector('.tour-add-room').setAttribute('data-hotel-index', nextIndex);
+            roomsContainer.querySelectorAll('.tour-room-row').forEach(function(rr){
+                rr.setAttribute('data-hotel-index', nextIndex);
+                rr.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-hotel-index', nextIndex); });
+            });
+        }
         clone.querySelectorAll('[id]').forEach(function(el){
             if (el.id && el.id.indexOf('tour_hotel_image_id_') === 0)
                 el.id = el.id.replace(/tour_hotel_image_id_\d+/, 'tour_hotel_image_id_' + nextIndex);
@@ -265,7 +405,6 @@
                     r.querySelector('.card-header strong').textContent = 'Hôtel ' + (i + 1);
                     r.querySelectorAll('[name^="tour_hotels["]').forEach(function(inp){ 
                         inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + i + ']');
-                        // Mettre à jour data-index pour les selects check-in/check-out
                         if (inp.name.indexOf('[check_in_day]') !== -1 || inp.name.indexOf('[check_out_day]') !== -1) {
                             inp.setAttribute('data-index', i);
                         }
@@ -276,13 +415,156 @@
                         if (btn.getAttribute('data-preview')) btn.setAttribute('data-preview', 'tour_hotel_image_id_' + i + '_preview');
                         if (btn.getAttribute('data-preview-wrap')) btn.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + i + '_preview_wrap');
                     });
-                    // Réinitialiser la validation pour cette ligne
+                    var roomsCont = r.querySelector('.tour-hotel-rooms-container');
+                    if (roomsCont) {
+                        roomsCont.setAttribute('data-hotel-index', i);
+                        r.querySelector('.tour-add-room').setAttribute('data-hotel-index', i);
+                        roomsCont.querySelectorAll('.tour-room-row').forEach(function(rr, ri){
+                            rr.setAttribute('data-hotel-index', i);
+                            rr.setAttribute('data-room-index', ri);
+                            rr.querySelectorAll('[name]').forEach(function(inp){
+                                if (inp.name && inp.name.indexOf('tour_hotels[') === 0 && inp.name.indexOf('[rooms]') !== -1)
+                                    inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + i + ']').replace(/\[rooms\]\[\d+\]/, '[rooms][' + ri + ']');
+                            });
+                            rr.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-hotel-index', i); btn.setAttribute('data-room-index', ri); });
+                            rr.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', ri); });
+                        });
+                    }
                     initHotelCheckInOutValidation(r);
                 });
-                // Mettre à jour le titre après suppression
                 updateHotelsTitle();
             }
         }
+        // Ajouter une chambre
+        if (e.target.classList.contains('tour-add-room')) {
+            var hotelRow = e.target.closest('.tour-hotel-row');
+            var roomsCont = hotelRow ? hotelRow.querySelector('.tour-hotel-rooms-container') : null;
+            if (!roomsCont) return;
+            var hi = roomsCont.getAttribute('data-hotel-index');
+            var rows = roomsCont.querySelectorAll('.tour-room-row');
+            var last = rows[rows.length - 1];
+            if (!last) return;
+            var nextRi = rows.length;
+            var clone = last.cloneNode(true);
+            clone.setAttribute('data-room-index', nextRi);
+            clone.querySelectorAll('[name]').forEach(function(inp){
+                if (inp.name && inp.name.indexOf('[rooms]') !== -1) {
+                    inp.name = inp.name.replace(/\[rooms\]\[\d+\]/, '[rooms][' + nextRi + ']');
+                    if (inp.name.indexOf('[id]') !== -1) { inp.remove(); return; }
+                    if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
+                    if (inp.tagName === 'TEXTAREA') inp.value = '';
+                    if (inp.type === 'checkbox') inp.checked = (inp.name.indexOf('is_default') !== -1 ? false : true);
+                }
+            });
+            clone.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-room-index', nextRi); });
+            clone.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', nextRi); });
+            clone.querySelectorAll('.badge.bg-success').forEach(function(b){ b.remove(); });
+            roomsCont.appendChild(clone);
+        }
+        // Supprimer une chambre
+        if (e.target.classList.contains('tour-remove-room')) {
+            var roomRow = e.target.closest('.tour-room-row');
+            if (!roomRow) return;
+            var roomsCont = roomRow.closest('.tour-hotel-rooms-container');
+            if (!roomsCont || roomsCont.querySelectorAll('.tour-room-row').length <= 1) return;
+            roomRow.remove();
+            var hi = roomsCont.getAttribute('data-hotel-index');
+            roomsCont.querySelectorAll('.tour-room-row').forEach(function(rr, ri){
+                rr.setAttribute('data-room-index', ri);
+                rr.querySelectorAll('[name]').forEach(function(inp){
+                    if (inp.name && inp.name.indexOf('[rooms]') !== -1)
+                        inp.name = inp.name.replace(/\[rooms\]\[\d+\]/, '[rooms][' + ri + ']');
+                });
+                rr.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-room-index', ri); });
+                rr.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', ri); });
+            });
+        }
     });
+
+    // Choisir un hôtel existant : charger les données dans la première ligne
+    var copySelect = document.getElementById('copy-from-hotel-select');
+    var copyBtn = document.getElementById('copy-from-hotel-btn');
+    if (copySelect && copyBtn) {
+        var dataUrlBase = '{{ url("admin/circuits/tour-hotels") }}';
+        copyBtn.addEventListener('click', function(){
+            var tourId = copySelect.value;
+            if (!tourId) return;
+            fetch(dataUrlBase + '/' + tourId + '/data', { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r){ return r.json(); })
+                .then(function(data){
+                    var firstRow = container.querySelector('.tour-hotel-row[data-index="0"]');
+                    if (!firstRow) return;
+                    var setVal = function(nameSuffix, val) {
+                        var inp = firstRow.querySelector('[name="tour_hotels[0][' + nameSuffix + ']"]');
+                        if (inp && val !== undefined && val !== null) {
+                            if (inp.type === 'checkbox') inp.checked = !!val;
+                            else inp.value = val;
+                        }
+                    };
+                    var h = data.hotel || {};
+                    setVal('hotel_name', h.hotel_name);
+                    setVal('stars', h.stars);
+                    setVal('address', h.address);
+                    setVal('room_type', h.room_type);
+                    setVal('meal_plan', h.meal_plan);
+                    setVal('notes', h.notes);
+                    setVal('image_id', h.image_id);
+                    setVal('check_in_day', h.check_in_day);
+                    setVal('check_out_day', h.check_out_day);
+                    setVal('is_optional', h.is_optional ? '1' : '');
+                    var roomsCont = firstRow.querySelector('.tour-hotel-rooms-container');
+                    if (roomsCont && Array.isArray(data.rooms)) {
+                        var roomRows = roomsCont.querySelectorAll('.tour-room-row');
+                        var need = data.rooms.length;
+                        if (need < 1) need = 1;
+                        while (roomRows.length > need) {
+                            if (roomRows.length <= 1) break;
+                            roomRows[roomRows.length - 1].remove();
+                            roomRows = roomsCont.querySelectorAll('.tour-room-row');
+                        }
+                        var addRoomBtn = firstRow.querySelector('.tour-add-room');
+                        while (roomRows.length < need && addRoomBtn) {
+                            addRoomBtn.click();
+                            roomRows = roomsCont.querySelectorAll('.tour-room-row');
+                        }
+                        roomRows = roomsCont.querySelectorAll('.tour-room-row');
+                        data.rooms.forEach(function(room, ri){
+                            var row = roomRows[ri];
+                            if (!row) return;
+                            var idx = row.getAttribute('data-room-index');
+                            if (idx === null) idx = String(ri);
+                            var setRoom = function(suffix, val) {
+                                var inps = row.querySelectorAll('[name]');
+                                for (var n = 0; n < inps.length; n++) {
+                                    var name = inps[n].name || '';
+                                    if (name.indexOf('[rooms][' + idx + '][' + suffix + ']') !== -1) {
+                                        if (inps[n].tagName === 'SELECT') inps[n].value = val || '';
+                                        else if (inps[n].type === 'checkbox') inps[n].checked = !!val;
+                                        else inps[n].value = val !== undefined && val !== null ? val : '';
+                                        return;
+                                    }
+                                }
+                            };
+                            setRoom('room_type', room.room_type);
+                            setRoom('room_label', room.room_label);
+                            setRoom('room_code', room.room_code);
+                            setRoom('room_count', room.room_count);
+                            setRoom('capacity_adults', room.capacity_adults);
+                            setRoom('capacity_children', room.capacity_children);
+                            setRoom('capacity_total', room.capacity_total);
+                            setRoom('supplement', room.supplement);
+                            setRoom('description', room.description);
+                            setRoom('notes', room.notes);
+                            var defInp = row.querySelector('[name*="[is_default]"]');
+                            if (defInp) defInp.checked = !!room.is_default;
+                            var actInp = row.querySelector('[name*="[is_active]"]');
+                            if (actInp) actInp.checked = room.is_active !== false;
+                        });
+                    }
+                    copySelect.value = '';
+                })
+                .catch(function(){ alert('Impossible de charger l\'hôtel.'); });
+        });
+    }
 })();
 </script>

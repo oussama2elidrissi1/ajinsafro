@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -85,6 +86,12 @@ class Voyage extends Model
     public function checkoutTokens()
     {
         return $this->hasMany(CheckoutToken::class);
+    }
+
+    /** Partenaires revendeurs ayant accès à ce voyage (vide = tous). */
+    public function partnerAccess(): BelongsToMany
+    {
+        return $this->belongsToMany(Partner::class, 'partner_voyage_access', 'voyage_id', 'partner_id')->withTimestamps();
     }
 
     public function flights()

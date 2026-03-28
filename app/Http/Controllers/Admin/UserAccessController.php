@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\BranchScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,14 +15,19 @@ use Spatie\Permission\Models\Role;
 
 class UserAccessController extends Controller
 {
+    public function __construct(
+        protected BranchScopeService $branchScope
+    ) {}
+
     public function index(Request $request)
     {
         $search = trim((string) $request->query('q', ''));
 
-        $users = User::query()
-            ->with('roles')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($sub) use ($search) {
+        $query = User::query()->with(['roles', 'branch']);
+        $this->branchScope->scopeUsers($query, $request->user());
+        $users = $query
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
                     $sub->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
@@ -52,6 +58,10 @@ class UserAccessController extends Controller
         $user->is_active = (bool) ($data['is_active'] ?? true);
         $user->access_mode = $data['access_mode'];
         $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
+        $user->branch_id = ! empty($data['branch_id']) ? (int) $data['branch_id'] : null;
+        $user->manager_id = ! empty($data['manager_id']) ? (int) $data['manager_id'] : null;
+        $user->job_title = $data['job_title'] ?? null;
+        $user->user_type = $data['user_type'] ?? null;
         $user->password = Hash::make($data['password']);
         $user->save();
 
@@ -62,13 +72,15 @@ class UserAccessController extends Controller
             ->with('success', 'Utilisateur créé avec succès.');
     }
 
-    public function edit(User $user)
+    public function edit(Request $request, User $user)
     {
+        $this->ensureUserInScope($request->user(), $user);
         return view('admin.settings.utilisateurs.form', $this->buildFormPayload($user));
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $this->ensureUserInScope($request->user(), $user);
         $data = $this->validatePayload($request, false, $user);
 
         $user->name = $data['name'];
@@ -79,6 +91,10 @@ class UserAccessController extends Controller
         $user->is_active = (bool) ($data['is_active'] ?? true);
         $user->access_mode = $data['access_mode'];
         $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
+        $user->branch_id = ! empty($data['branch_id']) ? (int) $data['branch_id'] : null;
+        $user->manager_id = array_key_exists('manager_id', $data) ? (empty($data['manager_id']) ? null : (int) $data['manager_id']) : $user->manager_id;
+        $user->job_title = $data['job_title'] ?? null;
+        $user->user_type = $data['user_type'] ?? null;
 
         if (! empty($data['password'])) {
             $user->password = Hash::make($data['password']);
@@ -93,8 +109,9 @@ class UserAccessController extends Controller
             ->with('success', 'Utilisateur mis à jour.');
     }
 
-    public function toggleActive(User $user): RedirectResponse
+    public function toggleActive(Request $request, User $user): RedirectResponse
     {
+        $this->ensureUserInScope($request->user(), $user);
         $user->is_active = ! $user->is_active;
         $user->save();
 
@@ -103,21 +120,32 @@ class UserAccessController extends Controller
             ->with('success', $user->is_active ? 'Utilisateur activé.' : 'Utilisateur désactivé.');
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse
     {
         if (auth()->id() === $user->id) {
             return redirect()->route('admin.settings.utilisateurs')->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
         }
+        $this->ensureUserInScope($request->user(), $user);
 
         $user->delete();
 
         return redirect()->route('admin.settings.utilisateurs')->with('success', 'Utilisateur supprimé.');
     }
 
+    private function ensureUserInScope(User $currentUser, User $targetUser): void
+    {
+        $query = User::query()->where('id', $targetUser->id);
+        $this->branchScope->scopeUsers($query, $currentUser);
+        if ($query->doesntExist()) {
+            abort(403, 'Accès non autorisé à cet utilisateur.');
+        }
+    }
+
     private function buildFormPayload(User $user): array
     {
         $roles = Role::query()->orderBy('name')->get();
         $permissionGroups = $this->permissionGroups();
+        $branches = $this->branchScope->branchesForSelect(request()->user());
 
         $rolePermissionsMap = $roles
             ->mapWithKeys(fn (Role $role) => [$role->name => $role->permissions->pluck('name')->values()->all()])
@@ -125,9 +153,15 @@ class UserAccessController extends Controller
 
         $selectedRole = $user->roles->first()?->name ?? $user->base_role;
 
+        $managersQuery = User::query()->where('is_active', true)->whereNotNull('branch_id');
+        $this->branchScope->scopeUsers($managersQuery, request()->user());
+        $managers = $managersQuery->orderBy('name')->get(['id', 'name', 'email', 'branch_id']);
+
         return [
             'userModel' => $user,
             'roles' => $roles,
+            'branches' => $branches,
+            'managers' => $managers,
             'permissionGroups' => $permissionGroups,
             'rolePermissionsMap' => $rolePermissionsMap,
             'selectedRole' => $selectedRole,
@@ -148,6 +182,10 @@ class UserAccessController extends Controller
             'email' => ['required', 'email', 'max:255', $emailRule],
             'phone' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string'],
+            'branch_id' => ['nullable', 'integer', Rule::exists('branches', 'id')],
+            'manager_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'job_title' => ['nullable', 'string', 'max:100'],
+            'user_type' => ['nullable', 'string', 'max:50'],
             'is_admin' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'access_mode' => ['required', Rule::in(['role', 'custom'])],

@@ -52,7 +52,7 @@ class UpdateWpTourRequest extends FormRequest
             'tour_price_by' => 'nullable|string',
             'st_tour_external_booking' => 'nullable|string',
             'hide_adult_in_booking_form' => 'nullable',
-            'max_people' => 'nullable|integer|min:1',
+            'max_people' => 'nullable|integer|min:0',
             'min_people' => 'nullable|integer|min:1',
             'duration_day' => 'nullable|integer|min:1',
             'destination' => 'nullable|string|max:255',

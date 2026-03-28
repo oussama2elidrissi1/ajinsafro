@@ -118,15 +118,41 @@ class HomePageSettingsController extends Controller
                 'accommodations.title' => ['nullable', 'string', 'max:255'],
                 'accommodations.count' => ['nullable', 'integer', 'min:1', 'max:20'],
 
+                'holiday_theme.enabled' => ['nullable', 'boolean'],
+                'holiday_theme.eyebrow' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.title_line_1' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.title_line_2' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.title_line_3' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.subtitle' => ['nullable', 'string', 'max:1000'],
+                'holiday_theme.left_image_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.deco_image_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.button_text' => ['nullable', 'string', 'max:120'],
+                'holiday_theme.button_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.items' => ['nullable', 'array'],
+                'holiday_theme.items.*.title' => ['nullable', 'string', 'max:255'],
+                'holiday_theme.items.*.badge' => ['nullable', 'string', 'max:120'],
+                'holiday_theme.items.*.description' => ['nullable', 'string', 'max:1000'],
+                'holiday_theme.items.*.image_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.items.*.button_text' => ['nullable', 'string', 'max:120'],
+                'holiday_theme.items.*.button_url' => ['nullable', 'string', 'max:2048'],
+                'holiday_theme.items.*.tags' => ['nullable', 'string', 'max:1000'],
+                'holiday_theme.items.*.active' => ['nullable', 'boolean'],
+                'holiday_theme.items.*.order' => ['nullable', 'integer', 'min:0'],
+                'holiday_theme_left_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'holiday_theme_deco_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'holiday_theme_item_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+
                 'promotions.title' => ['nullable', 'string', 'max:255'],
-                'promotions.items' => ['nullable', 'array'],
-                'promotions.items.*.badge_text' => ['nullable', 'string', 'max:100'],
-                'promotions.items.*.badge_bg' => ['nullable', 'string', 'max:20'],
-                'promotions.items.*.badge_color' => ['nullable', 'string', 'max:20'],
-                'promotions.items.*.title' => ['nullable', 'string', 'max:255'],
-                'promotions.items.*.text' => ['nullable', 'string', 'max:500'],
-                'promotions.items.*.style' => ['nullable', 'string', 'max:20'],
-                'promotions.items.*.url' => ['nullable', 'string', 'max:500'],
+                'promotions.images' => ['nullable', 'array'],
+                'promotions.images.0' => ['nullable', 'string', 'max:2048'],
+                'promotions.images.1' => ['nullable', 'string', 'max:2048'],
+                'promotions.images.2' => ['nullable', 'string', 'max:2048'],
+                'promotion_image_1' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'promotion_image_2' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'promotion_image_3' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'promotion_remove_1' => ['nullable', 'boolean'],
+                'promotion_remove_2' => ['nullable', 'boolean'],
+                'promotion_remove_3' => ['nullable', 'boolean'],
 
                 'whatsapp_banner.enabled' => ['nullable', 'boolean'],
                 'whatsapp_banner.title' => ['nullable', 'string', 'max:255'],
@@ -249,24 +275,6 @@ class HomePageSettingsController extends Controller
             ];
         }
 
-            $promotionItems = [];
-            $promosInput = $validated['promotions']['items'] ?? [];
-            if (is_array($promosInput)) {
-                foreach ($promosInput as $promo) {
-                    $promoTitle = trim((string)($promo['title'] ?? ''));
-                    if ($promoTitle === '') continue;
-                    $promotionItems[] = [
-                        'badge_text'  => trim((string)($promo['badge_text'] ?? '')),
-                        'badge_bg'    => trim((string)($promo['badge_bg'] ?? '#ef4444')),
-                        'badge_color' => trim((string)($promo['badge_color'] ?? '#fff')),
-                        'title'       => $promoTitle,
-                        'text'        => trim((string)($promo['text'] ?? '')),
-                        'style'       => trim((string)($promo['style'] ?? 'blue')),
-                        'url'         => trim((string)($promo['url'] ?? '#')),
-                    ];
-                }
-            }
-
             $payload = [
                 'hero' => [
                     'type' => $validated['hero']['type'],
@@ -282,6 +290,7 @@ class HomePageSettingsController extends Controller
                     'search' => (bool) $request->boolean('sections.search'),
                     'last_minute' => (bool) $request->boolean('sections.last_minute'),
                     'accommodations' => (bool) $request->boolean('sections.accommodations'),
+                    'holiday_theme' => (bool) ($request->boolean('sections.holiday_theme') || $request->boolean('holiday_theme.enabled')),
                     'regions' => (bool) $request->boolean('sections.regions'),
                     'good_spots' => (bool) $request->boolean('sections.good_spots'),
                     'promotions' => (bool) $request->boolean('sections.promotions'),
@@ -307,13 +316,11 @@ class HomePageSettingsController extends Controller
                     'title' => trim((string)($validated['accommodations']['title'] ?? 'Découvrez des séjours uniques')),
                     'count' => (int) ($validated['accommodations']['count'] ?? 4),
                 ],
+                'holiday_theme' => $this->buildHolidayThemePayload($request, $validated),
                 'regions' => $regions,
                 'good_spots' => $goodSpots,
                 'good_spots_title' => trim((string)($validated['good_spots_title'] ?? 'Les bons coins sur votre destination')),
-                'promotions' => [
-                    'title' => trim((string)($validated['promotions']['title'] ?? 'Destinations de ce mois')),
-                    'items' => $promotionItems,
-                ],
+                'promotions' => $this->buildPromotionsPayload($request, $validated, $current),
                 'whatsapp_banner' => $this->buildWhatsAppBannerPayload($request, $validated),
                 'cruises' => $this->buildCruisesPayload($request, $validated),
                 'footer' => [
@@ -640,6 +647,7 @@ class HomePageSettingsController extends Controller
                 'search' => true,
                 'last_minute' => true,
                 'accommodations' => true,
+                'holiday_theme' => true,
                 'regions' => true,
                 'good_spots' => true,
                 'promotions' => true,
@@ -647,7 +655,7 @@ class HomePageSettingsController extends Controller
                 'cruises' => false,
                 'newsletter' => true,
             ],
-            'section_order' => ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'],
+            'section_order' => ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'],
             'custom_sections' => [],
             'search' => [
                 'shortcode' => '[traveler_search]',
@@ -661,6 +669,19 @@ class HomePageSettingsController extends Controller
                 'title' => 'Découvrez des séjours uniques',
                 'count' => 4,
             ],
+            'holiday_theme' => [
+                'enabled' => true,
+                'eyebrow' => 'Voyages par theme',
+                'title_line_1' => '',
+                'title_line_2' => '',
+                'title_line_3' => '',
+                'subtitle' => '',
+                'left_image_url' => '',
+                'deco_image_url' => '',
+                'button_text' => '',
+                'button_url' => '',
+                'items' => [],
+            ],
             'regions' => [],
             'good_spots' => [
                 ['title' => 'Restaurants', 'subtitle' => 'Où manger ?', 'icon' => 'fas fa-utensils', 'image_url' => '', 'link_url' => ''],
@@ -671,14 +692,14 @@ class HomePageSettingsController extends Controller
             'good_spots_title' => 'Les bons coins sur votre destination',
             'promotions' => [
                 'title' => 'Destinations de ce mois',
-                'items' => [],
+                'images' => ['', '', ''],
             ],
             'whatsapp_banner' => [
                 'enabled' => false,
-                'title' => 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES',
-                'subtitle' => 'Stay informed with satguru travel',
-                'features' => ['Exclusive travel packages', 'Latest news and updates', 'Special offers and promotions'],
-                'button_text' => 'JOIN NOW',
+                'title' => 'Rejoignez notre chaîne WhatsApp',
+                'subtitle' => 'Recevez nos offres, actus et inspirations voyage.',
+                'features' => ['Promos', 'Nouveautés', 'Conseils'],
+                'button_text' => 'Rejoindre',
                 'button_url' => '#',
                 'qr_code_url' => '',
             ],
@@ -715,6 +736,37 @@ class HomePageSettingsController extends Controller
 
         $settings = array_replace_recursive($defaults, $decoded);
 
+        $holidayItems = data_get($settings, 'holiday_theme.items', []);
+        if (!is_array($holidayItems) || empty($holidayItems)) {
+            $legacyCards = data_get($settings, 'holiday_theme.cards', []);
+            if (is_array($legacyCards) && !empty($legacyCards)) {
+                data_set($settings, 'holiday_theme.items', $legacyCards);
+                $holidayItems = $legacyCards;
+            }
+        }
+        if (is_array($holidayItems)) {
+            $normalizedHolidayItems = [];
+            foreach ($holidayItems as $idx => $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $imageUrl = trim((string)($item['image_url'] ?? $item['image'] ?? ''));
+                $normalizedHolidayItems[] = [
+                    'title' => trim((string)($item['title'] ?? '')),
+                    'badge' => trim((string)($item['badge'] ?? '')),
+                    'description' => trim((string)($item['description'] ?? '')),
+                    'image_url' => $this->normalizeMediaUrl($imageUrl),
+                    'button_text' => trim((string)($item['button_text'] ?? 'Voir plus')),
+                    'button_url' => trim((string)($item['button_url'] ?? '#')),
+                    'tags' => is_array($item['tags'] ?? null) ? implode(', ', $item['tags']) : trim((string)($item['tags'] ?? '')),
+                    'active' => (bool)($item['active'] ?? true),
+                    'order' => isset($item['order']) ? (int)$item['order'] : (int)$idx,
+                ];
+            }
+            usort($normalizedHolidayItems, static fn ($a, $b) => ((int)($a['order'] ?? 0)) <=> ((int)($b['order'] ?? 0)));
+            data_set($settings, 'holiday_theme.items', $normalizedHolidayItems);
+        }
+
         if (!isset($settings['regions']) || !is_array($settings['regions'])) {
             $settings['regions'] = [];
         }
@@ -723,11 +775,105 @@ class HomePageSettingsController extends Controller
             $settings['good_spots'] = $defaults['good_spots'];
         }
 
+        if (!isset($settings['section_order']) || !is_array($settings['section_order'])) {
+            $settings['section_order'] = $defaults['section_order'];
+        }
+        if (!in_array('holiday_theme', $settings['section_order'], true)) {
+            $after = array_search('accommodations', $settings['section_order'], true);
+            if ($after === false) {
+                array_unshift($settings['section_order'], 'holiday_theme');
+            } else {
+                array_splice($settings['section_order'], $after + 1, 0, ['holiday_theme']);
+            }
+        }
+
         while (count($settings['good_spots']) < 4) {
             $settings['good_spots'][] = $defaults['good_spots'][count($settings['good_spots'])];
         }
 
+        $settings = $this->normalizePromotionsForRead($settings);
+
         return $settings;
+    }
+
+    /**
+     * Normalize promotions: new shape is { title, images[3] }.
+     * Migrates legacy `items[].image_url` into `images` when `images` is empty.
+     */
+    private function normalizePromotionsForRead(array $settings): array
+    {
+        $defaults = [
+            'title' => 'Destinations de ce mois',
+            'images' => ['', '', ''],
+        ];
+        $promo = $settings['promotions'] ?? [];
+        if (!is_array($promo)) {
+            $promo = [];
+        }
+        $title = trim((string) ($promo['title'] ?? $defaults['title']));
+        $images = isset($promo['images']) && is_array($promo['images']) ? array_values($promo['images']) : ['', '', ''];
+        while (count($images) < 3) {
+            $images[] = '';
+        }
+        $images = array_slice($images, 0, 3);
+        for ($i = 0; $i < 3; $i++) {
+            $images[$i] = $this->normalizeMediaUrl(trim((string) ($images[$i] ?? '')));
+        }
+        $hasAnyImage = false;
+        foreach ($images as $u) {
+            if ($u !== '') {
+                $hasAnyImage = true;
+                break;
+            }
+        }
+        if (!$hasAnyImage && !empty($promo['items']) && is_array($promo['items'])) {
+            $slot = 0;
+            foreach ($promo['items'] as $item) {
+                if ($slot >= 3) {
+                    break;
+                }
+                if (!is_array($item)) {
+                    continue;
+                }
+                $url = trim((string) ($item['image_url'] ?? ''));
+                if ($url !== '') {
+                    $images[$slot] = $this->normalizeMediaUrl($url);
+                    $slot++;
+                }
+            }
+        }
+        $settings['promotions'] = [
+            'title' => $title !== '' ? $title : $defaults['title'],
+            'images' => $images,
+        ];
+
+        return $settings;
+    }
+
+    private function buildPromotionsPayload(Request $request, array $validated, array $current): array
+    {
+        $defaultTitle = 'Destinations de ce mois';
+        $title = trim((string) ($validated['promotions']['title'] ?? ($current['promotions']['title'] ?? $defaultTitle)));
+        $images = ['', '', ''];
+        for ($i = 0; $i < 3; $i++) {
+            $n = $i + 1;
+            if ($request->hasFile("promotion_image_{$n}")) {
+                $path = $request->file("promotion_image_{$n}")->store('home-settings/promotions', 'public');
+                $images[$i] = $this->normalizeMediaUrl(Storage::disk('public')->url($path));
+                continue;
+            }
+            if ($request->boolean("promotion_remove_{$n}")) {
+                $images[$i] = '';
+                continue;
+            }
+            $posted = trim((string) ($request->input("promotions.images.$i", '')));
+            $images[$i] = $posted !== '' ? $this->normalizeMediaUrl($posted) : '';
+        }
+
+        return [
+            'title' => $title !== '' ? $title : $defaultTitle,
+            'images' => $images,
+        ];
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -812,7 +958,7 @@ class HomePageSettingsController extends Controller
         ];
     }
 
-    private const BUILTIN_SECTIONS = ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'];
+    private const BUILTIN_SECTIONS = ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'];
 
     private function normalizeSectionOrder(array $input): array
     {
@@ -878,13 +1024,95 @@ class HomePageSettingsController extends Controller
 
         return [
             'enabled' => (bool) $request->boolean('whatsapp_banner.enabled'),
-            'title' => trim((string) ($validated['whatsapp_banner']['title'] ?? 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES')),
-            'subtitle' => trim((string) ($validated['whatsapp_banner']['subtitle'] ?? 'Stay informed with satguru travel')),
+            'title' => trim((string) ($validated['whatsapp_banner']['title'] ?? 'Rejoignez notre chaîne WhatsApp')),
+            'subtitle' => trim((string) ($validated['whatsapp_banner']['subtitle'] ?? 'Recevez nos offres, actus et inspirations voyage.')),
             'features' => $features,
-            'button_text' => trim((string) ($validated['whatsapp_banner']['button_text'] ?? 'JOIN NOW')),
+            'button_text' => trim((string) ($validated['whatsapp_banner']['button_text'] ?? 'Rejoindre')),
             'button_url' => trim((string) ($validated['whatsapp_banner']['button_url'] ?? '#')),
             'qr_code_url' => $qrCodeUrl,
         ];
+    }
+
+    private function buildHolidayThemePayload(Request $request, array $validated): array
+    {
+        $current = $this->readHomeSettings();
+        $input = $validated['holiday_theme'] ?? [];
+
+        $leftImageUrl = trim((string) ($input['left_image_url'] ?? data_get($current, 'holiday_theme.left_image_url', '')));
+        $decoImageUrl = trim((string) ($input['deco_image_url'] ?? data_get($current, 'holiday_theme.deco_image_url', '')));
+
+        if ($request->hasFile('holiday_theme_left_image_file')) {
+            $path = $request->file('holiday_theme_left_image_file')->store('home-settings/holiday-theme', 'public');
+            $leftImageUrl = Storage::disk('public')->url($path);
+        }
+        if ($request->hasFile('holiday_theme_deco_image_file')) {
+            $path = $request->file('holiday_theme_deco_image_file')->store('home-settings/holiday-theme', 'public');
+            $decoImageUrl = Storage::disk('public')->url($path);
+        }
+
+        $items = [];
+        $itemsInput = $input['items'] ?? [];
+        if (is_array($itemsInput)) {
+            foreach ($itemsInput as $idx => $item) {
+                $title = trim((string) ($item['title'] ?? ''));
+                if ($title === '') {
+                    continue;
+                }
+                $imageUrl = trim((string) ($item['image_url'] ?? ''));
+                if ($request->hasFile("holiday_theme_item_files.$idx")) {
+                    $path = $request->file("holiday_theme_item_files.$idx")->store('home-settings/holiday-theme/items', 'public');
+                    $imageUrl = Storage::disk('public')->url($path);
+                }
+                $imageUrl = $this->normalizeMediaUrl($imageUrl);
+                $items[] = [
+                    'title' => $title,
+                    'badge' => trim((string) ($item['badge'] ?? '')),
+                    'description' => trim((string) ($item['description'] ?? '')),
+                    'image_url' => $imageUrl,
+                    'image' => $imageUrl,
+                    'button_text' => trim((string) ($item['button_text'] ?? 'Voir plus')),
+                    'button_url' => trim((string) ($item['button_url'] ?? '#')),
+                    'tags' => trim((string) ($item['tags'] ?? '')),
+                    'active' => (bool) ($item['active'] ?? false),
+                    'order' => isset($item['order']) ? (int) $item['order'] : (int) $idx,
+                ];
+            }
+        }
+
+        usort($items, static fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+
+        return [
+            'enabled' => (bool) $request->boolean('holiday_theme.enabled'),
+            'eyebrow' => trim((string) ($input['eyebrow'] ?? 'Voyages par theme')),
+            'title_line_1' => trim((string) ($input['title_line_1'] ?? '')),
+            'title_line_2' => trim((string) ($input['title_line_2'] ?? '')),
+            'title_line_3' => trim((string) ($input['title_line_3'] ?? '')),
+            'subtitle' => trim((string) ($input['subtitle'] ?? '')),
+            'left_image_url' => $this->normalizeMediaUrl($leftImageUrl),
+            'deco_image_url' => $this->normalizeMediaUrl($decoImageUrl),
+            'button_text' => trim((string) ($input['button_text'] ?? '')),
+            'button_url' => trim((string) ($input['button_url'] ?? '')),
+            'items' => array_values($items),
+        ];
+    }
+
+    private function normalizeMediaUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+        if (preg_match('#^(?:https?:)?//#i', $url) || str_starts_with($url, 'data:')) {
+            return $url;
+        }
+        $base = rtrim((string) config('app.admin_url', 'https://booking.ajinsafro.net'), '/');
+        if ($base === '') {
+            $base = rtrim((string) config('app.url', ''), '/');
+        }
+        if ($base === '') {
+            return $url;
+        }
+        return $base . '/' . ltrim($url, '/');
     }
 
     private function buildCruisesPayload(Request $request, array $validated): array

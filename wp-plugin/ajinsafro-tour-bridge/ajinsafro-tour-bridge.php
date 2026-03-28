@@ -470,11 +470,12 @@ class Ajinsafro_Tour_Bridge {
             }
         }
 
+        $allowed_ids = $repo->get_tour_activity_ids();
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('AJTB ajax_get_activities_modal: exclude_ids=' . json_encode($exclude_ids) . ', search=' . $search);
+            error_log('AJTB ajax_get_activities_modal: exclude_ids=' . json_encode($exclude_ids) . ', allowed_ids=' . json_encode($allowed_ids) . ', search=' . $search);
         }
 
-        $result = $repo->get_activities_for_modal($exclude_ids, $search, $page, $per_page);
+        $result = $repo->get_activities_for_modal($exclude_ids, $search, $page, $per_page, $allowed_ids);
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('AJTB ajax_get_activities_modal: result=' . json_encode($result));
@@ -603,12 +604,22 @@ class Ajinsafro_Tour_Bridge {
             return;
         }
 
+        $tour_css_version = file_exists(AJTB_PLUGIN_DIR . 'assets/css/tour.css')
+            ? (string) filemtime(AJTB_PLUGIN_DIR . 'assets/css/tour.css')
+            : AJTB_VERSION;
+        $tour_js_version = file_exists(AJTB_PLUGIN_DIR . 'assets/js/tour.js')
+            ? (string) filemtime(AJTB_PLUGIN_DIR . 'assets/js/tour.js')
+            : AJTB_VERSION;
+        $day_plan_js_version = file_exists(AJTB_PLUGIN_DIR . 'assets/js/day-plan.js')
+            ? (string) filemtime(AJTB_PLUGIN_DIR . 'assets/js/day-plan.js')
+            : AJTB_VERSION;
+
         // Main CSS
         wp_enqueue_style(
             'ajtb-tour-css',
             AJTB_PLUGIN_URL . 'assets/css/tour.css',
             [],
-            AJTB_VERSION
+            $tour_css_version
         );
 
         // jQuery UI Datepicker (for travel dates calendar)
@@ -620,14 +631,14 @@ class Ajinsafro_Tour_Bridge {
             'ajtb-tour-js',
             AJTB_PLUGIN_URL . 'assets/js/tour.js',
             ['jquery', 'jquery-ui-datepicker'],
-            AJTB_VERSION,
+            $tour_js_version,
             true
         );
         wp_enqueue_script(
             'ajtb-day-plan-js',
             AJTB_PLUGIN_URL . 'assets/js/day-plan.js',
             ['jquery'],
-            AJTB_VERSION,
+            $day_plan_js_version,
             true
         );
 

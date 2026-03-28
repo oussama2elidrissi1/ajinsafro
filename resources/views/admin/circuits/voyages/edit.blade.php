@@ -1,3 +1,4 @@
+
 @php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
 @endphp
@@ -145,12 +146,12 @@
 
                                 <div class="mb-3">
                                     <label for="content" class="form-label">Description complète</label>
-                                    <textarea class="form-control" id="content" name="content" rows="10">{{ old('content', $voyage->post_content) }}</textarea>
+                                    <textarea class="form-control rich-editor" id="content" name="content" rows="10">{{ old('content', $voyage->post_content) }}</textarea>
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="excerpt" class="form-label">Extrait / Accroche</label>
-                                    <textarea class="form-control" id="excerpt" name="excerpt" rows="3">{{ old('excerpt', $voyage->post_excerpt) }}</textarea>
+                                    <textarea class="form-control rich-editor" id="excerpt" name="excerpt" rows="3">{{ old('excerpt', $voyage->post_excerpt) }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -182,7 +183,13 @@
                                 
                                 <div class="mb-3">
                                     <label for="max_people" class="form-label">Nombre max. personnes</label>
-                                    <input type="number" class="form-control" id="max_people" name="max_people" value="{{ old('max_people', $meta['max_people'] ?? '') }}" min="1">
+                                    <input type="number" class="form-control bg-light" id="max_people" name="max_people" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
+                                    <small class="text-muted">Calculé automatiquement à partir des chambres de l'hôtel (onglet Hôtels).</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="places_display" class="form-label">Places</label>
+                                    <input type="number" class="form-control bg-light" id="places_display" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['places'] ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
+                                    <small class="text-muted">Total des places (identique au nombre max. personnes).</small>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -419,7 +426,7 @@
                         
                         <div class="mb-3">
                             <label for="st_google_map" class="form-label">Google Map (iframe code)</label>
-                            <textarea class="form-control" id="st_google_map" name="st_google_map" rows="4">{{ old('st_google_map', $meta['st_google_map'] ?? '') }}</textarea>
+                            <textarea class="form-control rich-editor" id="st_google_map" name="st_google_map" rows="4">{{ old('st_google_map', $meta['st_google_map'] ?? '') }}</textarea>
                         </div>
                         
                         <h5 class="mb-3 mt-4">Informations de contact</h5>
@@ -525,6 +532,62 @@
                                 <div class="mb-3">
                                     <label for="calculator_discount_by_people_type" class="form-label">Calculateur réduction</label>
                                     <input type="text" class="form-control" id="calculator_discount_by_people_type" name="calculator_discount_by_people_type" value="{{ old('calculator_discount_by_people_type', $meta['calculator_discount_by_people_type'] ?? '') }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Moyens de paiement</h4>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">
+                                        <i class="bx bxl-paypal"></i> PayPal
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">
+                                        OnePay
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">
+                                        OnePay ATM
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu">
+                                        PayU
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">
+                                        PayU Latam
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">
+                                        PayUmoney
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor">
+                                        <i class="bx bx-credit-card"></i> Razorpay
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -596,22 +659,22 @@
                         
                         <div class="mb-3">
                             <label for="tours_include" class="form-label">Ce qui est inclus</label>
-                            <textarea class="form-control" id="tours_include" name="tours_include" rows="6">{{ old('tours_include', $meta['tours_include'] ?? '') }}</textarea>
+                            <textarea class="form-control rich-editor" id="tours_include" name="tours_include" rows="6">{{ old('tours_include', $meta['tours_include'] ?? '') }}</textarea>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_exclude" class="form-label">Ce qui n'est pas inclus</label>
-                            <textarea class="form-control" id="tours_exclude" name="tours_exclude" rows="6">{{ old('tours_exclude', $meta['tours_exclude'] ?? '') }}</textarea>
+                            <textarea class="form-control rich-editor" id="tours_exclude" name="tours_exclude" rows="6">{{ old('tours_exclude', $meta['tours_exclude'] ?? '') }}</textarea>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_highlight" class="form-label">Points forts</label>
-                            <textarea class="form-control" id="tours_highlight" name="tours_highlight" rows="6">{{ old('tours_highlight', $meta['tours_highlight'] ?? '') }}</textarea>
+                            <textarea class="form-control rich-editor" id="tours_highlight" name="tours_highlight" rows="6">{{ old('tours_highlight', $meta['tours_highlight'] ?? '') }}</textarea>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_faq" class="form-label">FAQ</label>
-                            <textarea class="form-control" id="tours_faq" name="tours_faq" rows="6">{{ old('tours_faq', $meta['tours_faq'] ?? '') }}</textarea>
+                            <textarea class="form-control rich-editor" id="tours_faq" name="tours_faq" rows="6">{{ old('tours_faq', $meta['tours_faq'] ?? '') }}</textarea>
                         </div>
                         
                         <div class="mb-3">
@@ -707,10 +770,17 @@
                                         <div class="col-md-3">
                                             <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
                                             <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
+
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small mb-1">Places</label>
                                             <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Illimité">
+
+                    </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small mb-1">Places</label>
+                                            <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? '') }}" min="0" placeholder="Calculé automatiquement" readonly>
+
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small mb-1">Prix spécifique</label>
@@ -757,7 +827,11 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label small mb-1">Places</label>
+
                                                 <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" min="0" placeholder="Illimité">
+
+                                            <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" value="0" min="0" placeholder="Calculé automatiquement" readonly>
+
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label small mb-1">Prix spécifique</label>
@@ -1569,8 +1643,13 @@
                             'availableTaxonomies' => $availableTaxonomies ?? [],
                             'assignedTaxonomies' => $assignedTaxonomies ?? [],
                         ])
+
                     </div>
                 </div>
+
+                                </div>
+                            </div>
+
             </div>
 
             {{-- TAB VOLS "” Vol Aller = toujours Jour 1, Vol Retour = toujours Dernier jour (N) "” Laravel voyage_flights --}}
@@ -1793,7 +1872,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Description / Notes</label>
-                                        <textarea class="form-control" name="programme_days[{{ $dayIndex }}][notes]" rows="2" placeholder="Notes ou description du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                                        <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="2" placeholder="Notes ou description du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
                                     </div>
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
@@ -1832,7 +1911,7 @@
                                                         </span>
                                                         @if($da->is_editable)
                                                         <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
-                                                        <textarea class="form-control form-control-sm" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
+                                                        <textarea class="form-control form-control-sm rich-editor" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
                                                         @else
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}">
                                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" value="{{ $da->custom_description }}">
@@ -1923,8 +2002,93 @@
 </div>{{-- /.voyage-edit-page --}}
 @endsection
 @push('script')
+    <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
+        (function () {
+            function ensureId(el) {
+                if (el.id) return el.id;
+                var base = 'rich-editor-' + Math.random().toString(36).slice(2);
+                el.id = base;
+                return base;
+            }
+
+            function editorHeightFromRows(el) {
+                var rows = parseInt(el.getAttribute('rows') || '0', 10);
+                if (!rows || rows <= 2) return 160;
+                if (rows <= 4) return 220;
+                return 300;
+            }
+
+            function initOne(el) {
+                if (!el || el.tagName !== 'TEXTAREA') return;
+                if (!el.classList.contains('rich-editor')) return;
+                if (el.dataset.richEditorInitialized === 'true') return;
+
+                var id = ensureId(el);
+                if (window.tinymce && tinymce.get(id)) {
+                    el.dataset.richEditorInitialized = 'true';
+                    return;
+                }
+
+                el.dataset.richEditorInitialized = 'true';
+
+                tinymce.init({
+                    target: el,
+                    height: editorHeightFromRows(el),
+                    plugins: [
+                        "advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
+                        "searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
+                        "save table contextmenu directionality emoticons template paste textcolor"
+                    ],
+                    toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
+                    style_formats: [
+                        {title: 'Bold text', inline: 'b'},
+                        {title: 'Red text', inline: 'span', styles: {color: '#ff0000'}},
+                        {title: 'Red header', block: 'h1', styles: {color: '#ff0000'}},
+                        {title: 'Example 1', inline: 'span', classes: 'example1'},
+                        {title: 'Example 2', inline: 'span', classes: 'example2'},
+                        {title: 'Table styles'},
+                        {title: 'Table row 1', selector: 'tr', classes: 'tablerow1'}
+                    ]
+                });
+            }
+
+            function initAll(root) {
+                var scope = root && root.querySelectorAll ? root : document;
+                scope.querySelectorAll('textarea.rich-editor').forEach(initOne);
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                initAll(document);
+
+                var form = document.querySelector('form');
+                if (form && window.MutationObserver) {
+                    var mo = new MutationObserver(function (mutations) {
+                        mutations.forEach(function (m) {
+                            m.addedNodes && m.addedNodes.forEach(function (node) {
+                                if (!node || node.nodeType !== 1) return;
+                                if (node.matches && node.matches('textarea.rich-editor')) initOne(node);
+                                if (node.querySelectorAll) initAll(node);
+                            });
+                        });
+                    });
+                    mo.observe(form, {childList: true, subtree: true});
+                }
+
+                if (form) {
+                    form.addEventListener('submit', function () {
+                        if (window.tinymce) tinymce.triggerSave();
+                    });
+                }
+
+                document.addEventListener('shown.bs.tab', function (e) {
+                    var target = e && e.target ? document.querySelector(e.target.getAttribute('href')) : null;
+                    if (target) initAll(target);
+                });
+            });
+        })();
+
         // Initialiser les données pour le modal "Ajouter un élément" (hotels & transfers par jour)
         window.tourHotelsData = {};
         window.tourTransfersData = { arrival: [], departure: [] };
@@ -2726,7 +2890,7 @@
                     '<div class="col-md-6"><label class="form-label">Titre du jour</label>' +
                     '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex: Jour ' + (index + 1) + ' - Arrivée"></div></div>' +
                     '<div class="mb-3"><label class="form-label">Description / Notes</label>' +
-                    '<textarea class="form-control" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes ou description du jour"></textarea></div>' +
+                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes ou description du jour"></textarea></div>' +
                     '<input type="hidden" name="programme_days[' + index + '][title]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][description]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +
@@ -3391,7 +3555,7 @@
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
                 '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
-                '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description"></textarea>' +
+                '<textarea class="form-control form-control-sm rich-editor" name="' + prefix + '[custom_description]" rows="1" placeholder="Description"></textarea>' +
                 '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button></div></div>';
             list.appendChild(row);
             updateProgrammeDayInclus(card);
@@ -3890,6 +4054,12 @@
                         var n = acc.querySelectorAll('.programme-day-card').length;
                         durationInput.value = n > 0 ? n : (durationInput.value || 1);
                     }
+                    // Sécurité: tous les champs Hôtels (hôtel + chambres) doivent être soumis.
+                    form.querySelectorAll('[name^="tour_hotels["]').forEach(function(el) {
+                        if (el && el.hasAttribute && el.hasAttribute('disabled')) {
+                            el.removeAttribute('disabled');
+                        }
+                    });
                     // requestSubmit() déclenche la validation HTML5 (required, etc.) avant envoi
                     if (typeof form.requestSubmit === 'function') {
                         form.requestSubmit();

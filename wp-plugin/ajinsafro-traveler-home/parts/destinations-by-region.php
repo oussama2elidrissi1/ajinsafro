@@ -19,6 +19,9 @@ $featured_label = ! empty( $featured['label'] ) ? $featured['label'] : 'Maroc';
 $featured_img   = ! empty( $featured['image_url'] ) ? $featured['image_url'] : 'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&w=800&q=80';
 $featured_url   = ! empty( $featured['link_url'] ) ? $featured['link_url'] : '#';
 $featured_flag  = ! empty( $featured['flag_url'] ) ? $featured['flag_url'] : 'https://flagcdn.com/w40/ma.png';
+if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+    $featured_img = ajth_normalize_storage_url( $featured_img );
+}
 
 $country_flags = array(
     'maroc' => 'https://flagcdn.com/w40/ma.png',
@@ -63,6 +66,9 @@ $country_flags = array(
                 <div class="aj-dest-grid">
                     <?php foreach ( $items as $r ) :
                         $img   = ! empty( $r['image_url'] ) ? $r['image_url'] : '';
+                        if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+                            $img = ajth_normalize_storage_url( $img );
+                        }
                         $label = ! empty( $r['label'] ) ? $r['label'] : '';
                         $url   = ! empty( $r['link_url'] ) ? $r['link_url'] : '#';
                         $flag  = ! empty( $r['flag_url'] ) ? $r['flag_url'] : '';

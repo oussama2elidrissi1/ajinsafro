@@ -480,23 +480,13 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             $html .= '<li class="day-activity-item day-no-activities">' . esc_html__('Aucune activité', 'ajinsafro-tour-bridge') . '</li>';
         }
     }
-    /* CTA card "Add to day" : toujours affichée quand les activités sont modifiables (même si des activités sont déjà ajoutées) */
+    /* CTA \"Add activity\" : toujours affichée quand les activités sont modifiables (même si des activités sont déjà ajoutées) */
     if ($can_toggle) {
         $html .= '<li class="day-activity-item day-activity-empty-card">';
-        $html .= '<div class="day-activity-empty-card-content">';
-        $html .= '<div class="day-activity-empty-icon">';
-        $html .= '<svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" fill="none" stroke-width="1.5"><path d="M12 2v20M2 12h20"></path><circle cx="12" cy="12" r="3"></circle></svg>';
-        $html .= '</div>';
-        $html .= '<div class="day-activity-empty-text">';
-        $html .= '<h3 class="day-activity-empty-title">' . esc_html__('Add Activities to your day', 'ajinsafro-tour-bridge') . '</h3>';
-        $html .= '<p class="day-activity-empty-subtitle">' . esc_html__('Spend the day at leisure or add an activity to your day', 'ajinsafro-tour-bridge') . '</p>';
-        $html .= '</div>';
-        $html .= '<div class="day-activity-empty-action">';
         $html .= '<button type="button" class="ajtb-btn-open-activity-modal ajtb-btn-add-to-day" data-tour-id="' . esc_attr($tour_id) . '" data-day-id="' . esc_attr($day_id) . '">';
-        $html .= esc_html__('ADD TO DAY', 'ajinsafro-tour-bridge');
+        $html .= '<span class="ajtb-btn-add-to-day-icon" aria-hidden="true">+</span>';
+        $html .= esc_html__('Add activity', 'ajinsafro-tour-bridge');
         $html .= '</button>';
-        $html .= '</div>';
-        $html .= '</div>';
         $html .= '</li>';
     }
     $html .= '</ul>';
@@ -544,6 +534,62 @@ function ajtb_flights_have_content($flights) {
         }
     }
     return false;
+}
+
+/**
+ * Compute global totals (days, flights, transfers, hotels, activities, meals) from tour itinerary.
+ * Used for the sticky header bar (12 DAY PLAN / FLIGHTS / HOTEL / ACTIVITIES).
+ *
+ * @param array $tour Tour data with 'itinerary' key (array of days).
+ * @return array ['days' => int, 'flights' => int, 'transfers' => int, 'hotels' => int, 'activities' => int, 'meals' => int]
+ */
+function ajtb_get_global_totals($tour) {
+    $itinerary = isset($tour['itinerary']) && is_array($tour['itinerary']) ? $tour['itinerary'] : [];
+    $total_days = count($itinerary);
+    $out = [
+        'days' => $total_days,
+        'flights' => 0,
+        'transfers' => 0,
+        'hotels' => 0,
+        'activities' => 0,
+        'meals' => 0,
+    ];
+    foreach ($itinerary as $index => $day) {
+        $flight_or_list = $day['flight'] ?? [];
+        $first = is_array($flight_or_list) ? reset($flight_or_list) : null;
+        $is_list = $first && is_array($first) && (isset($first['from_city']) || isset($first['flight_type']) || isset($first['depart_label']));
+        $flight_list = $is_list ? $flight_or_list : [$flight_or_list];
+        $return_or_list = $day['flight_return'] ?? [];
+        $first_ret = is_array($return_or_list) ? reset($return_or_list) : null;
+        $is_list_ret = $first_ret && is_array($first_ret) && (isset($first_ret['from_city']) || isset($first_ret['flight_type']) || isset($first_ret['depart_label']));
+        $return_list = $is_list_ret ? $return_or_list : [$return_or_list];
+        foreach ($flight_list as $f) {
+            if (ajtb_flight_has_content($f)) {
+                $out['flights']++;
+            }
+        }
+        foreach ($return_list as $f) {
+            if (ajtb_flight_has_content($f)) {
+                $out['flights']++;
+            }
+        }
+        $tr_arr = isset($day['transfer']) && is_array($day['transfer']) ? $day['transfer'] : [];
+        $tr_dep = isset($day['transfer_return']) && is_array($day['transfer_return']) ? $day['transfer_return'] : [];
+        $out['transfers'] += count($tr_arr) + count($tr_dep);
+        $hotels_list = isset($day['hotels']) && is_array($day['hotels']) ? $day['hotels'] : (!empty($day['hotel']) ? [$day['hotel']] : []);
+        $out['hotels'] += count($hotels_list);
+        if (!empty($day['activities']) && is_array($day['activities'])) {
+            foreach ($day['activities'] as $a) {
+                if (!empty($a['is_included'])) {
+                    $out['activities']++;
+                }
+            }
+        }
+        if (!empty(trim((string) ($day['meals'] ?? '')))) {
+            $out['meals']++;
+        }
+    }
+    return $out;
 }
 
 /**

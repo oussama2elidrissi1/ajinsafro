@@ -15,11 +15,15 @@
                         @if(!empty($place->id))
                         <input type="hidden" name="departure_places[{{ $pi }}][id]" value="{{ $place->id }}">
                         @endif
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][name]" value="{{ old("departure_places.{$pi}.name", $place->name ?? '') }}" placeholder="Ex. Casablanca" required>
                         </div>
                         <div class="col-md-2">
                             <input type="text" class="form-control form-control-sm" name="departure_places[{{ $pi }}][code]" value="{{ old("departure_places.{$pi}.code", $place->code ?? '') }}" placeholder="CMN">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-0 d-block">Prix (MAD)</label>
+                            <input type="number" step="0.01" min="0" class="form-control form-control-sm" name="departure_places[{{ $pi }}][price]" value="{{ old("departure_places.{$pi}.price", $place->price ?? '') }}" placeholder="0">
                         </div>
                         <div class="col-md-2">
                             <div class="form-check mb-0">
@@ -55,8 +59,9 @@
         div.className = 'card mb-2 departure-place-inline-row';
         div.setAttribute('data-index', idx);
         div.innerHTML = '<div class="card-body py-2"><div class="row g-2 align-items-center">' +
-            '<div class="col-md-4"><input type="text" class="form-control form-control-sm" name="departure_places[' + idx + '][name]" placeholder="Ex. Casablanca" required></div>' +
+            '<div class="col-md-3"><input type="text" class="form-control form-control-sm" name="departure_places[' + idx + '][name]" placeholder="Ex. Casablanca" required></div>' +
             '<div class="col-md-2"><input type="text" class="form-control form-control-sm" name="departure_places[' + idx + '][code]" placeholder="CMN"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0 d-block">Prix (MAD)</label><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="departure_places[' + idx + '][price]" placeholder="0"></div>' +
             '<div class="col-md-2"><div class="form-check mb-0"><input type="checkbox" class="form-check-input" name="departure_places[' + idx + '][is_active]" value="1" checked><label class="form-check-label small">Actif</label></div></div>' +
             '<div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger remove-departure-place-inline" aria-label="Supprimer">×</button></div></div></div>';
         container.appendChild(div);

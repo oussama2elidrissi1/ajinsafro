@@ -38,8 +38,16 @@
             @if($voyage->duration_text)
                 <p class="mb-1"><strong>Durée :</strong> {{ $voyage->duration_text }}</p>
             @endif
-            @if($voyage->min_people)
-                <p class="mb-0"><strong>Minimum personnes :</strong> {{ $voyage->min_people }}</p>
+            @if(!empty($meta['min_people']))
+                <p class="mb-1"><strong>Minimum personnes :</strong> {{ $meta['min_people'] }}</p>
+            @endif
+            @if(isset($meta['max_people']) && $meta['max_people'] !== '' && $meta['max_people'] !== null)
+                <p class="mb-1"><strong>Nombre de personnes :</strong> {{ $meta['max_people'] }}</p>
+            @endif
+            @if(isset($meta['places']) && $meta['places'] !== '' && $meta['places'] !== null)
+                <p class="mb-0"><strong>Places :</strong> {{ $meta['places'] }}</p>
+            @elseif(isset($meta['max_people']) && $meta['max_people'] !== '' && $meta['max_people'] !== null)
+                <p class="mb-0"><strong>Places :</strong> {{ $meta['max_people'] }}</p>
             @endif
         </div>
     </div>

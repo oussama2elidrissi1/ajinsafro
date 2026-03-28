@@ -34,11 +34,12 @@
                                 if (! empty($child['route']) && ! Route::has($child['route'])) {
                                     return false;
                                 }
-
+                                if (! empty($child['roles']) && ! $user->hasRole($child['roles'])) {
+                                    return false;
+                                }
                                 if (! empty($child['permission']) && ! $user->can($child['permission'])) {
                                     return false;
                                 }
-
                                 return true;
                             })
                             ->values();

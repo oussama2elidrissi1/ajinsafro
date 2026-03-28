@@ -192,6 +192,8 @@ function ajth_get_header_settings() {
     $cached    = get_transient( $cache_key );
 
     if ( is_array( $cached ) && $cached_ts === $db_ts ) {
+        // Normalize even cached values to avoid legacy wp-login.php links.
+        $cached = ajth_normalize_auth_urls( $cached );
         return $cached;
     }
 
@@ -228,15 +230,79 @@ function ajth_get_header_settings() {
         $decoded = json_decode( $raw, true );
         if ( is_array( $decoded ) ) {
             $settings = array_replace_recursive( $defaults, $decoded );
+            $settings = ajth_normalize_auth_urls( $settings );
             set_transient( $cache_key, $settings, 10 * MINUTE_IN_SECONDS );
             set_transient( $cache_ts_key, $db_ts, 10 * MINUTE_IN_SECONDS );
             return $settings;
         }
     }
 
+    $defaults = ajth_normalize_auth_urls( $defaults );
     set_transient( $cache_key, $defaults, 2 * MINUTE_IN_SECONDS );
     set_transient( $cache_ts_key, $db_ts, 2 * MINUTE_IN_SECONDS );
     return $defaults;
+}
+
+/**
+ * Normalize storage URLs to point to the correct domain (booking.ajinsafro.net).
+ *
+ * The Laravel admin stores images in storage/app/public and generates URLs
+ * using Storage::disk('public')->url(). If APP_URL or ADMIN_URL is misconfigured,
+ * URLs may point to ajinsafro.net/storage/... instead of booking.ajinsafro.net/storage/...
+ *
+ * This helper fixes those URLs so images load correctly on the front-end.
+ *
+ * @param string $url The URL to normalize.
+ * @return string The normalized URL.
+ */
+function ajth_normalize_storage_url( string $url ): string {
+    $url = trim( $url );
+    if ( $url === '' ) {
+        return '';
+    }
+
+    $booking_host = 'booking.ajinsafro.net';
+    $wrong_patterns = array(
+        '#^https?://ajinsafro\.net/storage/#i',
+        '#^https?://www\.ajinsafro\.net/storage/#i',
+        '#^//ajinsafro\.net/storage/#i',
+    );
+
+    foreach ( $wrong_patterns as $pattern ) {
+        if ( preg_match( $pattern, $url ) ) {
+            $url = preg_replace( $pattern, 'https://' . $booking_host . '/storage/', $url );
+            break;
+        }
+    }
+
+    if ( preg_match( '#^storage/#', $url ) ) {
+        $url = 'https://' . $booking_host . '/' . $url;
+    }
+
+    return $url;
+}
+
+/**
+ * Keep front auth links on native WP endpoints by default.
+ * Prevents accidental routing to custom /login flows that break username/email auth.
+ */
+function ajth_normalize_auth_urls( array $settings ): array {
+    $login_raw = isset( $settings['login_url'] ) ? trim( (string) $settings['login_url'] ) : '';
+    $signup_raw = isset( $settings['signup_url'] ) ? trim( (string) $settings['signup_url'] ) : '';
+
+    if ( $login_raw === '' || str_contains( $login_raw, 'wp-login.php' ) ) {
+        $settings['login_url'] = home_url( '/login/' );
+    }
+
+    if ( $signup_raw === '' || str_contains( $signup_raw, 'wp-login.php' ) ) {
+        $settings['signup_url'] = home_url( '/register/' );
+    }
+
+    return $settings;
+}
+
+function ajth_public_login_endpoint(): string {
+    return apply_filters( 'ajth_public_login_endpoint', 'https://booking.ajinsafro.net/auth/public-login' );
 }
 
 /* ──────────────────────────────────────────────
@@ -319,6 +385,7 @@ function ajth_get_settings() {
             'search' => true,
             'last_minute' => true,
             'accommodations' => true,
+            'holiday_theme' => true,
             'regions' => true,
             'good_spots' => true,
             'promotions' => true,
@@ -338,6 +405,19 @@ function ajth_get_settings() {
             'title' => 'Découvrez des séjours uniques',
             'count' => 4,
         ),
+        'holiday_theme' => array(
+            'enabled' => true,
+            'eyebrow' => 'Voyages par theme',
+            'title_line_1' => '',
+            'title_line_2' => '',
+            'title_line_3' => '',
+            'subtitle' => '',
+            'left_image_url' => '',
+            'deco_image_url' => '',
+            'button_text' => '',
+            'button_url' => '',
+            'items' => array(),
+        ),
         'regions' => array(),
         'good_spots' => array(
             array( 'title' => 'Restaurants', 'subtitle' => 'Où manger ?', 'icon' => 'fas fa-utensils', 'image_url' => 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80', 'link_url' => '#' ),
@@ -348,18 +428,18 @@ function ajth_get_settings() {
         'good_spots_title' => 'Les bons coins sur votre destination',
         'promotions' => array(
             'title' => 'Destinations de ce mois',
-            'items' => array(),
+            'images' => array( '', '', '' ),
         ),
         'whatsapp_banner' => array(
             'enabled'   => true,
-            'title'    => 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES',
-            'subtitle' => 'Stay informed with satguru travel',
-            'features' => array( 'Exclusive travel packages', 'Latest news and updates', 'Special offers and promotions' ),
-            'button_text' => 'JOIN NOW',
+            'title'    => 'Rejoignez notre chaîne WhatsApp',
+            'subtitle' => 'Recevez nos offres, actus et inspirations voyage.',
+            'features' => array( 'Promos', 'Nouveautés', 'Conseils' ),
+            'button_text' => 'Rejoindre',
             'button_url'  => '#',
             'qr_code_url' => '',
         ),
-        'section_order' => array( 'last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter' ),
+        'section_order' => array( 'last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter' ),
         'footer' => array(
             'col1_heading' => 'En savoir plus',
             'col2_heading' => 'Société',
@@ -379,12 +459,21 @@ function ajth_get_settings() {
     }
 
     $settings = array_replace_recursive( $defaults, $saved );
+    $settings['holiday_theme'] = ajth_normalize_holiday_theme_settings(
+        isset( $settings['holiday_theme'] ) ? $settings['holiday_theme'] : array(),
+        $defaults['holiday_theme']
+    );
+    $settings['section_order'] = ajth_normalize_section_order_with_holiday_theme(
+        isset( $settings['section_order'] ) ? $settings['section_order'] : array(),
+        ! empty( $settings['holiday_theme']['enabled'] )
+    );
 
     $settings['hero']['overlay'] = max( 0, min( 1, floatval( $settings['hero']['overlay'] ) ) );
     $settings['last_minute']['count'] = max( 1, intval( $settings['last_minute']['count'] ) );
     $settings['sections']['search'] = ! empty( $settings['sections']['search'] );
     $settings['sections']['last_minute'] = ! empty( $settings['sections']['last_minute'] );
     $settings['sections']['accommodations'] = ! empty( $settings['sections']['accommodations'] );
+    $settings['sections']['holiday_theme'] = ! empty( $settings['sections']['holiday_theme'] ) || ! empty( $settings['holiday_theme']['enabled'] );
     $settings['sections']['regions'] = ! empty( $settings['sections']['regions'] );
     $settings['sections']['good_spots'] = ! empty( $settings['sections']['good_spots'] );
     $settings['sections']['promotions'] = ! empty( $settings['sections']['promotions'] );
@@ -393,6 +482,109 @@ function ajth_get_settings() {
     $settings['sections']['newsletter'] = ! empty( $settings['sections']['newsletter'] );
 
     return $settings;
+}
+
+function ajth_truthy( $value ): bool {
+    if ( is_bool( $value ) ) {
+        return $value;
+    }
+    if ( is_int( $value ) || is_float( $value ) ) {
+        return (int) $value === 1;
+    }
+    if ( is_string( $value ) ) {
+        $v = strtolower( trim( $value ) );
+        return in_array( $v, array( '1', 'true', 'on', 'yes' ), true );
+    }
+    return ! empty( $value );
+}
+
+function ajth_normalize_holiday_theme_settings( $theme, array $defaults ): array {
+    if ( is_string( $theme ) ) {
+        $decoded = json_decode( $theme, true );
+        $theme = is_array( $decoded ) ? $decoded : array();
+    }
+    if ( ! is_array( $theme ) ) {
+        $theme = array();
+    }
+    $theme = array_replace_recursive( $defaults, $theme );
+    $theme['enabled'] = ajth_truthy( $theme['enabled'] ?? true );
+
+    $items = $theme['items'] ?? array();
+    if ( ( ! is_array( $items ) || empty( $items ) ) && ! empty( $theme['cards'] ) && is_array( $theme['cards'] ) ) {
+        $items = $theme['cards'];
+    }
+    if ( is_string( $items ) ) {
+        $decoded = json_decode( $items, true );
+        $items = is_array( $decoded ) ? $decoded : array();
+    }
+    if ( ! is_array( $items ) ) {
+        $items = array();
+    }
+
+    $normalized = array();
+    foreach ( $items as $idx => $item ) {
+        if ( is_string( $item ) ) {
+            $decoded = json_decode( $item, true );
+            $item = is_array( $decoded ) ? $decoded : array();
+        }
+        if ( ! is_array( $item ) ) {
+            continue;
+        }
+        $title = trim( (string) ( $item['title'] ?? '' ) );
+        if ( $title === '' ) {
+            continue;
+        }
+        $item['title'] = $title;
+        $image_url = trim( (string) ( $item['image_url'] ?? '' ) );
+        if ( $image_url === '' ) {
+            $image_url = trim( (string) ( $item['image'] ?? '' ) );
+        }
+        $item['image_url'] = $image_url;
+        $item['image'] = $image_url;
+        $item['badge'] = trim( (string) ( $item['badge'] ?? '' ) );
+        $item['description'] = trim( (string) ( $item['description'] ?? '' ) );
+        $item['active'] = ajth_truthy( $item['active'] ?? true );
+        $item['order'] = isset( $item['order'] ) ? (int) $item['order'] : (int) $idx;
+        $normalized[] = $item;
+    }
+
+    usort( $normalized, static function( $a, $b ) {
+        return ( (int) ( $a['order'] ?? 0 ) ) <=> ( (int) ( $b['order'] ?? 0 ) );
+    } );
+    $theme['items'] = $normalized;
+    return $theme;
+}
+
+function ajth_normalize_section_order_with_holiday_theme( $order, bool $holidayEnabled ): array {
+    $fallback = array( 'last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises' );
+    if ( ! is_array( $order ) ) {
+        $order = $fallback;
+    }
+
+    $normalized = array();
+    foreach ( $order as $key ) {
+        if ( ! is_string( $key ) || $key === '' ) {
+            continue;
+        }
+        if ( ! in_array( $key, $normalized, true ) ) {
+            $normalized[] = $key;
+        }
+    }
+
+    if ( $holidayEnabled && ! in_array( 'holiday_theme', $normalized, true ) ) {
+        $after = array_search( 'accommodations', $normalized, true );
+        if ( $after === false ) {
+            array_unshift( $normalized, 'holiday_theme' );
+        } else {
+            array_splice( $normalized, $after + 1, 0, array( 'holiday_theme' ) );
+        }
+    }
+
+    if ( ! in_array( 'whatsapp_banner', $normalized, true ) ) {
+        $normalized[] = 'whatsapp_banner';
+    }
+
+    return $normalized;
 }
 
 /* ──────────────────────────────────────────────
@@ -488,6 +680,60 @@ function ajth_ensure_vols_page() {
         'post_status'  => 'publish',
         'post_title'   => 'Vols',
         'post_name'    => 'vols',
+        'post_content' => '',
+    ) );
+}
+
+function ajth_ensure_login_page() {
+    if ( get_page_by_path( 'login' ) ) {
+        return;
+    }
+
+    wp_insert_post( array(
+        'post_type'    => 'page',
+        'post_status'  => 'publish',
+        'post_title'   => 'Connexion',
+        'post_name'    => 'login',
+        'post_content' => '',
+    ) );
+}
+
+function ajth_get_maintenance_url(): string {
+    return home_url( '/maintenance/' );
+}
+
+function ajth_is_under_construction_label( $label ): bool {
+    $label = is_string( $label ) ? trim( $label ) : '';
+    if ( $label === '' ) {
+        return false;
+    }
+    $key = function_exists( 'mb_strtolower' ) ? mb_strtolower( $label, 'UTF-8' ) : strtolower( $label );
+    $targets = array(
+        'voyages',
+        'hébergement',
+        'hebergement',
+        'activités',
+        'activites',
+        'votre guide',
+        'hajj & omra',
+        'hajj',
+        'omra',
+        'transfert',
+        'formule low cost',
+    );
+    return in_array( $key, $targets, true );
+}
+
+function ajth_ensure_maintenance_page() {
+    if ( get_page_by_path( 'maintenance' ) ) {
+        return;
+    }
+
+    wp_insert_post( array(
+        'post_type'    => 'page',
+        'post_status'  => 'publish',
+        'post_title'   => 'Maintenance',
+        'post_name'    => 'maintenance',
         'post_content' => '',
     ) );
 }
@@ -719,7 +965,18 @@ class AJTH_Nav_Walker extends Walker_Nav_Menu {
         } else {
             $atts['rel'] = $item->xfn;
         }
-        $atts['href']         = ! empty( $item->url ) ? $item->url : '';
+        $href = ! empty( $item->url ) ? (string) $item->url : '';
+        $is_placeholder = (
+            $href === '' ||
+            $href === '#' ||
+            strpos( $href, '#' ) === 0 ||
+            $href === 'javascript:void(0)' ||
+            $href === 'javascript:void(0);'
+        );
+        if ( $is_placeholder && function_exists( 'ajth_is_under_construction_label' ) && ajth_is_under_construction_label( $title_raw ) ) {
+            $href = function_exists( 'ajth_get_maintenance_url' ) ? ajth_get_maintenance_url() : home_url( '/maintenance/' );
+        }
+        $atts['href']         = $href;
         $atts['aria-current'] = $item->current ? 'page' : '';
 
         $atts = apply_filters( 'nav_menu_link_attributes', $atts, $item, $args, $depth );
@@ -786,5 +1043,10 @@ function ajth_activate() {
 
     ajth_ensure_voyages_page();
     ajth_ensure_vols_page();
+    ajth_ensure_login_page();
+    ajth_ensure_maintenance_page();
 }
 register_activation_hook( __FILE__, 'ajth_activate' );
+
+add_action( 'init', 'ajth_ensure_login_page', 20 );
+add_action( 'init', 'ajth_ensure_maintenance_page', 20 );

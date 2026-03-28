@@ -15,6 +15,8 @@ class Client extends Model
     protected $fillable = [
         'uuid',
         'client_code',
+        'partner_id',
+        'branch_id',
         'client_type',
         'status',
         'source',
@@ -139,6 +141,16 @@ class Client extends Model
             ->first();
         $num = $last ? (int) substr($last->client_code, -4) + 1 : 1;
         return 'CL-' . $year . '-' . str_pad((string) $num, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function assignedTo(): BelongsTo

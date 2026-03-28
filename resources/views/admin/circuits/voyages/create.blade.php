@@ -30,7 +30,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.circuits.voyages.store') }}" method="POST">
+    <form id="create-voyage-form" action="{{ route('admin.circuits.voyages.store') }}" method="POST">
         @csrf
         <div class="row">
             <div class="col-lg-8">
@@ -254,7 +254,6 @@
                 .flight-block .flight-card-edit { padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
                 </style>
 
-
                 {{-- Vol 1 --}}
                 <div class="flight-block" data-flight-index="0">
                     <div class="flight-card-view" id="create-flight-0-card-view">
@@ -375,6 +374,7 @@
                 </div>
             </div>
         </div>
+        
 
         {{-- Tour Program Section --}}
         <div class="row">
@@ -781,5 +781,49 @@
 
         // Initialize hidden input
         updateHeroGalleryHidden();
+
+        // Éviter "An invalid form control with name='...' is not focusable" : retirer required des champs dans modals/onglets cachés avant submit
+        (function() {
+            function stripRequiredFromHiddenInForm(form) {
+                var list = [];
+                if (!form) return list;
+                form.querySelectorAll('input[required], select[required], textarea[required]').forEach(function(el) {
+                    var inHiddenModal = el.closest('.modal') && !el.closest('.modal').classList.contains('show');
+                    var inHiddenOffcanvas = el.closest('.offcanvas') && !el.closest('.offcanvas').classList.contains('show');
+                    var inInactiveTab = el.closest('.tab-pane') && !el.closest('.tab-pane').classList.contains('active');
+                    var inHidden = el.closest('[hidden]');
+                    if (inHiddenModal || inHiddenOffcanvas || inInactiveTab || inHidden) {
+                        list.push(el);
+                        el.removeAttribute('required');
+                        el.setAttribute('data-required-restore', '1');
+                    }
+                });
+                return list;
+            }
+            function restoreRequired(list) {
+                list.forEach(function(el) {
+                    if (el.getAttribute('data-required-restore') === '1') {
+                        el.setAttribute('required', 'required');
+                        el.removeAttribute('data-required-restore');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                var form = document.getElementById('create-voyage-form');
+                var submitBtn = form && form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', function(e) {
+                        var toRestore = stripRequiredFromHiddenInForm(form);
+                        if (toRestore.length > 0) {
+                            e.preventDefault();
+                            e.stopImmediatePropagation();
+                            form.requestSubmit();
+                            setTimeout(function() { restoreRequired(toRestore); }, 100);
+                            return false;
+                        }
+                    }, true);
+                }
+            });
+        })();
     </script>
 @endpush

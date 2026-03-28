@@ -13,5 +13,6 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'internal/sync/wp-to-laravel',
+        'auth/public-login',
     ];
 }

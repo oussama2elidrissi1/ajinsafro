@@ -21,7 +21,8 @@ class EnsureRoutePermission
             return $next($request);
         }
 
-        $permission = config("admin_menu.route_permissions.{$routeName}");
+        $routePermissions = config('admin_menu.route_permissions', []);
+        $permission = $routePermissions[$routeName] ?? null;
 
         if (! $permission) {
             foreach (config('admin_menu.route_prefix_permissions', []) as $prefix => $mappedPermission) {

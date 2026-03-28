@@ -56,10 +56,9 @@
                         </div>
                     </div>
                     <div class="mt-5 text-center">
-                        <p>Not you ? return <a href="{{ route('logout') }}" class="fw-medium text-primary" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Sign In</a></p>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
+                        <p>Not you ? return
+                            <a href="{{ route('logout.get') }}" class="fw-medium text-primary" style="text-decoration:underline;">Sign In</a>
+                        </p>
                         <p>©
                             <script>
                                 document.write(new Date().getFullYear())

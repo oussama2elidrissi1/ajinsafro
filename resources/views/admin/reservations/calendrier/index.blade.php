@@ -2,133 +2,97 @@
 @section('title')
     Calendrier des départs
 @endsection
+
+@php
+    $displayMonth = $month !== '' ? $month : now()->format('Y-m');
+    $dmParts = explode('-', $displayMonth);
+    $initialYear = (int) ($dmParts[0] ?? now()->year);
+    $initialMonth0 = (int) ($dmParts[1] ?? now()->month) - 1;
+    if ($initialMonth0 < 0 || $initialMonth0 > 11) {
+        $initialYear = now()->year;
+        $initialMonth0 = now()->month - 1;
+    }
+    $ajinCalendarConfig = [
+        'eventsUrl' => route('admin.reservations.calendrier.events'),
+        'detailsUrl' => route('admin.reservations.calendrier.event-details'),
+        'reservationDetailsUrl' => route('admin.reservations.calendrier.reservation-details'),
+        'createUrl' => route('admin.reservations.create'),
+        'initialYear' => $initialYear,
+        'initialMonth0' => $initialMonth0,
+        'dateFrom' => $dateFrom ?? '',
+        'dateTo' => $dateTo ?? '',
+    ];
+@endphp
+
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Calendrier des départs</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">Réservations</a></li>
-                        <li class="breadcrumb-item active">Calendrier</li>
-                    </ol>
-                </div>
+    @include('admin.reservations.calendrier.partials.tailwind-safelist')
+    <div class="partner-v2">
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-[#0e3a5a]">Calendrier des départs</h1>
+            <p class="text-sm text-gray-500 mt-1">Départs catalogue et réservations par date.</p>
+        </div>
+        <nav class="text-sm text-gray-500" aria-label="Fil d'Ariane">
+            <a href="{{ route('admin.dashboard') }}" class="hover:text-[#0083c4]">Admin</a>
+            <span class="mx-1">/</span>
+            <a href="{{ route('admin.reservations.index') }}" class="hover:text-[#0083c4]">Réservations</a>
+            <span class="mx-1">/</span>
+            <span class="text-gray-700 font-medium">Calendrier</span>
+        </nav>
+    </div>
+
+    @include('admin.reservations.calendrier.partials.filters')
+
+    <div class="ajin-cal-shell bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden mb-6 w-full min-w-0">
+        <div class="p-4 sm:p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/50">
+            <h2 class="font-bold text-lg text-[#0e3a5a] flex items-center gap-2">
+                <i class="far fa-calendar-alt text-[#0083c4]"></i>
+                <span id="ajin-cal-month-title">—</span>
+            </h2>
+            <div class="flex items-center gap-2">
+                <button type="button" id="ajin-cal-prev" class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#e6f3fa] hover:text-[#0083c4] hover:border-[#0083c4] transition-colors" title="Mois précédent">
+                    <i class="fas fa-chevron-left text-xs"></i>
+                </button>
+                <button type="button" id="ajin-cal-today" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors">Aujourd'hui</button>
+                <button type="button" id="ajin-cal-next" class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#e6f3fa] hover:text-[#0083c4] hover:border-[#0083c4] transition-colors" title="Mois suivant">
+                    <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="ajin-cal-weekdays grid grid-cols-7 border-b border-gray-100 bg-gray-50 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-center">
+            <div class="py-3 text-gray-500">Lun</div>
+            <div class="py-3 text-gray-500">Mar</div>
+            <div class="py-3 text-gray-500">Mer</div>
+            <div class="py-3 text-gray-500">Jeu</div>
+            <div class="py-3 text-gray-500">Ven</div>
+            <div class="py-3 text-[#f37a1f]">Sam</div>
+            <div class="py-3 text-[#f37a1f]">Dim</div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <div id="ajin-cal-root" class="min-w-[720px]">
+                <div id="ajin-cal-grid" class="grid grid-cols-7 bg-gray-100 gap-px"></div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <form class="row g-2 align-items-end">
-                        <div class="col-md-4">
-                            <label for="voyage-filter" class="form-label small mb-1">Filtrer par voyage</label>
-                            <select id="voyage-filter" name="voyage" class="form-select form-select-sm">
-                                <option value="">Tous les voyages</option>
-                                @foreach($voyages as $voyage)
-                                    <option value="{{ $voyage->id }}" {{ (int) ($selectedVoyageId ?? 0) === $voyage->id ? 'selected' : '' }}>
-                                        {{ $voyage->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" id="refresh-calendar" class="btn btn-sm btn-primary mt-3">
-                                <i class="bx bx-refresh"></i> Actualiser
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('admin.reservations.calendrier.partials.modals')
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div id="reservations-calendar"></div>
-                </div>
-            </div>
-        </div>
+    <script>
+        window.AJIN_CALENDAR_CONFIG = @json($ajinCalendarConfig);
+    </script>
+    @vite(['resources/js/admin-reservations-calendar.js'])
     </div>
 @endsection
 
-@push('script')
-    <!-- Calendar libs (déjà utilisés par la démo) -->
-    <script src="{{ URL::asset('build/libs/moment/min/moment.min.js') }}"></script>
-    <script src="{{ URL::asset('build/libs/jquery-ui-dist/jquery-ui.min.js') }}"></script>
-    <script src="{{ URL::asset('build/libs/fullcalendar/index.global.min.js') }}"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var calendarEl = document.getElementById('reservations-calendar');
-            if (!calendarEl || typeof FullCalendar === 'undefined') {
-                return;
-            }
-
-            var voyageFilter = document.getElementById('voyage-filter');
-            var refreshBtn = document.getElementById('refresh-calendar');
-
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'fr',
-                firstDay: 1,
-                height: 'auto',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,dayGridWeek,listWeek'
-                },
-                events: {
-                    url: '{{ route('admin.reservations.calendrier.events') }}',
-                    method: 'GET',
-                    extraParams: function () {
-                        return {
-                            voyage: voyageFilter && voyageFilter.value ? voyageFilter.value : ''
-                        };
-                    },
-                    failure: function () {
-                        console.error('Impossible de charger les événements du calendrier.');
-                    }
-                },
-                eventClick: function (info) {
-                    if (info.event.url) {
-                        window.open(info.event.url, '_blank');
-                        info.jsEvent.preventDefault();
-                    }
-                },
-                eventDidMount: function (info) {
-                    var props = info.event.extendedProps || {};
-                    var pieces = [];
-                    if (props.destination) {
-                        pieces.push('Destination : ' + props.destination);
-                    }
-                    if (props.price_from && props.currency_symbol) {
-                        pieces.push('Prix dès ' + props.price_from + ' ' + props.currency_symbol);
-                    }
-                    if (pieces.length) {
-                        info.el.title = pieces.join('\\n');
-                    }
-                }
-            });
-
-            calendar.render();
-
-            if (voyageFilter) {
-                voyageFilter.addEventListener('change', function () {
-                    calendar.refetchEvents();
-                });
-            }
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', function () {
-                    calendar.refetchEvents();
-                });
-            }
-        });
-    </script>
-
-    <script src="{{ URL::asset('build/js/app.js') }}"></script>
+@push('css')
+    @php
+        $useAgentShell = \App\Services\View\AgentPortalLayout::shouldUse(auth()->user());
+    @endphp
+    @unless($useAgentShell)
+        @vite(['resources/css/partner-v2.css'])
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    @endunless
+    @vite(['resources/css/ajin-calendar-agent.css'])
 @endpush

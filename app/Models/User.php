@@ -4,6 +4,9 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -25,6 +28,10 @@ class User extends Authenticatable
         'avatar',
         'phone',
         'address',
+        'branch_id',
+        'manager_id',
+        'job_title',
+        'user_type',
         'is_admin',
         'is_active',
         'access_mode',
@@ -62,5 +69,92 @@ class User extends Authenticatable
             return asset('storage/' . $this->avatar);
         }
         return asset('build/images/users/avatar-2.jpg');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function partner(): HasOne
+    {
+        return $this->hasOne(Partner::class);
+    }
+
+    public function chatChannels(): BelongsToMany
+    {
+        return $this->belongsToMany(ChatChannel::class, 'chat_channel_members', 'user_id', 'channel_id')
+            ->withPivot('role_in_channel', 'last_read_at')
+            ->withTimestamps();
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_SUPER_ADMIN) || $this->hasRole('Super Admin') || $this->is_admin;
+    }
+
+    public function isSiegeAdmin(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_SIEGE_ADMIN) || $this->hasRole('Admin Siège');
+    }
+
+    public function isBranchAdmin(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_BRANCH_ADMIN);
+    }
+
+    public function isChefCommercial(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_CHEF_COMMERCIAL) || $this->hasRole('Chef Commercial');
+    }
+
+    public function isManager(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_MANAGER) || $this->hasRole('Manager');
+    }
+
+    public function isCommercial(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL);
+    }
+
+    public function isAgent(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_AGENT) || $this->hasRole('Agent');
+    }
+
+    public function isComptable(): bool
+    {
+        return $this->hasRole('Comptable');
+    }
+
+    public function isPartner(): bool
+    {
+        return $this->hasRole('Partenaire');
+    }
+
+    /**
+     * Whether the user can access the admin area (dashboard, reservations, etc.).
+     * True if is_admin or has any of the Ajinsafro admin roles.
+     */
+    public function canAccessAdmin(): bool
+    {
+        if ($this->is_admin) {
+            return true;
+        }
+        return $this->hasRole([
+            \App\Services\BranchScopeService::ROLE_SUPER_ADMIN,
+            \App\Services\BranchScopeService::ROLE_SIEGE_ADMIN,
+            \App\Services\BranchScopeService::ROLE_BRANCH_ADMIN,
+            \App\Services\BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            \App\Services\BranchScopeService::ROLE_MANAGER,
+            \App\Services\BranchScopeService::ROLE_COMMERCIAL,
+            \App\Services\BranchScopeService::ROLE_AGENT,
+            'Super Admin',
+            'Admin Siège',
+            'Chef Commercial',
+            'Manager',
+            'Agent',
+        ]);
     }
 }

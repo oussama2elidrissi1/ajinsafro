@@ -65,6 +65,46 @@
                                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-6">
+                                        <label class="form-label">Agence</label>
+                                        <select name="branch_id" class="form-select @error('branch_id') is-invalid @enderror">
+                                            <option value="">– Aucune –</option>
+                                            @foreach($branches ?? [] as $b)
+                                                <option value="{{ $b->id }}" {{ old('branch_id', $userModel->branch_id) == $b->id ? 'selected' : '' }}>{{ $b->name }} ({{ $b->code }})</option>
+                                            @endforeach
+                                        </select>
+                                        @error('branch_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Responsable (manager)</label>
+                                        <select name="manager_id" class="form-select @error('manager_id') is-invalid @enderror">
+                                            <option value="">– Aucun –</option>
+                                            @foreach($managers ?? [] as $m)
+                                                @if($isEdit && $m->id == $userModel->id) @continue @endif
+                                                <option value="{{ $m->id }}" {{ old('manager_id', $userModel->manager_id) == $m->id ? 'selected' : '' }}>{{ $m->name }} ({{ $m->email }})</option>
+                                            @endforeach
+                                        </select>
+                                        @error('manager_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Poste</label>
+                                        <input type="text" name="job_title" class="form-control @error('job_title') is-invalid @enderror" value="{{ old('job_title', $userModel->job_title) }}" placeholder="ex: Agent commercial">
+                                        @error('job_title') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Type utilisateur</label>
+                                        <select name="user_type" class="form-select @error('user_type') is-invalid @enderror">
+                                            <option value="">–</option>
+                                            <option value="agent" {{ old('user_type', $userModel->user_type) === 'agent' ? 'selected' : '' }}>Agent</option>
+                                            <option value="commercial" {{ old('user_type', $userModel->user_type) === 'commercial' ? 'selected' : '' }}>Commercial</option>
+                                            <option value="chef_commercial" {{ old('user_type', $userModel->user_type) === 'chef_commercial' ? 'selected' : '' }}>Chef Commercial</option>
+                                            <option value="branch_admin" {{ old('user_type', $userModel->user_type) === 'branch_admin' ? 'selected' : '' }}>Admin Agence</option>
+                                            <option value="comptable" {{ old('user_type', $userModel->user_type) === 'comptable' ? 'selected' : '' }}>Comptable</option>
+                                            <option value="siege_admin" {{ old('user_type', $userModel->user_type) === 'siege_admin' ? 'selected' : '' }}>Admin Siège</option>
+                                            <option value="super_admin" {{ old('user_type', $userModel->user_type) === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                        </select>
+                                        @error('user_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-6">
                                         <label class="form-label">Mot de passe {{ $isEdit ? '(laisser vide pour conserver)' : '' }}</label>
                                         <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" {{ $isEdit ? '' : 'required' }}>
                                         @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror

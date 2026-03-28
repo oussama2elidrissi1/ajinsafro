@@ -29,27 +29,27 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="email">Email <span class="text-danger">*
                                             </span></label>
-                                        <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                            name="email" id="email" value=" " required
+                                        <input type="email" class="form-control {{ isset($errors) && $errors->has('email') ? 'is-invalid' : '' }}"
+                                            name="email" id="email" value="{{ old('email', '') }}" required
                                             autocomplete="email" autofocus placeholder="Enter email">
-                                        @error('email')
+                                        @if(isset($errors) && $errors->has('email'))
                                             <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
+                                                <strong>{{ $errors->first('email') }}</strong>
                                             </span>
-                                        @enderror
+                                        @endif
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label" for="userpassword">Password <span class="text-danger">*
                                             </span></label>
-                                        <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                            id="userpassword" name="password" required value="12345678"
+                                        <input type="password" class="form-control {{ isset($errors) && $errors->has('password') ? 'is-invalid' : '' }}"
+                                            id="userpassword" name="password" required
                                             autocomplete="current-password" placeholder="Enter password">
-                                        @error('password')
+                                        @if(isset($errors) && $errors->has('password'))
                                             <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
+                                                <strong>{{ $errors->first('password') }}</strong>
                                             </span>
-                                        @enderror
+                                        @endif
                                     </div>
 
                                     <div class="form-check">
@@ -70,14 +70,18 @@
                                                     class="mdi mdi-lock me-1"></i> Forgot your password?</a>
                                         </div>
                                     @endif
+
+                                    <div class="mt-4 pt-3 border-top text-center">
+                                        <p class="mb-0 text-muted small">Vous êtes un professionnel ?</p>
+                                        <a href="{{ route('partner.registration.form') }}" class="fw-medium text-primary">Devenir partenaire</a>
+                                    </div>
                                 </form>
                             </div>
 
                         </div>
                     </div>
                     <div class="mt-5 text-center">
-                        <p>Don't have an account ? <a href="{{ route('register') }}" class="fw-medium text-primary"> Signup
-                                now </a> </p>
+                        <p>Don't have an account ? <a href="{{ route('partner.registration.form') }}" class="fw-medium text-primary"> Devenir partenaire </a> </p>
                         <p>©
                             {{ date('Y') }} AJINSAFRO. Crafted with <i class="mdi mdi-heart text-danger"></i> by
                             AJINSAFRO

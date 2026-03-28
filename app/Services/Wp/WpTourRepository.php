@@ -194,6 +194,7 @@ class WpTourRepository
             'hide_adult_in_booking_form' => 'hide_adult_in_booking_form',
             'max_people' => 'max_people',
             'min_people' => 'min_people',
+            'places' => 'places',
             
             // CONTACT
             'contact_email' => 'contact_email',
@@ -609,22 +610,31 @@ class WpTourRepository
     
     /**
      * Get all locations as tree structure for tour selection.
+     * Returns empty array if WP connection or query fails.
      *
      * @return array
      */
     public function getLocationsTree(): array
     {
-        $locations = \DB::connection('wp')
-            ->table('posts')
-            ->where('post_type', 'location')
-            ->where('post_status', 'publish')
-            ->select('ID', 'post_title', 'post_parent')
-            ->orderBy('post_parent')
-            ->orderBy('post_title')
-            ->get()
-            ->toArray();
-        
-        return $this->buildLocationTree($locations);
+        try {
+            $locations = \DB::connection('wp')
+                ->table('posts')
+                ->where('post_type', 'location')
+                ->where('post_status', 'publish')
+                ->select('ID', 'post_title', 'post_parent')
+                ->orderBy('post_parent')
+                ->orderBy('post_title')
+                ->get()
+                ->toArray();
+
+            return $this->buildLocationTree($locations);
+        } catch (\Throwable $e) {
+            \Log::warning('WpTourRepository::getLocationsTree failed', [
+                'message' => $e->getMessage(),
+                'connection' => 'wp',
+            ]);
+            return [];
+        }
     }
     
     /**

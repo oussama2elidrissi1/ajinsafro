@@ -97,3 +97,15 @@ body[data-topbar="dark"] #page-topbar .navbar-brand-box .logo-light {
         height: 24px;
     }
 }
+
+/* Pagination (Laravel default) – normaliser la taille des icônes/flèches */
+.pagination .page-link svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.pagination .page-link {
+    line-height: 1.2;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}

@@ -368,6 +368,7 @@
                     'search' => 'Search',
                     'last_minute' => 'Tendances du moment',
                     'accommodations' => 'Séjours uniques',
+                    'holiday_theme' => 'Holidayz',
                     'regions' => 'Destinations',
                     'good_spots' => 'Bons coins',
                     'promotions' => 'Promotions',
@@ -375,7 +376,7 @@
                     'cruises' => 'Croisières',
                     'newsletter' => 'Newsletter',
                 ];
-                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter']));
+                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter']));
                 $sectionOrder = is_array($sectionOrder) ? $sectionOrder : [];
                 $customSections = old('custom_sections', data_get($settings, 'custom_sections', []));
                 $customSections = is_array($customSections) ? $customSections : [];
@@ -498,6 +499,137 @@
                 </div>
             </div>
 
+            {{-- Holidayz --}}
+            @php
+                $holidayTheme = old('holiday_theme', data_get($settings, 'holiday_theme', []));
+                $holidayItems = data_get($holidayTheme, 'items', []);
+                $holidayItems = is_array($holidayItems) ? $holidayItems : [];
+            @endphp
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Holidayz (Holidays by Theme)</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="holiday-add-item">Ajouter une card</button>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="holiday_theme[enabled]" value="1" id="holiday_enabled"
+                               {{ old('holiday_theme.enabled', data_get($holidayTheme, 'enabled', true)) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="holiday_enabled">Activer la section Holidayz</label>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Eyebrow</label>
+                            <input type="text" class="form-control" name="holiday_theme[eyebrow]" value="{{ old('holiday_theme.eyebrow', data_get($holidayTheme, 'eyebrow', 'Voyages par theme')) }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Titre ligne 1</label>
+                            <input type="text" class="form-control" name="holiday_theme[title_line_1]" value="{{ old('holiday_theme.title_line_1', data_get($holidayTheme, 'title_line_1')) }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Titre ligne 2</label>
+                            <input type="text" class="form-control" name="holiday_theme[title_line_2]" value="{{ old('holiday_theme.title_line_2', data_get($holidayTheme, 'title_line_2')) }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Titre ligne 3</label>
+                            <input type="text" class="form-control" name="holiday_theme[title_line_3]" value="{{ old('holiday_theme.title_line_3', data_get($holidayTheme, 'title_line_3')) }}">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Sous-titre</label>
+                            <input type="text" class="form-control" name="holiday_theme[subtitle]" value="{{ old('holiday_theme.subtitle', data_get($holidayTheme, 'subtitle')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Image gauche URL</label>
+                            <input type="text" class="form-control" name="holiday_theme[left_image_url]" value="{{ old('holiday_theme.left_image_url', data_get($holidayTheme, 'left_image_url')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Upload image gauche</label>
+                            <input type="file" class="form-control" name="holiday_theme_left_image_file" accept="image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Image déco URL</label>
+                            <input type="text" class="form-control" name="holiday_theme[deco_image_url]" value="{{ old('holiday_theme.deco_image_url', data_get($holidayTheme, 'deco_image_url')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Upload image déco</label>
+                            <input type="file" class="form-control" name="holiday_theme_deco_image_file" accept="image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Texte CTA</label>
+                            <input type="text" class="form-control" name="holiday_theme[button_text]" value="{{ old('holiday_theme.button_text', data_get($holidayTheme, 'button_text')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">URL CTA</label>
+                            <input type="text" class="form-control" name="holiday_theme[button_url]" value="{{ old('holiday_theme.button_url', data_get($holidayTheme, 'button_url')) }}">
+                        </div>
+                    </div>
+
+                    <h6 class="mb-2">Cards Holidayz</h6>
+                    <div id="holiday-items-container" class="vstack gap-2">
+                        @foreach($holidayItems as $idx => $item)
+                            <div class="border rounded p-2 holiday-row" data-index="{{ $idx }}">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto d-flex flex-column gap-0">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">↑</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">↓</button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Titre</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][title]" value="{{ data_get($item, 'title') }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Badge</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][badge]" value="{{ data_get($item, 'badge') }}" placeholder="Nouveau">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Description</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][description]" value="{{ data_get($item, 'description') }}" placeholder="Texte court">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Image URL</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][image_url]" value="{{ data_get($item, 'image_url') }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Upload</label>
+                                        <input type="file" class="form-control form-control-sm" name="holiday_theme_item_files[{{ $idx }}]" accept="image/*">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Btn texte</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][button_text]" value="{{ data_get($item, 'button_text', 'Voir plus') }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Btn URL</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][button_url]" value="{{ data_get($item, 'button_url', '#') }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Tags</label>
+                                        <input type="text" class="form-control form-control-sm" name="holiday_theme[items][{{ $idx }}][tags]" value="{{ is_array(data_get($item, 'tags')) ? implode(', ', data_get($item, 'tags', [])) : data_get($item, 'tags') }}" placeholder="plage, famille, luxe">
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="form-check form-switch mt-4">
+                                            <input class="form-check-input" type="checkbox" name="holiday_theme[items][{{ $idx }}][active]" value="1" {{ data_get($item, 'active', true) ? 'checked' : '' }}>
+                                            <label class="form-check-label small">Actif</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input type="hidden" class="holiday-order" name="holiday_theme[items][{{ $idx }}][order]" value="{{ data_get($item, 'order', $idx) }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">×</button>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="holiday-preview border rounded p-2 d-flex align-items-center gap-2">
+                                            <div class="holiday-preview__img" style="width:64px;height:44px;border-radius:8px;background:#e7edf5 center/cover no-repeat; background-image:url('{{ e((string) data_get($item, 'image_url', '')) }}');"></div>
+                                            <div>
+                                                <div class="holiday-preview__title fw-bold small">{{ data_get($item, 'title', 'Titre') }}</div>
+                                                <div class="holiday-preview__meta text-muted small">{{ data_get($item, 'badge', '') }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Destinations par région</h5>
@@ -564,58 +696,49 @@
                 </div>
             </div>
 
-            {{-- Promotions --}}
+            {{-- Promotions — 3 visuels (titre + images) --}}
             <div class="card">
                 <div class="card-header"><h5 class="card-title mb-0">Destinations de ce mois (Promotions)</h5></div>
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Titre de la section</label>
-                        <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Destinations de ce mois')) }}">
+                        <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Destinations de ce mois')) }}" placeholder="Ex. Explorez plus, voyagez mieux avec AjiNsafro">
                     </div>
-                    <p class="text-muted small mb-3">3 bannières promotionnelles avec un style gradient. Laissez vide pour utiliser le contenu par défaut.</p>
+                    <p class="text-muted small mb-3">Trois images affichées côte à côte sur la page d’accueil. Corrigez l’URL si besoin ou uploadez un fichier. Laissez vide ou cochez « Supprimer » pour retirer une carte.</p>
                     @php
-                        $defaultPromos = [
-                            ['badge_text' => 'Profitez', 'badge_bg' => '#ef4444', 'badge_color' => '#fff', 'title' => "Cartes de\nfidélités", 'text' => "Plus d'espace de voyages pour vous et nos fidèles.", 'style' => 'blue', 'url' => '#'],
-                            ['badge_text' => 'Profitez', 'badge_bg' => '#fff', 'badge_color' => '#f37a1f', 'title' => "Programme\nBztam e-Sfar", 'text' => 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.', 'style' => 'orange', 'url' => '#'],
-                            ['badge_text' => 'احجز الآن', 'badge_bg' => '#ffb300', 'badge_color' => '#0e3a5a', 'title' => 'الحجز بكري', 'text' => 'تجمع الان الودائع للمسافرين إلى وجهاتك و تمتع بخصم إضافي.', 'style' => 'dark-blue', 'url' => '#'],
-                        ];
-                        $promos = old('promotions.items', data_get($settings, 'promotions.items', $defaultPromos));
-                        if (empty($promos)) $promos = $defaultPromos;
+                        $promoImages = old('promotions.images', data_get($settings, 'promotions.images', ['', '', '']));
+                        if (!is_array($promoImages)) {
+                            $promoImages = ['', '', ''];
+                        }
+                        while (count($promoImages) < 3) {
+                            $promoImages[] = '';
+                        }
+                        $promoImages = array_slice($promoImages, 0, 3);
                     @endphp
                     <div class="vstack gap-3">
-                        @foreach($promos as $pi => $promo)
+                        @foreach($promoImages as $pi => $imgUrl)
                         <div class="border rounded p-3">
-                            <h6 class="mb-2">Promo {{ $pi + 1 }}</h6>
-                            <div class="row g-2">
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-0">Titre</label>
-                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][title]" value="{{ data_get($promo, 'title') }}">
+                            <h6 class="mb-2">Image {{ $pi + 1 }}</h6>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-8">
+                                    <label class="form-label small mb-0">URL de l’image</label>
+                                    <input type="text" class="form-control" name="promotions[images][{{ $pi }}]" value="{{ $imgUrl }}" placeholder="https://…">
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-0">Texte badge</label>
-                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][badge_text]" value="{{ data_get($promo, 'badge_text') }}">
+                                <div class="col-md-4">
+                                    <label class="form-label small mb-0">Remplacer (upload)</label>
+                                    <input type="file" class="form-control" name="promotion_image_{{ $pi + 1 }}" accept="image/*">
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-0">Style</label>
-                                    <select class="form-select form-select-sm" name="promotions[items][{{ $pi }}][style]">
-                                        <option value="blue" {{ data_get($promo, 'style') === 'blue' ? 'selected' : '' }}>Bleu</option>
-                                        <option value="orange" {{ data_get($promo, 'style') === 'orange' ? 'selected' : '' }}>Orange</option>
-                                        <option value="dark-blue" {{ data_get($promo, 'style') === 'dark-blue' ? 'selected' : '' }}>Bleu foncé</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-0">URL</label>
-                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][url]" value="{{ data_get($promo, 'url') }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-0">Badge BG</label>
-                                    <input type="color" class="form-control form-control-sm form-control-color" name="promotions[items][{{ $pi }}][badge_bg]" value="{{ data_get($promo, 'badge_bg', '#ef4444') }}">
-                                </div>
+                                @if($imgUrl !== '')
                                 <div class="col-12">
-                                    <label class="form-label small mb-0">Description</label>
-                                    <input class="form-control form-control-sm" name="promotions[items][{{ $pi }}][text]" value="{{ data_get($promo, 'text') }}">
+                                    <div class="d-flex flex-wrap align-items-center gap-3">
+                                        <img src="{{ $imgUrl }}" alt="Aperçu promotion {{ $pi + 1 }}" class="img-thumbnail rounded" style="max-height:140px;object-fit:contain">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="promotion_remove_{{ $pi + 1 }}" value="1" id="promotion_remove_{{ $pi + 1 }}" {{ old('promotion_remove_' . ($pi + 1)) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="promotion_remove_{{ $pi + 1 }}">Supprimer cette image</label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <input type="hidden" name="promotions[items][{{ $pi }}][badge_color]" value="{{ data_get($promo, 'badge_color', '#fff') }}">
+                                @endif
                             </div>
                         </div>
                         @endforeach
@@ -635,25 +758,26 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'JOIN OUR WHATSAPP CHANNEL FOR THE LATEST TRAVEL UPDATES')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'Rejoignez notre chaîne WhatsApp')) }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Sous-titre</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Stay informed with satguru travel')) }}">
+                            <label class="form-label">Texte court (description)</label>
+                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Recevez nos offres, actus et inspirations voyage.')) }}">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Caractéristiques (une par ligne)</label>
+                            <label class="form-label">Ligne meta (3 segments, affichés « A • B • C »)</label>
+                            <p class="text-muted small mb-2">Une ligne par segment ; laisser vide pour masquer la ligne.</p>
                             @php
-                                $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', ['Exclusive travel packages', 'Latest news and updates', 'Special offers and promotions']));
+                                $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', ['Promos', 'Nouveautés', 'Conseils']));
                                 $features = is_array($features) ? $features : [];
                             @endphp
                             @foreach(range(0, 2) as $fi)
-                            <input type="text" class="form-control mb-2" name="whatsapp_banner[features][]" value="{{ $features[$fi] ?? '' }}" placeholder="Caractéristique {{ $fi + 1 }}">
+                            <input type="text" class="form-control mb-2" name="whatsapp_banner[features][]" value="{{ $features[$fi] ?? '' }}" placeholder="Segment {{ $fi + 1 }}">
                             @endforeach
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Texte du bouton</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[button_text]" value="{{ old('whatsapp_banner.button_text', data_get($settings, 'whatsapp_banner.button_text', 'JOIN NOW')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[button_text]" value="{{ old('whatsapp_banner.button_text', data_get($settings, 'whatsapp_banner.button_text', 'Rejoindre')) }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">URL du bouton</label>
@@ -745,6 +869,14 @@
 
     </div>{{-- /.tab-content --}}
 @endsection
+
+@push('css')
+<style>
+.holiday-preview__img {
+    flex: 0 0 64px;
+}
+</style>
+@endpush
 
 @push('script')
 <script>
@@ -931,6 +1063,7 @@
     var sectionLabels = {
         last_minute: 'Tendances du moment',
         accommodations: 'Séjours uniques',
+        holiday_theme: 'Holidayz',
         regions: 'Destinations',
         good_spots: 'Bons coins',
         promotions: 'Promotions',
@@ -1013,6 +1146,92 @@
             if (btn.classList.contains('section-move-down') && row.nextElementSibling && row.nextElementSibling.classList.contains('section-order-row')) {
                 sectionOrderContainer.insertBefore(row.nextElementSibling, row);
             }
+        });
+    }
+
+    /* ── Holidayz items repeater ─────────── */
+    var holidayContainer = document.getElementById('holiday-items-container');
+    var holidayAddBtn = document.getElementById('holiday-add-item');
+    function holidayRowHtml(idx) {
+        return '<div class="border rounded p-2 holiday-row" data-index="' + idx + '">' +
+            '<div class="row g-2 align-items-center">' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">↑</button><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">↓</button></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Titre</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][title]"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Badge</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][badge]" placeholder="Nouveau"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Description</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][description]" placeholder="Texte court"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][image_url]"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Upload</label><input type="file" class="form-control form-control-sm" name="holiday_theme_item_files[' + idx + ']" accept="image/*"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Btn texte</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][button_text]" value="Voir plus"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Btn URL</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][button_url]" value="#"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Tags</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][tags]" placeholder="plage, famille, luxe"></div>' +
+            '<div class="col-auto"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" name="holiday_theme[items][' + idx + '][active]" value="1" checked><label class="form-check-label small">Actif</label></div></div>' +
+            '<div class="col-auto"><input type="hidden" class="holiday-order" name="holiday_theme[items][' + idx + '][order]" value="' + idx + '"><button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">×</button></div>' +
+            '<div class="col-12"><div class="holiday-preview border rounded p-2 d-flex align-items-center gap-2"><div class="holiday-preview__img" style="width:64px;height:44px;border-radius:8px;background:#e7edf5 center/cover no-repeat;"></div><div><div class="holiday-preview__title fw-bold small">Titre</div><div class="holiday-preview__meta text-muted small"></div></div></div></div>' +
+            '</div></div>';
+    }
+    function updateHolidayPreview(row) {
+        if (!row) return;
+        var title = row.querySelector('input[name*="[title]"]');
+        var badge = row.querySelector('input[name*="[badge]"]');
+        var image = row.querySelector('input[name*="[image_url]"]');
+        var previewTitle = row.querySelector('.holiday-preview__title');
+        var previewMeta = row.querySelector('.holiday-preview__meta');
+        var previewImg = row.querySelector('.holiday-preview__img');
+        if (previewTitle) previewTitle.textContent = (title && title.value) ? title.value : 'Titre';
+        if (previewMeta) previewMeta.textContent = (badge && badge.value) ? badge.value : '';
+        if (previewImg) {
+            var val = image && image.value ? image.value.trim() : '';
+            previewImg.style.backgroundImage = val ? 'url("' + val.replace(/"/g, '\\"') + '")' : 'none';
+        }
+    }
+    function holidayRenumber() {
+        if (!holidayContainer) return;
+        holidayContainer.querySelectorAll('.holiday-row').forEach(function (row, idx) {
+            row.setAttribute('data-index', idx);
+            row.querySelectorAll('[name^="holiday_theme[items]"]').forEach(function (inp) {
+                inp.name = inp.name.replace(/holiday_theme\[items\]\[\d+\]/, 'holiday_theme[items][' + idx + ']');
+            });
+            row.querySelectorAll('[name^="holiday_theme_item_files"]').forEach(function (inp) {
+                inp.name = 'holiday_theme_item_files[' + idx + ']';
+            });
+            var orderInput = row.querySelector('.holiday-order');
+            if (orderInput) {
+                orderInput.name = 'holiday_theme[items][' + idx + '][order]';
+                orderInput.value = idx;
+            }
+        });
+    }
+    if (holidayAddBtn && holidayContainer) {
+        holidayContainer.querySelectorAll('.holiday-row').forEach(function (row) { updateHolidayPreview(row); });
+        holidayAddBtn.addEventListener('click', function () {
+            var idx = holidayContainer.querySelectorAll('.holiday-row').length;
+            holidayContainer.insertAdjacentHTML('beforeend', holidayRowHtml(idx));
+            var rows = holidayContainer.querySelectorAll('.holiday-row');
+            updateHolidayPreview(rows[rows.length - 1]);
+        });
+        holidayContainer.addEventListener('click', function (e) {
+            if (e.target.classList.contains('holiday-remove')) {
+                var row = e.target.closest('.holiday-row');
+                if (row) { row.remove(); holidayRenumber(); }
+            }
+            if (e.target.classList.contains('holiday-move-up')) {
+                var row = e.target.closest('.holiday-row');
+                if (row && row.previousElementSibling) {
+                    holidayContainer.insertBefore(row, row.previousElementSibling);
+                    holidayRenumber();
+                }
+            }
+            if (e.target.classList.contains('holiday-move-down')) {
+                var row = e.target.closest('.holiday-row');
+                if (row && row.nextElementSibling) {
+                    holidayContainer.insertBefore(row.nextElementSibling, row);
+                    holidayRenumber();
+                }
+            }
+        });
+        holidayContainer.addEventListener('input', function (e) {
+            var row = e.target.closest('.holiday-row');
+            if (row) updateHolidayPreview(row);
         });
     }
 

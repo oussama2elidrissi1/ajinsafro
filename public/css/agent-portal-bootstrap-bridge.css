@@ -1,0 +1,63 @@
+/**
+ * Bootstrap admin views shown inside the agent portal shell — visual alignment
+ * with partner-v2 / dashboard agent without changing admin layouts for staff.
+ */
+.agent-portal-main .page-title-box .page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0e3a5a;
+}
+
+.agent-portal-main .card {
+  border-radius: 1rem;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.agent-portal-main .card.shadow-sm {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.agent-portal-main .card-header {
+  background: rgba(249, 250, 251, 0.5);
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.agent-portal-main .btn-primary {
+  background-color: #0083c4 !important;
+  border-color: #0083c4 !important;
+}
+
+.agent-portal-main .btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+.agent-portal-main .btn-outline-primary {
+  color: #0083c4;
+  border-color: #0083c4;
+}
+
+.agent-portal-main .btn-outline-primary:hover {
+  background-color: rgba(230, 243, 250, 0.6);
+  color: #0083c4;
+}
+
+.agent-portal-main .table thead.table-light th {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.agent-portal-main .badge.bg-success {
+  background-color: rgb(22 163 74) !important;
+}
+
+.agent-portal-main .badge.bg-warning {
+  background-color: rgb(234 179 8) !important;
+}
+
+.agent-portal-main .badge.bg-danger {
+  background-color: rgb(220 38 38) !important;
+}

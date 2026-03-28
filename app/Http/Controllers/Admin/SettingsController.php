@@ -21,9 +21,16 @@ class SettingsController extends Controller
         $view = 'admin.settings.' . $submenu . '.index';
 
         if ($submenu === 'parametres-generaux') {
+            $storedLogoPath = Setting::getValue('brand_logo');
+            $normalizedLogoPath = Setting::resolvedBrandLogoPath();
+            if ($storedLogoPath !== $normalizedLogoPath && $normalizedLogoPath !== null) {
+                Setting::setValue('brand_logo', $normalizedLogoPath);
+            }
+
             $settings = [
                 'brand_name' => Setting::getValue('brand_name'),
-                'brand_logo' => Setting::getValue('brand_logo'),
+                'brand_logo' => $normalizedLogoPath,
+                'brand_logo_url' => Setting::brandLogoUrl(),
                 'topbar_phone' => Setting::getValue('topbar_phone'),
                 'topbar_email' => Setting::getValue('topbar_email'),
                 'social_facebook' => Setting::getValue('social_facebook'),
@@ -92,12 +99,12 @@ class SettingsController extends Controller
         Setting::setValue('hero_subtitle', $validated['hero_subtitle'] ?? '');
 
         if ($request->hasFile('brand_logo')) {
-            $oldPath = Setting::getValue('brand_logo');
+            $oldPath = Setting::normalizePublicDiskPath(Setting::getValue('brand_logo'));
             if ($oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
             $path = $request->file('brand_logo')->store('front/brand', 'public');
-            Setting::setValue('brand_logo', $path);
+            Setting::setValue('brand_logo', Setting::normalizePublicDiskPath($path));
         }
 
         if ($request->hasFile('hero_image')) {

@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<section class="ajtb-section" id="overview">
+<section class="ajtb-section ajtb-tab-panel ajtb-tab-panel-hidden" id="overview">
     <h2 class="ajtb-section-title">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
@@ -129,19 +129,4 @@ if (!defined('ABSPATH')) {
         </div>
     </div>
 
-    <!-- Categories -->
-    <?php if (!empty($tour['categories']) || !empty($tour['tour_types'])): ?>
-        <div class="ajtb-tags">
-            <?php foreach ($tour['categories'] as $cat): ?>
-                <a href="<?php echo esc_url($cat['link']); ?>" class="tag-item">
-                    <?php echo esc_html($cat['name']); ?>
-                </a>
-            <?php endforeach; ?>
-            <?php foreach ($tour['tour_types'] as $type): ?>
-                <a href="<?php echo esc_url($type['link']); ?>" class="tag-item type">
-                    <?php echo esc_html($type['name']); ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
 </section>

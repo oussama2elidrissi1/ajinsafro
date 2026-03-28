@@ -25,7 +25,20 @@ use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
+use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\ReservationMessageController;
+use App\Http\Controllers\Admin\MessagerieController;
+use App\Http\Controllers\Admin\PartnerAccountController;
+use App\Http\Controllers\Admin\PartnerCommissionRuleController;
+use App\Http\Controllers\Auth\PartnerRegistrationController;
+use App\Http\Controllers\Partner\CatalogueController as PartnerCatalogueController;
+use App\Http\Controllers\Partner\ClientsController as PartnerClientsController;
+use App\Http\Controllers\Partner\CommissionsController as PartnerCommissionsController;
+use App\Http\Controllers\Partner\DashboardController as PartnerDashboardController;
+use App\Http\Controllers\Partner\DocumentsController as PartnerDocumentsController;
+use App\Http\Controllers\Partner\ReservationsController as PartnerReservationsController;
 use App\Http\Controllers\Admin\TourHotelController;
+use App\Http\Controllers\Admin\HotelBackofficeController;
 use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\TaxonomyTermController;
 use App\Http\Controllers\Admin\ProgramApiController;
@@ -55,6 +68,7 @@ use Illuminate\Support\Facades\Route;
 Auth::routes();
 
 Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
+Route::get('/maintenance', fn () => view('front.maintenance'))->name('front.maintenance');
 Route::get('/search', [FrontSearchController::class, 'index'])->name('front.search');
 Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voyages.index');
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
@@ -66,6 +80,10 @@ Route::post('/booking/checkout/{token}', [CheckoutController::class, 'process'])
 Route::post('/internal/sync/wp-to-laravel', [SyncInboundController::class, 'wpToLaravel'])
     ->middleware('sync.token');
 
+Route::get('devenir-partenaire', [PartnerRegistrationController::class, 'showRegistrationForm'])->name('partner.registration.form');
+Route::post('devenir-partenaire', [PartnerRegistrationController::class, 'store'])->name('partner.registration.store');
+Route::get('devenir-partenaire/success', fn () => view('auth.partner-registration-success'))->name('partner.registration.success');
+
 Route::middleware('auth')->group(function () {
     Route::get('lock-screen', [LockScreenController::class, 'show'])->name('lock-screen');
     Route::post('lock-screen', [LockScreenController::class, 'unlock'])->name('lock-screen.unlock');
@@ -73,6 +91,30 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('lock-screen/activate', [LockScreenController::class, 'lock'])->name('lock-screen.activate');
+});
+
+Route::middleware(['auth', 'partner'])->prefix('partner')->name('partner.')->group(function () {
+    Route::get('en-attente', fn () => view('partner.pending'))->name('pending');
+    Route::middleware('partner.validated')->group(function () {
+        Route::get('dashboard', [PartnerDashboardController::class, 'index'])->name('dashboard');
+        Route::get('reservations', [PartnerReservationsController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/create', [PartnerReservationsController::class, 'create'])->name('reservations.create');
+        Route::post('reservations', [PartnerReservationsController::class, 'store'])->name('reservations.store');
+        Route::get('reservations/{reservation}', [PartnerReservationsController::class, 'show'])->name('reservations.show');
+        Route::get('reservations/{reservation}/edit', [PartnerReservationsController::class, 'edit'])->name('reservations.edit');
+        Route::put('reservations/{reservation}', [PartnerReservationsController::class, 'update'])->name('reservations.update');
+        Route::delete('reservations/{reservation}', [PartnerReservationsController::class, 'destroy'])->name('reservations.destroy');
+        Route::get('clients', [PartnerClientsController::class, 'index'])->name('clients.index');
+        Route::get('clients/create', [PartnerClientsController::class, 'create'])->name('clients.create');
+        Route::post('clients', [PartnerClientsController::class, 'store'])->name('clients.store');
+        Route::get('clients/{client}', [PartnerClientsController::class, 'show'])->name('clients.show');
+        Route::get('clients/{client}/edit', [PartnerClientsController::class, 'edit'])->name('clients.edit');
+        Route::put('clients/{client}', [PartnerClientsController::class, 'update'])->name('clients.update');
+        Route::delete('clients/{client}', [PartnerClientsController::class, 'destroy'])->name('clients.destroy');
+        Route::get('catalogue', [PartnerCatalogueController::class, 'index'])->name('catalogue.index');
+        Route::get('commissions', [PartnerCommissionsController::class, 'index'])->name('commissions.index');
+        Route::get('documents', [PartnerDocumentsController::class, 'index'])->name('documents.index');
+    });
 });
 
 Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->prefix('admin')->name('admin.')->group(function () {
@@ -88,7 +130,35 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('reservations/annulees', [ReservationsController::class, 'page'])->name('reservations.annulees')->defaults('submenu', 'annulees');
     Route::get('reservations/calendrier', [ReservationsController::class, 'calendar'])->name('reservations.calendrier');
     Route::get('reservations/calendrier/events', [ReservationsController::class, 'calendarEvents'])->name('reservations.calendrier.events');
+    Route::get('reservations/calendrier/event-details', [ReservationsController::class, 'calendarEventDetails'])->name('reservations.calendrier.event-details');
     Route::get('reservations/paiements', [ReservationsController::class, 'page'])->name('reservations.paiements')->defaults('submenu', 'paiements');
+
+    Route::get('reservations/messages', [ReservationMessageController::class, 'index'])->name('reservations.messages');
+    Route::get('reservations/messages/create', [ReservationMessageController::class, 'create'])->name('reservations.messages.create');
+    Route::post('reservations/messages', [ReservationMessageController::class, 'store'])->name('reservations.messages.store');
+    Route::get('reservations/messages/{message}', [ReservationMessageController::class, 'show'])->name('reservations.messages.show')->whereNumber('message');
+    Route::post('reservations/messages/{message}/star', [ReservationMessageController::class, 'toggleStar'])->name('reservations.messages.star')->whereNumber('message');
+    Route::post('reservations/messages/{message}/trash', [ReservationMessageController::class, 'moveToTrash'])->name('reservations.messages.trash')->whereNumber('message');
+    Route::post('reservations/messages/{message}/label', [ReservationMessageController::class, 'setLabel'])->name('reservations.messages.label')->whereNumber('message');
+    Route::post('reservations/messages/{message}/important', [ReservationMessageController::class, 'setImportant'])->name('reservations.messages.important')->whereNumber('message');
+
+    Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
+    Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
+    Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');
+    Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
+    Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
+    Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');
+    Route::delete('reservations/{reservation}', [ReservationsController::class, 'destroy'])->name('reservations.destroy');
+    Route::post('reservations/{reservation}/validate', [ReservationsController::class, 'validateReservation'])->name('reservations.validate');
+
+    // CRUD Réservations
+    Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
+    Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
+    Route::get('reservations/{reservation}', [ReservationsController::class, 'show'])->name('reservations.show');
+    Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
+    Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');
+    Route::delete('reservations/{reservation}', [ReservationsController::class, 'destroy'])->name('reservations.destroy');
+    Route::post('reservations/{reservation}/validate', [ReservationsController::class, 'validateReservation'])->name('reservations.validate');
 
     Route::get('customers', [CustomersController::class, 'index'])->name('customers.index');
     Route::get('customers/clients/trashed', [ClientController::class, 'trashed'])->name('customers.clients.trashed');
@@ -144,6 +214,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::delete('circuits/airlines/ajax/{airline}', [AirlineController::class, 'ajaxDestroy'])->name('circuits.airlines.ajax.destroy');
 
     Route::get('circuits/tour-hotels', [TourHotelController::class, 'index'])->name('circuits.tour-hotels.index');
+    Route::get('circuits/tour-hotels/{tourId}/data', [TourHotelController::class, 'data'])->name('circuits.tour-hotels.data')->whereNumber('tourId');
+    Route::get('circuits/tour-hotels/{tourId}', [TourHotelController::class, 'show'])->name('circuits.tour-hotels.show')->whereNumber('tourId');
     Route::get('circuits/tour-hotels/{tourId}/edit', [TourHotelController::class, 'edit'])->name('circuits.tour-hotels.edit')->whereNumber('tourId');
     Route::match(['put', 'patch'], 'circuits/tour-hotels/{tourId}', [TourHotelController::class, 'update'])->name('circuits.tour-hotels.update')->whereNumber('tourId');
 
@@ -199,6 +271,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('accommodations/tarifs-saisonniers', [AccommodationsController::class, 'page'])->name('accommodations.tarifs-saisonniers')->defaults('submenu', 'tarifs-saisonniers');
     Route::get('accommodations/disponibilites', [AccommodationsController::class, 'page'])->name('accommodations.disponibilites')->defaults('submenu', 'disponibilites');
 
+    Route::resource('hotels', HotelBackofficeController::class)->names('hotels');
+
     Route::get('operations', [OperationsController::class, 'index'])->name('operations.index');
     Route::get('operations/planning', [OperationsController::class, 'page'])->name('operations.planning')->defaults('submenu', 'planning');
     Route::get('operations/guides-chauffeurs', [OperationsController::class, 'page'])->name('operations.guides-chauffeurs')->defaults('submenu', 'guides-chauffeurs');
@@ -221,6 +295,18 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('partners/partenaires', [PartnersController::class, 'page'])->name('partners.partenaires')->defaults('submenu', 'partenaires');
     Route::get('partners/fournisseurs', [PartnersController::class, 'page'])->name('partners.fournisseurs')->defaults('submenu', 'fournisseurs');
     Route::get('partners/contrats', [PartnersController::class, 'page'])->name('partners.contrats')->defaults('submenu', 'contrats');
+
+    Route::get('partner-accounts', [PartnerAccountController::class, 'index'])->name('partner-accounts.index');
+    Route::get('partner-accounts/{partner}', [PartnerAccountController::class, 'show'])->name('partner-accounts.show');
+    Route::post('partner-accounts/{partner}/validate', [PartnerAccountController::class, 'validatePartner'])->name('partner-accounts.validate');
+    Route::post('partner-accounts/{partner}/reject', [PartnerAccountController::class, 'rejectPartner'])->name('partner-accounts.reject');
+    Route::post('partner-accounts/{partner}/voyage-access', [PartnerAccountController::class, 'updateVoyageAccess'])->name('partner-accounts.voyage-access');
+    Route::get('partner-commission-rules', [PartnerCommissionRuleController::class, 'index'])->name('partner-commission-rules.index');
+    Route::get('partner-commission-rules/create', [PartnerCommissionRuleController::class, 'create'])->name('partner-commission-rules.create');
+    Route::post('partner-commission-rules', [PartnerCommissionRuleController::class, 'store'])->name('partner-commission-rules.store');
+    Route::get('partner-commission-rules/{partner_commission_rule}/edit', [PartnerCommissionRuleController::class, 'edit'])->name('partner-commission-rules.edit');
+    Route::put('partner-commission-rules/{partner_commission_rule}', [PartnerCommissionRuleController::class, 'update'])->name('partner-commission-rules.update');
+    Route::delete('partner-commission-rules/{partner_commission_rule}', [PartnerCommissionRuleController::class, 'destroy'])->name('partner-commission-rules.destroy');
 
     Route::get('reporting', [ReportingController::class, 'index'])->name('reporting.index');
     Route::get('reporting/rapports', [ReportingController::class, 'page'])->name('reporting.rapports')->defaults('submenu', 'rapports');
@@ -252,6 +338,19 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+
+    Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
+    Route::get('branches/create', [BranchController::class, 'create'])->name('branches.create');
+    Route::post('branches', [BranchController::class, 'store'])->name('branches.store');
+    Route::get('branches/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
+    Route::match(['put', 'patch'], 'branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
+    Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+
+    Route::get('messagerie', [MessagerieController::class, 'index'])->name('messagerie.index');
+    Route::get('messagerie/channels', [MessagerieController::class, 'channels'])->name('messagerie.channels');
+    Route::get('messagerie/channels/{channel}/messages', [MessagerieController::class, 'messages'])->name('messagerie.messages');
+    Route::post('messagerie/channels/{channel}/messages', [MessagerieController::class, 'send'])->name('messagerie.send');
+    Route::post('messagerie/channels', [MessagerieController::class, 'createChannel'])->name('messagerie.channels.create');
 
     // WordPress (TravelerWP) – tables cFdgeZ_*
     Route::prefix('wordpress')->name('wordpress.')->group(function () {

@@ -33,7 +33,7 @@ return [
             'icon' => 'bx bx-user',
             'permission' => 'customers.view',
             'children' => [
-                ['label' => 'Clients', 'route' => 'admin.customers.clients.index', 'permission' => 'customers.clients.view'],
+                ['label' => 'Clients', 'route' => 'admin.customers.clients', 'permission' => 'customers.clients.view'],
                 ['label' => 'Voyageurs', 'route' => 'admin.customers.voyageurs', 'permission' => 'customers.travelers.view'],
                 ['label' => 'Historique', 'route' => 'admin.customers.historique', 'permission' => 'customers.history.view'],
                 ['label' => 'Avis clients', 'route' => 'admin.customers.avis-clients', 'permission' => 'customers.reviews.view'],
@@ -194,6 +194,7 @@ return [
         'admin.operations.' => 'operations.view',
         'admin.visa.' => 'visa.view',
         'admin.finance.' => 'finance.view',
+        'admin.hotels.' => 'accommodations.view',
         'admin.partners.' => 'partners.view',
         'admin.reporting.' => 'reporting.view',
         'admin.wordpress.' => 'wordpress.view',

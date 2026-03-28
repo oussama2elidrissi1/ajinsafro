@@ -4,13 +4,19 @@
  * @version 1.0.0
  */
 
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap");
+
 /* ===================================
    CSS Variables
    =================================== */
 :root {
-    --ajtb-primary: #008cff;
-    --ajtb-primary-dark: #006fcc;
-    --ajtb-primary-light: #e6f4ff;
+    --ajtb-font:
+        "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        sans-serif;
+    --ajtb-primary: #0284c7;
+    --ajtb-primary-dark: #0369a1;
+    --ajtb-primary-light: #e0f2fe;
+    --ajtb-primary-hover: #0ea5e9;
     --ajtb-secondary: #ec5b24;
     --ajtb-success: #00a651;
     --ajtb-success-light: #e6f7ed;
@@ -19,14 +25,14 @@
     --ajtb-warning: #f5a623;
     --ajtb-text: #1a1a1a;
     --ajtb-text-light: #4a4a4a;
-    --ajtb-text-muted: #757575;
+    --ajtb-text-muted: #64748b;
     --ajtb-bg: #ffffff;
-    --ajtb-bg-light: #f7f7f7;
-    --ajtb-bg-gray: #f4f4f4;
-    --ajtb-border: #e7e7e7;
-    --ajtb-border-light: #f0f0f0;
-    --ajtb-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --ajtb-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --ajtb-bg-light: #f8fafc;
+    --ajtb-bg-gray: #f1f5f9;
+    --ajtb-border: #e2e8f0;
+    --ajtb-border-light: #f1f5f9;
+    --ajtb-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --ajtb-shadow-lg: 0 4px 14px rgba(0, 0, 0, 0.08);
     --ajtb-radius: 8px;
     --ajtb-radius-lg: 12px;
     --ajtb-transition: all 0.2s ease;
@@ -36,16 +42,20 @@
    Reset & Base
    =================================== */
 .ajtb-tour-page {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: var(--ajtb-font);
     color: var(--ajtb-text);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    overflow: visible;
     --header-h: 100px;
     --aj-sticky-bar-height: 52px;
     --aj-global-bar-height: 60px;
     --aj-day-details-bar-height: 52px;
     /* Source of truth : hauteur totale du bloc sticky (header + barre globale + barre day details) */
-    --sticky-stack-h: calc(var(--header-h, 100px) + var(--aj-global-bar-height, 60px) + var(--aj-day-details-bar-height, 52px));
+    --sticky-stack-h: calc(
+        var(--header-h, 100px) + var(--aj-global-bar-height, 60px) +
+            var(--aj-day-details-bar-height, 52px)
+    );
     /* Alias pour clarté : top offset pour la sidebar et le contenu */
     --stickyTop: var(--sticky-stack-h);
 }
@@ -55,6 +65,49 @@
 .ajtb-tour-page *::after {
     box-sizing: border-box;
 }
+
+/* Barre sticky titre du tour : 1er sticky au scroll, puis remplacée par la barre onglets */
+.ajtb-sticky-tour-title-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1210;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    padding: 12px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-100%);
+    transition: transform 0.25s ease;
+    pointer-events: none;
+}
+
+.ajtb-sticky-tour-title-bar.is-visible {
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.ajtb-sticky-tour-title-bar.is-hidden {
+    transform: translateY(-100%);
+    pointer-events: none;
+}
+
+.ajtb-sticky-tour-title-bar .aj-wide-container {
+    margin: 0 auto;
+}
+
+.ajtb-sticky-tour-title-bar__title {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    color: #1a1a1a !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* ----- Bloc sticky unique : titre + barre des onglets (un seul wrapper, zéro gap, style MakeMyTrip) ----- */
 
 /* ===================================
    CONTAINER SYSTEM - Professional Layout with Margins
@@ -107,7 +160,6 @@
 
 /* Desktop Extra Large (≥1400px) : Confortable pour grands écrans */
 @media (min-width: 1400px) {
-
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         max-width: 1440px;
@@ -129,7 +181,6 @@
 
 /* Desktop Large (1200-1399px) : Format standard confortable */
 @media (min-width: 1200px) and (max-width: 1399px) {
-
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         max-width: 1320px;
@@ -151,7 +202,6 @@
 
 /* Desktop Small / Tablet Large (992-1199px) : Transition desktop → tablet */
 @media (min-width: 992px) and (max-width: 1199px) {
-
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         max-width: 100%;
@@ -173,7 +223,6 @@
 
 /* Tablet (768-991px) : Une colonne ou layout simplifié */
 @media (min-width: 768px) and (max-width: 991px) {
-
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         max-width: 100%;
@@ -195,7 +244,6 @@
 
 /* Mobile (<768px) : Layout compact */
 @media (max-width: 767px) {
-
     .aj-wide-container,
     .ajtb-tour-page .aj-wide-container {
         max-width: 100%;
@@ -280,6 +328,7 @@
 .ajtb-tour-page .ajtb-tour-main {
     min-width: 0;
     width: 100%;
+    overflow: visible;
 }
 
 .ajtb-tour-page .ajtb-tour-sidebar {
@@ -290,14 +339,22 @@
     align-self: start;
 }
 
-/* Programme du Circuit : occupe toute la largeur de la colonne gauche (pas de double contrainte) */
+/* Programme du Circuit : bloc titre+barre sticky + Plan de séjour sticky (top calculé en JS) */
 .ajtb-tour-page #itinerary.ajtb-section {
     max-width: none;
     width: 100%;
-    /* Les barres sticky doivent être alignées avec le contenu, donc pas de padding supplémentaire */
     padding-left: 0;
     padding-right: 0;
     padding-top: 0;
+    overflow: visible;
+    --aj-sticky-wrap-height: 120px;
+    --ajtb-sticky-group-height: 60px; /* hauteur barre onglets, recalculé en JS pour coller les blocs */
+}
+
+/* S'assurer que le wrapper sticky (titre + barre) reste sticky dans #itinerary */
+.ajtb-tour-page #itinerary.ajtb-section .ajtb-itinerary-sticky-wrap {
+    position: -webkit-sticky;
+    position: sticky !important;
 }
 
 .ajtb-tour-page .ajtb-day-plan.programme-container,
@@ -323,7 +380,12 @@
 .ajtb-hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.1) 100%);
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.3) 50%,
+        rgba(0, 0, 0, 0.1) 100%
+    );
 }
 
 .ajtb-hero-content {
@@ -494,7 +556,6 @@
 }
 
 @keyframes bounce {
-
     0%,
     100% {
         transform: translateX(-50%) translateY(0);
@@ -520,7 +581,7 @@
     /* Keep same max-width and padding as .ajtb-tour-page .aj-wide-container – no override */
     padding-top: 20px;
     padding-bottom: 28px;
-    background: var(--ajtb-bg-gray, #f4f4f4);
+    background: #ffffff !important;
     border-radius: 12px;
     margin-left: auto;
     margin-right: auto;
@@ -717,7 +778,11 @@
 }
 
 .ajtb-hero-gallery-wrap .ajtb-hero-gallery-more {
-    background: linear-gradient(135deg, var(--ajtb-primary, #008cff) 0%, #006fcc 100%);
+    background: linear-gradient(
+        135deg,
+        var(--ajtb-primary) 0%,
+        var(--ajtb-primary-dark) 100%
+    );
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -766,7 +831,9 @@
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
     border: none;
     box-shadow: none;
 }
@@ -880,7 +947,7 @@
 
 .ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-prev::before,
 .ajtb-hero-gallery-slider .ajtb-hero-gallery-slider-next::before {
-    content: '';
+    content: "";
     position: absolute;
     width: 10px;
     height: 10px;
@@ -968,7 +1035,6 @@
 }
 
 @media (max-width: 767px) {
-
     .ajtb-hero-gallery-grid,
     .ajtb-hero-gallery-tablet {
         display: none !important;
@@ -1061,11 +1127,197 @@
 .ajtb-tour-main {
     min-width: 0;
     width: 100%;
+    overflow: visible;
 }
 
 .ajtb-tour-sidebar {
     min-width: 0;
     width: 380px;
+}
+
+/* ===================================
+   Top Search Bar - style Paris Group Tour (barre #0f2146, bouton #1a73e8)
+   Forcé avec !important pour passer devant le thème
+   =================================== */
+.ajtb-tour-page .ajtb-top-search-bar {
+    width: 100% !important;
+    background: #0f2146 !important;
+    padding: 16px 0 !important;
+    box-shadow: none !important;
+    font-family: var(--ajtb-font) !important;
+}
+
+.ajtb-top-search-bar__inner {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: nowrap;
+}
+
+/* Ligne des 3 options + bouton SEARCH (sous le modal Vols) */
+.ajtb-top-search-bar__row {
+    display: flex !important;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+}
+
+/* Modal "Vols depuis" au-dessus des 3 options */
+.ajtb-tour-page .ajtb-top-search-bar .aj-flight-details {
+    margin-top: 0 !important;
+    margin-bottom: 12px !important;
+    order: -1;
+}
+
+.ajtb-top-search-bar__inner .aj-searchbar {
+    flex: 1 !important;
+    min-width: 280px;
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.ajtb-top-search-bar__inner .aj-searchbar__row {
+    gap: 0 !important;
+}
+
+/* Blocs : fond légèrement plus clair, pas de fond blanc */
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-searchitem {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 14px 20px !important;
+    min-height: 56px;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-searchitem:first-child {
+    border-left: none !important;
+}
+
+/* Labels : bleu clair, uppercase */
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-label {
+    color: #7eb8f7 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    margin-bottom: 4px !important;
+}
+
+/* Valeurs : blanc (override thème) */
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-value,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-select,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-date-value,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-guest-summary {
+    color: #fff !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-select {
+    background: transparent !important;
+    color: #fff !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-select option {
+    background: #0f2146 !important;
+    color: #fff !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-icon,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-date-chevron,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-guest-chevron {
+    color: #7eb8f7 !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-guest-trigger {
+    color: #fff !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-value--disabled,
+.ajtb-tour-page
+    .ajtb-top-search-bar__inner
+    .aj-search-date-value[data-placeholder] {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Bouton SEARCH : bleu vif, pas blanc */
+.ajtb-tour-page .ajtb-top-search-bar__btn {
+    align-self: center;
+    padding: 14px 36px !important;
+    margin-left: 12px;
+    background: #1a73e8 !important;
+    background: linear-gradient(
+        180deg,
+        #2b85f0 0%,
+        #1a73e8 50%,
+        #1557b0 100%
+    ) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    cursor: pointer;
+    box-shadow:
+        0 2px 6px rgba(26, 115, 232, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__btn:hover {
+    background: linear-gradient(
+        180deg,
+        #3d94f2 0%,
+        #2b85f0 50%,
+        #1a73e8 100%
+    ) !important;
+    box-shadow:
+        0 4px 12px rgba(26, 115, 232, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    color: #fff !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__btn:active {
+    transform: translateY(1px);
+    box-shadow:
+        0 1px 4px rgba(26, 115, 232, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+@media (max-width: 767px) {
+    .ajtb-top-search-bar__inner {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .ajtb-top-search-bar__inner .aj-searchbar {
+        min-width: 100%;
+    }
+    .ajtb-top-search-bar__inner .aj-searchitem {
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .ajtb-top-search-bar__inner .aj-searchitem:first-child {
+        border-top: none;
+    }
+    .ajtb-top-search-bar__btn {
+        width: 100%;
+        margin-left: 0;
+    }
 }
 
 /* ===================================
@@ -1376,39 +1628,66 @@
 }
 
 /* ===================================
-   Tabs Navigation
+   Tabs Navigation (sous les images, style capture)
    =================================== */
+.ajtb-tabs-under-hero {
+    background: #fff;
+    border-bottom: 1px solid var(--ajtb-border);
+    margin-bottom: 0;
+    border-radius: 0 0 10px 10px;
+}
+
+.ajtb-tabs-under-hero .aj-wide-container {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 .ajtb-tabs-nav {
     display: flex;
-    gap: 4px;
-    padding: 4px;
-    background: var(--ajtb-bg-light);
-    border-radius: var(--ajtb-radius);
-    margin-bottom: 24px;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border-radius: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
+.ajtb-tabs-under-hero .ajtb-tabs-nav {
+    margin-bottom: 0;
+}
+
 .ajtb-tabs-nav .tab-link {
     flex-shrink: 0;
-    padding: 12px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ajtb-text-light);
+    padding: 18px 24px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #4b5563;
     text-decoration: none;
-    border-radius: 6px;
-    transition: var(--ajtb-transition);
+    border-radius: 8px 8px 0 0;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease;
+    letter-spacing: 0.03em;
 }
 
 .ajtb-tabs-nav .tab-link:hover {
     color: var(--ajtb-primary);
-    background: rgba(0, 140, 255, 0.05);
 }
 
 .ajtb-tabs-nav .tab-link.active {
-    background: var(--ajtb-bg);
     color: var(--ajtb-primary);
-    box-shadow: var(--ajtb-shadow);
+    border-bottom-color: var(--ajtb-primary);
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Top tab panels: only one visible at a time */
+.ajtb-tab-panel.ajtb-tab-panel-hidden {
+    display: none !important;
 }
 
 /* ===================================
@@ -1624,89 +1903,685 @@
 }
 
 /* ===================================
-   Programme MakeMyTrip : 2 colonnes (Plan de séjour | Détails) — priorité au contenu
-   Desktop: gauche 260px max, droite 1fr. Tablet: gauche 220px. Mobile: 1 colonne, jours en pills horizontaux.
+   Programme MakeMyTrip : sticky group (titre + tabs + barre jour + sidebar) + contenu scroll
    =================================== */
 
-/* ----- Barre globale : résumé du séjour (toujours visible, sticky sous le header) ----- */
-.ajtb-global-summary-bar {
-    margin: 24px 0 0 0;
-    padding: 16px 20px;
-    background: #fff;
-    border: 1px solid var(--ajtb-border, #e9ecef);
-    border-radius: var(--ajtb-radius, 12px) var(--ajtb-radius, 12px) 0 0;
-    border-bottom: none;
-    box-shadow: none;
-    position: sticky;
-    top: var(--header-h, 100px);
-    z-index: 998;
-    isolation: isolate;
-    /* Maintenir la même largeur que le container même en sticky : utiliser max-width au lieu de width: 100% */
-    max-width: 1320px;
+/* Layout : conteneur principal – zéro gap entre blocs pour effet stack collé */
+.ajtb-itinerary-layout.sticky-itinerary-container {
+    position: relative;
+    margin: 0;
+    padding: 0;
     width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 0;
+    max-width: 100%;
     box-sizing: border-box;
-    /* Padding horizontal identique au container principal */
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    transform: none;
+    overflow: visible;
+    background: transparent;
+    border: none;
+}
+
+/* Bloc 1 : barre onglets – collée au bloc du dessous (pas d’ombre ni marge) */
+.ajtb-tabs-block.ajtb-itinerary-block--tabs.sticky-itinerary-container__tabs {
+    position: -webkit-sticky;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1200 !important;
+    width: 100%;
+    background: #fff !important;
+    box-shadow: none;
+    border-radius: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Rectangle barre jour : aligné avec le rectangle du contenu (même colonne) */
+/* Barre jour : alignée en face du plan de séjour (même largeur 240px à gauche) */
+.ajtb-day-bar-row {
+    margin: 0;
+    padding: 0 0 0 240px;
+    width: 100%;
+    box-sizing: border-box;
+    background: #fff;
+    border-top: 1px solid var(--ajtb-border);
+    display: flex;
+    justify-content: flex-start;
+}
+
+.ajtb-day-bar-row .ajtb-day-details-bar {
+    margin: 0 !important;
+    padding: 6px 20px 8px !important;
+    min-height: 0 !important;
+    min-width: 0;
+    width: 100% !important;
+    max-width: none;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.ajtb-day-bar-row .ajtb-day-details-bar__day {
+    padding: 4px 12px !important;
+    font-size: 0.85rem !important;
+}
+
+.ajtb-day-bar-row .ajtb-day-details-bar__inclus-line {
+    font-size: 12px !important;
+}
+
+.ajtb-day-bar-row .ajtb-day-details-bar__left {
+    gap: 10px !important;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+/* Grille : plan de séjour (sticky) | contenu – colonne plan alignée avec la barre jour */
+.ajtb-itinerary-grid.ajtb-itinerary-body {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0;
+    align-items: stretch;
+    width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    padding: 0;
+    background: transparent;
+}
+
+/* Plan de séjour : sticky, commence sous la barre sticky, tout le contenu visible pendant tout le scroll */
+.ajtb-plan-sidebar.ajtb-plan-sidebar--sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    top: calc(var(--ajtb-sticky-group-height, 120px) + 32px);
+    align-self: flex-start;
+    max-height: calc(100vh - var(--ajtb-sticky-group-height, 120px) - 32px);
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+/* Colonne gauche : Plan de séjour – compact, sous la barre sticky */
+.ajtb-plan-sidebar.ajtb-itinerary-block--sidebar {
+    background: #fff;
+    border: 1px solid var(--ajtb-border);
+    border-top: none;
+    border-radius: 0 0 0 8px;
+    padding: 8px 0 12px;
+    min-height: 120px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    position: -webkit-sticky;
+    position: sticky;
+    top: calc(var(--ajtb-sticky-group-height, 1px) + 130px);
+    align-self: flex-start;
+    max-height: calc(100vh - var(--ajtb-sticky-group-height, 1px) - 130px);
+    overflow-y: auto;
+    z-index: 1000;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.ajtb-plan-sidebar.ajtb-itinerary-block--sidebar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.ajtb-itinerary-sidebar-title {
+    margin: 0 0 8px 0;
+    padding: 0 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.3;
+}
+
+/* Plan de séjour : style capture – jour actif = bloc gris foncé texte blanc, inactifs = texte gris clair */
+.ajtb-plan-sidebar .day-plan__link.active,
+.ajtb-plan-sidebar .day-plan__link.is-active {
+    background: #374151;
+    color: #fff;
+    border-radius: 0 999px 999px 0;
+    padding-left: 16px;
+    width: fit-content;
+    max-width: 100%;
+    margin-left: auto;
+}
+
+.ajtb-plan-sidebar .day-plan__link.active .day-plan__dot,
+.ajtb-plan-sidebar .day-plan__link.is-active .day-plan__dot {
+    background: #fff;
+}
+
+.ajtb-plan-sidebar .day-plan__item {
+    display: flex;
+}
+
+.ajtb-plan-sidebar .day-plan__link {
+    color: #6b7280;
+    width: fit-content;
+    max-width: 100%;
+    cursor: pointer;
+    padding: 6px 12px 6px 14px;
+    font-size: 12px;
+}
+
+.ajtb-plan-sidebar .day-plan__link:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.ajtb-plan-sidebar .day-plan__dot {
+    background: #9ca3af;
+    width: 6px;
+    height: 6px;
+    left: 6px;
+}
+
+.ajtb-plan-sidebar .day-plan__label {
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Colonne droite : conteneur invisible, occupe toute la largeur disponible */
+.ajtb-right-column.ajtb-itinerary-right {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+/* Rectangle A : header du jour – collé sous la barre onglets, bord supérieur aligné */
+.ajtb-day-header-block.ajtb-itinerary-block--day-header {
+    background: #fff;
+    border: 1px solid var(--ajtb-border);
+    border-top: none;
+    border-left: none;
+    border-radius: 0 0 8px 0;
+    padding: 8px 20px 10px;
+    margin: 0;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    box-sizing: border-box;
+    position: -webkit-sticky;
+    position: sticky;
+    top: var(--ajtb-sticky-group-height, 60px);
+    z-index: 1000;
+}
+
+.ajtb-day-header-block .ajtb-day-details-bar {
+    margin: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    min-height: 40px;
+}
+
+.ajtb-day-header-block .ajtb-day-details-bar__left {
+    gap: 10px;
+}
+
+.ajtb-day-header-block .ajtb-day-details-bar__day {
+    padding: 6px 14px;
+    font-size: 0.9rem;
+}
+
+/* Rectangle B : contenu du jour – collé sous le header du jour (une seule ligne de séparation) */
+.ajtb-day-content-block.ajtb-itinerary-block--day-content {
+    flex: 1 1 auto;
+    background: #fff;
+    border: 1px solid var(--ajtb-border);
+    border-top: 1px solid var(--ajtb-border);
+    border-left: none;
+    border-radius: 0 0 8px 0;
+    padding: 0;
+    min-height: 0;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+.ajtb-day-content-block .ajtb-day-panels {
+    padding: 0;
+    border: none;
+    background: transparent;
+    width: 100%;
+    max-width: none;
+}
+
+/* Responsive : layout blocs – tablette */
+@media (max-width: 1023px) {
+    .ajtb-itinerary-grid.ajtb-itinerary-body {
+        grid-template-columns: 220px 1fr;
+    }
+
+    .ajtb-day-bar-row {
+        padding-left: 220px;
+    }
+
+    .ajtb-day-bar-row .ajtb-day-details-bar {
+        padding: 5px 16px 6px !important;
+        min-width: 220px;
+    }
+}
+
+/* Responsive : layout blocs – mobile (1 colonne, sidebar au-dessus) */
+@media (max-width: 767px) {
+    .ajtb-itinerary-grid.ajtb-itinerary-body {
+        grid-template-columns: 1fr;
+    }
+
+    .ajtb-day-bar-row {
+        padding-left: 0;
+    }
+
+    .ajtb-plan-sidebar.ajtb-plan-sidebar--sticky {
+        position: static;
+        max-height: none;
+    }
+
+    .ajtb-plan-sidebar.ajtb-itinerary-block--sidebar {
+        border-radius: 0;
+        border-left: 1px solid var(--ajtb-border);
+    }
+
+    .ajtb-day-header-block.ajtb-itinerary-block--day-header,
+    .ajtb-day-content-block.ajtb-itinerary-block--day-content {
+        border-left: 1px solid var(--ajtb-border);
+        border-radius: 0;
+    }
+
+    .ajtb-itinerary-block--sidebar .ajtb-programme-days {
+        position: static;
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
+/* Sticky group (rétrocompat : si pas .ajtb-itinerary-layout) */
+.sticky-itinerary-container:not(.ajtb-itinerary-layout) {
+    position: -webkit-sticky;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1200 !important;
+    background: #fff !important;
+    margin: 12px 0 0 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: none;
+    overflow: visible;
+}
+
+/* Barre manuelle titre : au-dessus des onglets, collée, scroll et stick avec eux */
+.sticky-itinerary-container__header {
+    margin: 0;
+    padding: 16px 20px 12px;
     padding-left: max(20px, env(safe-area-inset-left));
     padding-right: max(20px, env(safe-area-inset-right));
-    /* Hauteur minimale stable pour éviter le chevauchement */
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+}
+
+.sticky-itinerary-container__header.ajtb-sticky-manual-title-bar {
+    border-bottom: none;
+}
+
+.sticky-itinerary-container__header .ajtb-itinerary-sticky-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    color: var(--ajtb-text, #1a1a1a) !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.sticky-itinerary-container__tabs {
+    margin: 0;
+    border-top: none;
+}
+
+/* Barre onglets sticky : collée au bloc du dessous (padding réduit, bordure basse = séparation unique) */
+.sticky-itinerary-container__tabs .ajtb-global-summary-bar {
+    margin: 0 !important;
+    padding: 10px 20px 12px !important;
+    padding-top: 12px !important;
+    padding-left: max(20px, env(safe-area-inset-left)) !important;
+    padding-right: max(20px, env(safe-area-inset-right)) !important;
+    background: var(--ajtb-primary-light) !important;
+    border: none !important;
+    border-top: 3px solid var(--ajtb-primary) !important;
+    border-bottom: 1px solid var(--ajtb-border) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    min-height: 48px;
+}
+
+.sticky-itinerary-container__body {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 16px;
+    margin: 0;
+    padding: 0 0 8px 0;
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+    border-top: 1px solid var(--ajtb-border, #e9ecef);
+    flex-wrap: nowrap;
+}
+
+/* Spacer dans le sticky pour aligner la barre Jour X en face du plan de séjour */
+.sticky-itinerary-container__spacer {
+    width: 240px;
+    max-width: 240px;
+    flex: 0 0 240px;
+}
+
+.sticky-itinerary-container__main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sticky-itinerary-container__main .ajtb-day-details-bar {
+    margin: 0;
+}
+
+/* Désactiver complètement la barre sticky globale des jours (Jour 1 / INCLUDED) */
+#ajtb-day-details-bar {
+    display: none !important;
+}
+
+/* Contenu scroll : même grille que le sticky, pas d'espace blanc inutile */
+.itinerary-scroll-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+}
+
+/* Sidebar Plan de séjour : sticky sous la barre onglets ; scrollbar masquée */
+.itinerary-scroll-content__nav.ajtb-programme-days,
+.ajtb-itinerary-block--sidebar .ajtb-programme-days {
+    width: 100%;
+    max-width: 100%;
+    position: -webkit-sticky;
+    position: sticky;
+    top: var(--ajtb-sticky-group-height, 60px);
+    max-height: calc(100vh - var(--ajtb-sticky-group-height, 60px));
+    overflow-y: auto;
+    align-self: flex-start;
+    z-index: 1000;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.itinerary-scroll-content__nav.ajtb-programme-days::-webkit-scrollbar,
+.ajtb-itinerary-block--sidebar .ajtb-programme-days::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.itinerary-scroll-content__panels,
+.ajtb-itinerary-block--day-content .ajtb-day-panels {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* Panneaux des jours : pleine largeur, contenu aligné à gauche */
+.itinerary-scroll-content .ajtb-day-panels,
+.ajtb-itinerary-block--day-content .ajtb-day-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 12px 16px 16px;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+.itinerary-scroll-content .ajtb-day-content-panel {
+    background: #fff;
+    border-radius: var(--ajtb-radius, 12px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    padding: 20px 24px 24px;
+    border: 1px solid var(--ajtb-border);
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+/* Un seul bloc carte : le contenu du jour est dans le bloc, pas dans une carte imbriquée (référence capture 2) */
+.ajtb-itinerary-block--day-content .ajtb-day-content-panel {
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    padding: 20px 0 24px;
+    margin: 0;
+}
+
+.ajtb-itinerary-block--day-content .ajtb-day-content-panel:not(:last-child) {
+    border-bottom: 1px solid var(--ajtb-border, #e9ecef);
+    padding-bottom: 24px;
+}
+
+/* Pas de hauteur min inutile */
+.itinerary-scroll-content .ajtb-day-panels,
+.itinerary-scroll-content .ajtb-day-content-panel,
+.itinerary-scroll-content .day-body,
+.ajtb-itinerary-block--day-content .ajtb-day-panels,
+.ajtb-itinerary-block--day-content .ajtb-day-content-panel,
+.ajtb-itinerary-block--day-content .day-body {
+    min-height: 0;
+}
+
+/* Bloc programme visible par défaut (avant JS) */
+.itinerary-scroll-content .ajtb-tab-block[data-ajtb-tab="programme"],
+.ajtb-itinerary-block--day-content .ajtb-tab-block[data-ajtb-tab="programme"] {
+    display: block;
+}
+
+/* Colonne droite #itinerary : forcer largeur pleine, pas de centrage ni max-width parasite */
+#itinerary.ajtb-section .ajtb-itinerary-grid {
+    width: 100%;
+    max-width: none;
+}
+
+#itinerary.ajtb-section .ajtb-day-content-block .day-body {
+    padding: 0 0 12px 0;
+    width: 100%;
+    max-width: none;
+}
+
+#itinerary.ajtb-section .ajtb-day-content-block .ajtb-day-content-panel {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Rétrocompat : wrapper sticky titre+barre seul (si utilisé ailleurs) */
+.ajtb-itinerary-sticky-wrap,
+.ajtb-sticky-header-bar {
+    position: -webkit-sticky;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1200 !important;
+    background: #fff !important;
+    margin: 24px auto 0;
+    padding: 0;
+    max-width: 1320px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Quand le bloc est en haut (après hero), même largeur que le contenu principal */
+.ajtb-tour-page > .ajtb-sticky-header-bar {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: clamp(12px, 2vw, 32px);
+    padding-right: clamp(12px, 2vw, 32px);
+    max-width: 1440px;
+    box-sizing: border-box;
+}
+
+/* Titre du tour (dans le bloc sticky, zéro gap avec la barre) */
+.ajtb-itinerary-sticky-wrap .ajtb-itinerary-sticky-title {
+    margin: 0 !important;
+    padding: 16px 20px 12px !important;
+    padding-left: max(20px, env(safe-area-inset-left)) !important;
+    padding-right: max(20px, env(safe-area-inset-right)) !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    color: var(--ajtb-text, #1a1a1a) !important;
+    background: #fff !important;
+    border: none !important;
+    box-sizing: border-box;
+}
+
+/* Barre des onglets (collée sous le titre, même largeur, pas de gap) */
+.ajtb-itinerary-sticky-wrap .ajtb-global-summary-bar {
+    margin: 0 !important;
+    padding: 0 20px 16px !important;
+    padding-left: max(20px, env(safe-area-inset-left)) !important;
+    padding-right: max(20px, env(safe-area-inset-right)) !important;
+    background: #fff !important;
+    border: none !important;
+    border-top: 1px solid var(--ajtb-border, #e9ecef);
+    border-radius: 0;
+    box-shadow: none;
+    max-width: none;
+    width: 100%;
     min-height: 52px;
+    box-sizing: border-box;
+}
+
+/* Éviter que le contenu scrollé ne se cache sous la barre onglets sticky */
+.ajtb-tour-page #itinerary.ajtb-section .ajtb-day-content-panel,
+.ajtb-tour-page
+    #itinerary.ajtb-section
+    .itinerary-scroll-content
+    .ajtb-day-content-panel,
+.ajtb-tour-page #itinerary.ajtb-section .aj-day-anchor {
+    scroll-margin-top: 220px;
+}
+
+/* Quand la section Galerie Photos est visible : masquer le layout et le sidebar */
+.ajtb-tour-page.ajtb-gallery-in-view .ajtb-itinerary-layout,
+.ajtb-tour-page.ajtb-gallery-in-view .itinerary-scroll-content__nav {
+    display: none !important;
 }
 
 .ajtb-global-summary-nav {
     display: flex;
-    /* Ne pas wrap pour éviter la compression : utiliser nowrap avec overflow-x */
     flex-wrap: nowrap;
-    gap: 10px;
+    gap: 16px;
     align-items: center;
-    /* Scroll horizontal si nécessaire, mais ne pas compresser */
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    /* Empêcher la compression des pills */
     min-width: 0;
+}
+
+/* Barre sticky : répartir les onglets sur toute la largeur ; mots centrés dans la barre */
+.sticky-itinerary-container__tabs .ajtb-global-summary-bar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.sticky-itinerary-container__tabs .ajtb-global-summary-nav {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    max-width: 100%;
 }
 
 .ajtb-global-pill {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     padding: 10px 18px;
     font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--ajtb-text, #1a1a1a);
-    background: #fff;
-    border: 2px solid var(--ajtb-border, #e9ecef);
+    color: #616161;
+    background: transparent;
+    border: 1px solid transparent;
     border-radius: 999px;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    text-align: center;
 }
 
 .ajtb-global-pill:hover {
-    border-color: var(--ajtb-primary, #2563eb);
-    color: var(--ajtb-primary, #2563eb);
-    background: rgba(37, 99, 235, 0.05);
+    color: #0284c7;
 }
 
+/* Onglet actif : pill blanc, bordure bleu clair, texte bleu (style capture) */
 .ajtb-global-pill.active {
-    background: var(--ajtb-primary, #2563eb);
-    color: #fff;
-    border-color: var(--ajtb-primary, #2563eb);
+    background: #fff;
+    color: #0284c7;
+    border-color: #7dd3fc;
+}
+
+/* Contexte barre sticky : inactifs = texte gris sur fond bleu clair, actif = pill blanc */
+.sticky-itinerary-container__tabs .ajtb-global-pill {
+    color: #616161;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.sticky-itinerary-container__tabs .ajtb-global-pill:hover {
+    color: #0284c7;
+}
+
+.sticky-itinerary-container__tabs .ajtb-global-pill.active {
+    background: #fff;
+    color: #0284c7;
+    border: 1px solid #7dd3fc;
 }
 
 .ajtb-global-pill-label {
     display: inline-block;
 }
 
-/* ----- Barre Day Details (sticky dans la colonne de contenu, auto-update au scroll) : Jour + INCLUS + onglets ----- */
+/* ----- Barre Day Details : Jour X + onglets Programme/Vol/Transfert/Hôtel/Activités — défile avec le contenu ----- */
 .ajtb-day-details-bar {
     display: flex;
-    /* Ne pas wrap pour éviter la compression : utiliser nowrap */
     flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
@@ -1717,38 +2592,98 @@
     border: 1px solid var(--ajtb-border, #e9ecef);
     border-radius: var(--ajtb-radius, 12px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    position: sticky;
-    /* Offset exact : headerHeight + hauteur réelle de la barre globale (pas de dayBarHeight car elle est dans la colonne) */
-    top: calc(var(--header-h, 100px) + var(--aj-global-bar-height, 60px));
-    z-index: 997;
-    isolation: isolate;
-    /* Largeur 100% de la colonne de contenu (pas full-width) */
+    position: relative;
     width: 100%;
     margin-left: 0;
     margin-right: 0;
     margin-top: 0;
     box-sizing: border-box;
-    /* Hauteur minimale stable pour éviter le chevauchement */
     min-height: 48px;
-    /* Pas de transform qui pourrait causer un chevauchement */
-    transform: none;
 }
 
 .ajtb-day-details-bar__left {
     display: flex;
-    /* Ne pas wrap pour éviter la compression */
     flex-wrap: nowrap;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     min-width: 0;
     flex-shrink: 0;
 }
 
-.ajtb-day-details-bar__day {
+/* Ligne INCLUDED: style capture (emplacement + INCLUDED: en gras + icône + nombre + libellé) */
+.ajtb-day-details-bar__inclus-line {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+}
+
+.ajtb-inclus-location {
+    color: #333;
+    margin-right: 2px;
+}
+
+.ajtb-inclus-label {
     font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--ajtb-text, #1a1a1a);
+    color: #333;
+    margin-right: 4px;
+}
+
+.ajtb-inclus-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #333;
+}
+
+.ajtb-inclus-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    opacity: 0.75;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.ajtb-inclus-item--transfer .ajtb-inclus-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M5 17h14v-4H5v4zm0-6h14V7H5v4z'/%3E%3Ccircle cx='7.5' cy='16.5' r='1.5'/%3E%3Ccircle cx='16.5' cy='16.5' r='1.5'/%3E%3C/svg%3E");
+}
+
+/* Activités : icône randonnée (personne en marche), même style que Vol et Transfert */
+.ajtb-inclus-item--activity .ajtb-inclus-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='6' r='2.5'/%3E%3Cpath d='M12 9v6'/%3E%3Cpath d='M9 15l3 4 3-4'/%3E%3Cpath d='M14 11l2-3'/%3E%3Cpath d='M12 9h2'/%3E%3C/svg%3E");
+}
+
+.ajtb-inclus-item--hotel .ajtb-inclus-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M3 21h18M3 10h18M5 21V8l7 5 7-5v13M5 10V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4'/%3E%3C/svg%3E");
+}
+
+.ajtb-inclus-item--meal .ajtb-inclus-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M8 2v4M16 2v4M3 10h18v2H3zM4 10v10M8 10v10M12 10v10M16 10v10M20 10v10'/%3E%3C/svg%3E");
+}
+
+.ajtb-inclus-item--flight .ajtb-inclus-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/%3E%3C/svg%3E");
+}
+
+/* Libellé du jour : pill dégradé orange-rouge, texte blanc (style capture) */
+.ajtb-day-details-bar__day {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
     white-space: nowrap;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #fb923c 0%, #ea580c 50%, #c2410c 100%);
+    text-align: center;
+    line-height: 1.2;
+    box-sizing: border-box;
 }
 
 .ajtb-day-details-bar__inclus-pills {
@@ -1873,7 +2808,10 @@
     border: 1px solid var(--ajtb-border, #e9ecef);
     border-radius: 999px;
     cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .ajtb-tab-pill:hover {
@@ -1912,12 +2850,13 @@
     padding-left: 0;
     padding-right: 0;
     padding-bottom: 0;
+    /* Nécessaire pour que la colonne Plan de séjour (sticky) reste fixe au scroll */
+    overflow: visible;
 }
 
+/* Colonne "Plan de séjour" : scroll normalement avec la page (pas sticky, comme 2e screenshot) */
 .ajtb-programme-days {
-    position: sticky;
-    /* Top exactement sous la barre globale sticky : headerHeight + globalBarHeight (dayBar est maintenant dans la colonne) */
-    top: calc(var(--header-h, 100px) + var(--aj-global-bar-height, 60px));
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -1925,16 +2864,11 @@
     max-width: 220px;
     flex: 0 0 auto;
     padding: 0;
-    padding-right: 0;
     margin-right: 0;
     margin-top: 0;
     align-self: flex-start;
-    z-index: 1;
-    /* Max-height pour éviter que la sidebar dépasse l'écran */
-    max-height: calc(100vh - calc(var(--header-h, 100px) + var(--aj-global-bar-height, 60px)));
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    max-height: none;
+    overflow: visible;
 }
 
 .ajtb-programme-days-title,
@@ -1958,7 +2892,7 @@
     align-self: flex-start;
 }
 
-/* ----- Day Plan timeline (ligne verticale + dots + label) ----- */
+/* ----- Day Plan timeline : ligne verticale qui passe par le centre des points (effet schéma) ----- */
 .day-plan {
     list-style: none;
     margin: 0;
@@ -1970,28 +2904,42 @@
 }
 
 .day-plan::before {
-    content: '';
+    content: "";
     position: absolute;
-    left: 5px;
-    top: 8px;
-    bottom: 8px;
-    width: 1px;
-    background: var(--ajtb-border);
+    left: 27px;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: #d1d5db;
+    z-index: 0;
+}
+
+.ajtb-plan-sidebar .day-plan {
+    padding-left: 14px;
+}
+
+.ajtb-plan-sidebar .day-plan::before {
+    background: #d1d5db;
+    left: 20px;
+    top: 10px;
+    bottom: 10px;
 }
 
 .day-plan__item {
     position: relative;
     margin: 0;
     padding: 0;
+    z-index: 1;
 }
 
 .day-plan__link {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0;
+    cursor: pointer;
     width: auto;
     min-width: 0;
-    padding: 6px 10px 6px 0;
+    padding: 8px 12px 8px 14px;
     margin: 0;
     border: none;
     background: transparent;
@@ -2000,7 +2948,10 @@
     color: var(--ajtb-text);
     cursor: pointer;
     border-radius: 999px;
-    transition: background 0.2s ease, color 0.2s ease;
+    position: relative;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .day-plan__link:hover {
@@ -2016,12 +2967,15 @@
 
 .day-plan__dot {
     flex-shrink: 0;
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--ajtb-border);
-    position: relative;
-    z-index: 1;
+    position: absolute;
+    left: 7px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
 }
 
 .day-plan__link.is-active .day-plan__dot,
@@ -2031,10 +2985,12 @@
 
 .day-plan__label {
     font-size: 13px;
-    line-height: 1.3;
+    line-height: 1.45;
+    letter-spacing: 0.01em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding-left: 0;
 }
 
 .ajtb-programme-center,
@@ -2049,7 +3005,7 @@
 .ajtb-day-panels {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 12px;
     margin-top: 0;
     padding-top: 0;
 }
@@ -2058,10 +3014,26 @@
     min-width: 0;
 }
 
+/* Zone jour : sur mesure, hauteur minimale */
 .ajtb-day-header-mmt {
-    margin-bottom: 20px;
-    padding-bottom: 16px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--ajtb-border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Pill numéro de jour : sur mesure, juste la taille du chiffre */
+.ajtb-day-header-mmt .ajtb-day-pill {
+    flex-shrink: 0;
+    margin-right: 0;
+    width: fit-content;
+    min-width: 1.25em;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    line-height: 1.2;
 }
 
 .ajtb-day-badge {
@@ -2075,11 +3047,16 @@
     margin-bottom: 10px;
 }
 
+.ajtb-day-header-mmt .ajtb-day-title-mmt {
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .ajtb-day-title-mmt {
     font-size: 20px;
     font-weight: 700;
     color: var(--ajtb-text);
-    margin: 0 0 8px 0;
 }
 
 .ajtb-day-inclus {
@@ -2089,7 +3066,7 @@
 }
 
 .ajtb-block-mmt {
-    margin-bottom: 24px;
+    margin-bottom: 12px;
 }
 
 .ajtb-block-mmt:last-child {
@@ -2100,14 +3077,41 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--ajtb-text);
-    margin: 0 0 12px 0;
+    margin: 0 0 8px 0;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
 .ajtb-block-icon {
-    font-size: 16px;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    vertical-align: middle;
+}
+
+.ajtb-block-icon--flight {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/%3E%3C/svg%3E");
+}
+
+.ajtb-block-icon--transfer {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M5 17h14v-4H5v4zm0-6h14V7H5v4z'/%3E%3Ccircle cx='7.5' cy='16.5' r='1.5'/%3E%3Ccircle cx='16.5' cy='16.5' r='1.5'/%3E%3C/svg%3E");
+}
+
+.ajtb-block-icon--hotel {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M3 21h18M3 10h18M5 21V8l7 5 7-5v13M5 10V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4'/%3E%3C/svg%3E");
+}
+
+.ajtb-block-icon--activity {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='6' r='2.5'/%3E%3Cpath d='M12 9v6'/%3E%3Cpath d='M9 15l3 4 3-4'/%3E%3Cpath d='M14 11l2-3'/%3E%3Cpath d='M12 9h2'/%3E%3C/svg%3E");
+}
+
+.ajtb-block-icon--meal {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M8 2v4M16 2v4M3 10h18v2H3zM4 10v10M8 10v10M12 10v10M16 10v10M20 10v10'/%3E%3C/svg%3E");
 }
 
 .ajtb-programme-mmt .day-body {
@@ -2148,7 +3152,9 @@
 /* Ancre pour scroll-spy et deep link (invisible) ; scroll-margin-top pour scrollIntoView sans masquer sous header+barre globale */
 .aj-day-anchor,
 #itinerary .ajtb-day-content-panel {
-    scroll-margin-top: calc(var(--header-h, 100px) + var(--aj-global-bar-height, 60px));
+    scroll-margin-top: calc(
+        var(--header-h, 100px) + var(--aj-global-bar-height, 60px)
+    );
 }
 
 .aj-day-anchor {
@@ -2181,7 +3187,7 @@
     border: 1px solid var(--ajtb-border);
 }
 
-/* Laptop / Tablet (768px – 1199px) : gauche 200px, détails priorité ; gauche scrollable si besoin */
+/* Laptop / Tablet (768px – 1199px) : gauche 160px, détails priorité */
 @media (min-width: 768px) and (max-width: 1199px) {
     .ajtb-programme-mmt.programme-container {
         gap: 10px;
@@ -2189,26 +3195,29 @@
         padding-top: 12px;
     }
 
-    .ajtb-programme-days {
-        /* Max-height adapté pour tablette : éviter que la sidebar dépasse l'écran */
-        max-height: calc(100vh - calc(var(--header-h, 100px) + var(--aj-global-bar-height, 60px)));
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
+    .sticky-itinerary-container__spacer {
         width: 160px;
-        /* fallback */
-        width: fit-content;
         max-width: 160px;
-        flex: 0 0 auto;
+        flex: 0 0 160px;
+    }
+
+    .itinerary-scroll-content__nav.ajtb-programme-days {
+        width: 160px;
+        max-width: 160px;
+        flex: 0 0 160px;
+    }
+
+    .ajtb-programme-days {
+        position: relative;
         padding-right: 0;
         margin-right: 0;
         margin-top: 0;
         padding-top: 0;
-        top: calc(var(--header-h, 100px) + var(--aj-global-bar-height, 60px));
     }
 
     .ajtb-programme-days .day-plan__link {
-        padding: 5px 8px 5px 0;
+        padding: 6px 10px 6px 0;
+        gap: 12px;
     }
 
     .ajtb-programme-days .day-plan__dot {
@@ -2217,10 +3226,38 @@
     }
 }
 
-/* Mobile (< 768px) : barre sticky compacte, --header-h plus petit, onglets scroll sans coupure */
+/* Mobile (< 768px) */
 @media (max-width: 767px) {
     .ajtb-tour-page {
         --header-h: 56px;
+    }
+
+    .ajtb-itinerary-sticky-wrap .ajtb-itinerary-sticky-title {
+        padding: 12px 16px 10px !important;
+        padding-left: max(16px, env(safe-area-inset-left)) !important;
+        padding-right: max(16px, env(safe-area-inset-right)) !important;
+        font-size: 1.2rem !important;
+    }
+
+    .ajtb-itinerary-sticky-wrap .ajtb-global-summary-bar {
+        padding: 0 16px 12px !important;
+        padding-left: max(16px, env(safe-area-inset-left)) !important;
+        padding-right: max(16px, env(safe-area-inset-right)) !important;
+    }
+
+    .ajtb-tour-page #itinerary.ajtb-section {
+        --aj-sticky-wrap-height: 100px;
+    }
+
+    .ajtb-itinerary-sticky-wrap {
+        margin-top: 16px;
+    }
+
+    .ajtb-itinerary-sticky-title {
+        padding: 12px 16px 8px !important;
+        padding-left: max(16px, env(safe-area-inset-left)) !important;
+        padding-right: max(16px, env(safe-area-inset-right)) !important;
+        font-size: 1.25rem !important;
     }
 
     .ajtb-global-summary-bar {
@@ -2262,22 +3299,17 @@
         margin-bottom: 12px;
         border-radius: var(--ajtb-radius, 12px);
         min-height: 42px;
-        /* S'assurer que la barre ne remonte pas sous globalBar */
-        position: sticky;
-        /* Largeur 100% de la colonne de contenu */
+        position: relative;
         width: 100%;
         max-width: 100%;
     }
 
     .ajtb-tour-page {
-        --sticky-stack-h: calc(var(--header-h, 56px) + var(--aj-global-bar-height, 50px) + var(--aj-day-details-bar-height, 48px));
+        --sticky-stack-h: calc(
+            var(--header-h, 56px) + var(--aj-global-bar-height, 50px) +
+                var(--aj-day-details-bar-height, 48px)
+        );
         --stickyTop: var(--sticky-stack-h);
-    }
-
-    .ajtb-programme-days {
-        top: calc(var(--header-h, 56px) + var(--aj-global-bar-height, 50px));
-        margin-top: 0;
-        padding-top: 0;
     }
 
     .ajtb-top-itinerary-bar {
@@ -2312,7 +3344,10 @@
     }
 
     .ajtb-tour-page {
-        --sticky-stack-h: calc(var(--header-h, 56px) + var(--aj-global-bar-height, 50px) + var(--aj-day-details-bar-height, 48px));
+        --sticky-stack-h: calc(
+            var(--header-h, 56px) + var(--aj-global-bar-height, 50px) +
+                var(--aj-day-details-bar-height, 48px)
+        );
     }
 
     .ajtb-programme-mmt.programme-container {
@@ -2321,6 +3356,68 @@
         /* Padding-top minimal : juste assez pour éviter le chevauchement */
         padding-top: 12px;
         margin-top: 0;
+    }
+
+    .sticky-itinerary-container__header {
+        padding: 12px 16px 10px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+
+    .sticky-itinerary-container__header .ajtb-itinerary-sticky-title {
+        font-size: 1.2rem !important;
+    }
+
+    .sticky-itinerary-container__tabs .ajtb-global-summary-bar {
+        padding: 0 16px 12px !important;
+        padding-left: max(16px, env(safe-area-inset-left)) !important;
+        padding-right: max(16px, env(safe-area-inset-right)) !important;
+    }
+
+    .sticky-itinerary-container__body {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 16px 16px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+
+    .sticky-itinerary-container__body {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .sticky-itinerary-container__body {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .sticky-itinerary-container__spacer {
+        display: none;
+    }
+
+    .itinerary-scroll-content__nav.ajtb-programme-days {
+        width: 100%;
+        max-width: none;
+        position: static;
+        top: auto;
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .itinerary-scroll-content {
+        flex-direction: column;
+        gap: 12px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+
+    .ajtb-tour-page
+        #itinerary.ajtb-section
+        .itinerary-scroll-content
+        .ajtb-day-content-panel,
+    .ajtb-tour-page #itinerary.ajtb-section .aj-day-anchor {
+        scroll-margin-top: 180px;
     }
 
     .ajtb-programme-center,
@@ -2527,7 +3624,7 @@
 }
 
 .aj-day-nav-item.is-active {
-    background: #EAF4FF;
+    background: #eaf4ff;
     border-color: #0d6efd;
     font-weight: 600;
     color: #0d6efd;
@@ -2594,6 +3691,12 @@
 }
 
 .aj-flight-card--removed {
+    display: none !important;
+}
+
+/* Carte vol masquée par le filtre "Starting from" — empêche tout autre script de la réafficher */
+.ajtb-flight-card-hidden.aj-flight-card,
+.aj-flight-card.ajtb-flight-card-hidden {
     display: none !important;
 }
 
@@ -2731,13 +3834,13 @@
 }
 
 .aj-flight-card--v2 .aj-flight-timeline__center::before {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     right: 0;
     top: 50%;
     height: 2px;
-    background: #e2e8f0;
+    background: var(--ajtb-border);
     margin-top: -1px;
     z-index: 0;
 }
@@ -2795,7 +3898,7 @@
     font-weight: 500;
     color: var(--ajtb-text, #1e293b);
     background: #f1f5f9;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--ajtb-border);
 }
 
 .aj-flight-card--v2 .aj-flight-actions {
@@ -2816,17 +3919,20 @@
     border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    transition:
+        background 0.2s,
+        color 0.2s,
+        border-color 0.2s;
 }
 
 .aj-btn--secondary {
-    background: #f1f5f9;
-    color: var(--ajtb-text, #1e293b);
-    border-color: #e2e8f0;
+    background: var(--ajtb-bg-light);
+    color: var(--ajtb-text);
+    border-color: var(--ajtb-border);
 }
 
 .aj-btn--secondary:hover {
-    background: #e2e8f0;
+    background: var(--ajtb-border-light);
 }
 
 .aj-btn--primary {
@@ -2862,7 +3968,7 @@
 .aj-flight-card--v2 .aj-flight-card__badge-wrap {
     padding: 12px 0 0;
     margin-top: 4px;
-    border-top: 1px dashed #e2e8f0;
+    border-top: 1px dashed var(--ajtb-border);
 }
 
 .aj-flight-card__badge--tentative {
@@ -2921,7 +4027,7 @@
         order: -1;
         text-align: left;
         padding-bottom: 8px;
-        border-bottom: 1px dashed #e2e8f0;
+        border-bottom: 1px dashed var(--ajtb-border);
     }
 
     .aj-flight-card--v2 .aj-flight-timeline__col--dest {
@@ -3040,11 +4146,11 @@
 }
 
 .ajtb-collapse-section .ajtb-collapse-icon::before {
-    content: '+';
+    content: "+";
 }
 
 .ajtb-collapse-section[open] .ajtb-collapse-icon::before {
-    content: '−';
+    content: "−";
 }
 
 .ajtb-collapse-body {
@@ -3088,6 +4194,237 @@
     flex-direction: column;
 }
 
+/* Hotel listing: images left, info right (same row) - override column */
+.ajtb-card-with-image.ajtb-card--hotel.ajtb-hotel-listing {
+    flex-direction: row;
+}
+
+.ajtb-hotel-listing {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    overflow: hidden;
+    border-radius: var(--ajtb-radius-lg);
+    border: 1px solid var(--ajtb-border);
+    background: var(--ajtb-bg);
+    box-shadow: var(--ajtb-shadow);
+}
+
+.ajtb-hotel-listing__media {
+    display: flex;
+    flex-direction: column;
+    width: 280px;
+    min-width: 280px;
+    flex-shrink: 0;
+    gap: 8px;
+    padding: 12px 0 12px 12px;
+}
+
+.ajtb-hotel-main-image {
+    width: 100%;
+    height: 200px;
+    border-radius: var(--ajtb-radius);
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.ajtb-hotel-thumbs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.ajtb-hotel-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--ajtb-bg-gray);
+    flex-shrink: 0;
+}
+
+.ajtb-hotel-thumb--viewall {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ajtb-text-muted);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+    padding: 4px;
+}
+
+.ajtb-hotel-listing__body {
+    flex: 1;
+    min-width: 0;
+    padding: 16px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ajtb-hotel-listing-card__rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ajtb-hotel-rating-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    padding: 4px 10px;
+    background: var(--ajtb-primary);
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: 8px;
+}
+
+.ajtb-hotel-rating-text {
+    font-size: 13px;
+    color: var(--ajtb-text);
+}
+
+.ajtb-hotel-listing-card__name {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--ajtb-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ajtb-hotel-listing-card .ajtb-hotel-stars {
+    color: #f59e0b;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.ajtb-hotel-listing-card__location {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ajtb-text);
+}
+
+.ajtb-hotel-listing-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    font-size: 13px;
+    color: var(--ajtb-text);
+}
+
+.ajtb-hotel-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ajtb-hotel-meta-icon {
+    flex-shrink: 0;
+    color: var(--ajtb-text-muted);
+}
+
+.ajtb-hotel-listing-card__room {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ajtb-hotel-listing-card__room strong {
+    font-size: 14px;
+    color: var(--ajtb-text);
+}
+
+.ajtb-hotel-more-rooms {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ajtb-primary);
+    text-decoration: none;
+}
+
+.ajtb-hotel-more-rooms:hover {
+    text-decoration: underline;
+}
+
+.ajtb-hotel-listing-card__room-detail {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ajtb-text-muted);
+}
+
+.ajtb-hotel-listing-card__meal {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ajtb-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ajtb-hotel-meal-icon {
+    flex-shrink: 0;
+    color: var(--ajtb-text-muted);
+}
+
+.ajtb-hotel-listing-card__amenities {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    font-size: 13px;
+    color: var(--ajtb-text);
+}
+
+.ajtb-hotel-listing-card__amenities li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ajtb-hotel-check {
+    flex-shrink: 0;
+    color: var(--ajtb-success);
+}
+
+@media (max-width: 767px) {
+    .ajtb-card-with-image.ajtb-card--hotel.ajtb-hotel-listing {
+        flex-direction: column;
+    }
+
+    .ajtb-hotel-listing__media {
+        width: 100%;
+        min-width: 0;
+        padding: 12px 12px 0;
+    }
+
+    .ajtb-hotel-main-image {
+        height: 180px;
+    }
+
+    .ajtb-hotel-thumb {
+        width: 56px;
+        height: 56px;
+    }
+
+    .ajtb-hotel-listing__body {
+        padding: 14px 16px 18px;
+    }
+}
+
 .ajtb-card-with-image.ajtb-card--hotel .ajtb-card-image {
     height: 220px;
 }
@@ -3107,10 +4444,14 @@
 }
 
 .ajtb-card-image:not(.has-image)::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.12),
+        rgba(255, 255, 255, 0)
+    );
 }
 
 .ajtb-card-image:not(.has-image)::before {
@@ -3124,11 +4465,13 @@
     color: rgba(0, 0, 0, 0.35);
 }
 
-.ajtb-card-with-image.ajtb-card--hotel .ajtb-card-image:not(.has-image)::before {
+.ajtb-card-with-image.ajtb-card--hotel
+    .ajtb-card-image:not(.has-image)::before {
     content: "\1F3E8";
 }
 
-.ajtb-card-with-image.ajtb-card--transfer .ajtb-card-image:not(.has-image)::before {
+.ajtb-card-with-image.ajtb-card--transfer
+    .ajtb-card-image:not(.has-image)::before {
     content: "\1F697";
 }
 
@@ -3143,7 +4486,7 @@
 }
 
 .ajtb-card-inner {
-    padding: 18px 20px;
+    padding: 12px 14px;
     flex: 1;
     min-width: 0;
 }
@@ -3405,7 +4748,6 @@
 
 /* <992px : stack (jours en haut, contenu en dessous), annuler la grille */
 @media (max-width: 991px) {
-
     .ajtb-day-plan,
     .ajtb-day-plan.programme-container {
         display: flex;
@@ -3529,7 +4871,7 @@
 
 /* Vol Aller (Jour 1) / Vol Retour (dernier jour) dans le contenu du jour */
 .ajtb-day-flight-block {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .ajtb-day-flight-block:last-of-type {
@@ -3602,12 +4944,12 @@
 }
 
 .day-body {
-    padding: 0 20px 20px;
-    /* Pas de scroll : tout le contenu du jour s'affiche */
+    padding: 0 0 12px 0;
+    /* Contenu bien cadré, pas d'espace vide */
 }
 
 .day-body .day-image {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     border-radius: var(--ajtb-radius);
     overflow: hidden;
 }
@@ -3623,12 +4965,12 @@
     font-size: 14px;
     line-height: 1.7;
     color: var(--ajtb-text-light);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 /* Description en premier dans chaque jour */
 .aj-day-programme-block--first {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 /* Compact: limit height of long notes (Traveler-style accordion) */
@@ -3666,7 +5008,7 @@
     margin-top: 6px;
     padding: 4px 0;
     font-size: 13px;
-    color: var(--ajtb-primary);
+    color: var(--ajtb-text);
     background: none;
     border: none;
     cursor: pointer;
@@ -3674,7 +5016,7 @@
 }
 
 .aj-day-notes-read-more:hover {
-    color: var(--ajtb-primary-dark);
+    color: var(--ajtb-text);
 }
 
 .aj-day-notes-wrap.aj-day-notes-expanded .aj-day-notes-read-more {
@@ -3778,15 +5120,15 @@
 .day-activities-list {
     list-style: none;
     padding: 0;
-    margin: 12px 0 0;
+    margin: 8px 0 0;
     border-top: 1px solid var(--ajtb-border);
-    padding-top: 12px;
+    padding-top: 8px;
 }
 
 .day-activity-item {
     margin-bottom: 12px;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(0, 0, 0, .06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .day-activity-item:last-child {
@@ -3885,7 +5227,9 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.1s ease;
+    transition:
+        background 0.2s ease,
+        transform 0.1s ease;
 }
 
 .day-add-activity .ajtb-btn-open-activity-modal:hover {
@@ -3898,7 +5242,434 @@
 }
 
 /* ===================================
-   Activity Modal
+   Activity Modal (reconstruit: ajtb-actmod)
+   =================================== */
+.ajtb-actmod {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
+}
+.ajtb-actmod.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+.ajtb-actmod-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+}
+.ajtb-actmod-box {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    max-width: 880px;
+    width: 92%;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.ajtb-actmod-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e9ef;
+}
+.ajtb-actmod-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: #1a1d21;
+}
+.ajtb-actmod-close {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    background: #f0f2f5;
+    border-radius: 8px;
+    font-size: 22px;
+    line-height: 1;
+    color: #5c6370;
+    cursor: pointer;
+}
+.ajtb-actmod-close:hover {
+    background: #e5e9ef;
+    color: #1a1d21;
+}
+.ajtb-actmod-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+.ajtb-actmod-search-wrap {
+    margin-bottom: 16px;
+}
+.ajtb-actmod-search {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e5e9ef;
+    border-radius: 8px;
+    font-size: 14px;
+}
+.ajtb-actmod-search:focus {
+    outline: none;
+    border-color: var(--ajtb-primary, #2563eb);
+}
+.ajtb-actmod-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px;
+    color: #6b7280;
+    font-size: 14px;
+}
+.ajtb-actmod-loading[hidden] {
+    display: none !important;
+}
+.ajtb-actmod-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #e5e9ef;
+    border-top-color: var(--ajtb-primary, #2563eb);
+    border-radius: 50%;
+    animation: ajtb-spin 0.7s linear infinite;
+}
+@keyframes ajtb-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+.ajtb-actmod-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.ajtb-actmod-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+}
+.ajtb-actmod-empty[hidden] {
+    display: none !important;
+}
+.ajtb-actmod-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+.ajtb-actmod-pagination[hidden] {
+    display: none !important;
+}
+.ajtb-actmod-pagination button {
+    padding: 6px 12px;
+    font-size: 13px;
+    border: 1px solid #e5e9ef;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+}
+.ajtb-actmod-pagination button:hover {
+    background: #f0f2f5;
+    border-color: var(--ajtb-primary, #2563eb);
+}
+.ajtb-actmod-row {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e5e9ef;
+    border-radius: 10px;
+    padding: 12px;
+}
+.ajtb-actmod-row-media {
+    width: 96px;
+}
+.ajtb-actmod-row-img,
+.ajtb-actmod-row-placeholder {
+    width: 96px;
+    height: 72px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f0f2f5;
+}
+.ajtb-actmod-row-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+.ajtb-actmod-row-content {
+    min-width: 0;
+}
+.ajtb-actmod-row-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: #1a1d21;
+    line-height: 1.3;
+}
+.ajtb-actmod-row-meta {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+.ajtb-actmod-row-desc {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.4;
+    line-clamp: 2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.ajtb-actmod-row-actions {
+    display: flex;
+    align-items: center;
+}
+.ajtb-actmod-btn-add {
+    flex-shrink: 0;
+    min-width: 90px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ajtb-primary, #2563eb);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+#ajtb-activity-modal .ajtb-actmod-btn-add {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+.ajtb-actmod-btn-add:hover:not(:disabled) {
+    background: var(--ajtb-primary-dark, #1d4ed8);
+}
+.ajtb-actmod-btn-add:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+@media (max-width: 700px) {
+    .ajtb-actmod-row {
+        grid-template-columns: 1fr;
+    }
+    .ajtb-actmod-row-media {
+        width: 100%;
+    }
+    .ajtb-actmod-row-img,
+    .ajtb-actmod-row-placeholder {
+        width: 100%;
+        height: 160px;
+    }
+    .ajtb-actmod-row-actions {
+        justify-content: flex-start;
+    }
+}
+
+/* ===================================
+   Summary Table
+   =================================== */
+.ajtb-summary-table {
+    border: 1px solid #d9dfe8;
+    background: #fff;
+}
+
+.ajtb-summary-day {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    border-bottom: 1px solid #d9dfe8;
+}
+
+.ajtb-summary-day:last-child {
+    border-bottom: 0;
+}
+
+.ajtb-summary-day__meta {
+    padding: 18px 16px;
+    background: #f5f6f8;
+    border-right: 1px solid #d9dfe8;
+}
+
+.ajtb-summary-day__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #24344d;
+    line-height: 1.2;
+}
+
+.ajtb-summary-day__date {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #677489;
+    line-height: 1.3;
+}
+
+.ajtb-summary-day__content {
+    min-width: 0;
+}
+
+.ajtb-summary-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-bottom: 1px solid #e5e9ef;
+}
+
+.ajtb-summary-row:last-child {
+    border-bottom: 0;
+}
+
+.ajtb-summary-cell {
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-right: 1px solid #e5e9ef;
+}
+
+.ajtb-summary-cell:last-child {
+    border-right: 0;
+}
+
+.ajtb-summary-cell.is-empty {
+    background: #fafbfc;
+}
+
+.ajtb-summary-cell__icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    border-radius: 6px;
+    background: #dbeafe;
+    position: relative;
+}
+
+.ajtb-summary-cell__icon::before {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1e40af;
+    content: "I";
+}
+
+.ajtb-summary-cell__icon--transfer {
+    background: #e0f2fe;
+}
+
+.ajtb-summary-cell__icon--transfer::before {
+    content: "T";
+    color: #0369a1;
+}
+
+.ajtb-summary-cell__icon--hotel {
+    background: #ede9fe;
+}
+
+.ajtb-summary-cell__icon--hotel::before {
+    content: "H";
+    color: #6d28d9;
+}
+
+.ajtb-summary-cell__icon--activity {
+    background: #dcfce7;
+}
+
+.ajtb-summary-cell__icon--activity::before {
+    content: "A";
+    color: #15803d;
+}
+
+.ajtb-summary-cell__icon--meal {
+    background: #fef3c7;
+}
+
+.ajtb-summary-cell__icon--meal::before {
+    content: "M";
+    color: #b45309;
+}
+
+.ajtb-summary-cell__icon--flight {
+    background: #fee2e2;
+}
+
+.ajtb-summary-cell__icon--flight::before {
+    content: "F";
+    color: #b91c1c;
+}
+
+.ajtb-summary-cell__icon--empty {
+    background: #e5e7eb;
+}
+
+.ajtb-summary-cell__icon--empty::before {
+    content: "—";
+    color: #6b7280;
+}
+
+.ajtb-summary-cell__text {
+    min-width: 0;
+    font-size: 15px;
+    line-height: 1.3;
+    color: #1f2937;
+    word-break: break-word;
+}
+
+@media (max-width: 900px) {
+    .ajtb-summary-day {
+        grid-template-columns: 1fr;
+    }
+
+    .ajtb-summary-day__meta {
+        border-right: 0;
+        border-bottom: 1px solid #d9dfe8;
+    }
+}
+
+@media (max-width: 640px) {
+    .ajtb-summary-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ajtb-summary-cell {
+        border-right: 0;
+        border-bottom: 1px solid #e5e9ef;
+    }
+
+    .ajtb-summary-row .ajtb-summary-cell:last-child {
+        border-bottom: 0;
+    }
+}
+
+/* ===================================
+   Activity Modal (legacy classes kept for other modals)
    =================================== */
 .ajtb-modal {
     position: fixed;
@@ -3913,7 +5684,9 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
 }
 
 .ajtb-modal.is-open {
@@ -4042,7 +5815,9 @@
     border: 1px solid var(--ajtb-border);
     border-radius: 12px;
     overflow: hidden;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    transition:
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
     display: flex;
     flex-direction: column;
 }
@@ -4097,6 +5872,12 @@
     margin: 0 0 12px 0;
     line-height: 1.5;
     flex: 1;
+    min-height: 0;
+    max-height: 3.6em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
 }
 
 .ajtb-activity-card-meta {
@@ -4123,6 +5904,7 @@
     margin-top: auto;
     padding-top: 12px;
     border-top: 1px solid var(--ajtb-border-light);
+    flex-shrink: 0;
 }
 
 .ajtb-activity-price {
@@ -4137,6 +5919,11 @@
 }
 
 .ajtb-btn-add-from-modal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 80px;
     padding: 8px 16px;
     font-size: 13px;
     font-weight: 600;
@@ -4156,6 +5943,13 @@
 .ajtb-btn-add-from-modal:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+/* Forcer la visibilité du bouton Ajouter dans le modal (priorité sur thème/autres CSS) */
+#ajtb-activity-modal .ajtb-activity-card-footer .ajtb-btn-add-from-modal {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* Loading skeleton */
@@ -4260,7 +6054,9 @@
     border: 1px solid var(--ajtb-border);
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .ajtb-pagination-btn:hover {
@@ -4344,7 +6140,9 @@
     border: 1px solid var(--ajtb-border);
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .ajtb-btn-secondary:hover {
@@ -4379,12 +6177,14 @@
     align-items: stretch;
     gap: 0;
     padding: 0;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     border: 1px solid var(--ajtb-border, #e8e8e8);
     border-radius: 14px;
     background: var(--ajtb-bg, #fff);
     overflow: hidden;
-    transition: box-shadow 0.25s ease, border-color 0.2s ease;
+    transition:
+        box-shadow 0.25s ease,
+        border-color 0.2s ease;
 }
 
 .day-activity-item.day-activity-card-pro:hover {
@@ -4443,7 +6243,7 @@
 .day-activity-item.day-activity-card-pro .day-activity-details {
     flex: 1;
     min-width: 0;
-    padding: 18px 20px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -4490,7 +6290,7 @@
     display: flex;
     gap: 10px;
     flex-shrink: 0;
-    padding: 16px 20px;
+    padding: 12px 14px;
     align-items: center;
     border-left: 1px solid var(--ajtb-border, #e8e8e8);
     background: rgba(0, 0, 0, 0.02);
@@ -4505,7 +6305,10 @@
     border: 1px solid var(--ajtb-border, #e8e8e8);
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
 }
 
 .ajtb-btn-edit-activity:hover {
@@ -4524,7 +6327,9 @@
     border: 1px solid rgba(185, 28, 28, 0.35);
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .day-activity-item .ajtb-btn-remove-activity:hover:not(:disabled) {
@@ -4547,142 +6352,71 @@
     border: 1px dashed var(--ajtb-border, #e8e8e8);
 }
 
-/* Empty state card: "Add Activities to your day" */
+/* Add activity: minimal – bouton seul, style discret */
 .day-activity-item.day-activity-empty-card {
-    display: flex;
-    align-items: center;
+    list-style: none;
+    margin: 0 0 6px 0;
     padding: 0;
-    margin: 0 0 16px 0;
-    border: 1px solid var(--ajtb-border, #e8e8e8);
-    border-radius: var(--ajtb-radius, 12px);
-    background: var(--ajtb-bg-light, #f8fafc);
-    overflow: hidden;
-    transition: box-shadow 0.25s ease, border-color 0.2s ease;
-    /* Alignement avec les autres cartes */
-    width: 100%;
-    box-sizing: border-box;
 }
 
-.day-activity-item.day-activity-empty-card:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    border-color: rgba(0, 0, 0, 0.08);
-}
-
-.day-activity-empty-card-content {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 24px 28px;
-    gap: 20px;
-}
-
-.day-activity-empty-icon {
-    flex-shrink: 0;
-    width: 56px;
-    height: 56px;
-    display: flex;
+.day-activity-item.day-activity-empty-card .ajtb-btn-add-to-day {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(37, 99, 235, 0.1);
-    border-radius: 12px;
-    color: var(--ajtb-primary, #2563eb);
-}
-
-.day-activity-empty-icon svg {
-    width: 32px;
-    height: 32px;
-}
-
-.day-activity-empty-text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
     gap: 6px;
-}
-
-.day-activity-empty-title {
-    font-size: 16px;
+    padding: 6px 14px;
+    font-size: 12px;
     font-weight: 600;
-    color: var(--ajtb-text, #1a1a1a);
-    margin: 0;
-    line-height: 1.4;
-    letter-spacing: -0.01em;
-}
-
-.day-activity-empty-subtitle {
-    font-size: 14px;
-    color: var(--ajtb-text-muted, #64748b);
-    margin: 0;
-    line-height: 1.5;
-}
-
-.day-activity-empty-action {
-    flex-shrink: 0;
-}
-
-.ajtb-btn-add-to-day {
-    padding: 10px 20px;
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: var(--ajtb-primary, #2563eb);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
+    color: var(--ajtb-primary);
+    background: transparent;
+    border: 1px dashed var(--ajtb-border);
+    border-radius: 999px;
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
     white-space: nowrap;
 }
 
-.ajtb-btn-add-to-day:hover:not(:disabled) {
-    background: var(--ajtb-primary-dark, #1d4ed8);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+.day-activity-item.day-activity-empty-card
+    .ajtb-btn-add-to-day:hover:not(:disabled) {
+    border-color: var(--ajtb-primary);
+    background: var(--ajtb-primary-light);
 }
 
-.ajtb-btn-add-to-day:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+.day-activity-item.day-activity-empty-card
+    .ajtb-btn-add-to-day:active:not(:disabled) {
+    background: var(--ajtb-primary-light);
 }
 
-.ajtb-btn-add-to-day:disabled {
-    opacity: 0.6;
+.day-activity-item.day-activity-empty-card .ajtb-btn-add-to-day:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
-/* Responsive: empiler sur mobile */
-@media (max-width: 767px) {
-    .day-activity-empty-card-content {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 20px;
-        gap: 16px;
-    }
+.ajtb-btn-add-to-day-icon {
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 700;
+}
 
-    .day-activity-empty-icon {
-        width: 48px;
-        height: 48px;
-    }
+/* Fallback si le bouton est utilisé ailleurs (sans la card) */
+.ajtb-btn-add-to-day {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
 
-    .day-activity-empty-icon svg {
-        width: 28px;
-        height: 28px;
-    }
-
-    .day-activity-empty-text {
-        width: 100%;
-    }
-
-    .day-activity-empty-action {
-        width: 100%;
-    }
-
-    .ajtb-btn-add-to-day {
-        width: 100%;
-        text-align: center;
-    }
+.ajtb-btn-add-to-day:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* Responsive modal */
@@ -5009,65 +6743,80 @@
     align-self: start;
 }
 
+/* Carte de paiement – compacte (petite, style capture) */
 .ajtb-booking-box {
-    background: var(--ajtb-bg);
-    border-radius: var(--ajtb-radius-lg);
-    box-shadow: var(--ajtb-shadow-lg);
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     overflow: hidden;
+    border: 1px solid var(--ajtb-border);
+    max-width: 320px;
 }
 
 .booking-price-header {
-    padding: 24px;
-    text-align: center;
-    background: linear-gradient(135deg, var(--ajtb-primary) 0%, var(--ajtb-primary-dark) 100%);
-    color: #fff;
+    padding: 14px 16px 10px;
+    text-align: left;
+    background: #fff;
+    color: var(--ajtb-text, #1a1a1a);
 }
 
 .booking-price-header .season-badge {
     display: inline-block;
-    padding: 4px 12px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-bottom: 12px;
+    padding: 2px 8px;
+    background: var(--ajtb-bg-light);
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--ajtb-text-muted);
 }
 
 .booking-price-header .price-display {
-    margin-bottom: 8px;
+    margin-bottom: 2px;
+}
+
+.booking-price-header .price-row-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
 }
 
 .booking-price-header .price-original {
-    display: block;
-    font-size: 16px;
+    font-size: 12px;
     text-decoration: line-through;
-    opacity: 0.7;
-    margin-bottom: 4px;
-}
-
-.booking-price-header .price-current {
-    font-size: 36px;
-    font-weight: 700;
-}
-
-.booking-price-header .price-current small {
-    font-size: 18px;
-}
-
-.booking-price-header .price-unit {
-    display: block;
-    font-size: 14px;
-    opacity: 0.8;
+    color: #a0a0a0;
 }
 
 .booking-price-header .discount-badge {
-    display: inline-block;
-    margin-top: 12px;
-    padding: 6px 16px;
-    background: var(--ajtb-danger);
-    border-radius: 50px;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
+    color: #dc2626;
+}
+
+.booking-price-header .price-row-main {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.booking-price-header .price-current {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ajtb-text, #1a1a1a);
+}
+
+.booking-price-header .price-unit {
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+}
+
+.booking-price-exclusion {
+    margin: 0 0 12px 0;
+    font-size: 11px;
+    color: #666;
 }
 
 /* Price Breakdown - REMOVED (no longer used) */
@@ -5099,34 +6848,36 @@
 }
 */
 
-/* Quick Info */
+/* Quick Info – compact */
 .booking-quick-info {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 16px 24px;
+    gap: 8px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--ajtb-border);
 }
 
 .booking-quick-info .info-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
+    gap: 4px;
+    font-size: 11px;
     color: var(--ajtb-text-light);
 }
 
 .booking-quick-info .info-item svg {
+    width: 14px;
+    height: 14px;
     color: var(--ajtb-success);
 }
 
-/* Booking Form */
+/* Booking Form – compact */
 .booking-form {
-    padding: 24px;
+    padding: 14px 16px 16px;
 }
 
 .booking-form .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .booking-form label {
@@ -5231,14 +6982,14 @@
    Booking Cart & Activities
    =================================== */
 .booking-cart {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .cart-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 0;
+    padding: 8px 0;
     border-bottom: 1px solid var(--ajtb-border-light);
 }
 
@@ -5247,19 +6998,19 @@
 }
 
 .cart-item-base {
-    padding: 14px 0;
-    margin-bottom: 8px;
-    border-bottom: 2px solid var(--ajtb-border);
+    padding: 8px 0;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--ajtb-border);
 }
 
 .cart-label {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--ajtb-text);
 }
 
 .cart-value {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--ajtb-text);
 }
@@ -5315,26 +7066,26 @@
     white-space: nowrap;
 }
 
-/* Booking Total */
+/* Booking Total – compact */
 .booking-total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 16px;
-    background: linear-gradient(135deg, var(--ajtb-primary-light) 0%, #f0f8ff 100%);
-    border: 2px solid var(--ajtb-primary);
-    border-radius: var(--ajtb-radius-lg);
-    margin-bottom: 18px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid var(--ajtb-border);
+    border-radius: 8px;
+    margin-bottom: 12px;
 }
 
 .booking-total .total-label {
-    font-size: 15px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--ajtb-text);
 }
 
 .booking-total .total-value {
-    font-size: 24px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--ajtb-primary);
 }
@@ -5362,6 +7113,37 @@
     background: #d65221;
     transform: translateY(-2px);
     box-shadow: var(--ajtb-shadow);
+}
+
+/* CTA carte paiement – compact, dégradé bleu */
+.ajtb-booking-box .btn-proceed-payment {
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    background: linear-gradient(
+        135deg,
+        var(--ajtb-primary-hover) 0%,
+        var(--ajtb-primary) 50%,
+        var(--ajtb-primary-dark) 100%
+    );
+    border-radius: var(--ajtb-radius);
+    margin-top: 0;
+}
+
+.ajtb-booking-box .btn-proceed-payment:hover {
+    background: linear-gradient(
+        135deg,
+        var(--ajtb-primary) 0%,
+        var(--ajtb-primary-dark) 100%
+    );
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
+}
+
+.ajtb-booking-box .btn-proceed-payment svg {
+    width: 14px;
+    height: 14px;
 }
 
 .btn-secondary {
@@ -5447,25 +7229,30 @@
 }
 */
 
-/* Booking Actions */
+/* Booking Actions – compact */
 .booking-actions {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    padding: 16px 24px;
-    background: var(--ajtb-bg-light);
+    gap: 12px;
+    padding: 10px 16px;
+    background: #f8fafc;
 }
 
 .booking-actions .action-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     background: none;
     border: none;
-    font-size: 13px;
+    font-size: 11px;
     color: var(--ajtb-text-light);
     cursor: pointer;
     transition: var(--ajtb-transition);
+}
+
+.booking-actions .action-btn svg {
+    width: 14px;
+    height: 14px;
 }
 
 .booking-actions .action-btn:hover {
@@ -5475,6 +7262,162 @@
 .booking-actions .action-btn.active svg {
     fill: var(--ajtb-danger);
     color: var(--ajtb-danger);
+}
+
+/* ===================================
+   Coupons & Offres (sous la carte de paiement)
+   =================================== */
+.ajtb-coupons-offers {
+    margin-top: 14px;
+    max-width: 320px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 14px 16px 12px;
+    border: 1px solid var(--ajtb-border);
+}
+
+.coupons-heading {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ajtb-text, #1a1a1a);
+}
+
+.coupons-enter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.coupons-enter-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ajtb-text, #333);
+}
+
+.coupons-enter-link {
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ajtb-primary, #0284c7);
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+}
+
+.coupons-enter-link:hover {
+    text-decoration: underline;
+}
+
+.coupons-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.coupon-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--ajtb-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.coupon-card--applied {
+    border-color: var(--ajtb-primary, #0284c7);
+    border-width: 2px;
+}
+
+.coupon-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    background: rgba(2, 132, 199, 0.12);
+    color: var(--ajtb-primary, #0284c7);
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+.coupon-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.coupon-code {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ajtb-text, #1a1a1a);
+}
+
+.coupon-desc {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.coupon-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.coupon-discount {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ajtb-text, #333);
+}
+
+.coupon-discount--applied {
+    color: #16a34a;
+}
+
+.coupon-action {
+    background: none;
+    border: none;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ajtb-primary, #0284c7);
+    cursor: pointer;
+    padding: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.coupon-action:hover {
+    text-decoration: underline;
+}
+
+.coupons-more-link {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 6px 0 0;
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ajtb-primary, #0284c7);
+    cursor: pointer;
+    text-align: center;
+}
+
+.coupons-more-link:hover {
+    text-decoration: underline;
 }
 
 /* Seasonal Pricing */
@@ -5546,7 +7489,6 @@
    Responsive
    =================================== */
 @media (max-width: 1199px) {
-
     .ajtb-tour-layout,
     .ajtb-tour-page .ajtb-tour-layout {
         grid-template-columns: 1fr;
@@ -5883,7 +7825,7 @@
 .ajtb-destination-chip-more {
     background: var(--ajtb-primary-light);
     color: var(--ajtb-primary);
-    border-color: rgba(0, 101, 209, 0.25);
+    border-color: var(--ajtb-border);
     font-weight: 600;
     cursor: pointer;
 }
@@ -5892,11 +7834,11 @@
     position: relative;
 }
 
-.ajtb-destination-more>summary {
+.ajtb-destination-more > summary {
     list-style: none;
 }
 
-.ajtb-destination-more>summary::-webkit-details-marker {
+.ajtb-destination-more > summary::-webkit-details-marker {
     display: none;
 }
 
@@ -5936,10 +7878,1170 @@
 }
 
 /* ===================================
+   Tour page compact spacing layer
+   Reduce whitespace without changing visual identity
+   =================================== */
+.ajtb-tour-page {
+    --ajtb-layout-gap: 20px;
+}
+
+.ajtb-tour-page .ajtb-tour-layout,
+.ajtb-tour-layout {
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar {
+    padding: 4px 0 !important;
+}
+
+.ajtb-top-search-bar__inner {
+    gap: 2px;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-searchbar {
+    gap: 0 !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-searchitem {
+    padding: 4px 12px !important;
+    min-height: 34px !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__btn {
+    padding: 6px 16px !important;
+    font-size: 12px !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-label {
+    margin-bottom: 0 !important;
+    font-size: 8px !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-value,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-select,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-date-value,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-guest-summary {
+    font-size: 12px !important;
+}
+
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-icon,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-search-date-chevron,
+.ajtb-tour-page .ajtb-top-search-bar__inner .aj-guest-chevron {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.ajtb-hero-content {
+    padding: 28px 0 34px;
+}
+
+.ajtb-breadcrumbs {
+    margin-bottom: 12px;
+}
+
+.ajtb-hero-title-wrap {
+    margin-bottom: 14px;
+}
+
+.ajtb-quick-info {
+    gap: 14px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+}
+
+.ajtb-tabs-nav .tab-link {
+    padding: 14px 18px 12px;
+}
+
+.ajtb-section {
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+.ajtb-section-title {
+    margin: 0 0 14px 0;
+    padding-bottom: 12px;
+}
+
+.ajtb-content-block p {
+    margin-bottom: 12px;
+}
+
+.ajtb-highlights {
+    margin-bottom: 18px;
+    padding: 16px;
+}
+
+.ajtb-quick-facts {
+    margin-top: 18px;
+    padding-top: 18px;
+}
+
+.ajtb-quick-facts .facts-title {
+    margin-bottom: 12px;
+}
+
+.ajtb-quick-facts .facts-grid {
+    gap: 12px;
+}
+
+.ajtb-quick-facts .fact-item {
+    gap: 10px;
+    padding: 10px;
+}
+
+.ajtb-tags {
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 16px;
+}
+
+.ajtb-tags .tag-item {
+    padding: 5px 11px;
+}
+
+.ajtb-gallery-grid {
+    gap: 8px;
+}
+
+.ajtb-include-exclude-grid {
+    gap: 18px;
+}
+
+.column-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+}
+
+.items-list .item {
+    gap: 8px;
+    padding: 8px 0;
+}
+
+.ajtb-note {
+    margin-top: 16px;
+    padding: 10px 14px;
+}
+
+.ajtb-faq-accordion {
+    gap: 10px;
+}
+
+.faq-question {
+    padding: 13px 16px;
+}
+
+.faq-answer .answer-content {
+    padding: 0 16px 16px;
+}
+
+.ajtb-faq-cta {
+    margin-top: 16px;
+    padding-top: 16px;
+}
+
+.ajtb-booking-box {
+    border-radius: 10px;
+}
+
+.booking-price-header {
+    padding: 12px 14px 8px;
+}
+
+.ajtb-booking-box .booking-form,
+.ajtb-booking-box .booking-quick-info,
+.ajtb-booking-box .booking-actions {
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+@media (max-width: 767px) {
+    .ajtb-tour-page .ajtb-tour-layout,
+    .ajtb-tour-layout {
+        gap: 16px;
+        padding: 16px 0;
+    }
+
+    .ajtb-hero-content {
+        padding: 22px 0 28px;
+    }
+
+    .ajtb-quick-info {
+        gap: 10px;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+    }
+
+    .ajtb-tabs-nav .tab-link {
+        padding: 12px 14px 10px;
+    }
+
+    .ajtb-section {
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    .ajtb-highlights,
+    .ajtb-note {
+        padding: 12px;
+    }
+
+    .ajtb-include-exclude-grid {
+        gap: 14px;
+    }
+}
+
+/* ===================================
+   Tour page rhythm polish
+   Same style, cleaner spacing/placement
+   =================================== */
+.ajtb-tour-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ajtb-tour-main > .ajtb-quick-info,
+.ajtb-tour-main > .ajtb-section {
+    margin-bottom: 0;
+}
+
+.ajtb-tour-sidebar {
+    top: 78px;
+}
+
+.ajtb-tabs-under-hero {
+    position: relative;
+    z-index: 5;
+}
+
+.ajtb-tabs-nav {
+    min-height: 52px;
+}
+
+.ajtb-tabs-nav .tab-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+}
+
+.ajtb-section > *:last-child,
+.ajtb-content-block > *:last-child,
+.answer-content > *:last-child {
+    margin-bottom: 0 !important;
+}
+
+.ajtb-highlights .highlights-list {
+    gap: 8px;
+}
+
+.ajtb-quick-facts .fact-icon {
+    width: 40px;
+    height: 40px;
+}
+
+.ajtb-quick-facts .fact-value {
+    line-height: 1.35;
+}
+
+.ajtb-include-exclude-grid .include-column,
+.ajtb-include-exclude-grid .exclude-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.items-list .item-text {
+    line-height: 1.45;
+}
+
+.faq-question .question-text {
+    line-height: 1.4;
+}
+
+.ajtb-faq-cta p {
+    margin: 0 0 10px;
+}
+
+.ajtb-gallery-grid .gallery-item {
+    border-radius: 10px;
+}
+
+.ajtb-booking-box .booking-form .form-group:last-child,
+.ajtb-booking-box .booking-actions > *:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 991px) {
+    .ajtb-tour-main {
+        gap: 14px;
+    }
+
+    .ajtb-tour-sidebar {
+        top: 70px;
+    }
+}
+
+@media (max-width: 767px) {
+    .ajtb-tour-main {
+        gap: 12px;
+    }
+
+    .ajtb-tabs-nav {
+        min-height: 46px;
+    }
+
+    .ajtb-tabs-nav .tab-link {
+        min-height: 46px;
+    }
+}
+
+/* ===================================
+   Expandable long content
+   =================================== */
+.ajtb-expandable-content {
+    position: relative;
+    overflow: hidden;
+    transition: max-height 0.28s ease;
+}
+
+.ajtb-expandable-content.is-collapsed {
+    max-height: var(--ajtb-expandable-max-height, 260px);
+}
+
+.ajtb-expandable-content.is-collapsed::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 84px;
+    pointer-events: none;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.9) 55%,
+        rgba(255, 255, 255, 1) 100%
+    );
+}
+
+.ajtb-expandable-content.is-expanded {
+    max-height: var(--ajtb-expandable-full-height, 2000px);
+}
+
+.ajtb-expandable-content.is-expanded::after {
+    display: none;
+}
+
+.ajtb-expandable-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    padding: 8px 14px;
+    border: 1px solid var(--ajtb-border);
+    border-radius: 999px;
+    background: var(--ajtb-bg);
+    color: var(--ajtb-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.ajtb-expandable-toggle:hover {
+    background: var(--ajtb-primary-light);
+    border-color: var(--ajtb-primary);
+    box-shadow: var(--ajtb-shadow);
+}
+
+/* ===================================
+   Programme du Circuit - Day content refresh
+   Only restyles the day content panels/cards
+   =================================== */
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-day-panels {
+    gap: 18px;
+    padding: 18px 18px 22px;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-content-panel {
+    padding: 20px 0 0;
+    border: 1px solid var(--ajtb-border);
+    border-radius: var(--ajtb-radius-lg);
+    background: linear-gradient(
+        180deg,
+        var(--ajtb-bg) 0%,
+        var(--ajtb-bg-light) 100%
+    );
+    box-shadow: var(--ajtb-shadow-lg);
+    overflow: hidden;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-content-panel:not(:last-child) {
+    border-bottom: 1px solid var(--ajtb-border);
+    padding-bottom: 0;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-header-mmt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 22px 16px;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--ajtb-border-light);
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-day-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 14px !important;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff8a00 0%, #ff5e00 100%);
+    color: #fff !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px rgba(255, 94, 0, 0.22);
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .day-body {
+    padding: 18px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .aj-day-programme-block {
+    margin: 0;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .aj-day-notes-wrap {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .aj-day-programme-block
+    .aj-day-notes-wrap
+    .aj-day-notes-content {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--ajtb-text-muted);
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-day-banner {
+    overflow: hidden;
+    border-radius: var(--ajtb-radius-lg);
+    border: 1px solid var(--ajtb-border);
+    box-shadow: var(--ajtb-shadow-lg);
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-banner
+    img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-block-mmt {
+    margin: 0;
+    padding: 18px 20px;
+    border: 1px solid var(--ajtb-border);
+    border-radius: var(--ajtb-radius-lg);
+    background: var(--ajtb-bg);
+    box-shadow: var(--ajtb-shadow);
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-block-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--ajtb-border-light);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ajtb-text);
+    letter-spacing: 0.01em;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activities-list {
+    margin: 0;
+    padding: 0;
+    border-top: 0;
+}
+
+#itinerary.ajtb-section .day-activity-item.day-activity-card-pro {
+    margin-bottom: 14px;
+    border: 1px solid var(--ajtb-border);
+    border-radius: var(--ajtb-radius-lg);
+    background: linear-gradient(
+        180deg,
+        var(--ajtb-bg) 0%,
+        var(--ajtb-bg-light) 100%
+    );
+    box-shadow: var(--ajtb-shadow);
+}
+
+#itinerary.ajtb-section .day-activity-item.day-activity-card-pro:hover {
+    border-color: var(--ajtb-primary-light);
+    box-shadow: var(--ajtb-shadow-lg);
+    transform: translateY(-1px);
+}
+
+#itinerary.ajtb-section
+    .day-activity-item.day-activity-card-pro
+    .day-activity-image {
+    width: 176px;
+    min-height: 132px;
+    background: linear-gradient(
+        145deg,
+        var(--ajtb-primary-light) 0%,
+        var(--ajtb-bg-light) 100%
+    );
+}
+
+#itinerary.ajtb-section
+    .day-activity-item.day-activity-card-pro
+    .day-activity-details {
+    padding: 16px 18px;
+    gap: 6px;
+}
+
+#itinerary.ajtb-section
+    .day-activity-item.day-activity-card-pro
+    .activity-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ajtb-text);
+}
+
+#itinerary.ajtb-section
+    .day-activity-item.day-activity-card-pro
+    .activity-price {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--ajtb-primary-light);
+    color: var(--ajtb-primary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+#itinerary.ajtb-section
+    .day-activity-item.day-activity-card-pro
+    .activity-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--ajtb-bg-light);
+    color: var(--ajtb-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+#itinerary.ajtb-section
+    .day-activity-item.day-activity-card-pro
+    .activity-description {
+    margin-top: 0;
+    color: var(--ajtb-text-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+#itinerary.ajtb-section
+    .day-activity-item.day-activity-card-pro
+    .day-activity-actions {
+    padding: 16px;
+    border-left: 1px solid var(--ajtb-border-light);
+    background: var(--ajtb-bg-light);
+}
+
+@media (max-width: 767px) {
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-day-panels {
+        padding: 14px 14px 18px;
+        gap: 14px;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-day-header-mmt,
+    #itinerary.ajtb-section .ajtb-itinerary-block--day-content .day-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    #itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-block-mmt,
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .aj-day-notes-wrap {
+        padding: 14px 15px;
+        border-radius: 14px;
+    }
+
+    #itinerary.ajtb-section
+        .day-activity-item.day-activity-card-pro
+        .day-activity-item-content {
+        flex-direction: column;
+    }
+
+    #itinerary.ajtb-section
+        .day-activity-item.day-activity-card-pro
+        .day-activity-image {
+        width: 100%;
+        min-height: 180px;
+    }
+
+    #itinerary.ajtb-section
+        .day-activity-item.day-activity-card-pro
+        .day-activity-actions {
+        border-left: 0;
+        border-top: 1px solid var(--ajtb-border-light);
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+/* ===================================
+   Tour page - style revision
+   Unified look: sections, cards, borders, typography
+   =================================== */
+.ajtb-tour-page .ajtb-section {
+    border: 1px solid var(--ajtb-border-light);
+    box-shadow: var(--ajtb-shadow);
+}
+
+.ajtb-tour-page .ajtb-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--ajtb-text);
+    border-bottom-color: var(--ajtb-border-light);
+}
+
+.ajtb-sticky-tour-title-bar {
+    box-shadow: var(--ajtb-shadow);
+}
+
+.ajtb-tour-page .ajtb-quick-info {
+    background: var(--ajtb-bg-light);
+    border: 1px solid var(--ajtb-border-light);
+    border-radius: var(--ajtb-radius);
+}
+
+.ajtb-tour-page .ajtb-content-block {
+    color: var(--ajtb-text-light);
+}
+
+.ajtb-tour-page .ajtb-highlights {
+    border: 1px solid rgba(0, 166, 81, 0.2);
+    border-radius: var(--ajtb-radius);
+}
+
+.ajtb-tour-page .ajtb-booking-box {
+    border: 1px solid var(--ajtb-border);
+    box-shadow: var(--ajtb-shadow);
+}
+
+.ajtb-tour-page .btn-outline-secondary {
+    border-color: var(--ajtb-border);
+    color: var(--ajtb-text-light);
+}
+
+.ajtb-tour-page .btn-outline-secondary:hover {
+    border-color: var(--ajtb-text-muted);
+    color: var(--ajtb-text);
+}
+
+/* ===================================
+   Itinerary day sections - flat timeline layout
+   Keep one main day card, remove nested card look
+   =================================== */
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .day-body {
+    gap: 0;
+}
+
+/* ===================================
+   Itinerary days - continuous container
+   One global stream, days separated by dividers only
+   =================================== */
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-day-panels {
+    gap: 0;
+    padding: 0;
+    border: 1px solid var(--ajtb-border);
+    border-radius: 0;
+    background: var(--ajtb-bg);
+    box-shadow: var(--ajtb-shadow-lg);
+    overflow: hidden;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-content-panel {
+    padding: 16px 24px 18px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-content-panel:not(:last-child) {
+    border-bottom: 0;
+    padding-bottom: 18px;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-content-panel
+    + .ajtb-day-content-panel {
+    margin-top: 0;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-header-mmt {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: -16px -24px 0;
+    padding: 8px 24px 10px;
+    border-top: 2px solid #d7e0ea;
+    border-bottom: 2px solid #d7e0ea;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-header-mmt__date {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ajtb-text);
+    white-space: nowrap;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-header-mmt__inclus {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--ajtb-text);
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-header-mmt__inclus
+    .ajtb-inclus-label {
+    margin-right: 2px;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-day-header-mmt__inclus
+    .ajtb-inclus-item {
+    white-space: nowrap;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .day-body {
+    padding: 12px 0 0;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-block-mmt,
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content #aj-day-activities-0,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    [id^="aj-day-activities-"] {
+    margin: 0;
+    padding: 18px 0;
+    border: 0;
+    border-top: 1px solid #e0e7ef;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .aj-day-notes-wrap,
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-day-banner,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-card-with-image.ajtb-card--transfer,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-card-with-image.ajtb-card--hotel,
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .aj-flight-card--v2,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activity-item.day-activity-card-pro {
+    border-radius: 0;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-body
+    > .ajtb-block-mmt:first-child,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-body
+    > [id^="aj-day-activities-"]:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+/* If the programme wrapper exists first, do not add an extra separator
+   on the first real section right after the day header */
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-body
+    > .ajtb-tab-block[data-ajtb-tab="programme"]
+    + .ajtb-block-mmt,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-body
+    > .ajtb-tab-block[data-ajtb-tab="programme"]
+    + [id^="aj-day-activities-"] {
+    padding-top: 0;
+    border-top: 0;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-block-title {
+    margin: 0 0 12px;
+    padding: 0;
+    border: 0;
+    font-size: 15px;
+    line-height: 1.35;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-block-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-wrap,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-card-wrap
+    > *
+    + *,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activities-list
+    > *
+    + * {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #e0e7ef;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .aj-flight-card--v2,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-card-with-image.ajtb-card--transfer,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-card-with-image.ajtb-card--hotel,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activity-item.day-activity-card-pro {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-card-with-image.ajtb-card--transfer,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-card-with-image.ajtb-card--hotel.ajtb-hotel-listing {
+    align-items: flex-start;
+    gap: 16px;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-image,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-hotel-main-image {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-card-with-image.ajtb-card--transfer
+    .ajtb-card-image {
+    width: 180px;
+    min-height: 132px;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-hotel-listing {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-hotel-listing__media {
+    width: 220px;
+    min-width: 220px;
+    padding: 0;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-hotel-main-image {
+    height: 160px;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-hotel-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 0;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-hotel-listing__body,
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-inner {
+    padding: 0;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-transfer-card,
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-hotel-card {
+    gap: 8px;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-head {
+    gap: 10px;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-head-icon,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .ajtb-hotel-rating-badge {
+    box-shadow: none;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-divider {
+    display: none;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-date,
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-chip,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .aj-flight-card--v2
+    .aj-chip,
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-status {
+    background: var(--ajtb-bg-light);
+    border: 1px solid var(--ajtb-border-light);
+    box-shadow: none;
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-card-status {
+    color: var(--ajtb-text-muted);
+}
+
+#itinerary.ajtb-section .ajtb-itinerary-block--day-content .aj-flight-card--v2 {
+    padding: 0;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .aj-flight-card--v2
+    .aj-flight-header {
+    margin-bottom: 12px;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .aj-flight-card--v2
+    .aj-flight-timeline {
+    margin-bottom: 12px;
+    padding: 12px 0;
+    border-top-color: var(--ajtb-border-light);
+    border-bottom-color: var(--ajtb-border-light);
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activity-item.day-activity-card-pro
+    .day-activity-item-content {
+    gap: 14px;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activity-item.day-activity-card-pro
+    .day-activity-image {
+    width: 150px;
+    min-height: 110px;
+    border-radius: 12px;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activity-item.day-activity-card-pro
+    .day-activity-details,
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activity-item.day-activity-card-pro
+    .day-activity-actions {
+    padding: 0;
+}
+
+#itinerary.ajtb-section
+    .ajtb-itinerary-block--day-content
+    .day-activity-item.day-activity-card-pro
+    .day-activity-actions {
+    border: 0;
+    background: transparent;
+}
+
+@media (max-width: 767px) {
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-day-panels {
+        border-radius: 0;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-day-content-panel {
+        padding: 18px 16px 20px;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-day-content-panel:not(:last-child) {
+        padding-bottom: 20px;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-day-header-mmt {
+        margin: -18px -16px 0;
+        padding: 8px 16px 10px;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-day-header-mmt__inclus {
+        width: 100%;
+    }
+
+    #itinerary.ajtb-section .ajtb-itinerary-block--day-content .ajtb-block-mmt,
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        [id^="aj-day-activities-"] {
+        padding: 16px 0;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-card-with-image.ajtb-card--transfer,
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-card-with-image.ajtb-card--hotel.ajtb-hotel-listing,
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .day-activity-item.day-activity-card-pro
+        .day-activity-item-content {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-card-with-image.ajtb-card--transfer
+        .ajtb-card-image,
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-hotel-listing__media,
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .day-activity-item.day-activity-card-pro
+        .day-activity-image {
+        width: 100%;
+        min-width: 0;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-hotel-listing__media {
+        padding: 0;
+    }
+
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-hotel-main-image {
+        height: 180px;
+    }
+
+    /* Rendre l'en-tête de chaque jour sticky dans la colonne de droite (Jour X + INCLUDED) */
+    #itinerary.ajtb-section
+        .ajtb-itinerary-block--day-content
+        .ajtb-day-header-mmt {
+        position: sticky;
+        top: var(--ajtb-sticky-group-height, 60px);
+        z-index: 900;
+        background: #ffffff;
+    }
+}
+
+/* ===================================
    Print Styles
    =================================== */
 @media print {
-
     .ajtb-hero,
     .ajtb-tour-sidebar,
     .ajtb-tabs-nav,
