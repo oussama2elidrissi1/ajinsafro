@@ -51,6 +51,7 @@
     @include('layouts.vendor-scripts')
     @stack('script')
     @stack('scripts')
+    @stack('body-end')
 </body>
 </html>
 @else
@@ -90,6 +91,7 @@
     @include('layouts.right-sidebar')
     @include('layouts.vendor-scripts')
     @stack('scripts')
+    @stack('body-end')
 </body>
 
 </html>

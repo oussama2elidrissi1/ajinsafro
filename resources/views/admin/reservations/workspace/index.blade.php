@@ -94,12 +94,30 @@
         box-shadow: 0 2px 10px rgba(14, 58, 90, 0.08);
     }
 
-    /* —— Modal détail voyage (workspace) — overlay fort + structure pro — */
+    /* —— Modal détail voyage (workspace) — racine en fin de <body>, hors layout — */
+    #ws-modal-root {
+        position: static;
+    }
     #ws-voyage-detail-modal.ws-md-root {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: 100% !important;
+        max-height: none !important;
+        min-height: 100vh !important;
+        min-height: 100dvh !important;
+        margin: 0 !important;
+        padding: 1rem;
+        box-sizing: border-box;
+        z-index: 99999 !important;
+        isolation: isolate;
         display: none;
         align-items: center;
         justify-content: center;
-        padding: 1rem;
         pointer-events: none;
     }
     #ws-voyage-detail-modal.ws-md-root:not(.hidden) {
@@ -109,22 +127,22 @@
     .ws-md-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.62);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
         z-index: 0;
     }
     .ws-md-shell {
         position: relative;
         z-index: 1;
         width: 100%;
-        max-width: 960px;
-        max-height: min(92vh, 880px);
+        max-width: 900px;
+        max-height: 90vh;
         display: flex;
         flex-direction: column;
         background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
         overflow: hidden;
         transform: scale(0.96);
         opacity: 0;
@@ -741,9 +759,16 @@
             @include('admin.reservations.workspace.partials.form', ['clients' => $clients])
         </div>
     </div>
+</div>
 
-    {{-- Modal détail prestation — overlay + panneau (#ws-modal-detail-json) --}}
-    <div id="ws-voyage-detail-modal" class="ws-md-root fixed inset-0 z-[10050] hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title" aria-hidden="true">
+<script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+@endsection
+
+@push('body-end')
+{{-- Modal hors layout (évite overflow / stacking) — rendu juste avant </body> --}}
+<div id="ws-modal-root">
+    <div id="ws-voyage-detail-modal" class="ws-md-root hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title" aria-hidden="true">
         <div class="ws-md-overlay" data-ws-md-backdrop tabindex="-1" aria-hidden="true"></div>
         <div class="ws-md-shell">
             <header class="ws-md-header">
@@ -762,10 +787,7 @@
         </div>
     </div>
 </div>
-
-<script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-<script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-@endsection
+@endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -802,7 +824,7 @@ document.addEventListener('DOMContentLoaded', function () {
             wsModalEl.classList.remove('ws-md-leaving');
             wsModalEl.style.removeProperty('display');
             wsModalEl.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = '';
+            document.body.style.overflow = 'auto';
         }, 280);
     }
     function renderWsModalBody(d) {
@@ -910,9 +932,6 @@ document.addEventListener('DOMContentLoaded', function () {
         wsDetailMap = parseWsDetailMap();
         var d = wsDetailMap[code];
         if (!d || !wsModalEl) return;
-        if (wsModalEl.parentElement !== document.body) {
-            document.body.appendChild(wsModalEl);
-        }
         if (wsMdTitle) wsMdTitle.textContent = d.title || '—';
         if (wsMdSub) {
             var subHtml = '';
