@@ -12,6 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class ReservationService
@@ -75,11 +76,13 @@ class ReservationService
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
-            // Stock & allocation progressive uniquement si une date de départ est fournie.
-            if (! empty($reservation->travel_date_id)) {
+            // Stock & allocation progressive : uniquement si date + tables migrées + voyage lié à un tour WP.
+            if (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation)) {
                 $this->allocateAndSyncReservationRooms($reservation);
             } else {
-                // Fallback : pas de date => pas de gestion de stock par départ.
+                if (! empty($reservation->travel_date_id)) {
+                    $this->logProgressiveAllocationSkipped($reservation);
+                }
                 $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
             }
 
@@ -126,9 +129,12 @@ class ReservationService
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
-            if (! empty($reservation->travel_date_id)) {
+            if (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation)) {
                 $this->allocateAndSyncReservationRooms($reservation);
             } else {
+                if (! empty($reservation->travel_date_id)) {
+                    $this->logProgressiveAllocationSkipped($reservation);
+                }
                 $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
             }
 
@@ -378,11 +384,59 @@ class ReservationService
     }
 
     /**
+     * Tables sur la connexion Laravel par défaut (pas WP).
+     */
+    private function roomOccupancyTablesReady(): bool
+    {
+        try {
+            return Schema::hasTable('tour_room_type_occupancies')
+                && Schema::hasTable('reservation_room_allocations');
+        } catch (\Throwable $e) {
+            Log::debug('ReservationService: room occupancy schema check failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Allocation progressive + occupation concurrentielle : module avancé, non requis pour une réservation standard.
+     */
+    private function shouldAllocateProgressiveRooms(Reservation $reservation): bool
+    {
+        if (! $this->roomOccupancyTablesReady()) {
+            return false;
+        }
+
+        return $reservation->getWpTourId() !== null;
+    }
+
+    private function logProgressiveAllocationSkipped(Reservation $reservation): void
+    {
+        $reason = ! $this->roomOccupancyTablesReady()
+            ? 'occupancy_tables_not_migrated'
+            : 'laravel_only_voyage_no_wp_tour';
+
+        Log::info('ReservationService: réservation sans allocation progressive (chemin standard)', [
+            'reservation_id' => $reservation->id,
+            'travel_date_id' => $reservation->travel_date_id,
+            'reason' => $reason,
+        ]);
+    }
+
+    /**
      * Rollback : retire l'occupation (stock réel) créée par cette réservation.
      * Utilisé sur update/delete pour recalculer sans accumuler l'occupation.
      */
     private function rollbackReservationAllocations(int $reservationId): void
     {
+        if (! $this->roomOccupancyTablesReady()) {
+            ReservationRoom::query()->where('reservation_id', $reservationId)->delete();
+
+            return;
+        }
+
         $allocations = DB::table('reservation_room_allocations')
             ->where('reservation_id', $reservationId)
             ->select([
@@ -458,9 +512,12 @@ class ReservationService
 
         $wpTourId = $reservation->getWpTourId();
         if (! $wpTourId) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'hotel_rooms' => ['Voyage associé introuvable (wp_post_id manquant).'],
+            Log::warning('ReservationService@allocate: appelé sans wp_post_id, repli sur sync basique', [
+                'reservation_id' => $reservation->id,
             ]);
+            $this->syncReservationRooms($reservation, []);
+
+            return;
         }
 
         $passengersCount = (int) ($reservation->passengers_count ?? 0);
@@ -518,8 +575,17 @@ class ReservationService
                 ->whereIn('tour_hotel_room_id', $roomIds)
                 ->pluck('tour_hotel_room_id');
         } catch (\Throwable $e) {
+            Log::warning('ReservationService@allocate: échec requête occupation', [
+                'reservation_id' => $reservation->id,
+                'travel_date_id' => $travelDateId,
+                'error' => $e->getMessage(),
+            ]);
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'hotel_rooms' => ['Tables d’occupation manquantes. Exécute les requêtes SQL nécessaires (tour_room_type_occupancies, reservation_room_allocations).'],
+                'hotel_rooms' => [
+                    config('app.debug')
+                        ? $e->getMessage()
+                        : 'La gestion avancée des chambres par date est temporairement indisponible. Réessayez plus tard ou enregistrez la réservation sans cette option.',
+                ],
             ]);
         }
 

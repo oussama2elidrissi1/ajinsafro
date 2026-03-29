@@ -541,7 +541,7 @@ class ReservationsController extends Controller
                 ->where('travel_date_id', $travelDateId)
                 ->sum('seats_occupied_total');
         } catch (\Throwable $e) {
-            // Si la table d’occupation n’existe pas encore, on ne bloque pas ici (le service plantera si nécessaire).
+            // Table absente ou erreur DB : pas de contrôle de capacité fine ici ; le service crée la réservation en chemin standard.
             return;
         }
 
