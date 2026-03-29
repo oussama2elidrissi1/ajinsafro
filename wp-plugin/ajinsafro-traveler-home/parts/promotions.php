@@ -1,6 +1,6 @@
 <?php
 /**
- * Part: Destinations de ce mois — trois visuels (titre + images)
+ * Part: promotional visuals
  *
  * @package AjinsafroTravelerHome
  */
@@ -16,7 +16,7 @@ $promo_settings = isset( $settings['promotions'] ) && is_array( $settings['promo
 	? $settings['promotions']
 	: array();
 
-$section_title = ! empty( $promo_settings['title'] ) ? (string) $promo_settings['title'] : 'Destinations de ce mois';
+$section_title = ! empty( $promo_settings['title'] ) ? (string) $promo_settings['title'] : 'Explorez plus, voyagez mieux avec AjinSafro';
 
 $images = array();
 if ( ! empty( $promo_settings['images'] ) && is_array( $promo_settings['images'] ) ) {
@@ -28,7 +28,6 @@ if ( ! empty( $promo_settings['images'] ) && is_array( $promo_settings['images']
 	}
 }
 
-// Compatibilité : ancien format items[].image_url
 if ( empty( $images ) && ! empty( $promo_settings['items'] ) && is_array( $promo_settings['items'] ) ) {
 	foreach ( $promo_settings['items'] as $item ) {
 		if ( count( $images ) >= 3 ) {
@@ -47,7 +46,6 @@ if ( empty( $images ) && ! empty( $promo_settings['items'] ) && is_array( $promo
 if ( empty( $images ) ) {
 	return;
 }
-
 ?>
 <section class="aj-promos" id="aj-promos">
 	<div class="aj-container">

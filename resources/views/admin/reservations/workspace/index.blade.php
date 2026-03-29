@@ -66,7 +66,7 @@
         0% { box-shadow: 0 0 0 0 rgba(0, 131, 196, 0.45); }
         100% { box-shadow: 0 0 0 12px rgba(0, 131, 196, 0); }
     }
-    #ws-catalog-table thead th { position: sticky; top: 0; z-index: 1; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); }
+    .ws-catalog-table thead th { position: sticky; top: 0; z-index: 2; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); box-shadow: 0 1px 0 #e2e8f0; }
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -87,13 +87,7 @@
             overflow: hidden;
         }
     }
-    /* Workspace catalogue — package meta compact (ligne date · prix · places + badges chambres) */
-    #ws-catalog-table .ws-room-badge {
-        max-width: 100%;
-    }
-    #ws-catalog-table .ws-room-badge:hover {
-        box-shadow: 0 2px 10px rgba(14, 58, 90, 0.08);
-    }
+    .ws-catalog-table .ws-room-badge { max-width: 100%; }
 
     /* —— Modal détail voyage (workspace) — racine en fin de <body>, hors layout — */
     #ws-modal-root {
@@ -499,38 +493,42 @@
 @endpush
 
 @section('content')
-<div class="fade-in max-w-[1680px] mx-auto pb-10">
-    {{-- En-tête --}}
-    <div class="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-gradient-to-br from-white via-[#f8fcfe] to-[#e6f3fa]/50 shadow-custom mb-8 px-5 sm:px-8 py-6 sm:py-8">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-blue/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-        <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div class="min-w-0">
-                <p class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-brand-blue/80 mb-2">Catalogue réservable</p>
-                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-dark tracking-tight">Espace réservation</h1>
-                <p class="text-sm text-gray-600 mt-2 max-w-2xl leading-relaxed">
-                    Même catalogue que <strong>Circuits / voyages</strong> (tours WordPress <span class="font-mono text-xs bg-white/80 px-1 rounded">st_tours</span>), enrichi par la fiche Laravel quand <span class="font-mono text-xs bg-white/80 px-1 rounded">voyages.wp_post_id</span> correspond. Vols et hébergements en lignes supplémentaires pour les voyages liés.
-                </p>
-                <div class="flex flex-wrap gap-2 sm:gap-3 mt-5">
-                    <span class="inline-flex items-center gap-2 rounded-xl bg-white/90 border border-brand-blue/15 px-3 py-2 text-xs font-semibold text-brand-dark shadow-sm">
-                        <i class="fas fa-suitcase-rolling text-brand-blue"></i>
-                        {{ $catalogPackageCount ?? $catalogRows->where('type', 'package')->count() }} voyage(s)
-                    </span>
-                    <span class="inline-flex items-center gap-2 rounded-xl bg-white/90 border border-gray-200/80 px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm">
-                        <i class="fas fa-layer-group text-brand-orange"></i>
-                        {{ $catalogTotalCount ?? $catalogRows->count() }} ligne(s) prestation
-                    </span>
+@php
+    $wsKpiPackages = $catalogRows->where('type', 'package')->count();
+    $wsKpiTotal = $catalogRows->count();
+    $wsKpiUpcoming = $catalogRows->filter(function ($r) {
+        return ! empty($r['departure_date']) && empty($r['departure_is_past']);
+    })->count();
+@endphp
+<div class="fade-in ws-page max-w-[1680px] mx-auto pb-10">
+    <header class="ws-hero">
+        <div class="ws-hero__main">
+            <h1 class="ws-hero__title">Espace réservation</h1>
+            <p class="ws-hero__sub">Catalogue des prestations — réserver et suivre les dossiers.</p>
+            <div class="ws-kpi-row">
+                <div class="ws-kpi">
+                    <span class="ws-kpi__val">{{ $wsKpiPackages }}</span>
+                    <span class="ws-kpi__lbl">Voyages</span>
+                </div>
+                <div class="ws-kpi">
+                    <span class="ws-kpi__val">{{ $wsKpiTotal }}</span>
+                    <span class="ws-kpi__lbl">Prestations</span>
+                </div>
+                <div class="ws-kpi ws-kpi--accent">
+                    <span class="ws-kpi__val">{{ $wsKpiUpcoming }}</span>
+                    <span class="ws-kpi__lbl">Départs à venir</span>
                 </div>
             </div>
-            <div class="flex flex-col sm:flex-row gap-3 shrink-0">
-                <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm hover:border-brand-blue/40 hover:text-brand-blue transition-all">
-                    <i class="fas fa-route"></i> Circuits / voyages
-                </a>
-                <a href="{{ route('admin.reservations.toutes') }}" class="inline-flex items-center justify-center gap-2 text-sm font-bold text-white bg-brand-dark hover:bg-brand-blue rounded-xl px-5 py-3 shadow-ws-bar transition-colors">
-                    <i class="fas fa-list-ul"></i> Toutes les réservations
-                </a>
-            </div>
         </div>
-    </div>
+        <div class="ws-hero__actions">
+            <a href="{{ route('admin.circuits.voyages.index') }}" class="ws-hero__btn ws-hero__btn--outline">
+                <i class="fas fa-route" aria-hidden="true"></i> Circuits / voyages
+            </a>
+            <a href="{{ route('admin.reservations.toutes') }}" class="ws-hero__btn ws-hero__btn--primary">
+                <i class="fas fa-list-ul" aria-hidden="true"></i> Toutes les réservations
+            </a>
+        </div>
+    </header>
 
     @if(session('success'))
         <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm">{{ session('success') }}</div>
@@ -538,64 +536,103 @@
 
     <div id="reservations-main-content" class="space-y-6">
         {{-- Filtres --}}
-        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-custom border border-gray-100/90 space-y-3">
-            <div class="flex flex-col xl:flex-row xl:flex-wrap xl:items-center gap-4">
-                <div class="flex-1 min-w-[220px] relative">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" id="ws-filter-search" placeholder="Rechercher par nom, code, sous-titre…" autocomplete="off"
-                        class="w-full pl-11 pr-4 py-3 bg-gray-50/90 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue focus:bg-white text-brand-dark font-medium placeholder-gray-400 transition-all">
-                </div>
-                <div class="flex flex-col sm:flex-row gap-3 flex-1 min-w-0">
-                    <select id="ws-filter-type" class="sm:min-w-[160px] bg-gray-50/90 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue text-brand-dark font-semibold cursor-pointer">
-                        <option value="all">Tous les types</option>
-                        <option value="package">Packages</option>
-                        <option value="vol">Vols</option>
-                        <option value="hebergement">Hébergements</option>
-                    </select>
-                    <div class="relative flex items-center flex-1 min-w-[200px] bg-gray-50/90 border border-gray-100 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-brand-blue/25 focus-within:border-brand-blue focus-within:bg-white transition-all">
-                        <i class="far fa-calendar-alt text-brand-blue mr-3 shrink-0"></i>
-                        <input type="text" id="ws-date-range-picker" readonly placeholder="Plage de dates de départ…" class="bg-transparent border-none outline-none text-brand-dark font-medium text-sm w-full cursor-pointer placeholder-gray-400">
+        <div class="ws-toolbar">
+            <div class="ws-toolbar__row ws-toolbar__row--search">
+                <div class="ws-field ws-field--grow">
+                    <label class="ws-field__label" for="ws-filter-search">Recherche</label>
+                    <div class="ws-field__input-wrap">
+                        <i class="fas fa-search ws-field__icon" aria-hidden="true"></i>
+                        <input type="text" id="ws-filter-search" placeholder="Nom, code, destination…" autocomplete="off" class="ws-input">
                     </div>
-                    <button type="button" id="ws-filters-reset" class="shrink-0 px-4 py-3 rounded-xl text-sm font-bold text-brand-blue border border-brand-blue/30 bg-white hover:bg-brand-light/80 transition-colors" title="Effacer recherche, type et dates">
-                        Réinitialiser
-                    </button>
                 </div>
-                <div class="flex items-center justify-between sm:justify-end gap-3 xl:ml-auto">
-                    <span class="text-xs text-gray-500 font-medium whitespace-nowrap"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogRows->count() }} affichée(s)</span>
-                    <div class="inline-flex bg-gray-100/90 rounded-xl p-1 border border-gray-100">
-                        <button type="button" id="btn-view-calendar" class="px-3 sm:px-4 py-2 rounded-lg text-gray-500 hover:text-brand-blue font-bold text-xs flex items-center gap-2 transition-all">
-                            <i class="far fa-calendar-alt"></i><span class="hidden sm:inline">Calendrier</span>
-                        </button>
-                        <button type="button" id="btn-view-list" class="px-3 sm:px-4 py-2 rounded-lg bg-white shadow-md text-brand-blue font-bold text-xs flex items-center gap-2 border border-gray-100/80">
-                            <i class="fas fa-list"></i><span class="hidden sm:inline">Liste</span>
-                        </button>
+                <div class="ws-toolbar__views">
+                    <span class="ws-toolbar__count"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogRows->count() }}</span>
+                    <div class="ws-seg">
+                        <button type="button" id="btn-view-list" class="ws-seg__btn is-active"><i class="fas fa-list" aria-hidden="true"></i><span>Liste</span></button>
+                        <button type="button" id="btn-view-calendar" class="ws-seg__btn"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Cal.</span></button>
                     </div>
                 </div>
             </div>
-            <p class="text-[11px] text-gray-500">La plage de dates filtre sur les lignes qui ont une <strong>date de départ</strong> ; les voyages sans date (—) restent affichés. Utilisez <strong>Réinitialiser</strong> si le tableau semble incomplet.</p>
+            <div class="ws-toolbar__row ws-toolbar__row--filters">
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-type">Type</label>
+                    <select id="ws-filter-type" class="ws-select">
+                        <option value="all">Tous</option>
+                        <option value="package">Package</option>
+                        <option value="vol">Vol</option>
+                        <option value="hebergement">Hébergement</option>
+                    </select>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-date-status">Départ</label>
+                    <select id="ws-filter-date-status" class="ws-select">
+                        <option value="all">Tous</option>
+                        <option value="upcoming">À venir</option>
+                        <option value="past">Passé</option>
+                        <option value="none">Sans date</option>
+                    </select>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-avail">Places</label>
+                    <select id="ws-filter-avail" class="ws-select">
+                        <option value="all">Tous</option>
+                        <option value="places">Avec places</option>
+                        <option value="full">Complet</option>
+                        <option value="unknown">Non renseigné</option>
+                    </select>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-res">Réservations</label>
+                    <select id="ws-filter-res" class="ws-select">
+                        <option value="all">Tous</option>
+                        <option value="none">Aucune</option>
+                        <option value="any">Au moins une</option>
+                        <option value="confirmed">Confirmées</option>
+                        <option value="pending">En attente</option>
+                    </select>
+                </div>
+                <div class="ws-field ws-field--grow">
+                    <label class="ws-field__label" for="ws-date-range-picker">Plage dates</label>
+                    <div class="ws-field__input-wrap">
+                        <i class="far fa-calendar-alt ws-field__icon" aria-hidden="true"></i>
+                        <input type="text" id="ws-date-range-picker" readonly placeholder="Optionnel" class="ws-input">
+                    </div>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-sort">Tri</label>
+                    <select id="ws-sort" class="ws-select">
+                        <option value="default">Défaut (réf.)</option>
+                        <option value="dep-asc">Date départ ↑</option>
+                        <option value="dep-desc">Date départ ↓</option>
+                        <option value="price-asc">Prix ↑</option>
+                        <option value="price-desc">Prix ↓</option>
+                        <option value="places-desc">Places ↓</option>
+                        <option value="places-asc">Places ↑</option>
+                    </select>
+                </div>
+                <div class="ws-field ws-field--actions">
+                    <button type="button" id="ws-filters-reset" class="ws-btn-reset">Réinitialiser</button>
+                </div>
+            </div>
         </div>
 
         {{-- Tableau --}}
-        <div id="reservations-list-view" class="bg-white rounded-2xl shadow-custom border border-gray-100/90 overflow-hidden">
-            <div class="px-5 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-gradient-to-r from-gray-50/80 to-white">
-                <h2 class="font-bold text-lg text-brand-dark flex items-center gap-2">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-light text-brand-blue"><i class="fas fa-th-list text-sm"></i></span>
-                    Prestations réservables
-                </h2>
-                <p class="text-xs text-gray-500">Statistiques = dossiers sur le <strong class="text-brand-dark">voyage</strong> (toutes dates confondues).</p>
+        <div id="reservations-list-view" class="ws-table-card">
+            <div class="ws-table-card__head">
+                <h2 class="ws-table-card__title">Prestations</h2>
             </div>
-            <div class="overflow-x-auto max-h-[min(72vh,920px)] overflow-y-auto -mx-px">
-                <table class="w-full text-left border-collapse min-w-[1040px]" id="ws-catalog-table">
+            <div class="ws-table-scroll">
+                <table class="ws-catalog-table" id="ws-catalog-table">
                     <thead>
-                        <tr class="text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                            <th class="py-3.5 px-4 sm:px-5 w-[120px]">Réf. &amp; type</th>
-                            <th class="py-3.5 px-4 sm:px-5 min-w-[200px]">Prestation</th>
-                            <th class="py-3.5 px-4 sm:px-5 w-[130px]">Départ</th>
-                            <th class="py-3.5 px-3 text-center w-[168px]">Statistiques</th>
-                            <th class="py-3.5 px-3 sm:px-4 text-right min-w-[320px]">Actions</th>
+                        <tr>
+                            <th class="ws-th ws-th--ref">Réf. &amp; type</th>
+                            <th class="ws-th ws-th--prestation">Prestation</th>
+                            <th class="ws-th ws-th--dep">Départ</th>
+                            <th class="ws-th ws-th--stats">Stats</th>
+                            <th class="ws-th ws-th--actions">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="text-sm">
+                    <tbody>
                         @forelse($catalogRows as $row)
                             @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row])
                         @empty
@@ -606,7 +643,7 @@
                                             <i class="fas fa-inbox"></i>
                                         </div>
                                         <p class="text-brand-dark font-bold text-lg mb-2">Aucun voyage dans le catalogue</p>
-                                        <p class="text-gray-500 text-sm mb-6">Créez ou synchronisez des fiches dans la table Laravel <strong>voyages</strong>, ou ouvrez les circuits WordPress pour les lier.</p>
+                                        <p class="text-gray-500 text-sm mb-6">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
                                         <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
                                             <i class="fas fa-plus-circle"></i> Gérer les voyages
                                         </a>
@@ -621,7 +658,7 @@
 
         {{-- Calendrier --}}
         <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 hidden">
-            <p class="text-sm text-gray-600 mb-4">Cliquez sur un événement pour ouvrir le formulaire <strong>Réserver</strong> de la ligne correspondante (retour automatique en vue liste).</p>
+            <p class="text-sm text-gray-600 mb-4">Clic sur un événement : ouverture du formulaire de réservation (retour liste automatique).</p>
             <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace"></div>
         </div>
     </div>
@@ -897,15 +934,6 @@ document.addEventListener('DOMContentLoaded', function () {
         closeWsDetailModal();
     });
 
-    if (typeof flatpickr !== 'undefined') {
-        flatpickr('#ws-date-range-picker', {
-            mode: 'range',
-            dateFormat: 'Y-m-d',
-            locale: 'fr',
-            onChange: function () { applyWsFilters(); }
-        });
-    }
-
     var calEl = document.getElementById('workspace-calendar');
     var calJson = document.getElementById('workspace-calendar-json');
     var calendar = null;
@@ -967,18 +995,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (btnList && btnCal && listView && calView) {
         btnList.addEventListener('click', function () {
-            btnList.classList.add('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
-            btnList.classList.remove('text-gray-500');
-            btnCal.classList.remove('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
-            btnCal.classList.add('text-gray-500');
+            btnList.classList.add('is-active');
+            btnCal.classList.remove('is-active');
             listView.classList.remove('hidden');
             calView.classList.add('hidden');
         });
         btnCal.addEventListener('click', function () {
-            btnCal.classList.add('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
-            btnCal.classList.remove('text-gray-500');
-            btnList.classList.remove('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
-            btnList.classList.add('text-gray-500');
+            btnCal.classList.add('is-active');
+            btnList.classList.remove('is-active');
             listView.classList.add('hidden');
             calView.classList.remove('hidden');
             if (calendar) setTimeout(function () { calendar.render(); }, 80);
@@ -987,22 +1011,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var searchEl = document.getElementById('ws-filter-search');
     var typeEl = document.getElementById('ws-filter-type');
+    var dateStatusEl = document.getElementById('ws-filter-date-status');
+    var availEl = document.getElementById('ws-filter-avail');
+    var resEl = document.getElementById('ws-filter-res');
+    var sortEl = document.getElementById('ws-sort');
     var rangeInput = document.getElementById('ws-date-range-picker');
     var resetBtn = document.getElementById('ws-filters-reset');
-    if (searchEl) searchEl.addEventListener('input', applyWsFilters);
-    if (typeEl) typeEl.addEventListener('change', applyWsFilters);
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function () {
-            if (searchEl) searchEl.value = '';
-            if (typeEl) typeEl.value = 'all';
-            if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();
-            applyWsFilters();
-        });
+
+    function wsRowCompare(a, b, sort) {
+        var ca = (a.getAttribute('data-code') || '');
+        var cb = (b.getAttribute('data-code') || '');
+        function n(tr, attr) {
+            var v = parseInt(tr.getAttribute(attr), 10);
+            return isNaN(v) ? 0 : v;
+        }
+        switch (sort) {
+            case 'dep-asc': return n(a, 'data-sort-dep') - n(b, 'data-sort-dep');
+            case 'dep-desc': return n(b, 'data-sort-dep') - n(a, 'data-sort-dep');
+            case 'price-asc': return n(a, 'data-sort-price') - n(b, 'data-sort-price');
+            case 'price-desc': return n(b, 'data-sort-price') - n(a, 'data-sort-price');
+            case 'places-asc': return n(a, 'data-sort-places') - n(b, 'data-sort-places');
+            case 'places-desc': return n(b, 'data-sort-places') - n(a, 'data-sort-places');
+            default: return ca.localeCompare(cb, 'fr');
+        }
+    }
+
+    function wsApplySort() {
+        var tbody = document.querySelector('#ws-catalog-table tbody');
+        if (!tbody || !sortEl) return;
+        var sort = sortEl.value || 'default';
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr.ws-catalog-row'));
+        rows.sort(function (a, b) { return wsRowCompare(a, b, sort); });
+        rows.forEach(function (tr) { tbody.appendChild(tr); });
     }
 
     window.applyWsFilters = function applyWsFilters() {
         var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
         var t = typeEl ? typeEl.value : 'all';
+        var ds = dateStatusEl ? dateStatusEl.value : 'all';
+        var av = availEl ? availEl.value : 'all';
+        var rs = resEl ? resEl.value : 'all';
         var rows = document.querySelectorAll('#ws-catalog-table tbody tr.ws-catalog-row');
         var visible = 0;
         var range = null;
@@ -1014,6 +1062,28 @@ document.addEventListener('DOMContentLoaded', function () {
         rows.forEach(function (tr) {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
+            if (ok && ds !== 'all') {
+                if (tr.getAttribute('data-date-status') !== ds) ok = false;
+            }
+            if (ok && av !== 'all') {
+                var w = tr.getAttribute('data-ws-avail') || 'na';
+                if (av === 'places') {
+                    if (w !== 'ok' && w !== 'low') ok = false;
+                } else if (av === 'full') {
+                    if (w !== 'full') ok = false;
+                } else if (av === 'unknown') {
+                    if (w !== 'unknown' && w !== 'na') ok = false;
+                }
+            }
+            if (ok && rs !== 'all') {
+                var st = parseInt(tr.getAttribute('data-stats-total'), 10) || 0;
+                var sv = parseInt(tr.getAttribute('data-stats-validee'), 10) || 0;
+                var sp = parseInt(tr.getAttribute('data-stats-pending'), 10) || 0;
+                if (rs === 'none' && st !== 0) ok = false;
+                if (rs === 'any' && st === 0) ok = false;
+                if (rs === 'confirmed' && sv < 1) ok = false;
+                if (rs === 'pending' && sp < 1) ok = false;
+            }
             if (ok && q) {
                 var blob = (tr.getAttribute('data-search') || '')
                     + ' ' + (tr.getAttribute('data-name') || '')
@@ -1034,7 +1104,40 @@ document.addEventListener('DOMContentLoaded', function () {
         if (c) c.textContent = String(visible);
     };
 
-    applyWsFilters();
+    function applyWsFiltersAndSort() {
+        wsApplySort();
+        applyWsFilters();
+    }
+
+    if (searchEl) searchEl.addEventListener('input', applyWsFilters);
+    if (typeEl) typeEl.addEventListener('change', applyWsFilters);
+    if (dateStatusEl) dateStatusEl.addEventListener('change', applyWsFilters);
+    if (availEl) availEl.addEventListener('change', applyWsFilters);
+    if (resEl) resEl.addEventListener('change', applyWsFilters);
+    if (sortEl) sortEl.addEventListener('change', applyWsFiltersAndSort);
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            if (searchEl) searchEl.value = '';
+            if (typeEl) typeEl.value = 'all';
+            if (dateStatusEl) dateStatusEl.value = 'all';
+            if (availEl) availEl.value = 'all';
+            if (resEl) resEl.value = 'all';
+            if (sortEl) sortEl.value = 'default';
+            if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();
+            applyWsFiltersAndSort();
+        });
+    }
+
+    if (typeof flatpickr !== 'undefined' && rangeInput) {
+        flatpickr(rangeInput, {
+            mode: 'range',
+            dateFormat: 'Y-m-d',
+            locale: 'fr',
+            onChange: function () { applyWsFilters(); }
+        });
+    }
+
+    applyWsFiltersAndSort();
 
 });
 </script>

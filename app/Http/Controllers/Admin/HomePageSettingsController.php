@@ -671,15 +671,15 @@ class HomePageSettingsController extends Controller
             ],
             'holiday_theme' => [
                 'enabled' => true,
-                'eyebrow' => 'Voyages par theme',
-                'title_line_1' => '',
-                'title_line_2' => '',
-                'title_line_3' => '',
-                'subtitle' => '',
+                'eyebrow' => 'Voyages par thème',
+                'title_line_1' => 'Explorez',
+                'title_line_2' => 'les voyages',
+                'title_line_3' => 'par thème',
+                'subtitle' => 'Des idées d’évasion pensées pour chaque envie.',
                 'left_image_url' => '',
                 'deco_image_url' => '',
-                'button_text' => '',
-                'button_url' => '',
+                'button_text' => 'VOIR PLUS',
+                'button_url' => '#',
                 'items' => [],
             ],
             'regions' => [],
@@ -691,21 +691,21 @@ class HomePageSettingsController extends Controller
             ],
             'good_spots_title' => 'Les bons coins sur votre destination',
             'promotions' => [
-                'title' => 'Destinations de ce mois',
+                'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
                 'images' => ['', '', ''],
             ],
             'whatsapp_banner' => [
                 'enabled' => false,
-                'title' => 'Rejoignez notre chaîne WhatsApp',
-                'subtitle' => 'Recevez nos offres, actus et inspirations voyage.',
-                'features' => ['Promos', 'Nouveautés', 'Conseils'],
+                'title' => 'Rejoignez notre chaîne WhatsApp pour suivre nos actualités voyage',
+                'subtitle' => 'Restez informé avec AjinSafro',
+                'features' => [],
                 'button_text' => 'Rejoindre',
                 'button_url' => '#',
                 'qr_code_url' => '',
             ],
             'cruises' => [
                 'enabled' => false,
-                'title' => 'CROISIÈRES',
+                'title' => 'Croisières',
                 'image_url' => '',
                 'button_text' => 'Découvrir',
                 'button_url' => '#',
@@ -803,7 +803,7 @@ class HomePageSettingsController extends Controller
     private function normalizePromotionsForRead(array $settings): array
     {
         $defaults = [
-            'title' => 'Destinations de ce mois',
+            'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
             'images' => ['', '', ''],
         ];
         $promo = $settings['promotions'] ?? [];
@@ -852,7 +852,7 @@ class HomePageSettingsController extends Controller
 
     private function buildPromotionsPayload(Request $request, array $validated, array $current): array
     {
-        $defaultTitle = 'Destinations de ce mois';
+        $defaultTitle = 'Explorez plus, voyagez mieux avec AjinSafro';
         $title = trim((string) ($validated['promotions']['title'] ?? ($current['promotions']['title'] ?? $defaultTitle)));
         $images = ['', '', ''];
         for ($i = 0; $i < 3; $i++) {
@@ -1024,8 +1024,8 @@ class HomePageSettingsController extends Controller
 
         return [
             'enabled' => (bool) $request->boolean('whatsapp_banner.enabled'),
-            'title' => trim((string) ($validated['whatsapp_banner']['title'] ?? 'Rejoignez notre chaîne WhatsApp')),
-            'subtitle' => trim((string) ($validated['whatsapp_banner']['subtitle'] ?? 'Recevez nos offres, actus et inspirations voyage.')),
+            'title' => trim((string) ($validated['whatsapp_banner']['title'] ?? 'Rejoignez notre chaîne WhatsApp pour suivre nos actualités voyage')),
+            'subtitle' => trim((string) ($validated['whatsapp_banner']['subtitle'] ?? 'Restez informé avec AjinSafro')),
             'features' => $features,
             'button_text' => trim((string) ($validated['whatsapp_banner']['button_text'] ?? 'Rejoindre')),
             'button_url' => trim((string) ($validated['whatsapp_banner']['button_url'] ?? '#')),
@@ -1083,15 +1083,15 @@ class HomePageSettingsController extends Controller
 
         return [
             'enabled' => (bool) $request->boolean('holiday_theme.enabled'),
-            'eyebrow' => trim((string) ($input['eyebrow'] ?? 'Voyages par theme')),
-            'title_line_1' => trim((string) ($input['title_line_1'] ?? '')),
-            'title_line_2' => trim((string) ($input['title_line_2'] ?? '')),
-            'title_line_3' => trim((string) ($input['title_line_3'] ?? '')),
-            'subtitle' => trim((string) ($input['subtitle'] ?? '')),
+            'eyebrow' => trim((string) ($input['eyebrow'] ?? 'Voyages par thème')),
+            'title_line_1' => trim((string) ($input['title_line_1'] ?? 'Explorez')),
+            'title_line_2' => trim((string) ($input['title_line_2'] ?? 'les voyages')),
+            'title_line_3' => trim((string) ($input['title_line_3'] ?? 'par thème')),
+            'subtitle' => trim((string) ($input['subtitle'] ?? 'Des idées d’évasion pensées pour chaque envie.')),
             'left_image_url' => $this->normalizeMediaUrl($leftImageUrl),
             'deco_image_url' => $this->normalizeMediaUrl($decoImageUrl),
-            'button_text' => trim((string) ($input['button_text'] ?? '')),
-            'button_url' => trim((string) ($input['button_url'] ?? '')),
+            'button_text' => trim((string) ($input['button_text'] ?? 'VOIR PLUS')),
+            'button_url' => trim((string) ($input['button_url'] ?? '#')),
             'items' => array_values($items),
         ];
     }
@@ -1131,7 +1131,7 @@ class HomePageSettingsController extends Controller
 
         return [
             'enabled' => (bool) $request->boolean('cruises.enabled'),
-            'title' => trim((string) ($validated['cruises']['title'] ?? 'CROISIÈRES')),
+            'title' => trim((string) ($validated['cruises']['title'] ?? 'Croisières')),
             'image_url' => $imageUrl,
             'button_text' => trim((string) ($validated['cruises']['button_text'] ?? 'Découvrir')),
             'button_url' => trim((string) ($validated['cruises']['button_url'] ?? '#')),
