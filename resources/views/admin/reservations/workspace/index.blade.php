@@ -545,7 +545,7 @@
             </button>
         </div>
 
-        <div id="ws-debug-modal" class="fixed inset-0 z-[100000] hidden" role="dialog" aria-modal="true" aria-labelledby="ws-debug-modal-title" aria-hidden="true">
+        <div id="ws-debug-modal" class="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-5" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="ws-debug-modal-title" aria-hidden="true">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]" data-ws-debug-close></div>
             <div class="relative z-10 flex h-full max-h-[100dvh] flex-col items-center justify-center overflow-hidden p-3 sm:p-5 pointer-events-none">
                 <div class="pointer-events-auto flex max-h-[min(92vh,940px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-amber-200/90 bg-amber-50/98 text-xs text-amber-950 shadow-2xl">
@@ -1169,22 +1169,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     applyWsFilters();
 
-    (function initWsDebugModal() {
+});
+</script>
+@endpush
+
+@push('body-end')
+@if(config('app.debug') && isset($catalogMeta))
+<script>
+(function () {
+    function setupWsDebugModal() {
         var root = document.getElementById('ws-debug-modal');
         var openBtn = document.getElementById('ws-debug-modal-open');
         if (!root || !openBtn) return;
         function closeModal() {
-            root.classList.add('hidden');
+            root.style.display = 'none';
             root.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = '';
         }
         function openModal() {
-            root.classList.remove('hidden');
+            root.style.display = 'flex';
             root.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
         }
         openBtn.addEventListener('click', function (e) {
             e.preventDefault();
+            e.stopPropagation();
             openModal();
         });
         root.querySelectorAll('[data-ws-debug-close]').forEach(function (el) {
@@ -1194,12 +1203,17 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && root && !root.classList.contains('hidden')) {
-                closeModal();
-            }
+            if (e.key !== 'Escape' || !root) return;
+            if (root.style.display === 'none' || root.getAttribute('aria-hidden') === 'true') return;
+            closeModal();
         });
-    })();
-
-});
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupWsDebugModal);
+    } else {
+        setupWsDebugModal();
+    }
+})();
 </script>
+@endif
 @endpush
