@@ -288,7 +288,7 @@ class ReservationWorkspaceCatalogService
                 'places_ignored' => $placesPayload['ignored'],
                 'ws_avail' => $wsAvail,
                 'ws_has_future' => $hasFutureTravelDate,
-                'modal_detail' => $this->buildPackageModalDetail(
+                'modal_detail' => ($packageModalDetail = $this->buildPackageModalDetail(
                     $wp,
                     $voyage,
                     $wpId,
@@ -303,6 +303,12 @@ class ReservationWorkspaceCatalogService
                     $priceLabel,
                     $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
                     $travelDateId,
+                )),
+                'form_prefill' => $this->buildPackageFormPrefill(
+                    '#'.$wpId,
+                    $packageModalDetail,
+                    $this->parseWpAdultPriceToFloat($adultPriceRaw),
+                    $this->parseWpAdultPriceToFloat($childRaw)
                 ),
             ]);
         }
@@ -341,6 +347,15 @@ class ReservationWorkspaceCatalogService
             $wpPid = $voyage->wp_post_id ? (int) $voyage->wp_post_id : null;
             $travelDateIdVol = $this->resolveTravelDateId($voyage, $flight->departure_date);
             $volStats = $statsByTour[$tourId] ?? $this->emptyStats();
+            $volModalDetail = $this->buildExtraModalDetail(
+                'vol',
+                $label,
+                $tourId,
+                $wpPid,
+                $volStats,
+                $flight->departure_date,
+                $travelDateIdVol,
+            );
             $rows->push([
                 'type' => 'vol',
                 'code' => 'VOL-'.$flight->id,
@@ -358,15 +373,8 @@ class ReservationWorkspaceCatalogService
                 'stats' => $volStats,
                 'ws_avail' => 'na',
                 'ws_has_future' => $flight->departure_date && ! $flight->departure_date->lt($today),
-                'modal_detail' => $this->buildExtraModalDetail(
-                    'vol',
-                    $label,
-                    $tourId,
-                    $wpPid,
-                    $volStats,
-                    $flight->departure_date,
-                    $travelDateIdVol,
-                ),
+                'modal_detail' => $volModalDetail,
+                'form_prefill' => $this->buildExtraFormPrefill('VOL-'.$flight->id, 'vol', $volModalDetail),
             ]);
         }
 
@@ -390,6 +398,15 @@ class ReservationWorkspaceCatalogService
                 $hotFuture = $startDate instanceof Carbon
                     ? ! $startDate->lt($today)
                     : ($startDate ? ! Carbon::parse($startDate)->lt($today) : false);
+                $hotModalDetail = $this->buildExtraModalDetail(
+                    'hebergement',
+                    $hotTitle,
+                    $tourId,
+                    $wpPidHotel,
+                    $hotStats,
+                    $startDate,
+                    $travelDateIdHot,
+                );
                 $rows->push([
                     'type' => 'hebergement',
                     'code' => 'HOT-'.$hotel->id,
@@ -407,15 +424,8 @@ class ReservationWorkspaceCatalogService
                     'stats' => $hotStats,
                     'ws_avail' => 'na',
                     'ws_has_future' => $hotFuture,
-                    'modal_detail' => $this->buildExtraModalDetail(
-                        'hebergement',
-                        $hotTitle,
-                        $tourId,
-                        $wpPidHotel,
-                        $hotStats,
-                        $startDate,
-                        $travelDateIdHot,
-                    ),
+                    'modal_detail' => $hotModalDetail,
+                    'form_prefill' => $this->buildExtraFormPrefill('HOT-'.$hotel->id, 'hebergement', $hotModalDetail),
                 ]);
             }
         }
@@ -717,6 +727,109 @@ class ReservationWorkspaceCatalogService
         }
 
         return 'ok';
+    }
+
+    /**
+     * Date par défaut pour le formulaire : prochain départ à venir, sinon le plus récent (passé).
+     *
+     * @param  list<array{id: int, date_iso: string, date_label: string, is_past: bool}>  $travelDates
+     */
+    private function pickDefaultTravelDateIdForForm(array $travelDates): ?int
+    {
+        if ($travelDates === []) {
+            return null;
+        }
+        foreach ($travelDates as $td) {
+            if (empty($td['is_past']) && ! empty($td['id'])) {
+                return (int) $td['id'];
+            }
+        }
+        $last = $travelDates[count($travelDates) - 1];
+
+        return ! empty($last['id']) ? (int) $last['id'] : null;
+    }
+
+    /**
+     * Données pour préremplissage du formulaire workspace (mêmes sources que le catalogue / modal).
+     *
+     * @param  array<string, mixed>  $modalDetail
+     * @return array<string, mixed>
+     */
+    private function buildPackageFormPrefill(string $rowCode, array $modalDetail, ?float $wpAdultAmount, ?float $wpChildAmount): array
+    {
+        $tds = $modalDetail['travel_dates'] ?? [];
+        $defaultTdId = $this->pickDefaultTravelDateIdForForm($tds);
+        $prices = $modalDetail['prices'] ?? [];
+
+        return [
+            'code' => $rowCode,
+            'kind' => 'package',
+            'title' => $modalDetail['title'] ?? '',
+            'wp_post_id' => $modalDetail['wp_post_id'] ?? null,
+            'laravel_voyage_id' => $modalDetail['laravel_voyage_id'] ?? null,
+            'post_status_label' => $modalDetail['post_status_label'] ?? null,
+            'destination' => $modalDetail['destination'] ?? null,
+            'duration' => $modalDetail['duration'] ?? null,
+            'travel_dates' => $tds,
+            'default_travel_date_id' => $defaultTdId,
+            'prices' => [
+                'adult_label' => $prices['adult_label'] ?? null,
+                'child_label' => $prices['child_label'] ?? null,
+                'currency' => $prices['currency'] ?? 'MAD',
+                'adult_amount' => $wpAdultAmount,
+                'child_amount' => $wpChildAmount,
+                'pricing_mode' => 'workspace_catalog',
+            ],
+            'places' => $modalDetail['places'] ?? [],
+            'rooms' => $modalDetail['rooms'] ?? [],
+            'stats' => $modalDetail['stats'] ?? [],
+            'form' => $modalDetail['form'] ?? [],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $modalDetail
+     * @return array<string, mixed>
+     */
+    private function buildExtraFormPrefill(string $rowCode, string $kind, array $modalDetail): array
+    {
+        $dep = $modalDetail['departure_date'] ?? null;
+        $tdId = $modalDetail['form']['travel_date_id'] ?? null;
+        $travelDates = [];
+        if ($dep) {
+            $d = Carbon::parse($dep);
+            $travelDates[] = [
+                'id' => $tdId,
+                'date_iso' => $d->format('Y-m-d'),
+                'date_label' => $d->locale('fr')->translatedFormat('d MMM yyyy'),
+                'is_past' => $d->lt(Carbon::today()),
+            ];
+        }
+
+        return [
+            'code' => $rowCode,
+            'kind' => $kind,
+            'title' => $modalDetail['title'] ?? '',
+            'wp_post_id' => $modalDetail['wp_post_id'] ?? null,
+            'laravel_voyage_id' => $modalDetail['laravel_voyage_id'] ?? null,
+            'post_status_label' => null,
+            'destination' => null,
+            'duration' => null,
+            'travel_dates' => $travelDates,
+            'default_travel_date_id' => $tdId ? (int) $tdId : null,
+            'prices' => [
+                'adult_label' => null,
+                'child_label' => null,
+                'currency' => 'MAD',
+                'adult_amount' => null,
+                'child_amount' => null,
+                'pricing_mode' => 'manual',
+            ],
+            'places' => ['state' => 'na', 'total' => null, 'reserved' => null, 'remaining' => null],
+            'rooms' => [],
+            'stats' => $modalDetail['stats'] ?? [],
+            'form' => $modalDetail['form'] ?? [],
+        ];
     }
 
     private function labelWpPostStatus(?string $s): string

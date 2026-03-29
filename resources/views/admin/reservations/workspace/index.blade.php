@@ -763,6 +763,7 @@
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 <script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/json" id="ws-form-prefill-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['form_prefill'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
 @push('body-end')
@@ -956,6 +957,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     closeWsDetailModal();
                     if (typeof window.wsOpenReservationForm === 'function') {
                         window.wsOpenReservationForm({
+                            code: code,
                             tourId: d.form.tour_id,
                             travelDateId: d.form.travel_date_id || '',
                             type: d.form.prestation_type || 'package',

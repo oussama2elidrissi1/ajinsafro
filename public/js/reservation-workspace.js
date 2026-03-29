@@ -24,6 +24,230 @@
 
     var amadeusPriceMultiplier = 1.0;
 
+    /** Tarifs alignés sur le catalogue workspace (null = repli sur grilles statiques) */
+    var workspaceLivePricing = null;
+
+    function parseWsFormPrefillMap() {
+        var el = document.getElementById('ws-form-prefill-json');
+        if (!el) return {};
+        try {
+            return JSON.parse(el.textContent || '{}');
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function parseAmountFromFrLabel(label) {
+        if (!label) return null;
+        var s = String(label).replace(/\u00a0/g, ' ').replace(/\s+/g, '').replace(',', '.');
+        var m = s.match(/(\d+(\.\d+)?)/);
+        return m ? parseFloat(m[1]) : null;
+    }
+
+    function getEffectiveBasePrices(typePrestation) {
+        if (workspaceLivePricing && workspaceLivePricing.adult != null && !isNaN(Number(workspaceLivePricing.adult))) {
+            var ad = Number(workspaceLivePricing.adult);
+            var ch = workspaceLivePricing.child;
+            if (ch == null || isNaN(Number(ch))) {
+                ch = parseAmountFromFrLabel(workspaceLivePricing.childLabel) || Math.round(ad * 0.75);
+            } else {
+                ch = Number(ch);
+            }
+            var bb = workspaceLivePricing.bebe != null ? Number(workspaceLivePricing.bebe) : 0;
+            if (isNaN(bb)) bb = 0;
+            return { adulte: ad, enfant: ch, bebe: bb };
+        }
+        var basePrices = {
+            package: { adulte: 15000, enfant: 10000, bebe: 2000 },
+            vol: { adulte: 4000, enfant: 3000, bebe: 500 },
+            hebergement: { adulte: 5000, enfant: 2500, bebe: 0 },
+        };
+        return basePrices[typePrestation] || basePrices.package;
+    }
+
+    function getExtrasListForType(typePrestation) {
+        return extrasData[typePrestation] || [];
+    }
+
+    function renderPrefillSections(pf) {
+        if (!pf) return '';
+        var cur = (pf.prices && pf.prices.currency) ? pf.prices.currency : 'MAD';
+        var h = '';
+
+        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
+        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">1. Informations prestation</p>';
+        h += '<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">';
+        h += '<div><dt class="text-slate-400 font-semibold">Référence</dt><dd class="font-bold text-slate-800 font-mono">' + escapeWsHtml(String(pf.code || '—')) + '</dd></div>';
+        h += '<div><dt class="text-slate-400 font-semibold">Type</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pf.kind || '')) + '</dd></div>';
+        if (pf.destination) h += '<div class="sm:col-span-2"><dt class="text-slate-400 font-semibold">Destination</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pf.destination)) + '</dd></div>';
+        if (pf.duration) h += '<div class="sm:col-span-2"><dt class="text-slate-400 font-semibold">Durée</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pf.duration)) + '</dd></div>';
+        var refs = [];
+        if (pf.wp_post_id) refs.push('WP #' + pf.wp_post_id);
+        if (pf.laravel_voyage_id) refs.push('Laravel #' + pf.laravel_voyage_id);
+        if (refs.length) h += '<div class="sm:col-span-2"><dt class="text-slate-400 font-semibold">Références</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(refs.join(' · ')) + '</dd></div>';
+        if (pf.post_status_label) h += '<div class="sm:col-span-2"><dt class="text-slate-400 font-semibold">Statut publication</dt><dd><span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">' + escapeWsHtml(String(pf.post_status_label)) + '</span></dd></div>';
+        h += '</dl></div>';
+
+        var tds = pf.travel_dates || [];
+        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
+        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">2. Départs disponibles</p>';
+        if (tds.length) {
+            h += '<p class="text-xs text-slate-600">' + tds.length + ' date(s) — sélection ci-dessous.</p>';
+        } else {
+            h += '<p class="text-xs text-amber-700 font-medium">Aucune date dans la disponibilité WordPress pour ce voyage.</p>';
+        }
+        h += '</div>';
+
+        var pr = pf.prices || {};
+        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
+        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">3. Tarification (catalogue)</p>';
+        h += '<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">';
+        h += '<div><dt class="text-slate-400 font-semibold">Adulte</dt><dd class="font-bold text-emerald-800">' + escapeWsHtml(String(pr.adult_label || (pr.adult_amount != null ? Math.round(pr.adult_amount) + ' ' + cur : '—'))) + '</dd></div>';
+        h += '<div><dt class="text-slate-400 font-semibold">Enfant</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pr.child_label || (pr.child_amount != null ? Math.round(pr.child_amount) + ' ' + cur : '—'))) + '</dd></div>';
+        h += '<div><dt class="text-slate-400 font-semibold">Devise</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(cur)) + '</dd></div>';
+        h += '<div><dt class="text-slate-400 font-semibold">Mode</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pr.pricing_mode || '—')) + '</dd></div>';
+        h += '</dl></div>';
+
+        var pl = pf.places || {};
+        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
+        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">4. Capacité</p>';
+        h += '<dl class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">';
+        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Total</dt><dd class="font-extrabold text-slate-800">' + (pl.total != null ? pl.total : '—') + '</dd></div>';
+        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Réservées</dt><dd class="font-extrabold text-slate-800">' + (pl.reserved != null ? pl.reserved : '—') + '</dd></div>';
+        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Dispo</dt><dd class="font-extrabold text-emerald-800">' + (pl.remaining != null ? pl.remaining : '—') + '</dd></div>';
+        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">État</dt><dd class="font-extrabold text-slate-800">' + escapeWsHtml(String(pl.state || '—')) + '</dd></div>';
+        h += '</dl></div>';
+
+        var rooms = pf.rooms || [];
+        if (rooms.length) {
+            h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
+            h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Chambres / détail</p>';
+            h += '<div class="flex flex-wrap gap-1.5">';
+            rooms.forEach(function (r) {
+                var rt = r.room_type || '';
+                var prd = r.product != null ? r.product : '';
+                h += '<span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700">' + escapeWsHtml(rt) + ' <span class="text-slate-400 mx-0.5">·</span> ' + escapeWsHtml(String(prd)) + '</span>';
+            });
+            h += '</div></div>';
+        }
+
+        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
+        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">5. Extras</p>';
+        h += '<p class="text-xs text-slate-600">Options proposées selon le type de prestation (ci-dessous, cochables par passager).</p>';
+        h += '</div>';
+
+        h += '<div class="rounded-xl bg-[#0e3a5a]/5 border border-[#0e3a5a]/10 p-4 space-y-1">';
+        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-[#0e3a5a]">6. Réservation</p>';
+        h += '<p class="text-xs text-slate-600">Renseignez le titulaire, les participants et validez le total en bas de formulaire.</p>';
+        h += '</div>';
+
+        return h;
+    }
+
+    function escapeWsHtml(s) {
+        if (s == null || s === '') return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function applyWorkspacePrefill(pf, type, nameDisplay) {
+        workspaceLivePricing = null;
+        var panel = document.getElementById('ws-prefill-panel');
+        var sec = document.getElementById('ws-prefill-sections');
+        var head = document.getElementById('ws-prefill-heading');
+        var sub = document.getElementById('ws-prefill-sub');
+        var badge = document.getElementById('ws-prefill-type-badge');
+        var depWrap = document.getElementById('ws-departure-wrap');
+        var depSel = document.getElementById('ws-departure-select');
+        var depHint = document.getElementById('ws-departure-hint');
+        var hidTravel = document.getElementById('ws-travel-date-id');
+
+        if (!panel || !sec) return;
+
+        if (!pf) {
+            panel.classList.add('hidden');
+            if (depWrap) depWrap.classList.add('hidden');
+            return;
+        }
+
+        panel.classList.remove('hidden');
+        if (head) head.textContent = pf.title || nameDisplay || '—';
+        if (sub) {
+            var bits = [];
+            if (pf.code) bits.push(String(pf.code));
+            if (pf.destination) bits.push(String(pf.destination));
+            sub.textContent = bits.join(' · ');
+            sub.classList.toggle('hidden', bits.length === 0);
+        }
+        if (badge) badge.textContent = (type || pf.kind || 'package').toUpperCase();
+        sec.innerHTML = renderPrefillSections(pf);
+
+        var pr = pf.prices || {};
+        var adultAmt = pr.adult_amount != null ? Number(pr.adult_amount) : parseAmountFromFrLabel(pr.adult_label);
+        var childAmt = pr.child_amount != null ? Number(pr.child_amount) : parseAmountFromFrLabel(pr.child_label);
+        if (isNaN(adultAmt)) adultAmt = null;
+        if (isNaN(childAmt)) childAmt = null;
+        workspaceLivePricing = {
+            adult: adultAmt,
+            child: childAmt,
+            bebe: 0,
+            currency: pr.currency || 'MAD',
+            childLabel: pr.child_label || '',
+        };
+
+        var roomSel = document.getElementById('ws-package-room-type');
+        if (roomSel) {
+            if (pf.rooms && pf.rooms.length) {
+                roomSel.innerHTML = '';
+                var seen = {};
+                pf.rooms.forEach(function (r) {
+                    var rt = (r.room_type || '').trim();
+                    if (!rt || seen[rt]) return;
+                    seen[rt] = true;
+                    var opt = document.createElement('option');
+                    opt.value = rt;
+                    opt.textContent = rt + (r.product != null ? ' (' + r.product + ' pl.)' : '');
+                    roomSel.appendChild(opt);
+                });
+                if (roomSel.options.length) roomSel.selectedIndex = 0;
+            } else if (type === 'package') {
+                roomSel.innerHTML = '<option value="">— Choisir —</option><option>Chambre Double</option><option>Chambre Twin</option><option>Chambre Triple</option>';
+            }
+        }
+
+        var tds = pf.travel_dates || [];
+        if (depWrap && depSel && hidTravel) {
+            depSel.innerHTML = '';
+            depSel.onchange = null;
+            if (tds.length) {
+                depWrap.classList.remove('hidden');
+                tds.forEach(function (td) {
+                    var opt = document.createElement('option');
+                    var idVal = td.id != null ? String(td.id) : '';
+                    opt.value = idVal;
+                    opt.textContent = (td.date_label || td.date_iso || '') + (td.is_past ? ' (passé)' : '');
+                    depSel.appendChild(opt);
+                });
+                var defId = pf.default_travel_date_id != null ? String(pf.default_travel_date_id) : (pf.form && pf.form.travel_date_id != null ? String(pf.form.travel_date_id) : '');
+                if (defId && Array.prototype.some.call(depSel.options, function (o) { return o.value === defId; })) {
+                    depSel.value = defId;
+                } else if (depSel.options.length) {
+                    depSel.selectedIndex = 0;
+                }
+                hidTravel.value = depSel.value || '';
+                depSel.onchange = function () {
+                    hidTravel.value = depSel.value || '';
+                };
+                if (depHint) depHint.textContent = 'Les dates proviennent de la disponibilité WordPress (identique au catalogue).';
+            } else {
+                depWrap.classList.add('hidden');
+                hidTravel.value = (pf.form && pf.form.travel_date_id != null) ? String(pf.form.travel_date_id) : '';
+                if (depHint) depHint.textContent = '';
+            }
+        }
+    }
+
     function getPassengersList() {
         var paxList = [];
         var titType = document.getElementById('titulaire-type');
@@ -49,12 +273,8 @@
         var badge = document.getElementById('badge-extras-type');
         if (!badge) return;
         var typePrestation = badge.innerText.toLowerCase().trim();
-        var basePrices = {
-            package: { adulte: 15000, enfant: 10000, bebe: 2000 },
-            vol: { adulte: 4000, enfant: 3000, bebe: 500 },
-            hebergement: { adulte: 5000, enfant: 2500, bebe: 0 },
-        };
-        var currentPrices = basePrices[typePrestation] || basePrices.package;
+        var currentPrices = getEffectiveBasePrices(typePrestation);
+        var cur = workspaceLivePricing && workspaceLivePricing.currency ? workspaceLivePricing.currency : 'MAD';
         var counts = { adulte: 0, enfant: 0, bebe: 0 };
         getPassengersList().forEach(function (p) {
             if (counts[p.type] !== undefined) counts[p.type]++;
@@ -71,7 +291,7 @@
             var paxId = cb.dataset.pax;
             var paxList = getPassengersList();
             var pax = paxList.find(function (p) { return p.id === paxId; });
-            var list = extrasData[typePrestation] || [];
+            var list = getExtrasListForType(typePrestation);
             var extraData = list.find(function (e) { return e.id === extId; });
             if (pax && extraData) {
                 extrasTotal += pax.type === 'enfant' ? extraData.priceChild : extraData.priceAdult;
@@ -97,11 +317,11 @@
         var elGrand = document.getElementById('summary-grand-total');
         var inputMontant = document.getElementById('input-montant-total');
         if (elPax) elPax.innerText = String(getPassengersList().length);
-        if (elBase) elBase.innerText = Math.round(baseTotal).toLocaleString('fr-FR') + ' MAD';
-        if (elEx) elEx.innerText = '+ ' + Math.round(totalOptions).toLocaleString('fr-FR') + ' MAD';
+        if (elBase) elBase.innerText = Math.round(baseTotal).toLocaleString('fr-FR') + ' ' + cur;
+        if (elEx) elEx.innerText = '+ ' + Math.round(totalOptions).toLocaleString('fr-FR') + ' ' + cur;
         if (elGrand) {
             elGrand.innerHTML = Math.round(grandTotal).toLocaleString('fr-FR') +
-                ' <span class="text-sm text-gray-500 font-medium">MAD</span>';
+                ' <span class="text-sm text-gray-500 font-medium">' + escapeWsHtml(cur) + '</span>';
         }
         if (inputMontant) inputMontant.value = String(Math.round(grandTotal));
     }
@@ -111,6 +331,8 @@
         var badge = document.getElementById('badge-extras-type');
         if (!container || !badge) return;
 
+        var curX = workspaceLivePricing && workspaceLivePricing.currency ? workspaceLivePricing.currency : 'MAD';
+
         var checkedState = {};
         container.querySelectorAll('.extra-pax-cb:checked').forEach(function (cb) {
             checkedState[cb.dataset.ext + '_' + cb.dataset.pax] = true;
@@ -118,7 +340,7 @@
 
         badge.innerText = type.toUpperCase();
         container.innerHTML = '';
-        var extras = extrasData[type] || [];
+        var extras = getExtrasListForType(type);
         var paxList = getPassengersList().filter(function (p) { return p.type !== 'bebe'; });
 
         if (extras.length === 0) {
@@ -140,7 +362,7 @@
                         '<input type="checkbox" class="extra-pax-cb w-4 h-4 rounded border-gray-300 text-[#0083c4]" data-ext="' + extra.id + '" data-pax="' + pax.id + '" ' + isChecked + '>' +
                         '<span class="text-[11px] text-gray-700 font-medium">' + pax.label + ' <span class="text-gray-400 font-normal">(' + typeDisplay + ')</span></span>' +
                         '</div>' +
-                        '<span class="text-[10px] font-bold text-[#f37a1f]">+ ' + price + ' MAD</span>' +
+                        '<span class="text-[10px] font-bold text-[#f37a1f]">+ ' + price + ' ' + curX + '</span>' +
                         '</label>';
                 });
                 paxHtml += '</div>';
@@ -172,7 +394,7 @@
     function collectExtrasJson() {
         var badge = document.getElementById('badge-extras-type');
         var typePrestation = badge ? badge.innerText.toLowerCase().trim() : 'package';
-        var list = extrasData[typePrestation] || [];
+        var list = getExtrasListForType(typePrestation);
         var out = [];
 
         document.querySelectorAll('.extra-pax-cb:checked').forEach(function (cb) {
@@ -251,10 +473,29 @@
 
         var type = btn.getAttribute('data-type') || 'package';
         var name = btn.getAttribute('data-name') || '';
-        document.getElementById('add-res-prestation-name').textContent = name;
+        var rowCode = (btn.getAttribute('data-row-code') || '').trim();
+        var prefillMap = parseWsFormPrefillMap();
+        var pf = rowCode && prefillMap[rowCode] ? prefillMap[rowCode] : null;
+
         document.getElementById('ws-prestation-type').value = type;
-        document.getElementById('ws-tour-id').value = btn.getAttribute('data-tour-id') || '';
+        document.getElementById('ws-tour-id').value = tourId;
         document.getElementById('ws-travel-date-id').value = btn.getAttribute('data-travel-date-id') || '';
+
+        if (pf && pf.form && pf.form.tour_id != null) {
+            document.getElementById('ws-tour-id').value = String(pf.form.tour_id);
+        }
+
+        document.getElementById('add-res-prestation-name').textContent = pf && pf.title ? pf.title : name;
+
+        if (pf) {
+            applyWorkspacePrefill(pf, type, name);
+        } else {
+            workspaceLivePricing = null;
+            var panelOff = document.getElementById('ws-prefill-panel');
+            if (panelOff) panelOff.classList.add('hidden');
+            var depOff = document.getElementById('ws-departure-wrap');
+            if (depOff) depOff.classList.add('hidden');
+        }
 
         var badge = document.getElementById('badge-extras-type');
         if (badge) badge.innerText = type.toUpperCase();
@@ -268,10 +509,16 @@
         var apiBadge = document.getElementById('api-status-badge');
         if (apiBadge) apiBadge.classList.add('hidden');
 
+        var mp = document.getElementById('ws-montant-paye');
+        if (mp) mp.value = '0';
+
         updateExtrasView();
     }
 
     function hideAddReservation() {
+        workspaceLivePricing = null;
+        var panel = document.getElementById('ws-prefill-panel');
+        if (panel) panel.classList.add('hidden');
         var main = document.getElementById('reservations-main-content');
         var add = document.getElementById('add-reservation-view');
         if (main) main.classList.remove('hidden');
@@ -279,16 +526,20 @@
     }
 
     /**
-     * Ouverture du formulaire workspace depuis le modal détails (évite de dupliquer la logique).
+     * Ouverture du formulaire workspace depuis le modal détails (données catalogue via code).
      */
     window.wsOpenReservationForm = function (opts) {
         opts = opts || {};
+        var code = String(opts.code || '').trim();
+        var map = parseWsFormPrefillMap();
+        var pf = code && map[code] ? map[code] : null;
         var fake = document.createElement('button');
         fake.className = 'btn-show-add-reservation';
-        fake.setAttribute('data-tour-id', String(opts.tourId || ''));
-        fake.setAttribute('data-type', opts.type || 'package');
-        fake.setAttribute('data-name', String(opts.name || ''));
-        fake.setAttribute('data-travel-date-id', String(opts.travelDateId || ''));
+        fake.setAttribute('data-row-code', code);
+        fake.setAttribute('data-tour-id', String(opts.tourId || (pf && pf.form && pf.form.tour_id) || ''));
+        fake.setAttribute('data-type', opts.type || (pf && pf.kind) || 'package');
+        fake.setAttribute('data-name', String(opts.name || (pf && pf.title) || ''));
+        fake.setAttribute('data-travel-date-id', String(opts.travelDateId !== undefined && opts.travelDateId !== null ? opts.travelDateId : (pf && pf.form && pf.form.travel_date_id != null ? pf.form.travel_date_id : '')));
         showAddReservation(fake);
     };
 
