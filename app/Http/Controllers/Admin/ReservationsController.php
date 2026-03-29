@@ -70,10 +70,7 @@ class ReservationsController extends Controller
      */
     public function panel(Request $request, Reservation $reservation): JsonResponse
     {
-        $branchIds = $this->branchScope->visibleBranchIds($request->user());
-        if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
-            abort(403, 'Accès non autorisé à cette réservation.');
-        }
+        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
 
         $reservation->load(['passengers', 'client', 'tour', 'travelDate', 'branch']);
 
@@ -260,7 +257,7 @@ class ReservationsController extends Controller
         $data['status'] = Reservation::STATUS_EN_COURS;
         $data['visa_ok'] = $request->boolean('visa_ok');
         $user = $request->user();
-        $data['branch_id'] = $user->branch_id;
+        $data['branch_id'] = $user->branch_id ?? $user->manager?->branch_id;
         $data['agent_id'] = $user->id;
         $data['sales_manager_id'] = $user->branch?->manager_user_id;
         $data['created_by'] = $user->id;
@@ -271,8 +268,17 @@ class ReservationsController extends Controller
             $request->file('visa_document')
         );
 
+        $tourId = (int) $data['tour_id'];
+        $tdId = isset($data['travel_date_id']) && $data['travel_date_id'] !== null && $data['travel_date_id'] !== ''
+            ? (int) $data['travel_date_id']
+            : 0;
+
         return redirect()
-            ->route('admin.reservations.index')
+            ->route('admin.reservations.index', array_filter([
+                'voyage_id' => $tourId > 0 ? $tourId : null,
+                'travel_date_id' => $tdId > 0 ? $tdId : null,
+                'status' => Reservation::STATUS_EN_COURS,
+            ], fn ($v) => $v !== null && $v !== ''))
             ->with('success', 'Réservation créée.');
     }
 
@@ -282,10 +288,7 @@ class ReservationsController extends Controller
      */
     public function show(Request $request, Reservation $reservation): RedirectResponse
     {
-        $branchIds = $this->branchScope->visibleBranchIds($request->user());
-        if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
-            abort(403, 'Accès non autorisé à cette réservation.');
-        }
+        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
 
         return redirect()->route('admin.reservations.edit', $reservation);
     }
@@ -295,10 +298,7 @@ class ReservationsController extends Controller
      */
     public function edit(Request $request, Reservation $reservation): View
     {
-        $branchIds = $this->branchScope->visibleBranchIds($request->user());
-        if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
-            abort(403, 'Accès non autorisé à cette réservation.');
-        }
+        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $reservation->load(['passengers', 'client', 'tour', 'reservationRooms']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
@@ -331,10 +331,7 @@ class ReservationsController extends Controller
      */
     public function update(Request $request, Reservation $reservation): RedirectResponse|HttpResponse
     {
-        $branchIds = $this->branchScope->visibleBranchIds($request->user());
-        if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
-            abort(403, 'Accès non autorisé à cette réservation.');
-        }
+        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $data = $request->validate([
             'tour_id' => 'required|integer',
             'travel_date_id' => 'nullable|integer',
@@ -478,8 +475,9 @@ class ReservationsController extends Controller
     /**
      * Suppression d'une réservation.
      */
-    public function destroy(Reservation $reservation): RedirectResponse
+    public function destroy(Request $request, Reservation $reservation): RedirectResponse
     {
+        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $this->reservationService->delete($reservation);
 
         return redirect()
@@ -490,8 +488,9 @@ class ReservationsController extends Controller
     /**
      * Valider une réservation (passer en VALIDEE).
      */
-    public function validateReservation(Reservation $reservation): RedirectResponse
+    public function validateReservation(Request $request, Reservation $reservation): RedirectResponse
     {
+        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $this->reservationService->validateReservation($reservation);
 
         return redirect()

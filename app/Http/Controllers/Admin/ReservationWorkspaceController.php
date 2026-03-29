@@ -194,7 +194,7 @@ class ReservationWorkspaceController extends Controller
             'paid_amount' => (float) $request->input('montant_paye'),
             'notes' => $notes,
             'passengers' => $passengers,
-            'branch_id' => $user->branch_id,
+            'branch_id' => $user->branch_id ?? $user->manager?->branch_id,
             'agent_id' => $user->id,
             'created_by' => $user->id,
             'hotel_rooms' => [],
@@ -225,6 +225,7 @@ class ReservationWorkspaceController extends Controller
         return redirect()->route('admin.reservations.index', array_filter([
             'voyage_id' => (int) $request->input('tour_id'),
             'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
+            'status' => Reservation::STATUS_EN_COURS,
         ], fn ($v) => $v !== null && $v !== ''))->with('success', 'Réservation enregistrée.');
     }
 

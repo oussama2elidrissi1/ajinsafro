@@ -3,19 +3,25 @@
 namespace App\Services;
 
 use App\Models\Branch;
-use App\Models\Client;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
 
 class BranchScopeService
 {
     public const ROLE_SUPER_ADMIN = 'super_admin';
+
     public const ROLE_SIEGE_ADMIN = 'siege_admin';
+
     public const ROLE_BRANCH_ADMIN = 'branch_admin';
+
     public const ROLE_CHEF_COMMERCIAL = 'chef_commercial';
+
     public const ROLE_MANAGER = 'manager';
+
     public const ROLE_COMMERCIAL = 'commercial';
+
     public const ROLE_AGENT = 'agent';
 
     /**
@@ -43,6 +49,7 @@ class BranchScopeService
         if ($user->branch_id) {
             return [(int) $user->branch_id];
         }
+
         return [];
     }
 
@@ -84,9 +91,62 @@ class BranchScopeService
             return $query;
         }
         if (empty($branchIds)) {
+            // Compte agence sans branch_id : sinon liste vide alors que des réservations viennent d’être créées
+            // (branch_id null + agent_id / created_by). Le portail restreint déjà via
+            // {@see constrainReservationQueryForPortalUser}.
+            if (AgentPortalLayout::shouldUse($user)) {
+                return $query;
+            }
+
             return $query->whereRaw('1 = 0');
         }
+
         return $query->whereIn('branch_id', $branchIds);
+    }
+
+    /**
+     * Accès fiche / panel / édition : aligné sur la liste (scope agence + propriété portail).
+     */
+    public function userCanAccessReservation(User $user, Reservation $reservation): bool
+    {
+        if ($this->canSeeAllBranches($user)) {
+            return true;
+        }
+
+        $branchIds = $this->visibleBranchIds($user);
+        if ($branchIds !== null && $branchIds !== [] && $reservation->branch_id !== null) {
+            if (in_array((int) $reservation->branch_id, array_map('intval', $branchIds), true)) {
+                return true;
+            }
+        }
+
+        if (AgentPortalLayout::shouldUse($user)) {
+            return $this->reservationMatchesPortalOwnership($user, $reservation);
+        }
+
+        return false;
+    }
+
+    private function reservationMatchesPortalOwnership(User $user, Reservation $reservation): bool
+    {
+        $ids = $this->portalOwnershipUserIds($user);
+        if ($ids === []) {
+            return false;
+        }
+        $agentId = (int) ($reservation->agent_id ?? 0);
+        $salesId = (int) ($reservation->sales_manager_id ?? 0);
+        $createdId = (int) ($reservation->created_by ?? 0);
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if ($id === 0) {
+                continue;
+            }
+            if ($agentId === $id || $salesId === $id || $createdId === $id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -101,6 +161,7 @@ class BranchScopeService
         if (empty($branchIds)) {
             return $query->whereRaw('1 = 0');
         }
+
         return $query->whereIn('branch_id', $branchIds);
     }
 
@@ -115,6 +176,7 @@ class BranchScopeService
         if ($user->branch_id) {
             return $query->where('branch_id', $user->branch_id);
         }
+
         return $query->whereRaw('1 = 0');
     }
 
@@ -131,6 +193,7 @@ class BranchScopeService
         if ($user->branch_id) {
             return Branch::where('id', $user->branch_id)->get();
         }
+
         return collect();
     }
 
