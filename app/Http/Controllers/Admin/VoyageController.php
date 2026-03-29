@@ -27,6 +27,7 @@ use App\Services\Wp\ProgramJsonService;
 use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
+use App\Support\TourPlacesCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -882,28 +883,32 @@ class VoyageController extends Controller
                 if ($roomType === null || $roomType === '') {
                     continue;
                 }
+                $adults = max(0, (int) ($r['capacity_adults'] ?? 0));
+                $children = max(0, (int) ($r['capacity_children'] ?? 0));
+                $rawCapTotal = $r['capacity_total'] ?? null;
+                $rawCapTotalProvided = ! ($rawCapTotal === null || $rawCapTotal === '');
+                // Aligné TourPlacesCalculator : cap. tot. explicite si fournie, sinon somme A+E (peut être 0 — pas de min(1) artificiel).
+                $capTotalStored = $rawCapTotalProvided
+                    ? max(0, (int) $rawCapTotal)
+                    : max(0, $adults + $children);
+
                 $payload = [
                     'tour_hotel_id' => $tourHotelId,
                     'room_type' => $roomType,
                     'room_label' => $r['room_label'] ?? null,
                     'room_code' => $r['room_code'] ?? null,
-                    'room_count' => max(1, (int) ($r['room_count'] ?? 1)),
-                    'capacity_adults' => max(0, (int) ($r['capacity_adults'] ?? 0)),
-                    'capacity_children' => max(0, (int) ($r['capacity_children'] ?? 0)),
+                    'room_count' => max(0, (int) ($r['room_count'] ?? 0)),
+                    'capacity_adults' => $adults,
+                    'capacity_children' => $children,
+                    'capacity_total' => $capTotalStored,
                     'supplement' => max(0, (float) ($r['supplement'] ?? 0)),
                     'description' => $r['description'] ?? null,
-                        // Checkbox non cochée => clé absente dans la requête => false
-                        'is_active' => !empty($r['is_active']),
+                    // Hidden 0 + checkbox 1 : actif ssi valeur finale 1 (aligné TourPlacesCalculator / JS).
+                    'is_active' => (int) ($r['is_active'] ?? 0) === 1,
                     'sort_order' => $sortOrder++,
-                    'is_default' => !empty($r['is_default']),
+                    'is_default' => ! empty($r['is_default']),
                     'notes' => $r['notes'] ?? null,
                 ];
-                // Normalisation: si `capacity_total` n'est pas fourni (vide/null), on dérive de A+E.
-                // Cela évite de persister une capacité_total à 1 quand l'UI ne l'envoie pas correctement.
-                $rawCapTotal = $r['capacity_total'] ?? null;
-                $rawCapTotalProvided = !($rawCapTotal === null || $rawCapTotal === '');
-                $capTotal = $rawCapTotalProvided ? (int) $rawCapTotal : ((int) ($payload['capacity_adults'] ?? 0) + (int) ($payload['capacity_children'] ?? 0));
-                $payload['capacity_total'] = max(1, $capTotal);
                 if ($roomId && TourHotelRoom::where('tour_hotel_id', $tourHotelId)->where('id', $roomId)->exists()) {
                     TourHotelRoom::where('id', $roomId)->update($payload);
                     $keptRoomIds[] = $roomId;
@@ -919,44 +924,20 @@ class VoyageController extends Controller
             TourHotelRoom::where('tour_hotel_id', $tourHotelId)->whereNotIn('id', $keptRoomIds)->delete();
         }
     }
-    
+
 
     /**
-     * Calcule le total des places du voyage à partir des chambres configurées (hôtel(s) du voyage).
-     * Règle : pour chaque ligne de chambre, places = room_count × capacity_total (sinon adults+enfants si cap. tot. vide).
-     * Somme sur tous les hôtels du tour. Une ligne est exclue seulement si is_active = 0/false explicitement en base ;
-     * NULL ou colonne absente = incluse (compatibilité anciennes données).
+     * @see TourPlacesCalculator Logique unique partagée avec le formulaire (JS).
      */
     private function computeTourTotalPlacesFromRooms(int $tourId): int
     {
-        $total = 0;
         try {
             $tourHotels = TourHotel::getAllForTour($tourId)->load('rooms');
-            foreach ($tourHotels as $hotel) {
-                foreach ($hotel->rooms as $room) {
-                    // Inclure toutes les chambres sauf si is_active est explicitement désactivé en base.
-                    // (where('is_active', true) excluait NULL / anciennes lignes → une seule ligne comptée.)
-                    $attrs = $room->getAttributes();
-                    if (array_key_exists('is_active', $attrs)) {
-                        $ia = $attrs['is_active'];
-                        if ($ia === false || $ia === 0 || $ia === '0') {
-                            continue;
-                        }
-                    }
-                    $cap = (int) ($room->capacity_total ?? 0);
-                    if ($cap <= 0) {
-                        $cap = (int) ($room->capacity_adults ?? 0) + (int) ($room->capacity_children ?? 0);
-                    }
-                    $count = (int) ($room->room_count ?? 0);
-                    if ($cap > 0 && $count > 0) {
-                        $total += $count * $cap;
-                    }
-                }
-            }
+
+            return TourPlacesCalculator::sumFromDatabase($tourHotels);
         } catch (\Throwable $e) {
             return 0;
         }
-        return $total;
     }
 
     /**
@@ -1375,8 +1356,26 @@ class VoyageController extends Controller
             $hotelIdsOrdered = $this->syncTourHotels($id, $request);
             $this->syncTourHotelRooms($id, $request, $hotelIdsOrdered);
 
-            // Calcul automatique des places : somme des (room_count × capacity_total) par type de chambre actif
+            // Calcul automatique des places (TourPlacesCalculator = même règles que le JS formulaire)
             $totalPlaces = $this->computeTourTotalPlacesFromRooms($id);
+            if (config('app.debug')) {
+                $hotelsForLog = TourHotel::getAllForTour($id)->load('rooms');
+                $dbExplain = TourPlacesCalculator::explainFromDatabase($hotelsForLog);
+                $reqHotelsRaw = $request->input('tour_hotels', []);
+                $reqExplain = TourPlacesCalculator::explainFromRequestArray(is_array($reqHotelsRaw) ? $reqHotelsRaw : []);
+                \Log::info('TourPlacesCalculator debug @ VoyageController::update', [
+                    'tour_id' => $id,
+                    'persisted_total' => $totalPlaces,
+                    'posted_max_people' => $request->input('max_people'),
+                    'request_total' => $reqExplain['total'],
+                    'request_lines' => $reqExplain['lines'],
+                    'request_ignored' => $reqExplain['ignored'],
+                    'db_total_after_sync' => $dbExplain['total'],
+                    'db_lines' => $dbExplain['lines'],
+                    'db_ignored' => $dbExplain['ignored'],
+                    'request_vs_db_total_diff' => $reqExplain['total'] - $dbExplain['total'],
+                ]);
+            }
             $this->repository->updateTour($id, ['max_people' => $totalPlaces, 'places' => $totalPlaces]);
 
             $this->syncTourTransfers($id, $request, $lastDayNumber);

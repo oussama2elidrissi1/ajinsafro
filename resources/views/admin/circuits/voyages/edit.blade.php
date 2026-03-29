@@ -1997,6 +1997,117 @@
 @endsection
 @push('script')
     <script>
+        (function () {
+            window.TOUR_PLACES_CALC_DEBUG = @json((bool) config('app.debug'));
+            window._tourPlacesRecalcPending = false;
+            window.notifyVoyageTourPlacesChanged = function () {
+                window._tourPlacesRecalcPending = true;
+                if (typeof window.recalculateVoyageTourPlacesPreview === 'function') {
+                    window.recalculateVoyageTourPlacesPreview();
+                }
+            };
+            document.addEventListener('DOMContentLoaded', function () {
+                var form = document.getElementById('edit-voyage-form');
+                var wrap = document.getElementById('tour-hotels-wrapper');
+                if (!form || !wrap) {
+                    return;
+                }
+                function pInt(v) {
+                    var n = parseInt(String(v == null ? '' : v).trim(), 10);
+                    return (isNaN(n) || n < 0) ? 0 : n;
+                }
+                function effectiveCapacity(ct, ad, ch) {
+                    if (ct > 0) {
+                        return ct;
+                    }
+                    var s = ad + ch;
+                    return s > 0 ? s : 0;
+                }
+                function handler(ev) {
+                    if (!ev.target || !ev.target.closest || !ev.target.closest('.tour-room-row')) {
+                        return;
+                    }
+                    window.recalculateVoyageTourPlacesPreview();
+                }
+                window.recalculateVoyageTourPlacesPreview = function () {
+                    var w = document.getElementById('tour-hotels-wrapper');
+                    var mp = document.getElementById('max_people');
+                    var pl = document.getElementById('places_display');
+                    if (!w || !mp) {
+                        return;
+                    }
+                    var total = 0;
+                    var lines = [];
+                    var ignored = [];
+                    w.querySelectorAll('.tour-room-row').forEach(function (row, idx) {
+                        var typeSel = row.querySelector('select[name*="[room_type]"]');
+                        var type = typeSel ? String(typeSel.value || '').trim() : '';
+                        if (!type) {
+                            ignored.push({ rowIndex: idx, reason: 'empty_room_type' });
+                            return;
+                        }
+                        var actCb = row.querySelector('input.tour-room-is-active');
+                        if (!actCb) {
+                            actCb = row.querySelector('input[type="checkbox"][name*="[is_active]"]');
+                        }
+                        if (actCb && !actCb.checked) {
+                            ignored.push({ rowIndex: idx, room_type: type, reason: 'is_active_off' });
+                            return;
+                        }
+                        var rcInp = row.querySelector('input[name*="[room_count]"]');
+                        var nb = pInt(rcInp && rcInp.value);
+                        if (nb <= 0) {
+                            ignored.push({ rowIndex: idx, room_type: type, reason: 'room_count_zero' });
+                            return;
+                        }
+                        var ctInp = row.querySelector('input[name*="[capacity_total]"]');
+                        var adInp = row.querySelector('input[name*="[capacity_adults]"]');
+                        var chInp = row.querySelector('input[name*="[capacity_children]"]');
+                        var cap = effectiveCapacity(
+                            pInt(ctInp && ctInp.value),
+                            pInt(adInp && adInp.value),
+                            pInt(chInp && chInp.value)
+                        );
+                        if (cap <= 0) {
+                            ignored.push({ rowIndex: idx, room_type: type, reason: 'capacity_zero' });
+                            return;
+                        }
+                        var product = nb * cap;
+                        total += product;
+                        lines.push({
+                            room_type: type,
+                            room_count: nb,
+                            capacity_used: cap,
+                            product: product
+                        });
+                    });
+                    window.__lastTourPlacesPreview = { total: total, lines: lines, ignored: ignored };
+                    window._tourPlacesRecalcPending = false;
+                    mp.value = String(total);
+                    if (pl) {
+                        pl.value = String(total);
+                    }
+                    if (window.TOUR_PLACES_CALC_DEBUG && typeof console !== 'undefined' && console.debug) {
+                        console.debug('[TourPlaces] front preview', window.__lastTourPlacesPreview);
+                    }
+                };
+                form.addEventListener('input', handler, true);
+                form.addEventListener('change', handler, true);
+                form.addEventListener('submit', function () {
+                    window.recalculateVoyageTourPlacesPreview();
+                    if (window.TOUR_PLACES_CALC_DEBUG && typeof console !== 'undefined' && console.debug) {
+                        var m = document.getElementById('max_people');
+                        console.debug('[TourPlaces] submit', window.__lastTourPlacesPreview, 'max_people_field:', m ? m.value : null);
+                    }
+                });
+                window.recalculateVoyageTourPlacesPreview();
+                if (window._tourPlacesRecalcPending) {
+                    window.recalculateVoyageTourPlacesPreview();
+                }
+            });
+        })();
+    </script>
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             document.body.classList.add('voyage-layout-page');
         });

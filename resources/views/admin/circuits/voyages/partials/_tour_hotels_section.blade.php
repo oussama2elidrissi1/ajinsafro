@@ -148,7 +148,7 @@
                                         </div>
                                         <div class="col-md-1">
                                             <label class="form-label small">Nb ch.</label>
-                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_count]" value="{{ $roomCountVal }}" min="1">
+                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_count]" value="{{ $roomCountVal }}" min="0">
                                         </div>
                                         <div class="col-md-1">
                                             <label class="form-label small">Cap. ad.</label>
@@ -160,7 +160,7 @@
                                         </div>
                                         <div class="col-md-1">
                                             <label class="form-label small">Cap. tot.</label>
-                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][capacity_total]" value="{{ $capTotalVal }}" min="1">
+                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][capacity_total]" value="{{ $capTotalVal }}" min="0">
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small">Supplément (DH)</label>
@@ -192,7 +192,8 @@
                                         </div>
                                         <div class="col-md-2">
                                             <div class="form-check mt-2">
-                                                <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][is_active]" value="1" {{ $isActiveVal ? 'checked' : '' }}>
+                                                <input type="hidden" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][is_active]" value="0">
+                                                <input type="checkbox" class="form-check-input tour-room-is-active" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][is_active]" value="1" {{ $isActiveVal ? 'checked' : '' }}>
                                                 <label class="form-check-label small">Actif</label>
                                             </div>
                                         </div>
@@ -254,6 +255,7 @@
             if (inp.name && inp.name.indexOf('[rooms]') !== -1) {
                 // Chambres : garder le même index room pour le nouveau hi, mais supprimer les id chambres
                 if (inp.name.indexOf('[id]') !== -1 && inp.name.indexOf('[rooms]') !== -1) { inp.remove(); return; }
+                if (inp.type === 'hidden' && inp.name.indexOf('[is_active]') !== -1) { inp.value = '0'; return; }
                 if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
                 if (inp.tagName === 'TEXTAREA') inp.value = '';
                 if (inp.type === 'checkbox') { inp.checked = (inp.name.indexOf('is_default') !== -1 ? false : true); }
@@ -297,7 +299,7 @@
         initHotelCheckInOutValidation(clone);
         // Mettre à jour le titre
         updateHotelsTitle();
-        recalculateVoyagePlacesPreview();
+        if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
     });
 
     // Validation check-in / check-out
@@ -389,45 +391,8 @@
     // Mettre à jour le titre au chargement
     updateHotelsTitle();
 
-    /** Places / max. personnes : somme (nb chambres × cap. tot.) sur toutes les lignes actives (aperçu formulaire édition). */
-    function recalculateVoyagePlacesPreview() {
-        var wrap = document.getElementById('tour-hotels-wrapper');
-        if (!wrap) return;
-        function pInt(v) {
-            var n = parseInt(String(v == null ? '' : v).trim(), 10);
-            return isNaN(n) || n < 0 ? 0 : n;
-        }
-        var total = 0;
-        wrap.querySelectorAll('.tour-room-row').forEach(function(row) {
-            var typeSel = row.querySelector('select[name*="[room_type]"]');
-            if (!typeSel || !String(typeSel.value || '').trim()) return;
-            var actCb = row.querySelector('input[type="checkbox"][name*="[is_active]"]');
-            if (actCb && !actCb.checked) return;
-            var rcInp = row.querySelector('input[name*="[room_count]"]');
-            var ctInp = row.querySelector('input[name*="[capacity_total]"]');
-            var nb = pInt(rcInp && rcInp.value);
-            var cap = pInt(ctInp && ctInp.value);
-            if (cap <= 0) {
-                var ad = row.querySelector('input[name*="[capacity_adults]"]');
-                var ch = row.querySelector('input[name*="[capacity_children]"]');
-                cap = pInt(ad && ad.value) + pInt(ch && ch.value);
-            }
-            if (nb <= 0) return;
-            if (cap <= 0) cap = 1;
-            total += nb * cap;
-        });
-        var mp = document.getElementById('max_people');
-        var pl = document.getElementById('places_display');
-        if (mp) mp.value = String(total);
-        if (pl) pl.value = String(total);
-    }
-
-    var hotelsWrap = document.getElementById('tour-hotels-wrapper');
-    if (hotelsWrap) {
-        hotelsWrap.addEventListener('input', recalculateVoyagePlacesPreview);
-        hotelsWrap.addEventListener('change', recalculateVoyagePlacesPreview);
-    }
-    recalculateVoyagePlacesPreview();
+    // Recalcul Places / Max personnes : implémenté dans edit.blade @push (après #max_people dans le DOM) + écouteurs sur #edit-voyage-form.
+    if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
     
     // Mettre à jour le titre quand les champs check-in/check-out changent
     container.addEventListener('change', function(e) {
@@ -474,7 +439,7 @@
                     initHotelCheckInOutValidation(r);
                 });
                 updateHotelsTitle();
-                recalculateVoyagePlacesPreview();
+                if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
             }
         }
         // Ajouter une chambre
@@ -493,6 +458,7 @@
                 if (inp.name && inp.name.indexOf('[rooms]') !== -1) {
                     inp.name = inp.name.replace(/\[rooms\]\[\d+\]/, '[rooms][' + nextRi + ']');
                     if (inp.name.indexOf('[id]') !== -1) { inp.remove(); return; }
+                    if (inp.type === 'hidden' && inp.name.indexOf('[is_active]') !== -1) { inp.value = '0'; return; }
                     if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
                     if (inp.tagName === 'TEXTAREA') inp.value = '';
                     if (inp.type === 'checkbox') inp.checked = (inp.name.indexOf('is_default') !== -1 ? false : true);
@@ -502,7 +468,7 @@
             clone.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', nextRi); });
             clone.querySelectorAll('.badge.bg-success').forEach(function(b){ b.remove(); });
             roomsCont.appendChild(clone);
-            recalculateVoyagePlacesPreview();
+            if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
         }
         // Supprimer une chambre
         if (e.target.classList.contains('tour-remove-room')) {
@@ -521,7 +487,7 @@
                 rr.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-room-index', ri); });
                 rr.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', ri); });
             });
-            recalculateVoyagePlacesPreview();
+            if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
         }
     });
 
@@ -601,11 +567,16 @@
                             setRoom('notes', room.notes);
                             var defInp = row.querySelector('[name*="[is_default]"]');
                             if (defInp) defInp.checked = !!room.is_default;
-                            var actInp = row.querySelector('[name*="[is_active]"]');
-                            if (actInp) actInp.checked = room.is_active !== false;
+                            var activeOn = room.is_active !== false && room.is_active !== 0 && room.is_active !== '0';
+                            var actCb = row.querySelector('input.tour-room-is-active');
+                            if (actCb) actCb.checked = !!activeOn;
+                            else {
+                                var legAct = row.querySelector('input[type="checkbox"][name*="[is_active]"]');
+                                if (legAct) legAct.checked = !!activeOn;
+                            }
                         });
                     }
-                    recalculateVoyagePlacesPreview();
+                    if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
                     copySelect.value = '';
                 })
                 .catch(function(){ alert('Impossible de charger l\'hôtel.'); });
