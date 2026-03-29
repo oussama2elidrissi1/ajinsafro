@@ -14,6 +14,7 @@ use App\Models\TravelProgramDay;
 use App\Models\TravelDayItem;
 use App\Models\Airline;
 use App\Models\TourHotel;
+use App\Models\TourHotelRoom;
 use App\Models\TourTransfer;
 use App\Models\TravelDeparturePlace;
 use App\Models\TravelDepartureFlight;
