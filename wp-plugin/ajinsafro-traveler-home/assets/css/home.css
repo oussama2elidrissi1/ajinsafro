@@ -3802,3 +3802,70 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
         font-size: 1.28rem;
     }
 }
+
+/* Final promo slider overrides after legacy responsive rules */
+.aj-home .aj-promos {
+    padding: 12px 0 18px;
+}
+
+.aj-home .aj-promo-slide {
+    flex: 0 0 min(560px, calc(50% - 7px));
+    min-width: 360px;
+}
+
+@media (max-width: 1279.98px) {
+    .aj-home .aj-promos {
+        padding: 12px 0 16px;
+    }
+
+    .aj-home .aj-promo-slide {
+        flex: 0 0 min(520px, 78vw);
+        min-width: 320px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .aj-home .aj-promos {
+        padding: 10px 0 14px;
+    }
+
+    .aj-home .aj-promos__frame {
+        padding: 12px;
+        border-radius: 20px;
+    }
+
+    .aj-home .aj-promos__toolbar {
+        margin-bottom: 8px;
+    }
+
+    .aj-home .aj-promo-slide {
+        flex: 0 0 88%;
+        min-width: 0;
+    }
+
+    .aj-home .aj-promo-banner {
+        grid-template-columns: minmax(96px, 34%) minmax(0, 1fr);
+        min-height: clamp(138px, 40vw, 156px);
+        height: clamp(138px, 40vw, 156px);
+        border-radius: 18px;
+    }
+
+    .aj-home .aj-promo-banner__content {
+        padding: 14px 14px 14px 16px;
+        gap: 6px;
+    }
+
+    .aj-home .aj-promo-banner__title {
+        font-size: .95rem;
+    }
+
+    .aj-home .aj-promo-banner__subtitle {
+        font-size: .78rem;
+        line-height: 1.35;
+    }
+
+    .aj-home .aj-promo-banner__cta {
+        padding: 7px 12px;
+        font-size: .7rem;
+    }
+}

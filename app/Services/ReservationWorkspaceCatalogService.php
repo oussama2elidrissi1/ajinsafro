@@ -540,7 +540,7 @@ class ReservationWorkspaceCatalogService
         }
 
         $q = Reservation::query()
-            ->where('tour_id', $voyage->id)
+            ->whereIn('tour_id', Voyage::allIdsSharingWpTour((int) $voyage->id))
             ->whereIn('status', [Reservation::STATUS_EN_COURS, Reservation::STATUS_VALIDEE])
             ->where('travel_date_id', $travelDateId);
         $this->branchScope->scopeReservations($q, $user);
@@ -762,7 +762,19 @@ class ReservationWorkspaceCatalogService
             return $base;
         }
 
-        $q = Reservation::query()->whereIn('tour_id', $tourIds);
+        $physicalToCanonical = [];
+        $allPhysical = [];
+        foreach ($tourIds as $tid) {
+            $tid = (int) $tid;
+            foreach (Voyage::allIdsSharingWpTour($tid) as $pid) {
+                $pid = (int) $pid;
+                $allPhysical[$pid] = true;
+                $physicalToCanonical[$pid] = $tid;
+            }
+        }
+        $allPhysicalIds = array_keys($allPhysical);
+
+        $q = Reservation::query()->whereIn('tour_id', $allPhysicalIds);
         $this->branchScope->scopeReservations($q, $user);
         $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
 
@@ -772,15 +784,16 @@ class ReservationWorkspaceCatalogService
             ->get();
 
         foreach ($aggregates as $row) {
-            $tid = (int) $row->tour_id;
-            if (! isset($base[$tid])) {
+            $physicalTid = (int) $row->tour_id;
+            $canonical = $physicalToCanonical[$physicalTid] ?? null;
+            if ($canonical === null || ! isset($base[$canonical])) {
                 continue;
             }
             $n = (int) $row->aggregate;
             match ($row->status) {
-                Reservation::STATUS_VALIDEE => $base[$tid]['validee'] += $n,
-                Reservation::STATUS_EN_COURS => $base[$tid]['en_cours'] += $n,
-                Reservation::STATUS_ANNULEE => $base[$tid]['annulee'] += $n,
+                Reservation::STATUS_VALIDEE => $base[$canonical]['validee'] += $n,
+                Reservation::STATUS_EN_COURS => $base[$canonical]['en_cours'] += $n,
+                Reservation::STATUS_ANNULEE => $base[$canonical]['annulee'] += $n,
                 default => null,
             };
         }
@@ -807,18 +820,36 @@ class ReservationWorkspaceCatalogService
         if ($tourIds === []) {
             return [];
         }
+
+        $physicalToCanonical = [];
+        $allPhysical = [];
+        foreach ($tourIds as $tid) {
+            $tid = (int) $tid;
+            foreach (Voyage::allIdsSharingWpTour($tid) as $pid) {
+                $pid = (int) $pid;
+                $allPhysical[$pid] = true;
+                $physicalToCanonical[$pid] = $tid;
+            }
+        }
+        $allPhysicalIds = array_keys($allPhysical);
+
         $q = Reservation::query()
-            ->whereIn('tour_id', $tourIds)
+            ->whereIn('tour_id', $allPhysicalIds)
             ->whereIn('status', [Reservation::STATUS_VALIDEE, Reservation::STATUS_EN_COURS]);
         $this->branchScope->scopeReservations($q, $user);
         $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
 
-        $out = [];
+        $out = array_fill_keys(array_map('intval', $tourIds), 0);
         foreach ((clone $q)
             ->selectRaw('tour_id, COALESCE(SUM(COALESCE(passengers_count, 0)), 0) as total_pax')
             ->groupBy('tour_id')
             ->get() as $row) {
-            $out[(int) $row->tour_id] = (int) $row->total_pax;
+            $physical = (int) $row->tour_id;
+            $canonical = $physicalToCanonical[$physical] ?? null;
+            if ($canonical === null || ! array_key_exists($canonical, $out)) {
+                continue;
+            }
+            $out[$canonical] += (int) $row->total_pax;
         }
 
         return $out;

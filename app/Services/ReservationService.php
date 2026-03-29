@@ -7,11 +7,13 @@ use App\Models\ReservationPassenger;
 use App\Models\ReservationRoom;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
+use App\Models\Voyage;
 use App\Services\PartnerCommissionService;
 use App\Services\WordPressMediaService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ReservationService
@@ -19,8 +21,7 @@ class ReservationService
     public function __construct(
         private readonly WordPressMediaService $mediaService,
         private readonly PartnerCommissionService $commissionService,
-    ) {
-    }
+    ) {}
 
     /**
      * Liste paginée des réservations avec filtres simples.
@@ -29,21 +30,21 @@ class ReservationService
     {
         $query = Reservation::query()->withCount('passengers');
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['payment_type'])) {
+        if (! empty($filters['payment_type'])) {
             $query->where('payment_type', $filters['payment_type']);
         }
 
-        if (!empty($filters['client'])) {
+        if (! empty($filters['client'])) {
             $q = trim((string) $filters['client']);
             $query->where(function ($sub) use ($q) {
-                $sub->where('client_first_name', 'like', '%' . $q . '%')
-                    ->orWhere('client_last_name', 'like', '%' . $q . '%')
-                    ->orWhere('client_email', 'like', '%' . $q . '%')
-                    ->orWhere('client_phone', 'like', '%' . $q . '%');
+                $sub->where('client_first_name', 'like', '%'.$q.'%')
+                    ->orWhere('client_last_name', 'like', '%'.$q.'%')
+                    ->orWhere('client_email', 'like', '%'.$q.'%')
+                    ->orWhere('client_phone', 'like', '%'.$q.'%');
             });
         }
 
@@ -56,7 +57,7 @@ class ReservationService
     public function create(array $data, ?UploadedFile $paymentReceipt = null, ?UploadedFile $visaDocument = null): Reservation
     {
         return DB::transaction(function () use ($data, $paymentReceipt, $visaDocument) {
-            $reservation = new Reservation();
+            $reservation = new Reservation;
             $this->fillReservation($reservation, $data);
 
             if (empty($reservation->status)) {
@@ -77,7 +78,7 @@ class ReservationService
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
             // Stock & allocation progressive uniquement si une date de départ est fournie.
-            if (!empty($reservation->travel_date_id)) {
+            if (! empty($reservation->travel_date_id)) {
                 $this->allocateAndSyncReservationRooms($reservation);
             } else {
                 // Fallback : pas de date => pas de gestion de stock par départ.
@@ -87,7 +88,20 @@ class ReservationService
             if ($reservation->partner_id) {
                 $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
             }
-            return $reservation->fresh(['passengers', 'reservationRooms']);
+            $fresh = $reservation->fresh(['passengers', 'reservationRooms', 'tour']);
+            if (config('app.debug') && $fresh) {
+                Log::debug('reservation.created', [
+                    'id' => $fresh->id,
+                    'tour_id' => $fresh->tour_id,
+                    'laravel_voyage_ids_same_wp' => Voyage::allIdsSharingWpTour((int) $fresh->tour_id),
+                    'wp_post_id' => $fresh->tour?->wp_post_id,
+                    'travel_date_id' => $fresh->travel_date_id,
+                    'prestation_type' => $fresh->prestation_type,
+                    'status' => $fresh->status,
+                ]);
+            }
+
+            return $fresh;
         });
     }
 
@@ -114,7 +128,7 @@ class ReservationService
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
-            if (!empty($reservation->travel_date_id)) {
+            if (! empty($reservation->travel_date_id)) {
                 $this->allocateAndSyncReservationRooms($reservation);
             } else {
                 $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
@@ -123,6 +137,7 @@ class ReservationService
             if ($reservation->partner_id) {
                 $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
             }
+
             return $reservation->fresh(['passengers', 'reservationRooms']);
         });
     }
@@ -134,6 +149,7 @@ class ReservationService
         if ($reservation->partner_id) {
             $this->commissionService->validateCommissionForReservation($reservation);
         }
+
         return $reservation;
     }
 
@@ -150,7 +166,12 @@ class ReservationService
 
     private function fillReservation(Reservation $reservation, array $data): void
     {
-        $reservation->tour_id = $data['tour_id'] ?? $reservation->tour_id;
+        if (array_key_exists('tour_id', $data)) {
+            $rawTour = $data['tour_id'];
+            if ($rawTour !== null && $rawTour !== '' && (int) $rawTour > 0) {
+                $reservation->tour_id = Voyage::canonicalVoyageId((int) $rawTour);
+            }
+        }
         $travelDateId = $data['travel_date_id'] ?? null;
         if ($travelDateId !== null && $travelDateId !== '' && $travelDateId !== 'null') {
             $reservation->travel_date_id = (int) $travelDateId;
@@ -169,7 +190,7 @@ class ReservationService
 
         $reservation->payment_type = $data['payment_type'] ?? $reservation->payment_type;
 
-        if (!empty($data['status'])) {
+        if (! empty($data['status'])) {
             $reservation->status = $data['status'];
         }
 
@@ -218,12 +239,12 @@ class ReservationService
     private function storeVisaDocument(Reservation $reservation, UploadedFile $file): string
     {
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'pdf';
-        $filename = 'visa-' . $reservation->id . '-' . time() . '.' . $extension;
-        $directory = 'reservation-visa/' . date('Y/m');
+        $filename = 'visa-'.$reservation->id.'-'.time().'.'.$extension;
+        $directory = 'reservation-visa/'.date('Y/m');
 
         Storage::disk('public')->putFileAs($directory, $file, $filename);
 
-        return $directory . '/' . $filename;
+        return $directory.'/'.$filename;
     }
 
     /**
@@ -232,27 +253,27 @@ class ReservationService
     private function storeReceipt(Reservation $reservation, UploadedFile $file): string
     {
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'pdf';
-        $filename = 'reservation-' . $reservation->id . '-' . time() . '.' . $extension;
-        $directory = 'reservation-receipts/' . date('Y/m');
+        $filename = 'reservation-'.$reservation->id.'-'.time().'.'.$extension;
+        $directory = 'reservation-receipts/'.date('Y/m');
 
         Storage::disk('public')->putFileAs($directory, $file, $filename);
 
-        return $directory . '/' . $filename; // utilisé avec asset('storage/'.$path)
+        return $directory.'/'.$filename; // utilisé avec asset('storage/'.$path)
     }
 
     /**
-     * @param array<int,array<string,mixed>> $passengersData
+     * @param  array<int,array<string,mixed>>  $passengersData
      */
     private function syncPassengers(Reservation $reservation, array $passengersData): void
     {
         $keepIds = [];
 
         foreach ($passengersData as $row) {
-            if (!is_array($row)) {
+            if (! is_array($row)) {
                 continue;
             }
             $hasContent = ($row['first_name'] ?? '') !== '' || ($row['last_name'] ?? '') !== '';
-            if (!$hasContent) {
+            if (! $hasContent) {
                 continue;
             }
 
@@ -271,6 +292,7 @@ class ReservationService
                 if ($passenger) {
                     $passenger->fill($payload)->save();
                     $keepIds[] = $passenger->id;
+
                     continue;
                 }
             }
@@ -279,7 +301,7 @@ class ReservationService
             $keepIds[] = $passenger->id;
         }
 
-        if (!empty($keepIds)) {
+        if (! empty($keepIds)) {
             ReservationPassenger::where('reservation_id', $reservation->id)
                 ->whereNotIn('id', $keepIds)
                 ->delete();
@@ -294,7 +316,7 @@ class ReservationService
     /**
      * Synchronise les chambres réservées et recalcule room_supplement_total.
      *
-     * @param array<int, array{tour_hotel_id?: int, tour_hotel_room_id?: int, room_count?: int}> $hotelRooms
+     * @param  array<int, array{tour_hotel_id?: int, tour_hotel_room_id?: int, room_count?: int}>  $hotelRooms
      */
     private function syncReservationRooms(Reservation $reservation, array $hotelRooms): void
     {
@@ -302,7 +324,7 @@ class ReservationService
         $totalSupplement = 0.0;
 
         foreach ($hotelRooms as $row) {
-            if (!is_array($row)) {
+            if (! is_array($row)) {
                 continue;
             }
             $tourHotelId = isset($row['tour_hotel_id']) ? (int) $row['tour_hotel_id'] : 0;
@@ -364,11 +386,12 @@ class ReservationService
         if ($allocations->isEmpty()) {
             // Si aucun enregistrement d'allocation : on laisse reservation_rooms telles quelles.
             ReservationRoom::query()->where('reservation_id', $reservationId)->delete();
+
             return;
         }
 
         // Regrouper par (travel_date_id, tour_hotel_room_id) pour éviter des updates multiples.
-        $grouped = $allocations->groupBy(fn ($a) => $a->travel_date_id . '_' . $a->tour_hotel_room_id);
+        $grouped = $allocations->groupBy(fn ($a) => $a->travel_date_id.'_'.$a->tour_hotel_room_id);
 
         foreach ($grouped as $key => $rows) {
             /** @var object $first */
@@ -387,7 +410,7 @@ class ReservationService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$occ) {
+            if (! $occ) {
                 continue;
             }
 
@@ -419,11 +442,12 @@ class ReservationService
         if ($travelDateId <= 0) {
             // Sécurité : si aucun travel_date_id, fallback.
             $this->syncReservationRooms($reservation, []);
+
             return;
         }
 
         $wpTourId = $reservation->getWpTourId();
-        if (!$wpTourId) {
+        if (! $wpTourId) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'hotel_rooms' => ['Voyage associé introuvable (wp_post_id manquant).'],
             ]);
@@ -492,7 +516,7 @@ class ReservationService
         $missing = array_values(array_diff($roomIds, $existingRoomIds->map(fn ($v) => (int) $v)->all()));
         foreach ($missing as $missingRoomId) {
             $room = $rooms->firstWhere('id', $missingRoomId);
-            if (!$room) {
+            if (! $room) {
                 continue;
             }
 
@@ -625,5 +649,3 @@ class ReservationService
         }
     }
 }
-
-

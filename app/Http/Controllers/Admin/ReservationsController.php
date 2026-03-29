@@ -262,13 +262,13 @@ class ReservationsController extends Controller
         $data['sales_manager_id'] = $user->branch?->manager_user_id;
         $data['created_by'] = $user->id;
 
-        $this->reservationService->create(
+        $reservation = $this->reservationService->create(
             $data,
             $request->file('payment_receipt'),
             $request->file('visa_document')
         );
 
-        $tourId = (int) $data['tour_id'];
+        $tourId = (int) $reservation->tour_id;
         $tdId = isset($data['travel_date_id']) && $data['travel_date_id'] !== null && $data['travel_date_id'] !== ''
             ? (int) $data['travel_date_id']
             : 0;

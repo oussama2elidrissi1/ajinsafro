@@ -429,6 +429,7 @@ function ajth_get_settings() {
         'promotions' => array(
             'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
             'images' => array( '', '', '' ),
+            'items' => array(),
         ),
         'whatsapp_banner' => array(
             'enabled'   => true,
@@ -478,6 +479,10 @@ function ajth_get_settings() {
     $settings['holiday_theme'] = ajth_normalize_holiday_theme_settings(
         isset( $settings['holiday_theme'] ) ? $settings['holiday_theme'] : array(),
         $defaults['holiday_theme']
+    );
+    $settings['promotions'] = ajth_normalize_promotions_settings(
+        isset( $settings['promotions'] ) ? $settings['promotions'] : array(),
+        $defaults['promotions']
     );
     $settings['section_order'] = ajth_normalize_section_order_with_holiday_theme(
         isset( $settings['section_order'] ) ? $settings['section_order'] : array(),
@@ -569,6 +574,92 @@ function ajth_normalize_holiday_theme_settings( $theme, array $defaults ): array
     } );
     $theme['items'] = $normalized;
     return $theme;
+}
+
+function ajth_normalize_promotions_settings( $promo, array $defaults ): array {
+    if ( is_string( $promo ) ) {
+        $decoded = json_decode( $promo, true );
+        $promo = is_array( $decoded ) ? $decoded : array();
+    }
+    if ( ! is_array( $promo ) ) {
+        $promo = array();
+    }
+
+    $promo = array_replace_recursive( $defaults, $promo );
+    $items = isset( $promo['items'] ) && is_array( $promo['items'] ) ? $promo['items'] : array();
+    $normalized = array();
+
+    foreach ( $items as $idx => $item ) {
+        if ( ! is_array( $item ) ) {
+            continue;
+        }
+
+        $image_url = trim( (string) ( $item['image_url'] ?? $item['image'] ?? '' ) );
+        $title = trim( (string) ( $item['title'] ?? '' ) );
+        $subtitle = trim( (string) ( $item['subtitle'] ?? $item['description'] ?? '' ) );
+        $button_text = trim( (string) ( $item['button_text'] ?? '' ) );
+        $button_url = trim( (string) ( $item['button_url'] ?? '' ) );
+
+        if ( '' === $title && '' === $subtitle && '' === $image_url && '' === $button_text && '' === $button_url ) {
+            continue;
+        }
+
+        $normalized[] = array(
+            'title' => $title,
+            'subtitle' => $subtitle,
+            'image_url' => $image_url,
+            'button_text' => $button_text,
+            'button_url' => $button_url,
+            'is_active' => ajth_truthy( $item['is_active'] ?? $item['active'] ?? true ),
+            'sort_order' => isset( $item['sort_order'] ) ? (int) $item['sort_order'] : ( isset( $item['order'] ) ? (int) $item['order'] : (int) $idx ),
+        );
+    }
+
+    if ( empty( $normalized ) && ! empty( $promo['images'] ) && is_array( $promo['images'] ) ) {
+        foreach ( array_values( $promo['images'] ) as $idx => $image_url ) {
+            $image_url = trim( (string) $image_url );
+            if ( '' === $image_url ) {
+                continue;
+            }
+            $normalized[] = array(
+                'title' => '',
+                'subtitle' => '',
+                'image_url' => $image_url,
+                'button_text' => '',
+                'button_url' => '',
+                'is_active' => true,
+                'sort_order' => (int) $idx,
+            );
+        }
+    }
+
+    usort( $normalized, static function( $a, $b ) {
+        return ( (int) ( $a['sort_order'] ?? 0 ) ) <=> ( (int) ( $b['sort_order'] ?? 0 ) );
+    } );
+
+    $images = array();
+    foreach ( $normalized as $item ) {
+        if ( ! ajth_truthy( $item['is_active'] ?? true ) ) {
+            continue;
+        }
+        $image_url = trim( (string) ( $item['image_url'] ?? '' ) );
+        if ( '' === $image_url ) {
+            continue;
+        }
+        $images[] = $image_url;
+        if ( count( $images ) >= 3 ) {
+            break;
+        }
+    }
+    while ( count( $images ) < 3 ) {
+        $images[] = '';
+    }
+
+    return array(
+        'title' => trim( (string) ( $promo['title'] ?? $defaults['title'] ) ) ?: $defaults['title'],
+        'images' => array_slice( $images, 0, 3 ),
+        'items' => array_values( $normalized ),
+    );
 }
 
 function ajth_normalize_section_order_with_holiday_theme( $order, bool $holidayEnabled ): array {

@@ -30,7 +30,9 @@ final class ReservationWorkspaceBookingService
         array $passengersNormalized,
         array $extrasPayload,
     ): array {
-        $voyage = Voyage::query()->findOrFail((int) $request->input('tour_id'));
+        $canonicalTourId = Voyage::canonicalVoyageId((int) $request->input('tour_id'));
+        $request->merge(['tour_id' => $canonicalTourId]);
+        $voyage = Voyage::query()->findOrFail($canonicalTourId);
         $prestationType = $request->string('prestation_type')->toString();
         $travelDateFromRequest = $request->filled('travel_date_id') ? (int) $request->input('travel_date_id') : null;
 
@@ -190,8 +192,9 @@ final class ReservationWorkspaceBookingService
 
     private function resolveRemainingSeats(Voyage $voyage, ?int $travelDateId, int $totalCapacity, User $user): ?int
     {
+        $tourPhysicalIds = Voyage::allIdsSharingWpTour((int) $voyage->id);
         $q = Reservation::query()
-            ->where('tour_id', $voyage->id)
+            ->whereIn('tour_id', $tourPhysicalIds)
             ->whereIn('status', [Reservation::STATUS_EN_COURS, Reservation::STATUS_VALIDEE]);
         if ($travelDateId !== null && $travelDateId > 0) {
             $q->where('travel_date_id', $travelDateId);

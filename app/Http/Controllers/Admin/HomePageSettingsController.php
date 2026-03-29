@@ -797,54 +797,48 @@ class HomePageSettingsController extends Controller
     }
 
     /**
-     * Normalize promotions: new shape is { title, images[3] }.
-     * Migrates legacy `items[].image_url` into `images` when `images` is empty.
+     * Normalize promotions into a rich shape:
+     * { title, images[3], items[] } while remaining compatible with legacy images-only data.
      */
     private function normalizePromotionsForRead(array $settings): array
     {
         $defaults = [
             'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
             'images' => ['', '', ''],
+            'items' => [],
         ];
         $promo = $settings['promotions'] ?? [];
         if (!is_array($promo)) {
             $promo = [];
         }
         $title = trim((string) ($promo['title'] ?? $defaults['title']));
-        $images = isset($promo['images']) && is_array($promo['images']) ? array_values($promo['images']) : ['', '', ''];
-        while (count($images) < 3) {
-            $images[] = '';
-        }
-        $images = array_slice($images, 0, 3);
-        for ($i = 0; $i < 3; $i++) {
-            $images[$i] = $this->normalizeMediaUrl(trim((string) ($images[$i] ?? '')));
-        }
-        $hasAnyImage = false;
-        foreach ($images as $u) {
-            if ($u !== '') {
-                $hasAnyImage = true;
-                break;
-            }
-        }
-        if (!$hasAnyImage && !empty($promo['items']) && is_array($promo['items'])) {
-            $slot = 0;
-            foreach ($promo['items'] as $item) {
-                if ($slot >= 3) {
-                    break;
-                }
-                if (!is_array($item)) {
+        $items = $this->normalizePromotionItemsForRead($promo['items'] ?? []);
+        if (empty($items)) {
+            $legacyImages = isset($promo['images']) && is_array($promo['images']) ? array_values($promo['images']) : [];
+            foreach ($legacyImages as $idx => $url) {
+                $normalizedUrl = $this->normalizeMediaUrl(trim((string) $url));
+                if ($normalizedUrl === '') {
                     continue;
                 }
-                $url = trim((string) ($item['image_url'] ?? ''));
-                if ($url !== '') {
-                    $images[$slot] = $this->normalizeMediaUrl($url);
-                    $slot++;
-                }
+                $items[] = [
+                    'title' => '',
+                    'subtitle' => '',
+                    'image_url' => $normalizedUrl,
+                    'button_text' => '',
+                    'button_url' => '',
+                    'is_active' => true,
+                    'sort_order' => (int) $idx,
+                ];
             }
         }
+
+        usort($items, static fn ($a, $b) => ((int) ($a['sort_order'] ?? 0)) <=> ((int) ($b['sort_order'] ?? 0)));
+        $images = $this->buildPromotionImagesFromItems($items);
+
         $settings['promotions'] = [
             'title' => $title !== '' ? $title : $defaults['title'],
             'images' => $images,
+            'items' => array_values($items),
         ];
 
         return $settings;
@@ -854,6 +848,159 @@ class HomePageSettingsController extends Controller
     {
         $defaultTitle = 'Explorez plus, voyagez mieux avec AjinSafro';
         $title = trim((string) ($validated['promotions']['title'] ?? ($current['promotions']['title'] ?? $defaultTitle)));
+        $items = [];
+        $itemsInput = $request->input('promotions.items', []);
+        if (!is_array($itemsInput)) {
+            $itemsInput = [];
+        }
+
+        foreach ($itemsInput as $idx => $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $titleValue = trim((string) ($item['title'] ?? ''));
+            $subtitle = trim((string) ($item['subtitle'] ?? ''));
+            $buttonText = trim((string) ($item['button_text'] ?? ''));
+            $buttonUrl = trim((string) ($item['button_url'] ?? ''));
+            $imageUrl = trim((string) ($item['image_url'] ?? ''));
+
+            if ($request->hasFile("promotion_item_files.$idx")) {
+                $path = $request->file("promotion_item_files.$idx")->store('home-settings/promotions', 'public');
+                $imageUrl = Storage::disk('public')->url($path);
+            }
+
+            if ($request->boolean("promotion_item_remove_image.$idx")) {
+                $imageUrl = '';
+            }
+
+            $imageUrl = $this->normalizeMediaUrl($imageUrl);
+
+            if (
+                $titleValue === '' &&
+                $subtitle === '' &&
+                $imageUrl === '' &&
+                $buttonText === '' &&
+                $buttonUrl === ''
+            ) {
+                continue;
+            }
+
+            $sortOrder = isset($item['sort_order']) ? (int) $item['sort_order'] : (int) $idx;
+            $isActive = $request->boolean("promotions.items.$idx.is_active", true);
+
+            $items[] = [
+                'title' => $titleValue,
+                'subtitle' => $subtitle,
+                'image_url' => $imageUrl,
+                'image' => $imageUrl,
+                'button_text' => $buttonText,
+                'button_url' => $buttonUrl,
+                'is_active' => $isActive,
+                'active' => $isActive,
+                'sort_order' => $sortOrder,
+                'order' => $sortOrder,
+            ];
+        }
+
+        if (empty($items)) {
+            $legacyImages = $this->buildLegacyPromotionImagesPayload($request);
+            foreach ($legacyImages as $idx => $imageUrl) {
+                if ($imageUrl === '') {
+                    continue;
+                }
+                $items[] = [
+                    'title' => '',
+                    'subtitle' => '',
+                    'image_url' => $imageUrl,
+                    'image' => $imageUrl,
+                    'button_text' => '',
+                    'button_url' => '',
+                    'is_active' => true,
+                    'active' => true,
+                    'sort_order' => $idx,
+                    'order' => $idx,
+                ];
+            }
+        }
+
+        usort($items, static fn ($a, $b) => ((int) ($a['sort_order'] ?? 0)) <=> ((int) ($b['sort_order'] ?? 0)));
+        $images = $this->buildPromotionImagesFromItems($items);
+
+        return [
+            'title' => $title !== '' ? $title : $defaultTitle,
+            'images' => $images,
+            'items' => array_values($items),
+        ];
+    }
+
+    private function normalizePromotionItemsForRead($items): array
+    {
+        if (!is_array($items)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($items as $idx => $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $imageUrl = $this->normalizeMediaUrl(trim((string) ($item['image_url'] ?? $item['image'] ?? '')));
+            $title = trim((string) ($item['title'] ?? ''));
+            $subtitle = trim((string) ($item['subtitle'] ?? $item['description'] ?? ''));
+            $buttonText = trim((string) ($item['button_text'] ?? ''));
+            $buttonUrl = trim((string) ($item['button_url'] ?? ''));
+
+            if ($title === '' && $subtitle === '' && $imageUrl === '' && $buttonText === '' && $buttonUrl === '') {
+                continue;
+            }
+
+            $normalized[] = [
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'image_url' => $imageUrl,
+                'button_text' => $buttonText,
+                'button_url' => $buttonUrl,
+                'is_active' => (bool) ($item['is_active'] ?? $item['active'] ?? true),
+                'sort_order' => isset($item['sort_order']) ? (int) $item['sort_order'] : (isset($item['order']) ? (int) $item['order'] : (int) $idx),
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function buildPromotionImagesFromItems(array $items): array
+    {
+        $images = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            if (!(bool) ($item['is_active'] ?? $item['active'] ?? true)) {
+                continue;
+            }
+
+            $url = $this->normalizeMediaUrl(trim((string) ($item['image_url'] ?? $item['image'] ?? '')));
+            if ($url === '') {
+                continue;
+            }
+
+            $images[] = $url;
+            if (count($images) >= 3) {
+                break;
+            }
+        }
+
+        while (count($images) < 3) {
+            $images[] = '';
+        }
+
+        return array_slice($images, 0, 3);
+    }
+
+    private function buildLegacyPromotionImagesPayload(Request $request): array
+    {
         $images = ['', '', ''];
         for ($i = 0; $i < 3; $i++) {
             $n = $i + 1;
@@ -870,10 +1017,7 @@ class HomePageSettingsController extends Controller
             $images[$i] = $posted !== '' ? $this->normalizeMediaUrl($posted) : '';
         }
 
-        return [
-            'title' => $title !== '' ? $title : $defaultTitle,
-            'images' => $images,
-        ];
+        return $images;
     }
 
     /* ──────────────────────────────────────────────────────────────────

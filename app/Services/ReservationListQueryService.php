@@ -4,11 +4,14 @@ namespace App\Services;
 
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\Voyage;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Source unique pour les listes admin : même périmètre d’accès (agence / portail)
  * et mêmes filtres voyage / date de départ que la vue participants workspace.
+ * Filtre voyage : tous les enregistrements {@see Voyage} partageant le même {@see Voyage::wp_post_id}
+ * (évite les réservations « invisibles » si plusieurs ids Laravel pour un même tour WordPress).
  */
 final class ReservationListQueryService
 {
@@ -31,8 +34,15 @@ final class ReservationListQueryService
      */
     public function applyTourFilter(Builder $q, int $tourId): Builder
     {
-        if ($tourId > 0) {
-            $q->where('tour_id', $tourId);
+        if ($tourId <= 0) {
+            return $q;
+        }
+
+        $ids = Voyage::allIdsSharingWpTour($tourId);
+        if (count($ids) === 1) {
+            $q->where('tour_id', $ids[0]);
+        } else {
+            $q->whereIn('tour_id', $ids);
         }
 
         return $q;

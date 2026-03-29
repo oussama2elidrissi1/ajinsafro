@@ -223,7 +223,7 @@ class ReservationWorkspaceController extends Controller
         }
 
         return redirect()->route('admin.reservations.index', array_filter([
-            'voyage_id' => (int) $request->input('tour_id'),
+            'voyage_id' => (int) $reservation->tour_id,
             'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
             'status' => Reservation::STATUS_EN_COURS,
         ], fn ($v) => $v !== null && $v !== ''))->with('success', 'Réservation enregistrée.');
@@ -255,7 +255,7 @@ class ReservationWorkspaceController extends Controller
         $travelDateId = $request->filled('travel_date_id') ? (int) $request->query('travel_date_id') : null;
 
         $q = $this->reservationListQuery->baseQuery($request->user())
-            ->where('tour_id', $voyage->id)
+            ->whereIn('tour_id', Voyage::allIdsSharingWpTour((int) $voyage->id))
             ->with(['passengers', 'client:id,client_code,full_name', 'travelDate']);
         $this->reservationListQuery->applyTravelDateFilter($q, $travelDateId);
         $reservations = $q->orderByDesc('created_at')->limit(500)->get();

@@ -130,41 +130,44 @@ class Voyage extends Model
     public function getFeaturedImageUrlAttribute(): ?string
     {
         // If featured_image is set, use it
-        if (!empty($this->featured_image)) {
+        if (! empty($this->featured_image)) {
             if (str_starts_with($this->featured_image, 'http://')
                 || str_starts_with($this->featured_image, 'https://')
                 || str_starts_with($this->featured_image, 'data:')) {
                 return $this->featured_image;
             }
+
             return Storage::disk('public')->url($this->featured_image);
         }
-        
+
         // Fallback to first gallery image
         $firstImage = $this->images()->orderBy('sort_order')->first();
         if ($firstImage) {
             return $firstImage->url;
         }
-        
+
         return null;
     }
 
     public function getDiscountPercentAttribute(): ?int
     {
-        if (!$this->old_price || $this->old_price <= 0 || !$this->price_from) {
+        if (! $this->old_price || $this->old_price <= 0 || ! $this->price_from) {
             return null;
         }
         if ($this->price_from >= $this->old_price) {
             return 0;
         }
+
         return (int) round((($this->old_price - $this->price_from) / $this->old_price) * 100);
     }
 
     public function getDiscountAmountAttribute(): ?int
     {
-        if (!$this->old_price || !$this->price_from) {
+        if (! $this->old_price || ! $this->price_from) {
             return null;
         }
         $diff = $this->old_price - $this->price_from;
+
         return $diff > 0 ? $diff : 0;
     }
 
@@ -176,5 +179,41 @@ class Voyage extends Model
             'USD' => '$',
             default => $this->currency ?? 'DH',
         };
+    }
+
+    /**
+     * Tous les ids Laravel {@see Voyage} qui représentent le même circuit WordPress (même wp_post_id).
+     * Sert à aligner listes, stats et catalogue quand plusieurs lignes voyages pointent vers un même tour WP.
+     *
+     * @return list<int>
+     */
+    public static function allIdsSharingWpTour(int $voyageId): array
+    {
+        $row = static::query()->find($voyageId);
+        if (! $row) {
+            return [$voyageId];
+        }
+        $wp = $row->wp_post_id;
+        if ($wp === null || (int) $wp <= 0) {
+            return [(int) $row->id];
+        }
+
+        return static::query()
+            ->where('wp_post_id', (int) $wp)
+            ->orderBy('id')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Id voyage « canonique » pour un tour WordPress : le plus petit {@see Voyage::id} (même règle que le catalogue workspace).
+     */
+    public static function canonicalVoyageId(int $voyageId): int
+    {
+        $ids = static::allIdsSharingWpTour($voyageId);
+
+        return $ids[0] ?? $voyageId;
     }
 }
