@@ -3,10 +3,11 @@
 namespace App\Support;
 
 use App\Models\Reservation;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 /**
- * Données pour le modal de confirmation après création (hub réservations).
+ * Données flash pour le bandeau de succès après création (hub réservations). Aucun champ technique côté UI.
  */
 final class AdminReservationFlash
 {
@@ -24,13 +25,6 @@ final class AdminReservationFlash
             $reservation->passengers->count()
         );
 
-        $typeLabel = match ($reservation->prestation_type) {
-            'package' => 'Package',
-            'vol' => 'Vol',
-            'hebergement' => 'Hébergement',
-            default => $reservation->prestation_type ? (string) $reservation->prestation_type : '—',
-        };
-
         $statusLabel = match ($reservation->status) {
             Reservation::STATUS_EN_COURS => 'En attente',
             Reservation::STATUS_VALIDEE => 'Confirmée',
@@ -43,8 +37,9 @@ final class AdminReservationFlash
             : '—';
 
         $currency = $reservation->tour?->currency_symbol ?? 'MAD';
-        $totalLabel = $reservation->base_price !== null
-            ? number_format((float) $reservation->base_price, 2, ',', ' ').' '.$currency
+        $totalAmount = $reservation->total_price;
+        $totalLabel = $totalAmount !== null
+            ? number_format((float) $totalAmount, 2, ',', ' ').' '.$currency
             : '—';
 
         $filteredQuery = array_filter([
@@ -56,25 +51,23 @@ final class AdminReservationFlash
             'created' => '1',
         ], fn ($v) => $v !== null && $v !== '');
 
+        Log::debug('admin.reservation_created', [
+            'reservation_id' => $reservation->id,
+            'tour_id' => $reservation->tour_id,
+            'wp_tour_post_id' => $reservation->wp_tour_post_id,
+            'travel_date_id' => $reservation->travel_date_id,
+            'prestation_type' => $reservation->prestation_type,
+            'status' => $reservation->status,
+            'branch_id' => $reservation->branch_id,
+        ]);
+
         return [
-            'title' => 'Réservation créée avec succès',
             'id' => $reservation->id,
             'voyage_name' => $voyageName,
-            'type_label' => $typeLabel,
             'departure_label' => $dateLabel,
             'pax_count' => $paxCount,
             'total_label' => $totalLabel,
             'status_label' => $statusLabel,
-            'debug' => [
-                'voyage_id' => (int) $reservation->tour_id,
-                'wp_tour_post_id' => $reservation->wp_tour_post_id,
-                'travel_date_id' => $reservation->travel_date_id,
-                'prestation_type' => $reservation->prestation_type,
-                'status' => $reservation->status,
-                'branch_id' => $reservation->branch_id,
-                'agent_id' => $reservation->agent_id,
-                'created_by' => $reservation->created_by,
-            ],
             'urls' => [
                 'view_in_list' => URL::route('admin.reservations.index', $filteredQuery),
                 'view_all' => URL::route('admin.reservations.index'),

@@ -2,7 +2,8 @@
     $highlightReservationId = $highlightReservationId ?? 0;
 @endphp
 @forelse($reservations as $reservation)
-    <tr @class(['table-info' => $highlightReservationId && (int) $reservation->id === (int) $highlightReservationId])>
+    <tr @class(['res-hub-row-highlight' => $highlightReservationId && (int) $reservation->id === (int) $highlightReservationId])
+        @if($highlightReservationId && (int) $reservation->id === (int) $highlightReservationId) id="res-hub-highlight-row" @endif>
         <td class="ps-3 text-muted small">{{ $reservation->id }}</td>
         <td>
             @if($reservation->client)

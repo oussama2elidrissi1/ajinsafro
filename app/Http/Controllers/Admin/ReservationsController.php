@@ -695,7 +695,7 @@ class ReservationsController extends Controller
         $data = $this->hubListData($request);
         $highlightReservationId = (int) $request->query('highlight', 0);
 
-        $reservationCreated = $request->session()->get('reservation_created');
+        $reservationCreated = $request->session()->pull('reservation_created');
         if (! is_array($reservationCreated)) {
             $reservationCreated = null;
         }

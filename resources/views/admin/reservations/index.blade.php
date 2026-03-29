@@ -67,12 +67,30 @@
     @endif
 
     @if(is_array($reservationCreated))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border border-success" role="alert" id="res-hub-created-banner">
-            <strong class="d-block mb-1"><i class="bx bx-check-circle me-1"></i> Réservation créée avec succès</strong>
-            <span class="small d-block text-body">#{{ $reservationCreated['id'] ?? '—' }} · {{ $reservationCreated['voyage_name'] ?? '—' }} · {{ $reservationCreated['type_label'] ?? '—' }}
-                · {{ $reservationCreated['departure_label'] ?? '—' }} · {{ $reservationCreated['pax_count'] ?? '—' }} pers. · {{ $reservationCreated['total_label'] ?? '—' }} · {{ $reservationCreated['status_label'] ?? '—' }}</span>
-            <span class="small text-muted d-block mt-1">Un panneau détaillé s’ouvre ci-dessous ; ce bandeau reste visible si le modal ne s’affiche pas (ex. conflit JS).</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        <div class="alert alert-success fade show shadow-sm border border-success mb-3" role="status" id="res-hub-created-banner">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                <div class="flex-grow-1 min-w-0">
+                    <strong class="d-block mb-2"><i class="bx bx-check-circle me-1"></i> Réservation créée avec succès</strong>
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">N° réservation</dt>
+                        <dd class="col-sm-8 col-md-9 mb-1"><strong>#{{ $reservationCreated['id'] ?? '—' }}</strong></dd>
+                        <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Voyage</dt>
+                        <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['voyage_name'] ?? '—' }}</dd>
+                        <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Date de départ</dt>
+                        <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['departure_label'] ?? '—' }}</dd>
+                        <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Personnes</dt>
+                        <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['pax_count'] ?? '—' }}</dd>
+                        <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Total</dt>
+                        <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['total_label'] ?? '—' }}</dd>
+                        <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-0">Statut</dt>
+                        <dd class="col-sm-8 col-md-9 mb-0">{{ $reservationCreated['status_label'] ?? '—' }}</dd>
+                    </dl>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center flex-shrink-0">
+                    <a href="{{ $reservationCreated['urls']['edit'] ?? '#' }}" class="btn btn-primary btn-sm">Voir la réservation</a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="alert">Fermer</button>
+                </div>
+            </div>
         </div>
     @endif
 
@@ -178,50 +196,6 @@
         </div>
     </div>
 
-    @if(is_array($reservationCreated))
-    <div class="modal fade" id="modalResCreated" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title text-success"><i class="bx bx-check-circle me-1"></i> {{ $reservationCreated['title'] ?? 'Réservation créée' }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                </div>
-                <div class="modal-body pt-2">
-                    <p class="text-muted small mb-3">Les filtres de la liste correspondent à ceux du formulaire ; la ligne est surlignée. Un rafraîchissement automatique met à jour les chiffres ci-dessous.</p>
-                    <div class="bg-light rounded p-3 mb-3 small">
-                        <div class="fw-semibold mb-2">Détails</div>
-                        <ul class="list-unstyled mb-0">
-                            <li><span class="text-muted">ID réservation</span> : <strong>#{{ $reservationCreated['id'] ?? '—' }}</strong></li>
-                            <li><span class="text-muted">Voyage</span> : {{ $reservationCreated['voyage_name'] ?? '—' }}</li>
-                            <li><span class="text-muted">Type</span> : {{ $reservationCreated['type_label'] ?? '—' }}</li>
-                            <li><span class="text-muted">Date de départ</span> : {{ $reservationCreated['departure_label'] ?? '—' }}</li>
-                            <li><span class="text-muted">Nombre de personnes</span> : {{ $reservationCreated['pax_count'] ?? '—' }}</li>
-                            <li><span class="text-muted">Total</span> : {{ $reservationCreated['total_label'] ?? '—' }}</li>
-                            <li><span class="text-muted">Statut</span> : {{ $reservationCreated['status_label'] ?? '—' }}</li>
-                        </ul>
-                    </div>
-                    <div class="border border-dashed rounded p-2 mb-3 small font-monospace text-body-secondary">
-                        <div class="fw-semibold text-dark mb-1">Debug (temporaire)</div>
-                        @php $dbg = $reservationCreated['debug'] ?? []; @endphp
-                        <div>voyage_id (tour_id) : <strong>{{ $dbg['voyage_id'] ?? '—' }}</strong></div>
-                        <div>wp_tour_post_id : <strong>{{ $dbg['wp_tour_post_id'] ?? '—' }}</strong></div>
-                        <div>travel_date_id : <strong>{{ $dbg['travel_date_id'] ?? '—' }}</strong></div>
-                        <div>prestation_type : <strong>{{ $dbg['prestation_type'] ?? '—' }}</strong></div>
-                        <div>status : <strong>{{ $dbg['status'] ?? '—' }}</strong></div>
-                        <div>branch_id : <strong>{{ $dbg['branch_id'] ?? '—' }}</strong></div>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ $reservationCreated['urls']['view_in_list'] ?? '#' }}" class="btn btn-primary btn-sm">Voir la réservation (liste filtrée)</a>
-                        <a href="{{ $reservationCreated['urls']['edit'] ?? '#' }}" class="btn btn-outline-primary btn-sm">Ouvrir la fiche édition</a>
-                        <a href="{{ $reservationCreated['urls']['view_all'] ?? '#' }}" class="btn btn-outline-secondary btn-sm">Voir toutes les réservations</a>
-                        <button type="button" class="btn btn-light btn-sm ms-auto" data-bs-dismiss="modal">Fermer</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
     {{-- Modal détails --}}
     <div class="modal fade" id="resHubDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -293,6 +267,7 @@
     <style>
         .reservations-table th { font-weight: 600; white-space: nowrap; font-size: 0.8rem; }
         .reservations-table td { vertical-align: middle; }
+        .res-hub-row-highlight { --res-hub-highlight-rgb: 25, 135, 84; background-color: rgba(var(--res-hub-highlight-rgb), 0.08); box-shadow: inset 3px 0 0 0 rgb(var(--res-hub-highlight-rgb)); }
     </style>
 @endsection
 
@@ -322,6 +297,14 @@
         if (tbody && payload.tbody_html) tbody.innerHTML = payload.tbody_html;
         var pag = document.getElementById('res-hub-pagination');
         if (pag && typeof payload.pagination_html === 'string') pag.innerHTML = payload.pagination_html;
+    }
+
+    function scrollToHighlightedReservationRow() {
+        var row = document.getElementById('res-hub-highlight-row');
+        if (!row) return;
+        setTimeout(function () {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
     }
 
     function fetchAndApplyHubRefresh() {
@@ -492,13 +475,14 @@
         });
     }
 
-    var createdModalEl = document.getElementById('modalResCreated');
-    if (createdModalEl) {
-        var cm = new bootstrap.Modal(createdModalEl);
-        cm.show();
-        setTimeout(function () { fetchAndApplyHubRefresh(); }, 150);
-    } else if (hubRefreshUrl && /(?:^|[?&])highlight=/.test(window.location.search)) {
-        setTimeout(function () { fetchAndApplyHubRefresh(); }, 150);
+    var createdBanner = document.getElementById('res-hub-created-banner');
+    var needsHubRefresh = (hubRefreshUrl && createdBanner) || (hubRefreshUrl && /(?:^|[?&])highlight=/.test(window.location.search));
+    if (needsHubRefresh) {
+        setTimeout(function () {
+            fetchAndApplyHubRefresh().then(function () { scrollToHighlightedReservationRow(); });
+        }, 150);
+    } else if (document.getElementById('res-hub-highlight-row')) {
+        scrollToHighlightedReservationRow();
     }
 })();
 </script>
