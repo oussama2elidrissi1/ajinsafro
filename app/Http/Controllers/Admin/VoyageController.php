@@ -922,8 +922,9 @@ class VoyageController extends Controller
 
     /**
      * Calcule le total des places du voyage à partir des chambres configurées (hôtel(s) du voyage).
-     * Règle : pour chaque type de chambre actif, places = room_count × capacity_total (ou capacity_adults + capacity_children).
-     * Total = somme de ces places sur tous les types de chambres de tous les hôtels du voyage.
+     * Règle : pour chaque ligne de chambre, places = room_count × capacity_total (sinon adults+enfants si cap. tot. vide).
+     * Somme sur tous les hôtels du tour. Une ligne est exclue seulement si is_active = 0/false explicitement en base ;
+     * NULL ou colonne absente = incluse (compatibilité anciennes données).
      */
     private function computeTourTotalPlacesFromRooms(int $tourId): int
     {
@@ -931,7 +932,16 @@ class VoyageController extends Controller
         try {
             $tourHotels = TourHotel::getAllForTour($tourId)->load('rooms');
             foreach ($tourHotels as $hotel) {
-                foreach ($hotel->rooms->where('is_active', true) as $room) {
+                foreach ($hotel->rooms as $room) {
+                    // Inclure toutes les chambres sauf si is_active est explicitement désactivé en base.
+                    // (where('is_active', true) excluait NULL / anciennes lignes → une seule ligne comptée.)
+                    $attrs = $room->getAttributes();
+                    if (array_key_exists('is_active', $attrs)) {
+                        $ia = $attrs['is_active'];
+                        if ($ia === false || $ia === 0 || $ia === '0') {
+                            continue;
+                        }
+                    }
                     $cap = (int) ($room->capacity_total ?? 0);
                     if ($cap <= 0) {
                         $cap = (int) ($room->capacity_adults ?? 0) + (int) ($room->capacity_children ?? 0);

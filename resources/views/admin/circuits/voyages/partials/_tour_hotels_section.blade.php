@@ -297,6 +297,7 @@
         initHotelCheckInOutValidation(clone);
         // Mettre à jour le titre
         updateHotelsTitle();
+        recalculateVoyagePlacesPreview();
     });
 
     // Validation check-in / check-out
@@ -387,6 +388,46 @@
     
     // Mettre à jour le titre au chargement
     updateHotelsTitle();
+
+    /** Places / max. personnes : somme (nb chambres × cap. tot.) sur toutes les lignes actives (aperçu formulaire édition). */
+    function recalculateVoyagePlacesPreview() {
+        var wrap = document.getElementById('tour-hotels-wrapper');
+        if (!wrap) return;
+        function pInt(v) {
+            var n = parseInt(String(v == null ? '' : v).trim(), 10);
+            return isNaN(n) || n < 0 ? 0 : n;
+        }
+        var total = 0;
+        wrap.querySelectorAll('.tour-room-row').forEach(function(row) {
+            var typeSel = row.querySelector('select[name*="[room_type]"]');
+            if (!typeSel || !String(typeSel.value || '').trim()) return;
+            var actCb = row.querySelector('input[type="checkbox"][name*="[is_active]"]');
+            if (actCb && !actCb.checked) return;
+            var rcInp = row.querySelector('input[name*="[room_count]"]');
+            var ctInp = row.querySelector('input[name*="[capacity_total]"]');
+            var nb = pInt(rcInp && rcInp.value);
+            var cap = pInt(ctInp && ctInp.value);
+            if (cap <= 0) {
+                var ad = row.querySelector('input[name*="[capacity_adults]"]');
+                var ch = row.querySelector('input[name*="[capacity_children]"]');
+                cap = pInt(ad && ad.value) + pInt(ch && ch.value);
+            }
+            if (nb <= 0) return;
+            if (cap <= 0) cap = 1;
+            total += nb * cap;
+        });
+        var mp = document.getElementById('max_people');
+        var pl = document.getElementById('places_display');
+        if (mp) mp.value = String(total);
+        if (pl) pl.value = String(total);
+    }
+
+    var hotelsWrap = document.getElementById('tour-hotels-wrapper');
+    if (hotelsWrap) {
+        hotelsWrap.addEventListener('input', recalculateVoyagePlacesPreview);
+        hotelsWrap.addEventListener('change', recalculateVoyagePlacesPreview);
+    }
+    recalculateVoyagePlacesPreview();
     
     // Mettre à jour le titre quand les champs check-in/check-out changent
     container.addEventListener('change', function(e) {
@@ -433,6 +474,7 @@
                     initHotelCheckInOutValidation(r);
                 });
                 updateHotelsTitle();
+                recalculateVoyagePlacesPreview();
             }
         }
         // Ajouter une chambre
@@ -460,6 +502,7 @@
             clone.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', nextRi); });
             clone.querySelectorAll('.badge.bg-success').forEach(function(b){ b.remove(); });
             roomsCont.appendChild(clone);
+            recalculateVoyagePlacesPreview();
         }
         // Supprimer une chambre
         if (e.target.classList.contains('tour-remove-room')) {
@@ -478,6 +521,7 @@
                 rr.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-room-index', ri); });
                 rr.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', ri); });
             });
+            recalculateVoyagePlacesPreview();
         }
     });
 
@@ -561,6 +605,7 @@
                             if (actInp) actInp.checked = room.is_active !== false;
                         });
                     }
+                    recalculateVoyagePlacesPreview();
                     copySelect.value = '';
                 })
                 .catch(function(){ alert('Impossible de charger l\'hôtel.'); });
