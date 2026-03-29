@@ -391,7 +391,7 @@
     // Mettre à jour le titre au chargement
     updateHotelsTitle();
 
-    // Recalcul Places / Max personnes : implémenté dans edit.blade @push (après #max_people dans le DOM) + écouteurs sur #edit-voyage-form.
+    // Recalcul Places / Max personnes : logique dans edit.blade.php (section scripts en fin de page), champs #max_people / #places_display, écouteurs sur #edit-voyage-form.
     if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
     
     // Mettre à jour le titre quand les champs check-in/check-out changent
