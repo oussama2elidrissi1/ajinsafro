@@ -64,6 +64,7 @@
             return [
                 'label' => (string) ($child['label'] ?? ''),
                 'route' => (string) ($child['route'] ?? ''),
+                'query' => $child['query'] ?? null,
             ];
         })->filter(fn ($item) => $item['route'] !== '' && Route::has($item['route']))->values()->all();
 
@@ -117,7 +118,8 @@
                     <div class="pb-2 pt-0 flex flex-col gap-0.5 px-1">
                         @foreach($group['items'] as $item)
                             @php $isActive = $navActive($item['route']); @endphp
-                            <a href="{{ route($item['route']) }}"
+                            @php $itemHref = !empty($item['query']) ? route($item['route'], $item['query']) : route($item['route']); @endphp
+                            <a href="{{ $itemHref }}"
                                data-partner-nav
                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg {{ $isActive ? 'bg-[#e6f3fa]/60 text-[#0083c4] font-semibold' : 'text-gray-600 hover:bg-white hover:text-[#0083c4] font-medium' }} transition-colors">
                                 <span class="w-1.5 h-1.5 rounded-full shrink-0 {{ $isActive ? 'bg-[#0083c4]' : 'bg-gray-300' }}"></span>

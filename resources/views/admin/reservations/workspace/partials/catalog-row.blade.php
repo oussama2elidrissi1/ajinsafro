@@ -5,7 +5,7 @@
     if ($hasLaravel && ! empty($row['travel_date_id'])) {
         $q['travel_date_id'] = $row['travel_date_id'];
     }
-    $participantsUrl = $hasLaravel ? route('admin.reservations.workspace.prestation.participants', $q) : '#';
+    $participantsUrl = $hasLaravel ? route('admin.reservations.index', $q) : '#';
     $pdfUrl = $hasLaravel ? route('admin.reservations.workspace.prestation.pdf', $q) : '#';
     $editTourUrl = $wpPostId ? route('admin.circuits.voyages.edit', $wpPostId) : null;
     $hasDepDate = ! empty($row['departure_date']);

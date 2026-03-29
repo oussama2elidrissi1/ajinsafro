@@ -61,7 +61,8 @@ Route::post('auth/public-login', [\App\Http\Controllers\Auth\PublicLoginControll
     ->name('auth.public-login');
 Route::get('auth/public-login', function () {
     $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
-    return redirect()->away($adminUrl . '/login');
+
+    return redirect()->away($adminUrl.'/login');
 })->name('auth.public-login.get');
 
 // GET /logout: session close + redirect to public website
@@ -69,6 +70,7 @@ Route::get('logout', function (\Illuminate\Http\Request $request) {
     \Illuminate\Support\Facades\Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
+
     return redirect()->away((string) config('app.public_url', 'https://ajinsafro.net'));
 })->name('logout.get');
 
@@ -85,8 +87,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
 Route::prefix('partner')->group(function () {
     Route::get('{any?}', function (?string $any = null) {
         $partnerUrl = rtrim((string) config('app.partner_url', 'https://partenaire.ajinsafro.net'), '/');
-        $path = $any ? '/' . ltrim($any, '/') : '/dashboard';
-        return redirect()->away($partnerUrl . $path);
+        $path = $any ? '/'.ltrim($any, '/') : '/dashboard';
+
+        return redirect()->away($partnerUrl.$path);
     })->where('any', '.*');
 });
 
@@ -130,6 +133,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
         Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');
         Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
+        Route::get('reservations/{reservation}/panel', [ReservationsController::class, 'panel'])->name('reservations.panel');
         Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
         Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');
         Route::delete('reservations/{reservation}', [ReservationsController::class, 'destroy'])->name('reservations.destroy');
@@ -357,4 +361,3 @@ Route::middleware('auth')->prefix('demo')->name('demo.')->group(function () {
     Route::get('/', [DemoController::class, 'index'])->name('index');
     Route::get('{any}', [DemoController::class, 'page'])->name('page');
 });
-

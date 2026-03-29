@@ -524,8 +524,8 @@
             <a href="{{ route('admin.circuits.voyages.index') }}" class="ws-hero__btn ws-hero__btn--outline">
                 <i class="fas fa-route" aria-hidden="true"></i> Circuits / voyages
             </a>
-            <a href="{{ route('admin.reservations.toutes') }}" class="ws-hero__btn ws-hero__btn--primary">
-                <i class="fas fa-list-ul" aria-hidden="true"></i> Toutes les réservations
+            <a href="{{ route('admin.reservations.index') }}" class="ws-hero__btn ws-hero__btn--primary">
+                <i class="fas fa-list-ul" aria-hidden="true"></i> Liste des réservations
             </a>
         </div>
     </header>

@@ -1,57 +1,57 @@
 <?php
 
 use App\Http\Controllers\Admin\AccommodationsController;
+use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\AirlineController;
+use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CircuitsController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CustomersController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\HeroImageController;
+use App\Http\Controllers\Admin\HomePageSettingsController;
+use App\Http\Controllers\Admin\HotelBackofficeController;
+use App\Http\Controllers\Admin\MessagerieController;
 use App\Http\Controllers\Admin\OperationsController;
+use App\Http\Controllers\Admin\PartnerAccountController;
+use App\Http\Controllers\Admin\PartnerCommissionRuleController;
 use App\Http\Controllers\Admin\PartnersController;
 use App\Http\Controllers\Admin\ProductsController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\ReportingController;
+use App\Http\Controllers\Admin\ReservationMessageController;
 use App\Http\Controllers\Admin\ReservationsController;
-use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\RoleAccessController;
-use App\Http\Controllers\Admin\UserAccessController;
-use App\Http\Controllers\Admin\DepartureController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\TaxonomyTermController;
+use App\Http\Controllers\Admin\TourHotelController;
+use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\TravelDayItemController;
 use App\Http\Controllers\Admin\TravelProgramDayController;
+use App\Http\Controllers\Admin\UserAccessController;
 use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
-use App\Http\Controllers\Admin\HomePageSettingsController;
-use App\Http\Controllers\Admin\HeroImageController;
+use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpMediaController;
-use App\Http\Controllers\Admin\ActivityController;
-use App\Http\Controllers\Admin\AirlineController;
-use App\Http\Controllers\Admin\BranchController;
-use App\Http\Controllers\Admin\ReservationMessageController;
-use App\Http\Controllers\Admin\MessagerieController;
-use App\Http\Controllers\Admin\PartnerAccountController;
-use App\Http\Controllers\Admin\PartnerCommissionRuleController;
+use App\Http\Controllers\Admin\WpTourController;
+use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Auth\PartnerRegistrationController;
+use App\Http\Controllers\Booking\CheckoutController;
+use App\Http\Controllers\Booking\StartBookingController;
+use App\Http\Controllers\DemoController;
+use App\Http\Controllers\Front\HomeController as FrontHomeController;
+use App\Http\Controllers\Front\SearchController as FrontSearchController;
+use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
+use App\Http\Controllers\Internal\SyncInboundController;
 use App\Http\Controllers\Partner\CatalogueController as PartnerCatalogueController;
 use App\Http\Controllers\Partner\ClientsController as PartnerClientsController;
 use App\Http\Controllers\Partner\CommissionsController as PartnerCommissionsController;
 use App\Http\Controllers\Partner\DashboardController as PartnerDashboardController;
 use App\Http\Controllers\Partner\DocumentsController as PartnerDocumentsController;
 use App\Http\Controllers\Partner\ReservationsController as PartnerReservationsController;
-use App\Http\Controllers\Admin\TourHotelController;
-use App\Http\Controllers\Admin\HotelBackofficeController;
-use App\Http\Controllers\Admin\TourTransferController;
-use App\Http\Controllers\Admin\TaxonomyTermController;
-use App\Http\Controllers\Admin\ProgramApiController;
-use App\Http\Controllers\Admin\WordPress\HotelController;
-use App\Http\Controllers\Admin\WpTourController;
-use App\Http\Controllers\Auth\LockScreenController;
-use App\Http\Controllers\Booking\CheckoutController;
-use App\Http\Controllers\Booking\StartBookingController;
-use App\Http\Controllers\Front\HomeController as FrontHomeController;
-use App\Http\Controllers\Front\SearchController as FrontSearchController;
-use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
-use App\Http\Controllers\Internal\SyncInboundController;
-use App\Http\Controllers\DemoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -146,19 +146,12 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
     Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');
     Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
+    Route::get('reservations/{reservation}/panel', [ReservationsController::class, 'panel'])->name('reservations.panel');
     Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
     Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');
     Route::delete('reservations/{reservation}', [ReservationsController::class, 'destroy'])->name('reservations.destroy');
     Route::post('reservations/{reservation}/validate', [ReservationsController::class, 'validateReservation'])->name('reservations.validate');
-
-    // CRUD Réservations
-    Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
-    Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
     Route::get('reservations/{reservation}', [ReservationsController::class, 'show'])->name('reservations.show');
-    Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
-    Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');
-    Route::delete('reservations/{reservation}', [ReservationsController::class, 'destroy'])->name('reservations.destroy');
-    Route::post('reservations/{reservation}/validate', [ReservationsController::class, 'validateReservation'])->name('reservations.validate');
 
     Route::get('customers', [CustomersController::class, 'index'])->name('customers.index');
     Route::get('customers/clients/trashed', [ClientController::class, 'trashed'])->name('customers.clients.trashed');
@@ -252,7 +245,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::post('circuits/voyages/{voyage}/departures', [DepartureController::class, 'store'])->name('circuits.voyages.departures.store');
     Route::match(['put', 'patch'], 'circuits/voyages/{voyage}/departures/{departure}', [DepartureController::class, 'update'])->name('circuits.voyages.departures.update');
     Route::delete('circuits/voyages/{voyage}/departures/{departure}', [DepartureController::class, 'destroy'])->name('circuits.voyages.departures.destroy');
-    
+
     // Travel Day Items (Package Builder)
     Route::post('circuits/voyages/{voyage}/items', [TravelDayItemController::class, 'store'])->name('circuits.voyages.items.store');
     Route::get('circuits/voyages/{voyage}/items/{item}/edit', [TravelDayItemController::class, 'edit'])->name('circuits.voyages.items.edit');
@@ -360,7 +353,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
         Route::get('hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hotels.edit')->whereNumber('hotel');
         Route::match(['put', 'patch'], 'hotels/{hotel}', [HotelController::class, 'update'])->name('hotels.update')->whereNumber('hotel');
         Route::delete('hotels/{hotel}', [HotelController::class, 'destroy'])->name('hotels.destroy')->whereNumber('hotel');
-        
+
         // Tours (st_tours) - Direct CRUD dans DB WordPress
         Route::get('tours', [WpTourController::class, 'index'])->name('tours.index');
         Route::get('tours/create', [WpTourController::class, 'create'])->name('tours.create');

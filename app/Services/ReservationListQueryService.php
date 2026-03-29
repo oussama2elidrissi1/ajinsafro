@@ -52,4 +52,63 @@ final class ReservationListQueryService
 
         return $q;
     }
+
+    /**
+     * @param  Builder<\App\Models\Reservation>  $q
+     * @return Builder<\App\Models\Reservation>
+     */
+    public function applyClientSearch(Builder $q, ?string $search): Builder
+    {
+        $s = $search !== null ? trim($search) : '';
+        if ($s === '') {
+            return $q;
+        }
+        $like = '%'.addcslashes($s, '%_\\').'%';
+        $q->where(function ($sub) use ($like) {
+            $sub->where('client_first_name', 'like', $like)
+                ->orWhere('client_last_name', 'like', $like)
+                ->orWhere('client_email', 'like', $like)
+                ->orWhere('client_phone', 'like', $like);
+        });
+
+        return $q;
+    }
+
+    /**
+     * @param  Builder<\App\Models\Reservation>  $q
+     * @return Builder<\App\Models\Reservation>
+     */
+    public function applyStatusFilter(Builder $q, ?string $status): Builder
+    {
+        if ($status !== null && $status !== '' && in_array($status, [
+            Reservation::STATUS_EN_COURS,
+            Reservation::STATUS_VALIDEE,
+            Reservation::STATUS_ANNULEE,
+        ], true)) {
+            $q->where('status', $status);
+        }
+
+        return $q;
+    }
+
+    /**
+     * Compteurs sur l’ensemble filtré (même base que le tableau paginé).
+     *
+     * @param  Builder<\App\Models\Reservation>  $q
+     * @return array{total: int, en_cours: int, validee: int, annulee: int}
+     */
+    public function aggregateStatusCounts(Builder $q): array
+    {
+        $rows = (clone $q)
+            ->selectRaw('status, COUNT(*) as c')
+            ->groupBy('status')
+            ->pluck('c', 'status');
+
+        return [
+            'total' => (int) $rows->sum(),
+            'en_cours' => (int) ($rows[Reservation::STATUS_EN_COURS] ?? 0),
+            'validee' => (int) ($rows[Reservation::STATUS_VALIDEE] ?? 0),
+            'annulee' => (int) ($rows[Reservation::STATUS_ANNULEE] ?? 0),
+        ];
+    }
 }

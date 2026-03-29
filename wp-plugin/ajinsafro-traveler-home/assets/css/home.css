@@ -2267,7 +2267,7 @@ body.aj-has-bg-pattern::after {
     border-radius: 18px;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    min-height: clamp(220px, 24vw, 260px);
+    min-height: clamp(200px, 20vw, 220px);
 }
 
 .aj-cruises__image {
@@ -2288,30 +2288,30 @@ body.aj-has-bg-pattern::after {
 .aj-cruises__content {
     position: relative;
     z-index: 2;
-    padding: clamp(28px, 4vw, 40px) clamp(24px, 4vw, 36px);
+    padding: clamp(20px, 3vw, 28px) clamp(20px, 3vw, 30px);
     background: linear-gradient(90deg, rgba(14, 58, 90, 0.95) 0%, rgba(14, 58, 90, 0.7) 50%, rgba(14, 58, 90, 0.3) 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    min-height: clamp(220px, 24vw, 260px);
+    min-height: clamp(200px, 20vw, 220px);
 }
 
 .aj-cruises__title {
-    font-size: clamp(1.7rem, 3vw, 2.35rem);
+    font-size: clamp(1.45rem, 2.3vw, 1.95rem);
     font-weight: 700;
     color: #fff;
-    margin: 0 0 16px;
+    margin: 0 0 10px;
     letter-spacing: 0.06em;
 }
 
 .aj-cruises__button {
     display: inline-block;
-    padding: 11px 28px;
+    padding: 9px 22px;
     background: #0083c4;
     color: #fff;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     border-radius: 30px;
     text-decoration: none;
     transition: all 0.3s;
@@ -2538,13 +2538,13 @@ body.aj-has-bg-pattern::after {
    18. HOLIDAYS BY THEME
    ========================================================================== */
 .aj-theme {
-    padding: 14px 0 18px;
+    padding: 10px 0 12px;
 }
 .aj-theme__grid {
     display: grid;
     grid-template-columns: minmax(280px, 36%) minmax(0, 1fr);
-    gap: 16px;
-    align-items: stretch;
+    gap: 14px;
+    align-items: start;
 }
 .aj-theme__left {
     position: relative;
@@ -2553,12 +2553,12 @@ body.aj-has-bg-pattern::after {
     background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
     border: 1px solid #e5eef7;
     box-shadow: 0 4px 20px rgba(0,0,0,.08);
-    min-height: 350px;
+    min-height: 300px;
     display: flex;
     flex-direction: column;
 }
 .aj-theme__left-media {
-    height: 148px;
+    height: 124px;
     background: linear-gradient(135deg, #0083c4 0%, #0e3a5a 100%);
     display: flex;
     align-items: center;
@@ -2580,10 +2580,10 @@ body.aj-has-bg-pattern::after {
     object-fit: cover;
 }
 .aj-theme__left-content {
-    padding: 18px;
+    padding: 14px 14px 12px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     flex: 1;
     z-index: 2;
 }
@@ -2596,8 +2596,8 @@ body.aj-has-bg-pattern::after {
 }
 .aj-theme__title {
     color: #0e3a5a;
-    font-size: clamp(1.45rem, 2vw, 2rem);
-    line-height: 1.2;
+    font-size: clamp(1.22rem, 1.6vw, 1.65rem);
+    line-height: 1.14;
     font-weight: 800;
 }
 .aj-theme__title span {
@@ -2605,21 +2605,21 @@ body.aj-has-bg-pattern::after {
 }
 .aj-theme__subtitle {
     color: #4b5563;
-    font-size: .88rem;
+    font-size: .82rem;
     max-width: 32ch;
 }
 .aj-theme__cta {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-top: 4px;
+    margin-top: 2px;
     width: fit-content;
-    padding: 8px 14px;
+    padding: 7px 12px;
     border-radius: 999px;
     background: #0083c4;
     color: #fff;
     font-weight: 700;
-    font-size: .8rem;
+    font-size: .76rem;
 }
 .aj-theme__cta:hover {
     background: #006ba3;
@@ -2629,7 +2629,7 @@ body.aj-has-bg-pattern::after {
     position: absolute;
     right: -18px;
     bottom: -18px;
-    width: 108px;
+    width: 92px;
     opacity: .28;
     pointer-events: none;
 }
@@ -2638,27 +2638,28 @@ body.aj-has-bg-pattern::after {
     background: rgba(255,255,255,.72);
     border: 1px solid #eef2f7;
     border-radius: 16px;
-    padding: 12px 14px 6px;
+    padding: 10px 12px 4px;
 }
 .aj-theme-track {
     overflow-x: auto;
     scroll-behavior: smooth;
-    padding-bottom: 2px;
+    gap: 12px;
+    padding-bottom: 0;
 }
 .aj-theme-card {
     flex: 0 0 calc(33.333% - 11px);
-    min-width: 225px;
-    border-radius: 14px;
+    min-width: 210px;
+    border-radius: 12px;
     border: 1px solid #edf1f6;
     background: #fff;
     box-shadow: 0 4px 16px rgba(0,0,0,.06);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 276px;
+    min-height: 238px;
 }
 .aj-theme-card__media {
-    height: 124px;
+    height: 102px;
     background: #d9e5f2;
 }
 .aj-theme-card__media img {
@@ -2683,25 +2684,25 @@ body.aj-has-bg-pattern::after {
     display: none;
 }
 .aj-theme-card__body {
-    padding: 12px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     flex: 1;
 }
 .aj-theme-card__badge {
     align-self: flex-start;
     display: inline-block;
-    font-size: .68rem;
+    font-size: .64rem;
     font-weight: 700;
     color: #0b5480;
     background: #e8f5fc;
     border: 1px solid #c8e7f9;
     border-radius: 999px;
-    padding: 3px 9px;
+    padding: 2px 8px;
 }
 .aj-theme-card__title {
-    font-size: .95rem;
+    font-size: .9rem;
     font-weight: 700;
     color: #1f2937;
     line-height: 1.3;
@@ -2709,26 +2710,26 @@ body.aj-has-bg-pattern::after {
 .aj-theme-card__desc {
     margin: 0;
     color: #5b6573;
-    font-size: .8rem;
-    line-height: 1.4;
+    font-size: .76rem;
+    line-height: 1.34;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 .aj-theme-card__tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
 }
 .aj-theme-card__tag {
     background: #f3f7fb;
     border: 1px solid #e3ebf3;
     color: #4b5563;
     border-radius: 999px;
-    font-size: .7rem;
+    font-size: .66rem;
     font-weight: 600;
-    padding: 4px 9px;
+    padding: 3px 8px;
 }
 .aj-theme-card__btn {
     margin-top: auto;
@@ -2736,11 +2737,11 @@ body.aj-has-bg-pattern::after {
     align-items: center;
     justify-content: center;
     width: fit-content;
-    padding: 7px 10px;
+    padding: 6px 9px;
     border-radius: 8px;
     background: #f37a1f;
     color: #fff;
-    font-size: .72rem;
+    font-size: .68rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .4px;
@@ -2748,6 +2749,14 @@ body.aj-has-bg-pattern::after {
 .aj-theme-card__btn:hover {
     background: #cf6310;
     color: #fff;
+}
+
+.aj-theme .aj-section-head {
+    margin-bottom: 8px;
+}
+
+.aj-theme .aj-section-title {
+    font-size: 1.32rem;
 }
 
 /* ==========================================================================
@@ -2996,17 +3005,17 @@ body.aj-has-bg-pattern::after {
         max-width: 130px;
     }
     .aj-cruises__content {
-        padding: 28px 20px;
+        padding: 18px 16px;
         text-align: center;
         align-items: center;
         background: linear-gradient(180deg, rgba(14, 58, 90, 0.95) 0%, rgba(14, 58, 90, 0.8) 100%);
-        min-height: clamp(180px, 52vw, 220px);
+        min-height: clamp(160px, 42vw, 190px);
     }
     .aj-cruises__inner {
-        min-height: clamp(180px, 52vw, 220px);
+        min-height: clamp(160px, 42vw, 190px);
     }
     .aj-cruises__title {
-        font-size: 1.5rem;
+        font-size: 1.28rem;
     }
     .aj-topbar__inner {
         flex-wrap: nowrap;
@@ -3053,11 +3062,13 @@ body.aj-has-bg-pattern::after {
     .aj-search-submit { width: 100%; }
     .aj-search-submit__btn { width: 100%; min-width: unset; }
     .aj-slider-v2__item { flex: 0 0 80%; min-width: 260px; }
-    .aj-theme { padding: 14px 0 18px; }
-    .aj-theme__right { padding: 12px; }
-    .aj-theme__left-media { height: 150px; }
-    .aj-theme-card { flex: 0 0 74%; min-width: 228px; min-height: 258px; }
-    .aj-theme-card__media { height: 118px; }
+    .aj-theme { padding: 10px 0 12px; }
+    .aj-theme__right { padding: 10px; }
+    .aj-theme__left { min-height: 0; }
+    .aj-theme__left-media { height: 126px; }
+    .aj-theme__left-content { padding: 12px; }
+    .aj-theme-card { flex: 0 0 72%; min-width: 214px; min-height: 222px; }
+    .aj-theme-card__media { height: 96px; }
     .aj-spots2__grid { grid-template-columns: 1fr; }
     .aj-promos__grid { grid-template-columns: 1fr; overflow-x: auto; scroll-snap-type: x mandatory; display: flex; gap: 16px; padding-bottom: 16px; }
     .aj-promo-card { flex: 0 0 85%; min-width: 280px; scroll-snap-align: center; }
@@ -3599,16 +3610,16 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
         max-width: 130px;
     }
     .aj-cruises__content {
-        padding: 28px 20px;
+        padding: 18px 16px;
         text-align: center;
         align-items: center;
         background: linear-gradient(180deg, rgba(14, 58, 90, 0.95) 0%, rgba(14, 58, 90, 0.8) 100%);
-        min-height: clamp(180px, 52vw, 220px);
+        min-height: clamp(160px, 42vw, 190px);
     }
     .aj-cruises__inner {
-        min-height: clamp(180px, 52vw, 220px);
+        min-height: clamp(160px, 42vw, 190px);
     }
     .aj-cruises__title {
-        font-size: 1.5rem;
+        font-size: 1.28rem;
     }
 }

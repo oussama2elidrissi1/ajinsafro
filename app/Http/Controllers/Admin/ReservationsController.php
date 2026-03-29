@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -34,29 +35,78 @@ class ReservationsController extends Controller
     ) {}
 
     /**
-     * Liste principale des réservations (toutes).
+     * Hub unique : liste, filtres, stats alignées, actions (modals / tiroir).
      */
     public function index(Request $request): View
     {
-        return $this->renderList($request, null, null);
+        return $this->renderList($request);
     }
 
     /**
-     * Entrées de sous-menu (en-attente, confirmées, etc.) réutilisent la même vue de liste
-     * avec un filtre de statut basé sur le slug du sous-menu.
+     * Anciennes URLs (/toutes, /en-attente, /paiements…) → hub avec query équivalente.
      */
-    public function page(Request $request): View
+    public function page(Request $request): RedirectResponse
     {
         $submenu = $request->route()->parameter('submenu');
+        $query = $request->query();
 
         $status = match ($submenu) {
-            'en-attente' => 'EN_COURS',
-            'confirmees' => 'VALIDEE',
-            'annulees' => 'ANNULEE',
-            default => null,
+            'en-attente' => Reservation::STATUS_EN_COURS,
+            'confirmees' => Reservation::STATUS_VALIDEE,
+            'annulees' => Reservation::STATUS_ANNULEE,
+            default => false,
         };
+        if (is_string($status)) {
+            $query['status'] = $status;
+        } else {
+            unset($query['status']);
+        }
 
-        return $this->renderList($request, $status, $submenu);
+        return redirect()->route('admin.reservations.index', $query);
+    }
+
+    /**
+     * JSON pour modals (détails + participants) — même périmètre d’accès que {@see edit}.
+     */
+    public function panel(Request $request, Reservation $reservation): JsonResponse
+    {
+        $branchIds = $this->branchScope->visibleBranchIds($request->user());
+        if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
+            abort(403, 'Accès non autorisé à cette réservation.');
+        }
+
+        $reservation->load(['passengers', 'client', 'tour', 'travelDate', 'branch']);
+
+        $clientLabel = $reservation->client
+            ? $reservation->client->full_name
+            : trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''));
+
+        return response()->json([
+            'id' => $reservation->id,
+            'status' => $reservation->status,
+            'created_at' => $reservation->created_at?->format('d/m/Y H:i'),
+            'client_label' => $clientLabel !== '' ? $clientLabel : null,
+            'client_code' => $reservation->client?->client_code,
+            'tour_name' => $reservation->tour?->name,
+            'tour_id' => $reservation->tour_id,
+            'travel_date_id' => $reservation->travel_date_id,
+            'travel_date_label' => $reservation->travelDate?->date
+                ? $reservation->travelDate->date->format('d/m/Y')
+                : null,
+            'prestation_type' => $reservation->prestation_type,
+            'base_price' => $reservation->base_price,
+            'paid_amount' => $reservation->paid_amount,
+            'payment_type' => $reservation->payment_type,
+            'branch' => $reservation->branch?->name,
+            'passengers' => $reservation->passengers->map(fn ($p) => [
+                'first_name' => $p->first_name,
+                'last_name' => $p->last_name,
+                'type' => $p->type,
+                'birth_date' => $p->birth_date?->format('Y-m-d'),
+                'document_type' => $p->document_type,
+                'document_number' => $p->document_number,
+            ])->values()->all(),
+        ]);
     }
 
     /**
@@ -266,13 +316,20 @@ class ReservationsController extends Controller
             'voyages' => $voyages,
             'clients' => $clients,
             'tourHotelsWithRooms' => $tourHotelsWithRooms,
+            'reservationEmbed' => $request->boolean('embed'),
+            'embedReturn' => $request->boolean('embed') ? array_filter([
+                'voyage_id' => $request->query('rq_voyage_id'),
+                'travel_date_id' => $request->query('rq_travel_date_id'),
+                'status' => $request->query('rq_status'),
+                'search' => $request->query('rq_search'),
+            ], fn ($v) => $v !== null && $v !== '') : [],
         ]);
     }
 
     /**
      * Mise à jour d'une réservation (avec chambres et validation capacité).
      */
-    public function update(Request $request, Reservation $reservation): RedirectResponse
+    public function update(Request $request, Reservation $reservation): RedirectResponse|HttpResponse
     {
         $branchIds = $this->branchScope->visibleBranchIds($request->user());
         if ($branchIds !== null && ! in_array($reservation->branch_id, $branchIds, true)) {
@@ -326,6 +383,18 @@ class ReservationsController extends Controller
             $request->file('payment_receipt'),
             $request->file('visa_document')
         );
+
+        if ($request->boolean('_embed')) {
+            $back = route('admin.reservations.index', array_filter([
+                'voyage_id' => $request->input('_return_voyage_id'),
+                'travel_date_id' => $request->input('_return_travel_date_id'),
+                'status' => $request->input('_return_status'),
+                'search' => $request->input('_return_search'),
+            ], fn ($v) => $v !== null && $v !== ''));
+
+            return response()
+                ->view('admin.reservations.embed-parent-refresh', ['url' => $back, 'message' => 'Réservation mise à jour.']);
+        }
 
         return redirect()
             ->route('admin.reservations.index')
@@ -462,34 +531,56 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Rend la vue de liste des réservations avec éventuellement un filtre de statut.
+     * Liste + stats : une seule base de requête filtrée (identique au tableau paginé).
      */
-    protected function renderList(Request $request, ?string $status, ?string $submenu): View
+    protected function renderList(Request $request): View
     {
-        $query = $this->reservationListQuery->baseQuery($request->user())
-            ->with(['passengers', 'client', 'tour', 'branch']);
-
-        if ($status) {
-            $query->where('status', $status);
-        }
+        $user = $request->user();
+        $base = $this->reservationListQuery->baseQuery($user);
 
         $tourFilter = (int) $request->query('voyage_id', 0);
         if ($tourFilter <= 0) {
             $tourFilter = (int) $request->query('tour_id', 0);
         }
-        $this->reservationListQuery->applyTourFilter($query, $tourFilter);
+        $this->reservationListQuery->applyTourFilter($base, $tourFilter);
 
         $travelDateFilter = (int) $request->query('travel_date_id', 0);
-        $this->reservationListQuery->applyTravelDateFilter($query, $travelDateFilter > 0 ? $travelDateFilter : null);
+        $this->reservationListQuery->applyTravelDateFilter($base, $travelDateFilter > 0 ? $travelDateFilter : null);
 
-        $reservations = $query->orderByDesc('created_at')->paginate(20);
+        $search = (string) $request->query('search', '');
+        $this->reservationListQuery->applyClientSearch($base, $search);
+
+        $statusParam = (string) $request->query('status', '');
+        if (! in_array($statusParam, [
+            Reservation::STATUS_EN_COURS,
+            Reservation::STATUS_VALIDEE,
+            Reservation::STATUS_ANNULEE,
+        ], true)) {
+            $statusParam = '';
+        }
+        $this->reservationListQuery->applyStatusFilter($base, $statusParam !== '' ? $statusParam : null);
+
+        $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
+
+        $reservations = (clone $base)
+            ->with(['passengers', 'client', 'tour', 'branch', 'travelDate'])
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        $voyageOptions = Voyage::query()
+            ->orderBy('name')
+            ->limit(500)
+            ->get(['id', 'name']);
 
         return view('admin.reservations.index', [
             'reservations' => $reservations,
-            'status' => $status,
-            'submenu' => $submenu,
+            'hubStats' => $hubStats,
             'filterTourId' => $tourFilter > 0 ? $tourFilter : null,
             'filterTravelDateId' => $travelDateFilter > 0 ? $travelDateFilter : null,
+            'filterSearch' => $search !== '' ? $search : null,
+            'filterStatus' => $statusParam !== '' ? $statusParam : null,
+            'voyageOptions' => $voyageOptions,
         ]);
     }
 

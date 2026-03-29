@@ -1,8 +1,9 @@
-@extends('layouts.master-ajinsafro')
+@extends(!empty($reservationEmbed) ? 'layouts.reservation-embed' : 'layouts.master-ajinsafro')
 
 @section('title', 'Modifier la réservation')
 
 @section('content')
+    @unless(!empty($reservationEmbed))
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
@@ -20,10 +21,22 @@
             </div>
         </div>
     </div>
+    @else
+    <div class="mb-3">
+        <h5 class="mb-0 fw-bold">Modifier · Réservation #{{ $reservation->id }}</h5>
+        <p class="text-muted small mb-0">Enregistrement : retour automatique à la liste.</p>
+    </div>
+    @endunless
 
     <form method="post" action="{{ route('admin.reservations.update', $reservation) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+        @if(!empty($reservationEmbed))
+            <input type="hidden" name="_embed" value="1">
+            @foreach($embedReturn ?? [] as $rk => $rv)
+                <input type="hidden" name="_return_{{ $rk }}" value="{{ $rv }}">
+            @endforeach
+        @endif
 
         <div class="card mb-3 border">
             <div class="card-body">

@@ -10,12 +10,12 @@
     $displayName = $user?->name;
 
     $reservationsListUrl = null;
-    if (Route::has('admin.reservations.toutes') && $user->can('reservations.all.view')) {
-        $reservationsListUrl = route('admin.reservations.toutes');
-    } elseif (Route::has('admin.reservations.en-attente') && $user->can('reservations.pending.view')) {
-        $reservationsListUrl = route('admin.reservations.en-attente');
-    } elseif (Route::has('admin.reservations.confirmees') && $user->can('reservations.confirmed.view')) {
-        $reservationsListUrl = route('admin.reservations.confirmees');
+    if (Route::has('admin.reservations.index') && $user->can('reservations.all.view')) {
+        $reservationsListUrl = route('admin.reservations.index');
+    } elseif (Route::has('admin.reservations.index') && $user->can('reservations.pending.view')) {
+        $reservationsListUrl = route('admin.reservations.index', ['status' => 'EN_COURS']);
+    } elseif (Route::has('admin.reservations.index') && $user->can('reservations.confirmed.view')) {
+        $reservationsListUrl = route('admin.reservations.index', ['status' => 'VALIDEE']);
     }
 
     $canOpenReservation = Route::has('admin.reservations.show') && $user->can('reservations.view');

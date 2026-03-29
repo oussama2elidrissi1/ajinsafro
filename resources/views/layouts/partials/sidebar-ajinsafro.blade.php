@@ -60,7 +60,10 @@
                             <ul class="sub-menu" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}">
                                 @foreach($children as $child)
                                     <li>
-                                        <a href="{{ route($child['route']) }}" class="{{ ($child['route'] ?? null) === $currentRoute ? 'active' : '' }}">{{ $child['label'] }}</a>
+                                        @php
+                                            $childHref = !empty($child['query']) ? route($child['route'], $child['query']) : route($child['route']);
+                                        @endphp
+                                        <a href="{{ $childHref }}" class="{{ ($child['route'] ?? null) === $currentRoute ? 'active' : '' }}">{{ $child['label'] }}</a>
                                     </li>
                                 @endforeach
                             </ul>

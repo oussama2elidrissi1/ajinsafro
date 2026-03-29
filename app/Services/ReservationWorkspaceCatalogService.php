@@ -1186,7 +1186,7 @@ class ReservationWorkspaceCatalogService
                 'label' => $title.' (#'.$wpId.')',
             ],
             'routes' => [
-                'reservations' => $laravelId ? route('admin.reservations.toutes', array_filter([
+                'reservations' => $laravelId ? route('admin.reservations.index', array_filter([
                     'voyage_id' => $laravelId,
                     'travel_date_id' => $preferredTravelDateId,
                 ], fn ($v) => $v !== null && $v !== '')) : null,
@@ -1230,7 +1230,7 @@ class ReservationWorkspaceCatalogService
                 'label' => $title,
             ],
             'routes' => [
-                'reservations' => route('admin.reservations.toutes', array_filter([
+                'reservations' => route('admin.reservations.index', array_filter([
                     'voyage_id' => $tourId,
                     'travel_date_id' => $travelDateId,
                 ], fn ($v) => $v !== null && $v !== '')),

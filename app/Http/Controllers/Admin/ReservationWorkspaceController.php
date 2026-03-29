@@ -222,12 +222,13 @@ class ReservationWorkspaceController extends Controller
             ]);
         }
 
-        return redirect()
-            ->route('admin.reservations.show', $reservation)
-            ->with('success', 'Réservation enregistrée.');
+        return redirect()->route('admin.reservations.index', array_filter([
+            'voyage_id' => (int) $request->input('tour_id'),
+            'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
+        ], fn ($v) => $v !== null && $v !== ''))->with('success', 'Réservation enregistrée.');
     }
 
-    public function prestationParticipants(Request $request): View
+    public function prestationParticipants(Request $request): RedirectResponse
     {
         $this->authorizeWorkspace($request);
         $request->validate([
@@ -235,27 +236,10 @@ class ReservationWorkspaceController extends Controller
             'travel_date_id' => 'nullable|integer',
         ]);
 
-        $voyage = Voyage::findOrFail((int) $request->query('voyage_id'));
-        $travelDateId = $request->filled('travel_date_id') ? (int) $request->query('travel_date_id') : null;
-
-        $q = $this->reservationListQuery->baseQuery($request->user())
-            ->where('tour_id', $voyage->id)
-            ->with(['passengers', 'client:id,client_code,full_name', 'travelDate']);
-        $this->reservationListQuery->applyTravelDateFilter($q, $travelDateId);
-        $reservations = $q->orderByDesc('created_at')->limit(200)->get();
-
-        $wpTourTitle = $this->resolveWpTourTitle($voyage->wp_post_id);
-        $prestationDisplayTitle = $wpTourTitle ?? $voyage->name;
-        $travelDateLabel = $this->resolveTravelDateLabel($travelDateId);
-
-        return view('admin.reservations.workspace.participants', [
-            'voyage' => $voyage,
-            'travelDateId' => $travelDateId,
-            'travelDateLabel' => $travelDateLabel,
-            'wpTourTitle' => $wpTourTitle,
-            'prestationDisplayTitle' => $prestationDisplayTitle,
-            'reservations' => $reservations,
-        ]);
+        return redirect()->route('admin.reservations.index', array_filter([
+            'voyage_id' => (int) $request->query('voyage_id'),
+            'travel_date_id' => $request->filled('travel_date_id') ? (int) $request->query('travel_date_id') : null,
+        ], fn ($v) => $v !== null && $v !== ''));
     }
 
     public function prestationPdf(Request $request): Response

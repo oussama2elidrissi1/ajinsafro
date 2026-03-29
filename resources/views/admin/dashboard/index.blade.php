@@ -67,7 +67,7 @@
                             <h5 class="mb-0">{{ $stats['reservations_en_cours'] }}</h5>
                         </div>
                     </div>
-                    <a href="{{ route('admin.reservations.en-attente') }}" class="stretched-link"></a>
+                    <a href="{{ route('admin.reservations.index', ['status' => 'EN_COURS']) }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
                             <h5 class="mb-0">{{ $stats['reservations_validees'] }}</h5>
                         </div>
                     </div>
-                    <a href="{{ route('admin.reservations.confirmees') }}" class="stretched-link"></a>
+                    <a href="{{ route('admin.reservations.index', ['status' => 'VALIDEE']) }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
