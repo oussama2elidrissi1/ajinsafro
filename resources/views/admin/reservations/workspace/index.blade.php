@@ -86,6 +86,13 @@
             overflow: hidden;
         }
     }
+    /* Workspace catalogue — package meta compact (ligne date · prix · places + badges chambres) */
+    #ws-catalog-table .ws-room-badge {
+        max-width: 100%;
+    }
+    #ws-catalog-table .ws-room-badge:hover {
+        box-shadow: 0 2px 10px rgba(14, 58, 90, 0.08);
+    }
 </style>
 @endpush
 

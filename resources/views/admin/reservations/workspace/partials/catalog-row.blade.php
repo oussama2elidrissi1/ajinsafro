@@ -79,73 +79,95 @@
             <p class="text-[11px] text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{{ $row['subtitle'] }}</p>
         @endif
         @if($typeKey === 'package' && $hasLaravel)
-            <div class="mt-2.5 space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 shadow-sm/30">
-                @if(!empty($row['voyage_destination']))
-                    <p class="text-[11px] text-slate-600 leading-snug flex items-start gap-2">
-                        <i class="fas fa-map-marker-alt text-brand-blue mt-0.5 text-[10px] shrink-0 opacity-90"></i>
-                        <span>{{ $row['voyage_destination'] }}</span>
+            @php
+                $ps = $placesState ?? '';
+            @endphp
+            <div class="mt-2 space-y-2">
+                @if(! empty($row['voyage_destination']))
+                    <p class="text-[11px] text-slate-600 leading-snug flex items-center gap-1.5">
+                        <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-brand-blue/10 text-brand-blue" aria-hidden="true"><i class="fas fa-map-marker-alt text-[10px]"></i></span>
+                        <span class="font-medium text-slate-700">{{ $row['voyage_destination'] }}</span>
                     </p>
                 @endif
-                <p class="text-[11px] leading-snug">
-                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Départ</span>
-                    @if($hasDepDate)
-                        <span class="font-semibold text-brand-dark"> {{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}</span>
-                        @if($pkgDepCanceled)
-                            <span class="ml-1.5 align-middle inline-flex text-[8px] font-bold uppercase text-red-700 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-md">Annulé</span>
+
+                {{-- Zone 1 : date + prix + places sur une ligne (desktop) --}}
+                <div class="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2 sm:gap-y-1 text-[11px] leading-snug">
+                    <span class="inline-flex items-center gap-1.5 text-slate-700 min-w-0">
+                        <i class="far fa-calendar-alt text-brand-blue/80 shrink-0 text-[12px]" aria-hidden="true"></i>
+                        @if($hasDepDate)
+                            <span class="font-semibold text-brand-dark tabular-nums">{{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}</span>
+                            @if($pkgDepCanceled)
+                                <span class="ml-0.5 inline-flex text-[9px] font-bold uppercase tracking-wide text-red-700 bg-red-50 border border-red-100/90 px-1.5 py-0.5 rounded-full">Annulé</span>
+                            @endif
+                        @else
+                            <span class="text-slate-400 font-medium">Aucune date</span>
                         @endif
-                    @else
-                        <span class="text-slate-400 font-medium"> Aucune date</span>
-                    @endif
-                </p>
-                <p class="text-[11px] leading-snug border-t border-slate-200/80 pt-1.5 mt-0.5">
-                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Prix adulte</span>
-                    @if(!empty($row['price_label']))
-                        <span class="font-semibold text-brand-dark"> {{ $row['price_label'] }}</span>
-                    @else
-                        <span class="text-slate-400 font-medium"> Sur demande</span>
-                    @endif
-                </p>
-                @php
-                    $ps = $placesState ?? '';
-                @endphp
-                <p class="text-[11px] leading-snug border-t border-slate-200/80 pt-1.5 mt-0.5">
-                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Places</span>
-                    @if($ps === 'ok' && $placesTotal !== null)
-                        <span class="font-semibold text-brand-dark"> {{ number_format((int) $placesTotal, 0, ',', ' ') }}</span>
-                    @elseif(in_array($ps, ['no_hotels', 'no_valid_rooms'], true))
-                        <span class="text-slate-400 font-medium"> Non renseigné</span>
-                    @else
-                        <span class="text-slate-400 font-medium"> —</span>
-                    @endif
-                </p>
+                    </span>
+
+                    <span class="hidden sm:inline text-slate-300 font-light select-none" aria-hidden="true">·</span>
+
+                    <span class="inline-flex items-center gap-1.5 text-slate-700 min-w-0">
+                        <i class="fas fa-coins text-emerald-600/85 shrink-0 text-[11px]" aria-hidden="true"></i>
+                        @if(! empty($row['price_label']))
+                            <span class="font-semibold text-brand-dark">{{ $row['price_label'] }}</span>
+                        @else
+                            <span class="text-slate-400 font-medium">Sur demande</span>
+                        @endif
+                    </span>
+
+                    <span class="hidden sm:inline text-slate-300 font-light select-none" aria-hidden="true">·</span>
+
+                    <span class="inline-flex items-center gap-1.5 text-slate-700 min-w-0">
+                        <i class="fas fa-users text-slate-500 shrink-0 text-[11px]" aria-hidden="true"></i>
+                        @if($ps === 'ok' && $placesTotal !== null)
+                            <span class="font-semibold text-brand-dark tabular-nums">{{ number_format((int) $placesTotal, 0, ',', ' ') }} places</span>
+                        @elseif(in_array($ps, ['no_hotels', 'no_valid_rooms'], true))
+                            <span class="text-slate-400 font-medium">Places non renseignées</span>
+                        @else
+                            <span class="text-slate-400 font-medium">—</span>
+                        @endif
+                    </span>
+                </div>
+
+                {{-- Zone 2 : badges chambres + tooltip détail --}}
                 @if($ps === 'ok' && is_array($placesLines) && count($placesLines) > 0)
-                    <ul class="mt-1.5 space-y-0.5 text-[10px] text-slate-600 leading-snug pl-0 list-none">
-                        @foreach($placesLines as $ln)
-                            <li class="flex flex-wrap gap-x-1">
-                                <span class="text-slate-500">•</span>
-                                <span>{{ $ln['room_type'] ?? '' }}</span>
-                                <span class="text-slate-400">:</span>
-                                <span class="font-mono tabular-nums">{{ (int) ($ln['room_count'] ?? 0) }}×{{ (int) ($ln['capacity_used'] ?? 0) }}</span>
-                                <span class="text-slate-400">=</span>
-                                <span class="font-semibold text-slate-700">{{ (int) ($ln['product'] ?? 0) }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
+                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 pt-0.5">
+                        <span class="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 shrink-0">
+                            <i class="fas fa-bed text-slate-400 text-[10px]" aria-hidden="true"></i>
+                            Chambres
+                        </span>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            @foreach($placesLines as $ln)
+                                @php
+                                    $rt = (string) ($ln['room_type'] ?? '');
+                                    $rc = (int) ($ln['room_count'] ?? 0);
+                                    $cu = (int) ($ln['capacity_used'] ?? 0);
+                                    $pr = (int) ($ln['product'] ?? 0);
+                                    $tip = $rt.' : '.$rc.' × '.$cu.' = '.$pr;
+                                @endphp
+                                <span
+                                    class="ws-room-badge inline-flex items-center rounded-full border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/90 px-2.5 py-0.5 text-[10px] font-semibold text-slate-700 shadow-sm tabular-nums transition-colors hover:border-brand-blue/30 hover:bg-brand-light/40 hover:text-brand-dark cursor-default"
+                                    title="{{ e($tip) }}"
+                                    aria-label="{{ e($tip) }}"
+                                >{{ $rt }} <span class="text-slate-400 font-medium mx-0.5">·</span> {{ $pr }}</span>
+                            @endforeach
+                        </div>
+                    </div>
                 @endif
             </div>
         @elseif($typeKey === 'package' && ! $hasLaravel)
-            <div class="mt-2.5 space-y-2">
-                @if(!empty($row['price_label']))
-                    <div class="rounded-xl border border-slate-100 bg-white px-3 py-2 text-[11px] shadow-sm">
-                        <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Prix adulte</span>
-                        <span class="font-semibold text-brand-dark"> {{ $row['price_label'] }}</span>
-                        <span class="text-[9px] text-slate-400 block mt-0.5">Source WordPress · liez Laravel pour départs et réservation.</span>
+            <div class="mt-2 space-y-2 text-[11px]">
+                @if(! empty($row['price_label']))
+                    <div class="flex flex-wrap items-center gap-2 text-slate-700">
+                        <i class="fas fa-coins text-emerald-600/80 text-[11px]" aria-hidden="true"></i>
+                        <span class="font-semibold text-brand-dark">{{ $row['price_label'] }}</span>
+                        <span class="text-[10px] text-slate-400">(WordPress — liez Laravel pour départs & réservation)</span>
                     </div>
                 @endif
-                <div class="rounded-xl border border-dashed border-amber-200 bg-amber-50/50 px-3 py-2 text-[11px] text-amber-900/90">
-                    <span class="text-[9px] font-extrabold uppercase tracking-wide text-amber-800">Départ</span>
-                    <span class="text-slate-600"> — liez <span class="font-mono text-[10px]">voyages.wp_post_id</span> pour afficher les départs Laravel.</span>
-                </div>
+                <p class="flex items-start gap-1.5 text-amber-800/95">
+                    <i class="fas fa-link mt-0.5 text-[10px] opacity-80" aria-hidden="true"></i>
+                    <span>Liez <span class="font-mono text-[10px] bg-amber-100/80 px-1 rounded">voyages.wp_post_id</span> pour départs et réservation.</span>
+                </p>
             </div>
         @endif
         @if($editTourUrl && $typeKey === 'package' && ! $hasLaravel)
