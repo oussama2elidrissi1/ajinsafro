@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+
 class ReservationsController extends Controller
 {
     public function __construct(
@@ -470,6 +471,14 @@ class ReservationsController extends Controller
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        $tourFilter = (int) $request->query('voyage_id', 0);
+        if ($tourFilter <= 0) {
+            $tourFilter = (int) $request->query('tour_id', 0);
+        }
+        if ($tourFilter > 0) {
+            $query->where('tour_id', $tourFilter);
         }
 
         $reservations = $query->orderByDesc('created_at')->paginate(20);
