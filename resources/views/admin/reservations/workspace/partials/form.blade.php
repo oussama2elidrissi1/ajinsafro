@@ -1,6 +1,11 @@
+@php
+    $__wsRd = 999999999;
+    $wsReservationDataUrlTemplate = str_replace((string) $__wsRd, '__VOYAGE__', route('admin.circuits.voyages.reservation-data', ['voyage' => $__wsRd]));
+@endphp
 {{-- Formulaire aligné sur agent.html (titulaire, accompagnants, extras, documents, finances) --}}
 <form id="workspace-reservation-form" method="post" action="{{ route('admin.reservations.workspace.store') }}" enctype="multipart/form-data" class="space-y-8">
     @csrf
+    <input type="hidden" id="ws-reservation-data-url-template" value="{{ $wsReservationDataUrlTemplate }}">
     <input type="hidden" name="tour_id" id="ws-tour-id" value="">
     <input type="hidden" name="travel_date_id" id="ws-travel-date-id" value="">
     <input type="hidden" name="prestation_type" id="ws-prestation-type" value="package">
@@ -140,7 +145,7 @@
             <h4 class="text-sm font-bold text-[#0e3a5a] mb-2">Détails package</h4>
             <div>
                 <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Type de chambre</label>
-                <select name="package_room_type" id="ws-package-room-type" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0083c4]">
+                <select name="package_room_type" id="ws-package-room-type" data-ws-dynamic="1" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0083c4]">
                     <option value="">— Choisir —</option>
                     <option>Chambre Double</option>
                     <option>Chambre Twin</option>
@@ -199,6 +204,7 @@
                 <i class="fas fa-calculator"></i> Récapitulatif
                 <span id="api-status-badge" class="hidden ml-2 bg-green-100 text-green-700 text-[9px] px-2 py-0.5 rounded uppercase font-bold">Tarif à jour</span>
             </h4>
+            <div id="ws-capacity-live" class="hidden mb-3 rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-2 text-[11px] text-slate-700 leading-snug"></div>
             <div class="flex flex-col gap-2 text-xs text-gray-600 font-medium">
                 <div class="flex justify-between border-b border-gray-100 pb-1.5">
                     <span>Base (<span id="summary-pax-count">1</span> pax)</span>
@@ -235,7 +241,7 @@
     <div class="pt-4 flex justify-end gap-3 border-t border-gray-100">
         <button type="button" id="btn-cancel-add-reservation" class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 border border-transparent">Annuler</button>
         @can('reservations.view')
-            <button type="submit" class="bg-[#0083c4] hover:bg-[#0e3a5a] text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center gap-2">
+            <button type="submit" id="ws-booking-submit" class="bg-[#0083c4] hover:bg-[#0e3a5a] text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center gap-2">
                 <i class="fas fa-save"></i> Confirmer la réservation
             </button>
         @endcan

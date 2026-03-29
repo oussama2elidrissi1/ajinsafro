@@ -26,7 +26,9 @@ class VoyageReservationDataController extends Controller
             $type = 'package';
         }
 
-        $payload = $this->catalog->getVoyageReservationDataPayload($voyage, $type, $request->user());
+        $travelDateId = $request->filled('travel_date_id') ? (int) $request->query('travel_date_id') : null;
+
+        $payload = $this->catalog->getVoyageReservationDataPayload($voyage, $type, $request->user(), $travelDateId);
         if ($payload === null) {
             abort(404, 'Voyage absent du catalogue workspace.');
         }

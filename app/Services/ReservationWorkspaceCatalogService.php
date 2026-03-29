@@ -486,11 +486,16 @@ class ReservationWorkspaceCatalogService
     /**
      * @return array<string, mixed>|null
      */
-    public function getVoyageReservationDataPayload(Voyage $voyage, string $prestationType, User $user): ?array
+    public function getVoyageReservationDataPayload(Voyage $voyage, string $prestationType, User $user, ?int $travelDateId = null): ?array
     {
         $row = $this->findCatalogRowForBooking($voyage, $prestationType, $user);
         if ($row === null) {
             return null;
+        }
+
+        $formPrefill = $row['form_prefill'] ?? null;
+        if (is_array($formPrefill) && $travelDateId !== null && $travelDateId > 0) {
+            $formPrefill = $this->refineFormPrefillPlacesForTravelDate($formPrefill, $voyage, $travelDateId, $user);
         }
 
         return [
@@ -502,9 +507,65 @@ class ReservationWorkspaceCatalogService
             ],
             'catalog_code' => $row['code'] ?? null,
             'catalog_type' => $row['type'] ?? null,
-            'form_prefill' => $row['form_prefill'] ?? null,
+            'form_prefill' => $formPrefill,
             'modal_detail' => $row['modal_detail'] ?? null,
         ];
+    }
+
+    /**
+     * Recalcule places réservées / restantes pour une date de départ (même logique que {@see ReservationWorkspaceBookingService::resolveRemainingSeats}).
+     *
+     * @param  array<string, mixed>  $prefill
+     * @return array<string, mixed>
+     */
+    private function refineFormPrefillPlacesForTravelDate(array $prefill, Voyage $voyage, int $travelDateId, User $user): array
+    {
+        if (! $voyage->wp_post_id) {
+            return $prefill;
+        }
+        $td = TravelDate::query()->find($travelDateId);
+        if (! $td || (int) $td->travel_id !== (int) $voyage->wp_post_id) {
+            return $prefill;
+        }
+
+        $places = $prefill['places'] ?? [];
+        $state = $places['state'] ?? '';
+        if ($state !== 'ok') {
+            return $prefill;
+        }
+        $total = isset($places['total']) ? (int) $places['total'] : null;
+        if ($total === null || $total <= 0) {
+            return $prefill;
+        }
+
+        $q = Reservation::query()
+            ->where('tour_id', $voyage->id)
+            ->whereIn('status', [Reservation::STATUS_EN_COURS, Reservation::STATUS_VALIDEE])
+            ->where('travel_date_id', $travelDateId);
+        $this->branchScope->scopeReservations($q, $user);
+        $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
+        $booked = (int) (clone $q)->sum('passengers_count');
+
+        $remaining = max(0, $total - $booked);
+        $pct = $total > 0 ? min(100, (int) round(($booked / $total) * 100)) : null;
+
+        $placesPayload = ['state' => 'ok', 'total' => $total];
+        $band = $this->computeWorkspaceAvailabilityBand($placesPayload, $booked);
+
+        $tds = $prefill['travel_dates'] ?? [];
+        $hasPastOnly = $tds !== [] && collect($tds)->every(fn ($d) => ! empty($d['is_past']));
+
+        $prefill['places'] = array_merge($places, [
+            'reserved' => $booked,
+            'remaining' => $remaining,
+            'fill_pct' => $pct,
+        ]);
+        $prefill['availability'] = array_merge(
+            $this->availabilityUiFromBand($band, $hasPastOnly),
+            ['band' => $band]
+        );
+
+        return $prefill;
     }
 
     /**
@@ -762,6 +823,75 @@ class ReservationWorkspaceCatalogService
         return $out;
     }
 
+    /**
+     * Libellé date long français (ex. 01 avril 2026) — évite les artefacts ICU (MMM / mois dupliqués).
+     */
+    private function formatFrenchLongDate(Carbon $date): string
+    {
+        return $date->copy()->locale('fr')->translatedFormat('d F Y');
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $lines
+     * @return list<array<string, mixed>>
+     */
+    private function enrichRoomLinesForDisplay(array $lines): array
+    {
+        $out = [];
+        foreach ($lines as $line) {
+            $rc = (int) ($line['room_count'] ?? 0);
+            $cu = (int) ($line['capacity_used'] ?? 0);
+            $pr = (int) ($line['product'] ?? 0);
+            $rt = (string) ($line['room_type'] ?? '');
+            $detail = ($rc > 0 && $cu > 0)
+                ? sprintf('%d ch. %s × %d pl. = %d places', $rc, $rt, $cu, $pr)
+                : ($rt !== '' ? $rt.' · '.$pr.' pl.' : '—');
+            $out[] = array_merge($line, ['detail_label' => $detail]);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Extras proposés dans le formulaire workspace (alignés sur les grilles historiques ; pilotés par le catalogue).
+     *
+     * @return list<array{id: string, name: string, desc: string, price_adult: float, price_child: float, icon: string}>
+     */
+    private function defaultWorkspaceExtrasCatalog(string $kind): array
+    {
+        return match ($kind) {
+            'vol' => [
+                ['id' => 'ext4', 'name' => 'Bagage soute 23kg', 'desc' => 'Ancillary', 'price_adult' => 450, 'price_child' => 450, 'icon' => 'fa-suitcase'],
+                ['id' => 'ext5', 'name' => 'Siège', 'desc' => 'SSR', 'price_adult' => 100, 'price_child' => 50, 'icon' => 'fa-chair'],
+                ['id' => 'ext6', 'name' => 'Repas bord', 'desc' => 'Halal / végétarien', 'price_adult' => 150, 'price_child' => 100, 'icon' => 'fa-hamburger'],
+            ],
+            'hebergement' => [
+                ['id' => 'ext7', 'name' => 'Vue mer', 'desc' => 'Supplément', 'price_adult' => 200, 'price_child' => 200, 'icon' => 'fa-water'],
+                ['id' => 'ext8', 'name' => 'Transfert aéroport', 'desc' => 'A/R', 'price_adult' => 300, 'price_child' => 150, 'icon' => 'fa-taxi'],
+                ['id' => 'ext9', 'name' => 'Spa', 'desc' => '45 min', 'price_adult' => 400, 'price_child' => 0, 'icon' => 'fa-spa'],
+            ],
+            default => [
+                ['id' => 'ext1', 'name' => 'Visite historique', 'desc' => 'Guide', 'price_adult' => 150, 'price_child' => 100, 'icon' => 'fa-map-marked-alt'],
+                ['id' => 'ext2', 'name' => 'Assurance multirisque', 'desc' => 'Annulation & santé', 'price_adult' => 350, 'price_child' => 200, 'icon' => 'fa-shield-alt'],
+                ['id' => 'ext3', 'name' => 'Demi-pension', 'desc' => 'PD + dîner', 'price_adult' => 1200, 'price_child' => 600, 'icon' => 'fa-utensils'],
+            ],
+        };
+    }
+
+    private function availabilityUiFromBand(string $band, bool $hasPastOnlyDates): array
+    {
+        if ($hasPastOnlyDates) {
+            return ['key' => 'past', 'label' => 'Départs passés', 'tone' => 'amber'];
+        }
+
+        return match ($band) {
+            'full' => ['key' => 'full', 'label' => 'Complet', 'tone' => 'red'],
+            'low' => ['key' => 'low', 'label' => 'Peu de places', 'tone' => 'orange'],
+            'ok' => ['key' => 'ok', 'label' => 'Disponible', 'tone' => 'emerald'],
+            default => ['key' => 'unknown', 'label' => 'Capacité N/A', 'tone' => 'slate'],
+        };
+    }
+
     private function computeWorkspaceAvailabilityBand(array $placesPayload, int $reserved): string
     {
         if (($placesPayload['state'] ?? '') !== 'ok') {
@@ -813,6 +943,8 @@ class ReservationWorkspaceCatalogService
         $tds = $modalDetail['travel_dates'] ?? [];
         $defaultTdId = $this->pickDefaultTravelDateIdForForm($tds);
         $prices = $modalDetail['prices'] ?? [];
+        $band = (string) ($modalDetail['availability_band'] ?? 'unknown');
+        $hasPastOnly = $tds !== [] && collect($tds)->every(fn ($d) => ! empty($d['is_past']));
 
         return [
             'code' => $rowCode,
@@ -834,7 +966,12 @@ class ReservationWorkspaceCatalogService
                 'pricing_mode' => 'workspace_catalog',
             ],
             'places' => $modalDetail['places'] ?? [],
-            'rooms' => $modalDetail['rooms'] ?? [],
+            'rooms' => $this->enrichRoomLinesForDisplay($modalDetail['rooms'] ?? []),
+            'availability' => array_merge(
+                $this->availabilityUiFromBand($band, $hasPastOnly),
+                ['band' => $band]
+            ),
+            'extras_catalog' => $this->defaultWorkspaceExtrasCatalog('package'),
             'stats' => $modalDetail['stats'] ?? [],
             'form' => $modalDetail['form'] ?? [],
         ];
@@ -854,7 +991,7 @@ class ReservationWorkspaceCatalogService
             $travelDates[] = [
                 'id' => $tdId,
                 'date_iso' => $d->format('Y-m-d'),
-                'date_label' => $d->locale('fr')->translatedFormat('d MMM yyyy'),
+                'date_label' => $this->formatFrenchLongDate($d),
                 'is_past' => $d->lt(Carbon::today()),
             ];
         }
@@ -880,6 +1017,11 @@ class ReservationWorkspaceCatalogService
             ],
             'places' => ['state' => 'na', 'total' => null, 'reserved' => null, 'remaining' => null],
             'rooms' => [],
+            'availability' => array_merge(
+                $this->availabilityUiFromBand('unknown', false),
+                ['band' => 'na']
+            ),
+            'extras_catalog' => $this->defaultWorkspaceExtrasCatalog($kind === 'vol' ? 'vol' : 'hebergement'),
             'stats' => $modalDetail['stats'] ?? [],
             'form' => $modalDetail['form'] ?? [],
         ];
@@ -954,7 +1096,7 @@ class ReservationWorkspaceCatalogService
             $travelDates[] = [
                 'id' => $td->id,
                 'date_iso' => $td->date->format('Y-m-d'),
-                'date_label' => $td->date->locale('fr')->translatedFormat('d MMM yyyy'),
+                'date_label' => $this->formatFrenchLongDate($td->date),
                 'is_past' => $td->date->lt($today),
             ];
         }

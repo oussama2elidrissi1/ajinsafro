@@ -27,6 +27,87 @@
     /** Tarifs alignés sur le catalogue workspace (null = repli sur grilles statiques) */
     var workspaceLivePricing = null;
 
+    /** Extras depuis form_prefill.extras_catalog (catalogue PHP) */
+    var workspaceExtrasLive = null;
+
+    /** Places catalogue pour calcul restant vs participants */
+    var workspaceLivePlaces = null;
+
+    /** Badge disponibilité (availability.key / label) */
+    var workspaceAvailability = null;
+
+    /** Annulation fetch GET reservation-data (changement date rapide) */
+    var workspacePlacesFetchController = null;
+
+    function buildReservationDataUrl(tourId, prestationType, travelDateId) {
+        var tpl = document.getElementById('ws-reservation-data-url-template');
+        if (!tpl || !tpl.value) return null;
+        var base = String(tpl.value).split('__VOYAGE__').join(String(tourId));
+        try {
+            var u = new URL(base, window.location.href);
+            u.searchParams.set('prestation_type', prestationType || 'package');
+            if (travelDateId) {
+                u.searchParams.set('travel_date_id', String(travelDateId));
+            } else {
+                u.searchParams.delete('travel_date_id');
+            }
+            return u.toString();
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Places / disponibilité alignées sur la date choisie (réservations filtrées par travel_date_id, comme le store).
+     */
+    function syncPlacesFromServer(travelDateId) {
+        var elTid = document.getElementById('ws-tour-id');
+        var tourId = elTid && elTid.value ? elTid.value.trim() : '';
+        var pt = document.getElementById('ws-prestation-type');
+        var prest = pt ? pt.value : 'package';
+        var url = buildReservationDataUrl(tourId, prest, travelDateId);
+        if (!url || !tourId) {
+            return;
+        }
+        if (workspacePlacesFetchController) {
+            workspacePlacesFetchController.abort();
+        }
+        workspacePlacesFetchController = new AbortController();
+        fetch(url, {
+            credentials: 'same-origin',
+            signal: workspacePlacesFetchController.signal,
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        })
+            .then(function (r) {
+                return r.ok ? r.json() : Promise.reject(new Error('reservation-data'));
+            })
+            .then(function (data) {
+                var pf = data && data.form_prefill;
+                if (pf && pf.places) {
+                    workspaceLivePlaces = pf.places;
+                }
+                if (pf && pf.availability) {
+                    workspaceAvailability = pf.availability;
+                }
+                calculateTotal();
+            })
+            .catch(function () {
+                /* ignore abort */
+            });
+    }
+
+    function formatIsoDateFr(iso) {
+        if (!iso || typeof iso !== 'string') return '';
+        var p = iso.split('-');
+        if (p.length !== 3) return iso;
+        var y = parseInt(p[0], 10);
+        var m = parseInt(p[1], 10) - 1;
+        var d = parseInt(p[2], 10);
+        if (isNaN(y) || isNaN(m) || isNaN(d)) return iso;
+        var dt = new Date(y, m, d);
+        return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
     function parseWsFormPrefillMap() {
         var el = document.getElementById('ws-form-prefill-json');
         if (!el) return {};
@@ -66,6 +147,18 @@
     }
 
     function getExtrasListForType(typePrestation) {
+        if (workspaceExtrasLive && workspaceExtrasLive.length) {
+            return workspaceExtrasLive.map(function (e) {
+                return {
+                    id: e.id,
+                    name: e.name,
+                    desc: e.desc || '',
+                    priceAdult: e.price_adult != null ? Number(e.price_adult) : 0,
+                    priceChild: e.price_child != null ? Number(e.price_child) : 0,
+                    icon: e.icon || 'fa-plus-circle',
+                };
+            });
+        }
         return extrasData[typePrestation] || [];
     }
 
@@ -92,7 +185,7 @@
         h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
         h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">2. Départs disponibles</p>';
         if (tds.length) {
-            h += '<p class="text-xs text-slate-600">' + tds.length + ' date(s) — sélection ci-dessous.</p>';
+            h += '<p class="text-xs text-slate-600">' + tds.length + ' date(s) — la capacité « restantes » se met à jour selon la date sélectionnée (réservations sur ce départ).</p>';
         } else {
             h += '<p class="text-xs text-amber-700 font-medium">Aucune date dans la disponibilité WordPress pour ce voyage.</p>';
         }
@@ -109,31 +202,40 @@
         h += '</dl></div>';
 
         var pl = pf.places || {};
+        var av = pf.availability || {};
+        var avLabel = av.label ? escapeWsHtml(String(av.label)) : '';
+        var avCls = 'bg-slate-100 text-slate-800 border-slate-200';
+        if (av.key === 'past') avCls = 'bg-amber-50 text-amber-900 border-amber-200';
+        else if (av.key === 'full') avCls = 'bg-red-50 text-red-800 border-red-200';
+        else if (av.key === 'ok') avCls = 'bg-emerald-50 text-emerald-900 border-emerald-200';
+        else if (av.key === 'low') avCls = 'bg-orange-50 text-orange-900 border-orange-200';
         h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
+        h += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
         h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">4. Capacité</p>';
+        if (avLabel) h += '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-extrabold ' + avCls + '">' + avLabel + '</span>';
+        h += '</div>';
         h += '<dl class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">';
         h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Total</dt><dd class="font-extrabold text-slate-800">' + (pl.total != null ? pl.total : '—') + '</dd></div>';
         h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Réservées</dt><dd class="font-extrabold text-slate-800">' + (pl.reserved != null ? pl.reserved : '—') + '</dd></div>';
-        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Dispo</dt><dd class="font-extrabold text-emerald-800">' + (pl.remaining != null ? pl.remaining : '—') + '</dd></div>';
-        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">État</dt><dd class="font-extrabold text-slate-800">' + escapeWsHtml(String(pl.state || '—')) + '</dd></div>';
+        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Restantes</dt><dd class="font-extrabold text-emerald-800">' + (pl.remaining != null ? pl.remaining : '—') + '</dd></div>';
+        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Calcul</dt><dd class="font-extrabold text-slate-800 text-[10px]">TourPlacesCalculator</dd></div>';
         h += '</dl></div>';
 
         var rooms = pf.rooms || [];
         if (rooms.length) {
             h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
-            h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Chambres / détail</p>';
-            h += '<div class="flex flex-wrap gap-1.5">';
+            h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Chambres (détail)</p>';
+            h += '<ul class="space-y-1.5 text-xs text-slate-700">';
             rooms.forEach(function (r) {
-                var rt = r.room_type || '';
-                var prd = r.product != null ? r.product : '';
-                h += '<span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700">' + escapeWsHtml(rt) + ' <span class="text-slate-400 mx-0.5">·</span> ' + escapeWsHtml(String(prd)) + '</span>';
+                var line = r.detail_label || ((r.room_type || '') + ' — ' + (r.product != null ? r.product + ' pl.' : ''));
+                h += '<li class="flex gap-2"><span class="text-slate-400 font-bold">•</span><span>' + escapeWsHtml(String(line)) + '</span></li>';
             });
-            h += '</div></div>';
+            h += '</ul></div>';
         }
 
         h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
         h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">5. Extras</p>';
-        h += '<p class="text-xs text-slate-600">Options proposées selon le type de prestation (ci-dessous, cochables par passager).</p>';
+        h += '<p class="text-xs text-slate-600">Options catalogue (prix par passager — cocher ci-dessous pour ajouter au total).</p>';
         h += '</div>';
 
         h += '<div class="rounded-xl bg-[#0e3a5a]/5 border border-[#0e3a5a]/10 p-4 space-y-1">';
@@ -153,6 +255,9 @@
 
     function applyWorkspacePrefill(pf, type, nameDisplay) {
         workspaceLivePricing = null;
+        workspaceExtrasLive = null;
+        workspaceLivePlaces = null;
+        workspaceAvailability = null;
         var panel = document.getElementById('ws-prefill-panel');
         var sec = document.getElementById('ws-prefill-sections');
         var head = document.getElementById('ws-prefill-heading');
@@ -196,6 +301,16 @@
             childLabel: pr.child_label || '',
         };
 
+        if (pf.extras_catalog && pf.extras_catalog.length) {
+            workspaceExtrasLive = pf.extras_catalog;
+        }
+        if (pf.places) {
+            workspaceLivePlaces = pf.places;
+        }
+        if (pf.availability) {
+            workspaceAvailability = pf.availability;
+        }
+
         var roomSel = document.getElementById('ws-package-room-type');
         if (roomSel) {
             if (pf.rooms && pf.rooms.length) {
@@ -207,7 +322,8 @@
                     seen[rt] = true;
                     var opt = document.createElement('option');
                     opt.value = rt;
-                    opt.textContent = rt + (r.product != null ? ' (' + r.product + ' pl.)' : '');
+                    var dl = r.detail_label || '';
+                    opt.textContent = dl || (rt + (r.product != null ? ' — ' + r.product + ' pl.' : ''));
                     roomSel.appendChild(opt);
                 });
                 if (roomSel.options.length) roomSel.selectedIndex = 0;
@@ -226,7 +342,10 @@
                     var opt = document.createElement('option');
                     var idVal = td.id != null ? String(td.id) : '';
                     opt.value = idVal;
-                    opt.textContent = (td.date_label || td.date_iso || '') + (td.is_past ? ' (passé)' : '');
+                    opt.setAttribute('data-is-past', td.is_past ? '1' : '0');
+                    var lbl = formatIsoDateFr(td.date_iso || '');
+                    if (!lbl) lbl = String(td.date_label || '').trim();
+                    opt.textContent = lbl + (td.is_past ? ' (passé)' : '');
                     depSel.appendChild(opt);
                 });
                 var defId = pf.default_travel_date_id != null ? String(pf.default_travel_date_id) : (pf.form && pf.form.travel_date_id != null ? String(pf.form.travel_date_id) : '');
@@ -236,10 +355,14 @@
                     depSel.selectedIndex = 0;
                 }
                 hidTravel.value = depSel.value || '';
-                depSel.onchange = function () {
+                var onDepChange = function () {
                     hidTravel.value = depSel.value || '';
+                    syncPlacesFromServer(depSel.value || '');
+                    calculateTotal();
                 };
-                if (depHint) depHint.textContent = 'Les dates proviennent de la disponibilité WordPress (identique au catalogue).';
+                depSel.onchange = onDepChange;
+                syncPlacesFromServer(depSel.value || '');
+                if (depHint) depHint.textContent = 'Dates = disponibilité WordPress (format long français, aligné catalogue).';
             } else {
                 depWrap.classList.add('hidden');
                 hidTravel.value = (pf.form && pf.form.travel_date_id != null) ? String(pf.form.travel_date_id) : '';
@@ -324,6 +447,55 @@
                 ' <span class="text-sm text-gray-500 font-medium">' + escapeWsHtml(cur) + '</span>';
         }
         if (inputMontant) inputMontant.value = String(Math.round(grandTotal));
+
+        var capEl = document.getElementById('ws-capacity-live');
+        var submitBtn = document.getElementById('ws-booking-submit');
+        var paxN = getPassengersList().length;
+        var rem0 = workspaceLivePlaces && workspaceLivePlaces.remaining != null ? Number(workspaceLivePlaces.remaining) : null;
+        var st = workspaceLivePlaces && workspaceLivePlaces.state ? String(workspaceLivePlaces.state) : '';
+        var avKey = workspaceAvailability && workspaceAvailability.key ? String(workspaceAvailability.key) : '';
+        var depSel = document.getElementById('ws-departure-select');
+        var pastDep = false;
+        if (depSel && depSel.selectedOptions && depSel.selectedOptions.length) {
+            pastDep = depSel.selectedOptions[0].getAttribute('data-is-past') === '1';
+        }
+        var blockedByAvail = avKey === 'full' || avKey === 'past' || (st === 'ok' && rem0 !== null && !isNaN(rem0) && rem0 <= 0);
+        var over = st === 'ok' && rem0 !== null && !isNaN(rem0) && paxN > rem0;
+        if (capEl) {
+            if (pastDep) {
+                capEl.classList.remove('hidden');
+                capEl.innerHTML = '<span class="font-bold text-amber-800">Départ passé</span> — choisissez une date à venir pour une nouvelle réservation.';
+            } else if (blockedByAvail && avKey === 'full') {
+                capEl.classList.remove('hidden');
+                capEl.innerHTML = '<span class="font-bold text-red-800">Complet</span> — plus de places disponibles sur ce départ.';
+            } else if (blockedByAvail && avKey === 'past') {
+                capEl.classList.remove('hidden');
+                capEl.innerHTML = '<span class="font-bold text-amber-800">Départs passés</span> — aucune date future dans la disponibilité.';
+            } else if (st === 'ok' && rem0 !== null && !isNaN(rem0)) {
+                var after = rem0 - paxN;
+                capEl.classList.remove('hidden');
+                capEl.innerHTML = '<span class="font-bold text-slate-800">Places (catalogue)</span> : ' + rem0 + ' restante(s) pour ce départ · <span class="font-extrabold">' + paxN + '</span> voyageur(s) dans le formulaire' +
+                    (after >= 0 ? ' → <span class="text-emerald-700 font-bold">il restera ' + after + ' après réservation</span>' : ' → <span class="text-red-700 font-bold">dépassement de ' + Math.abs(after) + '</span>');
+            } else {
+                capEl.classList.add('hidden');
+                capEl.textContent = '';
+            }
+        }
+        if (submitBtn) {
+            var blocked = blockedByAvail || over || pastDep;
+            submitBtn.disabled = !!blocked;
+            submitBtn.classList.toggle('opacity-50', !!blocked);
+            submitBtn.classList.toggle('cursor-not-allowed', !!blocked);
+            if (pastDep) {
+                submitBtn.title = 'Ce départ est passé — sélectionnez une date à venir.';
+            } else if (blockedByAvail) {
+                submitBtn.title = 'Places insuffisantes ou départ indisponible.';
+            } else if (over) {
+                submitBtn.title = 'Réduisez le nombre de voyageurs ou choisissez une autre date.';
+            } else {
+                submitBtn.title = '';
+            }
+        }
     }
 
     function renderExtras(type) {
@@ -491,6 +663,9 @@
             applyWorkspacePrefill(pf, type, name);
         } else {
             workspaceLivePricing = null;
+            workspaceExtrasLive = null;
+            workspaceLivePlaces = null;
+            workspaceAvailability = null;
             var panelOff = document.getElementById('ws-prefill-panel');
             if (panelOff) panelOff.classList.add('hidden');
             var depOff = document.getElementById('ws-departure-wrap');
@@ -517,6 +692,26 @@
 
     function hideAddReservation() {
         workspaceLivePricing = null;
+        workspaceExtrasLive = null;
+        workspaceLivePlaces = null;
+        workspaceAvailability = null;
+        if (workspacePlacesFetchController) {
+            try {
+                workspacePlacesFetchController.abort();
+            } catch (e) { /* ignore */ }
+            workspacePlacesFetchController = null;
+        }
+        var capEl = document.getElementById('ws-capacity-live');
+        if (capEl) {
+            capEl.classList.add('hidden');
+            capEl.textContent = '';
+        }
+        var submitBtn = document.getElementById('ws-booking-submit');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            submitBtn.title = '';
+        }
         var panel = document.getElementById('ws-prefill-panel');
         if (panel) panel.classList.add('hidden');
         var main = document.getElementById('reservations-main-content');
@@ -673,6 +868,11 @@
 
         if (document.getElementById('extras-container')) {
             updateExtrasView();
+        }
+
+        var roomTypeEl = document.getElementById('ws-package-room-type');
+        if (roomTypeEl) {
+            roomTypeEl.addEventListener('change', calculateTotal);
         }
     });
 })();
