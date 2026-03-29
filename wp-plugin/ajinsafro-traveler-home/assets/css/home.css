@@ -98,6 +98,10 @@
     box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
 }
 
+.aj-promo-banner--visual-only {
+    grid-template-columns: 1fr;
+}
+
 .aj-promo-banner__media {
     position: relative;
     min-width: 0;

@@ -10,7 +10,9 @@
     $filterStatus = $filterStatus ?? null;
     $highlightReservationId = $highlightReservationId ?? 0;
     $voyageOptions = $voyageOptions ?? collect();
-    $reservationCreated = session('reservation_created');
+    $reservationCreated = isset($reservationCreated) && is_array($reservationCreated)
+        ? $reservationCreated
+        : (session('reservation_created') ?: null);
     $baseQuery = array_filter([
         'voyage_id' => $filterTourId,
         'travel_date_id' => $filterTravelDateId,
@@ -61,6 +63,16 @@
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(is_array($reservationCreated))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border border-success" role="alert" id="res-hub-created-banner">
+            <strong class="d-block mb-1"><i class="bx bx-check-circle me-1"></i> Réservation créée avec succès</strong>
+            <span class="small d-block text-body">#{{ $reservationCreated['id'] ?? '—' }} · {{ $reservationCreated['voyage_name'] ?? '—' }} · {{ $reservationCreated['type_label'] ?? '—' }}
+                · {{ $reservationCreated['departure_label'] ?? '—' }} · {{ $reservationCreated['pax_count'] ?? '—' }} pers. · {{ $reservationCreated['total_label'] ?? '—' }} · {{ $reservationCreated['status_label'] ?? '—' }}</span>
+            <span class="small text-muted d-block mt-1">Un panneau détaillé s’ouvre ci-dessous ; ce bandeau reste visible si le modal ne s’affiche pas (ex. conflit JS).</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
         </div>
     @endif
 

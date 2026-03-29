@@ -360,6 +360,7 @@ class ReservationsController extends Controller
                 'status' => Reservation::STATUS_EN_COURS,
                 'highlight' => $reservation->id,
                 'id' => $reservation->id,
+                'created' => '1',
             ], fn ($v) => $v !== null && $v !== ''))
             ->with('reservation_created', AdminReservationFlash::createdPayload($reservation));
     }
@@ -694,6 +695,23 @@ class ReservationsController extends Controller
         $data = $this->hubListData($request);
         $highlightReservationId = (int) $request->query('highlight', 0);
 
+        $reservationCreated = $request->session()->get('reservation_created');
+        if (! is_array($reservationCreated)) {
+            $reservationCreated = null;
+        }
+        if ($reservationCreated === null
+            && $request->query('created') === '1'
+            && (int) $request->query('id', 0) > 0) {
+            $rid = (int) $request->query('id');
+            $res = Reservation::query()->find($rid);
+            if ($res
+                && $res->created_at
+                && $res->created_at->gt(now()->subMinutes(5))
+                && $this->branchScope->userCanAccessReservation($request->user(), $res)) {
+                $reservationCreated = AdminReservationFlash::createdPayload($res);
+            }
+        }
+
         $voyageOptions = Voyage::query()
             ->orderBy('name')
             ->limit(500)
@@ -702,6 +720,7 @@ class ReservationsController extends Controller
         return view('admin.reservations.index', array_merge($data, [
             'voyageOptions' => $voyageOptions,
             'highlightReservationId' => $highlightReservationId,
+            'reservationCreated' => $reservationCreated,
         ]));
     }
 

@@ -53,6 +53,7 @@ final class AdminReservationFlash
             'status' => $reservation->status,
             'highlight' => $reservation->id,
             'id' => $reservation->id,
+            'created' => '1',
         ], fn ($v) => $v !== null && $v !== '');
 
         return [

@@ -261,6 +261,7 @@ class ReservationWorkspaceController extends Controller
                 'status' => Reservation::STATUS_EN_COURS,
                 'highlight' => $reservation->id,
                 'id' => $reservation->id,
+                'created' => '1',
             ], fn ($v) => $v !== null && $v !== ''))->with('reservation_created', AdminReservationFlash::createdPayload($reservation));
         } catch (ValidationException $e) {
             throw $e;
