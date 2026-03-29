@@ -93,6 +93,389 @@
     #ws-catalog-table .ws-room-badge:hover {
         box-shadow: 0 2px 10px rgba(14, 58, 90, 0.08);
     }
+
+    /* —— Modal détail voyage (workspace) — overlay fort + structure pro — */
+    #ws-voyage-detail-modal.ws-md-root {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        pointer-events: none;
+    }
+    #ws-voyage-detail-modal.ws-md-root:not(.hidden) {
+        display: flex !important;
+        pointer-events: auto;
+    }
+    .ws-md-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 0;
+    }
+    .ws-md-shell {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 960px;
+        max-height: min(92vh, 880px);
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+        overflow: hidden;
+        transform: scale(0.96);
+        opacity: 0;
+        transition: transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.22s ease;
+    }
+    #ws-voyage-detail-modal.ws-md-visible .ws-md-shell {
+        transform: scale(1);
+        opacity: 1;
+    }
+    #ws-voyage-detail-modal.ws-md-leaving .ws-md-shell {
+        transform: scale(0.98);
+        opacity: 0;
+    }
+    .ws-md-header {
+        flex-shrink: 0;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e8ecf1;
+        background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+    }
+    .ws-md-header-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .ws-md-title {
+        font-size: 1.125rem;
+        font-weight: 800;
+        color: #0e3a5a;
+        line-height: 1.35;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .ws-md-meta {
+        margin-top: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        color: #64748b;
+        font-family: ui-monospace, monospace;
+    }
+    .ws-md-badge-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: #e6f3fa;
+        color: #0083c4;
+        border: 1px solid rgba(0, 131, 196, 0.2);
+    }
+    .ws-md-close {
+        flex-shrink: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #64748b;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .ws-md-close:hover {
+        background: #f1f5f9;
+        color: #0e3a5a;
+        border-color: #cbd5e1;
+    }
+    .ws-md-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 1.25rem 1.5rem 1.5rem;
+        background: #f8fafc;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+    .ws-md-body::-webkit-scrollbar {
+        width: 8px;
+    }
+    .ws-md-body::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 8px;
+    }
+    .ws-md-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 8px;
+    }
+    .ws-md-body-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .ws-md-card {
+        background: #fff;
+        border: 1px solid #e8ecf1;
+        border-radius: 12px;
+        padding: 1rem 1.15rem;
+        box-shadow: 0 1px 3px rgba(14, 58, 90, 0.04);
+    }
+    .ws-md-section-head {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+    }
+    .ws-md-section-head i {
+        color: #0083c4;
+        font-size: 0.85rem;
+    }
+    .ws-md-dl {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.65rem 1rem;
+        font-size: 0.875rem;
+    }
+    @media (min-width: 640px) {
+        .ws-md-dl {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    .ws-md-dl dt {
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+    .ws-md-dl dd {
+        margin: 0;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .ws-md-date-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .ws-md-date-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .ws-md-date-pill .ws-md-tag {
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.15rem 0.45rem;
+        border-radius: 6px;
+    }
+    .ws-md-tag-past {
+        background: #f1f5f9;
+        color: #475569;
+    }
+    .ws-md-tag-future {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    .ws-md-places-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    .ws-md-stat-box {
+        padding: 0.65rem 0.75rem;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #e8ecf1;
+        text-align: center;
+    }
+    .ws-md-stat-box span {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+        margin-bottom: 0.25rem;
+    }
+    .ws-md-stat-box strong {
+        font-size: 1.125rem;
+        font-weight: 800;
+        color: #0e3a5a;
+        font-variant-numeric: tabular-nums;
+    }
+    .ws-md-progress {
+        height: 10px;
+        border-radius: 9999px;
+        background: #e2e8f0;
+        overflow: hidden;
+        max-width: 100%;
+    }
+    .ws-md-progress-bar {
+        height: 100%;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, #0083c4, #0e3a5a);
+        transition: width 0.35s ease;
+    }
+    .ws-md-room-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+    .ws-md-room-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.65rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #334155;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+    }
+    .ws-md-price-main {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0e3a5a;
+    }
+    .ws-md-stats-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .ws-md-stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.65rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        border: 1px solid transparent;
+    }
+    .ws-md-stat-pill.ok {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+    .ws-md-stat-pill.wait {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fde68a;
+    }
+    .ws-md-stat-pill.cancel {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+    .ws-md-footer {
+        flex-shrink: 0;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e8ecf1;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    @media (min-width: 640px) {
+        .ws-md-footer {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+    .ws-md-footer-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+    .ws-md-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid transparent;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
+        white-space: nowrap;
+    }
+    .ws-md-btn:active {
+        transform: scale(0.98);
+    }
+    .ws-md-btn-primary {
+        background: #0e3a5a;
+        color: #fff;
+        border-color: #0e3a5a;
+    }
+    .ws-md-btn-primary:hover {
+        background: #0083c4;
+        border-color: #0083c4;
+        color: #fff;
+    }
+    .ws-md-btn-success {
+        background: #059669;
+        color: #fff;
+        border-color: #059669;
+    }
+    .ws-md-btn-success:hover {
+        background: #047857;
+        border-color: #047857;
+        color: #fff;
+    }
+    .ws-md-btn-secondary {
+        background: #fff;
+        color: #475569;
+        border-color: #e2e8f0;
+    }
+    .ws-md-btn-secondary:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+    .ws-md-btn-outline {
+        background: #fff;
+        color: #0083c4;
+        border-color: rgba(0, 131, 196, 0.35);
+    }
+    .ws-md-btn-outline:hover {
+        background: #e6f3fa;
+        border-color: #0083c4;
+    }
+    body.ws-md-open {
+        overflow: hidden !important;
+    }
 </style>
 @endpush
 
@@ -359,23 +742,23 @@
         </div>
     </div>
 
-    {{-- Modal détail prestation (données : #ws-modal-detail-json) --}}
-    <div id="ws-voyage-detail-modal" class="fixed inset-0 z-[9999] hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title">
-        <div class="absolute inset-0 bg-slate-900/55 backdrop-blur-[1px]" data-ws-md-backdrop aria-hidden="true"></div>
-        <div class="relative z-10 flex min-h-full w-full items-start justify-center overflow-y-auto p-4 sm:p-6">
-            <div class="w-full max-w-4xl rounded-2xl border border-slate-200/90 bg-white shadow-2xl flex flex-col max-h-[min(92vh,880px)] overflow-hidden my-auto">
-                <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-50 to-white shrink-0">
-                    <div class="min-w-0 pr-2">
-                        <h2 id="ws-md-title" class="text-lg sm:text-xl font-extrabold text-brand-dark leading-snug">—</h2>
-                        <p id="ws-md-sub" class="text-[11px] text-slate-500 mt-1.5 font-mono leading-relaxed"></p>
+    {{-- Modal détail prestation — overlay + panneau (#ws-modal-detail-json) --}}
+    <div id="ws-voyage-detail-modal" class="ws-md-root fixed inset-0 z-[10050] hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title" aria-hidden="true">
+        <div class="ws-md-overlay" data-ws-md-backdrop tabindex="-1" aria-hidden="true"></div>
+        <div class="ws-md-shell">
+            <header class="ws-md-header">
+                <div class="ws-md-header-top">
+                    <div class="min-w-0">
+                        <h2 id="ws-md-title" class="ws-md-title">—</h2>
+                        <div id="ws-md-sub" class="ws-md-meta"></div>
                     </div>
-                    <button type="button" class="shrink-0 w-10 h-10 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-dark transition-colors" data-ws-md-close aria-label="Fermer">
+                    <button type="button" class="ws-md-close" data-ws-md-close aria-label="Fermer">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div id="ws-md-body" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 text-sm text-slate-700 min-h-0"></div>
-                <div id="ws-md-footer" class="flex flex-wrap items-center gap-2 border-t border-slate-100 px-5 sm:px-6 py-4 bg-slate-50/90 shrink-0"></div>
-            </div>
+            </header>
+            <div id="ws-md-body" class="ws-md-body"></div>
+            <footer id="ws-md-footer" class="ws-md-footer"></footer>
         </div>
     </div>
 </div>
@@ -410,73 +793,97 @@ document.addEventListener('DOMContentLoaded', function () {
         return d.innerHTML;
     }
     function closeWsDetailModal() {
-        if (wsModalEl) {
+        if (!wsModalEl) return;
+        wsModalEl.classList.remove('ws-md-visible');
+        wsModalEl.classList.add('ws-md-leaving');
+        document.body.classList.remove('ws-md-open');
+        setTimeout(function () {
             wsModalEl.classList.add('hidden');
+            wsModalEl.classList.remove('ws-md-leaving');
             wsModalEl.style.removeProperty('display');
-        }
-        document.body.style.overflow = '';
+            wsModalEl.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }, 280);
     }
     function renderWsModalBody(d) {
         if (!d) return '';
         if (d.kind === 'package') {
-            var html = '<div class="space-y-6">';
-            html += '<section class="rounded-xl border border-slate-100 bg-slate-50/50 p-4">';
-            html += '<h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Informations générales</h3>';
-            html += '<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[13px]">';
-            if (d.post_status_label) html += '<div><dt class="text-slate-400 font-medium">Statut</dt><dd class="font-semibold text-brand-dark">' + escapeWsHtml(d.post_status_label) + '</dd></div>';
-            if (d.destination) html += '<div><dt class="text-slate-400 font-medium">Destination</dt><dd class="font-semibold text-brand-dark">' + escapeWsHtml(d.destination) + '</dd></div>';
-            if (d.duration) html += '<div><dt class="text-slate-400 font-medium">Durée</dt><dd class="font-semibold text-brand-dark">' + escapeWsHtml(d.duration) + '</dd></div>';
+            var html = '<div class="ws-md-body-inner">';
+            html += '<section class="ws-md-card" aria-labelledby="ws-sec-info">';
+            html += '<div class="ws-md-section-head" id="ws-sec-info"><i class="fas fa-info-circle" aria-hidden="true"></i> Informations générales</div>';
+            html += '<dl class="ws-md-dl">';
+            if (d.destination) html += '<div><dt>Destination</dt><dd>' + escapeWsHtml(d.destination) + '</dd></div>';
+            if (d.duration) html += '<div><dt>Durée</dt><dd>' + escapeWsHtml(d.duration) + '</dd></div>';
             html += '</dl></section>';
             if (d.travel_dates && d.travel_dates.length) {
-                html += '<section><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Dates de disponibilité</h3><ul class="flex flex-wrap gap-2">';
+                html += '<section class="ws-md-card" aria-labelledby="ws-sec-dates">';
+                html += '<div class="ws-md-section-head" id="ws-sec-dates"><i class="fas fa-calendar-alt" aria-hidden="true"></i> Dates de disponibilité</div>';
+                html += '<div class="ws-md-date-pills">';
                 d.travel_dates.forEach(function (td) {
-                    var badge = td.is_past ? 'bg-slate-200 text-slate-700' : 'bg-emerald-100 text-emerald-900';
-                    var tag = td.is_past ? 'PASSÉ' : 'À VENIR';
-                    html += '<li class="inline-flex items-center gap-2 rounded-lg border border-slate-200/90 px-3 py-2 text-[12px] bg-white"><span class="font-semibold">' + escapeWsHtml(td.date_label) + '</span>';
-                    html += '<span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ' + badge + '">' + tag + '</span></li>';
+                    var tagClass = td.is_past ? 'ws-md-tag ws-md-tag-past' : 'ws-md-tag ws-md-tag-future';
+                    var tag = td.is_past ? 'Passé' : 'À venir';
+                    html += '<span class="ws-md-date-pill"><span>' + escapeWsHtml(td.date_label) + '</span><span class="' + tagClass + '">' + tag + '</span></span>';
                 });
-                html += '</ul></section>';
+                html += '</div></section>';
             }
             if (d.places && d.places.state === 'ok' && d.places.total != null) {
                 var pct = d.places.fill_pct != null ? d.places.fill_pct : 0;
-                html += '<section><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Places</h3>';
-                html += '<p class="text-sm mb-2">Total <strong>' + d.places.total + '</strong> · Réservées <strong>' + d.places.reserved + '</strong> · Disponibles <strong>' + (d.places.remaining != null ? d.places.remaining : '—') + '</strong></p>';
-                html += '<div class="h-2.5 rounded-full bg-slate-200 overflow-hidden max-w-md"><div class="h-full rounded-full bg-brand-blue transition-all" style="width:' + pct + '%"></div></div>';
-                html += '<p class="text-[11px] text-slate-500 mt-1">' + pct + '% réservé</p></section>';
+                html += '<section class="ws-md-card" aria-labelledby="ws-sec-places">';
+                html += '<div class="ws-md-section-head" id="ws-sec-places"><i class="fas fa-users" aria-hidden="true"></i> Places</div>';
+                html += '<div class="ws-md-places-row">';
+                html += '<div class="ws-md-stat-box"><span>Total</span><strong>' + d.places.total + '</strong></div>';
+                html += '<div class="ws-md-stat-box"><span>Réservées</span><strong>' + d.places.reserved + '</strong></div>';
+                html += '<div class="ws-md-stat-box"><span>Disponibles</span><strong>' + (d.places.remaining != null ? d.places.remaining : '—') + '</strong></div>';
+                html += '</div>';
+                html += '<div class="ws-md-progress" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + pct + '%"></div></div>';
+                html += '<p style="margin:0.5rem 0 0;font-size:0.7rem;color:#94a3b8;font-weight:600">' + pct + '% des places réservées</p>';
+                html += '</section>';
             } else if (d.places) {
-                html += '<section><p class="text-sm text-slate-500">Places : calcul <em>' + escapeWsHtml(String(d.places.state)) + '</em> (hôtels / chambres)</p></section>';
+                html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-users"></i> Places</div>';
+                html += '<p style="margin:0;font-size:0.875rem;color:#64748b">Capacité non calculable : <strong>' + escapeWsHtml(String(d.places.state)) + '</strong> (hôtels / chambres)</p></section>';
             }
             if (d.rooms && d.rooms.length) {
-                html += '<section><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Chambres</h3><div class="flex flex-wrap gap-2">';
+                html += '<section class="ws-md-card" aria-labelledby="ws-sec-rooms">';
+                html += '<div class="ws-md-section-head" id="ws-sec-rooms"><i class="fas fa-bed" aria-hidden="true"></i> Chambres</div>';
+                html += '<div class="ws-md-room-pills">';
                 d.rooms.forEach(function (ln) {
                     var rt = ln.room_type || '';
                     var rc = ln.room_count || 0;
                     var cu = ln.capacity_used || 0;
                     var pr = ln.product || 0;
-                    var tip = rt + ' : ' + rc + ' chambres × ' + cu + ' personnes = ' + pr;
-                    html += '<span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700" title="' + escapeWsHtml(tip) + '">' + escapeWsHtml(rt) + ' <span class="text-slate-400 mx-0.5">·</span> ' + pr + '</span>';
+                    var tip = rt + ' : ' + rc + ' × ' + cu + ' = ' + pr;
+                    html += '<span class="ws-md-room-pill" title="' + escapeWsHtml(tip) + '">' + escapeWsHtml(rt) + ' <span style="color:#94a3b8;font-weight:800">' + pr + '</span></span>';
                 });
                 html += '</div></section>';
             }
-            html += '<section class="rounded-xl border border-slate-100 p-4"><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Tarifs</h3>';
-            html += '<p class="text-sm">Adulte : <strong>' + (d.prices && d.prices.adult_label ? escapeWsHtml(d.prices.adult_label) : '—') + '</strong></p>';
-            if (d.prices && d.prices.child_label) html += '<p class="text-sm mt-1">Enfant : <strong>' + escapeWsHtml(d.prices.child_label) + '</strong></p>';
-            html += '<p class="text-[11px] text-slate-500 mt-1">Devise : ' + escapeWsHtml((d.prices && d.prices.currency) || 'MAD') + '</p></section>';
+            html += '<section class="ws-md-card" aria-labelledby="ws-sec-price">';
+            html += '<div class="ws-md-section-head" id="ws-sec-price"><i class="fas fa-coins" aria-hidden="true"></i> Tarifs</div>';
+            html += '<p class="ws-md-price-main">' + (d.prices && d.prices.adult_label ? escapeWsHtml(d.prices.adult_label) : '—') + ' <span style="font-size:0.75rem;font-weight:600;color:#94a3b8">adulte</span></p>';
+            if (d.prices && d.prices.child_label) html += '<p style="margin:0.35rem 0 0;font-size:0.875rem;font-weight:700;color:#334155">Enfant : ' + escapeWsHtml(d.prices.child_label) + '</p>';
+            html += '<p style="margin:0.5rem 0 0;font-size:0.7rem;color:#94a3b8">Devise : ' + escapeWsHtml((d.prices && d.prices.currency) || 'MAD') + '</p>';
+            html += '</section>';
             if (d.stats) {
-                html += '<section><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Statistiques réservations</h3>';
-                html += '<div class="flex flex-wrap gap-2"><span class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[11px] font-bold text-emerald-800">Confirmées ' + (d.stats.validee || 0) + '</span>';
-                html += '<span class="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2 py-1 text-[11px] font-bold text-amber-900">En attente ' + (d.stats.en_cours || 0) + '</span>';
-                html += '<span class="inline-flex items-center gap-1 rounded-lg bg-red-50 border border-red-200 px-2 py-1 text-[11px] font-bold text-red-700">Annulées ' + (d.stats.annulee || 0) + '</span></div></section>';
+                html += '<section class="ws-md-card" aria-labelledby="ws-sec-stats">';
+                html += '<div class="ws-md-section-head" id="ws-sec-stats"><i class="fas fa-chart-bar" aria-hidden="true"></i> Réservations (toutes dates)</div>';
+                html += '<div class="ws-md-stats-row">';
+                html += '<span class="ws-md-stat-pill ok"><i class="fas fa-check-circle"></i> ' + (d.stats.validee || 0) + ' confirmées</span>';
+                html += '<span class="ws-md-stat-pill wait"><i class="fas fa-hourglass-half"></i> ' + (d.stats.en_cours || 0) + ' en attente</span>';
+                html += '<span class="ws-md-stat-pill cancel"><i class="fas fa-times-circle"></i> ' + (d.stats.annulee || 0) + ' annulées</span>';
+                html += '</div></section>';
             }
             html += '</div>';
             return html;
         }
-        var h = '<div class="space-y-4">';
-        if (d.departure_date) h += '<p class="text-sm"><strong>Départ :</strong> ' + escapeWsHtml(d.departure_date) + '</p>';
+        var h = '<div class="ws-md-body-inner">';
+        h += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-tag"></i> ' + escapeWsHtml(d.kind === 'vol' ? 'Vol' : 'Hébergement') + '</div>';
+        if (d.departure_date) h += '<p style="margin:0;font-size:0.875rem;color:#334155"><strong>Départ</strong> · ' + escapeWsHtml(d.departure_date) + '</p>';
+        h += '</section>';
         if (d.stats) {
-            h += '<div class="flex flex-wrap gap-2"><span class="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[11px] font-bold text-emerald-800">Confirmées ' + (d.stats.validee || 0) + '</span>';
-            h += '<span class="rounded-lg bg-amber-50 border border-amber-200 px-2 py-1 text-[11px] font-bold text-amber-900">En attente ' + (d.stats.en_cours || 0) + '</span>';
-            h += '<span class="rounded-lg bg-red-50 border border-red-200 px-2 py-1 text-[11px] font-bold text-red-700">Annulées ' + (d.stats.annulee || 0) + '</span></div>';
+            h += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-chart-bar"></i> Statistiques</div><div class="ws-md-stats-row">';
+            h += '<span class="ws-md-stat-pill ok"><i class="fas fa-check-circle"></i> ' + (d.stats.validee || 0) + '</span>';
+            h += '<span class="ws-md-stat-pill wait"><i class="fas fa-hourglass-half"></i> ' + (d.stats.en_cours || 0) + '</span>';
+            h += '<span class="ws-md-stat-pill cancel"><i class="fas fa-times-circle"></i> ' + (d.stats.annulee || 0) + '</span>';
+            h += '</div></section>';
         }
         h += '</div>';
         return h;
@@ -485,15 +892,18 @@ document.addEventListener('DOMContentLoaded', function () {
         var r = d.routes || {};
         var f = d.form || {};
         var h = '';
+        h += '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i> Fermer</button>';
+        h += '<div class="ws-md-footer-actions">';
         if (r.reservations) {
-            h += '<a href="' + r.reservations + '" class="inline-flex items-center gap-2 rounded-xl bg-brand-dark text-white px-4 py-2.5 text-xs font-bold hover:bg-brand-blue transition-colors"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+            h += '<a href="' + r.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
         }
         if (f.tour_id) {
-            h += '<button type="button" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2.5 text-xs font-bold hover:bg-emerald-700 border border-emerald-500/40" id="ws-md-btn-new-res"><i class="fas fa-suitcase-rolling"></i> Nouvelle réservation</button>';
+            h += '<button type="button" class="ws-md-btn ws-md-btn-success" id="ws-md-btn-new-res"><i class="fas fa-suitcase-rolling"></i> Nouvelle réservation</button>';
         }
         if (r.edit_voyage) {
-            h += '<a href="' + r.edit_voyage + '" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:border-brand-blue"><i class="fas fa-cog"></i> Modifier le voyage</a>';
+            h += '<a href="' + r.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
         }
+        h += '</div>';
         return h;
     }
     function openWsDetailModal(code) {
@@ -505,10 +915,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (wsMdTitle) wsMdTitle.textContent = d.title || '—';
         if (wsMdSub) {
-            var parts = [];
-            if (d.wp_post_id) parts.push('WP #' + d.wp_post_id);
-            if (d.laravel_voyage_id) parts.push('Laravel #' + d.laravel_voyage_id);
-            wsMdSub.textContent = parts.join(' · ');
+            var subHtml = '';
+            if (d.post_status_label) {
+                subHtml += '<span class="ws-md-badge-status">' + escapeWsHtml(d.post_status_label) + '</span>';
+            }
+            var ids = [];
+            if (d.wp_post_id) ids.push('WP #' + d.wp_post_id);
+            if (d.laravel_voyage_id) ids.push('Laravel #' + d.laravel_voyage_id);
+            if (ids.length) {
+                subHtml += '<span style="color:#475569;font-weight:600">' + escapeWsHtml(ids.join(' · ')) + '</span>';
+            }
+            wsMdSub.innerHTML = subHtml || '<span style="color:#94a3b8">—</span>';
         }
         if (wsMdBody) wsMdBody.innerHTML = renderWsModalBody(d);
         if (wsMdFooter) {
@@ -530,8 +947,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         wsModalEl.classList.remove('hidden');
-        wsModalEl.style.display = 'block';
+        wsModalEl.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('ws-md-open');
         document.body.style.overflow = 'hidden';
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                wsModalEl.classList.add('ws-md-visible');
+            });
+        });
     }
     document.addEventListener('click', function (e) {
         var t = e.target;
@@ -554,6 +977,13 @@ document.addEventListener('DOMContentLoaded', function () {
             closeWsDetailModal();
         }
     }, true);
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || !wsModalEl) return;
+        if (wsModalEl.classList.contains('hidden')) return;
+        e.preventDefault();
+        closeWsDetailModal();
+    });
 
     if (typeof flatpickr !== 'undefined') {
         flatpickr('#ws-date-range-picker', {
