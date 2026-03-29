@@ -919,6 +919,7 @@ class VoyageController extends Controller
             TourHotelRoom::where('tour_hotel_id', $tourHotelId)->whereNotIn('id', $keptRoomIds)->delete();
         }
     }
+    
 
     /**
      * Calcule le total des places du voyage à partir des chambres configurées (hôtel(s) du voyage).
