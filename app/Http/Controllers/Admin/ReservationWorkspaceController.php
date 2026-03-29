@@ -14,6 +14,7 @@ use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
 use App\Services\ReservationWorkspaceBookingService;
 use App\Services\ReservationWorkspaceCatalogService;
+use App\Support\AdminReservationFlash;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -182,6 +183,11 @@ class ReservationWorkspaceController extends Controller
 
         $paymentType = $this->mapPaymentType($request->input('payment_mode'));
 
+        $clientIdForOwnership = $request->string('client_mode')->toString() === 'existing'
+            ? (int) $request->input('client_external_id')
+            : null;
+        $ownership = $this->branchScope->defaultReservationOwnership($user, $clientIdForOwnership ?: null);
+
         $data = [
             'tour_id' => (int) $request->input('tour_id'),
             'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
@@ -202,7 +208,8 @@ class ReservationWorkspaceController extends Controller
             'paid_amount' => (float) $request->input('montant_paye'),
             'notes' => $notes,
             'passengers' => $passengers,
-            'branch_id' => $user->branch_id ?? $user->manager?->branch_id,
+            'branch_id' => $ownership['branch_id'],
+            'sales_manager_id' => $ownership['sales_manager_id'],
             'agent_id' => $user->id,
             'created_by' => $user->id,
             'hotel_rooms' => [],
@@ -237,7 +244,9 @@ class ReservationWorkspaceController extends Controller
             'voyage_id' => (int) $reservation->tour_id,
             'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
             'status' => Reservation::STATUS_EN_COURS,
-        ], fn ($v) => $v !== null && $v !== ''))->with('success', 'Réservation enregistrée.');
+            'highlight' => $reservation->id,
+            'id' => $reservation->id,
+        ], fn ($v) => $v !== null && $v !== ''))->with('reservation_created', AdminReservationFlash::createdPayload($reservation));
     }
 
     public function prestationParticipants(Request $request): RedirectResponse

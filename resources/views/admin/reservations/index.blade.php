@@ -8,7 +8,9 @@
     $filterTravelDateId = $filterTravelDateId ?? null;
     $filterSearch = $filterSearch ?? null;
     $filterStatus = $filterStatus ?? null;
+    $highlightReservationId = $highlightReservationId ?? 0;
     $voyageOptions = $voyageOptions ?? collect();
+    $reservationCreated = session('reservation_created');
     $baseQuery = array_filter([
         'voyage_id' => $filterTourId,
         'travel_date_id' => $filterTravelDateId,
@@ -21,6 +23,9 @@
          class="d-none"
          data-res-base="{{ rtrim(url('/admin/reservations'), '/') }}"
          data-csrf="{{ csrf_token() }}"
+         @can('reservations.view')
+         data-hub-refresh-url="{{ route('admin.reservations.hub-refresh') }}"
+         @endcan
          @if(config('app.debug') && auth()->user()->can('reservations.view'))
          data-hub-debug-url="{{ route('admin.reservations.hub-debug') }}"
          @endif
@@ -52,7 +57,7 @@
         </div>
     </div>
 
-    @if(session('success'))
+    @if(session('success') && empty($reservationCreated))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -103,7 +108,7 @@
             <div class="card border-0 shadow-sm h-100 border-start border-primary border-3">
                 <div class="card-body py-3">
                     <div class="text-muted text-uppercase fw-semibold" style="font-size:0.65rem;letter-spacing:.06em;">Total (filtré)</div>
-                    <div class="h4 mb-0 fw-bold text-primary">{{ $hubStats['total'] }}</div>
+                    <div class="h4 mb-0 fw-bold text-primary" id="res-hub-stat-total">{{ $hubStats['total'] }}</div>
                 </div>
             </div>
         </div>
@@ -111,7 +116,7 @@
             <div class="card border-0 shadow-sm h-100 border-start border-warning border-3">
                 <div class="card-body py-3">
                     <div class="text-muted text-uppercase fw-semibold" style="font-size:0.65rem;letter-spacing:.06em;">En attente</div>
-                    <div class="h4 mb-0 fw-bold">{{ $hubStats['en_cours'] }}</div>
+                    <div class="h4 mb-0 fw-bold" id="res-hub-stat-en-cours">{{ $hubStats['en_cours'] }}</div>
                 </div>
             </div>
         </div>
@@ -119,7 +124,7 @@
             <div class="card border-0 shadow-sm h-100 border-start border-success border-3">
                 <div class="card-body py-3">
                     <div class="text-muted text-uppercase fw-semibold" style="font-size:0.65rem;letter-spacing:.06em;">Confirmées</div>
-                    <div class="h4 mb-0 fw-bold text-success">{{ $hubStats['validee'] }}</div>
+                    <div class="h4 mb-0 fw-bold text-success" id="res-hub-stat-validee">{{ $hubStats['validee'] }}</div>
                 </div>
             </div>
         </div>
@@ -127,7 +132,7 @@
             <div class="card border-0 shadow-sm h-100 border-start border-danger border-3">
                 <div class="card-body py-3">
                     <div class="text-muted text-uppercase fw-semibold" style="font-size:0.65rem;letter-spacing:.06em;">Annulées</div>
-                    <div class="h4 mb-0 fw-bold text-danger">{{ $hubStats['annulee'] }}</div>
+                    <div class="h4 mb-0 fw-bold text-danger" id="res-hub-stat-annulee">{{ $hubStats['annulee'] }}</div>
                 </div>
             </div>
         </div>
@@ -150,90 +155,60 @@
                         <th class="text-end pe-3" style="min-width:200px;">Actions</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    @forelse($reservations as $reservation)
-                        <tr>
-                            <td class="ps-3 text-muted small">{{ $reservation->id }}</td>
-                            <td>
-                                @if($reservation->client)
-                                    <strong>{{ $reservation->client->full_name }}</strong>
-                                    <span class="text-muted small d-block">{{ $reservation->client->client_code }}</span>
-                                @else
-                                    {{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—' }}
-                                @endif
-                            </td>
-                            <td>{{ $reservation->tour?->name ?? '—' }}</td>
-                            <td class="small">
-                                @if($reservation->travelDate?->date)
-                                    {{ $reservation->travelDate->date->format('d/m/Y') }}
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                            <td>
-                                @php
-                                    $names = $reservation->passengers->map(fn($p) => trim(($p->first_name ?? '').' '.($p->last_name ?? '')))->filter()->values();
-                                @endphp
-                                @if($names->isEmpty())
-                                    <span class="text-muted">—</span>
-                                @else
-                                    <span class="text-break small">{{ $names->take(3)->join(', ') }}{{ $names->count() > 3 ? '…' : '' }}</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($reservation->payment_type)
-                                    <span class="badge bg-light text-dark">{{ $reservation->payment_type }}</span>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                            <td>
-                                @php
-                                    $statusClass = match($reservation->status) {
-                                        \App\Models\Reservation::STATUS_EN_COURS => 'badge bg-warning text-dark',
-                                        \App\Models\Reservation::STATUS_VALIDEE => 'badge bg-success',
-                                        \App\Models\Reservation::STATUS_ANNULEE => 'badge bg-danger',
-                                        default => 'badge bg-secondary',
-                                    };
-                                @endphp
-                                <span class="{{ $statusClass }}">{{ $reservation->status }}</span>
-                            </td>
-                            <td class="small">{{ optional($reservation->created_at)->format('d/m/Y H:i') }}</td>
-                            <td class="text-end pe-3">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-secondary btn-res-hub-detail" title="Détails"
-                                            data-res-id="{{ $reservation->id }}"><i class="bx bx-info-circle"></i></button>
-                                    <button type="button" class="btn btn-outline-secondary btn-res-hub-pax" title="Participants"
-                                            data-res-id="{{ $reservation->id }}"><i class="bx bx-group"></i></button>
-                                    <button type="button" class="btn btn-outline-primary btn-res-hub-edit" title="Modifier"
-                                            data-res-id="{{ $reservation->id }}"><i class="bx bx-pencil"></i></button>
-                                </div>
-                                @if($reservation->status !== \App\Models\Reservation::STATUS_VALIDEE)
-                                    <form action="{{ route('admin.reservations.validate', $reservation) }}" method="post" class="d-inline ms-1">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-success" title="Valider"><i class="bx bx-check"></i></button>
-                                    </form>
-                                @endif
-                                <form action="{{ route('admin.reservations.destroy', $reservation) }}" method="post" class="d-inline ms-1" onsubmit="return confirm('Supprimer cette réservation ?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="bx bx-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-5">Aucune réservation trouvée.</td>
-                        </tr>
-                    @endforelse
+                    <tbody id="res-hub-tbody">
+                    @include('admin.reservations.partials.hub-table-rows', ['reservations' => $reservations, 'highlightReservationId' => $highlightReservationId])
                     </tbody>
                 </table>
             </div>
             @if(method_exists($reservations, 'links'))
-                <div class="px-3 py-2 border-top">{{ $reservations->links() }}</div>
+                <div class="px-3 py-2 border-top" id="res-hub-pagination">{{ $reservations->links() }}</div>
             @endif
         </div>
     </div>
+
+    @if(is_array($reservationCreated))
+    <div class="modal fade" id="modalResCreated" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-success"><i class="bx bx-check-circle me-1"></i> {{ $reservationCreated['title'] ?? 'Réservation créée' }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <p class="text-muted small mb-3">Les filtres de la liste correspondent à ceux du formulaire ; la ligne est surlignée. Un rafraîchissement automatique met à jour les chiffres ci-dessous.</p>
+                    <div class="bg-light rounded p-3 mb-3 small">
+                        <div class="fw-semibold mb-2">Détails</div>
+                        <ul class="list-unstyled mb-0">
+                            <li><span class="text-muted">ID réservation</span> : <strong>#{{ $reservationCreated['id'] ?? '—' }}</strong></li>
+                            <li><span class="text-muted">Voyage</span> : {{ $reservationCreated['voyage_name'] ?? '—' }}</li>
+                            <li><span class="text-muted">Type</span> : {{ $reservationCreated['type_label'] ?? '—' }}</li>
+                            <li><span class="text-muted">Date de départ</span> : {{ $reservationCreated['departure_label'] ?? '—' }}</li>
+                            <li><span class="text-muted">Nombre de personnes</span> : {{ $reservationCreated['pax_count'] ?? '—' }}</li>
+                            <li><span class="text-muted">Total</span> : {{ $reservationCreated['total_label'] ?? '—' }}</li>
+                            <li><span class="text-muted">Statut</span> : {{ $reservationCreated['status_label'] ?? '—' }}</li>
+                        </ul>
+                    </div>
+                    <div class="border border-dashed rounded p-2 mb-3 small font-monospace text-body-secondary">
+                        <div class="fw-semibold text-dark mb-1">Debug (temporaire)</div>
+                        @php $dbg = $reservationCreated['debug'] ?? []; @endphp
+                        <div>voyage_id (tour_id) : <strong>{{ $dbg['voyage_id'] ?? '—' }}</strong></div>
+                        <div>wp_tour_post_id : <strong>{{ $dbg['wp_tour_post_id'] ?? '—' }}</strong></div>
+                        <div>travel_date_id : <strong>{{ $dbg['travel_date_id'] ?? '—' }}</strong></div>
+                        <div>prestation_type : <strong>{{ $dbg['prestation_type'] ?? '—' }}</strong></div>
+                        <div>status : <strong>{{ $dbg['status'] ?? '—' }}</strong></div>
+                        <div>branch_id : <strong>{{ $dbg['branch_id'] ?? '—' }}</strong></div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ $reservationCreated['urls']['view_in_list'] ?? '#' }}" class="btn btn-primary btn-sm">Voir la réservation (liste filtrée)</a>
+                        <a href="{{ $reservationCreated['urls']['edit'] ?? '#' }}" class="btn btn-outline-primary btn-sm">Ouvrir la fiche édition</a>
+                        <a href="{{ $reservationCreated['urls']['view_all'] ?? '#' }}" class="btn btn-outline-secondary btn-sm">Voir toutes les réservations</a>
+                        <button type="button" class="btn btn-light btn-sm ms-auto" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Modal détails --}}
     <div class="modal fade" id="resHubDetailModal" tabindex="-1" aria-hidden="true">
@@ -316,6 +291,35 @@
     if (!root) return;
     var base = root.getAttribute('data-res-base') || '';
     var hubDebugUrl = root.getAttribute('data-hub-debug-url') || '';
+    var hubRefreshUrl = root.getAttribute('data-hub-refresh-url') || '';
+
+    function applyHubRefreshPayload(payload) {
+        if (!payload || !payload.hub_stats) return;
+        var hs = payload.hub_stats;
+        var pairs = [
+            ['res-hub-stat-total', hs.total],
+            ['res-hub-stat-en-cours', hs.en_cours],
+            ['res-hub-stat-validee', hs.validee],
+            ['res-hub-stat-annulee', hs.annulee]
+        ];
+        pairs.forEach(function (p) {
+            var el = document.getElementById(p[0]);
+            if (el) el.textContent = String(p[1] != null ? p[1] : '0');
+        });
+        var tbody = document.getElementById('res-hub-tbody');
+        if (tbody && payload.tbody_html) tbody.innerHTML = payload.tbody_html;
+        var pag = document.getElementById('res-hub-pagination');
+        if (pag && typeof payload.pagination_html === 'string') pag.innerHTML = payload.pagination_html;
+    }
+
+    function fetchAndApplyHubRefresh() {
+        if (!hubRefreshUrl) return Promise.resolve();
+        var full = hubRefreshUrl + (window.location.search || '');
+        return fetch(full, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        }).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(applyHubRefreshPayload).catch(function () {});
+    }
     function panelUrl(id) { return base + '/' + encodeURIComponent(id) + '/panel'; }
     function editUrl(id) {
         var u = base + '/' + encodeURIComponent(id) + '/edit?embed=1';
@@ -347,69 +351,72 @@
         return 'Adulte';
     }
 
-    document.querySelectorAll('.btn-res-hub-detail').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var id = btn.getAttribute('data-res-id');
-            var modal = new bootstrap.Modal(document.getElementById('resHubDetailModal'));
-            document.getElementById('resHubDetailTitle').textContent = 'Réservation #' + id;
-            document.getElementById('resHubDetailBody').innerHTML = '<p class="text-muted mb-0">Chargement…</p>';
-            modal.show();
-            fetchPanel(id, function (d) {
-                var el = document.getElementById('resHubDetailBody');
-                if (!d) {
-                    el.innerHTML = '<p class="text-danger mb-0">Impossible de charger les détails.</p>';
-                    return;
-                }
-                var h = '<dl class="row mb-0">';
-                h += '<dt class="col-sm-4">Statut</dt><dd class="col-sm-8">' + esc(d.status) + '</dd>';
-                h += '<dt class="col-sm-4">Client</dt><dd class="col-sm-8">' + esc(d.client_label || '—') + (d.client_code ? ' <span class="text-muted">(' + esc(d.client_code) + ')</span>' : '') + '</dd>';
-                h += '<dt class="col-sm-4">Voyage</dt><dd class="col-sm-8">' + esc(d.tour_name || '—') + '</dd>';
-                h += '<dt class="col-sm-4">Départ</dt><dd class="col-sm-8">' + esc(d.travel_date_label || '—') + (d.travel_date_id ? ' <code class="small">id ' + esc(String(d.travel_date_id)) + '</code>' : '') + '</dd>';
-                h += '<dt class="col-sm-4">Type prestation</dt><dd class="col-sm-8">' + esc(d.prestation_type || '—') + '</dd>';
-                h += '<dt class="col-sm-4">Montants</dt><dd class="col-sm-8">Total : ' + esc(String(d.base_price ?? '—')) + ' · Payé : ' + esc(String(d.paid_amount ?? '—')) + '</dd>';
-                h += '<dt class="col-sm-4">Paiement</dt><dd class="col-sm-8">' + esc(d.payment_type || '—') + '</dd>';
-                h += '<dt class="col-sm-4">Créée</dt><dd class="col-sm-8">' + esc(d.created_at || '—') + '</dd>';
-                if (d.branch) h += '<dt class="col-sm-4">Agence</dt><dd class="col-sm-8">' + esc(d.branch) + '</dd>';
-                h += '</dl>';
-                el.innerHTML = h;
-            });
-        });
-    });
-
-    document.querySelectorAll('.btn-res-hub-pax').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var id = btn.getAttribute('data-res-id');
-            var modal = new bootstrap.Modal(document.getElementById('resHubPaxModal'));
-            document.getElementById('resHubPaxTitle').textContent = 'Participants · #' + id;
-            document.getElementById('resHubPaxBody').innerHTML = '<p class="text-muted p-3 mb-0">Chargement…</p>';
-            modal.show();
-            fetchPanel(id, function (d) {
-                var el = document.getElementById('resHubPaxBody');
-                if (!d || !d.passengers || !d.passengers.length) {
-                    el.innerHTML = '<p class="text-muted p-3 mb-0">Aucun participant enregistré.</p>';
-                    return;
-                }
-                var h = '<table class="table table-sm mb-0"><thead><tr><th>Nom</th><th>Type</th><th>Document</th></tr></thead><tbody>';
-                d.passengers.forEach(function (p) {
-                    var name = esc((p.first_name || '') + ' ' + (p.last_name || '')).trim() || '—';
-                    h += '<tr><td>' + name + '</td><td>' + esc(typeLabel(p.type)) + '</td><td class="small">' + esc(p.document_number || '—') + '</td></tr>';
+    var hubTable = document.querySelector('table.reservations-table');
+    if (hubTable) {
+        hubTable.addEventListener('click', function (e) {
+            var detailBtn = e.target.closest('.btn-res-hub-detail');
+            if (detailBtn) {
+                var id = detailBtn.getAttribute('data-res-id');
+                var modal = new bootstrap.Modal(document.getElementById('resHubDetailModal'));
+                document.getElementById('resHubDetailTitle').textContent = 'Réservation #' + id;
+                document.getElementById('resHubDetailBody').innerHTML = '<p class="text-muted mb-0">Chargement…</p>';
+                modal.show();
+                fetchPanel(id, function (d) {
+                    var el = document.getElementById('resHubDetailBody');
+                    if (!d) {
+                        el.innerHTML = '<p class="text-danger mb-0">Impossible de charger les détails.</p>';
+                        return;
+                    }
+                    var h = '<dl class="row mb-0">';
+                    h += '<dt class="col-sm-4">Statut</dt><dd class="col-sm-8">' + esc(d.status) + '</dd>';
+                    h += '<dt class="col-sm-4">Client</dt><dd class="col-sm-8">' + esc(d.client_label || '—') + (d.client_code ? ' <span class="text-muted">(' + esc(d.client_code) + ')</span>' : '') + '</dd>';
+                    h += '<dt class="col-sm-4">Voyage</dt><dd class="col-sm-8">' + esc(d.tour_name || '—') + '</dd>';
+                    h += '<dt class="col-sm-4">Départ</dt><dd class="col-sm-8">' + esc(d.travel_date_label || '—') + (d.travel_date_id ? ' <code class="small">id ' + esc(String(d.travel_date_id)) + '</code>' : '') + '</dd>';
+                    h += '<dt class="col-sm-4">Type prestation</dt><dd class="col-sm-8">' + esc(d.prestation_type || '—') + '</dd>';
+                    h += '<dt class="col-sm-4">Montants</dt><dd class="col-sm-8">Total : ' + esc(String(d.base_price ?? '—')) + ' · Payé : ' + esc(String(d.paid_amount ?? '—')) + '</dd>';
+                    h += '<dt class="col-sm-4">Paiement</dt><dd class="col-sm-8">' + esc(d.payment_type || '—') + '</dd>';
+                    h += '<dt class="col-sm-4">Créée</dt><dd class="col-sm-8">' + esc(d.created_at || '—') + '</dd>';
+                    if (d.branch) h += '<dt class="col-sm-4">Agence</dt><dd class="col-sm-8">' + esc(d.branch) + '</dd>';
+                    h += '</dl>';
+                    el.innerHTML = h;
                 });
-                h += '</tbody></table>';
-                el.innerHTML = h;
-            });
+                return;
+            }
+            var paxBtn = e.target.closest('.btn-res-hub-pax');
+            if (paxBtn) {
+                var idP = paxBtn.getAttribute('data-res-id');
+                var paxModal = new bootstrap.Modal(document.getElementById('resHubPaxModal'));
+                document.getElementById('resHubPaxTitle').textContent = 'Participants · #' + idP;
+                document.getElementById('resHubPaxBody').innerHTML = '<p class="text-muted p-3 mb-0">Chargement…</p>';
+                paxModal.show();
+                fetchPanel(idP, function (d) {
+                    var el = document.getElementById('resHubPaxBody');
+                    if (!d || !d.passengers || !d.passengers.length) {
+                        el.innerHTML = '<p class="text-muted p-3 mb-0">Aucun participant enregistré.</p>';
+                        return;
+                    }
+                    var h = '<table class="table table-sm mb-0"><thead><tr><th>Nom</th><th>Type</th><th>Document</th></tr></thead><tbody>';
+                    d.passengers.forEach(function (p) {
+                        var name = esc((p.first_name || '') + ' ' + (p.last_name || '')).trim() || '—';
+                        h += '<tr><td>' + name + '</td><td>' + esc(typeLabel(p.type)) + '</td><td class="small">' + esc(p.document_number || '—') + '</td></tr>';
+                    });
+                    h += '</tbody></table>';
+                    el.innerHTML = h;
+                });
+                return;
+            }
+            var editBtn = e.target.closest('.btn-res-hub-edit');
+            if (editBtn) {
+                var idE = editBtn.getAttribute('data-res-id');
+                if (frame) frame.src = editUrl(idE);
+                var oc = bootstrap.Offcanvas.getOrCreateInstance(offEl);
+                oc.show();
+            }
         });
-    });
+    }
 
     var offEl = document.getElementById('resHubEditOffcanvas');
     var frame = document.getElementById('resHubEditFrame');
-    document.querySelectorAll('.btn-res-hub-edit').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var id = btn.getAttribute('data-res-id');
-            if (frame) frame.src = editUrl(id);
-            var oc = bootstrap.Offcanvas.getOrCreateInstance(offEl);
-            oc.show();
-        });
-    });
     if (offEl) {
         offEl.addEventListener('hidden.bs.offcanvas', function () {
             if (frame) frame.src = 'about:blank';
@@ -471,6 +478,15 @@
                     if (tbody) tbody.innerHTML = '<tr><td colspan="13" class="text-danger">Échec du chargement.</td></tr>';
                 });
         });
+    }
+
+    var createdModalEl = document.getElementById('modalResCreated');
+    if (createdModalEl) {
+        var cm = new bootstrap.Modal(createdModalEl);
+        cm.show();
+        setTimeout(function () { fetchAndApplyHubRefresh(); }, 150);
+    } else if (hubRefreshUrl && /(?:^|[?&])highlight=/.test(window.location.search)) {
+        setTimeout(function () { fetchAndApplyHubRefresh(); }, 150);
     }
 })();
 </script>

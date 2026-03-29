@@ -15,6 +15,7 @@ use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
+use App\Support\AdminReservationFlash;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -91,6 +92,26 @@ class ReservationsController extends Controller
                 'search' => $request->query('search'),
             ],
             'reservations' => $items,
+        ]);
+    }
+
+    /**
+     * JSON : stats + fragment HTML du tableau (mêmes filtres que le hub) pour rafraîchir sans recharger la page.
+     */
+    public function hubRefresh(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->can('reservations.view'), 403);
+
+        $data = $this->hubListData($request);
+        $highlightReservationId = (int) $request->query('highlight', 0);
+
+        return response()->json([
+            'hub_stats' => $data['hubStats'],
+            'tbody_html' => view('admin.reservations.partials.hub-table-rows', [
+                'reservations' => $data['reservations'],
+                'highlightReservationId' => $highlightReservationId,
+            ])->render(),
+            'pagination_html' => $data['reservations']->links()->render(),
         ]);
     }
 
@@ -309,9 +330,11 @@ class ReservationsController extends Controller
         $data['status'] = Reservation::STATUS_EN_COURS;
         $data['visa_ok'] = $request->boolean('visa_ok');
         $user = $request->user();
-        $data['branch_id'] = $user->branch_id ?? $user->manager?->branch_id;
+        $clientIdForBranch = ($data['client_mode'] ?? '') === 'existing' ? (int) ($data['client_external_id'] ?? 0) : null;
+        $ownership = $this->branchScope->defaultReservationOwnership($user, $clientIdForBranch ?: null);
+        $data['branch_id'] = $ownership['branch_id'];
+        $data['sales_manager_id'] = $ownership['sales_manager_id'];
         $data['agent_id'] = $user->id;
-        $data['sales_manager_id'] = $user->branch?->manager_user_id;
         $data['created_by'] = $user->id;
 
         $voyageRef = Voyage::query()->find((int) $data['tour_id']);
@@ -335,8 +358,10 @@ class ReservationsController extends Controller
                 'voyage_id' => $tourId > 0 ? $tourId : null,
                 'travel_date_id' => $tdId > 0 ? $tdId : null,
                 'status' => Reservation::STATUS_EN_COURS,
+                'highlight' => $reservation->id,
+                'id' => $reservation->id,
             ], fn ($v) => $v !== null && $v !== ''))
-            ->with('success', 'Réservation créée.');
+            ->with('reservation_created', AdminReservationFlash::createdPayload($reservation));
     }
 
     /**
@@ -620,9 +645,11 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Liste + stats : une seule base de requête filtrée (identique au tableau paginé).
+     * Données hub (stats + page courante) : même logique pour la vue HTML et {@see hubRefresh()}.
+     *
+     * @return array{hubStats: array, reservations: \Illuminate\Contracts\Pagination\LengthAwarePaginator, filterTourId: int|null, filterTravelDateId: int|null, filterSearch: string|null, filterStatus: string|null}
      */
-    protected function renderList(Request $request): View
+    protected function hubListData(Request $request): array
     {
         $base = $this->hubFilteredReservationBuilder($request);
 
@@ -649,20 +676,33 @@ class ReservationsController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        return [
+            'hubStats' => $hubStats,
+            'reservations' => $reservations,
+            'filterTourId' => $tourFilter > 0 ? $tourFilter : null,
+            'filterTravelDateId' => $travelDateFilter > 0 ? $travelDateFilter : null,
+            'filterSearch' => $search !== '' ? $search : null,
+            'filterStatus' => $statusParam !== '' ? $statusParam : null,
+        ];
+    }
+
+    /**
+     * Liste + stats : une seule base de requête filtrée (identique au tableau paginé).
+     */
+    protected function renderList(Request $request): View
+    {
+        $data = $this->hubListData($request);
+        $highlightReservationId = (int) $request->query('highlight', 0);
+
         $voyageOptions = Voyage::query()
             ->orderBy('name')
             ->limit(500)
             ->get(['id', 'name']);
 
-        return view('admin.reservations.index', [
-            'reservations' => $reservations,
-            'hubStats' => $hubStats,
-            'filterTourId' => $tourFilter > 0 ? $tourFilter : null,
-            'filterTravelDateId' => $travelDateFilter > 0 ? $travelDateFilter : null,
-            'filterSearch' => $search !== '' ? $search : null,
-            'filterStatus' => $statusParam !== '' ? $statusParam : null,
+        return view('admin.reservations.index', array_merge($data, [
             'voyageOptions' => $voyageOptions,
-        ]);
+            'highlightReservationId' => $highlightReservationId,
+        ]));
     }
 
     /**

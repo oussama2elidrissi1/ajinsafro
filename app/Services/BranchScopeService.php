@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Branch;
+use App\Models\Client;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Services\View\AgentPortalLayout;
@@ -49,8 +50,45 @@ class BranchScopeService
         if ($user->branch_id) {
             return [(int) $user->branch_id];
         }
+        // Aligné sur l’attribution des réservations (commercial sans agence propre → agence du manager).
+        $managerBranchId = $user->manager?->branch_id;
+        if ($managerBranchId) {
+            return [(int) $managerBranchId];
+        }
 
         return [];
+    }
+
+    /**
+     * Branch + chef commercial pour une nouvelle réservation (même logique que la liste admin).
+     *
+     * @return array{branch_id: int|null, sales_manager_id: int|null}
+     */
+    public function defaultReservationOwnership(User $user, ?int $clientExternalId = null): array
+    {
+        $branchId = $user->branch_id ?? $user->manager?->branch_id;
+        if (($branchId === null || (int) $branchId <= 0) && $clientExternalId !== null && $clientExternalId > 0) {
+            $client = Client::query()->find($clientExternalId);
+            if ($client && $client->branch_id) {
+                $branchId = (int) $client->branch_id;
+            }
+        }
+        $branchId = $branchId && (int) $branchId > 0 ? (int) $branchId : null;
+
+        $salesManagerId = null;
+        if ($branchId !== null) {
+            $salesManagerId = Branch::query()->whereKey($branchId)->value('manager_user_id');
+            $salesManagerId = $salesManagerId ? (int) $salesManagerId : null;
+        }
+        if ($salesManagerId === null) {
+            $fallback = $user->branch?->manager_user_id;
+            $salesManagerId = $fallback ? (int) $fallback : null;
+        }
+
+        return [
+            'branch_id' => $branchId,
+            'sales_manager_id' => $salesManagerId,
+        ];
     }
 
     /**
