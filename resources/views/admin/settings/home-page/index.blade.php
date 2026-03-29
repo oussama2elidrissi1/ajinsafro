@@ -368,7 +368,7 @@
                     'search' => 'Search',
                     'last_minute' => 'Tendances du moment',
                     'accommodations' => 'Séjours uniques',
-                    'holiday_theme' => 'Holidayz',
+                    'holiday_theme' => 'Voyages par thème',
                     'regions' => 'Destinations',
                     'good_spots' => 'Bons coins',
                     'promotions' => 'Promotions',
@@ -499,7 +499,7 @@
                 </div>
             </div>
 
-            {{-- Holidayz --}}
+            {{-- Voyages par thème --}}
             @php
                 $holidayTheme = old('holiday_theme', data_get($settings, 'holiday_theme', []));
                 $holidayItems = data_get($holidayTheme, 'items', []);
@@ -507,19 +507,19 @@
             @endphp
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Holidayz (Holidays by Theme)</h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="holiday-add-item">Ajouter une card</button>
+                    <h5 class="card-title mb-0">Voyages par thème</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="holiday-add-item">Ajouter une carte</button>
                 </div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="holiday_theme[enabled]" value="1" id="holiday_enabled"
                                {{ old('holiday_theme.enabled', data_get($holidayTheme, 'enabled', true)) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="holiday_enabled">Activer la section Holidayz</label>
+                        <label class="form-check-label" for="holiday_enabled">Activer la section Voyages par thème</label>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Eyebrow</label>
-                            <input type="text" class="form-control" name="holiday_theme[eyebrow]" value="{{ old('holiday_theme.eyebrow', data_get($holidayTheme, 'eyebrow', 'Voyages par theme')) }}">
+                            <label class="form-label">Sur-titre</label>
+                            <input type="text" class="form-control" name="holiday_theme[eyebrow]" value="{{ old('holiday_theme.eyebrow', data_get($holidayTheme, 'eyebrow', 'Voyages par thème')) }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Titre ligne 1</label>
@@ -563,7 +563,7 @@
                         </div>
                     </div>
 
-                    <h6 class="mb-2">Cards Holidayz</h6>
+                    <h6 class="mb-2">Cartes voyages par thème</h6>
                     <div id="holiday-items-container" class="vstack gap-2">
                         @foreach($holidayItems as $idx => $item)
                             <div class="border rounded p-2 holiday-row" data-index="{{ $idx }}">
@@ -698,11 +698,11 @@
 
             {{-- Promotions — 3 visuels (titre + images) --}}
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Destinations de ce mois (Promotions)</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">Explorez plus (promotions)</h5></div>
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Titre de la section</label>
-                        <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Destinations de ce mois')) }}" placeholder="Ex. Explorez plus, voyagez mieux avec AjiNsafro">
+                        <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Explorez plus, voyagez mieux avec AjinSafro')) }}" placeholder="Ex. Explorez plus, voyagez mieux avec AjinSafro">
                     </div>
                     <p class="text-muted small mb-3">Trois images affichées côte à côte sur la page d’accueil. Corrigez l’URL si besoin ou uploadez un fichier. Laissez vide ou cochez « Supprimer » pour retirer une carte.</p>
                     @php
@@ -758,21 +758,21 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'Rejoignez notre chaîne WhatsApp')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'Rejoignez notre chaîne WhatsApp pour suivre nos actualités voyage')) }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Texte court (description)</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Recevez nos offres, actus et inspirations voyage.')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Restez informé avec AjinSafro')) }}">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Ligne meta (3 segments, affichés « A • B • C »)</label>
-                            <p class="text-muted small mb-2">Une ligne par segment ; laisser vide pour masquer la ligne.</p>
+                            <label class="form-label">Segments meta conservés pour compatibilité</label>
+                            <p class="text-muted small mb-2">Ces champs restent stockés mais ne sont plus affichés sur la home.</p>
                             @php
-                                $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', ['Promos', 'Nouveautés', 'Conseils']));
+                                $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', []));
                                 $features = is_array($features) ? $features : [];
                             @endphp
                             @foreach(range(0, 2) as $fi)
-                            <input type="text" class="form-control mb-2" name="whatsapp_banner[features][]" value="{{ $features[$fi] ?? '' }}" placeholder="Segment {{ $fi + 1 }}">
+                            <input type="text" class="form-control mb-2" name="whatsapp_banner[features][]" value="{{ $features[$fi] ?? '' }}" placeholder="Segment {{ $fi + 1 }} (optionnel)">
                             @endforeach
                         </div>
                         <div class="col-md-4">
@@ -812,7 +812,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="cruises[title]" value="{{ old('cruises.title', data_get($settings, 'cruises.title', 'CROISIÈRES')) }}">
+                            <input type="text" class="form-control" name="cruises[title]" value="{{ old('cruises.title', data_get($settings, 'cruises.title', 'Croisières')) }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Image URL</label>
@@ -1063,7 +1063,7 @@
     var sectionLabels = {
         last_minute: 'Tendances du moment',
         accommodations: 'Séjours uniques',
-        holiday_theme: 'Holidayz',
+        holiday_theme: 'Voyages par thème',
         regions: 'Destinations',
         good_spots: 'Bons coins',
         promotions: 'Promotions',
@@ -1149,7 +1149,7 @@
         });
     }
 
-    /* ── Holidayz items repeater ─────────── */
+    /* ── Voyages par theme items repeater ─────────── */
     var holidayContainer = document.getElementById('holiday-items-container');
     var holidayAddBtn = document.getElementById('holiday-add-item');
     function holidayRowHtml(idx) {
