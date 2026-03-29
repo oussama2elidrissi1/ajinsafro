@@ -2023,6 +2023,26 @@
                     var s = ad + ch;
                     return s > 0 ? s : 0;
                 }
+                /** Toutes les cartes chambre (évite les ambiguïtés de parcours ; dédoublonne par nœud). */
+                function collectTourRoomRows(wrapEl) {
+                    var out = [];
+                    var seen = new Set();
+                    var containers = wrapEl.querySelectorAll('.tour-hotel-rooms-container');
+                    var addRow = function (row) {
+                        if (row && !seen.has(row)) {
+                            seen.add(row);
+                            out.push(row);
+                        }
+                    };
+                    if (containers.length) {
+                        containers.forEach(function (cont) {
+                            cont.querySelectorAll('.tour-room-row').forEach(addRow);
+                        });
+                    } else {
+                        wrapEl.querySelectorAll('.tour-room-row').forEach(addRow);
+                    }
+                    return out;
+                }
                 function handler(ev) {
                     if (!ev.target || !ev.target.closest || !ev.target.closest('.tour-room-row')) {
                         return;
@@ -2039,8 +2059,9 @@
                     var total = 0;
                     var lines = [];
                     var ignored = [];
-                    w.querySelectorAll('.tour-room-row').forEach(function (row, idx) {
-                        var typeSel = row.querySelector('select[name*="[room_type]"]');
+                    var roomRows = collectTourRoomRows(w);
+                    roomRows.forEach(function (row, idx) {
+                        var typeSel = row.querySelector('select[name^="tour_hotels["][name$="[room_type]"]');
                         var type = typeSel ? String(typeSel.value || '').trim() : '';
                         if (!type) {
                             ignored.push({ rowIndex: idx, reason: 'empty_room_type' });
@@ -2048,21 +2069,25 @@
                         }
                         var actCb = row.querySelector('input.tour-room-is-active');
                         if (!actCb) {
-                            actCb = row.querySelector('input[type="checkbox"][name*="[is_active]"]');
+                            actCb = row.querySelector('input[type="checkbox"][name^="tour_hotels["][name$="[is_active]"]');
                         }
-                        if (actCb && !actCb.checked) {
+                        var activeYes = true;
+                        if (actCb) {
+                            activeYes = !!actCb.checked;
+                        }
+                        if (!activeYes) {
                             ignored.push({ rowIndex: idx, room_type: type, reason: 'is_active_off' });
                             return;
                         }
-                        var rcInp = row.querySelector('input[name*="[room_count]"]');
+                        var rcInp = row.querySelector('input[name^="tour_hotels["][name$="[room_count]"]');
                         var nb = pInt(rcInp && rcInp.value);
                         if (nb <= 0) {
                             ignored.push({ rowIndex: idx, room_type: type, reason: 'room_count_zero' });
                             return;
                         }
-                        var ctInp = row.querySelector('input[name*="[capacity_total]"]');
-                        var adInp = row.querySelector('input[name*="[capacity_adults]"]');
-                        var chInp = row.querySelector('input[name*="[capacity_children]"]');
+                        var ctInp = row.querySelector('input[name^="tour_hotels["][name$="[capacity_total]"]');
+                        var adInp = row.querySelector('input[name^="tour_hotels["][name$="[capacity_adults]"]');
+                        var chInp = row.querySelector('input[name^="tour_hotels["][name$="[capacity_children]"]');
                         var cap = effectiveCapacity(
                             pInt(ctInp && ctInp.value),
                             pInt(adInp && adInp.value),
@@ -2081,14 +2106,26 @@
                             product: product
                         });
                     });
-                    window.__lastTourPlacesPreview = { total: total, lines: lines, ignored: ignored };
+                    window.__lastTourPlacesPreview = {
+                        total: total,
+                        lines: lines,
+                        ignored: ignored,
+                        roomRowsDetected: roomRows.length
+                    };
                     window._tourPlacesRecalcPending = false;
                     mp.value = String(total);
                     if (pl) {
                         pl.value = String(total);
                     }
-                    if (window.TOUR_PLACES_CALC_DEBUG && typeof console !== 'undefined' && console.debug) {
-                        console.debug('[TourPlaces] front preview', window.__lastTourPlacesPreview);
+                    if (window.TOUR_PLACES_CALC_DEBUG && typeof console !== 'undefined') {
+                        console.info('[TourPlaces] Nombre de lignes chambres détectées:', roomRows.length);
+                        lines.forEach(function (ln, i) {
+                            console.info('[TourPlaces] Ligne ' + (i + 1) + ' → ' + ln.room_count + ' × ' + ln.capacity_used + ' = ' + ln.product + ' (type: ' + ln.room_type + ')');
+                        });
+                        ignored.forEach(function (ig) {
+                            console.warn('[TourPlaces] Ligne ignorée', ig);
+                        });
+                        console.info('[TourPlaces] Total final =', total);
                     }
                 };
                 form.addEventListener('input', handler, true);
