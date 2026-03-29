@@ -9,11 +9,19 @@
         $vePriceLabel = is_numeric($veAdultRaw)
             ? number_format((float) $veAdultRaw, 0, ',', ' ').' MAD'
             : trim((string) $veAdultRaw);
-    } elseif ($laravelV && $laravelV->price_from !== null && (float) $laravelV->price_from > 0) {
-        $cur = trim((string) ($laravelV->currency ?? ''));
-        $vePriceLabel = number_format((float) $laravelV->price_from, 0, ',', ' ').' '.($cur !== '' ? $cur : 'MAD');
+    } elseif ($laravelV) {
+        $priceFrom = data_get($laravelV, 'price_from');
+        if ($priceFrom !== null && $priceFrom !== '' && is_numeric($priceFrom) && (float) $priceFrom > 0) {
+            $cur = trim((string) (data_get($laravelV, 'currency')
+                ?: data_get($laravelV, 'currency_symbol')
+                ?: ''));
+            $vePriceLabel = number_format((float) $priceFrom, 0, ',', ' ').' '.($cur !== '' ? $cur : 'MAD');
+        }
     }
-    $veDestination = ($laravelV && trim((string) ($laravelV->destination ?? '')) !== '') ? trim((string) $laravelV->destination) : null;
+    $veDestinationRaw = $laravelV ? data_get($laravelV, 'destination') : null;
+    $veDestination = ($veDestinationRaw !== null && trim((string) $veDestinationRaw) !== '')
+        ? trim((string) $veDestinationRaw)
+        : null;
     $veDatesCount = isset($travelDates) && $travelDates instanceof \Illuminate\Support\Collection ? $travelDates->count() : 0;
 @endphp
 @extends('layouts.master-ajinsafro')
@@ -1915,7 +1923,7 @@
                         <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-pulse text-primary"></i> Résumé</h5>
                         <ul class="list-unstyled small mb-0 ve-summary-list">
                             <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">WordPress</span><span class="fw-semibold font-monospace">#{{ $veWpId ?: '—' }}</span></li>
-                            @if($laravelV)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Laravel</span><span class="fw-semibold font-monospace">#{{ $laravelV->id }}</span></li>@endif
+                            @if($laravelV && (int) data_get($laravelV, 'id', 0) > 0)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Laravel</span><span class="fw-semibold font-monospace">#{{ data_get($laravelV, 'id') }}</span></li>@endif
                             <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Dates départ</span><span class="fw-semibold">{{ $veDatesCount }}</span></li>
                             @if($vePriceLabel)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Prix</span><span class="fw-semibold text-truncate ms-1" style="max-width:55%">{{ $vePriceLabel }}</span></li>@endif
                             @if($veDestination)<li class="d-flex justify-content-between py-2"><span class="text-muted">Destination</span><span class="fw-semibold text-end small" style="max-width:55%">{{ Str::limit($veDestination, 40) }}</span></li>@endif

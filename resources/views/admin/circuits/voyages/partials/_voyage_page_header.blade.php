@@ -28,8 +28,8 @@
             <div class="ve-header-meta-line">
                 @if(!$isCreate)
                     <span class="ve-meta-pill"><i class="bx bx-hash"></i> WP #{{ $veWpId }}</span>
-                    @if($laravelV && (int) ($laravelV->id ?? 0) > 0)
-                        <span class="ve-meta-pill"><i class="bx bx-data"></i> Laravel #{{ $laravelV->id }}</span>
+                    @if($laravelV && (int) data_get($laravelV, 'id', 0) > 0)
+                        <span class="ve-meta-pill"><i class="bx bx-data"></i> Laravel #{{ data_get($laravelV, 'id') }}</span>
                     @endif
                     @if($vePriceLabel)
                         <span class="ve-meta-pill ve-meta-pill--accent"><i class="bx bx-purchase-tag"></i> {{ $vePriceLabel }}</span>

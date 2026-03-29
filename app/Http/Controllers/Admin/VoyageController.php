@@ -202,7 +202,8 @@ class VoyageController extends Controller
             $airlines = collect();
         }
 
-        $laravelVoyage = (object) ['id' => 0, 'wp_post_id' => null];
+        // Pas de modèle Voyage Laravel tant que le tour WP n’existe pas : null évite les accès à des attributs manquants dans la vue partagée create/edit.
+        $laravelVoyage = null;
         $outboundFlight = null;
         $inboundFlight = null;
         $flightOptionsByType = ['outbound' => collect(), 'return' => collect(), 'segment' => collect()];
