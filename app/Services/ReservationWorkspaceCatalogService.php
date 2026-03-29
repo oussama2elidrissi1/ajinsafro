@@ -455,6 +455,59 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
+     * Retrouve la ligne catalogue pour un voyage Laravel + type de prestation (même agrégat que la page workspace).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findCatalogRowForBooking(Voyage $voyage, string $prestationType, User $user): ?array
+    {
+        $built = $this->buildRows($user);
+        $tid = (int) $voyage->id;
+        $type = match ($prestationType) {
+            'vol' => 'vol',
+            'hebergement' => 'hebergement',
+            default => 'package',
+        };
+        $match = $built['rows']->first(function ($r) use ($tid, $type) {
+            return (int) ($r['voyage_id'] ?? 0) === $tid && ($r['type'] ?? '') === $type;
+        });
+        if ($match !== null) {
+            return $match;
+        }
+        if ($type !== 'package') {
+            return $built['rows']->first(function ($r) use ($tid) {
+                return (int) ($r['voyage_id'] ?? 0) === $tid && ($r['type'] ?? '') === 'package';
+            });
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getVoyageReservationDataPayload(Voyage $voyage, string $prestationType, User $user): ?array
+    {
+        $row = $this->findCatalogRowForBooking($voyage, $prestationType, $user);
+        if ($row === null) {
+            return null;
+        }
+
+        return [
+            'voyage' => [
+                'id' => (int) $voyage->id,
+                'name' => $voyage->name,
+                'wp_post_id' => $voyage->wp_post_id ? (int) $voyage->wp_post_id : null,
+                'destination' => $voyage->destination,
+            ],
+            'catalog_code' => $row['code'] ?? null,
+            'catalog_type' => $row['type'] ?? null,
+            'form_prefill' => $row['form_prefill'] ?? null,
+            'modal_detail' => $row['modal_detail'] ?? null,
+        ];
+    }
+
+    /**
      * @return array{departure: ?Departure, is_past: bool}
      */
     private function pickDepartureForDisplay(Collection $departures, Carbon $today): array

@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\UserAccessController;
 use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
+use App\Http\Controllers\Admin\VoyageReservationDataController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\WpTourController;
@@ -203,6 +204,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('circuits/voyages', [VoyageController::class, 'store'])->name('circuits.voyages.store');
         Route::get('circuits/voyages/{id}', [VoyageController::class, 'show'])->name('circuits.voyages.show')->whereNumber('id');
         Route::get('circuits/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('circuits.voyages.edit')->whereNumber('id');
+        Route::get('circuits/voyages/{voyage}/reservation-data', VoyageReservationDataController::class)->name('circuits.voyages.reservation-data');
         Route::match(['put', 'patch'], 'circuits/voyages/{id}', [VoyageController::class, 'update'])->name('circuits.voyages.update')->whereNumber('id');
         Route::delete('circuits/voyages/{id}', [VoyageController::class, 'destroy'])->name('circuits.voyages.destroy')->whereNumber('id');
         Route::post('circuits/voyages/ensure-location', [VoyageController::class, 'ensureLocation'])->name('circuits.voyages.ensure-location');

@@ -11,6 +11,7 @@ use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
 use App\Services\ReservationService;
+use App\Services\ReservationWorkspaceBookingService;
 use App\Services\ReservationWorkspaceCatalogService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ class ReservationWorkspaceController extends Controller
         protected ReservationService $reservationService,
         protected BranchScopeService $branchScope,
         protected ReservationWorkspaceCatalogService $catalog,
+        protected ReservationWorkspaceBookingService $workspaceBooking,
     ) {}
 
     public function index(Request $request): View
@@ -127,6 +129,13 @@ class ReservationWorkspaceController extends Controller
             ];
         }
 
+        $bookingResolve = $this->workspaceBooking->validateWorkspaceStoreAndResolveTotals(
+            $request,
+            $user,
+            $passengers,
+            $extrasPayload,
+        );
+
         $docPaths = [];
         foreach ($request->file('workspace_documents', []) as $file) {
             if ($file && $file->isValid()) {
@@ -155,6 +164,7 @@ class ReservationWorkspaceController extends Controller
                 'remarks' => $request->input('hotel_remarks'),
             ],
             'documents' => $docPaths,
+            'booking_snapshot' => $bookingResolve['booking_snapshot'],
         ];
 
         $notes = trim((string) $request->input('workspace_notes', ''));
@@ -178,7 +188,7 @@ class ReservationWorkspaceController extends Controller
             'client_document_number' => $request->string('titulaire_document')->toString(),
             'payment_type' => $paymentType,
             'status' => Reservation::STATUS_EN_COURS,
-            'base_price' => (float) $request->input('montant_total'),
+            'base_price' => $bookingResolve['authoritative_total'],
             'paid_amount' => (float) $request->input('montant_paye'),
             'notes' => $notes,
             'passengers' => $passengers,
