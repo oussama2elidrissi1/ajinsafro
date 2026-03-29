@@ -233,6 +233,13 @@
                         </table>
                     </div>
                 @endif
+                @if(!empty($catalogMeta['package_places_debug']))
+                    @if(!empty($catalogMeta['package_places_source_doc']))
+                        <p class="text-[10px] text-slate-700 mt-3 mb-1 leading-snug">{{ $catalogMeta['package_places_source_doc'] }}</p>
+                    @endif
+                    <p class="text-[10px] font-bold text-amber-900 mb-1">Places / chambres (échantillon max 8 packages Laravel — même calcul que l’édition voyage)</p>
+                    <pre class="text-[9px] font-mono mt-1 overflow-x-auto max-h-64 overflow-y-auto bg-white/70 rounded-lg p-2 border border-amber-200/80 whitespace-pre-wrap">{{ json_encode($catalogMeta['package_places_debug'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                @endif
             @endif
         </div>
     @endif

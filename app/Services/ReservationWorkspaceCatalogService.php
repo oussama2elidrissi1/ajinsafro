@@ -11,6 +11,7 @@ use App\Models\Voyage;
 use App\Models\VoyageFlight;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
+use App\Support\TourPlacesCalculator;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -23,6 +24,9 @@ use Illuminate\Support\Facades\Log;
  * Date de départ package = section « Disponibilité » du CRUD voyage : {@see TravelDate} (wp.aj_travel_dates, travel_id = wp_post_id),
  * synchronisée par {@see VoyageController::syncTravelDates()} depuis le formulaire travel_dates[*].
  * Vols / hébergements : {@see Voyage::departures()} inchangé pour l’alignement date ↔ travel_date_id.
+ *
+ * Places / chambres : {@see TourHotel} (wp.aj_tour_hotels.tour_id = ID WordPress du tour) + {@see TourHotelRoom}
+ * (wp.aj_tour_hotel_rooms). Calcul identique à l’édition voyage : {@see TourPlacesCalculator::explainFromDatabase()}.
  */
 class ReservationWorkspaceCatalogService
 {
@@ -123,6 +127,27 @@ class ReservationWorkspaceCatalogService
         $statsByTour = $this->batchReservationStatsByTour($user, $laravelIdsForExtras);
 
         $wpIdsWithLaravel = $voyagesByWp->keys()->map(fn ($k) => (int) $k)->values()->all();
+        /** @var Collection<int, \Illuminate\Support\Collection<int, TourHotel>> $hotelsByWpTourId */
+        $hotelsByWpTourId = collect();
+        if ($wpIdsWithLaravel !== []) {
+            $hotelsByWpTourId = TourHotel::query()
+                ->whereIn('tour_id', $wpIdsWithLaravel)
+                ->with(['rooms' => function ($q) {
+                    $q->orderBy('sort_order')->orderBy('id');
+                }])
+                ->get()
+                ->groupBy(fn (TourHotel $h) => (int) $h->tour_id)
+                ->map(function (Collection $group) {
+                    return $group->sortBy(function (TourHotel $h) {
+                        return [
+                            (int) ($h->check_in_day ?? $h->day_number ?? 1),
+                            (int) ($h->sort_order ?? 0),
+                            (int) $h->id,
+                        ];
+                    })->values();
+                });
+        }
+
         $travelDatesByWpTourId = collect();
         if ($wpIdsWithLaravel !== []) {
             $travelDatesByWpTourId = TravelDate::query()
@@ -135,6 +160,7 @@ class ReservationWorkspaceCatalogService
 
         $packagePriceDebug = [];
         $packageDepartureDebug = [];
+        $packagePlacesDebug = [];
 
         foreach ($wpTours as $wp) {
             if (! $wp instanceof WpPost) {
@@ -188,6 +214,26 @@ class ReservationWorkspaceCatalogService
                 ];
             }
 
+            $placesPayload = $this->resolvePackagePlacesPayload($wpId, $voyage, $hotelsByWpTourId);
+
+            if (config('app.debug') && $voyage !== null && count($packagePlacesDebug) < 8) {
+                $hotelsForDbg = $hotelsByWpTourId->get($wpId) ?? collect();
+                $packagePlacesDebug[] = [
+                    'wp_post_id' => $wpId,
+                    'laravel_voyage_id' => $voyage->id,
+                    'join_rule' => 'aj_tour_hotels.tour_id = voyages.wp_post_id (ID tour WordPress)',
+                    'tables' => 'aj_tour_hotels + aj_tour_hotel_rooms (connection wp)',
+                    'fields' => 'room_count, capacity_total, capacity_adults, capacity_children, room_type, is_active',
+                    'calculator' => TourPlacesCalculator::class.'::explainFromDatabase',
+                    'hotels_count' => $hotelsForDbg->count(),
+                    'rooms_rows_count' => $hotelsForDbg->sum(fn (TourHotel $h) => $h->rooms->count()),
+                    'total_places' => $placesPayload['total'],
+                    'lines' => $placesPayload['lines'],
+                    'ignored' => $placesPayload['ignored'],
+                    'state' => $placesPayload['state'],
+                ];
+            }
+
             $rows->push([
                 'type' => 'package',
                 'code' => '#'.$wpId,
@@ -208,18 +254,27 @@ class ReservationWorkspaceCatalogService
                 'price_label' => $priceLabel,
                 'voyage_destination' => $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
                 'stats' => $tourId ? ($statsByTour[$tourId] ?? $this->emptyStats()) : $this->emptyStats(),
+                'places_state' => $placesPayload['state'],
+                'places_total' => $placesPayload['total'],
+                'places_lines' => $placesPayload['lines'],
+                'places_ignored' => $placesPayload['ignored'],
             ]);
         }
 
         if (config('app.debug')) {
             $meta['package_price_debug'] = $packagePriceDebug;
             $meta['package_departure_debug'] = $packageDepartureDebug;
+            $meta['package_places_debug'] = $packagePlacesDebug;
             $meta['package_departure_source_doc'] = 'Disponibilité CRUD → request travel_dates → VoyageController::syncTravelDates → TravelDate (wp.aj_travel_dates)';
+            $meta['package_places_source_doc'] = 'TourHotel (wp.aj_tour_hotels.tour_id = wp_post_id) → TourHotelRoom (wp.aj_tour_hotel_rooms) ; places = TourPlacesCalculator::explainFromDatabase (identique édition voyage).';
             Log::debug('Workspace package prices (alignés sur VoyageController@index adult_price meta)', [
                 'packages' => $packagePriceDebug,
             ]);
             Log::debug('Workspace package départs (Disponibilité = aj_travel_dates)', [
                 'packages' => $packageDepartureDebug,
+            ]);
+            Log::debug('Workspace package places (chambres / capacité)', [
+                'sample' => $packagePlacesDebug,
             ]);
         }
 
@@ -333,6 +388,51 @@ class ReservationWorkspaceCatalogService
         return [
             'departure' => $past,
             'is_past' => $past !== null,
+        ];
+    }
+
+    /**
+     * Places affichées workspace = même règle que l’édition circuit/voyage {@see TourPlacesCalculator}.
+     *
+     * @param  Collection<int, \Illuminate\Support\Collection<int, TourHotel>>  $hotelsByWpTourId
+     * @return array{state: string, total: ?int, lines: list<array<string, mixed>>, ignored: list<array<string, mixed>>}
+     */
+    private function resolvePackagePlacesPayload(int $wpPostId, ?Voyage $voyage, Collection $hotelsByWpTourId): array
+    {
+        if ($voyage === null) {
+            return ['state' => 'no_laravel', 'total' => null, 'lines' => [], 'ignored' => []];
+        }
+
+        $hotels = $hotelsByWpTourId->get($wpPostId) ?? collect();
+        if ($hotels->isEmpty()) {
+            return ['state' => 'no_hotels', 'total' => null, 'lines' => [], 'ignored' => []];
+        }
+
+        $explain = TourPlacesCalculator::explainFromDatabase($hotels);
+        $lines = [];
+        foreach ($explain['lines'] as $l) {
+            $lines[] = [
+                'room_type' => (string) ($l['room_type'] ?? ''),
+                'room_count' => (int) ($l['room_count'] ?? 0),
+                'capacity_used' => (int) ($l['capacity_used'] ?? 0),
+                'product' => (int) ($l['product'] ?? 0),
+            ];
+        }
+
+        if ($explain['total'] === 0 && $lines === []) {
+            return [
+                'state' => 'no_valid_rooms',
+                'total' => 0,
+                'lines' => [],
+                'ignored' => $explain['ignored'],
+            ];
+        }
+
+        return [
+            'state' => 'ok',
+            'total' => (int) $explain['total'],
+            'lines' => $lines,
+            'ignored' => $explain['ignored'],
         ];
     }
 

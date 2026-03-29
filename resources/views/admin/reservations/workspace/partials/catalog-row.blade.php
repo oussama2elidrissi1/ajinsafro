@@ -31,12 +31,25 @@
     $stats = $row['stats'] ?? ['validee' => 0, 'en_cours' => 0, 'annulee' => 0];
     $isPast = ! empty($row['departure_is_past']);
     $isUpcoming = $hasDepDate && ! $isPast;
+    $placesState = $row['places_state'] ?? null;
+    $placesTotal = $row['places_total'] ?? null;
+    $placesLines = $row['places_lines'] ?? [];
+    $placesSearchBits = '';
+    if ($typeKey === 'package' && $hasLaravel) {
+        if (($placesState ?? '') === 'ok' && $placesTotal !== null) {
+            $placesSearchBits = ' places '.$placesTotal;
+            foreach ($placesLines as $pl) {
+                $placesSearchBits .= ' '.($pl['room_type'] ?? '').' '.($pl['product'] ?? '');
+            }
+        }
+    }
     $wsSearchBlob = \Illuminate\Support\Str::lower(trim(
         ($row['name'] ?? '')
         . ' ' . ($row['code'] ?? '')
         . ' ' . ($row['subtitle'] ?? '')
         . ' ' . ($row['voyage_destination'] ?? '')
         . ' ' . ($row['price_label'] ?? '')
+        . $placesSearchBits
     ));
     $pkgDepCanceled = $typeKey === 'package' && ! empty($row['departure_is_canceled']);
     $reserveLabel = $typeKey === 'vol' ? 'Réserver vol' : 'Réserver';
@@ -92,6 +105,33 @@
                         <span class="text-slate-400 font-medium"> Sur demande</span>
                     @endif
                 </p>
+                @php
+                    $ps = $placesState ?? '';
+                @endphp
+                <p class="text-[11px] leading-snug border-t border-slate-200/80 pt-1.5 mt-0.5">
+                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Places</span>
+                    @if($ps === 'ok' && $placesTotal !== null)
+                        <span class="font-semibold text-brand-dark"> {{ number_format((int) $placesTotal, 0, ',', ' ') }}</span>
+                    @elseif(in_array($ps, ['no_hotels', 'no_valid_rooms'], true))
+                        <span class="text-slate-400 font-medium"> Non renseigné</span>
+                    @else
+                        <span class="text-slate-400 font-medium"> —</span>
+                    @endif
+                </p>
+                @if($ps === 'ok' && is_array($placesLines) && count($placesLines) > 0)
+                    <ul class="mt-1.5 space-y-0.5 text-[10px] text-slate-600 leading-snug pl-0 list-none">
+                        @foreach($placesLines as $ln)
+                            <li class="flex flex-wrap gap-x-1">
+                                <span class="text-slate-500">•</span>
+                                <span>{{ $ln['room_type'] ?? '' }}</span>
+                                <span class="text-slate-400">:</span>
+                                <span class="font-mono tabular-nums">{{ (int) ($ln['room_count'] ?? 0) }}×{{ (int) ($ln['capacity_used'] ?? 0) }}</span>
+                                <span class="text-slate-400">=</span>
+                                <span class="font-semibold text-slate-700">{{ (int) ($ln['product'] ?? 0) }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
         @elseif($typeKey === 'package' && ! $hasLaravel)
             <div class="mt-2.5 space-y-2">
