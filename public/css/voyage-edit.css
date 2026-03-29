@@ -300,8 +300,8 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
     animation: ve-fadeIn 0.3s ease;
 }
 @keyframes ve-fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 /* ---------- Cards ---------- */
@@ -1012,7 +1012,7 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
    ─────────────────────────────────────────────────────────────────── */
 .voyage-edit-page .ve-page-layout {
     display: grid;
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: minmax(0, 1fr) 300px;
     gap: 1.5rem;
     align-items: start;
 }
@@ -1023,6 +1023,7 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
 }
 .voyage-edit-page .ve-main-col {
     min-width: 0;
+    width: 100%;
 }
 .voyage-edit-page .ve-sidebar-col {
     min-width: 0;
@@ -1219,3 +1220,52 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
     vertical-align: middle;
     font-size: 1rem;
 }
+
+/* ============================================================================
+   ONGLETS METIERS - Flights / Hotels / Transfers / Activities / Programme
+   Ensures business tab panes fill the full main column width properly.
+   ============================================================================ */
+
+/* Tab pane direct children of ve-tab-content fill full width */
+.voyage-edit-page .ve-tab-content > .tab-pane {
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.voyage-edit-page .ve-tab-content > .tab-pane.active {
+    display: block;
+    width: 100%;
+}
+
+/* Flight manager full width */
+.voyage-edit-page .flight-manager {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Flight sections */
+.voyage-edit-page .flight-opt-section {
+    width: 100%;
+}
+.voyage-edit-page .flight-opt-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Hotels / Transfers wrappers */
+.voyage-edit-page #tour-hotels-wrapper,
+.voyage-edit-page #tour-transfers-wrapper,
+.voyage-edit-page #tour-hotels-anchor,
+.voyage-edit-page #tour-transfers-anchor {
+    width: 100%;
+}
+
+/* Business tab pane heading consistency */
+.voyage-edit-page .tab-pane h5,
+.voyage-edit-page .tab-pane h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #212529;
+}
+

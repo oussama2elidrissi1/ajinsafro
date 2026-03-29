@@ -1573,9 +1573,6 @@
                     </div>
                 </div>
 
-                                </div>
-                            </div>
-
             </div>
 
             {{-- TAB VOLS "” Vol Aller = toujours Jour 1, Vol Retour = toujours Dernier jour (N) "” Laravel voyage_flights --}}
