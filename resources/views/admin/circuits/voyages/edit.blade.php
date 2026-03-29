@@ -92,6 +92,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#voyage-extras" role="tab">
+                            <i class="bx bx-plus-medical"></i> <span class="ve-tab-label">Extras</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#availability" role="tab">
                             <i class="bx bx-calendar"></i> <span class="ve-tab-label">Disponibilité</span>
                         </a>
@@ -619,6 +624,17 @@
                                 </select>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- TAB: EXTRAS RÉSERVATION (Laravel) --}}
+            <div class="tab-pane" id="voyage-extras" role="tabpanel">
+                <div class="card ve-pane-card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-2">Extras réservation</h4>
+                        <p class="text-muted small mb-3">Options affichées dans le formulaire « Nouvelle réservation » (workspace) pour ce voyage. Cochables par passager, prix adulte / enfant.</p>
+                        @include('admin.circuits.voyages.partials._voyage_extras', ['voyageExtras' => $voyageExtras ?? collect()])
                     </div>
                 </div>
             </div>

@@ -54,7 +54,7 @@ final class ReservationWorkspaceBookingService
         $this->assertPlacesAvailable($prefill, $paxCount, $voyage, $travelDateId, $user);
 
         $counts = $this->countPassengerTypes($passengersNormalized);
-        $serverTotal = $this->computeExpectedTotal($voyage, $prefill, $counts, $extrasPayload, $prestationType);
+        $serverTotal = $this->computeExpectedTotal($voyage, $prefill, $counts, $extrasPayload, $prestationType, $passengersNormalized);
 
         $clientTotal = round((float) $request->input('montant_total'), 2);
         if (abs($serverTotal - $clientTotal) > 2.0) {
@@ -190,6 +190,7 @@ final class ReservationWorkspaceBookingService
 
     /**
      * @param  array<int, mixed>  $extrasPayload
+     * @param  array<int, array<string, mixed>>  $passengersNormalized
      */
     private function computeExpectedTotal(
         Voyage $voyage,
@@ -197,6 +198,7 @@ final class ReservationWorkspaceBookingService
         array $counts,
         array $extrasPayload,
         string $prestationType,
+        array $passengersNormalized,
     ): float {
         $pr = $prefill['prices'] ?? [];
         $adult = isset($pr['adult_amount']) && is_numeric($pr['adult_amount']) ? (float) $pr['adult_amount'] : null;
@@ -220,14 +222,66 @@ final class ReservationWorkspaceBookingService
 
         $base = $counts['adult'] * $adult + $counts['child'] * $child + $counts['infant'] * $inf;
 
-        $extras = 0.0;
+        $extras = $this->computeExtrasTotalFromCatalog($prefill, $passengersNormalized, $extrasPayload);
+
+        return round($base + $extras, 2);
+    }
+
+    /**
+     * Recalcule les extras depuis {@see ReservationWorkspaceCatalogService} extras_catalog + types de passagers (pas le montant client).
+     *
+     * @param  array<int, array<string, mixed>>  $passengersNormalized
+     * @param  array<int, mixed>  $extrasPayload
+     */
+    private function computeExtrasTotalFromCatalog(array $prefill, array $passengersNormalized, array $extrasPayload): float
+    {
+        $catalog = $prefill['extras_catalog'] ?? [];
+        $byId = [];
+        foreach ($catalog as $e) {
+            if (isset($e['id'])) {
+                $byId[(string) $e['id']] = $e;
+            }
+        }
+        $sum = 0.0;
         foreach ($extrasPayload as $ex) {
             if (! is_array($ex)) {
                 continue;
             }
-            $extras += isset($ex['price']) ? (float) $ex['price'] : 0.0;
+            $vid = (string) ($ex['voyage_extra_id'] ?? '');
+            if ($vid === '') {
+                continue;
+            }
+            $def = $byId[$vid] ?? null;
+            if (! is_array($def)) {
+                continue;
+            }
+            $paxKey = (string) ($ex['pax'] ?? '');
+            $ptype = $this->resolveWorkspacePaxTypeForKey($paxKey, $passengersNormalized);
+            $unit = match ($ptype) {
+                'child' => (float) ($def['price_child'] ?? 0),
+                'infant' => 0.0,
+                default => (float) ($def['price_adult'] ?? 0),
+            };
+            $sum += $unit;
         }
 
-        return round($base + $extras, 2);
+        return round($sum, 2);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $passengersNormalized
+     */
+    private function resolveWorkspacePaxTypeForKey(string $key, array $passengersNormalized): string
+    {
+        if ($key === 'titulaire' || $key === '') {
+            return (string) ($passengersNormalized[0]['type'] ?? 'adult');
+        }
+        if (preg_match('/^comp_(\d+)$/', $key, $m)) {
+            $i = (int) $m[1] + 1;
+
+            return (string) ($passengersNormalized[$i]['type'] ?? 'adult');
+        }
+
+        return 'adult';
     }
 }

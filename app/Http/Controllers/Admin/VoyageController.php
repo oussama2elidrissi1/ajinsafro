@@ -10,6 +10,7 @@ use App\Models\Wp\Activity;
 use App\Models\Wp\TourDay;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Voyage;
+use App\Models\VoyageExtra;
 use App\Models\TravelProgramDay;
 use App\Models\TravelDayItem;
 use App\Models\Airline;
@@ -558,7 +559,11 @@ class VoyageController extends Controller
         // Total places calculé à partir des chambres (affiché en lecture seule dans paramètres généraux)
         $totalPlacesVoyage = $this->computeTourTotalPlacesFromRooms($id);
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage'));
+        $voyageExtras = $laravelVoyage
+            ? VoyageExtra::query()->where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
+            : collect();
+
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -1115,6 +1120,61 @@ class VoyageController extends Controller
     }
 
     /**
+     * Extras réservation (workspace) : une ligne par option, liée au voyage Laravel.
+     */
+    private function syncVoyageExtras(Voyage $voyage, Request $request): void
+    {
+        if (! $request->has('voyage_extras')) {
+            return;
+        }
+        $rows = $request->input('voyage_extras', []);
+        if (! is_array($rows)) {
+            return;
+        }
+        if ($rows === []) {
+            VoyageExtra::query()->where('voyage_id', $voyage->id)->delete();
+
+            return;
+        }
+        $keptIds = [];
+        $sort = 0;
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $name = trim((string) ($row['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $data = [
+                'name' => $name,
+                'description' => trim((string) ($row['description'] ?? '')) ?: null,
+                'price_adult' => isset($row['price_adult']) && $row['price_adult'] !== '' ? (float) $row['price_adult'] : 0.0,
+                'price_child' => isset($row['price_child']) && $row['price_child'] !== '' ? (float) $row['price_child'] : 0.0,
+                'is_active' => ! empty($row['is_active']),
+                'sort_order' => $sort++,
+                'extra_type' => trim((string) ($row['extra_type'] ?? '')) ?: null,
+                'icon' => trim((string) ($row['icon'] ?? '')) ?: 'fa-plus-circle',
+            ];
+            $rowId = isset($row['id']) && $row['id'] !== '' ? (int) $row['id'] : null;
+            if ($rowId) {
+                $ex = VoyageExtra::query()->where('voyage_id', $voyage->id)->where('id', $rowId)->first();
+                if ($ex) {
+                    $ex->update($data);
+                    $keptIds[] = $ex->id;
+                } else {
+                    $created = VoyageExtra::query()->create(array_merge($data, ['voyage_id' => $voyage->id]));
+                    $keptIds[] = $created->id;
+                }
+            } else {
+                $created = VoyageExtra::query()->create(array_merge($data, ['voyage_id' => $voyage->id]));
+                $keptIds[] = $created->id;
+            }
+        }
+        VoyageExtra::query()->where('voyage_id', $voyage->id)->whereNotIn('id', $keptIds)->delete();
+    }
+
+    /**
      * Sync travel dates for tour.
      */
     private function syncTravelDates(int $tourId, \Illuminate\Http\Request $request): void
@@ -1383,6 +1443,8 @@ class VoyageController extends Controller
             // Synchroniser les lieux de départ et les dates disponibles
             $this->syncDeparturePlaces($id, $request);
             $this->syncTravelDates($id, $request);
+
+            $this->syncVoyageExtras($laravelVoyage, $request);
 
             // Toujours synchroniser les vols Laravel → WP après chaque enregistrement (pour que le plugin affiche les vols)
             if ($laravelVoyage && $laravelVoyage->wp_post_id) {

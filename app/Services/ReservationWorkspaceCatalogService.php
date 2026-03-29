@@ -8,6 +8,7 @@ use App\Models\TourHotel;
 use App\Models\TravelDate;
 use App\Models\User;
 use App\Models\Voyage;
+use App\Models\VoyageExtra;
 use App\Models\VoyageFlight;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
@@ -878,6 +879,41 @@ class ReservationWorkspaceCatalogService
         };
     }
 
+    /**
+     * Extras workspace : {@see VoyageExtra} si le voyage Laravel existe et a des lignes actives, sinon grille historique (sans voyage Laravel).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function resolveExtrasCatalogForVoyage(?int $laravelVoyageId, string $kindFallback): array
+    {
+        if ($laravelVoyageId === null || $laravelVoyageId <= 0) {
+            return $this->defaultWorkspaceExtrasCatalog($kindFallback);
+        }
+        $rows = VoyageExtra::query()
+            ->where('voyage_id', $laravelVoyageId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+        if ($rows->isEmpty()) {
+            return [];
+        }
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'id' => 've_'.$r->id,
+                'name' => $r->name,
+                'desc' => (string) ($r->description ?? ''),
+                'price_adult' => (float) $r->price_adult,
+                'price_child' => (float) $r->price_child,
+                'icon' => $r->icon ?: 'fa-plus-circle',
+                'extra_type' => $r->extra_type,
+            ];
+        }
+
+        return $out;
+    }
+
     private function availabilityUiFromBand(string $band, bool $hasPastOnlyDates): array
     {
         if ($hasPastOnlyDates) {
@@ -971,7 +1007,10 @@ class ReservationWorkspaceCatalogService
                 $this->availabilityUiFromBand($band, $hasPastOnly),
                 ['band' => $band]
             ),
-            'extras_catalog' => $this->defaultWorkspaceExtrasCatalog('package'),
+            'extras_catalog' => $this->resolveExtrasCatalogForVoyage(
+                isset($modalDetail['laravel_voyage_id']) ? (int) $modalDetail['laravel_voyage_id'] : null,
+                'package'
+            ),
             'stats' => $modalDetail['stats'] ?? [],
             'form' => $modalDetail['form'] ?? [],
         ];
@@ -1021,7 +1060,10 @@ class ReservationWorkspaceCatalogService
                 $this->availabilityUiFromBand('unknown', false),
                 ['band' => 'na']
             ),
-            'extras_catalog' => $this->defaultWorkspaceExtrasCatalog($kind === 'vol' ? 'vol' : 'hebergement'),
+            'extras_catalog' => $this->resolveExtrasCatalogForVoyage(
+                isset($modalDetail['laravel_voyage_id']) ? (int) $modalDetail['laravel_voyage_id'] : null,
+                $kind === 'vol' ? 'vol' : 'hebergement'
+            ),
             'stats' => $modalDetail['stats'] ?? [],
             'form' => $modalDetail['form'] ?? [],
         ];

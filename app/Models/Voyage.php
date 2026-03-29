@@ -117,6 +117,12 @@ class Voyage extends Model
         return $this->hasMany(VoyageFlightOption::class)->orderBy('type')->orderBy('sort_order')->orderBy('id');
     }
 
+    /** Extras réservation (workspace / catalogue), configurables dans le CRUD voyage. */
+    public function extras()
+    {
+        return $this->hasMany(VoyageExtra::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     /**
      * Public URL for the featured image (public disk).
      * Falls back to first gallery image if featured_image is null.

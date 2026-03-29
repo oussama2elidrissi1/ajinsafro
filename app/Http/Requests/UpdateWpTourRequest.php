@@ -286,6 +286,17 @@ class UpdateWpTourRequest extends FormRequest
             'travel_dates.*.is_active' => 'nullable|boolean',
             'travel_dates.*.seats' => 'nullable|integer|min:0',
             'travel_dates.*.price_override' => 'nullable|numeric|min:0',
+
+            // Extras réservation (Laravel voyage_extras)
+            'voyage_extras' => 'nullable|array',
+            'voyage_extras.*.id' => 'nullable|integer',
+            'voyage_extras.*.name' => 'nullable|string|max:255',
+            'voyage_extras.*.description' => 'nullable|string|max:2000',
+            'voyage_extras.*.price_adult' => 'nullable|numeric|min:0',
+            'voyage_extras.*.price_child' => 'nullable|numeric|min:0',
+            'voyage_extras.*.is_active' => 'nullable|boolean',
+            'voyage_extras.*.extra_type' => 'nullable|string|max:64',
+            'voyage_extras.*.icon' => 'nullable|string|max:80',
         ];
     }
 

@@ -147,7 +147,10 @@
     }
 
     function getExtrasListForType(typePrestation) {
-        if (workspaceExtrasLive && workspaceExtrasLive.length) {
+        if (workspaceExtrasLive !== null && workspaceExtrasLive !== undefined) {
+            if (workspaceExtrasLive.length === 0) {
+                return [];
+            }
             return workspaceExtrasLive.map(function (e) {
                 return {
                     id: e.id,
@@ -235,7 +238,7 @@
 
         h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
         h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">5. Extras</p>';
-        h += '<p class="text-xs text-slate-600">Options catalogue (prix par passager — cocher ci-dessous pour ajouter au total).</p>';
+        h += '<p class="text-xs text-slate-600">Extras définis dans le CRUD voyage (onglet Extras) — cochables par passager ci-dessous.</p>';
         h += '</div>';
 
         h += '<div class="rounded-xl bg-[#0e3a5a]/5 border border-[#0e3a5a]/10 p-4 space-y-1">';
@@ -301,9 +304,7 @@
             childLabel: pr.child_label || '',
         };
 
-        if (pf.extras_catalog && pf.extras_catalog.length) {
-            workspaceExtrasLive = pf.extras_catalog;
-        }
+        workspaceExtrasLive = Array.isArray(pf.extras_catalog) ? pf.extras_catalog : [];
         if (pf.places) {
             workspaceLivePlaces = pf.places;
         }
@@ -421,17 +422,7 @@
             }
         });
 
-        var customExtrasTotal = 0;
-        document.querySelectorAll('#custom-extras-container > div').forEach(function (row) {
-            var inputs = row.querySelectorAll('input[type="number"]');
-            if (inputs.length >= 2) {
-                var priceAdulte = parseFloat(inputs[0].value) || 0;
-                var priceEnfant = parseFloat(inputs[1].value) || 0;
-                customExtrasTotal += priceAdulte * counts.adulte + priceEnfant * counts.enfant;
-            }
-        });
-
-        var totalOptions = extrasTotal + customExtrasTotal;
+        var totalOptions = extrasTotal;
         var grandTotal = baseTotal + totalOptions;
 
         var elPax = document.getElementById('summary-pax-count');
@@ -447,6 +438,14 @@
                 ' <span class="text-sm text-gray-500 font-medium">' + escapeWsHtml(cur) + '</span>';
         }
         if (inputMontant) inputMontant.value = String(Math.round(grandTotal));
+
+        var elReste = document.getElementById('summary-montant-reste');
+        var mpayeEl = document.getElementById('ws-montant-paye');
+        if (elReste && mpayeEl) {
+            var paye = parseFloat(mpayeEl.value) || 0;
+            var reste = grandTotal - paye;
+            elReste.textContent = Math.round(reste).toLocaleString('fr-FR') + ' ' + cur;
+        }
 
         var capEl = document.getElementById('ws-capacity-live');
         var submitBtn = document.getElementById('ws-booking-submit');
@@ -516,7 +515,10 @@
         var paxList = getPassengersList().filter(function (p) { return p.type !== 'bebe'; });
 
         if (extras.length === 0) {
-            container.innerHTML = '<p class="text-xs text-gray-500 italic col-span-full">Aucun extra pour ce type.</p>';
+            var emptyMsg = (workspaceExtrasLive !== null && workspaceExtrasLive !== undefined && workspaceExtrasLive.length === 0)
+                ? 'Aucun extra configuré pour ce voyage. Ajoutez-en dans Circuits → voyages → onglet « Extras ».'
+                : 'Aucun extra pour ce type.';
+            container.innerHTML = '<p class="text-xs text-gray-500 italic col-span-full">' + emptyMsg + '</p>';
             return;
         }
 
@@ -576,23 +578,12 @@
             var pax = getPassengersList().find(function (p) { return p.id === paxId; });
             if (!extraData || !pax) return;
             var price = pax.type === 'enfant' ? extraData.priceChild : extraData.priceAdult;
-            out.push({ name: extraData.name + ' (' + pax.label + ')', price: price, pax: paxId });
-        });
-
-        document.querySelectorAll('#custom-extras-container > div').forEach(function (row) {
-            var desc = row.querySelector('input[type="text"]');
-            var nums = row.querySelectorAll('input[type="number"]');
-            if (desc && desc.value.trim() && nums.length >= 2) {
-                var pa = parseFloat(nums[0].value) || 0;
-                var pe = parseFloat(nums[1].value) || 0;
-                var counts = { adulte: 0, enfant: 0, bebe: 0 };
-                getPassengersList().forEach(function (p) { if (counts[p.type] !== undefined) counts[p.type]++; });
-                out.push({
-                    name: desc.value.trim(),
-                    price: pa * counts.adulte + pe * counts.enfant,
-                    pax: 'custom',
-                });
-            }
+            out.push({
+                voyage_extra_id: extId,
+                name: extraData.name + ' (' + pax.label + ')',
+                price: price,
+                pax: paxId,
+            });
         });
 
         return JSON.stringify(out);
@@ -679,7 +670,6 @@
         var det = document.getElementById('details-' + type);
         if (det) det.classList.remove('hidden');
 
-        document.getElementById('custom-extras-container').innerHTML = '';
         amadeusPriceMultiplier = 1.0;
         var apiBadge = document.getElementById('api-status-badge');
         if (apiBadge) apiBadge.classList.add('hidden');
@@ -792,62 +782,9 @@
             });
         }
 
-        var btnCustom = document.getElementById('btn-add-custom-extra');
-        if (btnCustom) {
-            btnCustom.addEventListener('click', function () {
-                var container = document.getElementById('custom-extras-container');
-                var el = document.createElement('div');
-                el.className = 'flex flex-col p-3.5 bg-[#e6f3fa]/40 border border-[#0083c4]/30 rounded-xl relative';
-                el.innerHTML =
-                    '<button type="button" class="btn-remove-custom-extra absolute right-2 top-2 text-gray-400 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button>' +
-                    '<input type="text" placeholder="Description" class="text-xs font-bold bg-white border border-gray-200 rounded px-2 py-1.5 w-full mb-2">' +
-                    '<div class="flex gap-2"><div class="flex items-center gap-1 bg-white border rounded px-2 py-1"><span class="text-[10px] text-gray-400">Adulte</span>' +
-                    '<input type="number" class="custom-extra-a text-[11px] w-14 text-center" placeholder="0"></div>' +
-                    '<div class="flex items-center gap-1 bg-white border rounded px-2 py-1"><span class="text-[10px] text-gray-400">Enfant</span>' +
-                    '<input type="number" class="custom-extra-e text-[11px] w-14 text-center" placeholder="0"></div></div>';
-                el.querySelector('.btn-remove-custom-extra').addEventListener('click', function () {
-                    el.remove();
-                    calculateTotal();
-                });
-                el.querySelectorAll('input[type="number"]').forEach(function (i) {
-                    i.addEventListener('input', calculateTotal);
-                });
-                container.appendChild(el);
-            });
-        }
-
-        var btnAmadeus = document.getElementById('btn-amadeus-pricing');
-        if (btnAmadeus) {
-            btnAmadeus.addEventListener('click', function () {
-                var orig = btnAmadeus.innerHTML;
-                btnAmadeus.disabled = true;
-                btnAmadeus.textContent = 'Interrogation…';
-                setTimeout(function () {
-                    amadeusPriceMultiplier = 1.05;
-                    var b = document.getElementById('api-status-badge');
-                    if (b) {
-                        b.classList.remove('hidden');
-                        b.textContent = 'Tarif actualisé';
-                    }
-                    calculateTotal();
-                    btnAmadeus.innerHTML = orig;
-                    btnAmadeus.disabled = false;
-                }, 1200);
-            });
-        }
-
-        var fileInput = document.getElementById('reservation-files');
-        if (fileInput) {
-            fileInput.addEventListener('change', function () {
-                var fileList = document.getElementById('reservation-file-list');
-                Array.from(this.files).forEach(function (file) {
-                    var div = document.createElement('div');
-                    div.className = 'flex items-center justify-between bg-white p-3 border border-gray-200 rounded-xl text-xs text-gray-700';
-                    div.innerHTML = '<span class="truncate">' + file.name + '</span>';
-                    fileList.appendChild(div);
-                });
-                this.value = '';
-            });
+        var mpInput = document.getElementById('ws-montant-paye');
+        if (mpInput) {
+            mpInput.addEventListener('input', calculateTotal);
         }
 
         var mode = document.getElementById('ws-client-mode');
