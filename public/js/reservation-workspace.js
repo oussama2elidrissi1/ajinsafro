@@ -96,6 +96,36 @@
             });
     }
 
+    /** Libellé agent (pas les codes techniques package/vol/hebergement). */
+    function wsKindLabel(kind) {
+        var k = String(kind || 'package').toLowerCase();
+        if (k === 'vol') return 'Vol';
+        if (k === 'hebergement') return 'Hébergement';
+        return 'Circuit';
+    }
+
+    function getWorkspacePrestationType() {
+        var badge = document.getElementById('badge-extras-type');
+        if (!badge) return 'package';
+        var d = badge.getAttribute('data-ws-prestation');
+        if (d) return d.toLowerCase().trim();
+        var t = badge.innerText.toLowerCase().trim();
+        if (t === 'circuit') return 'package';
+        return t || 'package';
+    }
+
+    function setWorkspacePrestationType(type) {
+        var raw = String(type || 'package').toLowerCase();
+        var normalized = raw === 'vol' || raw === 'hebergement' ? raw : 'package';
+        var label = wsKindLabel(normalized);
+        ['badge-extras-type', 'ws-prefill-type-badge'].forEach(function (id) {
+            var badge = document.getElementById(id);
+            if (!badge) return;
+            badge.setAttribute('data-ws-prestation', normalized);
+            badge.textContent = label;
+        });
+    }
+
     function formatIsoDateFr(iso) {
         if (!iso || typeof iso !== 'string') return '';
         var p = iso.split('-');
@@ -165,87 +195,35 @@
         return extrasData[typePrestation] || [];
     }
 
+    /** Résumé voyage lisible agent uniquement (aucun ID / debug / logique interne). */
     function renderPrefillSections(pf) {
         if (!pf) return '';
         var cur = (pf.prices && pf.prices.currency) ? pf.prices.currency : 'MAD';
-        var h = '';
-
-        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
-        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">1. Informations prestation</p>';
-        h += '<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">';
-        h += '<div><dt class="text-slate-400 font-semibold">Référence</dt><dd class="font-bold text-slate-800 font-mono">' + escapeWsHtml(String(pf.code || '—')) + '</dd></div>';
-        h += '<div><dt class="text-slate-400 font-semibold">Type</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pf.kind || '')) + '</dd></div>';
-        if (pf.destination) h += '<div class="sm:col-span-2"><dt class="text-slate-400 font-semibold">Destination</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pf.destination)) + '</dd></div>';
-        if (pf.duration) h += '<div class="sm:col-span-2"><dt class="text-slate-400 font-semibold">Durée</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pf.duration)) + '</dd></div>';
-        var refs = [];
-        if (pf.wp_post_id) refs.push('WP #' + pf.wp_post_id);
-        if (pf.laravel_voyage_id) refs.push('Laravel #' + pf.laravel_voyage_id);
-        if (refs.length) h += '<div class="sm:col-span-2"><dt class="text-slate-400 font-semibold">Références</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(refs.join(' · ')) + '</dd></div>';
-        if (pf.post_status_label) h += '<div class="sm:col-span-2"><dt class="text-slate-400 font-semibold">Statut publication</dt><dd><span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">' + escapeWsHtml(String(pf.post_status_label)) + '</span></dd></div>';
-        h += '</dl></div>';
-
-        var tds = pf.travel_dates || [];
-        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
-        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">2. Départs disponibles</p>';
-        if (tds.length) {
-            h += '<p class="text-xs text-slate-600">' + tds.length + ' date(s) — la capacité « restantes » se met à jour selon la date sélectionnée (réservations sur ce départ).</p>';
-        } else {
-            h += '<p class="text-xs text-amber-700 font-medium">Aucune date dans la disponibilité WordPress pour ce voyage.</p>';
-        }
-        h += '</div>';
-
         var pr = pf.prices || {};
-        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
-        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">3. Tarification (catalogue)</p>';
-        h += '<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">';
-        h += '<div><dt class="text-slate-400 font-semibold">Adulte</dt><dd class="font-bold text-emerald-800">' + escapeWsHtml(String(pr.adult_label || (pr.adult_amount != null ? Math.round(pr.adult_amount) + ' ' + cur : '—'))) + '</dd></div>';
-        h += '<div><dt class="text-slate-400 font-semibold">Enfant</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pr.child_label || (pr.child_amount != null ? Math.round(pr.child_amount) + ' ' + cur : '—'))) + '</dd></div>';
-        h += '<div><dt class="text-slate-400 font-semibold">Devise</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(cur)) + '</dd></div>';
-        h += '<div><dt class="text-slate-400 font-semibold">Mode</dt><dd class="font-bold text-slate-800">' + escapeWsHtml(String(pr.pricing_mode || '—')) + '</dd></div>';
-        h += '</dl></div>';
-
+        var adultLabel = pr.adult_label || (pr.adult_amount != null ? Math.round(pr.adult_amount) + ' ' + cur : '—');
         var pl = pf.places || {};
+        var rem = pl.remaining != null ? pl.remaining : '—';
         var av = pf.availability || {};
+        var avKey = av.key || '';
         var avLabel = av.label ? escapeWsHtml(String(av.label)) : '';
-        var avCls = 'bg-slate-100 text-slate-800 border-slate-200';
-        if (av.key === 'past') avCls = 'bg-amber-50 text-amber-900 border-amber-200';
-        else if (av.key === 'full') avCls = 'bg-red-50 text-red-800 border-red-200';
-        else if (av.key === 'ok') avCls = 'bg-emerald-50 text-emerald-900 border-emerald-200';
-        else if (av.key === 'low') avCls = 'bg-orange-50 text-orange-900 border-orange-200';
-        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
-        h += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
-        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">4. Capacité</p>';
-        if (avLabel) h += '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-extrabold ' + avCls + '">' + avLabel + '</span>';
-        h += '</div>';
-        h += '<dl class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">';
-        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Total</dt><dd class="font-extrabold text-slate-800">' + (pl.total != null ? pl.total : '—') + '</dd></div>';
-        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Réservées</dt><dd class="font-extrabold text-slate-800">' + (pl.reserved != null ? pl.reserved : '—') + '</dd></div>';
-        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Restantes</dt><dd class="font-extrabold text-emerald-800">' + (pl.remaining != null ? pl.remaining : '—') + '</dd></div>';
-        h += '<div class="bg-slate-50 rounded-lg p-2 text-center border border-slate-100"><dt class="text-[10px] text-slate-400 font-bold">Calcul</dt><dd class="font-extrabold text-slate-800 text-[10px]">TourPlacesCalculator</dd></div>';
-        h += '</dl></div>';
+        var stClass = 'ws-pill ws-pill--muted';
+        if (avKey === 'ok') stClass = 'ws-pill ws-pill--ok';
+        else if (avKey === 'full') stClass = 'ws-pill ws-pill--danger';
+        else if (avKey === 'past' || avKey === 'low') stClass = 'ws-pill ws-pill--warn';
 
-        var rooms = pf.rooms || [];
-        if (rooms.length) {
-            h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
-            h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Chambres (détail)</p>';
-            h += '<ul class="space-y-1.5 text-xs text-slate-700">';
-            rooms.forEach(function (r) {
-                var line = r.detail_label || ((r.room_type || '') + ' — ' + (r.product != null ? r.product + ' pl.' : ''));
-                h += '<li class="flex gap-2"><span class="text-slate-400 font-bold">•</span><span>' + escapeWsHtml(String(line)) + '</span></li>';
-            });
-            h += '</ul></div>';
+        var h = '';
+        h += '<div class="ws-agent-summary">';
+        h += '<div class="ws-agent-summary__row">';
+        h += '<div class="ws-agent-kv"><span class="ws-agent-kv__label">Prix adulte</span><span class="ws-agent-kv__value ws-agent-kv__value--accent">' + escapeWsHtml(String(adultLabel)) + '</span></div>';
+        h += '<div class="ws-agent-kv"><span class="ws-agent-kv__label">Places restantes</span><span class="ws-agent-kv__value">' + escapeWsHtml(String(rem));
+        if (avLabel) h += ' <span class="' + stClass + '">' + avLabel + '</span>';
+        h += '</span></div>';
+        h += '</div>';
+        var tds = pf.travel_dates || [];
+        if (!tds.length) {
+            h += '<p class="ws-agent-note ws-agent-note--warn">Aucune date de départ disponible pour l’instant.</p>';
         }
-
-        h += '<div class="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2">';
-        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">5. Extras</p>';
-        h += '<p class="text-xs text-slate-600">Extras définis dans le CRUD voyage (onglet Extras) — cochables par passager ci-dessous.</p>';
         h += '</div>';
-
-        h += '<div class="rounded-xl bg-[#0e3a5a]/5 border border-[#0e3a5a]/10 p-4 space-y-1">';
-        h += '<p class="text-[10px] font-extrabold uppercase tracking-wide text-[#0e3a5a]">6. Réservation</p>';
-        h += '<p class="text-xs text-slate-600">Renseignez le titulaire, les participants et validez le total en bas de formulaire.</p>';
-        h += '</div>';
-
         return h;
     }
 
@@ -282,13 +260,15 @@
         panel.classList.remove('hidden');
         if (head) head.textContent = pf.title || nameDisplay || '—';
         if (sub) {
-            var bits = [];
-            if (pf.code) bits.push(String(pf.code));
-            if (pf.destination) bits.push(String(pf.destination));
-            sub.textContent = bits.join(' · ');
-            sub.classList.toggle('hidden', bits.length === 0);
+            if (pf.destination) {
+                sub.textContent = String(pf.destination);
+                sub.classList.remove('hidden');
+            } else {
+                sub.textContent = '';
+                sub.classList.add('hidden');
+            }
         }
-        if (badge) badge.textContent = (type || pf.kind || 'package').toUpperCase();
+        setWorkspacePrestationType(type || pf.kind || 'package');
         sec.innerHTML = renderPrefillSections(pf);
 
         var pr = pf.prices || {};
@@ -363,7 +343,7 @@
                 };
                 depSel.onchange = onDepChange;
                 syncPlacesFromServer(depSel.value || '');
-                if (depHint) depHint.textContent = 'Dates = disponibilité WordPress (format long français, aligné catalogue).';
+                if (depHint) depHint.textContent = 'Choisissez la date de départ.';
             } else {
                 depWrap.classList.add('hidden');
                 hidTravel.value = (pf.form && pf.form.travel_date_id != null) ? String(pf.form.travel_date_id) : '';
@@ -394,9 +374,7 @@
     }
 
     function calculateTotal() {
-        var badge = document.getElementById('badge-extras-type');
-        if (!badge) return;
-        var typePrestation = badge.innerText.toLowerCase().trim();
+        var typePrestation = getWorkspacePrestationType();
         var currentPrices = getEffectiveBasePrices(typePrestation);
         var cur = workspaceLivePricing && workspaceLivePricing.currency ? workspaceLivePricing.currency : 'MAD';
         var counts = { adulte: 0, enfant: 0, bebe: 0 };
@@ -430,7 +408,10 @@
         var elEx = document.getElementById('summary-extras-price');
         var elGrand = document.getElementById('summary-grand-total');
         var inputMontant = document.getElementById('input-montant-total');
-        if (elPax) elPax.innerText = String(getPassengersList().length);
+        var paxCount = getPassengersList().length;
+        if (elPax) elPax.innerText = String(paxCount);
+        var paxDisp = document.getElementById('ws-pax-total-display');
+        if (paxDisp) paxDisp.textContent = String(paxCount);
         if (elBase) elBase.innerText = Math.round(baseTotal).toLocaleString('fr-FR') + ' ' + cur;
         if (elEx) elEx.innerText = '+ ' + Math.round(totalOptions).toLocaleString('fr-FR') + ' ' + cur;
         if (elGrand) {
@@ -461,23 +442,27 @@
         var blockedByAvail = avKey === 'full' || avKey === 'past' || (st === 'ok' && rem0 !== null && !isNaN(rem0) && rem0 <= 0);
         var over = st === 'ok' && rem0 !== null && !isNaN(rem0) && paxN > rem0;
         if (capEl) {
+            capEl.classList.remove('ws-capacity-banner--ok', 'ws-capacity-banner--danger', 'ws-capacity-banner--warn');
+            capEl.classList.add('hidden');
+            capEl.innerHTML = '';
             if (pastDep) {
                 capEl.classList.remove('hidden');
-                capEl.innerHTML = '<span class="font-bold text-amber-800">Départ passé</span> — choisissez une date à venir pour une nouvelle réservation.';
+                capEl.classList.add('ws-capacity-banner--warn');
+                capEl.innerHTML = '<strong>Départ passé</strong> — choisissez une date à venir.';
             } else if (blockedByAvail && avKey === 'full') {
                 capEl.classList.remove('hidden');
-                capEl.innerHTML = '<span class="font-bold text-red-800">Complet</span> — plus de places disponibles sur ce départ.';
+                capEl.classList.add('ws-capacity-banner--danger');
+                capEl.innerHTML = '<strong>Complet</strong> — plus de places sur ce départ.';
             } else if (blockedByAvail && avKey === 'past') {
                 capEl.classList.remove('hidden');
-                capEl.innerHTML = '<span class="font-bold text-amber-800">Départs passés</span> — aucune date future dans la disponibilité.';
+                capEl.classList.add('ws-capacity-banner--warn');
+                capEl.innerHTML = '<strong>Départs passés</strong> — aucune date future disponible.';
             } else if (st === 'ok' && rem0 !== null && !isNaN(rem0)) {
                 var after = rem0 - paxN;
                 capEl.classList.remove('hidden');
-                capEl.innerHTML = '<span class="font-bold text-slate-800">Places (catalogue)</span> : ' + rem0 + ' restante(s) pour ce départ · <span class="font-extrabold">' + paxN + '</span> voyageur(s) dans le formulaire' +
-                    (after >= 0 ? ' → <span class="text-emerald-700 font-bold">il restera ' + after + ' après réservation</span>' : ' → <span class="text-red-700 font-bold">dépassement de ' + Math.abs(after) + '</span>');
-            } else {
-                capEl.classList.add('hidden');
-                capEl.textContent = '';
+                capEl.classList.add(after >= 0 && !over ? 'ws-capacity-banner--ok' : 'ws-capacity-banner--danger');
+                capEl.innerHTML = '<span class="ws-capacity-banner__line"><strong>' + rem0 + '</strong> place(s) restante(s) · <strong>' + paxN + '</strong> voyageur(s) saisi(s)' +
+                    (after >= 0 ? ' · après réservation : <strong>' + after + '</strong> restante(s)' : ' · <strong>Capacité dépassée</strong>') + '</span>';
             }
         }
         if (submitBtn) {
@@ -497,11 +482,11 @@
         }
     }
 
-    function renderExtras(type) {
+    function renderExtras() {
         var container = document.getElementById('extras-container');
-        var badge = document.getElementById('badge-extras-type');
-        if (!container || !badge) return;
+        if (!container) return;
 
+        var type = getWorkspacePrestationType();
         var curX = workspaceLivePricing && workspaceLivePricing.currency ? workspaceLivePricing.currency : 'MAD';
 
         var checkedState = {};
@@ -509,47 +494,43 @@
             checkedState[cb.dataset.ext + '_' + cb.dataset.pax] = true;
         });
 
-        badge.innerText = type.toUpperCase();
         container.innerHTML = '';
         var extras = getExtrasListForType(type);
         var paxList = getPassengersList().filter(function (p) { return p.type !== 'bebe'; });
 
         if (extras.length === 0) {
             var emptyMsg = (workspaceExtrasLive !== null && workspaceExtrasLive !== undefined && workspaceExtrasLive.length === 0)
-                ? 'Aucun extra configuré pour ce voyage. Ajoutez-en dans Circuits → voyages → onglet « Extras ».'
-                : 'Aucun extra pour ce type.';
-            container.innerHTML = '<p class="text-xs text-gray-500 italic col-span-full">' + emptyMsg + '</p>';
+                ? 'Aucun extra pour ce voyage.'
+                : 'Aucun extra disponible.';
+            container.innerHTML = '<p class="ws-extras-empty">' + emptyMsg + '</p>';
             return;
         }
 
         extras.forEach(function (extra) {
             var paxHtml = '';
             if (paxList.length > 0) {
-                paxHtml = '<div class="mt-3 pt-3 border-t border-gray-200/60 flex flex-col gap-2">';
+                paxHtml = '<div class="ws-extra-pax">';
                 paxList.forEach(function (pax) {
                     var price = pax.type === 'enfant' ? extra.priceChild : extra.priceAdult;
                     var isChecked = checkedState[extra.id + '_' + pax.id] ? 'checked' : '';
                     var typeDisplay = pax.type === 'adulte' ? 'Adulte' : 'Enfant';
                     paxHtml +=
-                        '<label class="flex items-center justify-between cursor-pointer hover:bg-white/50 p-1.5 rounded group/cb">' +
-                        '<div class="flex items-center gap-2.5">' +
-                        '<input type="checkbox" class="extra-pax-cb w-4 h-4 rounded border-gray-300 text-[#0083c4]" data-ext="' + extra.id + '" data-pax="' + pax.id + '" ' + isChecked + '>' +
-                        '<span class="text-[11px] text-gray-700 font-medium">' + pax.label + ' <span class="text-gray-400 font-normal">(' + typeDisplay + ')</span></span>' +
-                        '</div>' +
-                        '<span class="text-[10px] font-bold text-[#f37a1f]">+ ' + price + ' ' + curX + '</span>' +
+                        '<label class="ws-extra-line">' +
+                        '<span class="ws-extra-line__cb"><input type="checkbox" class="extra-pax-cb" data-ext="' + extra.id + '" data-pax="' + pax.id + '" ' + isChecked + '></span>' +
+                        '<span class="ws-extra-line__who">' + escapeWsHtml(pax.label) + ' <span class="ws-extra-line__tag">' + typeDisplay + '</span></span>' +
+                        '<span class="ws-extra-line__price">+ ' + price + ' ' + curX + '</span>' +
                         '</label>';
                 });
                 paxHtml += '</div>';
             } else {
-                paxHtml = '<div class="mt-3 pt-2 text-[10px] text-gray-400 italic">Aucun passager éligible.</div>';
+                paxHtml = '<p class="ws-extra-pax-none">Ajoutez le type des voyageurs ci-dessus.</p>';
             }
 
             container.innerHTML +=
-                '<div class="flex flex-col p-3.5 bg-gray-50 border border-gray-200 rounded-xl hover:border-[#0083c4]/50 hover:shadow-sm">' +
-                '<div class="flex flex-col flex-1">' +
-                '<span class="text-xs font-bold text-gray-800 flex items-center gap-2"><i class="fas ' + extra.icon + ' text-[#0083c4] w-4 text-center"></i> ' + extra.name + '</span>' +
-                '<span class="text-[10px] text-gray-500 mt-0.5 ml-6">' + extra.desc + '</span>' +
-                '</div>' + paxHtml + '</div>';
+                '<div class="ws-extra-card">' +
+                '<div class="ws-extra-card__head"><i class="fas ' + extra.icon + ' ws-extra-card__ico"></i><div>' +
+                '<div class="ws-extra-card__title">' + escapeWsHtml(extra.name) + '</div>' +
+                '<div class="ws-extra-card__desc">' + escapeWsHtml(extra.desc || '') + '</div></div></div>' + paxHtml + '</div>';
         });
 
         container.querySelectorAll('.extra-pax-cb').forEach(function (cb) {
@@ -558,16 +539,12 @@
     }
 
     function updateExtrasView() {
-        var badge = document.getElementById('badge-extras-type');
-        if (badge && badge.innerText) {
-            renderExtras(badge.innerText.toLowerCase());
-            calculateTotal();
-        }
+        renderExtras();
+        calculateTotal();
     }
 
     function collectExtrasJson() {
-        var badge = document.getElementById('badge-extras-type');
-        var typePrestation = badge ? badge.innerText.toLowerCase().trim() : 'package';
+        var typePrestation = getWorkspacePrestationType();
         var list = getExtrasListForType(typePrestation);
         var out = [];
 
@@ -625,7 +602,7 @@
     function showAddReservation(btn) {
         var tourId = (btn.getAttribute('data-tour-id') || '').trim();
         if (!tourId) {
-            alert('Ce tour n’est pas encore lié à une fiche voyage dans Laravel. Ouvrez « Circuits / voyages », enregistrez la fiche pour créer la liaison (wp_post_id).');
+            alert('Ce voyage n’est pas encore prêt à être réservé. Ouvrez « Circuits / voyages », enregistrez la fiche du circuit, puis réessayez.');
             return;
         }
         var main = document.getElementById('reservations-main-content');
@@ -663,8 +640,7 @@
             if (depOff) depOff.classList.add('hidden');
         }
 
-        var badge = document.getElementById('badge-extras-type');
-        if (badge) badge.innerText = type.toUpperCase();
+        setWorkspacePrestationType(type);
 
         document.querySelectorAll('.details-block').forEach(function (el) { el.classList.add('hidden'); });
         var det = document.getElementById('details-' + type);
@@ -693,8 +669,9 @@
         }
         var capEl = document.getElementById('ws-capacity-live');
         if (capEl) {
+            capEl.classList.remove('ws-capacity-banner--ok', 'ws-capacity-banner--danger', 'ws-capacity-banner--warn');
             capEl.classList.add('hidden');
-            capEl.textContent = '';
+            capEl.innerHTML = '';
         }
         var submitBtn = document.getElementById('ws-booking-submit');
         if (submitBtn) {

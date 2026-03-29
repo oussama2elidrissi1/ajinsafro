@@ -59,6 +59,7 @@
     </script>
 @endif
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}">
 <style>
     .ws-ring-pulse { animation: wsPulse 1.6s ease-out 1; }
     @keyframes wsPulse {
@@ -752,7 +753,7 @@
                 <h2 class="text-xl font-bold text-brand-dark flex items-center gap-2">
                     <i class="fas fa-user-plus text-brand-blue"></i> Nouvelle réservation
                 </h2>
-                <p class="text-xs text-gray-500 mt-1 font-medium">Prestation : <span id="add-res-prestation-name" class="text-brand-dark font-bold">—</span></p>
+                <p class="text-sm text-slate-600 mt-1"><span id="add-res-prestation-name" class="text-brand-dark font-bold">—</span></p>
             </div>
         </div>
         <div class="bg-white p-5 sm:p-8 rounded-2xl shadow-custom border border-gray-100">
