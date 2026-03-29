@@ -360,7 +360,7 @@
     </div>
 
     {{-- Modal détail prestation (données : #ws-modal-detail-json) --}}
-    <div id="ws-voyage-detail-modal" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title">
+    <div id="ws-voyage-detail-modal" class="fixed inset-0 z-[9999] hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title">
         <div class="absolute inset-0 bg-slate-900/55 backdrop-blur-[1px]" data-ws-md-backdrop aria-hidden="true"></div>
         <div class="relative z-10 flex min-h-full w-full items-start justify-center overflow-y-auto p-4 sm:p-6">
             <div class="w-full max-w-4xl rounded-2xl border border-slate-200/90 bg-white shadow-2xl flex flex-col max-h-[min(92vh,880px)] overflow-hidden my-auto">
@@ -391,150 +391,18 @@
 <script src="{{ asset('js/reservation-workspace.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    if (typeof flatpickr !== 'undefined') {
-        flatpickr('#ws-date-range-picker', {
-            mode: 'range',
-            dateFormat: 'Y-m-d',
-            locale: 'fr',
-            onChange: function () { applyWsFilters(); }
-        });
-    }
-
-    var calEl = document.getElementById('workspace-calendar');
-    var calJson = document.getElementById('workspace-calendar-json');
-    var calendar = null;
-    var btnList = document.getElementById('btn-view-list');
-    var btnCal = document.getElementById('btn-view-calendar');
-    var listView = document.getElementById('reservations-list-view');
-    var calView = document.getElementById('reservations-calendar-view');
-
-    if (calEl && calJson && typeof FullCalendar !== 'undefined') {
-        var raw = [];
-        try { raw = JSON.parse(calJson.textContent || '[]'); } catch (e) {}
-        var colors = { package: '#f37a1f', vol: '#0083c4', hebergement: '#d97706' };
-        var events = raw.map(function (e) {
-            return {
-                title: e.title,
-                start: e.start,
-                backgroundColor: colors[e.type] || '#0083c4',
-                borderColor: colors[e.type] || '#0083c4',
-                textColor: e.type === 'hebergement' ? '#1f2937' : '#fff',
-                extendedProps: {
-                    code: e.code,
-                    voyage_id: e.voyage_id,
-                    travel_date_id: e.travel_date_id,
-                    prestation_type: e.prestation_type,
-                    label: e.label
-                }
-            };
-        });
-        calendar = new FullCalendar.Calendar(calEl, {
-            initialView: 'dayGridMonth',
-            locale: 'fr',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
-            buttonText: { today: "Aujourd'hui", month: 'Mois', week: 'Semaine' },
-            events: events,
-            height: 'auto',
-            eventClick: function (info) {
-                info.jsEvent.preventDefault();
-                var p = info.event.extendedProps || {};
-                var code = String(p.code || '');
-                if (btnList) btnList.click();
-                var safe = code.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-                var row = code ? document.querySelector('tr.ws-catalog-row[data-row-code="' + safe + '"]') : null;
-                if (row) {
-                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    row.classList.add('ws-ring-pulse');
-                    setTimeout(function () { row.classList.remove('ws-ring-pulse'); }, 1800);
-                }
-                var btn = code ? document.querySelector('.btn-show-add-reservation[data-row-code="' + safe + '"]') : null;
-                if (btn) btn.click();
-            }
-        });
-    }
-
-    if (btnList && btnCal && listView && calView) {
-        btnList.addEventListener('click', function () {
-            btnList.classList.add('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
-            btnList.classList.remove('text-gray-500');
-            btnCal.classList.remove('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
-            btnCal.classList.add('text-gray-500');
-            listView.classList.remove('hidden');
-            calView.classList.add('hidden');
-        });
-        btnCal.addEventListener('click', function () {
-            btnCal.classList.add('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
-            btnCal.classList.remove('text-gray-500');
-            btnList.classList.remove('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
-            btnList.classList.add('text-gray-500');
-            listView.classList.add('hidden');
-            calView.classList.remove('hidden');
-            if (calendar) setTimeout(function () { calendar.render(); }, 80);
-        });
-    }
-
-    var searchEl = document.getElementById('ws-filter-search');
-    var typeEl = document.getElementById('ws-filter-type');
-    var rangeInput = document.getElementById('ws-date-range-picker');
-    var resetBtn = document.getElementById('ws-filters-reset');
-    if (searchEl) searchEl.addEventListener('input', applyWsFilters);
-    if (typeEl) typeEl.addEventListener('change', applyWsFilters);
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function () {
-            if (searchEl) searchEl.value = '';
-            if (typeEl) typeEl.value = 'all';
-            if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();
-            applyWsFilters();
-        });
-    }
-
-    window.applyWsFilters = function applyWsFilters() {
-        var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
-        var t = typeEl ? typeEl.value : 'all';
-        var rows = document.querySelectorAll('#ws-catalog-table tbody tr.ws-catalog-row');
-        var visible = 0;
-        var range = null;
-        if (rangeInput && rangeInput._flatpickr && rangeInput._flatpickr.selectedDates.length === 2) {
-            var a = rangeInput._flatpickr.selectedDates[0];
-            var b = rangeInput._flatpickr.selectedDates[1];
-            range = { start: a <= b ? a : b, end: a <= b ? b : a };
-        }
-        rows.forEach(function (tr) {
-            var ok = true;
-            if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
-            if (ok && q) {
-                var blob = (tr.getAttribute('data-search') || '')
-                    + ' ' + (tr.getAttribute('data-name') || '')
-                    + ' ' + (tr.getAttribute('data-code') || '');
-                if (blob.toLowerCase().indexOf(q) === -1) ok = false;
-            }
-            if (ok && range) {
-                var dep = tr.getAttribute('data-dep');
-                if (dep) {
-                    var d = new Date(dep + 'T12:00:00');
-                    if (d < range.start || d > range.end) ok = false;
-                }
-            }
-            tr.classList.toggle('hidden', !ok);
-            if (ok) visible++;
-        });
-        var c = document.getElementById('ws-row-visible-count');
-        if (c) c.textContent = String(visible);
-    };
-
-    applyWsFilters();
-
-    /* —— Modal détail prestation —— */
+    /* Modal détail : enregistré en premier (avant FullCalendar) pour éviter qu’une erreur JS bloque le clic. */
     var wsModalJson = document.getElementById('ws-modal-detail-json');
     var wsModalEl = document.getElementById('ws-voyage-detail-modal');
     var wsMdTitle = document.getElementById('ws-md-title');
     var wsMdSub = document.getElementById('ws-md-sub');
     var wsMdBody = document.getElementById('ws-md-body');
     var wsMdFooter = document.getElementById('ws-md-footer');
-    var wsDetailMap = {};
-    if (wsModalJson) {
-        try { wsDetailMap = JSON.parse(wsModalJson.textContent || '{}'); } catch (err) { wsDetailMap = {}; }
+    function parseWsDetailMap() {
+        if (!wsModalJson) return {};
+        try { return JSON.parse(wsModalJson.textContent || '{}'); } catch (err) { return {}; }
     }
+    var wsDetailMap = parseWsDetailMap();
     function escapeWsHtml(s) {
         if (s == null || s === '') return '';
         var d = document.createElement('div');
@@ -542,7 +410,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return d.innerHTML;
     }
     function closeWsDetailModal() {
-        if (wsModalEl) wsModalEl.classList.add('hidden');
+        if (wsModalEl) {
+            wsModalEl.classList.add('hidden');
+            wsModalEl.style.removeProperty('display');
+        }
         document.body.style.overflow = '';
     }
     function renderWsModalBody(d) {
@@ -626,8 +497,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return h;
     }
     function openWsDetailModal(code) {
+        wsDetailMap = parseWsDetailMap();
         var d = wsDetailMap[code];
         if (!d || !wsModalEl) return;
+        if (wsModalEl.parentElement !== document.body) {
+            document.body.appendChild(wsModalEl);
+        }
         if (wsMdTitle) wsMdTitle.textContent = d.title || '—';
         if (wsMdSub) {
             var parts = [];
@@ -655,26 +530,170 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         wsModalEl.classList.remove('hidden');
+        wsModalEl.style.display = 'block';
         document.body.style.overflow = 'hidden';
     }
     document.addEventListener('click', function (e) {
         var t = e.target;
-        if (t && t.closest && t.closest('.btn-ws-open-detail')) {
+        if (t && t.nodeType !== 1) t = t.parentElement;
+        if (!t || !t.closest) return;
+        var openBtn = t.closest('.btn-ws-open-detail');
+        if (openBtn) {
             e.preventDefault();
-            var btn = t.closest('.btn-ws-open-detail');
-            var code = btn.getAttribute('data-row-code') || '';
+            e.stopPropagation();
+            var code = openBtn.getAttribute('data-row-code') || '';
             openWsDetailModal(code);
             return;
         }
-        if (t && t.closest && t.closest('[data-ws-md-close]')) {
+        if (t.closest('[data-ws-md-close]')) {
             e.preventDefault();
             closeWsDetailModal();
             return;
         }
-        if (t && t.getAttribute && t.getAttribute('data-ws-md-backdrop') !== null) {
+        if (t.getAttribute && t.getAttribute('data-ws-md-backdrop') !== null) {
             closeWsDetailModal();
         }
-    });
+    }, true);
+
+    if (typeof flatpickr !== 'undefined') {
+        flatpickr('#ws-date-range-picker', {
+            mode: 'range',
+            dateFormat: 'Y-m-d',
+            locale: 'fr',
+            onChange: function () { applyWsFilters(); }
+        });
+    }
+
+    var calEl = document.getElementById('workspace-calendar');
+    var calJson = document.getElementById('workspace-calendar-json');
+    var calendar = null;
+    var btnList = document.getElementById('btn-view-list');
+    var btnCal = document.getElementById('btn-view-calendar');
+    var listView = document.getElementById('reservations-list-view');
+    var calView = document.getElementById('reservations-calendar-view');
+
+    try {
+        if (calEl && calJson && typeof FullCalendar !== 'undefined') {
+            var raw = [];
+            try { raw = JSON.parse(calJson.textContent || '[]'); } catch (e) {}
+            var colors = { package: '#f37a1f', vol: '#0083c4', hebergement: '#d97706' };
+            var events = raw.map(function (e) {
+                return {
+                    title: e.title,
+                    start: e.start,
+                    backgroundColor: colors[e.type] || '#0083c4',
+                    borderColor: colors[e.type] || '#0083c4',
+                    textColor: e.type === 'hebergement' ? '#1f2937' : '#fff',
+                    extendedProps: {
+                        code: e.code,
+                        voyage_id: e.voyage_id,
+                        travel_date_id: e.travel_date_id,
+                        prestation_type: e.prestation_type,
+                        label: e.label
+                    }
+                };
+            });
+            calendar = new FullCalendar.Calendar(calEl, {
+                initialView: 'dayGridMonth',
+                locale: 'fr',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+                buttonText: { today: "Aujourd'hui", month: 'Mois', week: 'Semaine' },
+                events: events,
+                height: 'auto',
+                eventClick: function (info) {
+                    info.jsEvent.preventDefault();
+                    var p = info.event.extendedProps || {};
+                    var code = String(p.code || '');
+                    if (btnList) btnList.click();
+                    var safe = code.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                    var row = code ? document.querySelector('tr.ws-catalog-row[data-row-code="' + safe + '"]') : null;
+                    if (row) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        row.classList.add('ws-ring-pulse');
+                        setTimeout(function () { row.classList.remove('ws-ring-pulse'); }, 1800);
+                    }
+                    var btn = code ? document.querySelector('.btn-show-add-reservation[data-row-code="' + safe + '"]') : null;
+                    if (btn) btn.click();
+                }
+            });
+        }
+    } catch (calErr) {
+        if (typeof console !== 'undefined' && console.warn) {
+            console.warn('Workspace FullCalendar:', calErr);
+        }
+    }
+
+    if (btnList && btnCal && listView && calView) {
+        btnList.addEventListener('click', function () {
+            btnList.classList.add('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
+            btnList.classList.remove('text-gray-500');
+            btnCal.classList.remove('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
+            btnCal.classList.add('text-gray-500');
+            listView.classList.remove('hidden');
+            calView.classList.add('hidden');
+        });
+        btnCal.addEventListener('click', function () {
+            btnCal.classList.add('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
+            btnCal.classList.remove('text-gray-500');
+            btnList.classList.remove('bg-white', 'shadow-md', 'text-brand-blue', 'border', 'border-gray-100/80');
+            btnList.classList.add('text-gray-500');
+            listView.classList.add('hidden');
+            calView.classList.remove('hidden');
+            if (calendar) setTimeout(function () { calendar.render(); }, 80);
+        });
+    }
+
+    var searchEl = document.getElementById('ws-filter-search');
+    var typeEl = document.getElementById('ws-filter-type');
+    var rangeInput = document.getElementById('ws-date-range-picker');
+    var resetBtn = document.getElementById('ws-filters-reset');
+    if (searchEl) searchEl.addEventListener('input', applyWsFilters);
+    if (typeEl) typeEl.addEventListener('change', applyWsFilters);
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            if (searchEl) searchEl.value = '';
+            if (typeEl) typeEl.value = 'all';
+            if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();
+            applyWsFilters();
+        });
+    }
+
+    window.applyWsFilters = function applyWsFilters() {
+        var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
+        var t = typeEl ? typeEl.value : 'all';
+        var rows = document.querySelectorAll('#ws-catalog-table tbody tr.ws-catalog-row');
+        var visible = 0;
+        var range = null;
+        if (rangeInput && rangeInput._flatpickr && rangeInput._flatpickr.selectedDates.length === 2) {
+            var a = rangeInput._flatpickr.selectedDates[0];
+            var b = rangeInput._flatpickr.selectedDates[1];
+            range = { start: a <= b ? a : b, end: a <= b ? b : a };
+        }
+        rows.forEach(function (tr) {
+            var ok = true;
+            if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
+            if (ok && q) {
+                var blob = (tr.getAttribute('data-search') || '')
+                    + ' ' + (tr.getAttribute('data-name') || '')
+                    + ' ' + (tr.getAttribute('data-code') || '');
+                if (blob.toLowerCase().indexOf(q) === -1) ok = false;
+            }
+            if (ok && range) {
+                var dep = tr.getAttribute('data-dep');
+                if (dep) {
+                    var d = new Date(dep + 'T12:00:00');
+                    if (d < range.start || d > range.end) ok = false;
+                }
+            }
+            tr.classList.toggle('hidden', !ok);
+            if (ok) visible++;
+        });
+        var c = document.getElementById('ws-row-visible-count');
+        if (c) c.textContent = String(visible);
+    };
+
+    applyWsFilters();
+
 });
 </script>
 @endpush
