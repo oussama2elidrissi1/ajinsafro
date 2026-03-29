@@ -234,7 +234,8 @@
         return d.innerHTML;
     }
 
-    function applyWorkspacePrefill(pf, type, nameDisplay) {
+    function applyWorkspacePrefill(pf, type, nameDisplay, preferredTravelDateId) {
+        preferredTravelDateId = preferredTravelDateId != null ? String(preferredTravelDateId).trim() : '';
         workspaceLivePricing = null;
         workspaceExtrasLive = null;
         workspaceLivePlaces = null;
@@ -330,12 +331,15 @@
                     depSel.appendChild(opt);
                 });
                 var defId = pf.default_travel_date_id != null ? String(pf.default_travel_date_id) : (pf.form && pf.form.travel_date_id != null ? String(pf.form.travel_date_id) : '');
-                if (defId && Array.prototype.some.call(depSel.options, function (o) { return o.value === defId; })) {
+                var pick = preferredTravelDateId;
+                if (pick && Array.prototype.some.call(depSel.options, function (o) { return o.value === pick; })) {
+                    depSel.value = pick;
+                } else if (defId && Array.prototype.some.call(depSel.options, function (o) { return o.value === defId; })) {
                     depSel.value = defId;
                 } else if (depSel.options.length) {
                     depSel.selectedIndex = 0;
                 }
-                hidTravel.value = depSel.value || '';
+                hidTravel.value = depSel.value || preferredTravelDateId || '';
                 var onDepChange = function () {
                     hidTravel.value = depSel.value || '';
                     syncPlacesFromServer(depSel.value || '');
@@ -346,7 +350,7 @@
                 if (depHint) depHint.textContent = 'Choisissez la date de départ.';
             } else {
                 depWrap.classList.add('hidden');
-                hidTravel.value = (pf.form && pf.form.travel_date_id != null) ? String(pf.form.travel_date_id) : '';
+                hidTravel.value = preferredTravelDateId || ((pf.form && pf.form.travel_date_id != null) ? String(pf.form.travel_date_id) : '');
                 if (depHint) depHint.textContent = '';
             }
         }
@@ -614,12 +618,13 @@
         var type = btn.getAttribute('data-type') || 'package';
         var name = btn.getAttribute('data-name') || '';
         var rowCode = (btn.getAttribute('data-row-code') || '').trim();
+        var preferredTd = (btn.getAttribute('data-travel-date-id') || '').trim();
         var prefillMap = parseWsFormPrefillMap();
         var pf = rowCode && prefillMap[rowCode] ? prefillMap[rowCode] : null;
 
         document.getElementById('ws-prestation-type').value = type;
         document.getElementById('ws-tour-id').value = tourId;
-        document.getElementById('ws-travel-date-id').value = btn.getAttribute('data-travel-date-id') || '';
+        document.getElementById('ws-travel-date-id').value = preferredTd;
 
         if (pf && pf.form && pf.form.tour_id != null) {
             document.getElementById('ws-tour-id').value = String(pf.form.tour_id);
@@ -628,7 +633,7 @@
         document.getElementById('add-res-prestation-name').textContent = pf && pf.title ? pf.title : name;
 
         if (pf) {
-            applyWorkspacePrefill(pf, type, name);
+            applyWorkspacePrefill(pf, type, name, preferredTd);
         } else {
             workspaceLivePricing = null;
             workspaceExtrasLive = null;

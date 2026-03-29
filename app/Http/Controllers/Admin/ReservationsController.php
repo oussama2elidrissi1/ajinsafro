@@ -3,28 +3,26 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Reservation;
-use App\Models\User;
-use App\Models\ReservationRoom;
 use App\Models\Client;
-use App\Models\TravelDate;
-use App\Models\Voyage;
+use App\Models\Reservation;
 use App\Models\TourHotel;
-use App\Models\TourHotelRoom;
+use App\Models\TravelDate;
+use App\Models\User;
+use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
+use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-
 
 class ReservationsController extends Controller
 {
@@ -32,8 +30,8 @@ class ReservationsController extends Controller
         protected ReservationService $reservationService,
         protected WpTourRepository $wpTourRepository,
         protected BranchScopeService $branchScope,
-    ) {
-    }
+        protected ReservationListQueryService $reservationListQuery,
+    ) {}
 
     /**
      * Liste principale des réservations (toutes).
@@ -84,7 +82,7 @@ class ReservationsController extends Controller
 
         $wpPostIds = $voyages->pluck('wp_post_id')->filter()->unique()->values()->all();
         $wpTitles = collect();
-        if (!empty($wpPostIds)) {
+        if (! empty($wpPostIds)) {
             try {
                 $wpTitles = WpPost::query()
                     ->whereIn('ID', $wpPostIds)
@@ -101,7 +99,7 @@ class ReservationsController extends Controller
             $selectedTravelDate = TravelDate::query()->where('is_active', true)->find($travelDateId);
             if ($selectedTravelDate && $requestedTourId > 0) {
                 $voyageForTour = Voyage::find($requestedTourId);
-                if (!$voyageForTour || (int) $selectedTravelDate->travel_id !== (int) $voyageForTour->wp_post_id) {
+                if (! $voyageForTour || (int) $selectedTravelDate->travel_id !== (int) $voyageForTour->wp_post_id) {
                     $selectedTravelDate = null;
                     $travelDateIncoherent = true;
                 }
@@ -134,7 +132,7 @@ class ReservationsController extends Controller
             return response()->json(['hotels' => [], 'currency' => 'DH']);
         }
         $voyage = Voyage::find($tourId);
-        if (!$voyage || !$voyage->wp_post_id) {
+        if (! $voyage || ! $voyage->wp_post_id) {
             return response()->json(['hotels' => [], 'currency' => 'DH']);
         }
         $wpTourId = (int) $voyage->wp_post_id;
@@ -162,6 +160,7 @@ class ReservationsController extends Controller
             })->all(),
             'currency' => $voyage->currency ?? 'DH',
         ];
+
         return response()->json($payload);
     }
 
@@ -340,7 +339,7 @@ class ReservationsController extends Controller
     {
         $count = 1;
         foreach ($passengers as $p) {
-            if (!is_array($p)) {
+            if (! is_array($p)) {
                 continue;
             }
             $hasName = (trim((string) ($p['first_name'] ?? '')) !== '') || (trim((string) ($p['last_name'] ?? '')) !== '');
@@ -348,6 +347,7 @@ class ReservationsController extends Controller
                 $count++;
             }
         }
+
         return $count;
     }
 
@@ -363,7 +363,7 @@ class ReservationsController extends Controller
         }
 
         $voyage = \App\Models\Voyage::query()->find($tourId);
-        if (!$voyage || !$voyage->wp_post_id) {
+        if (! $voyage || ! $voyage->wp_post_id) {
             return;
         }
 
@@ -436,15 +436,15 @@ class ReservationsController extends Controller
     public function showReceipt(Request $request): StreamedResponse|\Illuminate\Http\Response
     {
         $path = $request->query('path');
-        if (!$path || !is_string($path)) {
+        if (! $path || ! is_string($path)) {
             abort(404);
         }
         $path = str_replace('\\', '/', trim($path));
-        $valid = !str_contains($path, '..') && (str_starts_with($path, 'reservation-receipts/') || str_starts_with($path, 'reservation-visa/'));
-        if (!$valid) {
+        $valid = ! str_contains($path, '..') && (str_starts_with($path, 'reservation-receipts/') || str_starts_with($path, 'reservation-visa/'));
+        if (! $valid) {
             abort(404);
         }
-        if (!Storage::disk('public')->exists($path)) {
+        if (! Storage::disk('public')->exists($path)) {
             abort(404);
         }
         $mime = Storage::disk('public')->mimeType($path) ?: 'application/octet-stream';
@@ -457,7 +457,7 @@ class ReservationsController extends Controller
             }
         }, 200, [
             'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+            'Content-Disposition' => 'inline; filename="'.basename($path).'"',
         ]);
     }
 
@@ -466,8 +466,8 @@ class ReservationsController extends Controller
      */
     protected function renderList(Request $request, ?string $status, ?string $submenu): View
     {
-        $query = Reservation::query()->with(['passengers', 'client', 'tour', 'branch']);
-        $this->branchScope->scopeReservations($query, $request->user());
+        $query = $this->reservationListQuery->baseQuery($request->user())
+            ->with(['passengers', 'client', 'tour', 'branch']);
 
         if ($status) {
             $query->where('status', $status);
@@ -477,9 +477,10 @@ class ReservationsController extends Controller
         if ($tourFilter <= 0) {
             $tourFilter = (int) $request->query('tour_id', 0);
         }
-        if ($tourFilter > 0) {
-            $query->where('tour_id', $tourFilter);
-        }
+        $this->reservationListQuery->applyTourFilter($query, $tourFilter);
+
+        $travelDateFilter = (int) $request->query('travel_date_id', 0);
+        $this->reservationListQuery->applyTravelDateFilter($query, $travelDateFilter > 0 ? $travelDateFilter : null);
 
         $reservations = $query->orderByDesc('created_at')->paginate(20);
 
@@ -487,6 +488,8 @@ class ReservationsController extends Controller
             'reservations' => $reservations,
             'status' => $status,
             'submenu' => $submenu,
+            'filterTourId' => $tourFilter > 0 ? $tourFilter : null,
+            'filterTravelDateId' => $travelDateFilter > 0 ? $travelDateFilter : null,
         ]);
     }
 
@@ -578,9 +581,9 @@ class ReservationsController extends Controller
                 ->when($budgetMin !== null, fn ($q) => $q->where('price_from', '>=', $budgetMin))
                 ->when($budgetMax !== null, fn ($q) => $q->where('price_from', '<=', $budgetMax))
                 ->when($search !== '', fn ($q) => $q->where(function ($q2) use ($search) {
-                    $q2->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('destination', 'like', '%' . $search . '%')
-                        ->orWhere('slug', 'like', '%' . $search . '%');
+                    $q2->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('destination', 'like', '%'.$search.'%')
+                        ->orWhere('slug', 'like', '%'.$search.'%');
                 }))
                 ->pluck('wp_post_id');
         }
@@ -639,12 +642,12 @@ class ReservationsController extends Controller
         foreach ($travelDates as $travelDate) {
             $voyage = $voyages->get($travelDate->travel_id);
             $wpPost = $wpPosts->get((int) $travelDate->travel_id);
-            $title = $wpPost ? ($wpPost->post_title ?? '') : ($voyage?->name ?? ('Tour #' . $travelDate->travel_id));
+            $title = $wpPost ? ($wpPost->post_title ?? '') : ($voyage?->name ?? ('Tour #'.$travelDate->travel_id));
             $dateStr = $travelDate->date?->format('Y-m-d');
             $wpId = $travelDate->travel_id;
             $events[] = [
-                'id' => 'td-' . $travelDate->id,
-                'title' => $title !== '' ? $title : ('Tour #' . $wpId),
+                'id' => 'td-'.$travelDate->id,
+                'title' => $title !== '' ? $title : ('Tour #'.$wpId),
                 'start' => $dateStr,
                 'allDay' => true,
                 'extendedProps' => [
@@ -678,11 +681,11 @@ class ReservationsController extends Controller
 
         if ($search !== '') {
             $reservationQuery->where(function (Builder $q) use ($search) {
-                $q->where('client_first_name', 'like', '%' . $search . '%')
-                    ->orWhere('client_last_name', 'like', '%' . $search . '%')
-                    ->orWhere('client_email', 'like', '%' . $search . '%')
-                    ->orWhere('client_phone', 'like', '%' . $search . '%')
-                    ->orWhereHas('tour', fn (Builder $q2) => $q2->where('name', 'like', '%' . $search . '%'));
+                $q->where('client_first_name', 'like', '%'.$search.'%')
+                    ->orWhere('client_last_name', 'like', '%'.$search.'%')
+                    ->orWhere('client_email', 'like', '%'.$search.'%')
+                    ->orWhere('client_phone', 'like', '%'.$search.'%')
+                    ->orWhereHas('tour', fn (Builder $q2) => $q2->where('name', 'like', '%'.$search.'%'));
             });
         }
 
@@ -692,11 +695,11 @@ class ReservationsController extends Controller
                 continue;
             }
             $dateStr = $td->date->format('Y-m-d');
-            $client = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
+            $client = trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''));
             $tourName = $reservation->tour?->name ?? 'Voyage';
-            $chip = '#' . $reservation->id . ' · ' . ($client !== '' ? $client : 'Client');
+            $chip = '#'.$reservation->id.' · '.($client !== '' ? $client : 'Client');
             $events[] = [
-                'id' => 'res-' . $reservation->id,
+                'id' => 'res-'.$reservation->id,
                 'title' => $chip,
                 'start' => $dateStr,
                 'allDay' => true,
@@ -747,7 +750,7 @@ class ReservationsController extends Controller
             'kind' => 'reservation',
             'id' => $reservation->id,
             'status' => $reservation->status,
-            'client' => trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''))
+            'client' => trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''))
                 ?: ($reservation->client?->full_name ?? '—'),
             'email' => $reservation->client_email ?: $reservation->client?->email,
             'phone' => $reservation->client_phone ?: $reservation->client?->phone,
@@ -800,7 +803,7 @@ class ReservationsController extends Controller
             }
         }
 
-        if (!$travelDate && $date !== '') {
+        if (! $travelDate && $date !== '') {
             if ($voyageId > 0) {
                 $voyage = Voyage::query()->find($voyageId);
                 if ($voyage && $voyage->wp_post_id) {
@@ -820,7 +823,7 @@ class ReservationsController extends Controller
             }
         }
 
-        if (!$travelDate) {
+        if (! $travelDate) {
             return response()->json(['error' => $date === '' ? 'Paramètre date manquant' : 'Date de départ introuvable'], $date === '' ? 422 : 404);
         }
         if ($wpId === null) {
@@ -856,7 +859,7 @@ class ReservationsController extends Controller
 
             $durationDayRaw = $wpPost->getMeta('duration_day');
             $durationDays = $this->parseDurationDaysForModal($durationDayRaw);
-            $durationText = $durationDays >= 1 ? $durationDays . ' jour' . ($durationDays > 1 ? 's' : '') . ($durationDays >= 2 ? ' / ' . ($durationDays - 1) . ' nuit' . (($durationDays - 1) > 1 ? 's' : '') : '') : null;
+            $durationText = $durationDays >= 1 ? $durationDays.' jour'.($durationDays > 1 ? 's' : '').($durationDays >= 2 ? ' / '.($durationDays - 1).' nuit'.(($durationDays - 1) > 1 ? 's' : '') : '') : null;
 
             $priceFrom = $this->parsePriceFromMeta($wpPost->getMeta('min_price')) ?? $this->parsePriceFromMeta($wpPost->getMeta('base_price'));
             $priceOverride = $travelDate->price_override !== null ? (float) $travelDate->price_override : null;
@@ -888,6 +891,7 @@ class ReservationsController extends Controller
                 'capacity_total' => (int) $r->capacity_total,
                 'supplement' => (float) $r->supplement,
             ])->all();
+
             return [
                 'id' => $h->id,
                 'hotel_name' => $h->hotel_name,
@@ -900,7 +904,7 @@ class ReservationsController extends Controller
         $basePayload = [
             'travel_date_id' => $travelDate->id,
             'voyage_id' => $voyage?->id,
-            'name' => $wpPost?->post_title ?? ('Tour #' . $wpId),
+            'name' => $wpPost?->post_title ?? ('Tour #'.$wpId),
             'slug' => $wpPost?->post_name ?? '',
             'destination' => $destination,
             'departure_date' => $travelDate->date->format('Y-m-d'),
@@ -941,6 +945,7 @@ class ReservationsController extends Controller
             return 1;
         }
         $n = (int) $s;
+
         return $n >= 1 && $n <= 365 ? $n : 1;
     }
 
@@ -953,6 +958,7 @@ class ReservationsController extends Controller
             return null;
         }
         $n = is_numeric($value) ? (float) $value : null;
+
         return $n !== null && $n >= 0 ? $n : null;
     }
 
@@ -965,6 +971,7 @@ class ReservationsController extends Controller
             return null;
         }
         $n = (int) $value;
+
         return $n >= 0 ? $n : null;
     }
 }

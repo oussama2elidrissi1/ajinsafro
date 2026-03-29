@@ -10,6 +10,7 @@ use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
+use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
 use App\Services\ReservationWorkspaceBookingService;
 use App\Services\ReservationWorkspaceCatalogService;
@@ -26,6 +27,7 @@ class ReservationWorkspaceController extends Controller
         protected BranchScopeService $branchScope,
         protected ReservationWorkspaceCatalogService $catalog,
         protected ReservationWorkspaceBookingService $workspaceBooking,
+        protected ReservationListQueryService $reservationListQuery,
     ) {}
 
     public function index(Request $request): View
@@ -174,7 +176,7 @@ class ReservationWorkspaceController extends Controller
 
         $data = [
             'tour_id' => (int) $request->input('tour_id'),
-            'travel_date_id' => $request->filled('travel_date_id') ? (int) $request->input('travel_date_id') : null,
+            'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
             'prestation_type' => $request->string('prestation_type')->toString(),
             'client_mode' => $request->string('client_mode')->toString(),
             'client_external_id' => $request->string('client_mode')->toString() === 'existing'
@@ -236,14 +238,10 @@ class ReservationWorkspaceController extends Controller
         $voyage = Voyage::findOrFail((int) $request->query('voyage_id'));
         $travelDateId = $request->filled('travel_date_id') ? (int) $request->query('travel_date_id') : null;
 
-        $q = Reservation::query()
+        $q = $this->reservationListQuery->baseQuery($request->user())
             ->where('tour_id', $voyage->id)
             ->with(['passengers', 'client:id,client_code,full_name', 'travelDate']);
-        if ($travelDateId) {
-            $q->where('travel_date_id', $travelDateId);
-        }
-        $this->branchScope->scopeReservations($q, $request->user());
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $request->user());
+        $this->reservationListQuery->applyTravelDateFilter($q, $travelDateId);
         $reservations = $q->orderByDesc('created_at')->limit(200)->get();
 
         $wpTourTitle = $this->resolveWpTourTitle($voyage->wp_post_id);
@@ -271,14 +269,10 @@ class ReservationWorkspaceController extends Controller
         $voyage = Voyage::findOrFail((int) $request->query('voyage_id'));
         $travelDateId = $request->filled('travel_date_id') ? (int) $request->query('travel_date_id') : null;
 
-        $q = Reservation::query()
+        $q = $this->reservationListQuery->baseQuery($request->user())
             ->where('tour_id', $voyage->id)
             ->with(['passengers', 'client:id,client_code,full_name', 'travelDate']);
-        if ($travelDateId) {
-            $q->where('travel_date_id', $travelDateId);
-        }
-        $this->branchScope->scopeReservations($q, $request->user());
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $request->user());
+        $this->reservationListQuery->applyTravelDateFilter($q, $travelDateId);
         $reservations = $q->orderByDesc('created_at')->limit(500)->get();
 
         $wpTourTitle = $this->resolveWpTourTitle($voyage->wp_post_id);

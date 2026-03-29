@@ -27,6 +27,38 @@
         </div>
     @endif
 
+    @php
+        $filterTourId = $filterTourId ?? null;
+        $filterTravelDateId = $filterTravelDateId ?? null;
+        $clearListFiltersUrl = match ($submenu ?? null) {
+            'en-attente' => route('admin.reservations.en-attente'),
+            'confirmees' => route('admin.reservations.confirmees'),
+            'annulees' => route('admin.reservations.annulees'),
+            'paiements' => route('admin.reservations.paiements'),
+            'toutes' => route('admin.reservations.toutes'),
+            default => route('admin.reservations.index'),
+        };
+    @endphp
+    @if($filterTourId || $filterTravelDateId)
+        <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3" role="status">
+            <span class="mb-0">
+                <strong>Filtre actif</strong>
+                @if($filterTourId)
+                    · Voyage (Laravel) #{{ $filterTourId }}
+                @endif
+                @if($filterTravelDateId)
+                    · Départ <code>travel_date_id</code> {{ $filterTravelDateId }}
+                @endif
+            </span>
+            <span class="d-flex flex-wrap gap-2">
+                @if($filterTourId)
+                    <a href="{{ route('admin.reservations.workspace.prestation.participants', array_filter(['voyage_id' => $filterTourId, 'travel_date_id' => $filterTravelDateId])) }}" class="btn btn-sm btn-outline-primary">Participants</a>
+                @endif
+                <a href="{{ $clearListFiltersUrl }}" class="btn btn-sm btn-outline-secondary">Réinitialiser filtres</a>
+            </span>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">

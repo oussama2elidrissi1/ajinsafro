@@ -61,6 +61,10 @@
             @endif
         </div>
         <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('admin.reservations.toutes', array_filter(['voyage_id' => $voyage->id, 'travel_date_id' => $travelDateId])) }}"
+               class="btn btn-outline-primary d-inline-flex align-items-center gap-2 rounded-3 fw-bold shadow-sm">
+                <i class="fas fa-list-ul"></i> Liste réservations (même filtre)
+            </a>
             <a href="{{ route('admin.reservations.workspace.prestation.pdf', array_filter(['voyage_id' => $voyage->id, 'travel_date_id' => $travelDateId])) }}"
                class="btn btn-danger d-inline-flex align-items-center gap-2 rounded-3 fw-bold shadow-sm">
                 <i class="fas fa-file-pdf"></i> Télécharger PDF
@@ -92,7 +96,7 @@
         <div class="col-sm-4">
             <div class="card border-0 shadow-sm rounded-3 h-100 bg-light">
                 <div class="card-body py-3 small text-muted">
-                    Les lignes proviennent des réservations liées à ce voyage (filtre date appliqué si vous venez d’une ligne catalogue avec date).
+                    Même périmètre que la liste admin : voyage Laravel + date de départ (TravelDate) lorsque l’URL inclut <code>travel_date_id</code>.
                 </div>
             </div>
         </div>

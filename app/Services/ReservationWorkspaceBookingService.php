@@ -22,7 +22,7 @@ final class ReservationWorkspaceBookingService
     /**
      * @param  array<int, array<string, mixed>>  $passengersNormalized
      * @param  array<int, mixed>  $extrasPayload
-     * @return array{authoritative_total: float, booking_snapshot: array<string, mixed>}
+     * @return array{authoritative_total: float, resolved_travel_date_id: ?int, booking_snapshot: array<string, mixed>}
      */
     public function validateWorkspaceStoreAndResolveTotals(
         Request $request,
@@ -32,7 +32,7 @@ final class ReservationWorkspaceBookingService
     ): array {
         $voyage = Voyage::query()->findOrFail((int) $request->input('tour_id'));
         $prestationType = $request->string('prestation_type')->toString();
-        $travelDateId = $request->filled('travel_date_id') ? (int) $request->input('travel_date_id') : null;
+        $travelDateFromRequest = $request->filled('travel_date_id') ? (int) $request->input('travel_date_id') : null;
 
         $row = $this->catalog->findCatalogRowForBooking($voyage, $prestationType, $user);
         if ($row === null) {
@@ -47,6 +47,8 @@ final class ReservationWorkspaceBookingService
                 'tour_id' => ['Données catalogue indisponibles pour ce voyage.'],
             ]);
         }
+
+        $travelDateId = $this->resolvePersistedTravelDateId($travelDateFromRequest, $prestationType, $prefill);
 
         $this->validateTravelDate($voyage, $travelDateId, $prefill, $prestationType);
 
@@ -68,6 +70,7 @@ final class ReservationWorkspaceBookingService
 
         return [
             'authoritative_total' => $serverTotal,
+            'resolved_travel_date_id' => $travelDateId,
             'booking_snapshot' => [
                 'catalog_row_code' => $row['code'] ?? null,
                 'catalog_type' => $row['type'] ?? null,
@@ -86,6 +89,42 @@ final class ReservationWorkspaceBookingService
                 'computed_at' => now()->toIso8601String(),
             ],
         ];
+    }
+
+    /**
+     * Réconcilie la date de départ persistée : requête POST, défaut catalogue, ou seule date disponible.
+     * Évite les réservations enregistrées sans {@see TravelDate} id alors que le catalogue / le lien participants en ont une.
+     *
+     * @param  array<string, mixed>  $prefill
+     */
+    private function resolvePersistedTravelDateId(?int $fromRequest, string $prestationType, array $prefill): ?int
+    {
+        if ($fromRequest !== null && $fromRequest > 0) {
+            return $fromRequest;
+        }
+
+        $defaultId = isset($prefill['default_travel_date_id']) ? (int) $prefill['default_travel_date_id'] : 0;
+        if ($defaultId > 0) {
+            return $defaultId;
+        }
+
+        $formTd = isset($prefill['form']['travel_date_id']) ? (int) $prefill['form']['travel_date_id'] : 0;
+        if ($formTd > 0) {
+            return $formTd;
+        }
+
+        $dates = $prefill['travel_dates'] ?? [];
+        if (is_array($dates) && count($dates) === 1) {
+            $only = $dates[0];
+            if (is_array($only)) {
+                $id = isset($only['id']) ? (int) $only['id'] : 0;
+                if ($id > 0) {
+                    return $id;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function validateTravelDate(Voyage $voyage, ?int $travelDateId, array $prefill, string $prestationType): void
