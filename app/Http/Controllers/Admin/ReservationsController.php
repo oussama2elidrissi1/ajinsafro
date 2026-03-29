@@ -262,6 +262,11 @@ class ReservationsController extends Controller
         $data['sales_manager_id'] = $user->branch?->manager_user_id;
         $data['created_by'] = $user->id;
 
+        $voyageRef = Voyage::query()->find((int) $data['tour_id']);
+        $data['wp_tour_post_id'] = $voyageRef && $voyageRef->wp_post_id ? (int) $voyageRef->wp_post_id : null;
+        $data['catalog_source_code'] = null;
+        $data['voyage_flight_id'] = null;
+
         $reservation = $this->reservationService->create(
             $data,
             $request->file('payment_receipt'),

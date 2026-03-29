@@ -8,8 +8,6 @@ use App\Models\ReservationRoom;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Models\Voyage;
-use App\Services\PartnerCommissionService;
-use App\Services\WordPressMediaService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -230,6 +228,18 @@ class ReservationService
         }
         if (array_key_exists('updated_by', $data)) {
             $reservation->updated_by = $data['updated_by'];
+        }
+        if (array_key_exists('wp_tour_post_id', $data)) {
+            $wp = $data['wp_tour_post_id'];
+            $reservation->wp_tour_post_id = $wp !== null && $wp !== '' ? (int) $wp : null;
+        }
+        if (array_key_exists('catalog_source_code', $data)) {
+            $c = $data['catalog_source_code'];
+            $reservation->catalog_source_code = $c !== null && $c !== '' ? (string) $c : null;
+        }
+        if (array_key_exists('voyage_flight_id', $data)) {
+            $vf = $data['voyage_flight_id'];
+            $reservation->voyage_flight_id = $vf !== null && $vf !== '' ? (int) $vf : null;
         }
     }
 

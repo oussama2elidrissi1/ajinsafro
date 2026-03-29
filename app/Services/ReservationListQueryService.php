@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Reservation;
 use App\Models\User;
-use App\Models\Voyage;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -38,7 +37,7 @@ final class ReservationListQueryService
             return $q;
         }
 
-        $ids = Voyage::allIdsSharingWpTour($tourId);
+        $ids = ReservationLinkResolver::physicalTourIdsForVoyage($tourId);
         if (count($ids) === 1) {
             $q->where('tour_id', $ids[0]);
         } else {

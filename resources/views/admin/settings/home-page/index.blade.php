@@ -698,12 +698,102 @@
 
             {{-- Promotions — 3 visuels (titre + images) --}}
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Explorez plus (promotions)</h5></div>
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="card-title mb-0">Explorez plus (promotions)</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="promo-add-item">Ajouter une card</button>
+                </div>
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Titre de la section</label>
                         <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Explorez plus, voyagez mieux avec AjinSafro')) }}" placeholder="Ex. Explorez plus, voyagez mieux avec AjinSafro">
                     </div>
+                    <p class="text-muted small mb-3">Gérez ici les cards du slider compact. Vous pouvez ajouter, réordonner, activer ou désactiver chaque bannière promo, puis remplacer son image si nécessaire.</p>
+                    @php
+                        $promoItems = old('promotions.items', data_get($settings, 'promotions.items', []));
+                        $promoItems = is_array($promoItems) ? $promoItems : [];
+                    @endphp
+                    <div id="promo-items-container" class="vstack gap-3 mb-3">
+                        @foreach($promoItems as $pi => $promoItem)
+                            @php
+                                $promoItem = is_array($promoItem) ? $promoItem : [];
+                                $promoTitle = old("promotions.items.$pi.title", data_get($promoItem, 'title', ''));
+                                $promoSubtitle = old("promotions.items.$pi.subtitle", data_get($promoItem, 'subtitle', data_get($promoItem, 'description', '')));
+                                $promoImage = old("promotions.items.$pi.image_url", data_get($promoItem, 'image_url', data_get($promoItem, 'image', '')));
+                                $promoButtonText = old("promotions.items.$pi.button_text", data_get($promoItem, 'button_text', ''));
+                                $promoButtonUrl = old("promotions.items.$pi.button_url", data_get($promoItem, 'button_url', ''));
+                                $promoSort = old("promotions.items.$pi.sort_order", data_get($promoItem, 'sort_order', data_get($promoItem, 'order', $pi)));
+                                $promoActive = old("promotions.items.$pi.is_active", data_get($promoItem, 'is_active', data_get($promoItem, 'active', true)));
+                                $promoRemoveImage = old("promotion_item_remove_image.$pi", 0);
+                            @endphp
+                            <div class="border rounded p-3 promo-row bg-light" data-index="{{ $pi }}">
+                                <div class="row g-3">
+                                    <div class="col-auto d-flex flex-column gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary promo-move-up" title="Monter">↑</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary promo-move-down" title="Descendre">↓</button>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4">
+                                        <label class="form-label small mb-1">Titre</label>
+                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][title]" value="{{ $promoTitle }}" placeholder="Titre de la card">
+                                    </div>
+                                    <div class="col-xl-4 col-lg-5">
+                                        <label class="form-label small mb-1">Sous-titre</label>
+                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][subtitle]" value="{{ $promoSubtitle }}" placeholder="Texte court lisible sur la bannière">
+                                    </div>
+                                    <div class="col-xl-2 col-md-3">
+                                        <label class="form-label small mb-1">Ordre</label>
+                                        <input type="number" class="form-control form-control-sm promo-order" name="promotions[items][{{ $pi }}][sort_order]" value="{{ $promoSort }}" min="0">
+                                    </div>
+                                    <div class="col-auto">
+                                        <label class="form-label small d-block mb-1">État</label>
+                                        <input type="hidden" name="promotions[items][{{ $pi }}][is_active]" value="0">
+                                        <div class="form-check form-switch mt-1">
+                                            <input class="form-check-input" type="checkbox" name="promotions[items][{{ $pi }}][is_active]" value="1" {{ (string) $promoActive === '0' ? '' : ($promoActive ? 'checked' : '') }}>
+                                            <label class="form-check-label small">Actif</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto ms-auto">
+                                        <label class="form-label small d-block mb-1 opacity-0">Action</label>
+                                        <button type="button" class="btn btn-sm btn-outline-danger promo-remove">Supprimer</button>
+                                    </div>
+                                    <div class="col-xl-6">
+                                        <label class="form-label small mb-1">Image URL</label>
+                                        <input type="text" class="form-control form-control-sm promo-image-url" name="promotions[items][{{ $pi }}][image_url]" value="{{ $promoImage }}" placeholder="https://...">
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <label class="form-label small mb-1">Remplacer (upload)</label>
+                                        <input type="file" class="form-control form-control-sm" name="promotion_item_files[{{ $pi }}]" accept="image/*">
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <label class="form-label small d-block mb-1">Image actuelle</label>
+                                        <div class="form-check mt-1">
+                                            <input type="hidden" name="promotion_item_remove_image[{{ $pi }}]" value="0">
+                                            <input class="form-check-input" type="checkbox" name="promotion_item_remove_image[{{ $pi }}]" value="1" {{ (string) $promoRemoveImage === '1' ? 'checked' : '' }}>
+                                            <label class="form-check-label small">Supprimer l’image</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-4">
+                                        <label class="form-label small mb-1">Texte bouton</label>
+                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][button_text]" value="{{ $promoButtonText }}" placeholder="Découvrir">
+                                    </div>
+                                    <div class="col-xl-5 col-md-8">
+                                        <label class="form-label small mb-1">Lien bouton</label>
+                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][button_url]" value="{{ $promoButtonUrl }}" placeholder="https://... ou /voyages">
+                                    </div>
+                                    <div class="col-xl-4">
+                                        <label class="form-label small d-block mb-1">Aperçu compact</label>
+                                        <div class="promo-preview">
+                                            <div class="promo-preview__img" @if($promoImage) style="background-image:url('{{ e($promoImage) }}')" @endif></div>
+                                            <div class="promo-preview__body">
+                                                <div class="promo-preview__title">{{ $promoTitle !== '' ? $promoTitle : 'Titre de la card' }}</div>
+                                                <div class="promo-preview__subtitle">{{ $promoSubtitle !== '' ? $promoSubtitle : 'Sous-titre de la bannière promo' }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <fieldset class="d-none" disabled>
                     <p class="text-muted small mb-3">Trois images affichées côte à côte sur la page d’accueil. Corrigez l’URL si besoin ou uploadez un fichier. Laissez vide ou cochez « Supprimer » pour retirer une carte.</p>
                     @php
                         $promoImages = old('promotions.images', data_get($settings, 'promotions.images', ['', '', '']));
@@ -743,6 +833,7 @@
                         </div>
                         @endforeach
                     </div>
+                    </fieldset>
                 </div>
             </div>
 
@@ -874,6 +965,37 @@
 <style>
 .holiday-preview__img {
     flex: 0 0 64px;
+}
+.promo-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 84px;
+    padding: 10px 12px;
+    border: 1px solid #e9eef5;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+.promo-preview__img {
+    flex: 0 0 96px;
+    width: 96px;
+    height: 60px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.promo-preview__title {
+    font-weight: 700;
+    color: #0e3a5a;
+    line-height: 1.3;
+}
+.promo-preview__subtitle {
+    color: #6b7280;
+    font-size: .8125rem;
+    margin-top: 4px;
+    line-height: 1.4;
 }
 </style>
 @endpush
@@ -1236,6 +1358,110 @@
     }
 
     /* ── Destinations par région (DBR) ─────────── */
+    /* ── Promotions items repeater ───────────── */
+    var promoContainer = document.getElementById('promo-items-container');
+    var promoAddBtn = document.getElementById('promo-add-item');
+    function promoRowHtml(idx) {
+        return '<div class="border rounded p-3 promo-row bg-light" data-index="' + idx + '">' +
+            '<div class="row g-3">' +
+            '<div class="col-auto d-flex flex-column gap-1">' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary promo-move-up" title="Monter">↑</button>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary promo-move-down" title="Descendre">↓</button>' +
+            '</div>' +
+            '<div class="col-xl-3 col-lg-4"><label class="form-label small mb-1">Titre</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][title]" placeholder="Titre de la card"></div>' +
+            '<div class="col-xl-4 col-lg-5"><label class="form-label small mb-1">Sous-titre</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][subtitle]" placeholder="Texte court lisible sur la bannière"></div>' +
+            '<div class="col-xl-2 col-md-3"><label class="form-label small mb-1">Ordre</label><input type="number" class="form-control form-control-sm promo-order" name="promotions[items][' + idx + '][sort_order]" value="' + idx + '" min="0"></div>' +
+            '<div class="col-auto"><label class="form-label small d-block mb-1">État</label><input type="hidden" name="promotions[items][' + idx + '][is_active]" value="0"><div class="form-check form-switch mt-1"><input class="form-check-input" type="checkbox" name="promotions[items][' + idx + '][is_active]" value="1" checked><label class="form-check-label small">Actif</label></div></div>' +
+            '<div class="col-auto ms-auto"><label class="form-label small d-block mb-1 opacity-0">Action</label><button type="button" class="btn btn-sm btn-outline-danger promo-remove">Supprimer</button></div>' +
+            '<div class="col-xl-6"><label class="form-label small mb-1">Image URL</label><input type="text" class="form-control form-control-sm promo-image-url" name="promotions[items][' + idx + '][image_url]" placeholder="https://..."></div>' +
+            '<div class="col-xl-3 col-md-6"><label class="form-label small mb-1">Remplacer (upload)</label><input type="file" class="form-control form-control-sm" name="promotion_item_files[' + idx + ']" accept="image/*"></div>' +
+            '<div class="col-xl-3 col-md-6"><label class="form-label small d-block mb-1">Image actuelle</label><div class="form-check mt-1"><input type="hidden" name="promotion_item_remove_image[' + idx + ']" value="0"><input class="form-check-input" type="checkbox" name="promotion_item_remove_image[' + idx + ']" value="1"><label class="form-check-label small">Supprimer l’image</label></div></div>' +
+            '<div class="col-xl-3 col-md-4"><label class="form-label small mb-1">Texte bouton</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][button_text]" placeholder="Découvrir"></div>' +
+            '<div class="col-xl-5 col-md-8"><label class="form-label small mb-1">Lien bouton</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][button_url]" placeholder="https://... ou /voyages"></div>' +
+            '<div class="col-xl-4"><label class="form-label small d-block mb-1">Aperçu compact</label><div class="promo-preview"><div class="promo-preview__img"></div><div class="promo-preview__body"><div class="promo-preview__title">Titre de la card</div><div class="promo-preview__subtitle">Sous-titre de la bannière promo</div></div></div></div>' +
+            '</div></div>';
+    }
+    function updatePromoPreview(row) {
+        if (!row) return;
+        var title = row.querySelector('input[name*="[title]"]');
+        var subtitle = row.querySelector('input[name*="[subtitle]"]');
+        var image = row.querySelector('.promo-image-url');
+        var previewTitle = row.querySelector('.promo-preview__title');
+        var previewSubtitle = row.querySelector('.promo-preview__subtitle');
+        var previewImage = row.querySelector('.promo-preview__img');
+        if (previewTitle) previewTitle.textContent = title && title.value ? title.value : 'Titre de la card';
+        if (previewSubtitle) previewSubtitle.textContent = subtitle && subtitle.value ? subtitle.value : 'Sous-titre de la bannière promo';
+        if (previewImage) {
+            var imageValue = image && image.value ? image.value.trim() : '';
+            previewImage.style.backgroundImage = imageValue ? 'url("' + imageValue.replace(/"/g, '\\"') + '")' : '';
+        }
+    }
+    function promoRenumber() {
+        if (!promoContainer) return;
+        promoContainer.querySelectorAll('.promo-row').forEach(function (row, idx) {
+            row.setAttribute('data-index', idx);
+            row.querySelectorAll('[name^="promotions[items]"]').forEach(function (input) {
+                input.name = input.name.replace(/promotions\[items\]\[\d+\]/, 'promotions[items][' + idx + ']');
+            });
+            row.querySelectorAll('[name^="promotion_item_files"]').forEach(function (input) {
+                input.name = 'promotion_item_files[' + idx + ']';
+            });
+            row.querySelectorAll('[name^="promotion_item_remove_image"]').forEach(function (input) {
+                input.name = 'promotion_item_remove_image[' + idx + ']';
+            });
+            var orderInput = row.querySelector('.promo-order');
+            if (orderInput) {
+                orderInput.name = 'promotions[items][' + idx + '][sort_order]';
+                orderInput.value = idx;
+            }
+        });
+    }
+    if (promoAddBtn && promoContainer) {
+        promoContainer.querySelectorAll('.promo-row').forEach(function (row) { updatePromoPreview(row); });
+        if (!promoContainer.querySelector('.promo-row')) {
+            promoContainer.insertAdjacentHTML('beforeend', promoRowHtml(0));
+        }
+        promoAddBtn.addEventListener('click', function () {
+            var idx = promoContainer.querySelectorAll('.promo-row').length;
+            promoContainer.insertAdjacentHTML('beforeend', promoRowHtml(idx));
+            var rows = promoContainer.querySelectorAll('.promo-row');
+            updatePromoPreview(rows[rows.length - 1]);
+        });
+        promoContainer.addEventListener('click', function (e) {
+            var target = e.target;
+            if (target.classList.contains('promo-remove')) {
+                var removeRow = target.closest('.promo-row');
+                if (removeRow) {
+                    removeRow.remove();
+                    promoRenumber();
+                    if (!promoContainer.querySelector('.promo-row')) {
+                        promoContainer.insertAdjacentHTML('beforeend', promoRowHtml(0));
+                    }
+                }
+            }
+            if (target.classList.contains('promo-move-up')) {
+                var upRow = target.closest('.promo-row');
+                if (upRow && upRow.previousElementSibling) {
+                    promoContainer.insertBefore(upRow, upRow.previousElementSibling);
+                    promoRenumber();
+                }
+            }
+            if (target.classList.contains('promo-move-down')) {
+                var downRow = target.closest('.promo-row');
+                if (downRow && downRow.nextElementSibling) {
+                    promoContainer.insertBefore(downRow.nextElementSibling, downRow);
+                    promoRenumber();
+                }
+            }
+        });
+        promoContainer.addEventListener('input', function (e) {
+            var row = e.target.closest('.promo-row');
+            if (row) {
+                updatePromoPreview(row);
+            }
+        });
+    }
+
     var dbrContainer = document.getElementById('dbr-items-container');
     var dbrAddBtn = document.getElementById('dbr-add-item');
     function dbrRowHtml(idx, order, label, imageUrl, linkUrl) {

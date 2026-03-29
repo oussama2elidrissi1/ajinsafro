@@ -138,6 +138,14 @@ class ReservationWorkspaceController extends Controller
             $extrasPayload,
         );
 
+        $voyageForMeta = Voyage::query()->findOrFail((int) $request->input('tour_id'));
+        $catalogRow = $this->catalog->findCatalogRowForBooking(
+            $voyageForMeta,
+            $request->string('prestation_type')->toString(),
+            $user
+        );
+        $catalogRow = is_array($catalogRow) ? $catalogRow : [];
+
         $docPaths = [];
         foreach ($request->file('workspace_documents', []) as $file) {
             if ($file && $file->isValid()) {
@@ -198,6 +206,9 @@ class ReservationWorkspaceController extends Controller
             'agent_id' => $user->id,
             'created_by' => $user->id,
             'hotel_rooms' => [],
+            'wp_tour_post_id' => $voyageForMeta->wp_post_id ? (int) $voyageForMeta->wp_post_id : null,
+            'catalog_source_code' => $catalogRow['code'] ?? null,
+            'voyage_flight_id' => isset($catalogRow['flight_id']) ? (int) $catalogRow['flight_id'] : null,
         ];
 
         if ($request->string('client_mode')->toString() === 'new') {

@@ -19,15 +19,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Catalogue workspace : une ligne « package » par tour WordPress (même liste que /admin/circuits/voyages).
- * Titre / code = WordPress. Prix package = même source que Circuits / voyages : meta WP {@see WpPost::getMeta('adult_price')}.
- * Si absent, repli {@see Voyage::price_from}.
- * Date de départ package = section « Disponibilité » du CRUD voyage : {@see TravelDate} (wp.aj_travel_dates, travel_id = wp_post_id),
- * synchronisée par {@see VoyageController::syncTravelDates()} depuis le formulaire travel_dates[*].
- * Vols / hébergements : {@see Voyage::departures()} inchangé pour l’alignement date ↔ travel_date_id.
- *
- * Places / chambres : {@see TourHotel} (wp.aj_tour_hotels.tour_id = ID WordPress du tour) + {@see TourHotelRoom}
- * (wp.aj_tour_hotel_rooms). Calcul identique à l’édition voyage : {@see TourPlacesCalculator::explainFromDatabase()}.
+ * Catalogue workspace : packages WordPress, packages Laravel sans wp_post_id (code LVL-*), vols, hébergements.
+ * Stats / passagers : {@see ReservationLinkResolver::workspaceStatsTourIdUniverse} + agrégation par ids voyage étendus.
+ * Vols : tous les {@see VoyageFlight}. Dates {@see TravelDate} : travel_id = wp_post_id ou id fiche Laravel si pas de WP.
  */
 class ReservationWorkspaceCatalogService
 {
@@ -125,8 +119,9 @@ class ReservationWorkspaceCatalogService
         }
 
         $laravelIdsForExtras = $voyagesByWp->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
-        $statsByTour = $this->batchReservationStatsByTour($user, $laravelIdsForExtras);
-        $passengersByTour = $this->batchPassengersBookedByTour($user, $laravelIdsForExtras);
+        $statsTourUniverse = ReservationLinkResolver::workspaceStatsTourIdUniverse($voyagesByWp);
+        $statsByTour = $this->batchReservationStatsByTour($user, $statsTourUniverse);
+        $passengersByTour = $this->batchPassengersBookedByTour($user, $statsTourUniverse);
 
         $extraWpMetaByPostId = [];
         if ($wpIds !== []) {
@@ -314,6 +309,8 @@ class ReservationWorkspaceCatalogService
             ]);
         }
 
+        $this->pushLaravelNativePackageRows($rows, $today, $statsByTour, $passengersByTour);
+
         if (config('app.debug')) {
             $meta['package_price_debug'] = $packagePriceDebug;
             $meta['package_departure_debug'] = $packageDepartureDebug;
@@ -335,7 +332,6 @@ class ReservationWorkspaceCatalogService
 
         $flightQuery = VoyageFlight::query()
             ->with('voyage')
-            ->whereIn('voyage_id', $laravelIdsForExtras ?: [0])
             ->orderBy('departure_date');
 
         foreach ($flightQuery->get() as $flight) {
@@ -1276,15 +1272,173 @@ class ReservationWorkspaceCatalogService
 
     private function resolveTravelDateId(Voyage $voyage, $date): ?int
     {
-        if (! $voyage->wp_post_id || $date === null) {
+        if ($date === null) {
+            return null;
+        }
+        $travelKey = $voyage->wp_post_id ? (int) $voyage->wp_post_id : (int) $voyage->id;
+        if ($travelKey <= 0) {
             return null;
         }
         $d = $date instanceof Carbon ? $date->toDateString() : Carbon::parse($date)->toDateString();
 
         return TravelDate::query()
-            ->where('travel_id', (int) $voyage->wp_post_id)
+            ->where('travel_id', $travelKey)
             ->whereDate('date', $d)
             ->where('is_active', true)
             ->value('id');
+    }
+
+    /**
+     * Packages pour fiches {@see Voyage} sans wp_post_id (réservables hors catalogue WordPress).
+     *
+     * @param  array<int, array{validee: int, en_cours: int, annulee: int}>  $statsByTour
+     * @param  array<int, int>  $passengersByTour
+     */
+    private function pushLaravelNativePackageRows(
+        Collection $rows,
+        Carbon $today,
+        array $statsByTour,
+        array $passengersByTour,
+    ): void {
+        foreach (
+            Voyage::query()
+                ->whereNull('wp_post_id')
+                ->orderBy('name')
+                ->limit(200)
+                ->get() as $voyage
+        ) {
+            $tid = (int) $voyage->id;
+            if (VoyageFlight::query()->where('voyage_id', $tid)->exists()) {
+                continue;
+            }
+            if ($rows->contains(fn ($r) => ($r['type'] ?? '') === 'package' && (int) ($r['voyage_id'] ?? 0) === $tid)) {
+                continue;
+            }
+
+            $rowStats = $statsByTour[$tid] ?? $this->emptyStats();
+            $paxBooked = (int) ($passengersByTour[$tid] ?? 0);
+            $packageModalDetail = $this->buildLaravelNativePackageModalPayload($voyage, $rowStats, $paxBooked, $today);
+            $travelDateId = $packageModalDetail['form']['travel_date_id'] ?? null;
+            $travelDatesList = $packageModalDetail['travel_dates'] ?? [];
+            $hasFuture = $travelDatesList !== [] && collect($travelDatesList)->contains(fn ($d) => empty($d['is_past']));
+
+            $rows->push([
+                'type' => 'package',
+                'code' => 'LVL-'.$tid,
+                'name' => $voyage->name ?: 'Voyage #'.$tid,
+                'subtitle' => 'Fiche Laravel (sans tour WordPress)',
+                'voyage_id' => $tid,
+                'wp_post_id' => null,
+                'laravel_synced' => true,
+                'departure_id' => null,
+                'flight_id' => null,
+                'tour_hotel_wp_id' => null,
+                'travel_date_id' => $travelDateId,
+                'departure_date' => null,
+                'departure_is_past' => false,
+                'departure_is_canceled' => false,
+                'price_label' => $this->formatVoyagePriceLabel($voyage),
+                'voyage_destination' => $voyage->destination && trim((string) $voyage->destination) !== ''
+                    ? trim((string) $voyage->destination)
+                    : null,
+                'stats' => $rowStats,
+                'places_state' => 'na',
+                'places_total' => null,
+                'places_lines' => [],
+                'places_ignored' => [],
+                'ws_avail' => $hasFuture ? 'ok' : 'na',
+                'ws_has_future' => $hasFuture,
+                'modal_detail' => $packageModalDetail,
+                'form_prefill' => $this->buildPackageFormPrefill(
+                    'LVL-'.$tid,
+                    $packageModalDetail,
+                    $voyage->price_from !== null ? (float) $voyage->price_from : null,
+                    null
+                ),
+            ]);
+        }
+    }
+
+    /**
+     * @param  array{validee: int, en_cours: int, annulee: int}  $stats
+     * @return array<string, mixed>
+     */
+    private function buildLaravelNativePackageModalPayload(Voyage $voyage, array $stats, int $paxBooked, Carbon $today): array
+    {
+        $tid = (int) $voyage->id;
+        $tdColl = TravelDate::query()
+            ->where('travel_id', $tid)
+            ->where('is_active', true)
+            ->orderBy('date')
+            ->get();
+
+        $pickTd = $this->pickTravelDateForPackageDisplay($tdColl, $today);
+        $pickedTd = $pickTd['travelDate'];
+        $preferredTravelDateId = $pickedTd?->id;
+
+        $travelDates = [];
+        foreach ($tdColl->filter(fn ($d) => $d instanceof TravelDate && $d->date) as $td) {
+            $travelDates[] = [
+                'id' => $td->id,
+                'date_iso' => $td->date->format('Y-m-d'),
+                'date_label' => $this->formatFrenchLongDate($td->date),
+                'is_past' => $td->date->lt($today),
+            ];
+        }
+
+        $currency = trim((string) ($voyage->currency ?? '')) !== ''
+            ? trim((string) $voyage->currency)
+            : 'MAD';
+        $priceLabel = $this->formatVoyagePriceLabel($voyage);
+        $band = $this->computeWorkspaceAvailabilityBand(['state' => 'na', 'total' => null], $paxBooked);
+
+        return [
+            'kind' => 'package',
+            'title' => $voyage->name ?: 'Voyage #'.$tid,
+            'wp_post_id' => null,
+            'laravel_voyage_id' => $tid,
+            'post_status' => null,
+            'post_status_label' => 'Laravel',
+            'destination' => $voyage->destination && trim((string) $voyage->destination) !== ''
+                ? trim((string) $voyage->destination)
+                : null,
+            'duration' => $this->resolveDurationLabel($voyage, null),
+            'travel_dates' => $travelDates,
+            'places' => [
+                'state' => 'na',
+                'total' => null,
+                'reserved' => $paxBooked,
+                'remaining' => null,
+                'fill_pct' => null,
+            ],
+            'rooms' => [],
+            'prices' => [
+                'adult_label' => $priceLabel,
+                'child_label' => null,
+                'currency' => $currency,
+            ],
+            'stats' => $stats,
+            'stats_total' => ($stats['validee'] ?? 0) + ($stats['en_cours'] ?? 0) + ($stats['annulee'] ?? 0),
+            'availability_band' => $band,
+            'laravel_synced' => true,
+            'prestation_type' => 'package',
+            'form' => [
+                'tour_id' => $tid,
+                'travel_date_id' => $preferredTravelDateId,
+                'prestation_type' => 'package',
+                'label' => ($voyage->name ?: 'Voyage').' · Laravel',
+            ],
+            'routes' => [
+                'reservations' => route('admin.reservations.index', array_filter([
+                    'voyage_id' => $tid,
+                    'travel_date_id' => $preferredTravelDateId,
+                ], fn ($v) => $v !== null && $v !== '')),
+                'create' => route('admin.reservations.create', array_filter([
+                    'tour_id' => $tid,
+                    'travel_date_id' => $preferredTravelDateId,
+                ], fn ($v) => $v !== null && $v !== '')),
+                'edit_voyage' => null,
+            ],
+        ];
     }
 }

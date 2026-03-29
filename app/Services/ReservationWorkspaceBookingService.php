@@ -143,16 +143,12 @@ final class ReservationWorkspaceBookingService
         }
 
         $td = TravelDate::query()->find($travelDateId);
-        if (! $td || ! $voyage->wp_post_id) {
+        if (! $td) {
             throw ValidationException::withMessages([
                 'travel_date_id' => ['Date de départ invalide.'],
             ]);
         }
-        if ((int) $td->travel_id !== (int) $voyage->wp_post_id) {
-            throw ValidationException::withMessages([
-                'travel_date_id' => ['Cette date ne correspond pas au tour WordPress du voyage.'],
-            ]);
-        }
+        ReservationLinkResolver::assertTravelDateBelongsToVoyage($voyage, $td);
         if (! $td->is_active) {
             throw ValidationException::withMessages([
                 'travel_date_id' => ['Cette date n’est plus active.'],

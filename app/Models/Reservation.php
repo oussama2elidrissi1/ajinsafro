@@ -15,17 +15,24 @@ class Reservation extends Model
 
     protected $table = 'reservations';
 
-    public const STATUS_EN_COURS  = 'EN_COURS';
-    public const STATUS_VALIDEE   = 'VALIDEE';
-    public const STATUS_ANNULEE   = 'ANNULEE';
+    public const STATUS_EN_COURS = 'EN_COURS';
+
+    public const STATUS_VALIDEE = 'VALIDEE';
+
+    public const STATUS_ANNULEE = 'ANNULEE';
 
     public const PAYMENT_CASHPLUS = 'CASHPLUS';
+
     public const PAYMENT_VIREMENT = 'VIREMENT';
-    public const PAYMENT_ESPECE   = 'ESPECE';
+
+    public const PAYMENT_ESPECE = 'ESPECE';
 
     public const VISA_STATUS_NOT_REQUIRED = 'not_required';
+
     public const VISA_STATUS_PENDING = 'pending';
+
     public const VISA_STATUS_APPROVED = 'approved';
+
     public const VISA_STATUS_REJECTED = 'rejected';
 
     protected $fillable = [
@@ -34,6 +41,9 @@ class Reservation extends Model
         'sales_manager_id',
         'agent_id',
         'tour_id',
+        'wp_tour_post_id',
+        'catalog_source_code',
+        'voyage_flight_id',
         'prestation_type',
         'travel_date_id',
         'client_mode',
@@ -59,14 +69,16 @@ class Reservation extends Model
     ];
 
     protected $casts = [
-        'tour_id'          => 'integer',
-        'travel_date_id'   => 'integer',
+        'tour_id' => 'integer',
+        'wp_tour_post_id' => 'integer',
+        'voyage_flight_id' => 'integer',
+        'travel_date_id' => 'integer',
         'client_external_id' => 'integer',
         'passengers_count' => 'integer',
         'base_price' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'room_supplement_total' => 'decimal:2',
-        'visa_ok'          => 'boolean',
+        'visa_ok' => 'boolean',
     ];
 
     public function reservationRooms(): HasMany
@@ -145,6 +157,7 @@ class Reservation extends Model
     public function getWpTourId(): ?int
     {
         $voyage = $this->tour;
+
         return $voyage && $voyage->wp_post_id ? (int) $voyage->wp_post_id : null;
     }
 
@@ -158,7 +171,7 @@ class Reservation extends Model
         if ($base === null && $supp === null) {
             return null;
         }
+
         return ($base ?? 0) + ($supp ?? 0);
     }
 }
-

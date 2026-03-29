@@ -143,10 +143,20 @@ class HomePageSettingsController extends Controller
                 'holiday_theme_item_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
 
                 'promotions.title' => ['nullable', 'string', 'max:255'],
+                'promotions.items' => ['nullable', 'array'],
+                'promotions.items.*.title' => ['nullable', 'string', 'max:255'],
+                'promotions.items.*.subtitle' => ['nullable', 'string', 'max:1000'],
+                'promotions.items.*.image_url' => ['nullable', 'string', 'max:2048'],
+                'promotions.items.*.button_text' => ['nullable', 'string', 'max:120'],
+                'promotions.items.*.button_url' => ['nullable', 'string', 'max:2048'],
+                'promotions.items.*.is_active' => ['nullable', 'boolean'],
+                'promotions.items.*.sort_order' => ['nullable', 'integer', 'min:0'],
                 'promotions.images' => ['nullable', 'array'],
                 'promotions.images.0' => ['nullable', 'string', 'max:2048'],
                 'promotions.images.1' => ['nullable', 'string', 'max:2048'],
                 'promotions.images.2' => ['nullable', 'string', 'max:2048'],
+                'promotion_item_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
+                'promotion_item_remove_image.*' => ['nullable', 'boolean'],
                 'promotion_image_1' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
                 'promotion_image_2' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
                 'promotion_image_3' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
@@ -693,6 +703,7 @@ class HomePageSettingsController extends Controller
             'promotions' => [
                 'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
                 'images' => ['', '', ''],
+                'items' => [],
             ],
             'whatsapp_banner' => [
                 'enabled' => false,
