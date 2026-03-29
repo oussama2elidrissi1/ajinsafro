@@ -741,9 +741,11 @@ class VoyageController extends Controller
     /**
      * Sync hotels for tour: replace all by request data (tour_hotels[] or tour_hotel).
      * Règle métier : un seul hôtel par voyage (premier élément conservé si plusieurs).
+     *
+     * @return int[] IDs des enregistrements TourHotel créés, dans l’ordre d’affichage (pour sync des chambres).
      */
-private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): void
-{
+    private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): array
+    {
     $items = [];
 
     $inputHotels = $request->has('tour_hotels') && is_array($request->input('tour_hotels'))
@@ -788,19 +790,22 @@ private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request):
         ];
     }
 
-    TourHotel::where('tour_id', $tourId)->delete();
+        TourHotel::where('tour_id', $tourId)->delete();
 
-    $sortOrder = 0;
+        $sortOrder = 0;
+        $createdIds = [];
 
-    foreach ($items as $data) {
-        $payload = array_merge($data, [
-            'tour_id' => $tourId,
-            'sort_order' => $sortOrder++
-        ]);
+        foreach ($items as $data) {
+            $payload = array_merge($data, [
+                'tour_id' => $tourId,
+                'sort_order' => $sortOrder++,
+            ]);
 
-        TourHotel::create($payload);
+            $createdIds[] = (int) TourHotel::create($payload)->id;
+        }
+
+        return $createdIds;
     }
-}
     /**
      * Sync rooms for each tour hotel. Expects hotel ids in same order as tour_hotels request array.
      */
@@ -911,16 +916,6 @@ private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request):
                 }
             }
             TourHotelRoom::where('tour_hotel_id', $tourHotelId)->whereNotIn('id', $keptRoomIds)->delete();
-            if (array_filter($content, fn ($v) => $v !== null && $v !== '')) {
-                TourHotel::create(array_merge($data, ['tour_id' => $tourId, 'sort_order' => $sortOrder++]));
-            }
-
-            $payload = array_merge($data, [
-                'tour_id' => $tourId,
-                'sort_order' => $sortOrder++
-            ]);
-
-            TourHotel::create($payload);
         }
     }
 
@@ -1364,7 +1359,7 @@ private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request):
                 }
             }
 
-            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row par jour + chambres par hôtel
+            // Hôtels puis chambres (IDs nouveaux après delete/create) — un seul sync hôtels
             $hotelIdsOrdered = $this->syncTourHotels($id, $request);
             $this->syncTourHotelRooms($id, $request, $hotelIdsOrdered);
 
@@ -1372,8 +1367,6 @@ private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request):
             $totalPlaces = $this->computeTourTotalPlacesFromRooms($id);
             $this->repository->updateTour($id, ['max_people' => $totalPlaces, 'places' => $totalPlaces]);
 
-            // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row par jour
-            $this->syncTourHotels($id, $request);
             $this->syncTourTransfers($id, $request, $lastDayNumber);
 
             // Synchroniser les lieux de départ et les dates disponibles
