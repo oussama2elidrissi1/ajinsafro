@@ -43,6 +43,58 @@ class ReservationsController extends Controller
     }
 
     /**
+     * JSON debug : toutes les réservations du périmètre courant (mêmes filtres que le hub), max 500.
+     * Uniquement si APP_DEBUG — pour tester l’affichage / la cohérence des données.
+     */
+    public function hubDebug(Request $request): JsonResponse
+    {
+        abort_unless(config('app.debug'), 404);
+        abort_unless($request->user()->can('reservations.view'), 403);
+
+        $base = $this->hubFilteredReservationBuilder($request);
+        $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
+
+        $rows = (clone $base)
+            ->with(['passengers:id,reservation_id,first_name,last_name', 'tour:id,name,wp_post_id', 'travelDate:id,date'])
+            ->orderByDesc('created_at')
+            ->limit(500)
+            ->get();
+
+        $items = $rows->map(function (Reservation $r) {
+            return [
+                'id' => $r->id,
+                'tour_id' => $r->tour_id,
+                'tour_name' => $r->tour?->name,
+                'tour_wp_post_id' => $r->tour?->wp_post_id,
+                'wp_tour_post_id' => $r->wp_tour_post_id ?? null,
+                'catalog_source_code' => $r->catalog_source_code ?? null,
+                'voyage_flight_id' => $r->voyage_flight_id ?? null,
+                'prestation_type' => $r->prestation_type,
+                'travel_date_id' => $r->travel_date_id,
+                'travel_date' => $r->travelDate?->date?->format('Y-m-d'),
+                'status' => $r->status,
+                'created_at' => $r->created_at?->toIso8601String(),
+                'client_snapshot' => trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')),
+                'passengers_count' => $r->passengers->count(),
+                'passengers_preview' => $r->passengers->take(6)->map(fn ($p) => trim(($p->first_name ?? '').' '.($p->last_name ?? '')))->filter()->values()->all(),
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'hub_stats' => $hubStats,
+            'count' => count($items),
+            'limit' => 500,
+            'filters' => [
+                'voyage_id' => $request->query('voyage_id', $request->query('tour_id')),
+                'travel_date_id' => $request->query('travel_date_id'),
+                'status' => $request->query('status'),
+                'search' => $request->query('search'),
+            ],
+            'reservations' => $items,
+        ]);
+    }
+
+    /**
      * Anciennes URLs (/toutes, /en-attente, /paiements…) → hub avec query équivalente.
      */
     public function page(Request $request): RedirectResponse
@@ -535,9 +587,9 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Liste + stats : une seule base de requête filtrée (identique au tableau paginé).
+     * Requête réservations hub avec les filtres query (liste, stats, debug).
      */
-    protected function renderList(Request $request): View
+    protected function hubFilteredReservationBuilder(Request $request): Builder
     {
         $user = $request->user();
         $base = $this->reservationListQuery->baseQuery($user);
@@ -563,6 +615,31 @@ class ReservationsController extends Controller
             $statusParam = '';
         }
         $this->reservationListQuery->applyStatusFilter($base, $statusParam !== '' ? $statusParam : null);
+
+        return $base;
+    }
+
+    /**
+     * Liste + stats : une seule base de requête filtrée (identique au tableau paginé).
+     */
+    protected function renderList(Request $request): View
+    {
+        $base = $this->hubFilteredReservationBuilder($request);
+
+        $tourFilter = (int) $request->query('voyage_id', 0);
+        if ($tourFilter <= 0) {
+            $tourFilter = (int) $request->query('tour_id', 0);
+        }
+        $travelDateFilter = (int) $request->query('travel_date_id', 0);
+        $search = (string) $request->query('search', '');
+        $statusParam = (string) $request->query('status', '');
+        if (! in_array($statusParam, [
+            Reservation::STATUS_EN_COURS,
+            Reservation::STATUS_VALIDEE,
+            Reservation::STATUS_ANNULEE,
+        ], true)) {
+            $statusParam = '';
+        }
 
         $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
 

@@ -133,6 +133,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
         Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');
         Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
+        Route::get('reservations/hub-debug', [ReservationsController::class, 'hubDebug'])->name('reservations.hub-debug');
         Route::get('reservations/{reservation}/panel', [ReservationsController::class, 'panel'])->name('reservations.panel');
         Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
         Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');

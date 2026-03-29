@@ -120,6 +120,7 @@
 
         initSlider('aj-lm-track', '.aj-arrow--prev', '.aj-arrow--next');
         initSlider('aj-accom-track', '.aj-accom-prev', '.aj-accom-next');
+        initSlider('aj-theme-track', '.aj-theme-prev', '.aj-theme-next');
         initSlider('aj-promos-track', '.aj-promos-prev', '.aj-promos-next');
     }
 

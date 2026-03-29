@@ -20,7 +20,11 @@
     <div id="res-hub-root"
          class="d-none"
          data-res-base="{{ rtrim(url('/admin/reservations'), '/') }}"
-         data-csrf="{{ csrf_token() }}"></div>
+         data-csrf="{{ csrf_token() }}"
+         @if(config('app.debug') && auth()->user()->can('reservations.view'))
+         data-hub-debug-url="{{ route('admin.reservations.hub-debug') }}"
+         @endif
+    ></div>
 
     <div class="row mb-3">
         <div class="col-12">
@@ -38,6 +42,11 @@
                     <a href="{{ route('admin.reservations.create') }}" class="btn btn-primary btn-sm">
                         <i class="bx bx-plus me-1"></i> Nouvelle réservation
                     </a>
+                    @if(config('app.debug') && auth()->user()->can('reservations.view'))
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btn-res-hub-debug" data-bs-toggle="modal" data-bs-target="#resHubDebugModal" title="APP_DEBUG : liste brute des réservations (filtres actuels)">
+                            <i class="bx bx-bug me-1"></i> Debug réservations
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -241,6 +250,33 @@
         </div>
     </div>
 
+    @if(config('app.debug') && auth()->user()->can('reservations.view'))
+    {{-- Modal debug : toutes les réservations (même périmètre que le hub, max 500) --}}
+    <div class="modal fade" id="resHubDebugModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Debug — réservations (filtres page actuels)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-2">Données JSON + tableau. Même requête que la liste (agence / portail + filtres GET). Max 500 lignes. Visible uniquement si <code>APP_DEBUG=true</code>.</p>
+                    <ul class="small mb-3" id="resHubDebugMeta"></ul>
+                    <pre class="bg-light border rounded p-2 small mb-3" style="max-height:220px;overflow:auto;" id="resHubDebugJson"></pre>
+                    <div class="table-responsive" style="max-height:50vh;">
+                        <table class="table table-sm table-bordered align-middle mb-0" id="resHubDebugTable">
+                            <thead class="table-light"><tr>
+                                <th>#</th><th>Client</th><th>tour_id</th><th>Voyage</th><th>wp tour</th><th>catalog</th><th>vol id</th><th>prest.</th><th>td id</th><th>Départ</th><th>Statut</th><th>Créée</th><th>Pax</th>
+                            </tr></thead>
+                            <tbody id="resHubDebugTbody"><tr><td colspan="13" class="text-muted">Ouvrez le modal pour charger…</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Modal participants --}}
     <div class="modal fade" id="resHubPaxModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -279,6 +315,7 @@
     var root = document.getElementById('res-hub-root');
     if (!root) return;
     var base = root.getAttribute('data-res-base') || '';
+    var hubDebugUrl = root.getAttribute('data-hub-debug-url') || '';
     function panelUrl(id) { return base + '/' + encodeURIComponent(id) + '/panel'; }
     function editUrl(id) {
         var u = base + '/' + encodeURIComponent(id) + '/edit?embed=1';
@@ -376,6 +413,63 @@
     if (offEl) {
         offEl.addEventListener('hidden.bs.offcanvas', function () {
             if (frame) frame.src = 'about:blank';
+        });
+    }
+
+    var debugModal = document.getElementById('resHubDebugModal');
+    if (debugModal && hubDebugUrl) {
+        debugModal.addEventListener('show.bs.modal', function () {
+            var metaEl = document.getElementById('resHubDebugMeta');
+            var jsonEl = document.getElementById('resHubDebugJson');
+            var tbody = document.getElementById('resHubDebugTbody');
+            if (metaEl) metaEl.innerHTML = '<li>Chargement…</li>';
+            if (jsonEl) jsonEl.textContent = '';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="13" class="text-muted">Chargement…</td></tr>';
+            var u = hubDebugUrl + (window.location.search || '');
+            fetch(u, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
+                .then(function (data) {
+                    if (jsonEl) jsonEl.textContent = JSON.stringify(data, null, 2);
+                    if (metaEl) {
+                        var hs = data.hub_stats || {};
+                        var f = data.filters || {};
+                        metaEl.innerHTML =
+                            '<li><strong>Total filtré (stats)</strong> : ' + esc(String(hs.total ?? '—')) + ' · en cours ' + esc(String(hs.en_cours ?? '—')) + ' · validées ' + esc(String(hs.validee ?? '—')) + ' · annulées ' + esc(String(hs.annulee ?? '—')) + '</li>' +
+                            '<li><strong>Réservations renvoyées</strong> : ' + esc(String(data.count ?? 0)) + ' (plafond ' + esc(String(data.limit ?? 500)) + ')</li>' +
+                            '<li><strong>Filtres GET</strong> : voyage_id=' + esc(String(f.voyage_id || '—')) + ', travel_date_id=' + esc(String(f.travel_date_id || '—')) + ', status=' + esc(String(f.status || '—')) + ', search=' + esc(String(f.search || '—')) + '</li>';
+                    }
+                    if (tbody) {
+                        var list = data.reservations || [];
+                        if (!list.length) {
+                            tbody.innerHTML = '<tr><td colspan="13" class="text-muted">Aucune réservation.</td></tr>';
+                            return;
+                        }
+                        var h = '';
+                        list.forEach(function (row) {
+                            var pax = (row.passengers_preview || []).join(', ') || '—';
+                            h += '<tr>' +
+                                '<td class="text-nowrap">' + esc(String(row.id)) + '</td>' +
+                                '<td class="small">' + esc(row.client_snapshot || '—') + '</td>' +
+                                '<td>' + esc(String(row.tour_id ?? '—')) + '</td>' +
+                                '<td class="small">' + esc(row.tour_name || '—') + '</td>' +
+                                '<td class="small">' + esc(String(row.tour_wp_post_id ?? '—')) + ' / ' + esc(String(row.wp_tour_post_id ?? '—')) + '</td>' +
+                                '<td class="small">' + esc(row.catalog_source_code || '—') + '</td>' +
+                                '<td>' + esc(String(row.voyage_flight_id ?? '—')) + '</td>' +
+                                '<td>' + esc(String(row.prestation_type || '—')) + '</td>' +
+                                '<td>' + esc(String(row.travel_date_id ?? '—')) + '</td>' +
+                                '<td class="small">' + esc(row.travel_date || '—') + '</td>' +
+                                '<td>' + esc(String(row.status || '—')) + '</td>' +
+                                '<td class="small text-nowrap">' + esc((row.created_at || '').replace('T', ' ').slice(0, 19)) + '</td>' +
+                                '<td class="small">' + esc(String(row.passengers_count ?? 0)) + ' · ' + esc(pax) + '</td>' +
+                                '</tr>';
+                        });
+                        tbody.innerHTML = h;
+                    }
+                })
+                .catch(function () {
+                    if (metaEl) metaEl.innerHTML = '<li class="text-danger">Erreur de chargement (vérifiez APP_DEBUG et la route).</li>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="13" class="text-danger">Échec du chargement.</td></tr>';
+                });
         });
     }
 })();

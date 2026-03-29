@@ -3869,3 +3869,143 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
         font-size: .7rem;
     }
 }
+
+/* Final holiday theme sizing overrides */
+.aj-home .aj-theme {
+    padding: 14px 0 18px;
+}
+
+.aj-home .aj-theme__grid {
+    gap: 18px;
+}
+
+.aj-home .aj-theme__left {
+    min-height: 410px;
+    border-radius: 20px;
+}
+
+.aj-home .aj-theme__left-media {
+    height: 166px;
+}
+
+.aj-home .aj-theme__left-content {
+    padding: 18px 18px 16px;
+    gap: 10px;
+}
+
+.aj-home .aj-theme__subtitle {
+    font-size: .9rem;
+    line-height: 1.5;
+    max-width: 34ch;
+}
+
+.aj-home .aj-theme__cta {
+    margin-top: auto;
+    padding: 9px 15px;
+}
+
+.aj-home .aj-theme__right {
+    padding: 14px 16px 8px;
+    border-radius: 20px;
+}
+
+.aj-home .aj-theme .aj-section-head {
+    margin-bottom: 12px;
+}
+
+.aj-home .aj-theme-card {
+    min-height: 365px;
+    min-width: 236px;
+    border-radius: 18px;
+}
+
+.aj-home .aj-theme-card__media {
+    height: 155px;
+}
+
+.aj-home .aj-theme-card__body {
+    padding: 16px;
+    gap: 8px;
+}
+
+.aj-home .aj-theme-card__title {
+    font-size: 1rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.aj-home .aj-theme-card__desc {
+    line-height: 1.45;
+}
+
+.aj-home .aj-theme-card__tags {
+    gap: 6px;
+}
+
+.aj-home .aj-theme-card__tag {
+    padding: 4px 9px;
+}
+
+.aj-home .aj-theme-card__btn {
+    padding: 8px 11px;
+}
+
+@media (max-width: 991.98px) {
+    .aj-home .aj-theme__grid {
+        gap: 16px;
+    }
+
+    .aj-home .aj-theme__left {
+        min-height: 380px;
+    }
+
+    .aj-home .aj-theme__left-media {
+        height: 154px;
+    }
+
+    .aj-home .aj-theme-card {
+        min-height: 340px;
+    }
+
+    .aj-home .aj-theme-card__media {
+        height: 144px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .aj-home .aj-theme {
+        padding: 12px 0 16px;
+    }
+
+    .aj-home .aj-theme__left {
+        min-height: 340px;
+    }
+
+    .aj-home .aj-theme__left-media {
+        height: 146px;
+    }
+
+    .aj-home .aj-theme__left-content {
+        padding: 16px 14px 14px;
+    }
+
+    .aj-home .aj-theme__right {
+        padding: 12px;
+    }
+
+    .aj-home .aj-theme-card {
+        min-height: 320px;
+        min-width: 0;
+    }
+
+    .aj-home .aj-theme-card__media {
+        height: 135px;
+    }
+
+    .aj-home .aj-theme-card__body {
+        padding: 14px;
+    }
+}
