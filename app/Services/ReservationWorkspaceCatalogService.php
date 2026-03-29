@@ -125,6 +125,24 @@ class ReservationWorkspaceCatalogService
 
         $laravelIdsForExtras = $voyagesByWp->pluck('id')->map(fn ($id) => (int) $id)->unique()->values()->all();
         $statsByTour = $this->batchReservationStatsByTour($user, $laravelIdsForExtras);
+        $passengersByTour = $this->batchPassengersBookedByTour($user, $laravelIdsForExtras);
+
+        $extraWpMetaByPostId = [];
+        if ($wpIds !== []) {
+            $extraWpMetaByPostId = WpPostMeta::query()
+                ->whereIn('post_id', $wpIds)
+                ->whereIn('meta_key', ['child_price', 'duration_day'])
+                ->orderBy('meta_id')
+                ->get()
+                ->groupBy(fn (WpPostMeta $m) => (int) $m->post_id)
+                ->map(function (Collection $group) {
+                    return [
+                        'child_price' => $group->where('meta_key', 'child_price')->last()?->meta_value,
+                        'duration_day' => $group->where('meta_key', 'duration_day')->last()?->meta_value,
+                    ];
+                })
+                ->all();
+        }
 
         $wpIdsWithLaravel = $voyagesByWp->keys()->map(fn ($k) => (int) $k)->values()->all();
         /** @var Collection<int, \Illuminate\Support\Collection<int, TourHotel>> $hotelsByWpTourId */
@@ -149,9 +167,9 @@ class ReservationWorkspaceCatalogService
         }
 
         $travelDatesByWpTourId = collect();
-        if ($wpIdsWithLaravel !== []) {
+        if ($wpIds !== []) {
             $travelDatesByWpTourId = TravelDate::query()
-                ->whereIn('travel_id', $wpIdsWithLaravel)
+                ->whereIn('travel_id', $wpIds)
                 ->where('is_active', true)
                 ->orderBy('date')
                 ->get()
@@ -173,6 +191,8 @@ class ReservationWorkspaceCatalogService
             $tdColl = collect();
             if ($voyage && (int) $voyage->wp_post_id > 0) {
                 $tdColl = $travelDatesByWpTourId->get((int) $voyage->wp_post_id) ?? collect();
+            } elseif ($voyage === null) {
+                $tdColl = $travelDatesByWpTourId->get($wpId) ?? collect();
             }
             $pickTd = $this->pickTravelDateForPackageDisplay($tdColl, $today);
             $pickedTd = $pickTd['travelDate'];
@@ -216,6 +236,14 @@ class ReservationWorkspaceCatalogService
 
             $placesPayload = $this->resolvePackagePlacesPayload($wpId, $voyage, $hotelsByWpTourId);
 
+            $extraMeta = $extraWpMetaByPostId[$wpId] ?? ['child_price' => null, 'duration_day' => null];
+            $childRaw = $extraMeta['child_price'] ?? $wp->getMeta('child_price');
+            $durationRaw = $extraMeta['duration_day'] ?? $wp->getMeta('duration_day');
+            $paxBooked = $tourId ? (int) ($passengersByTour[$tourId] ?? 0) : 0;
+            $rowStats = $tourId ? ($statsByTour[$tourId] ?? $this->emptyStats()) : $this->emptyStats();
+            $hasFutureTravelDate = $tdColl->contains(fn (TravelDate $d) => $d->date && ! $d->date->lt($today));
+            $wsAvail = $this->computeWorkspaceAvailabilityBand($placesPayload, $paxBooked);
+
             if (config('app.debug') && $voyage !== null && count($packagePlacesDebug) < 8) {
                 $hotelsForDbg = $hotelsByWpTourId->get($wpId) ?? collect();
                 $packagePlacesDebug[] = [
@@ -253,11 +281,29 @@ class ReservationWorkspaceCatalogService
                 'departure_is_canceled' => false,
                 'price_label' => $priceLabel,
                 'voyage_destination' => $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
-                'stats' => $tourId ? ($statsByTour[$tourId] ?? $this->emptyStats()) : $this->emptyStats(),
+                'stats' => $rowStats,
                 'places_state' => $placesPayload['state'],
                 'places_total' => $placesPayload['total'],
                 'places_lines' => $placesPayload['lines'],
                 'places_ignored' => $placesPayload['ignored'],
+                'ws_avail' => $wsAvail,
+                'ws_has_future' => $hasFutureTravelDate,
+                'modal_detail' => $this->buildPackageModalDetail(
+                    $wp,
+                    $voyage,
+                    $wpId,
+                    $wpDisplayTitle,
+                    $tdColl,
+                    $today,
+                    $placesPayload,
+                    $rowStats,
+                    $paxBooked,
+                    $childRaw,
+                    $durationRaw,
+                    $priceLabel,
+                    $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
+                    $travelDateId,
+                ),
             ]);
         }
 
@@ -293,6 +339,8 @@ class ReservationWorkspaceCatalogService
             $tourId = (int) $voyage->id;
             $label = trim(($flight->flight_number ?: 'Vol').' · '.$flight->from_label.' → '.$flight->to_label);
             $wpPid = $voyage->wp_post_id ? (int) $voyage->wp_post_id : null;
+            $travelDateIdVol = $this->resolveTravelDateId($voyage, $flight->departure_date);
+            $volStats = $statsByTour[$tourId] ?? $this->emptyStats();
             $rows->push([
                 'type' => 'vol',
                 'code' => 'VOL-'.$flight->id,
@@ -304,10 +352,21 @@ class ReservationWorkspaceCatalogService
                 'departure_id' => null,
                 'flight_id' => (int) $flight->id,
                 'tour_hotel_wp_id' => null,
-                'travel_date_id' => $this->resolveTravelDateId($voyage, $flight->departure_date),
+                'travel_date_id' => $travelDateIdVol,
                 'departure_date' => $flight->departure_date,
                 'departure_is_past' => $flight->departure_date && $flight->departure_date->lt($today),
-                'stats' => $statsByTour[$tourId] ?? $this->emptyStats(),
+                'stats' => $volStats,
+                'ws_avail' => 'na',
+                'ws_has_future' => $flight->departure_date && ! $flight->departure_date->lt($today),
+                'modal_detail' => $this->buildExtraModalDetail(
+                    'vol',
+                    $label,
+                    $tourId,
+                    $wpPid,
+                    $volStats,
+                    $flight->departure_date,
+                    $travelDateIdVol,
+                ),
             ]);
         }
 
@@ -325,6 +384,12 @@ class ReservationWorkspaceCatalogService
             $wpPidHotel = (int) $voyage->wp_post_id;
             $tourWpTitle = $wpPostTitleById->get($wpPidHotel) ?: $voyage->name;
             foreach (TourHotel::getAllForTour($wpPidHotel) as $hotel) {
+                $travelDateIdHot = $this->resolveTravelDateId($voyage, $startDate);
+                $hotTitle = ($hotel->hotel_name ?: 'Hébergement').' — '.$tourWpTitle;
+                $hotStats = $statsByTour[$tourId] ?? $this->emptyStats();
+                $hotFuture = $startDate instanceof Carbon
+                    ? ! $startDate->lt($today)
+                    : ($startDate ? ! Carbon::parse($startDate)->lt($today) : false);
                 $rows->push([
                     'type' => 'hebergement',
                     'code' => 'HOT-'.$hotel->id,
@@ -336,10 +401,21 @@ class ReservationWorkspaceCatalogService
                     'departure_id' => $pick['departure']?->id,
                     'flight_id' => null,
                     'tour_hotel_wp_id' => (int) $hotel->id,
-                    'travel_date_id' => $this->resolveTravelDateId($voyage, $startDate),
+                    'travel_date_id' => $travelDateIdHot,
                     'departure_date' => $startDate,
                     'departure_is_past' => $pick['is_past'],
-                    'stats' => $statsByTour[$tourId] ?? $this->emptyStats(),
+                    'stats' => $hotStats,
+                    'ws_avail' => 'na',
+                    'ws_has_future' => $hotFuture,
+                    'modal_detail' => $this->buildExtraModalDetail(
+                        'hebergement',
+                        $hotTitle,
+                        $tourId,
+                        $wpPidHotel,
+                        $hotStats,
+                        $startDate,
+                        $travelDateIdHot,
+                    ),
                 ]);
             }
         }
@@ -593,6 +669,222 @@ class ReservationWorkspaceCatalogService
     private function emptyStats(): array
     {
         return ['validee' => 0, 'en_cours' => 0, 'annulee' => 0];
+    }
+
+    /**
+     * Passagers réservés (confirmés + en attente), même périmètre que les stats par statut.
+     *
+     * @param  array<int>  $tourIds
+     * @return array<int, int>
+     */
+    private function batchPassengersBookedByTour(User $user, array $tourIds): array
+    {
+        if ($tourIds === []) {
+            return [];
+        }
+        $q = Reservation::query()
+            ->whereIn('tour_id', $tourIds)
+            ->whereIn('status', [Reservation::STATUS_VALIDEE, Reservation::STATUS_EN_COURS]);
+        $this->branchScope->scopeReservations($q, $user);
+        $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
+
+        $out = [];
+        foreach ((clone $q)
+            ->selectRaw('tour_id, COALESCE(SUM(COALESCE(passengers_count, 0)), 0) as total_pax')
+            ->groupBy('tour_id')
+            ->get() as $row) {
+            $out[(int) $row->tour_id] = (int) $row->total_pax;
+        }
+
+        return $out;
+    }
+
+    private function computeWorkspaceAvailabilityBand(array $placesPayload, int $reserved): string
+    {
+        if (($placesPayload['state'] ?? '') !== 'ok') {
+            return 'unknown';
+        }
+        $total = (int) ($placesPayload['total'] ?? 0);
+        if ($total <= 0) {
+            return 'unknown';
+        }
+        $remaining = max(0, $total - $reserved);
+        if ($remaining <= 0) {
+            return 'full';
+        }
+        if (($remaining / $total) <= 0.15) {
+            return 'low';
+        }
+
+        return 'ok';
+    }
+
+    private function labelWpPostStatus(?string $s): string
+    {
+        return match ($s) {
+            'publish' => 'Publié',
+            'draft' => 'Brouillon',
+            'pending' => 'En attente de validation',
+            'private' => 'Privé',
+            'future' => 'Planifié',
+            'trash' => 'Corbeille',
+            default => $s ?: '—',
+        };
+    }
+
+    private function formatChildPriceLabel(mixed $raw): ?string
+    {
+        $f = $this->parseWpAdultPriceToFloat($raw);
+        if ($f === null || $f <= 0) {
+            return null;
+        }
+
+        return number_format($f, 0, ',', ' ').' MAD';
+    }
+
+    private function resolveDurationLabel(?Voyage $voyage, mixed $durationMetaRaw): ?string
+    {
+        if ($voyage && trim((string) ($voyage->duration_text ?? '')) !== '') {
+            return trim((string) $voyage->duration_text);
+        }
+        $f = $this->parseWpAdultPriceToFloat($durationMetaRaw);
+        if ($f !== null && $f > 0) {
+            $n = (int) round($f);
+
+            return $n.' jour'.($n > 1 ? 's' : '');
+        }
+        $s = trim((string) ($durationMetaRaw ?? ''));
+
+        return $s !== '' ? $s : null;
+    }
+
+    /**
+     * @param  Collection<int, TravelDate>  $tdColl
+     * @return array<string, mixed>
+     */
+    private function buildPackageModalDetail(
+        WpPost $wp,
+        ?Voyage $voyage,
+        int $wpId,
+        string $title,
+        Collection $tdColl,
+        Carbon $today,
+        array $placesPayload,
+        array $stats,
+        int $passengersReserved,
+        mixed $childPriceMetaRaw,
+        mixed $durationMetaRaw,
+        ?string $priceLabel,
+        ?string $destination,
+        ?int $preferredTravelDateId,
+    ): array {
+        $laravelId = $voyage ? (int) $voyage->id : null;
+        $currency = $voyage && trim((string) ($voyage->currency ?? '')) !== ''
+            ? trim((string) $voyage->currency)
+            : 'MAD';
+
+        $travelDates = [];
+        foreach ($tdColl->filter(fn ($d) => $d instanceof TravelDate && $d->date)->sortBy(fn (TravelDate $d) => $d->date->timestamp) as $td) {
+            $travelDates[] = [
+                'id' => $td->id,
+                'date_iso' => $td->date->format('Y-m-d'),
+                'date_label' => $td->date->locale('fr')->translatedFormat('d MMM yyyy'),
+                'is_past' => $td->date->lt($today),
+            ];
+        }
+
+        $placesTotal = ($placesPayload['state'] ?? '') === 'ok' ? (int) ($placesPayload['total'] ?? 0) : null;
+        $remaining = $placesTotal !== null ? max(0, $placesTotal - $passengersReserved) : null;
+        $pct = ($placesTotal !== null && $placesTotal > 0)
+            ? min(100, (int) round(($passengersReserved / $placesTotal) * 100))
+            : null;
+
+        $band = $this->computeWorkspaceAvailabilityBand($placesPayload, $passengersReserved);
+
+        return [
+            'kind' => 'package',
+            'title' => $title,
+            'wp_post_id' => $wpId,
+            'laravel_voyage_id' => $laravelId,
+            'post_status' => $wp->post_status,
+            'post_status_label' => $this->labelWpPostStatus($wp->post_status),
+            'destination' => $destination,
+            'duration' => $this->resolveDurationLabel($voyage, $durationMetaRaw),
+            'travel_dates' => $travelDates,
+            'places' => [
+                'state' => $placesPayload['state'],
+                'total' => $placesTotal,
+                'reserved' => $passengersReserved,
+                'remaining' => $remaining,
+                'fill_pct' => $pct,
+            ],
+            'rooms' => $placesPayload['lines'] ?? [],
+            'prices' => [
+                'adult_label' => $priceLabel,
+                'child_label' => $this->formatChildPriceLabel($childPriceMetaRaw),
+                'currency' => $currency,
+            ],
+            'stats' => $stats,
+            'stats_total' => ($stats['validee'] ?? 0) + ($stats['en_cours'] ?? 0) + ($stats['annulee'] ?? 0),
+            'availability_band' => $band,
+            'laravel_synced' => $voyage !== null,
+            'prestation_type' => 'package',
+            'form' => [
+                'tour_id' => $laravelId,
+                'travel_date_id' => $preferredTravelDateId,
+                'prestation_type' => 'package',
+                'label' => $title.' (#'.$wpId.')',
+            ],
+            'routes' => [
+                'reservations' => $laravelId ? route('admin.reservations.index', ['voyage_id' => $laravelId]) : null,
+                'create' => $laravelId ? route('admin.reservations.create', array_filter([
+                    'tour_id' => $laravelId,
+                    'travel_date_id' => $preferredTravelDateId,
+                ], fn ($v) => $v !== null && $v !== '')) : null,
+                'edit_voyage' => route('admin.circuits.voyages.edit', $wpId),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildExtraModalDetail(
+        string $kind,
+        string $title,
+        int $tourId,
+        ?int $wpPostId,
+        array $stats,
+        $departureDate,
+        ?int $travelDateId,
+    ): array {
+        $pt = $kind === 'vol' ? 'vol' : 'hebergement';
+
+        return [
+            'kind' => $kind,
+            'title' => $title,
+            'laravel_voyage_id' => $tourId,
+            'wp_post_id' => $wpPostId,
+            'stats' => $stats,
+            'stats_total' => ($stats['validee'] ?? 0) + ($stats['en_cours'] ?? 0) + ($stats['annulee'] ?? 0),
+            'departure_date' => $departureDate ? Carbon::parse($departureDate)->format('Y-m-d') : null,
+            'prestation_type' => $pt,
+            'laravel_synced' => true,
+            'form' => [
+                'tour_id' => $tourId,
+                'travel_date_id' => $travelDateId,
+                'prestation_type' => $pt,
+                'label' => $title,
+            ],
+            'routes' => [
+                'reservations' => route('admin.reservations.index', ['voyage_id' => $tourId]),
+                'create' => route('admin.reservations.create', array_filter([
+                    'tour_id' => $tourId,
+                    'travel_date_id' => $travelDateId,
+                ], fn ($v) => $v !== null && $v !== '')),
+                'edit_voyage' => $wpPostId ? route('admin.circuits.voyages.edit', $wpPostId) : null,
+            ],
+        ];
     }
 
     private function resolveTravelDateId(Voyage $voyage, $date): ?int

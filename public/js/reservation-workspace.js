@@ -278,6 +278,20 @@
         if (add) add.classList.add('hidden');
     }
 
+    /**
+     * Ouverture du formulaire workspace depuis le modal détails (évite de dupliquer la logique).
+     */
+    window.wsOpenReservationForm = function (opts) {
+        opts = opts || {};
+        var fake = document.createElement('button');
+        fake.className = 'btn-show-add-reservation';
+        fake.setAttribute('data-tour-id', String(opts.tourId || ''));
+        fake.setAttribute('data-type', opts.type || 'package');
+        fake.setAttribute('data-name', String(opts.name || ''));
+        fake.setAttribute('data-travel-date-id', String(opts.travelDateId || ''));
+        showAddReservation(fake);
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.btn-show-add-reservation').forEach(function (btn) {
             btn.addEventListener('click', function (e) {

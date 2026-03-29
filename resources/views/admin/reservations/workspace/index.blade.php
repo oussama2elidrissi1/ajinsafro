@@ -307,7 +307,7 @@
                             <th class="py-3.5 px-4 sm:px-5 min-w-[200px]">Prestation</th>
                             <th class="py-3.5 px-4 sm:px-5 w-[130px]">Départ</th>
                             <th class="py-3.5 px-3 text-center w-[168px]">Statistiques</th>
-                            <th class="py-3.5 px-3 sm:px-4 text-right min-w-[280px]">Actions</th>
+                            <th class="py-3.5 px-3 sm:px-4 text-right min-w-[320px]">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm">
@@ -358,9 +358,30 @@
             @include('admin.reservations.workspace.partials.form', ['clients' => $clients])
         </div>
     </div>
+
+    {{-- Modal détail prestation (données : #ws-modal-detail-json) --}}
+    <div id="ws-voyage-detail-modal" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title">
+        <div class="absolute inset-0 bg-slate-900/55 backdrop-blur-[1px]" data-ws-md-backdrop aria-hidden="true"></div>
+        <div class="relative z-10 flex min-h-full w-full items-start justify-center overflow-y-auto p-4 sm:p-6">
+            <div class="w-full max-w-4xl rounded-2xl border border-slate-200/90 bg-white shadow-2xl flex flex-col max-h-[min(92vh,880px)] overflow-hidden my-auto">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-50 to-white shrink-0">
+                    <div class="min-w-0 pr-2">
+                        <h2 id="ws-md-title" class="text-lg sm:text-xl font-extrabold text-brand-dark leading-snug">—</h2>
+                        <p id="ws-md-sub" class="text-[11px] text-slate-500 mt-1.5 font-mono leading-relaxed"></p>
+                    </div>
+                    <button type="button" class="shrink-0 w-10 h-10 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-dark transition-colors" data-ws-md-close aria-label="Fermer">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="ws-md-body" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 text-sm text-slate-700 min-h-0"></div>
+                <div id="ws-md-footer" class="flex flex-wrap items-center gap-2 border-t border-slate-100 px-5 sm:px-6 py-4 bg-slate-50/90 shrink-0"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
 @push('scripts')
@@ -502,6 +523,158 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     applyWsFilters();
+
+    /* —— Modal détail prestation —— */
+    var wsModalJson = document.getElementById('ws-modal-detail-json');
+    var wsModalEl = document.getElementById('ws-voyage-detail-modal');
+    var wsMdTitle = document.getElementById('ws-md-title');
+    var wsMdSub = document.getElementById('ws-md-sub');
+    var wsMdBody = document.getElementById('ws-md-body');
+    var wsMdFooter = document.getElementById('ws-md-footer');
+    var wsDetailMap = {};
+    if (wsModalJson) {
+        try { wsDetailMap = JSON.parse(wsModalJson.textContent || '{}'); } catch (err) { wsDetailMap = {}; }
+    }
+    function escapeWsHtml(s) {
+        if (s == null || s === '') return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+    function closeWsDetailModal() {
+        if (wsModalEl) wsModalEl.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    function renderWsModalBody(d) {
+        if (!d) return '';
+        if (d.kind === 'package') {
+            var html = '<div class="space-y-6">';
+            html += '<section class="rounded-xl border border-slate-100 bg-slate-50/50 p-4">';
+            html += '<h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Informations générales</h3>';
+            html += '<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[13px]">';
+            if (d.post_status_label) html += '<div><dt class="text-slate-400 font-medium">Statut</dt><dd class="font-semibold text-brand-dark">' + escapeWsHtml(d.post_status_label) + '</dd></div>';
+            if (d.destination) html += '<div><dt class="text-slate-400 font-medium">Destination</dt><dd class="font-semibold text-brand-dark">' + escapeWsHtml(d.destination) + '</dd></div>';
+            if (d.duration) html += '<div><dt class="text-slate-400 font-medium">Durée</dt><dd class="font-semibold text-brand-dark">' + escapeWsHtml(d.duration) + '</dd></div>';
+            html += '</dl></section>';
+            if (d.travel_dates && d.travel_dates.length) {
+                html += '<section><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Dates de disponibilité</h3><ul class="flex flex-wrap gap-2">';
+                d.travel_dates.forEach(function (td) {
+                    var badge = td.is_past ? 'bg-slate-200 text-slate-700' : 'bg-emerald-100 text-emerald-900';
+                    var tag = td.is_past ? 'PASSÉ' : 'À VENIR';
+                    html += '<li class="inline-flex items-center gap-2 rounded-lg border border-slate-200/90 px-3 py-2 text-[12px] bg-white"><span class="font-semibold">' + escapeWsHtml(td.date_label) + '</span>';
+                    html += '<span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ' + badge + '">' + tag + '</span></li>';
+                });
+                html += '</ul></section>';
+            }
+            if (d.places && d.places.state === 'ok' && d.places.total != null) {
+                var pct = d.places.fill_pct != null ? d.places.fill_pct : 0;
+                html += '<section><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Places</h3>';
+                html += '<p class="text-sm mb-2">Total <strong>' + d.places.total + '</strong> · Réservées <strong>' + d.places.reserved + '</strong> · Disponibles <strong>' + (d.places.remaining != null ? d.places.remaining : '—') + '</strong></p>';
+                html += '<div class="h-2.5 rounded-full bg-slate-200 overflow-hidden max-w-md"><div class="h-full rounded-full bg-brand-blue transition-all" style="width:' + pct + '%"></div></div>';
+                html += '<p class="text-[11px] text-slate-500 mt-1">' + pct + '% réservé</p></section>';
+            } else if (d.places) {
+                html += '<section><p class="text-sm text-slate-500">Places : calcul <em>' + escapeWsHtml(String(d.places.state)) + '</em> (hôtels / chambres)</p></section>';
+            }
+            if (d.rooms && d.rooms.length) {
+                html += '<section><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Chambres</h3><div class="flex flex-wrap gap-2">';
+                d.rooms.forEach(function (ln) {
+                    var rt = ln.room_type || '';
+                    var rc = ln.room_count || 0;
+                    var cu = ln.capacity_used || 0;
+                    var pr = ln.product || 0;
+                    var tip = rt + ' : ' + rc + ' chambres × ' + cu + ' personnes = ' + pr;
+                    html += '<span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700" title="' + escapeWsHtml(tip) + '">' + escapeWsHtml(rt) + ' <span class="text-slate-400 mx-0.5">·</span> ' + pr + '</span>';
+                });
+                html += '</div></section>';
+            }
+            html += '<section class="rounded-xl border border-slate-100 p-4"><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Tarifs</h3>';
+            html += '<p class="text-sm">Adulte : <strong>' + (d.prices && d.prices.adult_label ? escapeWsHtml(d.prices.adult_label) : '—') + '</strong></p>';
+            if (d.prices && d.prices.child_label) html += '<p class="text-sm mt-1">Enfant : <strong>' + escapeWsHtml(d.prices.child_label) + '</strong></p>';
+            html += '<p class="text-[11px] text-slate-500 mt-1">Devise : ' + escapeWsHtml((d.prices && d.prices.currency) || 'MAD') + '</p></section>';
+            if (d.stats) {
+                html += '<section><h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Statistiques réservations</h3>';
+                html += '<div class="flex flex-wrap gap-2"><span class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[11px] font-bold text-emerald-800">Confirmées ' + (d.stats.validee || 0) + '</span>';
+                html += '<span class="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2 py-1 text-[11px] font-bold text-amber-900">En attente ' + (d.stats.en_cours || 0) + '</span>';
+                html += '<span class="inline-flex items-center gap-1 rounded-lg bg-red-50 border border-red-200 px-2 py-1 text-[11px] font-bold text-red-700">Annulées ' + (d.stats.annulee || 0) + '</span></div></section>';
+            }
+            html += '</div>';
+            return html;
+        }
+        var h = '<div class="space-y-4">';
+        if (d.departure_date) h += '<p class="text-sm"><strong>Départ :</strong> ' + escapeWsHtml(d.departure_date) + '</p>';
+        if (d.stats) {
+            h += '<div class="flex flex-wrap gap-2"><span class="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[11px] font-bold text-emerald-800">Confirmées ' + (d.stats.validee || 0) + '</span>';
+            h += '<span class="rounded-lg bg-amber-50 border border-amber-200 px-2 py-1 text-[11px] font-bold text-amber-900">En attente ' + (d.stats.en_cours || 0) + '</span>';
+            h += '<span class="rounded-lg bg-red-50 border border-red-200 px-2 py-1 text-[11px] font-bold text-red-700">Annulées ' + (d.stats.annulee || 0) + '</span></div>';
+        }
+        h += '</div>';
+        return h;
+    }
+    function renderWsModalFooter(d) {
+        var r = d.routes || {};
+        var f = d.form || {};
+        var h = '';
+        if (r.reservations) {
+            h += '<a href="' + r.reservations + '" class="inline-flex items-center gap-2 rounded-xl bg-brand-dark text-white px-4 py-2.5 text-xs font-bold hover:bg-brand-blue transition-colors"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        }
+        if (f.tour_id) {
+            h += '<button type="button" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2.5 text-xs font-bold hover:bg-emerald-700 border border-emerald-500/40" id="ws-md-btn-new-res"><i class="fas fa-suitcase-rolling"></i> Nouvelle réservation</button>';
+        }
+        if (r.edit_voyage) {
+            h += '<a href="' + r.edit_voyage + '" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:border-brand-blue"><i class="fas fa-cog"></i> Modifier le voyage</a>';
+        }
+        return h;
+    }
+    function openWsDetailModal(code) {
+        var d = wsDetailMap[code];
+        if (!d || !wsModalEl) return;
+        if (wsMdTitle) wsMdTitle.textContent = d.title || '—';
+        if (wsMdSub) {
+            var parts = [];
+            if (d.wp_post_id) parts.push('WP #' + d.wp_post_id);
+            if (d.laravel_voyage_id) parts.push('Laravel #' + d.laravel_voyage_id);
+            wsMdSub.textContent = parts.join(' · ');
+        }
+        if (wsMdBody) wsMdBody.innerHTML = renderWsModalBody(d);
+        if (wsMdFooter) {
+            wsMdFooter.innerHTML = renderWsModalFooter(d);
+            var nb = document.getElementById('ws-md-btn-new-res');
+            if (nb && d.form && d.form.tour_id) {
+                nb.addEventListener('click', function onNewRes() {
+                    nb.removeEventListener('click', onNewRes);
+                    closeWsDetailModal();
+                    if (typeof window.wsOpenReservationForm === 'function') {
+                        window.wsOpenReservationForm({
+                            tourId: d.form.tour_id,
+                            travelDateId: d.form.travel_date_id || '',
+                            type: d.form.prestation_type || 'package',
+                            name: d.form.label || d.title || ''
+                        });
+                    }
+                });
+            }
+        }
+        wsModalEl.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    document.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t && t.closest && t.closest('.btn-ws-open-detail')) {
+            e.preventDefault();
+            var btn = t.closest('.btn-ws-open-detail');
+            var code = btn.getAttribute('data-row-code') || '';
+            openWsDetailModal(code);
+            return;
+        }
+        if (t && t.closest && t.closest('[data-ws-md-close]')) {
+            e.preventDefault();
+            closeWsDetailModal();
+            return;
+        }
+        if (t && t.getAttribute && t.getAttribute('data-ws-md-backdrop') !== null) {
+            closeWsDetailModal();
+        }
+    });
 });
 </script>
 @endpush

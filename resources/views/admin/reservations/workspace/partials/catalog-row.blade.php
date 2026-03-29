@@ -53,6 +53,9 @@
     ));
     $pkgDepCanceled = $typeKey === 'package' && ! empty($row['departure_is_canceled']);
     $reserveLabel = $typeKey === 'vol' ? 'Réserver vol' : 'Réserver';
+    $modalDetail = $row['modal_detail'] ?? null;
+    $wsAvail = $row['ws_avail'] ?? 'na';
+    $wsUpcoming = ! empty($row['ws_has_future']);
 @endphp
 <tr class="ws-catalog-row group border-b border-gray-100/90 last:border-0 hover:bg-slate-50/80 transition-colors {{ $rowAccent }} {{ $hasLaravel ? '' : 'bg-amber-50/25' }}"
     data-type="{{ $typeKey }}"
@@ -60,7 +63,9 @@
     data-code="{{ $row['code'] }}"
     data-name="{{ $row['name'] }}"
     data-search="{{ e($wsSearchBlob) }}"
-    data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}">
+    data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}"
+    data-ws-avail="{{ e($wsAvail) }}"
+    data-ws-upcoming="{{ $wsUpcoming ? '1' : '0' }}">
     {{-- Réf. & type --}}
     <td class="py-3.5 px-4 sm:px-5 align-top w-[120px] sm:w-[132px]">
         <span class="text-xs font-extrabold text-brand-dark block font-mono tracking-tight leading-tight">{{ $row['code'] }}</span>
@@ -210,7 +215,16 @@
     </td>
     {{-- Actions --}}
     <td class="py-3.5 px-3 sm:px-4 align-middle text-right">
-        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-end gap-2 min-w-0 sm:min-w-[280px]">
+        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-end gap-2 min-w-0 sm:min-w-[320px]">
+            @if(!empty($modalDetail))
+                <button type="button"
+                    class="btn-ws-open-detail inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-[11px] font-bold text-slate-700 shadow-sm hover:border-brand-blue hover:text-brand-blue hover:bg-brand-light/40 transition-all order-0"
+                    data-row-code="{{ e($row['code']) }}"
+                    title="Détails du voyage">
+                    <i class="fas fa-chart-line text-xs" aria-hidden="true"></i>
+                    <span class="hidden sm:inline">Détails</span>
+                </button>
+            @endif
             @if($hasLaravel)
                 <a href="{{ $participantsUrl }}"
                    class="ws-action-link inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-[11px] font-bold text-slate-600 shadow-sm hover:border-brand-blue hover:bg-brand-blue hover:text-white transition-all order-1 sm:order-none">
