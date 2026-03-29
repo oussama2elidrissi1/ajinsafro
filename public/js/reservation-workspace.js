@@ -443,7 +443,9 @@
         if (depSel && depSel.selectedOptions && depSel.selectedOptions.length) {
             pastDep = depSel.selectedOptions[0].getAttribute('data-is-past') === '1';
         }
-        var blockedByAvail = avKey === 'full' || avKey === 'past' || (st === 'ok' && rem0 !== null && !isNaN(rem0) && rem0 <= 0);
+        // Ne pas bloquer sur avKey === 'past' seul : packages Laravel (places.state = na) peuvent
+        // exposer une pastille « past » sans gestion de capacité WP. Le passé réel = pastDep (date choisie).
+        var blockedByAvail = avKey === 'full' || (st === 'ok' && rem0 !== null && !isNaN(rem0) && rem0 <= 0);
         var over = st === 'ok' && rem0 !== null && !isNaN(rem0) && paxN > rem0;
         if (capEl) {
             capEl.classList.remove('ws-capacity-banner--ok', 'ws-capacity-banner--danger', 'ws-capacity-banner--warn');

@@ -18,6 +18,8 @@ use App\Support\AdminReservationFlash;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -90,163 +92,197 @@ class ReservationWorkspaceController extends Controller
             'hotel_remarks' => 'nullable|string|max:2000',
         ]);
 
-        $user = $request->user();
-        $extrasPayload = [];
-        if ($request->filled('extras_json')) {
-            $decoded = json_decode($request->string('extras_json')->toString(), true);
-            $extrasPayload = is_array($decoded) ? $decoded : [];
-        }
-
-        $companions = [];
-        if ($request->filled('passengers_json')) {
-            $decoded = json_decode($request->string('passengers_json')->toString(), true);
-            $companions = is_array($decoded) ? $decoded : [];
-        }
-
-        $passengers = [];
-        $passengers[] = [
-            'first_name' => $request->string('titulaire_prenom')->toString(),
-            'last_name' => $request->string('titulaire_nom')->toString(),
-            'type' => $this->mapPaxType($request->string('titulaire_type')->toString()),
-            'birth_date' => $request->input('titulaire_dob'),
-            'document_type' => 'passport',
-            'document_number' => $request->string('titulaire_document')->toString(),
-        ];
-
-        foreach ($companions as $row) {
-            if (! is_array($row)) {
-                continue;
+        try {
+            $user = $request->user();
+            $extrasPayload = [];
+            if ($request->filled('extras_json')) {
+                $decoded = json_decode($request->string('extras_json')->toString(), true);
+                $extrasPayload = is_array($decoded) ? $decoded : [];
             }
-            $fn = trim((string) ($row['first_name'] ?? ''));
-            $ln = trim((string) ($row['last_name'] ?? ''));
-            if ($fn === '' && $ln === '') {
-                continue;
+
+            $companions = [];
+            if ($request->filled('passengers_json')) {
+                $decoded = json_decode($request->string('passengers_json')->toString(), true);
+                $companions = is_array($decoded) ? $decoded : [];
             }
+
+            $passengers = [];
             $passengers[] = [
-                'first_name' => $fn,
-                'last_name' => $ln,
-                'type' => $this->mapPaxType((string) ($row['type'] ?? 'adulte')),
-                'birth_date' => $row['birth_date'] ?? null,
+                'first_name' => $request->string('titulaire_prenom')->toString(),
+                'last_name' => $request->string('titulaire_nom')->toString(),
+                'type' => $this->mapPaxType($request->string('titulaire_type')->toString()),
+                'birth_date' => $request->input('titulaire_dob'),
                 'document_type' => 'passport',
-                'document_number' => $row['document_number'] ?? null,
+                'document_number' => $request->string('titulaire_document')->toString(),
             ];
-        }
 
-        $bookingResolve = $this->workspaceBooking->validateWorkspaceStoreAndResolveTotals(
-            $request,
-            $user,
-            $passengers,
-            $extrasPayload,
-        );
-
-        $voyageForMeta = Voyage::query()->findOrFail((int) $request->input('tour_id'));
-        $catalogRow = $this->catalog->findCatalogRowForBooking(
-            $voyageForMeta,
-            $request->string('prestation_type')->toString(),
-            $user
-        );
-        $catalogRow = is_array($catalogRow) ? $catalogRow : [];
-
-        $docPaths = [];
-        foreach ($request->file('workspace_documents', []) as $file) {
-            if ($file && $file->isValid()) {
-                $docPaths[] = $file->store('reservation-workspace/'.date('Y/m'), 'public');
+            foreach ($companions as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $fn = trim((string) ($row['first_name'] ?? ''));
+                $ln = trim((string) ($row['last_name'] ?? ''));
+                if ($fn === '' && $ln === '') {
+                    continue;
+                }
+                $passengers[] = [
+                    'first_name' => $fn,
+                    'last_name' => $ln,
+                    'type' => $this->mapPaxType((string) ($row['type'] ?? 'adulte')),
+                    'birth_date' => $row['birth_date'] ?? null,
+                    'document_type' => 'passport',
+                    'document_number' => $row['document_number'] ?? null,
+                ];
             }
-        }
 
-        $workspaceMeta = [
-            'prestation_type' => $request->string('prestation_type')->toString(),
-            'civilite' => $request->input('titulaire_civilite'),
-            'nationalite' => $request->input('titulaire_nationalite'),
-            'doc_expires' => $request->input('titulaire_doc_expires'),
-            'payment_mode_label' => $request->input('payment_mode'),
-            'vol' => [
-                'rbd' => $request->input('vol_rbd'),
-                'tarif' => $request->input('vol_tarif_type'),
-                'ff' => $request->input('vol_ff_number'),
-            ],
-            'package' => [
-                'room' => $request->input('package_room_type'),
-                'remarks' => $request->input('package_remarks'),
-            ],
-            'hotel' => [
-                'room' => $request->input('hotel_room_type'),
-                'pension' => $request->input('hotel_pension'),
-                'remarks' => $request->input('hotel_remarks'),
-            ],
-            'documents' => $docPaths,
-            'booking_snapshot' => $bookingResolve['booking_snapshot'],
-        ];
+            $bookingResolve = $this->workspaceBooking->validateWorkspaceStoreAndResolveTotals(
+                $request,
+                $user,
+                $passengers,
+                $extrasPayload,
+            );
 
-        $notes = trim((string) $request->input('workspace_notes', ''));
-        $notes .= ($notes !== '' ? "\n\n" : '').'<!--WORKSPACE_META-->'.json_encode($workspaceMeta, JSON_UNESCAPED_UNICODE);
+            $voyageForMeta = Voyage::query()->findOrFail((int) $request->input('tour_id'));
+            $catalogRow = $this->catalog->findCatalogRowForBooking(
+                $voyageForMeta,
+                $request->string('prestation_type')->toString(),
+                $user
+            );
+            $catalogRow = is_array($catalogRow) ? $catalogRow : [];
 
-        $paymentType = $this->mapPaymentType($request->input('payment_mode'));
+            $docPaths = [];
+            foreach ($request->file('workspace_documents', []) as $file) {
+                if ($file && $file->isValid()) {
+                    $docPaths[] = $file->store('reservation-workspace/'.date('Y/m'), 'public');
+                }
+            }
 
-        $clientIdForOwnership = $request->string('client_mode')->toString() === 'existing'
-            ? (int) $request->input('client_external_id')
-            : null;
-        $ownership = $this->branchScope->defaultReservationOwnership($user, $clientIdForOwnership ?: null);
+            $workspaceMeta = [
+                'prestation_type' => $request->string('prestation_type')->toString(),
+                'civilite' => $request->input('titulaire_civilite'),
+                'nationalite' => $request->input('titulaire_nationalite'),
+                'doc_expires' => $request->input('titulaire_doc_expires'),
+                'payment_mode_label' => $request->input('payment_mode'),
+                'vol' => [
+                    'rbd' => $request->input('vol_rbd'),
+                    'tarif' => $request->input('vol_tarif_type'),
+                    'ff' => $request->input('vol_ff_number'),
+                ],
+                'package' => [
+                    'room' => $request->input('package_room_type'),
+                    'remarks' => $request->input('package_remarks'),
+                ],
+                'hotel' => [
+                    'room' => $request->input('hotel_room_type'),
+                    'pension' => $request->input('hotel_pension'),
+                    'remarks' => $request->input('hotel_remarks'),
+                ],
+                'documents' => $docPaths,
+                'booking_snapshot' => $bookingResolve['booking_snapshot'],
+            ];
 
-        $data = [
-            'tour_id' => (int) $request->input('tour_id'),
-            'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
-            'prestation_type' => $request->string('prestation_type')->toString(),
-            'client_mode' => $request->string('client_mode')->toString(),
-            'client_external_id' => $request->string('client_mode')->toString() === 'existing'
+            $notes = trim((string) $request->input('workspace_notes', ''));
+            $notes .= ($notes !== '' ? "\n\n" : '').'<!--WORKSPACE_META-->'.json_encode($workspaceMeta, JSON_UNESCAPED_UNICODE);
+
+            $paymentType = $this->mapPaymentType($request->input('payment_mode'));
+
+            $clientIdForOwnership = $request->string('client_mode')->toString() === 'existing'
                 ? (int) $request->input('client_external_id')
-                : null,
-            'client_first_name' => $request->string('titulaire_prenom')->toString(),
-            'client_last_name' => $request->string('titulaire_nom')->toString(),
-            'client_email' => $request->input('titulaire_email'),
-            'client_phone' => $request->string('titulaire_phone')->toString(),
-            'client_document_type' => 'passport',
-            'client_document_number' => $request->string('titulaire_document')->toString(),
-            'payment_type' => $paymentType,
-            'status' => Reservation::STATUS_EN_COURS,
-            'base_price' => $bookingResolve['authoritative_total'],
-            'paid_amount' => (float) $request->input('montant_paye'),
-            'notes' => $notes,
-            'passengers' => $passengers,
-            'branch_id' => $ownership['branch_id'],
-            'sales_manager_id' => $ownership['sales_manager_id'],
-            'agent_id' => $user->id,
-            'created_by' => $user->id,
-            'hotel_rooms' => [],
-            'wp_tour_post_id' => $voyageForMeta->wp_post_id ? (int) $voyageForMeta->wp_post_id : null,
-            'catalog_source_code' => $catalogRow['code'] ?? null,
-            'voyage_flight_id' => isset($catalogRow['flight_id']) ? (int) $catalogRow['flight_id'] : null,
-        ];
+                : null;
+            $ownership = $this->branchScope->defaultReservationOwnership($user, $clientIdForOwnership ?: null);
 
-        if ($request->string('client_mode')->toString() === 'new') {
-            $data['client_external_id'] = null;
-        }
+            $data = [
+                'tour_id' => (int) $request->input('tour_id'),
+                'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
+                'prestation_type' => $request->string('prestation_type')->toString(),
+                'client_mode' => $request->string('client_mode')->toString(),
+                'client_external_id' => $request->string('client_mode')->toString() === 'existing'
+                    ? (int) $request->input('client_external_id')
+                    : null,
+                'client_first_name' => $request->string('titulaire_prenom')->toString(),
+                'client_last_name' => $request->string('titulaire_nom')->toString(),
+                'client_email' => $request->input('titulaire_email'),
+                'client_phone' => $request->string('titulaire_phone')->toString(),
+                'client_document_type' => 'passport',
+                'client_document_number' => $request->string('titulaire_document')->toString(),
+                'payment_type' => $paymentType,
+                'status' => Reservation::STATUS_EN_COURS,
+                'base_price' => $bookingResolve['authoritative_total'],
+                'paid_amount' => (float) $request->input('montant_paye'),
+                'notes' => $notes,
+                'passengers' => $passengers,
+                'branch_id' => $ownership['branch_id'],
+                'sales_manager_id' => $ownership['sales_manager_id'],
+                'agent_id' => $user->id,
+                'created_by' => $user->id,
+                'hotel_rooms' => [],
+                'wp_tour_post_id' => $voyageForMeta->wp_post_id ? (int) $voyageForMeta->wp_post_id : null,
+                'catalog_source_code' => $catalogRow['code'] ?? null,
+                'voyage_flight_id' => isset($catalogRow['flight_id']) ? (int) $catalogRow['flight_id'] : null,
+            ];
 
-        $reservation = $this->reservationService->create($data, null, null);
-
-        foreach ($extrasPayload as $extra) {
-            if (! is_array($extra)) {
-                continue;
+            if ($request->string('client_mode')->toString() === 'new') {
+                $data['client_external_id'] = null;
             }
-            $name = trim((string) ($extra['name'] ?? ''));
-            if ($name === '') {
-                continue;
-            }
-            ReservationExtra::query()->create([
-                'reservation_id' => $reservation->id,
-                'name' => $name,
-                'price' => isset($extra['price']) ? (float) $extra['price'] : 0,
-                'passenger_key' => isset($extra['pax']) ? (string) $extra['pax'] : null,
-            ]);
-        }
 
-        return redirect()->route('admin.reservations.index', array_filter([
-            'voyage_id' => (int) $reservation->tour_id,
-            'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
-            'status' => Reservation::STATUS_EN_COURS,
-            'highlight' => $reservation->id,
-            'id' => $reservation->id,
-        ], fn ($v) => $v !== null && $v !== ''))->with('reservation_created', AdminReservationFlash::createdPayload($reservation));
+            $reservation = $this->reservationService->create($data, null, null);
+
+            foreach ($extrasPayload as $extra) {
+                if (! is_array($extra)) {
+                    continue;
+                }
+                $name = trim((string) ($extra['name'] ?? ''));
+                if ($name === '') {
+                    continue;
+                }
+                ReservationExtra::query()->create([
+                    'reservation_id' => $reservation->id,
+                    'name' => $name,
+                    'price' => isset($extra['price']) ? (float) $extra['price'] : 0,
+                    'passenger_key' => isset($extra['pax']) ? (string) $extra['pax'] : null,
+                ]);
+            }
+
+            if (config('app.debug')) {
+                Log::debug('workspace.store.ok', [
+                    'reservation_id' => $reservation->id,
+                    'tour_id' => $reservation->tour_id,
+                    'wp_tour_post_id' => $reservation->wp_tour_post_id,
+                    'travel_date_id' => $reservation->travel_date_id,
+                    'prestation_type' => $reservation->prestation_type,
+                    'status' => $reservation->status,
+                    'catalog_code' => $catalogRow['code'] ?? null,
+                ]);
+            }
+
+            return redirect()->route('admin.reservations.index', array_filter([
+                'voyage_id' => (int) $reservation->tour_id,
+                'travel_date_id' => $bookingResolve['resolved_travel_date_id'] ?? null,
+                'status' => Reservation::STATUS_EN_COURS,
+                'highlight' => $reservation->id,
+                'id' => $reservation->id,
+            ], fn ($v) => $v !== null && $v !== ''))->with('reservation_created', AdminReservationFlash::createdPayload($reservation));
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            report($e);
+            if (config('app.debug')) {
+                Log::warning('workspace.store.failed', [
+                    'message' => $e->getMessage(),
+                    'tour_id' => $request->input('tour_id'),
+                    'prestation_type' => $request->input('prestation_type'),
+                    'travel_date_id' => $request->input('travel_date_id'),
+                ]);
+            }
+            $msg = config('app.debug')
+                ? $e->getMessage()
+                : 'Une erreur technique est survenue lors de l’enregistrement. Réessayez ou contactez le support.';
+
+            return redirect()
+                ->route('admin.reservations.workspace')
+                ->withInput($request->except(['workspace_documents']))
+                ->with('workspace_store_error', $msg);
+        }
     }
 
     public function prestationParticipants(Request $request): RedirectResponse

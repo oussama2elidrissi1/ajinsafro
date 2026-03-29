@@ -46,13 +46,13 @@ class ReservationWorkspaceCatalogService
             'total_rows' => 0,
         ];
 
+        $wpTours = collect();
         try {
             $wpTours = AdminWpTourCatalogQuery::allToursOrdered();
         } catch (\Throwable $e) {
-            Log::warning('ReservationWorkspaceCatalog: WP indisponible', ['error' => $e->getMessage()]);
+            Log::warning('ReservationWorkspaceCatalog: WP indisponible — poursuite avec voyages Laravel / vols uniquement', ['error' => $e->getMessage()]);
             $meta['wp_connection_failed'] = true;
-
-            return ['rows' => collect(), 'meta' => $meta];
+            $wpTours = collect();
         }
 
         $meta['wp_tour_count'] = $wpTours->count();

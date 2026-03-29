@@ -530,6 +530,24 @@
         </div>
     </header>
 
+    @if(session('workspace_store_error'))
+        <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 text-red-900 px-4 py-3 text-sm shadow-sm" role="alert">
+            <strong class="font-semibold">Enregistrement impossible.</strong>
+            <p class="mb-0 mt-1">{{ session('workspace_store_error') }}</p>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 text-amber-950 px-4 py-3 text-sm shadow-sm" role="alert">
+            <strong class="font-semibold">Vérifiez le formulaire :</strong>
+            <ul class="mb-0 mt-2 ps-4 list-disc space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if(session('success'))
         <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm">{{ session('success') }}</div>
     @endif
