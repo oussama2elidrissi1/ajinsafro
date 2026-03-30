@@ -672,6 +672,12 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
 }
 
 /* ---------- Modal Improvements ---------- */
+.voyage-edit-page .modal {
+    z-index: 2060;
+}
+.voyage-edit-page .modal-backdrop {
+    z-index: 2050;
+}
 .voyage-edit-page .modal-content {
     border-radius: 16px;
     border: none;
@@ -910,7 +916,12 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
         font-size: 0.78rem;
     }
     .voyage-edit-page .ve-nav-tabs .nav-link span.ve-tab-label {
-        display: none; /* Icons only on mobile */
+        display: inline-block;
+        max-width: 88px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: bottom;
     }
     .voyage-edit-page .ve-nav-tabs .nav-link i {
         font-size: 1.2rem;

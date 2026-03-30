@@ -3881,11 +3881,13 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
 
 .aj-home .aj-theme__grid {
     gap: 18px;
+    align-items: stretch;
 }
 
 .aj-home .aj-theme__left {
     min-height: 410px;
     border-radius: 20px;
+    height: 100%;
 }
 
 .aj-home .aj-theme__left-media {
@@ -3909,6 +3911,10 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
 }
 
 .aj-home .aj-theme__right {
+    display: flex;
+    flex-direction: column;
+    min-height: 410px;
+    height: 100%;
     padding: 14px 16px 8px;
     border-radius: 20px;
 }
@@ -3917,10 +3923,17 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
     margin-bottom: 12px;
 }
 
+.aj-home .aj-theme-track {
+    flex: 1 1 auto;
+    align-items: stretch;
+}
+
 .aj-home .aj-theme-card {
     min-height: 365px;
     min-width: 236px;
     border-radius: 18px;
+    height: auto;
+    align-self: stretch;
 }
 
 .aj-home .aj-theme-card__media {
@@ -3966,6 +3979,10 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
         min-height: 380px;
     }
 
+    .aj-home .aj-theme__right {
+        min-height: 380px;
+    }
+
     .aj-home .aj-theme__left-media {
         height: 154px;
     }
@@ -3984,8 +4001,13 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
         padding: 12px 0 16px;
     }
 
+    .aj-home .aj-theme__grid {
+        align-items: initial;
+    }
+
     .aj-home .aj-theme__left {
         min-height: 340px;
+        height: auto;
     }
 
     .aj-home .aj-theme__left-media {
@@ -3997,12 +4019,19 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
     }
 
     .aj-home .aj-theme__right {
+        min-height: 0;
+        height: auto;
         padding: 12px;
+    }
+
+    .aj-home .aj-theme-track {
+        flex: initial;
     }
 
     .aj-home .aj-theme-card {
         min-height: 320px;
         min-width: 0;
+        align-self: auto;
     }
 
     .aj-home .aj-theme-card__media {

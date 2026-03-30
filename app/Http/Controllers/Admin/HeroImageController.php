@@ -21,6 +21,13 @@ class HeroImageController
      */
     public function upload(Request $request, int $id): JsonResponse
     {
+        if ($id <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Veuillez d’abord enregistrer le voyage avant d’ajouter une image.',
+            ], 422);
+        }
+
         $request->validate([
             'hero_image' => [
                 'required',
@@ -83,6 +90,13 @@ class HeroImageController
      */
     public function select(Request $request, int $id): JsonResponse
     {
+        if ($id <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Veuillez d’abord enregistrer le voyage avant de choisir une image.',
+            ], 422);
+        }
+
         $request->validate([
             'attachment_id' => 'required|integer|min:1',
         ]);
@@ -117,6 +131,13 @@ class HeroImageController
      */
     public function remove(int $id): JsonResponse
     {
+        if ($id <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Voyage introuvable.',
+            ], 422);
+        }
+
         $tour = $this->tourRepository->findTour($id);
         $tour->deleteMeta('_tour_hero_image_id');
         $tour->deleteMeta('_thumbnail_id');

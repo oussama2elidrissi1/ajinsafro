@@ -541,62 +541,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Moyens de paiement</h4>
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">
-                                        <i class="bx bxl-paypal"></i> PayPal
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">
-                                        OnePay
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">
-                                        OnePay ATM
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu">
-                                        PayU
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">
-                                        PayU Latam
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">
-                                        PayUmoney
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor">
-                                        <i class="bx bx-credit-card"></i> Razorpay
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {{-- TAB 4: INFORMATION --}}
@@ -993,6 +937,7 @@
 
             <script>
             (function() {
+                var wpTourId = parseInt("{{ (int) ($voyage->ID ?? 0) }}", 10) || 0;
                 var heroUploadUrl = "{{ route('admin.circuits.voyages.hero-image.upload', ['id' => $voyage->ID]) }}";
                 var heroSelectUrl = "{{ route('admin.circuits.voyages.hero-image.select', ['id' => $voyage->ID]) }}";
                 var heroRemoveUrl = "{{ route('admin.circuits.voyages.hero-image.remove', ['id' => $voyage->ID]) }}";
@@ -1012,6 +957,23 @@
                 var wpFeaturedPreviewWrap = document.getElementById('wp-featured-preview-wrap');
                 var wpFeaturedRemoveBtn = document.getElementById('wp-featured-remove-btn');
 
+                function notifySaveFirst() {
+                    alert('Veuillez d’abord enregistrer le voyage avant de gérer les images.');
+                }
+
+                if (wpTourId <= 0) {
+                    ['hero-upload-btn', 'hero-choose-media-btn', 'hero-remove-btn', 'wp-featured-choose-btn', 'wp-featured-upload-btn', 'wp-featured-remove-btn']
+                        .forEach(function (id) {
+                            var el = document.getElementById(id);
+                            if (!el) return;
+                            el.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                notifySaveFirst();
+                            }, true);
+                        });
+                }
+
                 function setHeroPreview(url, id) {
                     if (heroInput) heroInput.value = id || '';
                     if (heroPreview) heroPreview.src = url || '';
@@ -1023,6 +985,7 @@
                 }
                 if (heroFileInput) {
                     heroFileInput.addEventListener('change', function() {
+                        if (wpTourId <= 0) { heroFileInput.value = ''; notifySaveFirst(); return; }
                         if (!this.files || !this.files[0]) return;
                         var file = this.files[0];
                         var errEl = document.getElementById('hero-upload-error');
@@ -1066,6 +1029,7 @@
 
                 if (document.getElementById('hero-remove-btn')) {
                     document.getElementById('hero-remove-btn').addEventListener('click', function() {
+                        if (wpTourId <= 0) { notifySaveFirst(); return; }
                         if (!confirm('Retirer l\'image principale ?')) return;
                         var fd = new FormData();
                         if (csrfToken) fd.append('_token', csrfToken);
@@ -2230,7 +2194,7 @@
                 scope.querySelectorAll('textarea.rich-editor').forEach(initOne);
             }
 
-            document.addEventListener('DOMContentLoaded', function () {
+            function bootRichEditors() {
                 initAll(document);
 
                 var form = document.querySelector('form');
@@ -2257,7 +2221,13 @@
                     var target = e && e.target ? document.querySelector(e.target.getAttribute('href')) : null;
                     if (target) initAll(target);
                 });
-            });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bootRichEditors);
+            } else {
+                bootRichEditors();
+            }
         })();
 
         // Initialiser les données pour le modal "Ajouter un élément" (hotels & transfers par jour)
@@ -3114,7 +3084,7 @@
                     });
                 }
             }
-            document.addEventListener('DOMContentLoaded', function() {
+            function bootProgrammeDaysManager() {
                 updateBadge();
                 updateDuration();
                 document.getElementById('btn-add-program-day') && document.getElementById('btn-add-program-day').addEventListener('click', addDay);
@@ -3137,7 +3107,13 @@
                     if (durationInput) durationInput.value = count() || 1;
                 });
                 attachDragToCards();
-            });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bootProgrammeDaysManager);
+            } else {
+                bootProgrammeDaysManager();
+            }
             function attachDragToCards() {
                 if (!accordion) return;
                 var cards = accordion.querySelectorAll('.programme-day-card');

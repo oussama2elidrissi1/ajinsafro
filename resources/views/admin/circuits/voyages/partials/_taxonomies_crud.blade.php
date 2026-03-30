@@ -1,12 +1,20 @@
 @php
+    // Certaines installs WP exposent "language" ou "languages". On n'affiche qu'un seul bloc "Langue".
     $taxonomyConfig = [
         'st_tour_type' => 'Type de tour',
         'durations'    => 'Durée',
         'language'     => 'Langue',
-        'languages'    => 'Langues',
     ];
     $availableTaxonomies = $availableTaxonomies ?? [];
     $assignedTaxonomies = $assignedTaxonomies ?? [];
+
+    // Fallback compat : si la clé principale n'existe pas mais "languages" est remplie.
+    if (empty($availableTaxonomies['language']) && ! empty($availableTaxonomies['languages'])) {
+        $availableTaxonomies['language'] = $availableTaxonomies['languages'];
+    }
+    if (empty($assignedTaxonomies['language']) && ! empty($assignedTaxonomies['languages'])) {
+        $assignedTaxonomies['language'] = $assignedTaxonomies['languages'];
+    }
 @endphp
 <div class="row">
     @foreach($taxonomyConfig as $taxKey => $taxLabel)
