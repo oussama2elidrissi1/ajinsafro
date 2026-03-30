@@ -2222,6 +2222,7 @@
     </script>
     <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
+    <script src="{{ URL::asset('js/voyage-editor-runtime.js') }}"></script>
     <script>
         (function () {
             function ensureId(el) {
@@ -2374,6 +2375,7 @@
 
         // Ouvrir l'onglet Vols si ?tab=flights (depuis Hôtels / Transferts sidebar)
         document.addEventListener('DOMContentLoaded', function() {
+            if (window.VoyageEditorRuntime && window.VoyageEditorRuntime.ownsTabs) return;
             var params = new URLSearchParams(window.location.search);
             if (params.get('tab') === 'flights') {
                 var tabEl = document.querySelector('a[href="#flights"][data-bs-toggle="tab"]');
@@ -2384,6 +2386,7 @@
         });
         // Ouvrir un onglet donnÃ© si ?tab=... ou si le hash cible un panneau.
         document.addEventListener('DOMContentLoaded', function() {
+            if (window.VoyageEditorRuntime && window.VoyageEditorRuntime.ownsTabs) return;
             var params = new URLSearchParams(window.location.search);
             var targetTab = params.get('tab');
             if (!targetTab && window.location.hash) {
@@ -2399,6 +2402,7 @@
         });
 
         (function programmeUiVisibility() {
+            if (window.VoyageEditorRuntime && window.VoyageEditorRuntime.ownsTabs) return;
             function ensureFirstProgramDayVisible() {
                 var accordion = document.getElementById('accordionProgrammeDays');
                 if (!accordion) return;
@@ -3124,6 +3128,7 @@
         window.PROGRAM_VOYAGE_ID = @json($voyage->ID ?? 0);
 
         (function programmeDaysManager() {
+            if (window.VoyageEditorRuntime && window.VoyageEditorRuntime.ownsProgrammeBuilder) return;
             var accordion = document.getElementById('accordionProgrammeDays');
             var badge = document.getElementById('program-days-badge');
             var durationInput = document.getElementById('duration_day');
@@ -4636,7 +4641,7 @@
         })();
 
         // "”"”"” MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) "”"”"”
-        (function diagnosticMode() {
+        (function diagnosticMode() { return;
             console.log('ðŸ”§ DIAGNOSTIC MODE - Flight Options Persistence (v2 - Ignore Templates)');
             
             function removeDisabledFromFlightOptions() {
