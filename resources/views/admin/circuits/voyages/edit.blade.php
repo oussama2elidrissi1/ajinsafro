@@ -1859,12 +1859,12 @@
 
                                         <div class="mb-3">
                                             <label class="form-label">Description dÃ©taillÃ©e</label>
-                                            <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
+                                            <textarea class="form-control" name="programme_days[{{ $dayIndex }}][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
                                         </div>
 
                                         <div class="mb-3">
                                             <label class="form-label">Notes</label>
-                                            <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="3" placeholder="Contenu du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                                            <textarea class="form-control" name="programme_days[{{ $dayIndex }}][notes]" rows="3" placeholder="Contenu du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
                                         </div>
 
                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ old('programme_days.'.$dayIndex.'.title', $day->title ?? ($day->day_title ?? '')) }}">
@@ -1903,7 +1903,7 @@
                                                             </span>
                                                             @if($da->is_editable)
                                                                 <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:220px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
-                                                                <textarea class="form-control form-control-sm rich-editor" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
+                                                                <textarea class="form-control form-control-sm" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
                                                             @else
                                                                 <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}">
                                                                 <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" value="{{ $da->custom_description }}">
@@ -2241,6 +2241,7 @@
             function initOne(el) {
                 if (!el || el.tagName !== 'TEXTAREA') return;
                 if (!el.classList.contains('rich-editor')) return;
+                if (el.closest('#program-days')) return;
                 if (el.dataset.richEditorInitialized === 'true') return;
 
                 var id = ensureId(el);
@@ -3194,9 +3195,9 @@
                     '<div class="col-md-6"><label class="form-label">Description courte</label>' +
                     '<textarea class="form-control" name="programme_days[' + index + '][description]" rows="2" placeholder="RÃ©sumÃ© du jour"></textarea></div></div>' +
                     '<div class="mb-3"><label class="form-label">Description dÃ©taillÃ©e</label>' +
-                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour"></textarea></div>' +
+                    '<textarea class="form-control" name="programme_days[' + index + '][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour"></textarea></div>' +
                     '<div class="mb-3"><label class="form-label">Notes</label>' +
-                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes du jour"></textarea></div>' +
+                    '<textarea class="form-control" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes du jour"></textarea></div>' +
                     '<input type="hidden" name="programme_days[' + index + '][title]" value="Jour ' + (index + 1) + '">' +
                     '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][hotel_id]" value="">' +
@@ -3869,7 +3870,7 @@
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
                 '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
-                '<textarea class="form-control form-control-sm rich-editor" name="' + prefix + '[custom_description]" rows="1" placeholder="Description"></textarea>' +
+                '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description"></textarea>' +
                 '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button></div></div>';
             list.appendChild(row);
             updateProgrammeDayInclus(card);
