@@ -34,6 +34,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -579,7 +580,7 @@ class VoyageController extends Controller
         // Total places calculé à partir des chambres (affiché en lecture seule dans paramètres généraux)
         $totalPlacesVoyage = $this->computeTourTotalPlacesFromRooms($id);
 
-        $voyageExtras = $laravelVoyage
+        $voyageExtras = ($laravelVoyage && $this->voyageExtrasTableAvailable())
             ? VoyageExtra::query()->where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
             : collect();
 
@@ -1144,6 +1145,10 @@ class VoyageController extends Controller
      */
     private function syncVoyageExtras(Voyage $voyage, Request $request): void
     {
+        if (! $this->voyageExtrasTableAvailable()) {
+            return;
+        }
+
         if (! $request->has('voyage_extras')) {
             return;
         }
@@ -1192,6 +1197,25 @@ class VoyageController extends Controller
             }
         }
         VoyageExtra::query()->where('voyage_id', $voyage->id)->whereNotIn('id', $keptIds)->delete();
+    }
+
+    private function voyageExtrasTableAvailable(): bool
+    {
+        static $available = null;
+
+        if ($available !== null) {
+            return $available;
+        }
+
+        try {
+            $model = new VoyageExtra();
+            $connection = $model->getConnectionName() ?: config('database.default');
+            $available = Schema::connection($connection)->hasTable($model->getTable());
+        } catch (\Throwable $e) {
+            $available = false;
+        }
+
+        return $available;
     }
 
     /**

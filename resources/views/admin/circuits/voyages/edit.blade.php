@@ -211,6 +211,61 @@
                 .day-summary-card .small {
                     font-size: 0.8125rem;
                 }
+                .programme-day-card {
+                    border: 1px solid #dbe5f1;
+                    border-radius: 0.9rem;
+                    overflow: hidden;
+                    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+                }
+                .programme-day-card + .programme-day-card {
+                    margin-top: 1rem;
+                }
+                .programme-day-card .accordion-button {
+                    background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+                    font-weight: 700;
+                    color: #16324f;
+                    box-shadow: none;
+                }
+                .programme-day-card .accordion-button:not(.collapsed) {
+                    color: #0f2740;
+                    box-shadow: inset 0 -1px 0 rgba(13, 110, 253, 0.08);
+                }
+                .programme-day-card .accordion-body {
+                    background: #fff;
+                    padding: 1.25rem;
+                }
+                .programme-day-card .form-label {
+                    display: inline-block;
+                    margin-bottom: 0.45rem;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    letter-spacing: 0.01em;
+                    color: #30475f;
+                    text-transform: uppercase;
+                }
+                .programme-day-card .form-control,
+                .programme-day-card .form-select {
+                    border-color: #cfd9e6;
+                    background-color: #fff;
+                }
+                .programme-day-card .form-control:focus,
+                .programme-day-card .form-select:focus {
+                    border-color: #86b7fe;
+                    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+                }
+                .programme-day-card .programme-day-extras {
+                    border: 1px dashed #c9d7ea;
+                    border-radius: 0.75rem;
+                    background: #f8fbff;
+                    padding: 0.85rem 1rem;
+                    min-height: 0;
+                }
+                .programme-day-card .programme-activities-list:empty {
+                    display: none;
+                }
+                .programme-day-card .tox-tinymce {
+                    border-color: #cfd9e6;
+                }
                 .destination-ux-badge-wrap { margin-top: 0.5rem; }
                 .destination-ux-badge { font-size: 0.75rem; font-weight: 500; }
                 .destination-ux-chips-section { margin-bottom: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
@@ -2326,6 +2381,79 @@
                 }
             }
         });
+        // Ouvrir un onglet donnÃ© si ?tab=... ou si le hash cible un panneau.
+        document.addEventListener('DOMContentLoaded', function() {
+            var params = new URLSearchParams(window.location.search);
+            var targetTab = params.get('tab');
+            if (!targetTab && window.location.hash) {
+                targetTab = window.location.hash.replace(/^#/, '');
+            }
+            if (!targetTab) return;
+
+            var normalizedTarget = targetTab.charAt(0) === '#' ? targetTab : ('#' + targetTab);
+            var tabEl = document.querySelector('a[href="' + normalizedTarget + '"][data-bs-toggle="tab"]');
+            if (tabEl && window.bootstrap && bootstrap.Tab) {
+                bootstrap.Tab.getOrCreateInstance(tabEl).show();
+            }
+        });
+
+        (function programmeUiVisibility() {
+            function ensureFirstProgramDayVisible() {
+                var accordion = document.getElementById('accordionProgrammeDays');
+                if (!accordion) return;
+
+                var firstCard = accordion.querySelector('.programme-day-card');
+                if (!firstCard) return;
+
+                var collapseEl = firstCard.querySelector('.accordion-collapse');
+                var toggleBtn = firstCard.querySelector('.accordion-button');
+                if (!collapseEl || !toggleBtn) return;
+
+                if (window.bootstrap && bootstrap.Collapse) {
+                    bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).show();
+                } else {
+                    collapseEl.classList.add('show');
+                }
+
+                toggleBtn.classList.remove('collapsed');
+                toggleBtn.setAttribute('aria-expanded', 'true');
+                firstCard.scrollIntoView({ behavior: 'auto', block: 'start' });
+            }
+
+            function openProgrammeTabIfNeeded() {
+                var params = new URLSearchParams(window.location.search);
+                var hasProgramErrors = Array.from(document.querySelectorAll('.alert.alert-danger li')).some(function(item) {
+                    return /programme_days/i.test(item.textContent || '');
+                });
+                var shouldOpenProgramme = params.get('tab') === 'program-days'
+                    || window.location.hash === '#program-days'
+                    || hasProgramErrors;
+
+                if (!shouldOpenProgramme) return;
+
+                var tabButton = document.querySelector('a[href="#program-days"][data-bs-toggle="tab"]');
+                if (tabButton && window.bootstrap && bootstrap.Tab) {
+                    bootstrap.Tab.getOrCreateInstance(tabButton).show();
+                }
+
+                window.requestAnimationFrame(ensureFirstProgramDayVisible);
+            }
+
+            function bootProgrammeUiVisibility() {
+                openProgrammeTabIfNeeded();
+                window.setTimeout(function() {
+                    ensureFirstProgramDayVisible();
+                    ensureFirstProgramDayVisible();
+                }, 250);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bootProgrammeUiVisibility);
+            } else {
+                bootProgrammeUiVisibility();
+            }
+        })();
+
         // Destination UX: location tree (search, chips, actions, hierarchy, indeterminate)
         (function destinationUx() {
             var container = document.getElementById('locationTreeContainer');
