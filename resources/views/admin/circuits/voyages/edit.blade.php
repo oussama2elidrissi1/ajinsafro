@@ -1770,37 +1770,55 @@
                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][day_id]" value="{{ $day->id }}">
 
                                         <div class="row mb-3">
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <label class="form-label">Type / Mode</label>
                                                 <select name="programme_days[{{ $dayIndex }}][mode]" class="form-select programme-day-mode">
                                                     <option value="program" {{ ($day->mode ?? 'program') === 'program' ? 'selected' : '' }}>Visite / Programme</option>
                                                     <option value="free" {{ ($day->mode ?? '') === 'free' ? 'selected' : '' }}>Libre</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Type de jour</label>
+                                                <select name="programme_days[{{ $dayIndex }}][day_type]" class="form-select">
+                                                    @foreach(\App\Models\TravelProgramDay::DAY_TYPES as $value => $label)
+                                                        <option value="{{ $value }}" {{ old('programme_days.'.$dayIndex.'.day_type', $day->day_type ?? 'visite') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
                                                 <label class="form-label">Titre du jour</label>
                                                 <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex: Jour 1 - Arrivée">
                                             </div>
                                         </div>
 
-                                        <div class="mb-3">
-                                            <label class="form-label">Ville (optionnel)</label>
-                                            <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][city]" value="{{ old('programme_days.'.$dayIndex.'.city', $day->city ?? '') }}" placeholder="Ex: Marrakech">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Ville</label>
+                                                <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][city]" value="{{ old('programme_days.'.$dayIndex.'.city', $day->city ?? '') }}" placeholder="Ex: Marrakech">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Description courte</label>
+                                                <textarea class="form-control" name="programme_days[{{ $dayIndex }}][description]" rows="2" placeholder="RÃ©sumÃ© du jour">{{ old('programme_days.'.$dayIndex.'.description', $day->description ?? '') }}</textarea>
+                                            </div>
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label">Description / Notes</label>
+                                            <label class="form-label">Description dÃ©taillÃ©e</label>
+                                            <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Notes</label>
                                             <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="3" placeholder="Contenu du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
                                         </div>
 
-                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
-                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ old('programme_days.'.$dayIndex.'.title', $day->title ?? ($day->day_title ?? '')) }}">
 
                                         {{-- Inputs hidden pour lignage par jour: vols/hôtel/transferts --}}
                                         @php $dayHotelsTransfers = ($programDayHotelsTransfers ?? [])[$dayIndex] ?? []; @endphp
-                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][flights]" value="">
-                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ $dayHotelsTransfers['hotel_id'] ?? '' }}">
-                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ implode(',', $dayHotelsTransfers['transfer_ids'] ?? []) }}">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][flights]" value="{{ old('programme_days.'.$dayIndex.'.flights', '') }}">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ old('programme_days.'.$dayIndex.'.hotel_id', $dayHotelsTransfers['hotel_id'] ?? '') }}">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ old('programme_days.'.$dayIndex.'.transfer_ids', implode(',', $dayHotelsTransfers['transfer_ids'] ?? [])) }}">
 
                                         <div class="programme-day-extras mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"></div>
                                         <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
@@ -3035,15 +3053,23 @@
                     '<div class="accordion-body" data-day-index="' + index + '" data-day-id="">' +
                     '<input type="hidden" name="programme_days[' + index + '][id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][day_id]" value="">' +
-                    '<div class="row mb-3"><div class="col-md-6"><label class="form-label">Mode</label>' +
+                    '<div class="row mb-3"><div class="col-md-4"><label class="form-label">Mode</label>' +
                     '<select name="programme_days[' + index + '][mode]" class="form-select programme-day-mode">' +
                     '<option value="program" selected>Programme</option><option value="free">Libre</option></select></div>' +
-                    '<div class="col-md-6"><label class="form-label">Titre du jour</label>' +
+                    '<div class="col-md-4"><label class="form-label">Type de jour</label>' +
+                    '<select name="programme_days[' + index + '][day_type]" class="form-select">' +
+                    '<option value="arrivee">ArrivÃ©e</option><option value="visite" selected>Visite</option><option value="transfert">Transfert</option><option value="libre">Libre</option></select></div>' +
+                    '<div class="col-md-4"><label class="form-label">Titre du jour</label>' +
                     '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex: Jour ' + (index + 1) + ' - Arrivée"></div></div>' +
-                    '<div class="mb-3"><label class="form-label">Description / Notes</label>' +
-                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes ou description du jour"></textarea></div>' +
-                    '<input type="hidden" name="programme_days[' + index + '][title]" value="">' +
-                    '<input type="hidden" name="programme_days[' + index + '][description]" value="">' +
+                    '<div class="row mb-3"><div class="col-md-6"><label class="form-label">Ville</label>' +
+                    '<input type="text" class="form-control" name="programme_days[' + index + '][city]" placeholder="Ex: Marrakech"></div>' +
+                    '<div class="col-md-6"><label class="form-label">Description courte</label>' +
+                    '<textarea class="form-control" name="programme_days[' + index + '][description]" rows="2" placeholder="RÃ©sumÃ© du jour"></textarea></div></div>' +
+                    '<div class="mb-3"><label class="form-label">Description dÃ©taillÃ©e</label>' +
+                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour"></textarea></div>' +
+                    '<div class="mb-3"><label class="form-label">Notes</label>' +
+                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes du jour"></textarea></div>' +
+                    '<input type="hidden" name="programme_days[' + index + '][title]" value="Jour ' + (index + 1) + '">' +
                     '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][hotel_id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][transfer_ids]" value="">' +
@@ -3110,6 +3136,9 @@
                         var card = e.target.closest('.programme-day-card');
                         var i = parseInt(card.getAttribute('data-day-index'), 10);
                         var label = card.querySelector('.programme-day-label');
+                        var hiddenTitle = card.querySelector('input[name$="[title]"]');
+                        var currentTitle = e.target.value.trim() || ('Jour ' + (i + 1));
+                        if (hiddenTitle) hiddenTitle.value = currentTitle;
                         if (label) label.textContent = 'JOUR ' + (i + 1) + ' "“ ' + (e.target.value.trim() || ('Jour ' + (i + 1)));
                     }
                 });

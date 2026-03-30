@@ -189,12 +189,13 @@ class VoyageController extends Controller
         $worldCities = config('world_cities', []);
         $mergedCitiesByCode = $this->buildMergedCitiesByCode($worldCountries, $worldCities, $countryCitiesData);
 
-        $programDays = collect();
+        $oldProgrammeDays = $this->getOldProgrammeDaysInput();
         try {
             $activitiesCatalog = Activity::orderBy('title')->get();
         } catch (\Throwable $e) {
             $activitiesCatalog = collect();
         }
+        $programDays = $this->buildProgrammeFormDaysFromPayload($oldProgrammeDays, $activitiesCatalog);
         try {
             $airlines = Airline::query()->orderBy('name')->get();
         } catch (\Throwable $e) {
@@ -229,7 +230,7 @@ class VoyageController extends Controller
         $travelDates = collect();
         $programJson = [];
         $programApiUrl = '';
-        $programDayHotelsTransfers = [];
+        $programDayHotelsTransfers = $this->extractProgrammeDayRelationsFromInput($oldProgrammeDays);
         $tourActivities = collect();
 
         return view('admin.circuits.voyages.edit', compact(
@@ -262,6 +263,10 @@ class VoyageController extends Controller
 
         try {
             $tour = $this->repository->createTour($validated);
+            $laravelVoyage = Voyage::firstOrCreate(
+                ['wp_post_id' => $tour->ID],
+                ['name' => $tour->post_title ?? 'Tour', 'slug' => 'tour-' . $tour->ID]
+            );
             
             // Save tour program if provided (PHP serialized)
             if ($request->has('tours_program')) {
@@ -270,12 +275,15 @@ class VoyageController extends Controller
                 $this->repository->saveTourProgram($tour->ID, $programStyle, $programItems);
             }
 
+            if ($request->has('programme_days')) {
+                $this->syncProgrammeDaysAndActivities($tour->ID, $request);
+                $this->repository->updateTour($tour->ID, [
+                    'duration_day' => $this->programService->countDays($tour->ID),
+                ]);
+            }
+
             if (!$request->boolean('without_flight') && $request->input('without_flight') !== '1' && $request->has('flights')) {
                 try {
-                    $laravelVoyage = Voyage::firstOrCreate(
-                        ['wp_post_id' => $tour->ID],
-                        ['name' => $tour->post_title ?? 'Tour', 'slug' => 'tour-' . $tour->ID]
-                    );
                     $this->voyageFlightService->syncFlights($laravelVoyage->id, $request->input('flights', []));
                 } catch (\Throwable $e) {
                     \Log::error('VoyageController@store voyage flights failed', ['tour_id' => $tour->ID, 'message' => $e->getMessage()]);
@@ -458,6 +466,7 @@ class VoyageController extends Controller
         // Charger les TravelProgramDay avec relations hotels/transfers pour le modal par jour
         // Clé par index du jour (0, 1, 2...) pour correspondre à $dayIndex dans la vue (programme_days)
         $programDayHotelsTransfers = [];
+        $travelProgramDaysWithRelations = collect();
         try {
             $travelProgramDaysWithRelations = $laravelVoyage->programDays()
                 ->with(['hotel', 'transfers'])
@@ -471,6 +480,16 @@ class VoyageController extends Controller
             }
         } catch (\Throwable $e) {
             \Log::warning('VoyageController@edit: could not load travel program days with relations', ['voyage_id' => $laravelVoyage->id, 'error' => $e->getMessage()]);
+        }
+
+        $programDays = $this->mergeProgrammeDaysWithLaravelData($programDays, $travelProgramDaysWithRelations);
+
+        $oldProgrammeDays = $this->getOldProgrammeDaysInput();
+        if (!empty($oldProgrammeDays)) {
+            $programDays = $this->buildProgrammeFormDaysFromPayload($oldProgrammeDays, $activitiesCatalog);
+            $programDayHotelsTransfers = $this->extractProgrammeDayRelationsFromInput($oldProgrammeDays);
+        } elseif ($programDays->isEmpty()) {
+            $programDays = $this->buildProgrammeFormDaysFromPayload([], $activitiesCatalog);
         }
 
         $outboundFlight = $laravelVoyage->outboundFlight;
@@ -1481,7 +1500,7 @@ class VoyageController extends Controller
      * Tables: aj_tour_days, aj_tour_day_activities.
      * - Also syncs day-level hotels and transfers (TravelProgramDay.hotel_id + transfers pivot).
      */
-    protected function syncProgrammeDaysAndActivities(int $tourId, UpdateWpTourRequest $request): void
+    protected function syncProgrammeDaysAndActivities(int $tourId, Request $request): void
     {
         $programmeDays = $request->input('programme_days', []);
         if (!is_array($programmeDays)) {
@@ -1503,23 +1522,30 @@ class VoyageController extends Controller
         }
 
         $submittedDayActivityIds = [];
+        $submittedDayNumbers = [];
         foreach ($programmeDays as $i => $dayRow) {
             $dayId = (int) ($orderedDayIds[$i] ?? 0);
             if ($dayId <= 0) {
                 continue;
             }
+            $dayNumber = $i + 1;
+            $submittedDayNumbers[] = $dayNumber;
             $dayTitle = isset($dayRow['day_title']) ? trim((string) $dayRow['day_title']) : null;
+            $plainDescription = isset($dayRow['description']) ? trim((string) $dayRow['description']) : null;
             $notes = isset($dayRow['notes']) ? trim((string) $dayRow['notes']) : null;
             $this->programService->updateDay($dayId, [
                 'mode' => $dayRow['mode'] ?? 'program',
                 'day_title' => $dayTitle !== '' ? $dayTitle : null,
                 'notes' => $notes !== '' ? $notes : null,
-                'title' => $dayRow['title'] ?? null,
-                'description' => $dayRow['description'] ?? null,
+                'title' => $dayTitle !== '' ? $dayTitle : ($dayRow['title'] ?? null),
+                'description' => $plainDescription !== '' ? $plainDescription : null,
             ]);
+
+            $this->syncTravelProgramDayContent($tourId, $dayNumber, is_array($dayRow) ? $dayRow : []);
 
             $activities = $dayRow['activities'] ?? [];
             if (!is_array($activities)) {
+                $this->syncDayHotelsAndTransfers($tourId, $dayId, is_array($dayRow) ? $dayRow : []);
                 continue;
             }
             foreach ($activities as $k => $row) {
@@ -1553,12 +1579,21 @@ class VoyageController extends Controller
             }
 
             // Sync hotel & transfers for this day (TravelProgramDay, résolu depuis TourDay)
-            $this->syncDayHotelsAndTransfers($tourId, $dayId, $dayRow);
+            $this->syncDayHotelsAndTransfers($tourId, $dayId, is_array($dayRow) ? $dayRow : []);
+        }
+
+        $voyage = Voyage::where('wp_post_id', $tourId)->first();
+        if ($voyage) {
+            TravelProgramDay::where('voyage_id', $voyage->id)
+                ->when(!empty($submittedDayNumbers), function ($query) use ($submittedDayNumbers) {
+                    $query->whereNotIn('day_number', $submittedDayNumbers);
+                })
+                ->delete();
         }
 
         $current = TourDayActivity::where('tour_id', $tourId)->get();
         foreach ($current as $da) {
-            if (in_array($da->id, $submittedDayActivityIds)) {
+            if (in_array($da->id, $submittedDayActivityIds, true)) {
                 continue;
             }
             if ($da->is_mandatory) {
@@ -1754,6 +1789,182 @@ class VoyageController extends Controller
                 ->where('program_day_id', $day->id)
                 ->delete();
         }
+    }
+
+    protected function syncTravelProgramDayContent(int $tourId, int $dayNumber, array $dayRow): void
+    {
+        $voyage = Voyage::firstOrCreate(
+            ['wp_post_id' => $tourId],
+            ['name' => optional($this->repository->getPost($tourId))->post_title ?? 'Tour', 'slug' => 'tour-' . $tourId]
+        );
+
+        $dayTitle = trim((string) ($dayRow['day_title'] ?? $dayRow['title'] ?? ''));
+        $description = trim((string) ($dayRow['description'] ?? ''));
+        $notes = trim((string) ($dayRow['notes'] ?? ''));
+        $contentHtml = trim((string) ($dayRow['content_html'] ?? ''));
+        $dayType = (string) ($dayRow['day_type'] ?? 'visite');
+        if (!array_key_exists($dayType, TravelProgramDay::DAY_TYPES)) {
+            $dayType = 'visite';
+        }
+
+        $programDay = TravelProgramDay::firstOrNew([
+            'voyage_id' => $voyage->id,
+            'day_number' => $dayNumber,
+        ]);
+
+        $city = trim((string) ($dayRow['city'] ?? ''));
+
+        $programDay->fill([
+            'title' => $dayTitle !== '' ? $dayTitle : ('Jour ' . $dayNumber),
+            'city' => $city !== '' ? $city : null,
+            'description' => $description !== '' ? $description : ($notes !== '' ? strip_tags($notes) : null),
+            'content_html' => $contentHtml !== '' ? $contentHtml : null,
+            'day_type' => $dayType,
+        ]);
+        $programDay->save();
+    }
+
+    protected function getOldProgrammeDaysInput(): array
+    {
+        $rows = session()->getOldInput('programme_days', []);
+
+        return is_array($rows) ? array_values($rows) : [];
+    }
+
+    protected function extractProgrammeDayRelationsFromInput(array $rows): array
+    {
+        $out = [];
+
+        foreach ($rows as $index => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $transferIds = $row['transfer_ids'] ?? [];
+            if (is_string($transferIds)) {
+                $transferIds = array_values(array_filter(array_map('intval', array_map('trim', explode(',', $transferIds)))));
+            } elseif (is_array($transferIds)) {
+                $transferIds = array_values(array_filter(array_map('intval', $transferIds)));
+            } else {
+                $transferIds = [];
+            }
+
+            $out[$index] = [
+                'hotel_id' => $row['hotel_id'] ?? '',
+                'transfer_ids' => $transferIds,
+            ];
+        }
+
+        return $out;
+    }
+
+    protected function buildProgrammeFormDaysFromPayload(array $rows, $activitiesCatalog): \Illuminate\Support\Collection
+    {
+        $catalogById = $activitiesCatalog instanceof \Illuminate\Support\Collection
+            ? $activitiesCatalog->keyBy('id')
+            : collect();
+
+        $payload = collect($rows)
+            ->filter(fn ($row) => is_array($row))
+            ->values();
+
+        if ($payload->isEmpty()) {
+            $payload = collect([[
+                'mode' => 'program',
+                'day_title' => 'Jour 1',
+                'city' => '',
+                'day_type' => 'visite',
+                'content_html' => '',
+                'description' => '',
+                'notes' => '',
+                'title' => 'Jour 1',
+                'activities' => [],
+            ]]);
+        }
+
+        return $payload->map(function (array $row, int $index) use ($catalogById) {
+            $dayNumber = $index + 1;
+            $dayTitle = trim((string) ($row['day_title'] ?? $row['title'] ?? ''));
+            $title = trim((string) ($row['title'] ?? ''));
+            $description = (string) ($row['description'] ?? '');
+            $notes = (string) ($row['notes'] ?? '');
+            $contentHtml = (string) ($row['content_html'] ?? '');
+            $dayType = (string) ($row['day_type'] ?? 'visite');
+            if (!array_key_exists($dayType, TravelProgramDay::DAY_TYPES)) {
+                $dayType = 'visite';
+            }
+
+            $day = (object) [
+                'id' => (int) ($row['id'] ?? $row['day_id'] ?? 0),
+                'day_number' => $dayNumber,
+                'mode' => ($row['mode'] ?? 'program') === 'free' ? 'free' : 'program',
+                'day_title' => $dayTitle !== '' ? $dayTitle : ('Jour ' . $dayNumber),
+                'title' => $title !== '' ? $title : ($dayTitle !== '' ? $dayTitle : ('Jour ' . $dayNumber)),
+                'city' => trim((string) ($row['city'] ?? '')),
+                'day_type' => $dayType,
+                'content_html' => $contentHtml,
+                'description' => $description,
+                'notes' => $notes,
+            ];
+
+            $activities = collect($row['activities'] ?? [])
+                ->filter(fn ($activityRow) => is_array($activityRow))
+                ->values()
+                ->map(function (array $activityRow, int $actIndex) use ($catalogById) {
+                    $activityId = (int) ($activityRow['activity_id'] ?? 0);
+                    $catalogActivity = $catalogById->get($activityId);
+
+                    return (object) [
+                        'id' => (int) ($activityRow['day_activity_id'] ?? $activityRow['id'] ?? 0),
+                        'activity_id' => $activityId,
+                        'sort_order' => (int) ($activityRow['sort_order'] ?? $actIndex),
+                        'is_included' => $this->normalizeCheckboxValue($activityRow['is_included'] ?? 0, 1),
+                        'is_mandatory' => $this->normalizeCheckboxValue($activityRow['is_mandatory'] ?? 0, 0),
+                        'is_editable' => true,
+                        'custom_title' => (string) ($activityRow['custom_title'] ?? ''),
+                        'custom_description' => (string) ($activityRow['custom_description'] ?? ''),
+                        'activity' => (object) [
+                            'title' => $catalogActivity->title ?? ('Activité #' . $activityId),
+                        ],
+                    ];
+                });
+
+            return [
+                'day' => $day,
+                'activities' => $activities,
+            ];
+        });
+    }
+
+    protected function mergeProgrammeDaysWithLaravelData($programDays, $travelProgramDaysWithRelations): \Illuminate\Support\Collection
+    {
+        $days = $programDays instanceof \Illuminate\Support\Collection ? $programDays : collect();
+        $travelDaysByNumber = $travelProgramDaysWithRelations instanceof \Illuminate\Support\Collection
+            ? $travelProgramDaysWithRelations->keyBy('day_number')
+            : collect();
+
+        return $days->values()->map(function (array $entry) use ($travelDaysByNumber) {
+            $day = $entry['day'];
+            $travelDay = $travelDaysByNumber->get((int) ($day->day_number ?? 0));
+
+            if ($travelDay) {
+                $day->city = $travelDay->city;
+                $day->day_type = $travelDay->day_type ?: 'visite';
+                $day->content_html = $travelDay->content_html;
+                if (empty($day->description)) {
+                    $day->description = $travelDay->description;
+                }
+            } else {
+                $day->city = $day->city ?? '';
+                $day->day_type = $day->day_type ?? 'visite';
+                $day->content_html = $day->content_html ?? '';
+            }
+
+            return [
+                'day' => $day,
+                'activities' => $entry['activities'] ?? collect(),
+            ];
+        });
     }
 
     /**
