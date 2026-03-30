@@ -1766,91 +1766,101 @@
                                 </h2>
                                 <div id="{{ $collapseId }}" class="accordion-collapse collapse {{ $isFirst ? 'show' : '' }}" data-bs-parent="#accordionProgrammeDays">
                                     <div class="accordion-body" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][id]" value="{{ $day->id }}">
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][day_id]" value="{{ $day->id }}">
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Mode</label>
-                                            <select name="programme_days[{{ $dayIndex }}][mode]" class="form-select programme-day-mode">
-                                                <option value="program" {{ ($day->mode ?? 'program') === 'program' ? 'selected' : '' }}>Programme</option>
-                                                <option value="free" {{ ($day->mode ?? '') === 'free' ? 'selected' : '' }}>Libre</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Titre du jour</label>
-                                            <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex: Jour 1 - Arrivée">
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Description / Notes</label>
-                                        <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="2" placeholder="Notes ou description du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
-                                    </div>
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
-                                    
-                                    {{-- Inputs hidden pour lignage par jour: vols/hôtel/transferts (pré-remplis depuis programDayHotelsTransfers pour le modal Programme) --}}
-                                    @php $dayHotelsTransfers = ($programDayHotelsTransfers ?? [])[$dayIndex] ?? []; @endphp
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][flights]" value="">
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ $dayHotelsTransfers['hotel_id'] ?? '' }}">
-                                    <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ implode(',', $dayHotelsTransfers['transfer_ids'] ?? []) }}">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][id]" value="{{ $day->id }}">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][day_id]" value="{{ $day->id }}">
 
-                                    <div class="programme-day-extras mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"></div>
-                                    <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
-                                        INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activités' : 'Activité' }}
-                                    </p>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Type / Mode</label>
+                                                <select name="programme_days[{{ $dayIndex }}][mode]" class="form-select programme-day-mode">
+                                                    <option value="program" {{ ($day->mode ?? 'program') === 'program' ? 'selected' : '' }}>Visite / Programme</option>
+                                                    <option value="free" {{ ($day->mode ?? '') === 'free' ? 'selected' : '' }}>Libre</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Titre du jour</label>
+                                                <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex: Jour 1 - Arrivée">
+                                            </div>
+                                        </div>
 
-                                    <h6 class="mt-3 mb-2">Éléments du jour</h6>
-                                    <div class="programme-activities-list mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
-                                        @foreach($activities as $actIndex => $da)
-                                            <div class="programme-activity-row card mb-2" data-day-activity-id="{{ $da->id }}" draggable="true">
-                                                <div class="card-body py-2">
-                                                    <div class="d-flex flex-wrap align-items-start gap-2">
-                                                        <span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>
-                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][day_activity_id]" value="{{ $da->id }}">
-                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][activity_id]" value="{{ $da->activity_id }}">
-                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][sort_order]" value="{{ $actIndex }}">
-                                                        <span class="fw-medium">{{ $da->activity->title ?? 'Activité #'.$da->activity_id }}</span>
-                                                        <span class="form-check form-check-inline mb-0">
-                                                            <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="0">
-                                                            <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
-                                                            <label class="form-check-label small">Inclus</label>
-                                                        </span>
-                                                        <span class="form-check form-check-inline mb-0">
-                                                            <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_mandatory]" value="0">
-                                                            <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_mandatory]" value="1" {{ $da->is_mandatory ? 'checked' : '' }} {{ $da->is_mandatory ? 'readonly' : '' }}>
-                                                            <label class="form-check-label small">Obligatoire</label>
-                                                        </span>
-                                                        @if($da->is_editable)
-                                                        <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:200px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
-                                                        <textarea class="form-control form-control-sm rich-editor" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
-                                                        @else
-                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}">
-                                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" value="{{ $da->custom_description }}">
-                                                        @endif
-                                                        @if(!$da->is_mandatory)
-                                                        <button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>
-                                                        @endif
+                                        <div class="mb-3">
+                                            <label class="form-label">Ville (optionnel)</label>
+                                            <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][city]" value="{{ old('programme_days.'.$dayIndex.'.city', $day->city ?? '') }}" placeholder="Ex: Marrakech">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Description / Notes</label>
+                                            <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="3" placeholder="Contenu du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                                        </div>
+
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ $day->title ?? '' }}">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][description]" value="{{ $day->description ?? '' }}">
+
+                                        {{-- Inputs hidden pour lignage par jour: vols/hôtel/transferts --}}
+                                        @php $dayHotelsTransfers = ($programDayHotelsTransfers ?? [])[$dayIndex] ?? []; @endphp
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][flights]" value="">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ $dayHotelsTransfers['hotel_id'] ?? '' }}">
+                                        <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ implode(',', $dayHotelsTransfers['transfer_ids'] ?? []) }}">
+
+                                        <div class="programme-day-extras mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"></div>
+                                        <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
+                                            INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activités' : 'Activité' }}
+                                        </p>
+
+                                        <h6 class="mt-3 mb-2">Activités</h6>
+                                        <div class="programme-activities-list mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
+                                            @foreach($activities as $actIndex => $da)
+                                                <div class="programme-activity-row card mb-2" data-day-activity-id="{{ $da->id }}" draggable="true">
+                                                    <div class="card-body py-2">
+                                                        <div class="d-flex flex-wrap align-items-start gap-2">
+                                                            <span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>
+                                                            <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][day_activity_id]" value="{{ $da->id }}">
+                                                            <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][activity_id]" value="{{ $da->activity_id }}">
+                                                            <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][sort_order]" value="{{ $actIndex }}">
+                                                            <span class="fw-medium">{{ $da->activity->title ?? 'Activité #'.$da->activity_id }}</span>
+                                                            <span class="form-check form-check-inline mb-0">
+                                                                <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="0">
+                                                                <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
+                                                                <label class="form-check-label small">Inclus</label>
+                                                            </span>
+                                                            <span class="form-check form-check-inline mb-0">
+                                                                <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_mandatory]" value="0">
+                                                                <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_mandatory]" value="1" {{ $da->is_mandatory ? 'checked' : '' }} {{ $da->is_mandatory ? 'readonly' : '' }}>
+                                                                <label class="form-check-label small">Obligatoire</label>
+                                                            </span>
+                                                            @if($da->is_editable)
+                                                                <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:220px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
+                                                                <textarea class="form-control form-control-sm rich-editor" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
+                                                            @else
+                                                                <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}">
+                                                                <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" value="{{ $da->custom_description }}">
+                                                            @endif
+                                                            @if(!$da->is_mandatory)
+                                                                <button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                        <button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}" data-day-number="{{ $day->day_number }}">
-                                            <i class="bx bx-plus"></i> Ajouter un élément
-                                        </button>
-                                        <span class="small text-muted">ou</span>
-                                        <select class="form-select form-select-sm add-activity-select" style="max-width:240px" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
-                                            <option value="">-- Activité rapide --</option>
-                                            @foreach($activitiesCatalog as $act)
-                                                <option value="{{ $act->id }}">{{ $act->title }}</option>
                                             @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"><i class="bx bx-plus"></i> Ajouter</button>
-                                    </div>
+                                        </div>
+
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}" data-day-number="{{ $day->day_number }}">
+                                                <i class="bx bx-plus"></i> Ajouter un élément
+                                            </button>
+                                            <span class="small text-muted">ou</span>
+                                            <select class="form-select form-select-sm add-activity-select" style="max-width:260px" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
+                                                <option value="">-- Activité rapide --</option>
+                                                @foreach($activitiesCatalog as $act)
+                                                    <option value="{{ $act->id }}">{{ $act->title }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"><i class="bx bx-plus"></i> Ajouter</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         @empty
                             <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2" id="program-no-days-alert">
                                 <span><i class="bx bx-info-circle"></i> Aucun jour. Cliquez sur Â« Ajouter un jour Â» pour définir le programme.</span>
