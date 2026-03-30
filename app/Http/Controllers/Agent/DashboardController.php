@@ -14,6 +14,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -224,6 +225,10 @@ class DashboardController extends Controller
      */
     private function buildCalendarEvents(Builder $reservationsQuery): array
     {
+        if (! Schema::connection('mysql')->hasColumn('reservations', 'travel_date_id')) {
+            return [];
+        }
+
         $rows = (clone $reservationsQuery)
             ->with(['tour:id,name', 'travelDate'])
             ->whereNotNull('travel_date_id')

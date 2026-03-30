@@ -74,6 +74,22 @@
         <div class="ve-page-layout">
         <div class="ve-main-col">
         <p class="ve-tab-zone-hint text-muted small mb-2 d-none d-lg-flex align-items-center gap-2"><i class="bx bx-folder-open"></i><span>Onglets : Basique, Info, Disponibilité, Médias… défilez pour Vols, Hôtels, Programme.</span></p>
+        <div class="card ve-pane-card ve-form-actions-card">
+            <div class="card-body ve-form-actions-body">
+                <div>
+                    <h5 class="mb-1">Actions</h5>
+                    <p class="text-muted small mb-0">Enregistrez vos modifications à tout moment sans quitter la page.</p>
+                </div>
+                <div class="ve-form-actions-buttons">
+                    <button type="submit" form="edit-voyage-form" class="btn btn-primary">
+                        <i class="bx bx-save"></i> Enregistrer
+                    </button>
+                    <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary">
+                        <i class="bx bx-x"></i> Annuler
+                    </a>
+                </div>
+            </div>
+        </div>
 
         {{-- ===== Modern Tab Navigation (scrollable, sticky) ===== --}}
         <div class="ve-tabs-wrapper">
@@ -149,9 +165,11 @@
         </div>
 
         <div class="tab-content ve-tab-content pt-4">
-            <div class="tab-pane active" id="basic" role="tabpanel">
-                <div class="card ve-pane-card">
-                    <div class="card-body">
+            <div class="tab-pane active show" id="basic" role="tabpanel">
+                <div class="row g-4 ve-basic-layout">
+                    <div class="col-lg-8">
+                        <div class="card ve-pane-card mb-0">
+                            <div class="card-body">
                         <h4 class="card-title mb-2">Informations principales</h4>
                         <p class="text-muted small mb-4">Publication et capacités : voir la colonne de droite.</p>
                         <div class="mb-4">
@@ -169,6 +187,75 @@
                         <div class="mb-0 ve-rich-field">
                             <label for="excerpt" class="form-label">Extrait / Accroche</label>
                             <textarea class="form-control rich-editor" id="excerpt" name="excerpt" rows="3">{{ old('excerpt', $voyage->post_excerpt) }}</textarea>
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="ve-basic-sidebar">
+                            <div class="card ve-pane-card ve-basic-side-card mb-0">
+                                <div class="card-body">
+                                    <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-pulse text-primary"></i> Resume</h5>
+                                    <ul class="list-unstyled small mb-0 ve-summary-list">
+                                        <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">WordPress</span><span class="fw-semibold font-monospace">#{{ $veWpId ?: '-' }}</span></li>
+                                        @if($laravelV && (int) data_get($laravelV, 'id', 0) > 0)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Laravel</span><span class="fw-semibold font-monospace">#{{ data_get($laravelV, 'id') }}</span></li>@endif
+                                        <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Dates depart</span><span class="fw-semibold">{{ $veDatesCount }}</span></li>
+                                        @if($vePriceLabel)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Prix</span><span class="fw-semibold text-truncate ms-1" style="max-width:55%">{{ $vePriceLabel }}</span></li>@endif
+                                        @if($veDestination)<li class="d-flex justify-content-between py-2"><span class="text-muted">Destination</span><span class="fw-semibold text-end small" style="max-width:55%">{{ Str::limit($veDestination, 40) }}</span></li>@endif
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card ve-pane-card ve-basic-side-card mb-0">
+                                <div class="card-body">
+                                    <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> Parametres generaux</h5>
+                                    <div class="mb-3">
+                                        <label for="post_status" class="form-label">Statut</label>
+                                        <select class="form-select" id="post_status" name="post_status">
+                                            <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>Publie</option>
+                                            <option value="draft" {{ old('post_status', $voyage->post_status) === 'draft' ? 'selected' : '' }}>Brouillon</option>
+                                            <option value="pending" {{ old('post_status', $voyage->post_status) === 'pending' ? 'selected' : '' }}>En attente</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="duration_day" class="form-label">Duree (jours)</label>
+                                        <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="min_people" class="form-label">Min. personnes</label>
+                                        <input type="number" class="form-control" id="min_people" name="min_people" value="{{ old('min_people', $meta['min_people'] ?? '') }}" min="1">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="max_people" class="form-label">Max. personnes</label>
+                                        <input type="number" class="form-control bg-light" id="max_people" name="max_people" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
+                                        <small class="text-muted">Via chambres (Hotels)</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="places_display" class="form-label">Places</label>
+                                        <input type="number" class="form-control bg-light" id="places_display" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['places'] ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="tour_price_by" class="form-label">Tarification par</label>
+                                        <select class="form-select" id="tour_price_by" name="tour_price_by">
+                                            <option value="">-- Selectionner --</option>
+                                            <option value="person" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'person' ? 'selected' : '' }}>Par personne</option>
+                                            <option value="group" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'group' ? 'selected' : '' }}>Par groupe</option>
+                                            <option value="fixed" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'fixed' ? 'selected' : '' }}>Prix fixe</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured', $meta['is_featured'] ?? '') === 'on' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="is_featured">Tour a la une</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="hide_adult_in_booking_form" name="hide_adult_in_booking_form" value="1" {{ old('hide_adult_in_booking_form', $meta['hide_adult_in_booking_form'] ?? '') === 'on' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="hide_adult_in_booking_form">Masquer champ adulte</label>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label for="st_tour_external_booking" class="form-label">Lien reservation externe</label>
+                                        <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -233,6 +320,91 @@
                 .programme-day-card .accordion-body {
                     background: #fff;
                     padding: 1.25rem;
+                }
+                .programme-day-card .section-card {
+                    border: 1px solid #e3ebf5;
+                    border-radius: 0.9rem;
+                    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+                    box-shadow: none;
+                }
+                .programme-day-card .section-card .card-body {
+                    padding: 1rem;
+                }
+                .programme-day-card .section-card-title {
+                    margin: 0 0 0.85rem;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    letter-spacing: 0.04em;
+                    text-transform: uppercase;
+                    color: #5f7288;
+                }
+                @media (min-width: 768px) {
+                    .programme-day-card .accordion-body {
+                        display: grid;
+                        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+                        gap: 1rem;
+                        align-items: start;
+                    }
+                    .programme-day-card .accordion-body > :not(.programme-day-settings):not(.programme-day-split):not(.programme-day-detail):not(.programme-day-notes):not(input[type="hidden"]) {
+                        grid-column: 1 / -1;
+                    }
+                    .programme-day-card .programme-day-settings,
+                    .programme-day-card .programme-day-split {
+                        --bs-gutter-x: 0;
+                        margin-right: 0;
+                        margin-left: 0;
+                    }
+                    .programme-day-card .programme-day-settings > [class*="col-"],
+                    .programme-day-card .programme-day-split > [class*="col-"] {
+                        width: auto;
+                        max-width: none;
+                        padding-right: 0;
+                        padding-left: 0;
+                    }
+                    .programme-day-card .programme-day-settings {
+                        grid-column: 2;
+                        display: grid;
+                        gap: 1rem;
+                        align-self: start;
+                    }
+                    .programme-day-card .programme-day-settings::before,
+                    .programme-day-card .programme-day-split > .col-md-6:last-child::before {
+                        display: block;
+                        margin: 0 0 0.85rem;
+                        font-size: 0.8rem;
+                        font-weight: 700;
+                        letter-spacing: 0.04em;
+                        text-transform: uppercase;
+                        color: #5f7288;
+                    }
+                    .programme-day-card .programme-day-settings::before {
+                        content: "Paramètres du jour";
+                    }
+                    .programme-day-card .programme-day-split {
+                        grid-column: 1 / -1;
+                        display: grid;
+                        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+                        gap: 1rem;
+                    }
+                    .programme-day-card .programme-day-split > .col-md-6:last-child::before {
+                        content: "Résumé";
+                    }
+                    .programme-day-card .programme-day-settings,
+                    .programme-day-card .programme-day-split > .col-md-6:last-child,
+                    .programme-day-card .programme-day-detail,
+                    .programme-day-card .programme-day-notes {
+                        border: 1px solid #e3ebf5;
+                        border-radius: 0.9rem;
+                        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+                        padding: 1rem;
+                    }
+                    .programme-day-card .programme-day-detail {
+                        grid-column: 1;
+                    }
+                    .programme-day-card .programme-day-notes {
+                        grid-column: 1;
+                        margin-bottom: 0 !important;
+                    }
                 }
                 .programme-day-card .form-label {
                     display: inline-block;
@@ -376,7 +548,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Localisation & Carte</h4>
@@ -1824,7 +1995,7 @@
                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][id]" value="{{ $day->id }}">
                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][day_id]" value="{{ $day->id }}">
 
-                                        <div class="row mb-3">
+                                        <div class="row g-4">
                                             <div class="col-md-4">
                                                 <label class="form-label">Type / Mode</label>
                                                 <select name="programme_days[{{ $dayIndex }}][mode]" class="form-select programme-day-mode">
@@ -1846,7 +2017,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="row mb-3">
+                                        <div class="row mb-3 programme-day-split">
                                             <div class="col-md-6">
                                                 <label class="form-label">Ville</label>
                                                 <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][city]" value="{{ old('programme_days.'.$dayIndex.'.city', $day->city ?? '') }}" placeholder="Ex: Marrakech">
@@ -1857,12 +2028,12 @@
                                             </div>
                                         </div>
 
-                                        <div class="mb-3">
+                                        <div class="mb-3 programme-day-detail">
                                             <label class="form-label">Description dÃ©taillÃ©e</label>
                                             <textarea class="form-control" name="programme_days[{{ $dayIndex }}][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
                                         </div>
 
-                                        <div class="mb-3">
+                                        <div class="mb-3 programme-day-notes">
                                             <label class="form-label">Notes</label>
                                             <textarea class="form-control" name="programme_days[{{ $dayIndex }}][notes]" rows="3" placeholder="Contenu du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
                                         </div>
@@ -1947,103 +2118,20 @@
 
         </div>{{-- /.tab-content --}}
 
-        </div>{{-- /.ve-main-col --}}
-
-        <aside class="ve-sidebar-col">
-            <div class="ve-sticky-sidebar">
-
-                {{-- ── ACTIONS (unique zone : enregistrer / annuler / supprimer) ── --}}
-                <div class="card ve-sidebar-card ve-actions-card">
-                    <div class="card-body">
-                        <button type="submit" form="edit-voyage-form" class="btn btn-primary">
-                            <i class="bx bx-save"></i> Enregistrer
-                        </button>
-                        <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary">
-                            <i class="bx bx-x"></i> Annuler
-                        </a>
-                    </div>
-                </div>
-
-                {{-- ── RÉSUMÉ ── --}}
-                <div class="card ve-sidebar-card">
-                    <div class="card-body">
-                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-pulse text-primary"></i> Résumé</h5>
-                        <ul class="list-unstyled small mb-0 ve-summary-list">
-                            <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">WordPress</span><span class="fw-semibold font-monospace">#{{ $veWpId ?: '—' }}</span></li>
-                            @if($laravelV && (int) data_get($laravelV, 'id', 0) > 0)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Laravel</span><span class="fw-semibold font-monospace">#{{ data_get($laravelV, 'id') }}</span></li>@endif
-                            <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Dates départ</span><span class="fw-semibold">{{ $veDatesCount }}</span></li>
-                            @if($vePriceLabel)<li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Prix</span><span class="fw-semibold text-truncate ms-1" style="max-width:55%">{{ $vePriceLabel }}</span></li>@endif
-                            @if($veDestination)<li class="d-flex justify-content-between py-2"><span class="text-muted">Destination</span><span class="fw-semibold text-end small" style="max-width:55%">{{ Str::limit($veDestination, 40) }}</span></li>@endif
-                        </ul>
-                    </div>
-                </div>
-                <div class="card ve-sidebar-card">
-                    <div class="card-body">
-                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> Paramètres généraux</h5>
-                        <div class="mb-3">
-                            <label for="post_status" class="form-label">Statut</label>
-                            <select class="form-select" id="post_status" name="post_status">
-                                <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>Publié</option>
-                                <option value="draft" {{ old('post_status', $voyage->post_status) === 'draft' ? 'selected' : '' }}>Brouillon</option>
-                                <option value="pending" {{ old('post_status', $voyage->post_status) === 'pending' ? 'selected' : '' }}>En attente</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="duration_day" class="form-label">Durée (jours)</label>
-                            <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="min_people" class="form-label">Min. personnes</label>
-                            <input type="number" class="form-control" id="min_people" name="min_people" value="{{ old('min_people', $meta['min_people'] ?? '') }}" min="1">
-                        </div>
-                        <div class="mb-3">
-                            <label for="max_people" class="form-label">Max. personnes</label>
-                            <input type="number" class="form-control bg-light" id="max_people" name="max_people" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
-                            <small class="text-muted">Via chambres (Hôtels)</small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="places_display" class="form-label">Places</label>
-                            <input type="number" class="form-control bg-light" id="places_display" value="{{ old('max_people', $totalPlacesVoyage ?? $meta['places'] ?? $meta['max_people'] ?? 0) }}" min="0" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="tour_price_by" class="form-label">Tarification par</label>
-                            <select class="form-select" id="tour_price_by" name="tour_price_by">
-                                <option value="">-- Sélectionner --</option>
-                                <option value="person" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'person' ? 'selected' : '' }}>Par personne</option>
-                                <option value="group" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'group' ? 'selected' : '' }}>Par groupe</option>
-                                <option value="fixed" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'fixed' ? 'selected' : '' }}>Prix fixe</option>
-                            </select>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured', $meta['is_featured'] ?? '') === 'on' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_featured">Tour à la une</label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="hide_adult_in_booking_form" name="hide_adult_in_booking_form" value="1" {{ old('hide_adult_in_booking_form', $meta['hide_adult_in_booking_form'] ?? '') === 'on' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="hide_adult_in_booking_form">Masquer champ adulte</label>
-                        </div>
-                        <div class="mb-0">
-                            <label for="st_tour_external_booking" class="form-label">Lien réservation externe</label>
-                            <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
-                        </div>
-                    </div>
-                </div>
-                {{-- ── ZONE DANGEREUSE (edit uniquement) ── --}}
-                @if (!$isCreate)
-                <div class="card ve-sidebar-card ve-danger-zone-card">
-                    <div class="card-body">
-                        <p class="ve-danger-zone-title"><i class="bx bx-error-circle"></i> Zone dangereuse</p>
-                        <p class="ve-danger-zone-text">Supprimer définitivement ce tour et toutes ses données. Action irréversible.</p>
-                        <button type="submit" form="delete-voyage-form" class="btn btn-outline-danger btn-sm"
-                            onclick="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.')">
-                            <i class="bx bx-trash"></i> Supprimer ce voyage
-                        </button>
-                    </div>
-                </div>
-                @endif
-
+        @if (!$isCreate)
+        <div class="card ve-pane-card ve-danger-zone-card mt-4">
+            <div class="card-body">
+                <p class="ve-danger-zone-title"><i class="bx bx-error-circle"></i> Zone dangereuse</p>
+                <p class="ve-danger-zone-text">Supprimer définitivement ce tour et toutes ses données. Action irréversible.</p>
+                <button type="submit" form="delete-voyage-form" class="btn btn-outline-danger btn-sm"
+                    onclick="return confirm('Supprimer définitivement ce tour WordPress ? Cette action est irréversible.')">
+                    <i class="bx bx-trash"></i> Supprimer ce voyage
+                </button>
             </div>
-        </aside>
+        </div>
+        @endif
+
+        </div>{{-- /.ve-main-col --}}
 
         </div>{{-- /.ve-page-layout --}}
 
@@ -3187,7 +3275,7 @@
                     '<div class="accordion-body" data-day-index="' + index + '" data-day-id="">' +
                     '<input type="hidden" name="programme_days[' + index + '][id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][day_id]" value="">' +
-                    '<div class="row mb-3"><div class="col-md-4"><label class="form-label">Mode</label>' +
+                    '<div class="row mb-3 programme-day-settings"><div class="col-md-4"><label class="form-label">Mode</label>' +
                     '<select name="programme_days[' + index + '][mode]" class="form-select programme-day-mode">' +
                     '<option value="program" selected>Programme</option><option value="free">Libre</option></select></div>' +
                     '<div class="col-md-4"><label class="form-label">Type de jour</label>' +
@@ -3195,13 +3283,13 @@
                     '<option value="arrivee">ArrivÃ©e</option><option value="visite" selected>Visite</option><option value="transfert">Transfert</option><option value="libre">Libre</option></select></div>' +
                     '<div class="col-md-4"><label class="form-label">Titre du jour</label>' +
                     '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex: Jour ' + (index + 1) + ' - Arrivée"></div></div>' +
-                    '<div class="row mb-3"><div class="col-md-6"><label class="form-label">Ville</label>' +
+                    '<div class="row mb-3 programme-day-split"><div class="col-md-6"><label class="form-label">Ville</label>' +
                     '<input type="text" class="form-control" name="programme_days[' + index + '][city]" placeholder="Ex: Marrakech"></div>' +
                     '<div class="col-md-6"><label class="form-label">Description courte</label>' +
                     '<textarea class="form-control" name="programme_days[' + index + '][description]" rows="2" placeholder="RÃ©sumÃ© du jour"></textarea></div></div>' +
-                    '<div class="mb-3"><label class="form-label">Description dÃ©taillÃ©e</label>' +
+                    '<div class="mb-3 programme-day-detail"><label class="form-label">Description dÃ©taillÃ©e</label>' +
                     '<textarea class="form-control" name="programme_days[' + index + '][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour"></textarea></div>' +
-                    '<div class="mb-3"><label class="form-label">Notes</label>' +
+                    '<div class="mb-3 programme-day-notes"><label class="form-label">Notes</label>' +
                     '<textarea class="form-control" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes du jour"></textarea></div>' +
                     '<input type="hidden" name="programme_days[' + index + '][title]" value="Jour ' + (index + 1) + '">' +
                     '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +

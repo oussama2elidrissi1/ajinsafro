@@ -1022,19 +1022,28 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
    Right column: sidebar (actions, summary, settings, danger zone)
    ─────────────────────────────────────────────────────────────────── */
 .voyage-edit-page .ve-page-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 300px;
-    gap: 1.5rem;
+    display: block;
     align-items: start;
-}
-@media (max-width: 991px) {
-    .voyage-edit-page .ve-page-layout {
-        grid-template-columns: 1fr;
-    }
 }
 .voyage-edit-page .ve-main-col {
     min-width: 0;
     width: 100%;
+}
+.voyage-edit-page .ve-form-actions-card {
+    margin-bottom: 1rem;
+}
+.voyage-edit-page .ve-form-actions-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.voyage-edit-page .ve-form-actions-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 .voyage-edit-page .ve-sidebar-col {
     min-width: 0;
@@ -1211,6 +1220,28 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
 .voyage-edit-page .ve-pane-card {
     margin-bottom: 1.25rem;
 }
+.voyage-edit-page .ve-basic-layout > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+}
+.voyage-edit-page .ve-basic-layout .ve-pane-card {
+    margin-bottom: 0;
+}
+.voyage-edit-page .ve-basic-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.voyage-edit-page .ve-basic-side-card .card-body {
+    padding: 1.125rem;
+}
+.voyage-edit-page .ve-basic-side-card .ve-summary-list li:last-child {
+    border-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+.voyage-edit-page .ve-basic-side-card .ve-summary-list li:first-child {
+    padding-top: 0 !important;
+}
 .voyage-edit-page .ve-rich-field textarea.rich-editor {
     min-height: 140px;
 }
@@ -1222,6 +1253,18 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 .voyage-edit-page .page-content { overflow-x: hidden; }
+@media (max-width: 991px) {
+    .voyage-edit-page .ve-form-actions-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .voyage-edit-page .ve-form-actions-buttons .btn {
+        width: 100%;
+    }
+    .voyage-edit-page .ve-basic-sidebar {
+        gap: 1rem;
+    }
+}
 
 /* Cleanup: save bar hidden, actions are in sidebar only */
 .voyage-edit-page .ve-save-bar { display: none !important; }

@@ -49,7 +49,6 @@
     @include('partner_v2.partials.footer')
 
     @include('layouts.vendor-scripts')
-    @stack('script')
     @stack('scripts')
     @stack('body-end')
 </body>

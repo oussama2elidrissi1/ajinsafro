@@ -61,3 +61,31 @@
 .agent-portal-main .badge.bg-danger {
   background-color: rgb(220 38 38) !important;
 }
+
+/*
+ * Tailwind partner-v2 ships a global `.collapse { visibility: collapse; }`
+ * utility that conflicts with Bootstrap accordions in the agent/manager shell.
+ * Keep the fix scoped to the portal shell so admin keeps its native behavior.
+ */
+.partner-v2 .agent-portal-main .accordion-collapse.collapse {
+  visibility: hidden;
+  display: none;
+}
+
+.partner-v2 .agent-portal-main .accordion-collapse.collapse.show {
+  visibility: visible;
+  display: block;
+  overflow: visible;
+}
+
+.partner-v2 .agent-portal-main .accordion-collapse.collapsing {
+  visibility: visible;
+  display: block;
+  overflow: hidden;
+}
+
+.partner-v2 .agent-portal-main .accordion-collapse.show .accordion-body,
+.partner-v2 .agent-portal-main .programme-day-card .accordion-body {
+  visibility: visible;
+  opacity: 1;
+}

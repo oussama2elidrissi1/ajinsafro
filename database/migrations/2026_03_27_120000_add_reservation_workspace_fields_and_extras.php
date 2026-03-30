@@ -11,16 +11,31 @@ return new class extends Migration
         $schema = Schema::connection('mysql');
 
         if ($schema->hasTable('reservations')) {
-            $schema->table('reservations', function (Blueprint $table) {
-                if (! Schema::hasColumn('reservations', 'prestation_type')) {
+            $hasPrestation = $schema->hasColumn('reservations', 'prestation_type');
+            $hasPaid = $schema->hasColumn('reservations', 'paid_amount');
+
+            if (! $hasPrestation) {
+                $schema->table('reservations', function (Blueprint $table) {
                     $table->string('prestation_type', 30)->nullable()->after('tour_id')
                         ->comment('package|vol|hebergement (module workspace)');
+                });
+            }
+
+            if (! $hasPaid) {
+                // base_price est ajouté par 2026_03_19_100000 ; les bases sans cette migration
+                // n’ont pas cette colonne — éviter after() sur une colonne absente.
+                $afterPaid = 'notes';
+                if ($schema->hasColumn('reservations', 'room_supplement_total')) {
+                    $afterPaid = 'room_supplement_total';
+                } elseif ($schema->hasColumn('reservations', 'base_price')) {
+                    $afterPaid = 'base_price';
                 }
-                if (! Schema::hasColumn('reservations', 'paid_amount')) {
-                    $table->decimal('paid_amount', 12, 2)->nullable()->after('base_price')
+
+                $schema->table('reservations', function (Blueprint $table) use ($afterPaid) {
+                    $table->decimal('paid_amount', 12, 2)->nullable()->after($afterPaid)
                         ->comment('Acompte / montant payé (workspace)');
-                }
-            });
+                });
+            }
         }
 
         if (! $schema->hasTable('reservation_extras')) {

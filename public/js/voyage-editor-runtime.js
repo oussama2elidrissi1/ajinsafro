@@ -24,6 +24,7 @@
         programmeBound: false,
         flightsBound: false,
         flightsObserver: null,
+        programmeManagerDiagnosticsBound: false,
         draggedProgrammeCard: null
     };
 
@@ -351,6 +352,7 @@
 
         normalizeProgrammeCards();
         bindProgrammeEvents(accordion);
+        bindProgrammeManagerDiagnostics(accordion);
         ensureFirstProgrammeDayVisible();
 
         return accordion;
@@ -685,6 +687,72 @@
 
     function createProgrammeCollapseId(index) {
         return 'programme-day-collapse-' + (index + 1) + '-' + Date.now();
+    }
+
+    function bindProgrammeManagerDiagnostics(accordion) {
+        if (state.programmeManagerDiagnosticsBound || !isManagerPortalShell()) {
+            return;
+        }
+
+        state.programmeManagerDiagnosticsBound = true;
+
+        accordion.addEventListener('click', function (event) {
+            var toggleButton = event.target.closest('.accordion-button');
+            if (!toggleButton) {
+                return;
+            }
+
+            window.setTimeout(function () {
+                logProgrammeManagerState(toggleButton.closest('.programme-day-card'), 'click');
+            }, 50);
+
+            window.setTimeout(function () {
+                logProgrammeManagerState(toggleButton.closest('.programme-day-card'), 'click+400ms');
+            }, 400);
+        });
+
+        accordion.addEventListener('shown.bs.collapse', function (event) {
+            logProgrammeManagerState(event.target.closest('.programme-day-card'), 'shown.bs.collapse');
+        });
+
+        accordion.addEventListener('hidden.bs.collapse', function (event) {
+            logProgrammeManagerState(event.target.closest('.programme-day-card'), 'hidden.bs.collapse');
+        });
+    }
+
+    function logProgrammeManagerState(card, phase) {
+        if (!card || !window.console) {
+            return;
+        }
+
+        var collapse = card.querySelector('.accordion-collapse');
+        var body = card.querySelector('.accordion-body');
+        var computedCollapse = collapse ? window.getComputedStyle(collapse) : null;
+        var computedBody = body ? window.getComputedStyle(body) : null;
+
+        console.log('[Programme Manager Diagnostic]', {
+            phase: phase,
+            dayIndex: card.getAttribute('data-day-index'),
+            collapseFound: !!collapse,
+            bodyFound: !!body,
+            bodyHtmlLength: body ? (body.innerHTML || '').length : 0,
+            collapseClasses: collapse ? collapse.className : null,
+            bodyClasses: body ? body.className : null,
+            collapseDisplay: computedCollapse ? computedCollapse.display : null,
+            collapseVisibility: computedCollapse ? computedCollapse.visibility : null,
+            collapseHeight: collapse ? collapse.getBoundingClientRect().height : null,
+            collapseMaxHeight: computedCollapse ? computedCollapse.maxHeight : null,
+            collapseOverflow: computedCollapse ? computedCollapse.overflow : null,
+            bodyDisplay: computedBody ? computedBody.display : null,
+            bodyVisibility: computedBody ? computedBody.visibility : null,
+            bodyOpacity: computedBody ? computedBody.opacity : null,
+            bodyHeight: body ? body.getBoundingClientRect().height : null,
+            bodyOverflow: computedBody ? computedBody.overflow : null
+        });
+    }
+
+    function isManagerPortalShell() {
+        return document.body.classList.contains('partner-v2') && !!document.querySelector('.agent-portal-main');
     }
 
     function enableFlightOptionsForSubmit() {
