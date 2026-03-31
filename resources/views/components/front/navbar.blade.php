@@ -72,12 +72,6 @@
 
             {{-- Actions right --}}
             <div class="flex items-center gap-2 md:gap-4">
-                <div class="relative hidden sm:block">
-                    <button type="button" class="flex items-center gap-1 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" aria-expanded="false" aria-haspopup="true">
-                        <span>EUR</span>
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                    </button>
-                </div>
                 <a href="{{ $maintenanceUrl }}" class="p-2 rounded-md text-gray-600 hover:bg-gray-100" aria-label="Cart">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 </a>

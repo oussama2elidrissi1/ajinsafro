@@ -157,21 +157,8 @@ $default_menu_items = array(
                 </div>
             </div>
             
-            <!-- Right: Language, Currency, Auth -->
+            <!-- Right: Auth -->
             <div class="aj-topbar__right">
-                <!-- Language Selector -->
-                <div class="aj-topbar__selector" id="aj-lang-selector">
-                    <img src="https://upload.wikimedia.org/wikipedia/en/c/c3/Flag_of_France.svg" alt="FR" class="aj-topbar__flag">
-                    <span>FR</span>
-                    <i class="fas fa-chevron-down aj-topbar__caret"></i>
-                </div>
-                
-                <!-- Currency Selector -->
-                <div class="aj-topbar__selector" id="aj-currency-selector">
-                    <span>MAD</span>
-                    <i class="fas fa-chevron-down aj-topbar__caret"></i>
-                </div>
-                
                 <!-- Auth Links -->
                 <?php if ( ! empty( $hdr['show_auth_links'] ) ) : ?>
                 <div class="aj-topbar__auth">

@@ -258,7 +258,7 @@ body.aj-custom-header #masthead {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   TOPBAR — Dark blue bar with socials, contact, language, currency, auth
+   TOPBAR — Dark blue bar with socials, contact, auth
    ══════════════════════════════════════════════════════════════════════════ */
 .aj-topbar {
     background: #0e3a5a;
@@ -325,35 +325,9 @@ body.aj-custom-header #masthead {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-/* Selectors (Language, Currency) */
-.aj-topbar__selector {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background .2s;
-}
-
-.aj-topbar__selector:hover {
-    background: rgba(255,255,255,.1);
-}
-
-.aj-topbar__flag {
-    width: 16px;
-    height: 12px;
-    object-fit: cover;
-    border-radius: 1px;
-    box-shadow: 0 0 1px rgba(0,0,0,.3);
-}
-
-.aj-topbar__caret {
-    font-size: 10px;
-    opacity: .7;
-    margin-left: 2px;
+    margin-left: auto;
+    justify-content: flex-end;
+    flex-wrap: wrap;
 }
 
 /* Auth Links in Topbar */
@@ -3210,9 +3184,7 @@ body.aj-has-bg-pattern::after {
     .aj-topbar__socials { gap: 8px; font-size: 12px; }
     .aj-topbar__contact { display: none; }
     .aj-topbar__item { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
-    .aj-topbar__right { gap: 4px; flex-shrink: 0; }
-    .aj-topbar__selector { padding: 4px 6px; font-size: 10px; }
-    .aj-topbar__flag { width: 14px; height: 10px; }
+    .aj-topbar__right { gap: 4px; flex-shrink: 0; justify-content: flex-end; }
     .aj-topbar__auth { display: none; }
     .aj-navbar__inner { min-height: 64px; height: 64px; padding-left: 16px; padding-right: 16px; gap: 12px; }
     .aj-navbar__logo { flex-shrink: 0; }
@@ -3265,12 +3237,6 @@ body.aj-has-bg-pattern::after {
     .aj-topbar__socials {
         gap: 6px;
         font-size: 11px;
-    }
-    .aj-topbar__selector span {
-        display: none;
-    }
-    .aj-topbar__selector {
-        padding: 4px;
     }
 }
 
