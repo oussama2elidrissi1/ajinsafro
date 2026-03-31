@@ -35,7 +35,7 @@
 <body class="partner-v2 text-gray-800 antialiased font-sans">
     @include('partner_v2.partials.header', ['portalLogoutUsesPartner' => false])
 
-    <main class="flex-grow w-full z-10 relative">
+    <main class="flex-grow w-full relative">
         <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 mt-4 sm:mt-8 mb-16 fade-in">
             <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
                 @include('agent_v2.partials.sidebar')

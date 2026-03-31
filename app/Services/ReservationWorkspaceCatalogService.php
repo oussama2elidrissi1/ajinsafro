@@ -552,7 +552,6 @@ class ReservationWorkspaceCatalogService
             ->whereIn('status', [Reservation::STATUS_EN_COURS, Reservation::STATUS_VALIDEE])
             ->where('travel_date_id', $travelDateId);
         $this->branchScope->scopeReservations($q, $user);
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
         $booked = (int) (clone $q)->sum('passengers_count');
 
         $remaining = max(0, $total - $booked);
@@ -784,7 +783,6 @@ class ReservationWorkspaceCatalogService
 
         $q = Reservation::query()->whereIn('tour_id', $allPhysicalIds);
         $this->branchScope->scopeReservations($q, $user);
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
 
         $aggregates = (clone $q)
             ->selectRaw('tour_id, status, COUNT(*) as aggregate')
@@ -845,7 +843,6 @@ class ReservationWorkspaceCatalogService
             ->whereIn('tour_id', $allPhysicalIds)
             ->whereIn('status', [Reservation::STATUS_VALIDEE, Reservation::STATUS_EN_COURS]);
         $this->branchScope->scopeReservations($q, $user);
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
 
         $out = array_fill_keys(array_map('intval', $tourIds), 0);
         foreach ((clone $q)

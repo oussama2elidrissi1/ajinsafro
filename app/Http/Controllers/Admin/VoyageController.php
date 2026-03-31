@@ -226,6 +226,8 @@ class VoyageController extends Controller
         $tourHotelImageUrl = null;
         $transferArrivalImageUrl = null;
         $transferDepartureImageUrl = null;
+        $otherTourHotelsForCopy = collect();
+        $otherTourTitles = [];
         $departurePlaces = collect();
         $departurePlaceFlightsFromTour = collect();
         $travelDates = collect();
@@ -233,15 +235,18 @@ class VoyageController extends Controller
         $programApiUrl = '';
         $programDayHotelsTransfers = $this->extractProgrammeDayRelationsFromInput($oldProgrammeDays);
         $tourActivities = collect();
+        $totalPlacesVoyage = 0;
+        $voyageExtras = collect();
 
         return view('admin.circuits.voyages.edit', compact(
             'voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds',
             'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines',
             'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber',
-            'heroImageUrl', 'tourHotel', 'tourHotels', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures',
+            'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures',
             'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo',
             'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl',
-            'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers'
+            'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers',
+            'totalPlacesVoyage', 'voyageExtras'
         ));
     }
 

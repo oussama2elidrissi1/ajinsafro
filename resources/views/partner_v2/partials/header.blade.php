@@ -30,26 +30,39 @@
 
     $socials = isset($hdr['socials']) && is_array($hdr['socials']) ? $hdr['socials'] : [];
     $socialIcons = [
-        'facebook'  => '<i class="fab fa-facebook-f"></i>',
-        'twitter'   => '<i class="fab fa-twitter"></i>',
-        'youtube'   => '<i class="fab fa-youtube"></i>',
+        'facebook' => '<i class="fab fa-facebook-f"></i>',
+        'twitter' => '<i class="fab fa-twitter"></i>',
+        'youtube' => '<i class="fab fa-youtube"></i>',
         'instagram' => '<i class="fab fa-instagram"></i>',
-        'linkedin'  => '<i class="fab fa-linkedin-in"></i>',
+        'linkedin' => '<i class="fab fa-linkedin-in"></i>',
     ];
 
     $user = request()->user();
     $voyagesPageUrl = url('/voyages');
     $defaultMenuItems = [
         ['label' => 'Voyages', 'url' => $voyagesPageUrl, 'icon' => 'fas fa-suitcase-rolling', 'active' => false, 'children' => []],
-        ['label' => 'Hébergement', 'url' => '#hebergement', 'icon' => 'fas fa-hotel', 'active' => false, 'children' => []],
-        ['label' => 'Activités', 'url' => '#activites', 'icon' => 'fas fa-camera', 'active' => false, 'children' => []],
+        ['label' => 'Hebergement', 'url' => '#hebergement', 'icon' => 'fas fa-hotel', 'active' => false, 'children' => []],
+        ['label' => 'Activites', 'url' => '#activites', 'icon' => 'fas fa-camera', 'active' => false, 'children' => []],
         ['label' => 'Transfert', 'url' => '#transfert', 'icon' => 'fas fa-car-side', 'active' => false, 'children' => []],
         ['label' => 'Hajj & Omra', 'url' => '#hajj-omra', 'icon' => 'fas fa-kaaba', 'active' => false, 'children' => []],
         ['label' => 'Votre guide', 'url' => '#guide', 'icon' => 'fas fa-map-signs', 'active' => false, 'children' => []],
     ];
 
-    /** When false (e.g. espace agent sur booking), use logout GET route instead of partner.logout. */
     $portalLogoutUsesPartner = $portalLogoutUsesPartner ?? true;
+    $profileUrl = null;
+
+    if ($user) {
+        if (\Illuminate\Support\Facades\Route::has('admin.profile.edit')) {
+            $profileUrl = route('admin.profile.edit');
+        } elseif (\Illuminate\Support\Facades\Route::has('partner.profile.show')) {
+            $profileUrl = route('partner.profile.show');
+        }
+    }
+
+    $navLinks = !empty($hdr['links']) && is_array($hdr['links']) ? $hdr['links'] : [];
+    if (empty($navLinks)) {
+        $navLinks = $defaultMenuItems;
+    }
 @endphp
 
 @if(!empty($hdr['enabled']))
@@ -85,17 +98,6 @@
             </div>
 
             <div class="aj-topbar__right">
-                <div class="aj-topbar__selector" id="aj-lang-selector">
-                    <img src="https://upload.wikimedia.org/wikipedia/en/c/c3/Flag_of_France.svg" alt="FR" class="aj-topbar__flag">
-                    <span>FR</span>
-                    <i class="fas fa-chevron-down aj-topbar__caret"></i>
-                </div>
-
-                <div class="aj-topbar__selector" id="aj-currency-selector">
-                    <span>MAD</span>
-                    <i class="fas fa-chevron-down aj-topbar__caret"></i>
-                </div>
-
                 @if(!empty($hdr['show_auth_links']))
                 <div class="aj-topbar__auth">
                     @if($user)
@@ -116,10 +118,10 @@
                             </a>
                         @endif
                     @else
-                        <a href="{{ !empty($hdr['login_url']) ? $hdr['login_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/login') }}" class="aj-topbar__auth-link">
+                        <a href="{{ $hdr['login_url'] }}" class="aj-topbar__auth-link">
                             {{ __('SE CONNECTER') }}
                         </a>
-                        <a href="{{ !empty($hdr['signup_url']) ? $hdr['signup_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/register') }}" class="aj-topbar__auth-link aj-topbar__auth-link--signup">
+                        <a href="{{ $hdr['signup_url'] }}" class="aj-topbar__auth-link aj-topbar__auth-link--signup">
                             {{ __("S'INSCRIRE") }}
                         </a>
                     @endif
@@ -164,30 +166,27 @@
                             <img src="{{ $user->avatar_url }}" alt="Avatar" class="rounded-circle" style="width:24px;height:24px;object-fit:cover;">
                             <span>{{ $user->name }}</span>
                         </div>
+                        @if($profileUrl)
+                            <a href="{{ $profileUrl }}" class="aj-auth-link aj-auth-link--block">{{ __('Mon profil') }}</a>
+                        @endif
                         @if($portalLogoutUsesPartner)
                             <form method="POST" action="{{ route('partner.logout') }}">
                                 @csrf
                                 <button type="submit" class="aj-auth-link aj-auth-link--block border-0 bg-transparent text-start w-100">
-                                    {{ __('Se déconnecter') }}
+                                    {{ __('Deconnexion') }}
                                 </button>
                             </form>
                         @else
-                            <a href="{{ route('logout.get') }}" class="aj-auth-link aj-auth-link--block">{{ __('Se déconnecter') }}</a>
+                            <a href="{{ route('logout.get') }}" class="aj-auth-link aj-auth-link--block">{{ __('Deconnexion') }}</a>
                         @endif
                     @else
-                        <a href="{{ !empty($hdr['login_url']) ? $hdr['login_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/login') }}" class="aj-auth-link aj-auth-link--block">{{ __('Se connecter') }}</a>
-                        <a href="{{ !empty($hdr['signup_url']) ? $hdr['signup_url'] : (rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/') . '/register') }}" class="aj-auth-link aj-auth-link--signup aj-auth-link--block">{{ __("S'inscrire") }}</a>
+                        <a href="{{ $hdr['login_url'] }}" class="aj-auth-link aj-auth-link--block">{{ __('Se connecter') }}</a>
+                        <a href="{{ $hdr['signup_url'] }}" class="aj-auth-link aj-auth-link--signup aj-auth-link--block">{{ __("S'inscrire") }}</a>
                     @endif
                 </div>
                 @endif
 
                 <div class="aj-navbar__menu" id="aj-nav-menu">
-                    @php
-                        $navLinks = !empty($hdr['links']) && is_array($hdr['links']) ? $hdr['links'] : [];
-                        if (empty($navLinks)) {
-                            $navLinks = $defaultMenuItems;
-                        }
-                    @endphp
                     <ul class="aj-nav-list">
                         @foreach($navLinks as $link)
                             @php
@@ -251,4 +250,3 @@
     @endif
 </header>
 @endif
-

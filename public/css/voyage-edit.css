@@ -671,30 +671,37 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
     background: linear-gradient(135deg, #10b981, #34d399) !important;
 }
 
+body.voyage-layout-page.partner-v2 main {
+    z-index: auto !important;
+}
+
 /* ---------- Modal Improvements ---------- */
-.voyage-edit-page .modal {
-    z-index: 2060;
+body.voyage-layout-page .modal {
+    z-index: 2080;
 }
-.voyage-edit-page .modal-backdrop {
-    z-index: 2050;
+body.voyage-layout-page .modal-backdrop {
+    z-index: 2070;
 }
-.voyage-edit-page .modal-content {
+body.voyage-layout-page .offcanvas-backdrop {
+    z-index: 2055;
+}
+body.voyage-layout-page .modal-content {
     border-radius: 16px;
     border: none;
     box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     overflow: hidden;
 }
-.voyage-edit-page .modal-header {
+body.voyage-layout-page .modal-header {
     background: linear-gradient(135deg, #f8fafc, #f1f5f9);
     border-bottom: 1px solid #e2e8f0;
     padding: 18px 24px;
 }
-.voyage-edit-page .modal-title {
+body.voyage-layout-page .modal-title {
     font-weight: 700;
     font-size: 1rem;
     color: #1e293b;
 }
-.voyage-edit-page .modal-body {
+body.voyage-layout-page .modal-body {
     padding: 24px;
 }
 
@@ -979,7 +986,8 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
 }
 
 /* Offcanvas (Day Builder Drawer) */
-.voyage-edit-page .offcanvas {
+body.voyage-layout-page .offcanvas {
+    z-index: 2060;
     border-radius: 16px 0 0 16px;
     box-shadow: -10px 0 40px rgba(0,0,0,0.1);
 }

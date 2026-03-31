@@ -150,6 +150,9 @@ body.partner-v2::after {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .aj-topbar__auth {
@@ -299,6 +302,93 @@ body.partner-v2::after {
   min-width: 0;
   display: flex;
   justify-content: center;
+}
+
+.aj-navbar__lowcost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+.aj-navbar__account {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 0 0 auto;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.aj-navbar__profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 260px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(14, 58, 90, 0.08);
+  background: #f8fafc;
+  color: #0e3a5a;
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.aj-navbar__profile:hover {
+  border-color: rgba(0, 131, 196, 0.18);
+  background: #eef7fb;
+  box-shadow: 0 8px 18px rgba(14, 58, 90, 0.08);
+}
+
+.aj-navbar__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(0, 131, 196, 0.12);
+}
+
+.aj-navbar__profile-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.aj-navbar__logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0083c4, #0e3a5a);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  white-space: nowrap;
+}
+
+.aj-navbar__logout:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(14, 58, 90, 0.16);
+  opacity: 0.96;
+}
+
+.agent-portal-main--full {
+  width: 100%;
 }
 
 .aj-nav-list {
@@ -559,6 +649,7 @@ body.partner-v2::after {
 @media (max-width: 1279px) {
   .aj-navbar__burger { display: inline-flex; }
   .aj-navbar__menu { justify-content: flex-start; }
+  .aj-header__account--desktop { display: none; }
   .aj-drawer {
     position: fixed;
     top: 0;
@@ -594,4 +685,10 @@ body.partner-v2::after {
   .aj-topbar__partner-name { display: none; }
   .aj-footer-v2__cols { grid-template-columns: 1fr; }
   .aj-footer-v2 { padding-top: 40px; }
+}
+
+@media (max-width: 1440px) {
+  .aj-navbar__profile {
+    max-width: 190px;
+  }
 }

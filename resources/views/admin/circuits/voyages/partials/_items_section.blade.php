@@ -130,8 +130,15 @@
 @push('scripts')
 <script>
     let itemModalEl = document.getElementById('itemModal');
-    let itemModal = new bootstrap.Modal(itemModalEl);
     let itemForm = document.getElementById('itemForm');
+
+    function getItemModal() {
+        if (!itemModalEl || !window.bootstrap || !bootstrap.Modal) {
+            return null;
+        }
+
+        return bootstrap.Modal.getOrCreateInstance(itemModalEl);
+    }
 
     function addItemForDay(dayNumber) {
         // Reset form
@@ -145,7 +152,10 @@
         document.getElementById('itemModalLabel').textContent = 'Ajouter un item - Jour ' + dayNumber;
         
         // Show modal
-        itemModal.show();
+        let itemModal = getItemModal();
+        if (itemModal) {
+            itemModal.show();
+        }
     }
 
     function editItem(itemId) {
@@ -178,7 +188,10 @@
                 document.getElementById('item_sort_order').value = data.sort_order;
                 
                 document.getElementById('itemModalLabel').textContent = 'Modifier l\'item';
-                itemModal.show();
+                let itemModal = getItemModal();
+                if (itemModal) {
+                    itemModal.show();
+                }
             })
             .catch(error => {
                 console.error('Error fetching item:', error);

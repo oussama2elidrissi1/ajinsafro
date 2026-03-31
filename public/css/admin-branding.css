@@ -109,3 +109,15 @@ body[data-topbar="dark"] #page-topbar .navbar-brand-box .logo-light {
     padding-top: 0.35rem;
     padding-bottom: 0.35rem;
 }
+
+.sidebar-brand-box {
+    background: #fff;
+}
+
+.admin-sidebar-logo {
+    width: auto;
+    height: 34px;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}

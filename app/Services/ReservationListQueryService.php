@@ -18,11 +18,11 @@ final class ReservationListQueryService
         private BranchScopeService $branchScope,
     ) {}
 
-    public function baseQuery(User $user): Builder
+    public function baseQuery(User $user, array $context = []): Builder
     {
         $q = Reservation::query();
         $this->branchScope->scopeReservations($q, $user);
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
+        $this->branchScope->constrainReservationQueryForPortalUser($q, $user, $context);
 
         return $q;
     }

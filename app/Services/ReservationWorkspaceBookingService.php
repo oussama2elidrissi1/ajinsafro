@@ -196,7 +196,6 @@ final class ReservationWorkspaceBookingService
             $q->where('travel_date_id', $travelDateId);
         }
         $this->branchScope->scopeReservations($q, $user);
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $user);
         $booked = (int) (clone $q)->sum('passengers_count');
 
         return max(0, $totalCapacity - $booked);

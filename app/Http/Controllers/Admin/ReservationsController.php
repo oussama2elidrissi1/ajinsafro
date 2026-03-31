@@ -618,15 +618,20 @@ class ReservationsController extends Controller
     protected function hubFilteredReservationBuilder(Request $request): Builder
     {
         $user = $request->user();
-        $base = $this->reservationListQuery->baseQuery($user);
 
         $tourFilter = (int) $request->query('voyage_id', 0);
         if ($tourFilter <= 0) {
             $tourFilter = (int) $request->query('tour_id', 0);
         }
-        $this->reservationListQuery->applyTourFilter($base, $tourFilter);
 
         $travelDateFilter = (int) $request->query('travel_date_id', 0);
+        $base = $this->reservationListQuery->baseQuery($user, [
+            'tour_id' => $tourFilter > 0 ? $tourFilter : null,
+            'travel_date_id' => $travelDateFilter > 0 ? $travelDateFilter : null,
+        ]);
+
+        $this->reservationListQuery->applyTourFilter($base, $tourFilter);
+
         $this->reservationListQuery->applyTravelDateFilter($base, $travelDateFilter > 0 ? $travelDateFilter : null);
 
         $search = (string) $request->query('search', '');
@@ -1001,14 +1006,7 @@ class ReservationsController extends Controller
     private function scopeReservationAccessForCalendar(Builder $query, User $user): void
     {
         $this->branchScope->scopeReservations($query, $user);
-        if ($user->isCommercial() || $user->isChefCommercial() || $user->isAgent()) {
-            $uid = $user->id;
-            $query->where(function (Builder $q) use ($uid) {
-                $q->where('agent_id', $uid)
-                    ->orWhere('sales_manager_id', $uid)
-                    ->orWhere('created_by', $uid);
-            });
-        }
+        $this->branchScope->constrainReservationQueryForPortalUser($query, $user);
     }
 
     /**

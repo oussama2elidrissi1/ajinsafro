@@ -211,7 +211,7 @@
         }).then(r => r.json()).then(data => {
             this.disabled = false;
             if (data.success) {
-                (window.bootstrap && bootstrap.Modal.getInstance(document.getElementById('taxonomyTermModal'))).hide();
+                (window.bootstrap && bootstrap.Modal.getOrCreateInstance(document.getElementById('taxonomyTermModal'))).hide();
                 refreshTaxonomy(taxonomy);
             } else {
                 alert(data.message || 'Erreur');

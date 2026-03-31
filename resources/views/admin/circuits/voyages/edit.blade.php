@@ -1275,6 +1275,21 @@
                 var mediaPag = document.getElementById('hero-media-pagination');
                 var mediaPage = 1;
 
+                function getModalInstance(modalEl) {
+                    if (!modalEl || !window.bootstrap || !bootstrap.Modal) {
+                        return null;
+                    }
+
+                    return bootstrap.Modal.getOrCreateInstance(modalEl);
+                }
+
+                function hideModal(modalEl) {
+                    var instance = getModalInstance(modalEl);
+                    if (instance) {
+                        instance.hide();
+                    }
+                }
+
                 function loadMediaSearch(page) {
                     page = page || 1;
                     var q = (mediaSearch && mediaSearch.value) || '';
@@ -1304,7 +1319,7 @@
                                             if (inp) inp.value = id;
                                             if (prev) prev.src = url || '';
                                             if (wrap) wrap.style.display = 'flex';
-                                            if (mediaModal && window.bootstrap) { var m = bootstrap.Modal.getInstance(mediaModal); if (m) m.hide(); }
+                                            hideModal(mediaModal);
                                             window.logistiqueMediaTarget = null;
                                         } else {
                                             var fd = new FormData();
@@ -1313,7 +1328,7 @@
                                             fetch(heroSelectUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' } })
                                                 .then(function(r) { return r.json(); })
                                                 .then(function(r) {
-                                                    if (r.success) { setHeroPreview(r.url, r.attachment_id); if (window.bootstrap && mediaModal) { var m = bootstrap.Modal.getInstance(mediaModal); if (m) m.hide(); } }
+                                                    if (r.success) { setHeroPreview(r.url, r.attachment_id); hideModal(mediaModal); }
                                                 });
                                         }
                                     });
@@ -1335,9 +1350,9 @@
                 if (document.getElementById('hero-choose-media-btn')) {
                     document.getElementById('hero-choose-media-btn').addEventListener('click', function() {
                         window.logistiqueMediaTarget = null;
-                        if (mediaModal && window.bootstrap) {
-                            var m = new bootstrap.Modal(mediaModal);
-                            m.show();
+                        var mediaModalInstance = getModalInstance(mediaModal);
+                        if (mediaModalInstance) {
+                            mediaModalInstance.show();
                             loadMediaSearch(1);
                         }
                     });
@@ -1350,9 +1365,9 @@
                                 previewId: this.getAttribute('data-preview'),
                                 previewWrapId: this.getAttribute('data-preview-wrap')
                             };
-                            if (mediaModal && window.bootstrap) {
-                                var m = new bootstrap.Modal(mediaModal);
-                                m.show();
+                            var mediaModalInstance = getModalInstance(mediaModal);
+                            if (mediaModalInstance) {
+                                mediaModalInstance.show();
                                 loadMediaSearch(1);
                             }
                         });
@@ -1435,10 +1450,7 @@
                             return;
                         }
                         setFeaturedPreview(result.data.url || '', result.data.attachment_id || '');
-                        if (featuredModalEl && window.bootstrap) {
-                            var modalInstance = bootstrap.Modal.getInstance(featuredModalEl);
-                            if (modalInstance) modalInstance.hide();
-                        }
+                        hideModal(featuredModalEl);
                     }).catch(function() {
                         setFeaturedError('Erreur réseau pendant la sélection.');
                     });
@@ -1540,8 +1552,8 @@
                 if (featuredChooseBtn) {
                     featuredChooseBtn.addEventListener('click', function() {
                         setFeaturedError('');
-                        if (featuredModalEl && window.bootstrap) {
-                            var featuredModal = new bootstrap.Modal(featuredModalEl);
+                        var featuredModal = getModalInstance(featuredModalEl);
+                        if (featuredModal) {
                             featuredModal.show();
                             loadFeaturedMedia(1);
                         }
@@ -1726,9 +1738,9 @@
                     btn.addEventListener('click', function() {
                         heroGalleryCurrentIndex = this.getAttribute('data-index');
                         window.logistiqueMediaTarget = null;
-                        if (mediaModal && window.bootstrap) {
-                            var m = new bootstrap.Modal(mediaModal);
-                            m.show();
+                        var mediaModalInstance = getModalInstance(mediaModal);
+                        if (mediaModalInstance) {
+                            mediaModalInstance.show();
                             loadMediaSearch(1);
                         }
                     });
@@ -1756,10 +1768,7 @@
                             var url = item.getAttribute('data-url');
                             if (id && heroGalleryCurrentIndex !== null) {
                                 setHeroGalleryPreview(heroGalleryCurrentIndex, url, id);
-                                if (mediaModal && window.bootstrap) {
-                                    var m = bootstrap.Modal.getInstance(mediaModal);
-                                    if (m) m.hide();
-                                }
+                                hideModal(mediaModal);
                                 heroGalleryCurrentIndex = null;
                             }
                         }
@@ -1926,15 +1935,26 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
+                                <div id="activities-catalog-list-view">
                                 <div class="mb-3">
                                     <input type="text" class="form-control" id="activities-catalog-search" placeholder="Rechercher une activité...">
                                 </div>
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                    <div class="alert alert-info py-2 small mb-0 flex-grow-1" id="activities-catalog-region-hint">
+                                        Le catalogue est filtrÃ© automatiquement selon la destination du voyage.
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary" id="activities-catalog-open-create">
+                                        <i class="bx bx-plus me-1"></i> Nouvelle activitÃ©
+                                    </button>
+                                </div>
+                                <div class="alert d-none py-2" id="activities-catalog-list-alert" role="alert"></div>
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Nom</th>
+                                                <th>Type / RÃ©gion</th>
                                                 <th style="width:120px;">Action</th>
                                             </tr>
                                         </thead>
@@ -1946,6 +1966,89 @@
                                     <div class="btn-group btn-group-sm">
                                         <button type="button" class="btn btn-outline-secondary" id="activities-catalog-prev">Précédent</button>
                                         <button type="button" class="btn btn-outline-secondary" id="activities-catalog-next">Suivant</button>
+                                    </div>
+                                </div>
+
+                                </div>
+
+                                <div id="activities-catalog-form-view" class="d-none">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div>
+                                            <h6 class="mb-1">CrÃ©er une nouvelle activitÃ©</h6>
+                                            <p class="text-muted small mb-0">CrÃ©ation rapide sans quitter l'Ã©dition du voyage.</p>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-light" id="activities-catalog-back-to-list">
+                                            <i class="bx bx-arrow-back me-1"></i> Retour Ã  la liste
+                                        </button>
+                                    </div>
+
+                                    <div class="alert d-none" id="activities-catalog-form-alert" role="alert"></div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="activities-create-title" class="form-label">Nom de l activitÃ© <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="activities-create-title">
+                                            <div class="small text-danger mt-1 d-none" data-error="title"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="activities-create-type" class="form-label">Type d activitÃ© <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="activities-create-type" placeholder="Ex: excursion, quad">
+                                            <div class="small text-danger mt-1 d-none" data-error="activity_type"></div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="activities-create-region" class="form-label">RÃ©gion / localisation <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="activities-create-region" placeholder="PrÃ©rempli depuis la destination du voyage">
+                                            <div class="small text-danger mt-1 d-none" data-error="region_name"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="activities-create-adult-price" class="form-label">Prix adulte <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="activities-create-adult-price" min="0" step="0.01" placeholder="0.00">
+                                                <span class="input-group-text">MAD</span>
+                                            </div>
+                                            <div class="small text-danger mt-1 d-none" data-error="adult_price"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="activities-create-child-price" class="form-label">Prix enfant <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="activities-create-child-price" min="0" step="0.01" placeholder="0.00">
+                                                <span class="input-group-text">MAD</span>
+                                            </div>
+                                            <div class="small text-danger mt-1 d-none" data-error="child_price"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="activities-create-min-age" class="form-label">Age minimum <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="activities-create-min-age" min="0" max="120">
+                                            <div class="small text-danger mt-1 d-none" data-error="min_age"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="activities-create-max-age" class="form-label">Age maximum <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="activities-create-max-age" min="0" max="120">
+                                            <div class="small text-danger mt-1 d-none" data-error="max_age"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="activities-create-duration" class="form-label">DurÃ©e <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="activities-create-duration" min="1" step="1" placeholder="60">
+                                                <span class="input-group-text">min</span>
+                                            </div>
+                                            <div class="small text-danger mt-1 d-none" data-error="default_duration_minutes"></div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="activities-create-gallery" class="form-label">Images multiples</label>
+                                            <input type="file" class="form-control" id="activities-create-gallery" accept="image/jpeg,image/png,image/webp" multiple>
+                                            <div class="form-text">Optionnel. Si vous laissez vide, les images pourront Ãªtre ajoutÃ©es plus tard depuis le CRUD activitÃ©.</div>
+                                            <div class="small text-danger mt-1 d-none" data-error="gallery_images"></div>
+                                            <div class="small text-danger mt-1 d-none" data-error="image"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2 mt-4">
+                                        <button type="button" class="btn btn-light" id="activities-catalog-form-reset">RÃ©initialiser</button>
+                                        <button type="button" class="btn btn-primary" id="activities-catalog-form-submit">
+                                            <span class="btn-text"><i class="bx bx-save me-1"></i> Enregistrer l'activitÃ©</span>
+                                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -2306,6 +2409,73 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             document.body.classList.add('voyage-layout-page');
+
+            document.querySelectorAll('.voyage-edit-page .modal, .voyage-edit-page .offcanvas').forEach(function (overlay) {
+                if (overlay.parentElement !== document.body) {
+                    document.body.appendChild(overlay);
+                }
+            });
+
+            if (window.__voyageOverlayStateInit) {
+                return;
+            }
+
+            window.__voyageOverlayStateInit = true;
+
+            var overlaySyncTimer = null;
+
+            function visibleCount(selector) {
+                return document.querySelectorAll(selector).length;
+            }
+
+            function trimBackdrops(selector, keepCount) {
+                var nodes = Array.prototype.slice.call(document.querySelectorAll(selector));
+                if (nodes.length <= keepCount) {
+                    return;
+                }
+                nodes.slice(0, nodes.length - keepCount).forEach(function (node) {
+                    node.remove();
+                });
+            }
+
+            function syncOverlayState() {
+                var openModals = visibleCount('.modal.show');
+                var openOffcanvas = visibleCount('.offcanvas.show');
+
+                trimBackdrops('.modal-backdrop', openModals > 0 ? 1 : 0);
+                trimBackdrops('.offcanvas-backdrop', openOffcanvas > 0 ? 1 : 0);
+
+                if (openModals === 0) {
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                }
+
+                if (openModals === 0 && openOffcanvas === 0) {
+                    document.body.style.removeProperty('overflow');
+                    document.body.classList.remove('day-builder-open');
+                } else if (openOffcanvas > 0 && openModals === 0) {
+                    document.body.style.overflow = 'hidden';
+                    document.body.classList.add('day-builder-open');
+                }
+            }
+
+            function scheduleOverlaySync() {
+                if (overlaySyncTimer) {
+                    window.clearTimeout(overlaySyncTimer);
+                }
+                overlaySyncTimer = window.setTimeout(syncOverlayState, 40);
+            }
+
+            [
+                'shown.bs.modal',
+                'hidden.bs.modal',
+                'shown.bs.offcanvas',
+                'hidden.bs.offcanvas'
+            ].forEach(function (eventName) {
+                document.addEventListener(eventName, scheduleOverlaySync, true);
+            });
+
+            scheduleOverlaySync();
         });
     </script>
     <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
@@ -3190,6 +3360,11 @@
                 return [
                     'id' => $a->id,
                     'title' => $a->title,
+                    'activity_type' => $a->activity_type,
+                    'region_name' => $a->region_name ?: $a->location_text,
+                    'location_text' => $a->location_text,
+                    'place_text' => $a->location_text,
+                    'base_price' => (float) ($a->adult_price ?? $a->base_price ?? 0),
                 ];
             })->values()->all();
 
@@ -3197,7 +3372,17 @@
                 return [
                     'id' => $a->id,
                     'title' => $a->title,
-                    'base_price' => (float) ($a->base_price ?? 0),
+                    'description' => $a->description,
+                    'activity_type' => $a->activity_type,
+                    'region_name' => $a->region_name ?: $a->location_text,
+                    'location_text' => $a->location_text,
+                    'place_text' => $a->location_text,
+                    'base_price' => (float) ($a->adult_price ?? $a->base_price ?? 0),
+                    'adult_price' => (float) ($a->adult_price ?? $a->base_price ?? 0),
+                    'child_price' => (float) ($a->child_price ?? 0),
+                    'default_duration_minutes' => (int) ($a->default_duration_minutes ?? 0),
+                    'min_age' => (int) ($a->min_age ?? 0),
+                    'max_age' => (int) ($a->max_age ?? 0),
                 ];
             })->values()->all();
 
@@ -3209,11 +3394,149 @@
             })->values()->all();
         @endphp
 
+        window.ALL_PROGRAMME_ACTIVITIES_CATALOG = @json($programmeActivitiesCatalog);
+        window.ALL_TOUR_ACTIVITIES_CATALOG = @json($tourActivitiesCatalog);
         window.PROGRAMME_ACTIVITIES_CATALOG = @json($programmeActivitiesCatalog);
         window.TOUR_ACTIVITIES_SELECTED = @json($tourActivitiesSelected);
         window.TOUR_ACTIVITIES_CATALOG = @json($tourActivitiesCatalog);
         window.PROGRAM_API_URL = @json($programApiUrl ?? '');
         window.PROGRAM_VOYAGE_ID = @json($voyage->ID ?? 0);
+
+        (function activityRegionCatalogFilter() {
+            function normalizeTerm(value) {
+                return String(value || '').toLowerCase().trim().replace(/\s+/g, ' ');
+            }
+
+            function splitTerms(value) {
+                if (!value) return [];
+                return String(value)
+                    .split(/[,;\/|]+/)
+                    .map(function (item) { return normalizeTerm(item); })
+                    .filter(Boolean);
+            }
+
+            function uniqueTerms(values) {
+                return Array.from(new Set(values.filter(Boolean)));
+            }
+
+            function currentVoyageRegionTerms() {
+                var values = [];
+
+                document.querySelectorAll('.location-checkbox:checked').forEach(function (checkbox) {
+                    var title = checkbox.getAttribute('data-loc-title');
+                    if (title) {
+                        values.push(title);
+                    }
+                });
+
+                var addressInput = document.getElementById('address');
+                if (addressInput && addressInput.value.trim()) {
+                    values.push(addressInput.value.trim());
+                }
+
+                return uniqueTerms(values.flatMap(splitTerms));
+            }
+
+            function activityRegionTerms(activity) {
+                return uniqueTerms([
+                    activity && activity.region_name,
+                    activity && activity.location_text,
+                    activity && activity.place_text,
+                ].flatMap(splitTerms));
+            }
+
+            function matchesActivityRegion(activity, requestedTerms) {
+                if (!requestedTerms.length) {
+                    return true;
+                }
+
+                var activityTerms = activityRegionTerms(activity);
+                if (!activityTerms.length) {
+                    return false;
+                }
+
+                return activityTerms.some(function (activityTerm) {
+                    return requestedTerms.some(function (requestedTerm) {
+                        return activityTerm === requestedTerm
+                            || activityTerm.indexOf(requestedTerm) !== -1
+                            || requestedTerm.indexOf(activityTerm) !== -1;
+                    });
+                });
+            }
+
+            function filteredCatalog(sourceKey) {
+                var source = Array.isArray(window[sourceKey]) ? window[sourceKey] : [];
+                var terms = currentVoyageRegionTerms();
+
+                return source.filter(function (activity) {
+                    return matchesActivityRegion(activity, terms);
+                });
+            }
+
+            function syncQuickActivitySelects() {
+                var catalogue = filteredCatalog('ALL_PROGRAMME_ACTIVITIES_CATALOG');
+
+                document.querySelectorAll('.add-activity-select').forEach(function (select) {
+                    var currentValue = select.value;
+                    select.innerHTML = '';
+
+                    var placeholder = document.createElement('option');
+                    placeholder.value = '';
+                    placeholder.textContent = '-- Activite rapide --';
+                    select.appendChild(placeholder);
+
+                    catalogue.forEach(function (activity) {
+                        var option = document.createElement('option');
+                        option.value = String(activity.id);
+                        option.textContent = activity.title || ('Activite #' + activity.id);
+                        select.appendChild(option);
+                    });
+
+                    if (currentValue && select.querySelector('option[value="' + currentValue + '"]')) {
+                        select.value = currentValue;
+                    } else {
+                        select.value = '';
+                    }
+                });
+            }
+
+            function apply() {
+                window.PROGRAMME_ACTIVITIES_CATALOG = filteredCatalog('ALL_PROGRAMME_ACTIVITIES_CATALOG');
+                window.TOUR_ACTIVITIES_CATALOG = filteredCatalog('ALL_TOUR_ACTIVITIES_CATALOG');
+                syncQuickActivitySelects();
+
+                document.dispatchEvent(new CustomEvent('voyage-activity-region-change', {
+                    detail: {
+                        terms: currentVoyageRegionTerms(),
+                    }
+                }));
+            }
+
+            window.AjinsafroActivityRegionFilter = {
+                apply: apply,
+                currentTerms: currentVoyageRegionTerms,
+                matches: matchesActivityRegion,
+                getFilteredCatalog: function (kind) {
+                    return kind === 'programme'
+                        ? filteredCatalog('ALL_PROGRAMME_ACTIVITIES_CATALOG')
+                        : filteredCatalog('ALL_TOUR_ACTIVITIES_CATALOG');
+                }
+            };
+
+            document.addEventListener('change', function (event) {
+                if (event.target && event.target.classList && event.target.classList.contains('location-checkbox')) {
+                    apply();
+                }
+            });
+
+            document.addEventListener('input', function (event) {
+                if (event.target && event.target.id === 'address') {
+                    apply();
+                }
+            });
+
+            apply();
+        })();
 
         (function programmeDaysManager() {
             if (window.VoyageEditorRuntime && window.VoyageEditorRuntime.ownsProgrammeBuilder) return;
@@ -4139,6 +4462,28 @@
                 }
             });
 
+            drawer.addEventListener('shown.bs.offcanvas', function() {
+                document.body.classList.add('day-builder-open');
+                if (!document.querySelector('.modal.show')) {
+                    document.body.style.overflow = 'hidden';
+                }
+            });
+
+            drawer.addEventListener('hidden.bs.offcanvas', function() {
+                document.body.classList.remove('day-builder-open');
+                if (!document.querySelector('.modal.show')) {
+                    document.body.style.overflow = '';
+                }
+            });
+
+            document.addEventListener('day-builder:item-count-changed', function(e) {
+                var detail = (e && e.detail) ? e.detail : {};
+                var activeDayIndex = drawer.getAttribute('data-day-index');
+                if (String(detail.dayIndex) !== String(activeDayIndex)) return;
+                var dayNumber = parseInt(drawer.getAttribute('data-day-number') || '1', 10) || 1;
+                updateDrawerSummary(dayNumber, activeDayIndex);
+            });
+
             function getDayItemsCount(dayIndex) {
                 return window.dayItemsManager.countItems(dayIndex);
             }
@@ -4165,24 +4510,6 @@
                 if (contextEl) contextEl.textContent = 'Ajout direct dans les éléments du Jour ' + dayNum + '.';
 
                 if (flightsManager) {
-
-            drawer.addEventListener('shown.bs.offcanvas', function() {
-                document.body.style.overflow = 'hidden';
-                document.body.classList.add('day-builder-open');
-            });
-
-            drawer.addEventListener('hidden.bs.offcanvas', function() {
-                document.body.style.overflow = '';
-                document.body.classList.remove('day-builder-open');
-            });
-
-            document.addEventListener('day-builder:item-count-changed', function(e) {
-                var detail = (e && e.detail) ? e.detail : {};
-                var activeDayIndex = drawer.getAttribute('data-day-index');
-                if (String(detail.dayIndex) !== String(activeDayIndex)) return;
-                var dayNumber = parseInt(drawer.getAttribute('data-day-number') || '1', 10) || 1;
-                updateDrawerSummary(dayNumber, activeDayIndex);
-            });
                     var manager = flightsManager.querySelector('.flight-manager');
                     if (manager) manager.setAttribute('data-day-number', String(dayNum));
                 }
@@ -4495,10 +4822,17 @@
             var nextBtn = document.getElementById('activities-catalog-next');
             var countLabel = document.getElementById('activities-catalog-count');
 
-            var catalog = Array.isArray(window.TOUR_ACTIVITIES_CATALOG) ? window.TOUR_ACTIVITIES_CATALOG : [];
-            var filteredCatalog = catalog.slice();
+            var filteredCatalog = [];
             var page = 1;
             var pageSize = 8;
+
+            function getCatalog() {
+                if (window.AjinsafroActivityRegionFilter && typeof window.AjinsafroActivityRegionFilter.getFilteredCatalog === 'function') {
+                    return window.AjinsafroActivityRegionFilter.getFilteredCatalog('tour');
+                }
+
+                return Array.isArray(window.TOUR_ACTIVITIES_CATALOG) ? window.TOUR_ACTIVITIES_CATALOG : [];
+            }
 
             function esc(str) {
                 return String(str || '')
@@ -4564,9 +4898,21 @@
                 return !!rowsContainer.querySelector('.voyage-activity-row[data-activity-id="' + activityId + '"]');
             }
 
+            function focusActivityRow(activityId) {
+                var row = rowsContainer.querySelector('.voyage-activity-row[data-activity-id="' + activityId + '"]');
+                if (!row) return;
+
+                row.classList.add('table-success');
+                row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+                window.setTimeout(function() {
+                    row.classList.remove('table-success');
+                }, 1800);
+            }
+
             function buildRow(activity) {
                 var title = esc(activity.title || ('Activité #' + activity.id));
-                var defaultPrice = toNumber(activity.base_price, 0).toFixed(2);
+                var defaultPrice = toNumber(activity.adult_price || activity.base_price, 0).toFixed(2);
 
                 var tr = document.createElement('tr');
                 tr.className = 'voyage-activity-row';
@@ -4597,12 +4943,43 @@
                 return tr;
             }
 
+            function appendActivityToVoyage(activity) {
+                if (!activity || !activity.id || hasActivity(activity.id)) {
+                    if (activity && activity.id) {
+                        focusActivityRow(activity.id);
+                    }
+                    return false;
+                }
+
+                var row = buildRow(activity);
+                var emptyRow = rowsContainer.querySelector('.voyage-activities-empty-row');
+                if (emptyRow) emptyRow.remove();
+                rowsContainer.appendChild(row);
+                reindexRows();
+                updateEmptyState();
+                refreshCatalog();
+                focusActivityRow(activity.id);
+
+                return true;
+            }
+
             function refreshCatalog() {
                 if (!catalogBody) return;
 
                 var term = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase().trim();
-                filteredCatalog = catalog.filter(function(item) {
-                    return !term || String(item.title || '').toLowerCase().indexOf(term) !== -1;
+                filteredCatalog = getCatalog().filter(function(item) {
+                    if (!term) {
+                        return true;
+                    }
+
+                    return [
+                        item.title,
+                        item.activity_type,
+                        item.region_name,
+                        item.location_text,
+                    ].some(function(value) {
+                        return String(value || '').toLowerCase().indexOf(term) !== -1;
+                    });
                 });
 
                 var total = filteredCatalog.length;
@@ -4631,6 +5008,57 @@
                         '<td>' + item.id + '</td>' +
                         '<td>' + esc(item.title) + '</td>' +
                         '<td><button type="button" class="btn btn-sm btn-success add-catalog-activity" data-activity-id="' + item.id + '" ' + disabled + '>Ajouter</button></td>' +
+                    '</tr>';
+                }).join('');
+            }
+
+            function refreshCatalog() {
+                if (!catalogBody) return;
+
+                var term = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase().trim();
+                filteredCatalog = getCatalog().filter(function(item) {
+                    if (!term) {
+                        return true;
+                    }
+
+                    return [
+                        item.title,
+                        item.activity_type,
+                        item.region_name,
+                        item.location_text,
+                    ].some(function(value) {
+                        return String(value || '').toLowerCase().indexOf(term) !== -1;
+                    });
+                });
+
+                var total = filteredCatalog.length;
+                var totalPages = Math.max(1, Math.ceil(total / pageSize));
+                if (page > totalPages) page = totalPages;
+                if (page < 1) page = 1;
+
+                var start = (page - 1) * pageSize;
+                var current = filteredCatalog.slice(start, start + pageSize);
+
+                if (countLabel) {
+                    countLabel.textContent = total + ' resultat' + (total > 1 ? 's' : '') + ' - Page ' + page + '/' + totalPages;
+                }
+
+                if (prevBtn) prevBtn.disabled = page <= 1;
+                if (nextBtn) nextBtn.disabled = page >= totalPages;
+
+                if (!current.length) {
+                    catalogBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">Aucune activite trouvee.</td></tr>';
+                    return;
+                }
+
+                catalogBody.innerHTML = current.map(function(item) {
+                    var isSelected = hasActivity(item.id);
+                    var highlightClass = Number(item.id) === Number(window.__voyageActivitiesLastCreatedId || 0) ? ' class="table-success"' : '';
+                    return '<tr' + highlightClass + '>' +
+                        '<td>' + item.id + '</td>' +
+                        '<td>' + esc(item.title) + '</td>' +
+                        '<td><div class="fw-medium">' + esc(item.activity_type || 'Non renseigne') + '</div><div class="small text-muted">' + esc(item.region_name || item.location_text || 'Non renseignee') + '</div></td>' +
+                        '<td><button type="button" class="btn btn-sm ' + (isSelected ? 'btn-outline-secondary' : 'btn-success') + ' add-catalog-activity" data-activity-id="' + item.id + '" ' + (isSelected ? 'disabled' : '') + '>' + (isSelected ? 'Ajoutee' : 'Ajouter') + '</button></td>' +
                     '</tr>';
                 }).join('');
             }
@@ -4676,20 +5104,14 @@
                     if (!addBtn) return;
 
                     var activityId = toInt(addBtn.getAttribute('data-activity-id'), 0);
-                    if (!activityId || hasActivity(activityId)) return;
+                    if (!activityId) return;
 
-                    var activity = catalog.find(function(item) { return item.id === activityId; });
+                    var activity = getCatalog().find(function(item) { return Number(item.id) === Number(activityId); });
                     if (!activity) return;
 
-                    var row = buildRow(activity);
-                    var emptyRow = rowsContainer.querySelector('.voyage-activities-empty-row');
-                    if (emptyRow) emptyRow.remove();
-                    rowsContainer.appendChild(row);
-                    reindexRows();
-                    updateEmptyState();
-                    refreshCatalog();
+                    if (!appendActivityToVoyage(activity)) return;
 
-                    var bsModal = window.bootstrap && window.bootstrap.Modal ? window.bootstrap.Modal.getInstance(modalEl) : null;
+                    var bsModal = window.bootstrap && window.bootstrap.Modal ? window.bootstrap.Modal.getOrCreateInstance(modalEl) : null;
                     if (bsModal) {
                         bsModal.hide();
                     }
@@ -4724,8 +5146,380 @@
                 });
             }
 
+            document.addEventListener('voyage-activity-region-change', function() {
+                page = 1;
+                refreshCatalog();
+            });
+
+            window.__voyageActivitiesModalAdd = appendActivityToVoyage;
+            window.__voyageActivitiesRefreshCatalog = refreshCatalog;
+
             reindexRows();
             refreshCatalog();
+        })();
+
+        (function inlineActivitiesQuickCreate() {
+            var modalEl = document.getElementById('activitiesCatalogModal');
+            var listView = document.getElementById('activities-catalog-list-view');
+            var formView = document.getElementById('activities-catalog-form-view');
+            if (!modalEl || !listView || !formView) return;
+
+            var ajaxStoreUrl = @json(route('admin.circuits.activities.ajax.store'));
+            var csrfToken = @json(csrf_token());
+            var searchInput = document.getElementById('activities-catalog-search');
+            var regionHint = document.getElementById('activities-catalog-region-hint');
+            var listAlert = document.getElementById('activities-catalog-list-alert');
+            var formAlert = document.getElementById('activities-catalog-form-alert');
+            var openCreateBtn = document.getElementById('activities-catalog-open-create');
+            var backToListBtn = document.getElementById('activities-catalog-back-to-list');
+            var submitBtn = document.getElementById('activities-catalog-form-submit');
+            var resetBtn = document.getElementById('activities-catalog-form-reset');
+            var titleInput = document.getElementById('activities-create-title');
+            var typeInput = document.getElementById('activities-create-type');
+            var regionInput = document.getElementById('activities-create-region');
+            var adultPriceInput = document.getElementById('activities-create-adult-price');
+            var childPriceInput = document.getElementById('activities-create-child-price');
+            var minAgeInput = document.getElementById('activities-create-min-age');
+            var maxAgeInput = document.getElementById('activities-create-max-age');
+            var durationInput = document.getElementById('activities-create-duration');
+            var galleryInput = document.getElementById('activities-create-gallery');
+
+            function currentRegionTerms() {
+                if (window.AjinsafroActivityRegionFilter && typeof window.AjinsafroActivityRegionFilter.currentTerms === 'function') {
+                    return window.AjinsafroActivityRegionFilter.currentTerms();
+                }
+
+                var addressInput = document.getElementById('address');
+                return addressInput && addressInput.value.trim() ? [addressInput.value.trim()] : [];
+            }
+
+            function normalizeActivity(raw) {
+                return {
+                    id: Number(raw.id || 0),
+                    title: raw.title || '',
+                    activity_type: raw.activity_type || '',
+                    region_name: raw.region_name || raw.location_text || raw.place_text || '',
+                    location_text: raw.location_text || raw.region_name || '',
+                    place_text: raw.place_text || raw.region_name || '',
+                    adult_price: raw.adult_price || raw.base_price || raw.price || 0,
+                    child_price: raw.child_price || 0,
+                    base_price: raw.base_price || raw.adult_price || raw.price || 0,
+                    min_age: raw.min_age || 0,
+                    max_age: raw.max_age || 0,
+                    default_duration_minutes: raw.default_duration_minutes || raw.duration_minutes || 0,
+                };
+            }
+
+            function setListAlert(type, message) {
+                if (!listAlert) return;
+                listAlert.className = 'alert alert-' + type + ' py-2';
+                listAlert.textContent = message || '';
+                listAlert.classList.remove('d-none');
+            }
+
+            function clearListAlert() {
+                if (!listAlert) return;
+                listAlert.classList.add('d-none');
+            }
+
+            function setFormAlert(type, message) {
+                if (!formAlert) return;
+                formAlert.className = 'alert alert-' + type;
+                formAlert.textContent = message || '';
+                formAlert.classList.remove('d-none');
+            }
+
+            function clearFormAlert() {
+                if (!formAlert) return;
+                formAlert.classList.add('d-none');
+            }
+
+            function clearFieldErrors() {
+                formView.querySelectorAll('[data-error]').forEach(function(el) {
+                    el.classList.add('d-none');
+                    el.textContent = '';
+                });
+
+                [
+                    titleInput,
+                    typeInput,
+                    regionInput,
+                    adultPriceInput,
+                    childPriceInput,
+                    minAgeInput,
+                    maxAgeInput,
+                    durationInput,
+                    galleryInput
+                ].forEach(function(input) {
+                    if (input) input.classList.remove('is-invalid');
+                });
+            }
+
+            function applyFieldErrors(errors) {
+                if (!errors) return;
+
+                var inputMap = {
+                    title: titleInput,
+                    activity_type: typeInput,
+                    region_name: regionInput,
+                    adult_price: adultPriceInput,
+                    child_price: childPriceInput,
+                    min_age: minAgeInput,
+                    max_age: maxAgeInput,
+                    default_duration_minutes: durationInput,
+                    gallery_images: galleryInput,
+                    image: galleryInput,
+                };
+
+                Object.keys(errors).forEach(function(field) {
+                    var normalizedField = field.indexOf('gallery_images.') === 0 ? 'gallery_images' : field;
+                    var errorEl = formView.querySelector('[data-error="' + normalizedField + '"]');
+                    if (errorEl) {
+                        errorEl.textContent = Array.isArray(errors[field]) ? errors[field][0] : String(errors[field]);
+                        errorEl.classList.remove('d-none');
+                    }
+
+                    if (inputMap[normalizedField]) {
+                        inputMap[normalizedField].classList.add('is-invalid');
+                    }
+                });
+            }
+
+            function setFormLoading(loading) {
+                var btnText = submitBtn && submitBtn.querySelector('.btn-text');
+                var spinner = submitBtn && submitBtn.querySelector('.spinner-border');
+                if (submitBtn) submitBtn.disabled = loading;
+                if (resetBtn) resetBtn.disabled = loading;
+                if (backToListBtn) backToListBtn.disabled = loading;
+                if (btnText) btnText.classList.toggle('d-none', loading);
+                if (spinner) spinner.classList.toggle('d-none', !loading);
+            }
+
+            function syncRegionHint() {
+                if (!regionHint) return;
+
+                var terms = currentRegionTerms();
+                if (!terms.length) {
+                    regionHint.textContent = 'Le catalogue est filtre automatiquement selon la destination du voyage.';
+                    return;
+                }
+
+                regionHint.textContent = 'Catalogue filtre sur : ' + terms.join(', ');
+            }
+
+            function resetForm() {
+                if (titleInput) titleInput.value = '';
+                if (typeInput) typeInput.value = '';
+                if (regionInput) regionInput.value = currentRegionTerms()[0] || '';
+                if (adultPriceInput) adultPriceInput.value = '';
+                if (childPriceInput) childPriceInput.value = '';
+                if (minAgeInput) minAgeInput.value = '';
+                if (maxAgeInput) maxAgeInput.value = '';
+                if (durationInput) durationInput.value = '';
+                if (galleryInput) galleryInput.value = '';
+                clearFormAlert();
+                clearFieldErrors();
+            }
+
+            function showListMode(type, message) {
+                formView.classList.add('d-none');
+                listView.classList.remove('d-none');
+                clearFormAlert();
+                clearFieldErrors();
+
+                if (message) {
+                    setListAlert(type || 'success', message);
+                } else {
+                    clearListAlert();
+                }
+            }
+
+            function showFormMode() {
+                listView.classList.add('d-none');
+                formView.classList.remove('d-none');
+                clearListAlert();
+                clearFormAlert();
+                clearFieldErrors();
+
+                if (regionInput && !regionInput.value.trim()) {
+                    regionInput.value = currentRegionTerms()[0] || '';
+                }
+
+                if (titleInput) {
+                    window.setTimeout(function() {
+                        titleInput.focus();
+                    }, 60);
+                }
+            }
+
+            function upsertCatalogEntry(activity) {
+                ['ALL_PROGRAMME_ACTIVITIES_CATALOG', 'ALL_TOUR_ACTIVITIES_CATALOG', 'PROGRAMME_ACTIVITIES_CATALOG', 'TOUR_ACTIVITIES_CATALOG'].forEach(function(key) {
+                    if (!Array.isArray(window[key])) {
+                        window[key] = [];
+                    }
+
+                    var payload = {
+                        id: Number(activity.id),
+                        title: activity.title,
+                        activity_type: activity.activity_type || '',
+                        region_name: activity.region_name || activity.location_text || '',
+                        location_text: activity.location_text || activity.region_name || '',
+                        place_text: activity.place_text || activity.region_name || '',
+                        base_price: activity.base_price || 0,
+                        adult_price: activity.adult_price || activity.base_price || 0,
+                        child_price: activity.child_price || 0,
+                        default_duration_minutes: activity.default_duration_minutes || 0,
+                        min_age: activity.min_age || 0,
+                        max_age: activity.max_age || 0,
+                    };
+
+                    var idx = window[key].findIndex(function(item) {
+                        return Number(item.id) === Number(activity.id);
+                    });
+
+                    if (idx >= 0) {
+                        window[key][idx] = Object.assign({}, window[key][idx], payload);
+                    } else {
+                        window[key].unshift(payload);
+                    }
+                });
+
+                if (window.AjinsafroActivityRegionFilter && typeof window.AjinsafroActivityRegionFilter.apply === 'function') {
+                    window.AjinsafroActivityRegionFilter.apply();
+                }
+            }
+
+            async function parseJsonResponse(response) {
+                var json = await response.json().catch(function() { return null; });
+                if (!response.ok || !json || json.success === false) {
+                    var error = new Error((json && json.message) || 'Une erreur est survenue.');
+                    error.status = response.status;
+                    error.payload = json;
+                    throw error;
+                }
+
+                return json;
+            }
+
+            function buildFormData() {
+                var fd = new FormData();
+                fd.append('_token', csrfToken);
+                fd.append('allow_empty_gallery', '1');
+                fd.append('title', (titleInput.value || '').trim());
+                fd.append('activity_type', (typeInput.value || '').trim());
+                fd.append('region_name', (regionInput.value || '').trim());
+                fd.append('location_text', (regionInput.value || '').trim());
+                fd.append('adult_price', adultPriceInput.value || '');
+                fd.append('child_price', childPriceInput.value || '');
+                fd.append('min_age', minAgeInput.value || '');
+                fd.append('max_age', maxAgeInput.value || '');
+                fd.append('default_duration_minutes', durationInput.value || '');
+
+                if (galleryInput && galleryInput.files) {
+                    Array.prototype.forEach.call(galleryInput.files, function(file) {
+                        fd.append('gallery_images[]', file);
+                    });
+                }
+
+                return fd;
+            }
+
+            async function submitForm() {
+                clearFieldErrors();
+                clearFormAlert();
+                setFormLoading(true);
+
+                try {
+                    var response = await fetch(ajaxStoreUrl, {
+                        method: 'POST',
+                        body: buildFormData(),
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    var json = await parseJsonResponse(response);
+                    var activity = normalizeActivity(json.data || {});
+
+                    window.__voyageActivitiesLastCreatedId = activity.id;
+                    upsertCatalogEntry(activity);
+
+                    if (typeof window.__voyageActivitiesModalAdd === 'function') {
+                        window.__voyageActivitiesModalAdd(activity);
+                    }
+
+                    resetForm();
+                    if (searchInput) {
+                        searchInput.value = '';
+                    }
+
+                    if (typeof window.__voyageActivitiesRefreshCatalog === 'function') {
+                        window.__voyageActivitiesRefreshCatalog();
+                    }
+
+                    showListMode('success', 'Activite creee et ajoutee au voyage.');
+                } catch (error) {
+                    if (error.status === 422 && error.payload && error.payload.errors) {
+                        applyFieldErrors(error.payload.errors);
+                        setFormAlert('warning', error.payload.message || 'Veuillez corriger les erreurs du formulaire.');
+                    } else {
+                        setFormAlert('danger', error.message || 'Impossible de creer l activite.');
+                    }
+                } finally {
+                    setFormLoading(false);
+                }
+            }
+
+            if (openCreateBtn) {
+                openCreateBtn.addEventListener('click', function() {
+                    resetForm();
+                    showFormMode();
+                });
+            }
+
+            if (backToListBtn) {
+                backToListBtn.addEventListener('click', function() {
+                    showListMode();
+                    if (typeof window.__voyageActivitiesRefreshCatalog === 'function') {
+                        window.__voyageActivitiesRefreshCatalog();
+                    }
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    resetForm();
+                });
+            }
+
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    submitForm();
+                });
+            }
+
+            modalEl.addEventListener('shown.bs.modal', function() {
+                syncRegionHint();
+                if (!formView.classList.contains('d-none')) {
+                    if (titleInput) titleInput.focus();
+                    return;
+                }
+
+                if (searchInput) searchInput.focus();
+            });
+
+            document.addEventListener('voyage-activity-region-change', function() {
+                syncRegionHint();
+
+                if (!formView.classList.contains('d-none') && regionInput && !regionInput.value.trim()) {
+                    regionInput.value = currentRegionTerms()[0] || '';
+                }
+            });
+
+            syncRegionHint();
         })();
 
         // "”"”"” MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) "”"”"”

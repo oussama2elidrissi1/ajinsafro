@@ -17,6 +17,10 @@
             </button>
         </div>
 
+        <div class="alert alert-info py-2 small mb-3">
+            Le catalogue est filtre automatiquement selon la region / destination du voyage.
+        </div>
+
         <div id="day-builder-activities-loader" class="text-center py-4 d-none">
             <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
             <div class="small text-muted mt-2">Chargement des activités...</div>
@@ -44,9 +48,21 @@
                     <div class="card-body">
                         <input type="hidden" id="activity-form-id">
                         <div class="mb-3">
-                            <label for="activity-form-title" class="form-label">Titre <span class="text-danger">*</span></label>
+                            <label for="activity-form-title" class="form-label">Nom de l activite <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="activity-form-title">
                             <div class="small text-danger mt-1 d-none" data-error="title"></div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="activity-form-type" class="form-label">Type d activite <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="activity-form-type" placeholder="Ex: excursion, quad">
+                                <div class="small text-danger mt-1 d-none" data-error="activity_type"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="activity-form-region" class="form-label">Region / destination <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="activity-form-region" placeholder="Ex: Merzouga">
+                                <div class="small text-danger mt-1 d-none" data-error="region_name"></div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="activity-form-slug" class="form-label">Slug</label>
@@ -70,6 +86,7 @@
                             <input type="file" class="form-control" id="activity-form-image" accept="image/jpeg,image/png,image/webp">
                             <small class="text-muted d-block mt-1">JPEG/PNG/WebP (max 5MB)</small>
                             <div class="small text-danger mt-1 d-none" data-error="image"></div>
+                            <div class="small text-danger mt-1 d-none" data-error="gallery_images"></div>
                             <div id="activity-form-image-current-wrap" class="mt-2 d-none">
                                 <img id="activity-form-image-current" src="" alt="Image actuelle" class="img-fluid rounded" style="max-height: 170px; object-fit: cover; width: 100%;">
                                 <small class="text-muted d-block mt-1">Image actuelle</small>
@@ -81,9 +98,28 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="activity-form-base-price" class="form-label">Prix de base</label>
+                            <label for="activity-form-base-price" class="form-label">Prix adulte <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="activity-form-base-price" step="0.01" min="0" placeholder="0.00">
-                            <div class="small text-danger mt-1 d-none" data-error="base_price"></div>
+                            <div class="small text-danger mt-1 d-none" data-error="adult_price"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="activity-form-child-price" class="form-label">Prix enfant <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="activity-form-child-price" step="0.01" min="0" placeholder="0.00">
+                            <div class="small text-danger mt-1 d-none" data-error="child_price"></div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="activity-form-min-age" class="form-label">Age min <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="activity-form-min-age" min="0" max="120">
+                                <div class="small text-danger mt-1 d-none" data-error="min_age"></div>
+                            </div>
+                            <div class="col-6">
+                                <label for="activity-form-max-age" class="form-label">Age max <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="activity-form-max-age" min="0" max="120">
+                                <div class="small text-danger mt-1 d-none" data-error="max_age"></div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -98,10 +134,8 @@
                             <div class="small text-danger mt-1 d-none" data-error="default_duration_minutes"></div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="activity-form-place" class="form-label">Place text</label>
-                            <input type="text" class="form-control" id="activity-form-place">
-                            <div class="small text-danger mt-1 d-none" data-error="place_text"></div>
+                        <div class="small text-muted mb-3">
+                            La region selectionnee controle les activites proposees dans le voyage.
                         </div>
 
                         <div class="form-check form-switch mb-3">
@@ -154,6 +188,8 @@
     var formAlert = document.getElementById('day-builder-activities-form-alert');
     var formId = document.getElementById('activity-form-id');
     var formTitleInput = document.getElementById('activity-form-title');
+    var formTypeInput = document.getElementById('activity-form-type');
+    var formRegionInput = document.getElementById('activity-form-region');
     var formSlugInput = document.getElementById('activity-form-slug');
     var formDescriptionInput = document.getElementById('activity-form-description');
     var formImageInput = document.getElementById('activity-form-image');
@@ -162,9 +198,11 @@
     var previewImageWrap = document.getElementById('activity-form-image-preview-wrap');
     var previewImage = document.getElementById('activity-form-image-preview');
     var formBasePriceInput = document.getElementById('activity-form-base-price');
+    var formChildPriceInput = document.getElementById('activity-form-child-price');
+    var formMinAgeInput = document.getElementById('activity-form-min-age');
+    var formMaxAgeInput = document.getElementById('activity-form-max-age');
     var formIconInput = document.getElementById('activity-form-icon');
     var formDurationInput = document.getElementById('activity-form-duration');
-    var formPlaceInput = document.getElementById('activity-form-place');
     var formIsActiveInput = document.getElementById('activity-form-is-active');
     var formSubmitBtn = document.getElementById('activity-form-submit-btn');
     var formResetBtn = document.getElementById('activity-form-reset-btn');
@@ -174,6 +212,14 @@
         editingId: null,
         activities: [],
     };
+
+    function currentRegionTerms() {
+        if (window.AjinsafroActivityRegionFilter && typeof window.AjinsafroActivityRegionFilter.currentTerms === 'function') {
+            return window.AjinsafroActivityRegionFilter.currentTerms();
+        }
+
+        return [];
+    }
 
     function esc(value) {
         return String(value == null ? '' : value)
@@ -251,24 +297,50 @@
         return {
             id: Number(raw.id),
             title: raw.title || '',
+            slug: raw.slug || '',
             description: raw.description || '',
-            base_price: raw.base_price || raw.price || 0,
+            activity_type: raw.activity_type || '',
+            region_name: raw.region_name || raw.location_text || raw.place_text || '',
+            location_text: raw.location_text || raw.region_name || '',
+            place_text: raw.place_text || raw.region_name || '',
+            adult_price: raw.adult_price || raw.base_price || raw.price || 0,
+            child_price: raw.child_price || 0,
+            base_price: raw.base_price || raw.adult_price || raw.price || 0,
+            default_duration_minutes: raw.default_duration_minutes || 0,
+            min_age: raw.min_age || 0,
+            max_age: raw.max_age || 0,
+            icon: raw.icon || '',
+            image_url: raw.image_url || '',
+            is_active: Boolean(raw.is_active),
         };
     }
 
     function cardHtml(activity) {
+        var badge = activity.is_active
+            ? '<span class="badge bg-success-subtle text-success">Active</span>'
+            : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
+
         return '<div class="card h-100 programme-catalog-card">' +
             '<div class="card-body d-flex flex-column" data-activity-view>' +
                 '<div class="d-flex justify-content-between align-items-start gap-2">' +
-                    '<h6 class="card-title mb-1" data-activity-title>' + esc(activity.title) + '</h6>' +
+                    '<div>' +
+                        '<h6 class="card-title mb-1" data-activity-title>' + esc(activity.title) + '</h6>' +
+                        '<div class="small text-muted">' + esc(activity.activity_type || 'Type non renseigne') + '</div>' +
+                    '</div>' +
                     '<div class="d-flex gap-1">' +
                         '<button type="button" class="btn btn-sm btn-light" data-action="edit" data-id="' + activity.id + '" title="Modifier"><i class="bx bx-pencil"></i></button>' +
                         '<button type="button" class="btn btn-sm btn-light text-danger" data-action="delete" data-id="' + activity.id + '" title="Supprimer"><i class="bx bx-trash"></i></button>' +
                     '</div>' +
                 '</div>' +
+                '<div class="small text-muted mb-2">' + esc(activity.region_name || 'Region non renseignee') + '</div>' +
                 '<p class="card-text small text-muted flex-grow-1" data-activity-description>' + esc(limitText(activity.description, 90)) + '</p>' +
+                '<div class="small mb-1">Adulte: ' + esc(activity.adult_price || '0.00') + ' MAD</div>' +
+                '<div class="small text-muted mb-1">Enfant: ' + esc(activity.child_price || '0.00') + ' MAD</div>' +
                 '<div class="small text-muted mb-2">Prix: ' + esc(activity.base_price || '0.00') + ' • Durée: ' + esc(activity.default_duration_minutes || '—') + ' min</div>' +
-                '<button type="button" class="btn btn-sm btn-primary day-builder-add-activity" data-activity-id="' + activity.id + '" data-activity-title="' + esc(activity.title) + '">Ajouter au jour</button>' +
+                '<div class="d-flex align-items-center justify-content-between gap-2 mt-auto">' +
+                    badge +
+                    '<button type="button" class="btn btn-sm btn-primary day-builder-add-activity" data-activity-id="' + activity.id + '" data-activity-title="' + esc(activity.title) + '">Ajouter au jour</button>' +
+                '</div>' +
             '</div>' +
         '</div>';
     }
@@ -307,40 +379,42 @@
     }
 
     function upsertCatalogEntry(activity) {
-        ['PROGRAMME_ACTIVITIES_CATALOG', 'TOUR_ACTIVITIES_CATALOG'].forEach(function(key) {
+        ['ALL_PROGRAMME_ACTIVITIES_CATALOG', 'ALL_TOUR_ACTIVITIES_CATALOG', 'PROGRAMME_ACTIVITIES_CATALOG', 'TOUR_ACTIVITIES_CATALOG'].forEach(function(key) {
             if (!Array.isArray(window[key])) window[key] = [];
             var idx = window[key].findIndex(function(item) { return Number(item.id) === Number(activity.id); });
             var payload = {
                 id: Number(activity.id),
                 title: activity.title,
                 description: activity.description,
+                activity_type: activity.activity_type || '',
+                region_name: activity.region_name || activity.location_text || '',
+                location_text: activity.location_text || activity.region_name || '',
+                place_text: activity.place_text || activity.region_name || '',
                 base_price: activity.base_price || 0,
+                adult_price: activity.adult_price || activity.base_price || 0,
+                child_price: activity.child_price || 0,
+                default_duration_minutes: activity.default_duration_minutes || 0,
+                min_age: activity.min_age || 0,
+                max_age: activity.max_age || 0,
             };
             if (idx >= 0) window[key][idx] = Object.assign({}, window[key][idx], payload);
             else window[key].unshift(payload);
         });
 
-        document.querySelectorAll('.add-activity-select').forEach(function(select) {
-            var val = String(activity.id);
-            var option = select.querySelector('option[value="' + val + '"]');
-            if (!option) {
-                option = document.createElement('option');
-                option.value = val;
-                select.appendChild(option);
-            }
-            option.textContent = activity.title;
-        });
+        if (window.AjinsafroActivityRegionFilter && typeof window.AjinsafroActivityRegionFilter.apply === 'function') {
+            window.AjinsafroActivityRegionFilter.apply();
+        }
     }
 
     function removeCatalogEntry(activityId) {
-        ['PROGRAMME_ACTIVITIES_CATALOG', 'TOUR_ACTIVITIES_CATALOG'].forEach(function(key) {
+        ['ALL_PROGRAMME_ACTIVITIES_CATALOG', 'ALL_TOUR_ACTIVITIES_CATALOG', 'PROGRAMME_ACTIVITIES_CATALOG', 'TOUR_ACTIVITIES_CATALOG'].forEach(function(key) {
             if (!Array.isArray(window[key])) return;
             window[key] = window[key].filter(function(item) { return Number(item.id) !== Number(activityId); });
         });
 
-        document.querySelectorAll('.add-activity-select option[value="' + activityId + '"]').forEach(function(opt) {
-            opt.remove();
-        });
+        if (window.AjinsafroActivityRegionFilter && typeof window.AjinsafroActivityRegionFilter.apply === 'function') {
+            window.AjinsafroActivityRegionFilter.apply();
+        }
     }
 
     async function parseJsonResponse(response) {
@@ -359,7 +433,7 @@
             el.classList.add('d-none');
             el.textContent = '';
         });
-        [formTitleInput, formSlugInput, formDescriptionInput, formImageInput, formBasePriceInput, formIconInput, formDurationInput, formPlaceInput].forEach(function(input) {
+        [formTitleInput, formTypeInput, formRegionInput, formSlugInput, formDescriptionInput, formImageInput, formBasePriceInput, formChildPriceInput, formMinAgeInput, formMaxAgeInput, formIconInput, formDurationInput].forEach(function(input) {
             if (input) input.classList.remove('is-invalid');
         });
     }
@@ -368,24 +442,28 @@
         clearFieldErrors();
         if (!errors) return;
         Object.keys(errors).forEach(function(field) {
-            var key = field === 'location_text' ? 'place_text' : field;
-            var errEl = formView.querySelector('[data-error="' + key + '"]') || formView.querySelector('[data-error="' + field + '"]');
+            var normalizedField = field.indexOf('gallery_images.') === 0 ? 'gallery_images' : field;
+            var errEl = formView.querySelector('[data-error="' + normalizedField + '"]');
             if (errEl) {
                 errEl.textContent = Array.isArray(errors[field]) ? errors[field][0] : String(errors[field]);
                 errEl.classList.remove('d-none');
             }
             var map = {
                 title: formTitleInput,
+                activity_type: formTypeInput,
+                region_name: formRegionInput,
                 slug: formSlugInput,
                 description: formDescriptionInput,
                 image: formImageInput,
-                base_price: formBasePriceInput,
+                gallery_images: formImageInput,
+                adult_price: formBasePriceInput,
+                child_price: formChildPriceInput,
+                min_age: formMinAgeInput,
+                max_age: formMaxAgeInput,
                 icon: formIconInput,
                 default_duration_minutes: formDurationInput,
-                place_text: formPlaceInput,
-                location_text: formPlaceInput,
             };
-            if (map[field]) map[field].classList.add('is-invalid');
+            if (map[normalizedField]) map[normalizedField].classList.add('is-invalid');
         });
     }
 
@@ -409,13 +487,17 @@
     function resetFormValues() {
         formId.value = '';
         formTitleInput.value = '';
+        formTypeInput.value = '';
+        formRegionInput.value = currentRegionTerms()[0] || '';
         formSlugInput.value = '';
         formDescriptionInput.value = '';
         formImageInput.value = '';
         formBasePriceInput.value = '';
+        formChildPriceInput.value = '';
+        formMinAgeInput.value = '';
+        formMaxAgeInput.value = '';
         formIconInput.value = '';
         formDurationInput.value = '';
-        formPlaceInput.value = '';
         formIsActiveInput.checked = true;
         currentImageWrap.classList.add('d-none');
         currentImage.src = '';
@@ -427,7 +509,15 @@
         setListLoading(true);
         hideListAlert();
         try {
-            var url = urls.list + ((search && search.trim()) ? ('?search=' + encodeURIComponent(search.trim())) : '');
+            var params = new URLSearchParams();
+            if (search && search.trim()) {
+                params.set('search', search.trim());
+            }
+            currentRegionTerms().forEach(function(term) {
+                params.append('regions[]', term);
+            });
+
+            var url = urls.list + (params.toString() ? ('?' + params.toString()) : '');
             var response = await fetch(url, {
                 headers: {
                     'Accept': 'application/json',
@@ -462,13 +552,17 @@
 
             formId.value = String(data.id);
             formTitleInput.value = data.title || '';
+            formTypeInput.value = data.activity_type || '';
+            formRegionInput.value = data.region_name || data.location_text || '';
             formSlugInput.value = data.slug || '';
             formDescriptionInput.value = data.description || '';
             formImageInput.value = '';
-            formBasePriceInput.value = data.base_price || '';
+            formBasePriceInput.value = data.adult_price || data.base_price || '';
+            formChildPriceInput.value = data.child_price || '';
+            formMinAgeInput.value = data.min_age || '';
+            formMaxAgeInput.value = data.max_age || '';
             formIconInput.value = data.icon || '';
             formDurationInput.value = data.default_duration_minutes || '';
-            formPlaceInput.value = data.location_text || data.place_text || '';
             formIsActiveInput.checked = Boolean(data.is_active);
 
             if (data.image_url) {
@@ -492,13 +586,18 @@
     function buildFormData() {
         var fd = new FormData();
         fd.append('_token', csrfToken);
+        fd.append('activity_type', (formTypeInput.value || '').trim());
+        fd.append('region_name', (formRegionInput.value || '').trim());
         fd.append('title', (formTitleInput.value || '').trim());
         fd.append('slug', (formSlugInput.value || '').trim());
         fd.append('description', formDescriptionInput.value || '');
-        fd.append('base_price', formBasePriceInput.value || '');
+        fd.append('adult_price', formBasePriceInput.value || '');
+        fd.append('child_price', formChildPriceInput.value || '');
+        fd.append('min_age', formMinAgeInput.value || '');
+        fd.append('max_age', formMaxAgeInput.value || '');
         fd.append('icon', formIconInput.value || '');
         fd.append('default_duration_minutes', formDurationInput.value || '');
-        fd.append('place_text', formPlaceInput.value || '');
+        fd.append('location_text', (formRegionInput.value || '').trim());
         fd.append('is_active', formIsActiveInput.checked ? '1' : '0');
 
         if (formImageInput.files && formImageInput.files[0]) {
@@ -536,10 +635,10 @@
             } else {
                 state.activities.unshift(activity);
             }
-            renderCards();
             upsertCatalogEntry(activity);
 
             showListMode();
+            fetchList(searchInput ? (searchInput.value || '') : '');
             showToast(json.message || (isEdit ? 'Activité mise à jour.' : 'Activité créée.'), 'success');
         } catch (error) {
             if (error.status === 422 && error.payload && error.payload.errors) {
@@ -571,8 +670,8 @@
             state.activities = state.activities.filter(function(item) {
                 return item.id !== Number(activityId);
             });
-            renderCards();
             removeCatalogEntry(activityId);
+            fetchList(searchInput ? (searchInput.value || '') : '');
             showToast(json.message || 'Activité supprimée.', 'success');
         } catch (error) {
             showToast(error.message || 'Suppression impossible.', 'danger');
@@ -655,6 +754,14 @@
             var deleteId = deleteBtn.getAttribute('data-id');
             if (!deleteId) return;
             deleteActivity(deleteId);
+        }
+    });
+
+    document.addEventListener('voyage-activity-region-change', function() {
+        if (state.mode === 'list') {
+            fetchList(searchInput ? (searchInput.value || '') : '');
+        } else if (!formRegionInput.value.trim()) {
+            formRegionInput.value = currentRegionTerms()[0] || '';
         }
     });
 

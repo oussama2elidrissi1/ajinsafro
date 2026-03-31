@@ -311,7 +311,10 @@ class ReservationWorkspaceController extends Controller
         $voyage = Voyage::findOrFail((int) $request->query('voyage_id'));
         $travelDateId = $request->filled('travel_date_id') ? (int) $request->query('travel_date_id') : null;
 
-        $q = $this->reservationListQuery->baseQuery($request->user())
+        $q = $this->reservationListQuery->baseQuery($request->user(), [
+            'tour_id' => (int) $voyage->id,
+            'travel_date_id' => $travelDateId,
+        ])
             ->whereIn('tour_id', Voyage::allIdsSharingWpTour((int) $voyage->id))
             ->with(['passengers', 'client:id,client_code,full_name', 'travelDate']);
         $this->reservationListQuery->applyTravelDateFilter($q, $travelDateId);

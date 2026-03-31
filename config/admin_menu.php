@@ -18,15 +18,7 @@ return [
             'label' => 'Réservations',
             'icon' => 'bx bx-calendar-check',
             'permission' => 'reservations.view',
-            'children' => [
-                ['label' => 'Espace réservation (catalogue)', 'route' => 'admin.reservations.workspace', 'permission' => 'reservations.view'],
-                ['label' => 'Liste des réservations', 'route' => 'admin.reservations.index', 'permission' => 'reservations.all.view'],
-                ['label' => 'En attente', 'route' => 'admin.reservations.index', 'permission' => 'reservations.pending.view', 'query' => ['status' => 'EN_COURS']],
-                ['label' => 'Confirmées', 'route' => 'admin.reservations.index', 'permission' => 'reservations.confirmed.view', 'query' => ['status' => 'VALIDEE']],
-                ['label' => 'Annulées', 'route' => 'admin.reservations.index', 'permission' => 'reservations.cancelled.view', 'query' => ['status' => 'ANNULEE']],
-                ['label' => 'Calendrier', 'route' => 'admin.reservations.calendrier', 'permission' => 'reservations.calendar.view'],
-                ['label' => 'Paiements', 'route' => 'admin.reservations.paiements', 'permission' => 'reservations.payments.view'],
-            ],
+            'route' => 'admin.reservations.workspace',
         ],
         [
             'key' => 'customers',

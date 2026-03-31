@@ -11,6 +11,21 @@
         ->filter(fn ($section) => in_array($section['key'] ?? '', $allowedSections, true))
         ->values();
     $isManagerPortal = $user?->hasRole([\App\Services\BranchScopeService::ROLE_MANAGER, 'Manager']);
+    $navActive = function (?string $routeName) use ($currentRoute): bool {
+        if (! $routeName) {
+            return false;
+        }
+        if ($currentRoute === $routeName) {
+            return true;
+        }
+        $parts = explode('.', $routeName);
+        if (count($parts) < 2) {
+            return false;
+        }
+        $prefix = $parts[0] . '.' . $parts[1];
+
+        return $currentRoute === $prefix || str_starts_with($currentRoute, $prefix . '.');
+    };
 @endphp
 
 <div class="vertical-menu">
@@ -40,6 +55,7 @@
 
                 @foreach($menuItems as $section)
                     @php
+                        $sectionRoute = !empty($section['route']) && \Illuminate\Support\Facades\Route::has($section['route']) ? $section['route'] : null;
                         $children = collect($section['children'] ?? [])
                             ->filter(function ($child) use ($user) {
                                 if (! empty($child['route']) && ! \Illuminate\Support\Facades\Route::has($child['route'])) {
@@ -56,26 +72,35 @@
                             ->values();
 
                         $hasSectionPermission = empty($section['permission']) || $user->can($section['permission']);
-                        $sectionActive = $children->contains(fn ($child) => ($child['route'] ?? null) === $currentRoute);
+                        $sectionActive = $children->contains(fn ($child) => ($child['route'] ?? null) === $currentRoute) || $navActive($sectionRoute);
                     @endphp
 
-                    @if($hasSectionPermission && $children->isNotEmpty())
+                    @if($hasSectionPermission && ($children->isNotEmpty() || $sectionRoute))
                         <li>
-                            <a href="javascript: void(0);" class="has-arrow waves-effect {{ $sectionActive ? 'mm-active' : '' }}">
-                                <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i><span>{{ $section['label'] }}</span>
-                            </a>
-                            <ul class="sub-menu" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}">
-                                @foreach($children as $child)
-                                    <li>
-                                        @php
-                                            $childHref = !empty($child['query']) ? route($child['route'], $child['query']) : route($child['route']);
-                                        @endphp
-                                        <a href="{{ $childHref }}" class="{{ ($child['route'] ?? null) === $currentRoute ? 'active' : '' }}">
-                                            {{ $child['label'] }}
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
+                            @if($children->isNotEmpty())
+                                <a href="javascript: void(0);" class="has-arrow waves-effect {{ $sectionActive ? 'mm-active' : '' }}">
+                                    <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i><span>{{ $section['label'] }}</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}">
+                                    @foreach($children as $child)
+                                        <li>
+                                            @php
+                                                $childHref = !empty($child['query']) ? route($child['route'], $child['query']) : route($child['route']);
+                                            @endphp
+                                            <a href="{{ $childHref }}" class="{{ ($child['route'] ?? null) === $currentRoute ? 'active' : '' }}">
+                                                {{ $child['label'] }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                @php
+                                    $sectionHref = !empty($section['query']) ? route($sectionRoute, $section['query']) : route($sectionRoute);
+                                @endphp
+                                <a href="{{ $sectionHref }}" class="waves-effect {{ $sectionActive ? 'active' : '' }}">
+                                    <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i><span>{{ $section['label'] }}</span>
+                                </a>
+                            @endif
                         </li>
                     @endif
                 @endforeach

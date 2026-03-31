@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Client;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\Voyage;
 use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -151,40 +152,11 @@ class BranchScopeService
             return true;
         }
 
-        $branchIds = $this->visibleBranchIds($user);
-        if ($branchIds !== null && $branchIds !== [] && $reservation->branch_id !== null) {
-            if (in_array((int) $reservation->branch_id, array_map('intval', $branchIds), true)) {
-                return true;
-            }
-        }
+        $query = Reservation::query()->whereKey($reservation->getKey());
+        $this->scopeReservations($query, $user);
+        $this->constrainReservationQueryForPortalUser($query, $user);
 
-        if (AgentPortalLayout::shouldUse($user)) {
-            return $this->reservationMatchesPortalOwnership($user, $reservation);
-        }
-
-        return false;
-    }
-
-    private function reservationMatchesPortalOwnership(User $user, Reservation $reservation): bool
-    {
-        $ids = $this->portalOwnershipUserIds($user);
-        if ($ids === []) {
-            return false;
-        }
-        $agentId = (int) ($reservation->agent_id ?? 0);
-        $salesId = (int) ($reservation->sales_manager_id ?? 0);
-        $createdId = (int) ($reservation->created_by ?? 0);
-        foreach ($ids as $id) {
-            $id = (int) $id;
-            if ($id === 0) {
-                continue;
-            }
-            if ($agentId === $id || $salesId === $id || $createdId === $id) {
-                return true;
-            }
-        }
-
-        return false;
+        return $query->exists();
     }
 
     /**
@@ -276,21 +248,224 @@ class BranchScopeService
      * Restreint une requête réservations pour le portail agent/commercial/manager
      * (aligné sur {@see AgentPortalLayout::shouldUse} et {@see portalOwnershipUserIds}).
      */
-    public function constrainReservationQueryForPortalUser(Builder $query, User $user): void
+    public function constrainReservationQueryForPortalUser(Builder $query, User $user, array $context = []): void
     {
         if (! \App\Services\View\AgentPortalLayout::shouldUse($user)) {
             return;
         }
-        $ids = $this->portalOwnershipUserIds($user);
+
+        $ids = $this->normalizePortalIds($this->portalOwnershipUserIds($user));
         if ($ids === []) {
             $query->whereRaw('1 = 0');
 
             return;
         }
-        $query->where(function (Builder $q) use ($ids) {
-            $q->whereIn('agent_id', $ids)
-                ->orWhereIn('sales_manager_id', $ids)
-                ->orWhereIn('created_by', $ids);
+
+        if ($this->shouldUseBranchWideFilteredReservationVisibility($user, $context)) {
+            return;
+        }
+
+        $sharing = $this->portalReservationSharingContext($user, $ids);
+
+        $query->where(function (Builder $q) use ($ids, $sharing) {
+            $this->applyPortalOwnershipReservationScope($q, $ids);
+            $this->applyPortalSharedReservationScope($q, $sharing);
         });
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    private function applyPortalOwnershipReservationScope(Builder $query, array $ids): void
+    {
+        $query->whereIn('agent_id', $ids)
+            ->orWhereIn('sales_manager_id', $ids)
+            ->orWhereIn('created_by', $ids);
+    }
+
+    /**
+     * @param  array{tour_ids: list<int>, wp_tour_post_ids: list<int>, travel_date_ids: list<int>, voyage_flight_ids: list<int>, catalog_source_codes: list<string>, tour_hotel_ids: list<int>}  $sharing
+     */
+    private function applyPortalSharedReservationScope(Builder $query, array $sharing): void
+    {
+        if ($sharing['tour_ids'] !== []) {
+            $query->orWhereIn('tour_id', $sharing['tour_ids']);
+        }
+
+        if ($sharing['wp_tour_post_ids'] !== []) {
+            $query->orWhereIn('wp_tour_post_id', $sharing['wp_tour_post_ids']);
+        }
+
+        if ($sharing['travel_date_ids'] !== []) {
+            $query->orWhereIn('travel_date_id', $sharing['travel_date_ids']);
+        }
+
+        if ($sharing['voyage_flight_ids'] !== []) {
+            $query->orWhereIn('voyage_flight_id', $sharing['voyage_flight_ids']);
+        }
+
+        if ($sharing['catalog_source_codes'] !== []) {
+            $query->orWhereIn('catalog_source_code', $sharing['catalog_source_codes']);
+        }
+
+        if ($sharing['tour_hotel_ids'] !== []) {
+            $query->orWhereHas('reservationRooms', function (Builder $reservationRooms) use ($sharing) {
+                $reservationRooms->whereIn('tour_hotel_id', $sharing['tour_hotel_ids']);
+            });
+        }
+    }
+
+    /**
+     * @param  list<int>  $ownershipIds
+     * @return array{tour_ids: list<int>, wp_tour_post_ids: list<int>, travel_date_ids: list<int>, voyage_flight_ids: list<int>, catalog_source_codes: list<string>, tour_hotel_ids: list<int>}
+     */
+    private function portalReservationSharingContext(User $user, array $ownershipIds): array
+    {
+        $sharing = [
+            'tour_ids' => [],
+            'wp_tour_post_ids' => [],
+            'travel_date_ids' => [],
+            'voyage_flight_ids' => [],
+            'catalog_source_codes' => [],
+            'tour_hotel_ids' => [],
+        ];
+
+        $seed = Reservation::query()
+            ->select([
+                'id',
+                'tour_id',
+                'wp_tour_post_id',
+                'travel_date_id',
+                'voyage_flight_id',
+                'catalog_source_code',
+            ])
+            ->with(['reservationRooms:id,reservation_id,tour_hotel_id']);
+
+        $this->scopeReservations($seed, $user);
+        $seed->where(function (Builder $query) use ($ownershipIds) {
+            $this->applyPortalOwnershipReservationScope($query, $ownershipIds);
+        });
+
+        $reservations = $seed->get();
+        if ($reservations->isEmpty()) {
+            return $sharing;
+        }
+
+        $tourIds = $reservations->pluck('tour_id')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        $sharedTourIds = [];
+        foreach ($tourIds as $tourId) {
+            foreach (Voyage::allIdsSharingWpTour($tourId) as $physicalId) {
+                $physicalId = (int) $physicalId;
+                if ($physicalId > 0) {
+                    $sharedTourIds[$physicalId] = $physicalId;
+                }
+            }
+        }
+
+        $sharedWpTourIds = $reservations->pluck('wp_tour_post_id')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($sharedWpTourIds !== []) {
+            $voyageIds = Voyage::query()
+                ->whereIn('wp_post_id', $sharedWpTourIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->values()
+                ->all();
+
+            foreach ($voyageIds as $voyageId) {
+                foreach (Voyage::allIdsSharingWpTour($voyageId) as $physicalId) {
+                    $physicalId = (int) $physicalId;
+                    if ($physicalId > 0) {
+                        $sharedTourIds[$physicalId] = $physicalId;
+                    }
+                }
+            }
+        }
+
+        if ($sharedTourIds !== []) {
+            $sharedWpTourIds = array_values(array_unique(array_merge(
+                $sharedWpTourIds,
+                Voyage::query()
+                    ->whereIn('id', array_values($sharedTourIds))
+                    ->whereNotNull('wp_post_id')
+                    ->pluck('wp_post_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->filter(fn ($id) => $id > 0)
+                    ->values()
+                    ->all()
+            )));
+        }
+
+        $sharing['tour_ids'] = array_values($sharedTourIds);
+        $sharing['wp_tour_post_ids'] = $sharedWpTourIds;
+        $sharing['travel_date_ids'] = $reservations->pluck('travel_date_id')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+        $sharing['voyage_flight_ids'] = $reservations->pluck('voyage_flight_id')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+        $sharing['catalog_source_codes'] = $reservations->pluck('catalog_source_code')
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn ($value) => $value !== '')
+            ->unique()
+            ->values()
+            ->all();
+        $sharing['tour_hotel_ids'] = $reservations->flatMap(function (Reservation $reservation) {
+            return $reservation->reservationRooms->pluck('tour_hotel_id');
+        })
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        return $sharing;
+    }
+
+    private function shouldUseBranchWideFilteredReservationVisibility(User $user, array $context): bool
+    {
+        $branchIds = $this->visibleBranchIds($user);
+        if ($branchIds === [] || $branchIds === null) {
+            return false;
+        }
+
+        return (int) ($context['tour_id'] ?? 0) > 0
+            || (int) ($context['travel_date_id'] ?? 0) > 0
+            || (int) ($context['voyage_flight_id'] ?? 0) > 0
+            || (int) ($context['tour_hotel_id'] ?? 0) > 0
+            || trim((string) ($context['catalog_source_code'] ?? '')) !== '';
+    }
+
+    /**
+     * @param  array<int, mixed>  $ids
+     * @return list<int>
+     */
+    private function normalizePortalIds(array $ids): array
+    {
+        return collect($ids)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 }
