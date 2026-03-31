@@ -241,20 +241,26 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
     scrollbar-width: none;
     -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
-    margin: 0 -4px;
-    padding: 0 4px;
+    margin: 0;
+    padding: 0 8px 0 10px;
+    scroll-padding-inline: 10px;
+    scroll-behavior: smooth;
 }
 .voyage-edit-page .ve-tab-scroll::-webkit-scrollbar {
     display: none;
 }
 .voyage-edit-page .nav-tabs.ve-nav-tabs {
+    display: inline-flex;
     border-bottom: 2px solid #f1f5f9;
     flex-wrap: nowrap;
     gap: 2px;
     white-space: nowrap;
     padding-bottom: 0;
+    min-width: max-content;
 }
+.voyage-edit-page .ve-nav-tabs .nav-item,
 .voyage-edit-page .ve-nav-tabs .nav-link {
+    flex: 0 0 auto;
     border: none;
     border-bottom: 3px solid transparent;
     border-radius: 10px 10px 0 0;
@@ -268,6 +274,7 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
     gap: 7px;
     position: relative;
     white-space: nowrap;
+    scroll-snap-align: start;
 }
 .voyage-edit-page .ve-nav-tabs .nav-link:hover {
     color: var(--ve-primary);
@@ -918,15 +925,20 @@ body.voyage-layout-page .modal-body {
         border-radius: 12px 12px 0 0;
         padding: 4px 4px 0;
     }
+    .voyage-edit-page .ve-tab-scroll {
+        padding-left: 12px;
+        padding-right: 12px;
+        scroll-padding-inline: 12px;
+    }
     .voyage-edit-page .ve-nav-tabs .nav-link {
         padding: 10px 12px;
         font-size: 0.78rem;
     }
     .voyage-edit-page .ve-nav-tabs .nav-link span.ve-tab-label {
         display: inline-block;
-        max-width: 88px;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        max-width: none;
+        overflow: visible;
+        text-overflow: clip;
         white-space: nowrap;
         vertical-align: bottom;
     }
@@ -1272,6 +1284,107 @@ body.voyage-layout-page .offcanvas {
 .voyage-edit-page .ve-rich-field .tox-tinymce {
     box-sizing: border-box;
 }
+.voyage-edit-page .programme-day-card--dragging {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* ============================================================================
+   Programme (days) critical layout stabilizers
+   Root cause addressed: drag interactions can leave transient inline styles
+   that push an accordion item out of normal flow. Force containment + reset.
+   ============================================================================ */
+.voyage-edit-page #program-days,
+.voyage-edit-page #accordionProgrammeDays {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+.voyage-edit-page #accordionProgrammeDays {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    contain: layout paint;
+}
+.voyage-edit-page #accordionProgrammeDays > .programme-day-card {
+    float: none !important;
+    display: block;
+    flex: 0 0 auto;
+    align-self: stretch;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    position: relative;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+.voyage-edit-page #accordionProgrammeDays > .programme-day-card * {
+    max-width: 100%;
+}
+
+/* ============================================================================
+   Programme day form — restore structured grid layout (regression fix)
+   ============================================================================ */
+.voyage-edit-page .program-day-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.voyage-edit-page .program-day-form > * {
+    min-width: 0;
+}
+.voyage-edit-page .program-day-form .field-mode { grid-column: span 1; }
+.voyage-edit-page .program-day-form .field-type { grid-column: span 1; }
+.voyage-edit-page .program-day-form .field-title { grid-column: span 1; }
+
+/* Second row: city (2/3) + summary (1/3) */
+.voyage-edit-page .program-day-form .field-ville { grid-column: span 2; }
+.voyage-edit-page .program-day-form .field-resume { grid-column: span 1; }
+
+/* Full-width fields */
+.voyage-edit-page .program-day-form .field-description,
+.voyage-edit-page .program-day-form .field-notes {
+    grid-column: 1 / -1;
+}
+
+.voyage-edit-page .program-day-form textarea,
+.voyage-edit-page .program-day-form input,
+.voyage-edit-page .program-day-form select {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 992px) {
+    .voyage-edit-page .program-day-form {
+        grid-template-columns: 1fr;
+    }
+    .voyage-edit-page .program-day-form .field-ville,
+    .voyage-edit-page .program-day-form .field-resume,
+    .voyage-edit-page .program-day-form .field-description,
+    .voyage-edit-page .program-day-form .field-notes {
+        grid-column: 1 / -1;
+    }
+}
+.voyage-edit-page #accordionProgrammeDays .sortable-ghost,
+.voyage-edit-page #accordionProgrammeDays .sortable-chosen,
+.voyage-edit-page #accordionProgrammeDays .sortable-drag,
+.voyage-edit-page #accordionProgrammeDays .ui-sortable-helper,
+.voyage-edit-page #accordionProgrammeDays .ui-sortable-placeholder {
+    display: block !important;
+    position: relative !important;
+}
 .voyage-edit-page .ve-form-bottom-spacer { height: 0; }
 .voyage-edit-page .ve-tab-zone-hint {
     line-height: 1.45;
@@ -1378,4 +1491,3 @@ body.voyage-layout-page .offcanvas {
     font-weight: 600;
     color: #212529;
 }
-

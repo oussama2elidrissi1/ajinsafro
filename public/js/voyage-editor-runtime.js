@@ -22,6 +22,8 @@
         initialized: false,
         tabsBound: false,
         programmeBound: false,
+        programmeObserver: null,
+        programmeIntegrityScheduled: false,
         flightsBound: false,
         flightsObserver: null,
         programmeManagerDiagnosticsBound: false,
@@ -161,6 +163,7 @@
             updateHash(normalizedTabId);
         }
 
+        ensureActiveTabVisible(context, normalizedTabId);
         dispatch('voyage:tab-opened', { tabId: normalizedTabId });
     }
 
@@ -189,6 +192,32 @@
             linksById: linksById,
             panesById: panesById
         };
+    }
+
+    function ensureActiveTabVisible(context, tabId) {
+        var activeLink = context && context.linksById ? context.linksById[tabId] : null;
+        var scroller = activeLink ? activeLink.closest('.ve-tab-scroll') : null;
+
+        if (!activeLink || !scroller) {
+            return;
+        }
+
+        window.requestAnimationFrame(function () {
+            var padding = 12;
+            var linkStart = activeLink.offsetLeft;
+            var linkEnd = linkStart + activeLink.offsetWidth;
+            var viewStart = scroller.scrollLeft;
+            var viewEnd = viewStart + scroller.clientWidth;
+
+            if (linkStart - viewStart < padding) {
+                scroller.scrollLeft = Math.max(0, linkStart - padding);
+                return;
+            }
+
+            if (viewEnd - linkEnd < padding) {
+                scroller.scrollLeft = Math.max(0, linkEnd - scroller.clientWidth + padding);
+            }
+        });
     }
 
     function resolveInitialTab(context) {
@@ -353,6 +382,7 @@
         normalizeProgrammeCards();
         bindProgrammeEvents(accordion);
         bindProgrammeManagerDiagnostics(accordion);
+        bindProgrammeIntegrityObserver(accordion);
         ensureFirstProgrammeDayVisible();
 
         return accordion;
@@ -411,7 +441,19 @@
             }
 
             state.draggedProgrammeCard = card;
+            card.classList.add('programme-day-card--dragging');
             card.classList.add('opacity-50');
+            // Keep the dragged card in normal flow (no fixed pixel widths).
+            // Some browsers can leave stale inline styles if drag is cancelled/interrupted.
+            card.style.width = '100%';
+            card.style.maxWidth = '100%';
+            card.style.transform = 'none';
+            card.style.position = '';
+            card.style.left = '';
+            card.style.right = '';
+            card.style.top = '';
+            card.style.marginLeft = '';
+            card.style.marginRight = '';
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', card.getAttribute('data-day-index') || '');
         });
@@ -450,6 +492,20 @@
         });
 
         accordion.addEventListener('dragend', cleanupDraggedProgrammeCard);
+        // Defensive cleanup for interrupted drags (ESC, drop outside, blur, etc.)
+        document.addEventListener('drop', cleanupDraggedProgrammeCard, true);
+        document.addEventListener('dragend', cleanupDraggedProgrammeCard, true);
+        window.addEventListener('blur', cleanupDraggedProgrammeCard, true);
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState !== 'visible') {
+                cleanupDraggedProgrammeCard();
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e && (e.key === 'Escape' || e.key === 'Esc')) {
+                cleanupDraggedProgrammeCard();
+            }
+        }, true);
 
         if (form) {
             form.addEventListener('submit', function () {
@@ -461,12 +517,24 @@
     function cleanupDraggedProgrammeCard() {
         if (state.draggedProgrammeCard) {
             state.draggedProgrammeCard.classList.remove('opacity-50');
+            state.draggedProgrammeCard.classList.remove('programme-day-card--dragging');
+            state.draggedProgrammeCard.style.width = '';
+            state.draggedProgrammeCard.style.maxWidth = '';
+            state.draggedProgrammeCard.style.transform = '';
+            state.draggedProgrammeCard.style.position = '';
+            state.draggedProgrammeCard.style.left = '';
+            state.draggedProgrammeCard.style.right = '';
+            state.draggedProgrammeCard.style.top = '';
+            state.draggedProgrammeCard.style.marginLeft = '';
+            state.draggedProgrammeCard.style.marginRight = '';
+            state.draggedProgrammeCard.style.zIndex = '';
         }
 
         Array.prototype.slice.call(document.querySelectorAll('.programme-day-card.border-primary')).forEach(function (card) {
             card.classList.remove('border-primary');
         });
 
+        scheduleProgrammeIntegritySync();
         state.draggedProgrammeCard = null;
     }
 
@@ -573,9 +641,24 @@
     }
 
     function normalizeProgrammeCards() {
+        normalizeProgrammeCardPlacement();
+
         getProgrammeCards().forEach(function (card, index) {
             card.setAttribute('data-day-index', index);
             card.draggable = true;
+            card.style.width = '';
+            card.style.maxWidth = '';
+            card.style.position = '';
+            card.style.left = '';
+            card.style.right = '';
+            card.style.top = '';
+            card.style.transform = '';
+            card.style.marginLeft = '';
+            card.style.marginRight = '';
+            card.style.zIndex = '';
+            card.classList.remove('programme-day-card--dragging');
+            card.classList.remove('opacity-50');
+            card.classList.remove('border-primary');
 
             card.querySelectorAll('[name^="programme_days["]').forEach(function (field) {
                 field.name = field.name.replace(/^programme_days\[\d+\]/, 'programme_days[' + index + ']');
@@ -682,7 +765,94 @@
     }
 
     function getProgrammeCards() {
-        return Array.prototype.slice.call(document.querySelectorAll('.programme-day-card'));
+        var accordion = document.getElementById('accordionProgrammeDays');
+
+        if (!accordion) {
+            return [];
+        }
+
+        return Array.prototype.slice.call(accordion.children).filter(function (node) {
+            return !!(node && node.classList && node.classList.contains('programme-day-card'));
+        });
+    }
+
+    function normalizeProgrammeCardPlacement() {
+        var accordion = document.getElementById('accordionProgrammeDays');
+
+        if (!accordion) {
+            return;
+        }
+
+        Array.prototype.slice.call(document.querySelectorAll('.programme-day-card')).forEach(function (card) {
+            if (!card.closest('#program-days')) {
+                if (card !== state.draggedProgrammeCard && card.parentElement) {
+                    card.parentElement.removeChild(card);
+                }
+                return;
+            }
+
+            if (card.parentElement !== accordion) {
+                accordion.appendChild(card);
+            }
+        });
+
+        Array.prototype.slice.call(document.querySelectorAll('.sortable-ghost, .sortable-chosen, .sortable-drag, .ui-sortable-helper, .ui-sortable-placeholder')).forEach(function (node) {
+            if (!accordion.contains(node) && node !== state.draggedProgrammeCard && node.parentElement) {
+                node.parentElement.removeChild(node);
+            }
+        });
+    }
+
+    function bindProgrammeIntegrityObserver(accordion) {
+        if (state.programmeObserver || !window.MutationObserver) {
+            return;
+        }
+
+        var root = document.body || document.getElementById('program-days') || accordion;
+        state.programmeObserver = new window.MutationObserver(function (mutations) {
+            var shouldSync = mutations.some(function (mutation) {
+                return containsProgrammeCardNodes(mutation.addedNodes)
+                    || containsProgrammeCardNodes(mutation.removedNodes);
+            });
+
+            if (shouldSync) {
+                scheduleProgrammeIntegritySync();
+            }
+        });
+
+        state.programmeObserver.observe(root, { childList: true, subtree: true });
+    }
+
+    function scheduleProgrammeIntegritySync() {
+        if (state.programmeIntegrityScheduled) {
+            return;
+        }
+
+        state.programmeIntegrityScheduled = true;
+
+        window.requestAnimationFrame(function () {
+            state.programmeIntegrityScheduled = false;
+            normalizeProgrammeCards();
+        });
+    }
+
+    function containsProgrammeCardNodes(nodes) {
+        return Array.prototype.slice.call(nodes || []).some(function (node) {
+            if (!node || node.nodeType !== 1) {
+                return false;
+            }
+
+            return (node.classList && node.classList.contains('programme-day-card'))
+                || (node.classList && (
+                    node.classList.contains('sortable-ghost')
+                    || node.classList.contains('sortable-chosen')
+                    || node.classList.contains('sortable-drag')
+                    || node.classList.contains('ui-sortable-helper')
+                    || node.classList.contains('ui-sortable-placeholder')
+                ))
+                || !!(node.querySelector && node.querySelector('.sortable-ghost, .sortable-chosen, .sortable-drag, .ui-sortable-helper, .ui-sortable-placeholder'))
+                || !!(node.querySelector && node.querySelector('.programme-day-card'));
+        });
     }
 
     function createProgrammeCollapseId(index) {

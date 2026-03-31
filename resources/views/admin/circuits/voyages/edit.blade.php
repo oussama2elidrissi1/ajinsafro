@@ -298,28 +298,120 @@
                 .day-summary-card .small {
                     font-size: 0.8125rem;
                 }
+                #program-days,
+                #program-days .card,
+                #accordionProgrammeDays {
+                    width: 100%;
+                    max-width: 100%;
+                    min-width: 0;
+                    overflow-x: hidden;
+                    box-sizing: border-box;
+                }
                 .programme-day-card {
                     border: 1px solid #dbe5f1;
                     border-radius: 0.9rem;
                     overflow: hidden;
                     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+                    width: 100%;
+                    max-width: 100%;
+                    min-width: 0;
+                    box-sizing: border-box;
+                    position: relative;
                 }
                 .programme-day-card + .programme-day-card {
                     margin-top: 1rem;
+                }
+                .programme-day-card .accordion-header {
+                    display: grid;
+                    grid-template-columns: auto minmax(0, 1fr) auto;
+                    align-items: stretch;
+                    gap: 0.75rem;
+                    width: 100%;
+                    max-width: 100%;
+                    min-width: 0;
+                    padding: 0 0.75rem;
+                    box-sizing: border-box;
+                }
+                .programme-day-card .drag-handle {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 2rem;
+                    min-width: 2rem;
+                    margin: 0 !important;
+                    cursor: grab;
+                    user-select: none;
                 }
                 .programme-day-card .accordion-button {
                     background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
                     font-weight: 700;
                     color: #16324f;
                     box-shadow: none;
+                    width: 100%;
+                    min-width: 0;
+                    padding-left: 0;
+                    padding-right: 0;
                 }
                 .programme-day-card .accordion-button:not(.collapsed) {
                     color: #0f2740;
                     box-shadow: inset 0 -1px 0 rgba(13, 110, 253, 0.08);
                 }
+                .programme-day-card .programme-day-label {
+                    display: block;
+                    min-width: 0;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .programme-day-card .btn-remove-program-day {
+                    align-self: center;
+                    margin: 0 !important;
+                    flex: 0 0 auto;
+                }
+                .programme-day-card .accordion-collapse {
+                    width: 100%;
+                    max-width: 100%;
+                    min-width: 0;
+                }
                 .programme-day-card .accordion-body {
                     background: #fff;
                     padding: 1.25rem;
+                    width: 100%;
+                    max-width: 100%;
+                    min-width: 0;
+                    overflow-x: hidden;
+                    box-sizing: border-box;
+                }
+                .programme-day-card .row,
+                .programme-day-card .programme-day-settings,
+                .programme-day-card .programme-day-split,
+                .programme-day-card .programme-activities-list,
+                .programme-day-card .programme-activity-row,
+                .programme-day-card .programme-activity-row .card-body {
+                    width: 100%;
+                    max-width: 100%;
+                    min-width: 0;
+                    box-sizing: border-box;
+                }
+                .programme-day-card .row {
+                    margin-left: 0;
+                    margin-right: 0;
+                }
+                .programme-day-card .row > [class*="col-"] {
+                    min-width: 0;
+                    max-width: 100%;
+                }
+                .programme-day-card .programme-activities-list {
+                    overflow-x: hidden;
+                }
+                .programme-day-card .programme-activity-row .card-body > .d-flex {
+                    width: 100%;
+                    max-width: 100%;
+                    min-width: 0;
+                }
+                .programme-day-card .remove-programme-activity {
+                    margin-left: auto;
+                    flex: 0 0 auto;
                 }
                 .programme-day-card .section-card {
                     border: 1px solid #e3ebf5;
@@ -338,72 +430,12 @@
                     text-transform: uppercase;
                     color: #5f7288;
                 }
+                /* Programme day form layout is handled by `.program-day-form` grid.
+                   Disable the previous 2-column accordion-body grid that caused
+                   intermittent empty right space and compressed fields. */
                 @media (min-width: 768px) {
                     .programme-day-card .accordion-body {
-                        display: grid;
-                        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-                        gap: 1rem;
-                        align-items: start;
-                    }
-                    .programme-day-card .accordion-body > :not(.programme-day-settings):not(.programme-day-split):not(.programme-day-detail):not(.programme-day-notes):not(input[type="hidden"]) {
-                        grid-column: 1 / -1;
-                    }
-                    .programme-day-card .programme-day-settings,
-                    .programme-day-card .programme-day-split {
-                        --bs-gutter-x: 0;
-                        margin-right: 0;
-                        margin-left: 0;
-                    }
-                    .programme-day-card .programme-day-settings > [class*="col-"],
-                    .programme-day-card .programme-day-split > [class*="col-"] {
-                        width: auto;
-                        max-width: none;
-                        padding-right: 0;
-                        padding-left: 0;
-                    }
-                    .programme-day-card .programme-day-settings {
-                        grid-column: 2;
-                        display: grid;
-                        gap: 1rem;
-                        align-self: start;
-                    }
-                    .programme-day-card .programme-day-settings::before,
-                    .programme-day-card .programme-day-split > .col-md-6:last-child::before {
                         display: block;
-                        margin: 0 0 0.85rem;
-                        font-size: 0.8rem;
-                        font-weight: 700;
-                        letter-spacing: 0.04em;
-                        text-transform: uppercase;
-                        color: #5f7288;
-                    }
-                    .programme-day-card .programme-day-settings::before {
-                        content: "Paramètres du jour";
-                    }
-                    .programme-day-card .programme-day-split {
-                        grid-column: 1 / -1;
-                        display: grid;
-                        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-                        gap: 1rem;
-                    }
-                    .programme-day-card .programme-day-split > .col-md-6:last-child::before {
-                        content: "Résumé";
-                    }
-                    .programme-day-card .programme-day-settings,
-                    .programme-day-card .programme-day-split > .col-md-6:last-child,
-                    .programme-day-card .programme-day-detail,
-                    .programme-day-card .programme-day-notes {
-                        border: 1px solid #e3ebf5;
-                        border-radius: 0.9rem;
-                        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-                        padding: 1rem;
-                    }
-                    .programme-day-card .programme-day-detail {
-                        grid-column: 1;
-                    }
-                    .programme-day-card .programme-day-notes {
-                        grid-column: 1;
-                        margin-bottom: 0 !important;
                     }
                 }
                 .programme-day-card .form-label {
@@ -2084,7 +2116,7 @@
                                 $dayTitleDisplay = $day->day_title ?? $day->title ?? ('Jour ' . $day->day_number);
                             @endphp
                             <div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}" data-day-index="{{ $dayIndex }}">
-                                <h2 class="accordion-header d-flex align-items-center">
+                                <h2 class="accordion-header programme-day-header">
                                     <span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer" aria-hidden="true"><i class="bx bx-dots-vertical-rounded"></i></span>
                                     <button class="accordion-button flex-grow-1 {{ $isFirst ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
                                         <span class="programme-day-label">JOUR {{ $day->day_number }} "“ {{ $dayTitleDisplay }}</span>
@@ -2098,15 +2130,15 @@
                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][id]" value="{{ $day->id }}">
                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][day_id]" value="{{ $day->id }}">
 
-                                        <div class="row g-4">
-                                            <div class="col-md-4">
+                                        <div class="program-day-form" data-day-index="{{ $dayIndex }}">
+                                            <div class="field-mode">
                                                 <label class="form-label">Type / Mode</label>
                                                 <select name="programme_days[{{ $dayIndex }}][mode]" class="form-select programme-day-mode">
                                                     <option value="program" {{ ($day->mode ?? 'program') === 'program' ? 'selected' : '' }}>Visite / Programme</option>
                                                     <option value="free" {{ ($day->mode ?? '') === 'free' ? 'selected' : '' }}>Libre</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="field-type">
                                                 <label class="form-label">Type de jour</label>
                                                 <select name="programme_days[{{ $dayIndex }}][day_type]" class="form-select">
                                                     @foreach(\App\Models\TravelProgramDay::DAY_TYPES as $value => $label)
@@ -2114,31 +2146,29 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="field-title">
                                                 <label class="form-label">Titre du jour</label>
                                                 <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex: Jour 1 - Arrivée">
                                             </div>
-                                        </div>
 
-                                        <div class="row mb-3 programme-day-split">
-                                            <div class="col-md-6">
+                                            <div class="field-ville">
                                                 <label class="form-label">Ville</label>
                                                 <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][city]" value="{{ old('programme_days.'.$dayIndex.'.city', $day->city ?? '') }}" placeholder="Ex: Marrakech">
                                             </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Description courte</label>
+                                            <div class="field-resume">
+                                                <label class="form-label">Résumé</label>
                                                 <textarea class="form-control" name="programme_days[{{ $dayIndex }}][description]" rows="2" placeholder="RÃ©sumÃ© du jour">{{ old('programme_days.'.$dayIndex.'.description', $day->description ?? '') }}</textarea>
                                             </div>
-                                        </div>
 
-                                        <div class="mb-3 programme-day-detail">
-                                            <label class="form-label">Description dÃ©taillÃ©e</label>
-                                            <textarea class="form-control" name="programme_days[{{ $dayIndex }}][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
-                                        </div>
+                                            <div class="field-description programme-day-detail">
+                                                <label class="form-label">Description dÃ©taillÃ©e</label>
+                                                <textarea class="form-control" name="programme_days[{{ $dayIndex }}][content_html]" rows="4" placeholder="Programme dÃ©taillÃ© du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
+                                            </div>
 
-                                        <div class="mb-3 programme-day-notes">
-                                            <label class="form-label">Notes</label>
-                                            <textarea class="form-control" name="programme_days[{{ $dayIndex }}][notes]" rows="3" placeholder="Contenu du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                                            <div class="field-notes programme-day-notes">
+                                                <label class="form-label">Notes</label>
+                                                <textarea class="form-control" name="programme_days[{{ $dayIndex }}][notes]" rows="3" placeholder="Contenu du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                                            </div>
                                         </div>
 
                                         <input type="hidden" name="programme_days[{{ $dayIndex }}][title]" value="{{ old('programme_days.'.$dayIndex.'.title', $day->title ?? ($day->day_title ?? '')) }}">
@@ -3587,7 +3617,7 @@
                     return '<option value="' + a.id + '">' + (a.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</option>';
                 }).join('');
                 return '<div class="accordion-item programme-day-card" data-day-id="" data-day-index="' + index + '">' +
-                    '<h2 class="accordion-header d-flex align-items-center">' +
+                    '<h2 class="accordion-header programme-day-header">' +
                     '<span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer"><i class="bx bx-dots-vertical-rounded"></i></span>' +
                     '<button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#' + collapseId + '" aria-expanded="false" aria-controls="' + collapseId + '">' +
                     '<span class="programme-day-label">JOUR ' + (index + 1) + ' "“ Jour ' + (index + 1) + '</span></button>' +
@@ -3596,7 +3626,7 @@
                     '<div class="accordion-body" data-day-index="' + index + '" data-day-id="">' +
                     '<input type="hidden" name="programme_days[' + index + '][id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][day_id]" value="">' +
-                    '<div class="row mb-3 programme-day-settings"><div class="col-md-4"><label class="form-label">Mode</label>' +
+                    '<div class="row g-4 mb-3 programme-day-settings"><div class="col-md-4"><label class="form-label">Mode</label>' +
                     '<select name="programme_days[' + index + '][mode]" class="form-select programme-day-mode">' +
                     '<option value="program" selected>Programme</option><option value="free">Libre</option></select></div>' +
                     '<div class="col-md-4"><label class="form-label">Type de jour</label>' +
