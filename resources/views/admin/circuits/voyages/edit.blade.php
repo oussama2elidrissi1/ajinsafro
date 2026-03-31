@@ -28,7 +28,7 @@
 @section('title')
     {{ $isCreate ? 'Créer un tour WordPress' : 'Modifier le tour WordPress' }}
 @endsection
-@push('css')
+@push('styles')
     <link href="{{ URL::asset('css/voyage-edit.css') }}" rel="stylesheet" type="text/css" />
 @endpush
 @section('content')
