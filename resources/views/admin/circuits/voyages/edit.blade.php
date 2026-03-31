@@ -2408,8 +2408,6 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            document.body.classList.add('voyage-layout-page');
-
             document.querySelectorAll('.voyage-edit-page .modal, .voyage-edit-page .offcanvas').forEach(function (overlay) {
                 if (overlay.parentElement !== document.body) {
                     document.body.appendChild(overlay);

@@ -1,5 +1,6 @@
 @php
     $useAgentPortal = \App\Services\View\AgentPortalLayout::shouldUse(auth()->user());
+    $voyageLayoutPage = request()->routeIs('admin.circuits.voyages.create', 'admin.circuits.voyages.edit');
 @endphp
 
 @if($useAgentPortal)
@@ -32,7 +33,7 @@
 
     @stack('styles')
 </head>
-<body class="partner-v2 text-gray-800 antialiased font-sans">
+<body class="partner-v2 text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}">
     @include('partner_v2.partials.header', ['portalLogoutUsesPartner' => false])
 
     <main class="flex-grow w-full relative">
@@ -71,7 +72,7 @@
     @stack('styles')
 </head>
 
-<body data-layout="detached" data-topbar="colored">
+<body class="{{ $voyageLayoutPage ? 'voyage-layout-page' : '' }}" data-layout="detached" data-topbar="colored">
     <!-- Begin page -->
     <div class="container-fluid">
         <div id="layout-wrapper">

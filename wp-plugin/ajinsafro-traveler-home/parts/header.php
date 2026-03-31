@@ -51,6 +51,7 @@ $resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url ) {
 
 $is_voyages_page = is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
 
+
 $title_icon_map = array(
     'packages'     => 'fas fa-suitcase-rolling',
     'package'      => 'fas fa-suitcase-rolling',
