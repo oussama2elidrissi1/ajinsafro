@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PublicLoginController extends Controller
@@ -36,7 +37,7 @@ class PublicLoginController extends Controller
 
         $login = trim((string) ($credentials['login'] ?? $credentials['email'] ?? $credentials['username'] ?? ''));
         if ($login === '') {
-            return redirect()->away($publicLoginUrl . '?login_error=1');
+            return $this->failedLoginResponse($request, $publicLoginUrl, $login);
         }
 
         $remember = ! empty($credentials['remember']);
@@ -68,11 +69,7 @@ class PublicLoginController extends Controller
         }
 
         if (! $attempted) {
-            return redirect()
-                ->away($publicLoginUrl . '?login_error=1&login=' . urlencode($login))
-                ->withHeaders([
-                    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-                ]);
+            return $this->failedLoginResponse($request, $publicLoginUrl, $login);
         }
 
         $request->session()->regenerate();
@@ -91,64 +88,95 @@ class PublicLoginController extends Controller
 
     private function attemptViaWordPressAccount(string $login, string $password, bool $remember, Request $request): bool
     {
-        $prefix = (string) config('database.connections.wp.prefix', 'wp_');
-        $usersTable = $prefix . 'users';
+        try {
+            $query = DB::connection('wp')->table('users');
 
-        $query = DB::connection('wp')->table($usersTable);
-
-        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
-            $wpUser = $query->where('user_email', $login)->first();
-        } else {
-            $wpUser = $query
-                ->where('user_login', $login)
-                ->orWhere('user_email', $login)
-                ->first();
-        }
-
-        if (! $wpUser || empty($wpUser->user_pass)) {
-            return false;
-        }
-
-        $verifier = app(WpPasswordVerifier::class);
-        if (! $verifier->verify($password, (string) $wpUser->user_pass)) {
-            return false;
-        }
-
-        $email = trim((string) ($wpUser->user_email ?? ''));
-        if ($email === '') {
-            $email = Str::lower(trim((string) ($wpUser->user_login ?? ''))) . '@ajinsafro.local';
-        }
-
-        $name = trim((string) ($wpUser->display_name ?? ''));
-        if ($name === '') {
-            $name = trim((string) ($wpUser->user_login ?? 'Client'));
-        }
-
-        $laravelUser = User::query()
-            ->where('email', $email)
-            ->orWhere('name', trim((string) ($wpUser->user_login ?? '')))
-            ->first();
-
-        if (! $laravelUser) {
-            $laravelUser = User::create([
-                'name' => $name,
-                'email' => $email,
-                'password' => Str::random(40),
-                'is_active' => true,
-            ]);
-        } else {
-            $laravelUser->name = $laravelUser->name ?: $name;
-            $laravelUser->email = $laravelUser->email ?: $email;
-            if ($laravelUser->is_active === false) {
-                $laravelUser->is_active = true;
+            if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+                $wpUser = $query->where('user_email', $login)->first();
+            } else {
+                $wpUser = $query
+                    ->where('user_login', $login)
+                    ->orWhere('user_email', $login)
+                    ->first();
             }
-            $laravelUser->save();
+
+            if (! $wpUser || empty($wpUser->user_pass)) {
+                return false;
+            }
+
+            $verifier = app(WpPasswordVerifier::class);
+            if (! $verifier->verify($password, (string) $wpUser->user_pass)) {
+                return false;
+            }
+
+            $email = trim((string) ($wpUser->user_email ?? ''));
+            if ($email === '') {
+                $email = Str::lower(trim((string) ($wpUser->user_login ?? ''))) . '@ajinsafro.local';
+            }
+
+            $name = trim((string) ($wpUser->display_name ?? ''));
+            if ($name === '') {
+                $name = trim((string) ($wpUser->user_login ?? 'Client'));
+            }
+
+            $laravelUser = User::query()
+                ->where('email', $email)
+                ->orWhere('name', trim((string) ($wpUser->user_login ?? '')))
+                ->first();
+
+            if (! $laravelUser) {
+                $laravelUser = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'password' => Str::random(40),
+                    'is_active' => true,
+                ]);
+            } else {
+                $laravelUser->name = $laravelUser->name ?: $name;
+                $laravelUser->email = $laravelUser->email ?: $email;
+                if ($laravelUser->is_active === false) {
+                    $laravelUser->is_active = true;
+                }
+                $laravelUser->save();
+            }
+
+            Auth::login($laravelUser, $remember);
+            $request->setUserResolver(static fn () => $laravelUser);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('WP login error: ' . $e->getMessage(), [
+                'login' => $login,
+                'exception' => $e,
+            ]);
+
+            return false;
+        }
+    }
+
+    private function failedLoginResponse(Request $request, string $publicLoginUrl, string $login): RedirectResponse
+    {
+        $previousUrl = url()->previous();
+        $previousHost = parse_url($previousUrl, PHP_URL_HOST);
+        $currentHost = $request->getHost();
+
+        if (is_string($previousHost) && strcasecmp($previousHost, $currentHost) === 0) {
+            return back()
+                ->withErrors([
+                    'login' => 'Identifiants incorrects. Veuillez réessayer.',
+                ])
+                ->withInput(['login' => $login]);
         }
 
-        Auth::login($laravelUser, $remember);
-        $request->setUserResolver(static fn () => $laravelUser);
+        $target = $publicLoginUrl . '?login_error=1';
+        if ($login !== '') {
+            $target .= '&login=' . urlencode($login);
+        }
 
-        return true;
+        return redirect()
+            ->away($target)
+            ->withHeaders([
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]);
     }
 }
-
