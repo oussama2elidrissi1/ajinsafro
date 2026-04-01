@@ -79,6 +79,24 @@ class StoreWpTourRequest extends FormRequest
             'cities' => array_values(array_unique(array_filter(array_map('intval', $cities)))),
             'include_country' => array_values(array_unique(array_filter(array_map('intval', $includeCountry)))),
         ]);
+
+        $payload = $this->input('programme_days_payload');
+        if (!is_string($payload) || trim($payload) === '') {
+            return;
+        }
+
+        $decoded = json_decode($payload, true);
+        if (!is_array($decoded)) {
+            return;
+        }
+
+        if (isset($decoded['programme_days']) && is_array($decoded['programme_days'])) {
+            $decoded = $decoded['programme_days'];
+        }
+
+        $this->merge([
+            'programme_days' => array_values(array_filter($decoded, 'is_array')),
+        ]);
     }
 
     /**

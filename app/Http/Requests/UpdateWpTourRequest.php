@@ -23,6 +23,28 @@ class UpdateWpTourRequest extends FormRequest
         // No strict rules: outbound/inbound are optional; cabin defaults to economy in service.
     }
 
+    protected function prepareForValidation(): void
+    {
+        $payload = $this->input('programme_days_payload');
+
+        if (!is_string($payload) || trim($payload) === '') {
+            return;
+        }
+
+        $decoded = json_decode($payload, true);
+        if (!is_array($decoded)) {
+            return;
+        }
+
+        if (isset($decoded['programme_days']) && is_array($decoded['programme_days'])) {
+            $decoded = $decoded['programme_days'];
+        }
+
+        $this->merge([
+            'programme_days' => array_values(array_filter($decoded, 'is_array')),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      */

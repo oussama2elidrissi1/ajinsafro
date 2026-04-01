@@ -430,23 +430,29 @@ class VoyageController extends Controller
         $worldCities = config('world_cities', []);
         $mergedCitiesByCode = $this->buildMergedCitiesByCode($worldCountries, $worldCities, $countryCitiesData);
 
-        // Programme par jours (Laravel: aj_tour_days + activités). Nombre de jours = réel en base.
+        // Programme par jours (Laravel: aj_tour_days + activités). The Blade loop iterates over
+        // loadProgram() (WP aj_tour_days). If duration_day meta is stale (e.g. 4) but travel_program_days
+        // has 7 rows, ensureDaysExist() only used meta and WP stayed at 4 days — the UI showed 4 cards.
+        $laravelVoyage = Voyage::firstOrCreate(
+            ['wp_post_id' => $id],
+            ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
+        );
+
         $programDays = collect();
         $activitiesCatalog = collect();
         try {
+            $durationFromMeta = $this->parseDurationDays($meta['duration_day'] ?? null);
+            $maxLaravelDayNumber = (int) (TravelProgramDay::where('voyage_id', $laravelVoyage->id)->max('day_number') ?? 0);
+            $maxWpDayNumber = (int) (TourDay::where('tour_id', $id)->max('day_number') ?? 0);
+            $ensureCount = max($durationFromMeta, $maxLaravelDayNumber, $maxWpDayNumber);
+            if ($ensureCount > 1) {
+                $this->programService->ensureDaysExist($id, $ensureCount);
+            }
             $this->programService->importWpToursProgramToDayNotesIfEmpty($id);
             $programDays = $this->programService->loadProgram($id);
             $activitiesCatalog = Activity::orderBy('title')->get();
         } catch (\Throwable $e) {
             \Log::warning('VoyageController@edit: could not load program days', ['tour_id' => $id, 'error' => $e->getMessage()]);
-        }
-
-        $laravelVoyage = Voyage::where('wp_post_id', $id)->first();
-        if (!$laravelVoyage) {
-            $laravelVoyage = Voyage::firstOrCreate(
-                ['wp_post_id' => $id],
-                ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
-            );
         }
 
         $tourActivities = collect();
@@ -474,14 +480,44 @@ class VoyageController extends Controller
         $programDayHotelsTransfers = [];
         $travelProgramDaysWithRelations = collect();
         try {
+            // Important: TourTransfer model uses the 'wp' connection, while program_day_transfers
+            // lives on 'mysql'. A belongsToMany would attempt to join the pivot table on the 'wp'
+            // connection and crash the edit page. So we DO NOT eager-load transfers here.
             $travelProgramDaysWithRelations = $laravelVoyage->programDays()
-                ->with(['hotel', 'transfers'])
+                ->with(['hotel'])
                 ->orderBy('day_number')
                 ->get();
+
+            // Load transfer ids from the pivot table using the correct connection.
+            $transferIdsByProgramDayId = [];
+            try {
+                $programDayIds = $travelProgramDaysWithRelations->pluck('id')->filter()->values()->toArray();
+                if (!empty($programDayIds) && \Illuminate\Support\Facades\Schema::connection('mysql')->hasTable('program_day_transfers')) {
+                    $rows = \Illuminate\Support\Facades\DB::connection('mysql')
+                        ->table('program_day_transfers')
+                        ->whereIn('program_day_id', $programDayIds)
+                        ->get(['program_day_id', 'transfer_id']);
+
+                    foreach ($rows as $r) {
+                        $pid = (int) ($r->program_day_id ?? 0);
+                        $tid = (int) ($r->transfer_id ?? 0);
+                        if ($pid > 0 && $tid > 0) {
+                            $transferIdsByProgramDayId[$pid] ??= [];
+                            $transferIdsByProgramDayId[$pid][] = $tid;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('VoyageController@edit: could not load program_day_transfers pivot', [
+                    'voyage_id' => $laravelVoyage->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             foreach ($travelProgramDaysWithRelations as $index => $pday) {
                 $programDayHotelsTransfers[$index] = [
                     'hotel_id' => $pday->hotel_id,
-                    'transfer_ids' => $pday->transfers()->pluck('id')->toArray(),
+                    'transfer_ids' => array_values(array_unique($transferIdsByProgramDayId[(int) $pday->id] ?? [])),
                 ];
             }
         } catch (\Throwable $e) {
@@ -588,6 +624,13 @@ class VoyageController extends Controller
         $voyageExtras = ($laravelVoyage && $this->voyageExtrasTableAvailable())
             ? VoyageExtra::query()->where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
             : collect();
+
+        \Log::info('EDIT PROGRAM DAYS COUNT', [
+            'voyage_id' => $laravelVoyage->id,
+            'tour_id' => $id,
+            'count' => $programDays->count(),
+            'day_numbers' => $programDays->pluck('day.day_number')->filter()->values()->toArray(),
+        ]);
 
         return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras'));
     }
@@ -1358,7 +1401,34 @@ class VoyageController extends Controller
             // Programme par jours uniquement (aj_tour_days + aj_tour_day_activities). Plus d'édition tours_program.
             if ($request->has('programme_days')) {
                 try {
+                    $voyage = Voyage::firstOrCreate(
+                        ['wp_post_id' => $id],
+                        ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
+                    );
+                    $tour = $this->repository->getPost($id);
+
+                    \Log::info('ProgrammeDays BEFORE SAVE', [
+                        'voyage_id' => $voyage->id ?? null,
+                        'tour_id' => $tour?->ID ?? null,
+                        'request_count' => is_array($request->programme_days ?? null) ? count($request->programme_days) : 0,
+                        'request_days' => $request->programme_days ?? [],
+                    ]);
+
+                    \Log::info('VoyageController@update - programme_days payload received', [
+                        'tour_id' => $id,
+                        'programme_days_count' => is_array($request->input('programme_days')) ? count($request->input('programme_days')) : null,
+                        'programme_days_payload_len' => is_string($request->input('programme_days_payload')) ? strlen($request->input('programme_days_payload')) : null,
+                    ]);
                     $this->syncProgrammeDaysAndActivities($id, $request);
+
+                    \Log::info('ProgrammeDays AFTER SAVE', [
+                        'voyage_id' => $voyage->id ?? null,
+                        'tour_id' => $tour?->ID ?? null,
+                        'wp_days_count' => \App\Models\Wp\TourDay::where('tour_id', $id)->count(),
+                        'laravel_days_count' => \App\Models\TravelProgramDay::where('voyage_id', $voyage->id)->count(),
+                        'laravel_day_numbers' => \App\Models\TravelProgramDay::where('voyage_id', $voyage->id)->orderBy('day_number')->pluck('day_number')->toArray(),
+                    ]);
+
                     $dayCount = $this->programService->countDays($id);
                     $this->repository->updateTour($id, ['duration_day' => $dayCount]);
                 } catch (\Throwable $e) {

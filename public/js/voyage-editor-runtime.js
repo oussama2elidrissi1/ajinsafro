@@ -508,10 +508,106 @@
         }, true);
 
         if (form) {
+            // Ensure programme days payload is always submitted as JSON.
+            // This avoids PHP input limits (max_input_vars) truncating programme_days[*] fields,
+            // which can lead to only the first few days being received server-side.
             form.addEventListener('submit', function () {
-                syncProgrammeDuration();
-            });
+                try {
+                    syncProgrammeDuration();
+                    syncProgrammeDaysPayloadForSubmit(form);
+                } catch (e) {
+                    // Never block submit; server-side can still rely on legacy fields if needed.
+                }
+            }, true);
         }
+    }
+
+    function syncProgrammeDaysPayloadForSubmit(form) {
+        if (!form) {
+            return [];
+        }
+
+        var payloadField = document.getElementById('programme-days-payload');
+        var programmeDays = buildProgrammeDaysPayloadFromDom();
+
+        if (payloadField) {
+            payloadField.value = JSON.stringify(programmeDays);
+        }
+
+        // Disable the large nested programme_days[*] inputs to avoid hitting PHP max_input_vars.
+        Array.prototype.slice.call(form.querySelectorAll('[name^="programme_days["]')).forEach(function (field) {
+            field.setAttribute('disabled', 'disabled');
+        });
+
+        return programmeDays;
+    }
+
+    function buildProgrammeDaysPayloadFromDom() {
+        var accordion = document.getElementById('accordionProgrammeDays');
+        if (!accordion) {
+            return [];
+        }
+
+        var cards = getProgrammeCards();
+        var programmeDays = [];
+
+        function fieldValue(scope, selector) {
+            var field = scope.querySelector(selector);
+            return field ? field.value : '';
+        }
+
+        function checkboxValue(scope, selector, fallback) {
+            var field = scope.querySelector(selector);
+            if (!field) {
+                return fallback;
+            }
+            return field.checked ? 1 : 0;
+        }
+
+        cards.forEach(function (card) {
+            var dayId = (fieldValue(card, 'input[name$="[id]"]') || card.getAttribute('data-day-id') || '').trim();
+            var dayTitle = (fieldValue(card, 'input[name$="[day_title]"]') || '').trim();
+            var title = (fieldValue(card, 'input[name$="[title]"]') || '').trim();
+            var notes = (fieldValue(card, 'textarea[name$="[notes]"]') || '').trim();
+            var mode = fieldValue(card, 'select[name$="[mode]"]') === 'free' ? 'free' : 'program';
+            var activities = [];
+
+            Array.prototype.slice.call(card.querySelectorAll('.programme-activity-row')).forEach(function (row, k) {
+                var activityId = parseInt(fieldValue(row, 'input[name$="[activity_id]"]') || '0', 10);
+                if (!activityId || activityId <= 0) {
+                    return;
+                }
+
+                activities.push({
+                    day_activity_id: fieldValue(row, 'input[name$="[day_activity_id]"]'),
+                    activity_id: activityId,
+                    sort_order: k,
+                    is_included: checkboxValue(row, 'input[type="checkbox"][name$="[is_included]"]', 1),
+                    is_mandatory: checkboxValue(row, 'input[type="checkbox"][name$="[is_mandatory]"]', 0),
+                    custom_title: fieldValue(row, '[name$="[custom_title]"]'),
+                    custom_description: fieldValue(row, '[name$="[custom_description]"]')
+                });
+            });
+
+            programmeDays.push({
+                id: dayId,
+                day_id: (fieldValue(card, 'input[name$="[day_id]"]') || dayId).trim(),
+                mode: mode,
+                day_title: dayTitle,
+                city: fieldValue(card, 'input[name$="[city]"]'),
+                day_type: fieldValue(card, 'select[name$="[day_type]"]') || 'visite',
+                content_html: fieldValue(card, 'textarea[name$="[content_html]"]'),
+                notes: notes,
+                title: title || dayTitle,
+                description: fieldValue(card, 'textarea[name$="[description]"]'),
+                hotel_id: fieldValue(card, 'input[name$="[hotel_id]"]'),
+                transfer_ids: fieldValue(card, 'input[name$="[transfer_ids]"]'),
+                flights: fieldValue(card, 'input[name$="[flights]"]'),
+                activities: activities
+            });
+        });
+
+        return programmeDays;
     }
 
     function cleanupDraggedProgrammeCard() {
@@ -778,19 +874,17 @@
 
     function normalizeProgrammeCardPlacement() {
         var accordion = document.getElementById('accordionProgrammeDays');
+        var programRoot = document.getElementById('program-days');
 
-        if (!accordion) {
+        if (!accordion || !programRoot) {
             return;
         }
 
-        Array.prototype.slice.call(document.querySelectorAll('.programme-day-card')).forEach(function (card) {
-            if (!card.closest('#program-days')) {
-                if (card !== state.draggedProgrammeCard && card.parentElement) {
-                    card.parentElement.removeChild(card);
-                }
+        // Scope to programme tab only — never remove .programme-day-card nodes elsewhere on the page.
+        Array.prototype.slice.call(programRoot.querySelectorAll('.programme-day-card')).forEach(function (card) {
+            if (card === state.draggedProgrammeCard) {
                 return;
             }
-
             if (card.parentElement !== accordion) {
                 accordion.appendChild(card);
             }
