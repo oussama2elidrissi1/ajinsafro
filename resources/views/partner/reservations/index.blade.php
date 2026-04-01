@@ -41,7 +41,9 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-3">Voyage</th>
+                                    <th class="ps-3">Offre</th>
+                                    <th>Créée par</th>
+                                    <th>Agence</th>
                                     <th>Client</th>
                                     <th>Statut</th>
                                     <th>Créée le</th>
@@ -51,7 +53,9 @@
                             <tbody>
                                 @forelse($reservations as $reservation)
                                     <tr>
-                                        <td class="ps-3">{{ $reservation->tour?->name ?? '—' }}</td>
+                                        <td class="ps-3">{{ $reservation->offer?->name ?? '—' }}</td>
+                                        <td>{{ $reservation->creator?->name ?? '—' }}</td>
+                                        <td>{{ $reservation->agency_label ?? '—' }}</td>
                                         <td>{{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—' }}</td>
                                         <td>
                                             <span class="badge bg-{{ $reservation->status === \App\Models\Reservation::STATUS_VALIDEE ? 'success' : ($reservation->status === \App\Models\Reservation::STATUS_ANNULEE ? 'danger' : 'warning text-dark') }}">{{ $reservation->status }}</span>
@@ -69,7 +73,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">Aucune réservation.</td>
+                                        <td colspan="7" class="text-center text-muted py-4">Aucune réservation.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

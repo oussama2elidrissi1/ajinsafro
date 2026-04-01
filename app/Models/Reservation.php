@@ -40,6 +40,8 @@ class Reservation extends Model
         'branch_id',
         'sales_manager_id',
         'agent_id',
+        'created_by',
+        'updated_by',
         'tour_id',
         'wp_tour_post_id',
         'catalog_source_code',
@@ -59,9 +61,7 @@ class Reservation extends Model
         'status',
         'passengers_count',
         'notes',
-        'base_price',
         'paid_amount',
-        'room_supplement_total',
         'visa_ok',
         'visa_notes',
         'visa_status',
@@ -74,10 +74,14 @@ class Reservation extends Model
         'voyage_flight_id' => 'integer',
         'travel_date_id' => 'integer',
         'client_external_id' => 'integer',
+        'partner_id' => 'integer',
+        'branch_id' => 'integer',
+        'sales_manager_id' => 'integer',
+        'agent_id' => 'integer',
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
         'passengers_count' => 'integer',
-        'base_price' => 'decimal:2',
         'paid_amount' => 'decimal:2',
-        'room_supplement_total' => 'decimal:2',
         'visa_ok' => 'boolean',
     ];
 
@@ -102,6 +106,11 @@ class Reservation extends Model
     }
 
     public function tour(): BelongsTo
+    {
+        return $this->belongsTo(Voyage::class, 'tour_id');
+    }
+
+    public function offer(): BelongsTo
     {
         return $this->belongsTo(Voyage::class, 'tour_id');
     }
@@ -136,7 +145,17 @@ class Reservation extends Model
         return $this->belongsTo(User::class, 'agent_id');
     }
 
+    public function assignedAgent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'agent_id');
+    }
+
     public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
@@ -173,5 +192,29 @@ class Reservation extends Model
         }
 
         return ($base ?? 0) + ($supp ?? 0);
+    }
+
+    public function getBasePriceAttribute(): ?float
+    {
+        $raw = $this->attributes['base_price'] ?? null;
+        if ($raw !== null && $raw !== '') {
+            return (float) $raw;
+        }
+
+        $paid = $this->attributes['paid_amount'] ?? null;
+
+        return $paid !== null && $paid !== '' ? (float) $paid : null;
+    }
+
+    public function getRoomSupplementTotalAttribute(): ?float
+    {
+        $raw = $this->attributes['room_supplement_total'] ?? null;
+
+        return $raw !== null && $raw !== '' ? (float) $raw : null;
+    }
+
+    public function getAgencyLabelAttribute(): ?string
+    {
+        return $this->branch?->name ?: $this->partner?->name;
     }
 }

@@ -31,7 +31,7 @@ class ReservationsController extends Controller
 
     public function index(Request $request): View
     {
-        $query = $this->scopeReservations($request)->with(['tour:id,name']);
+        $query = $this->scopeReservations($request)->with(['offer:id,name', 'creator:id,name,email', 'branch:id,name', 'partner:id,name']);
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
         }
@@ -73,6 +73,9 @@ class ReservationsController extends Controller
             'passengers_count' => ['nullable', 'integer', 'min:1'],
         ]);
         $data['partner_id'] = $partner->id;
+        $data['created_by'] = $request->user()->id;
+        $data['updated_by'] = $request->user()->id;
+        $data['agent_id'] = $request->user()->id;
         $data['client_mode'] = $data['client_mode'] ?? ($data['client_external_id'] ? 'existing' : 'new');
         $data['passengers'] = [];
         $data['hotel_rooms'] = [];
@@ -93,7 +96,7 @@ class ReservationsController extends Controller
         if ($reservation->partner_id !== $partner->id) {
             abort(403);
         }
-        $reservation->load(['tour', 'partner']);
+        $reservation->load(['offer', 'partner', 'branch', 'creator']);
         return view('partner.reservations.show', compact('reservation'));
     }
 
@@ -106,7 +109,7 @@ class ReservationsController extends Controller
         $clients = Client::where('partner_id', $partner->id)->orderBy('full_name')->get(['id', 'client_code', 'full_name', 'email', 'phone']);
         $voyages = Voyage::orderBy('name')->get(['id', 'name']);
         $travelDates = TravelDate::where('is_active', true)->orderBy('date')->get();
-        $reservation->load(['tour', 'passengers', 'reservationRooms']);
+        $reservation->load(['offer', 'passengers', 'reservationRooms', 'creator', 'branch', 'partner']);
         return view('partner.reservations.edit', compact('reservation', 'clients', 'voyages', 'travelDates'));
     }
 
@@ -128,6 +131,7 @@ class ReservationsController extends Controller
             'status' => ['in:EN_COURS,VALIDEE,ANNULEE'],
         ]);
         $data['partner_id'] = $partner->id;
+        $data['updated_by'] = $request->user()->id;
         $data['passengers'] = $reservation->passengers->toArray();
         $data['hotel_rooms'] = [];
         $this->reservationService->update($reservation, $data);

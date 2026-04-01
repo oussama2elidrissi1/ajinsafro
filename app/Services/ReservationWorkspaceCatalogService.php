@@ -5,11 +5,14 @@ namespace App\Services;
 use App\Models\Departure;
 use App\Models\Reservation;
 use App\Models\TourHotel;
+use App\Models\TravelDayItem;
 use App\Models\TravelDate;
 use App\Models\User;
 use App\Models\Voyage;
 use App\Models\VoyageExtra;
 use App\Models\VoyageFlight;
+use App\Models\Wp\Activity;
+use App\Models\Wp\TourDayActivity;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
 use App\Support\TourPlacesCalculator;
@@ -925,15 +928,19 @@ class ReservationWorkspaceCatalogService
         if ($laravelVoyageId === null || $laravelVoyageId <= 0) {
             return $this->defaultWorkspaceExtrasCatalog($kindFallback);
         }
+
+        $voyage = Voyage::query()->find($laravelVoyageId, ['id', 'name', 'slug', 'destination', 'wp_post_id']);
+        if (! $voyage) {
+            return [];
+        }
+
+        $activityRows = $this->resolveActivityExtrasCatalogForVoyage($voyage);
         $rows = VoyageExtra::query()
             ->where('voyage_id', $laravelVoyageId)
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
-        if ($rows->isEmpty()) {
-            return [];
-        }
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
@@ -944,10 +951,209 @@ class ReservationWorkspaceCatalogService
                 'price_child' => (float) $r->price_child,
                 'icon' => $r->icon ?: 'fa-plus-circle',
                 'extra_type' => $r->extra_type,
+                'selection_mode' => 'per_pax',
+                'pricing_type' => 'per_person',
             ];
         }
 
-        return $out;
+        return array_values(array_merge($out, $activityRows));
+    }
+
+    /**
+     * Activités liées au voyage pour la réservation workspace.
+     * Priorité:
+     * 1. travel_day_items type=activity (source voyage_activities_tab)
+     * 2. wp.aj_tour_day_activities pour le wp_post_id du voyage
+     * 3. fallback catalogue actif avec région/localisation tarifée quand aucun lien explicite n'existe
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function resolveActivityExtrasCatalogForVoyage(Voyage $voyage): array
+    {
+        $out = [];
+        $seen = [];
+
+        $push = function (array $row) use (&$out, &$seen): void {
+            $key = (string) ($row['id'] ?? '');
+            if ($key === '' || isset($seen[$key])) {
+                return;
+            }
+            $seen[$key] = true;
+            $out[] = $row;
+        };
+
+        $inlineRows = TravelDayItem::query()
+            ->where('voyage_id', (int) $voyage->id)
+            ->where('type', 'activity')
+            ->where('meta_json->source', 'voyage_activities_tab')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        if ($inlineRows->isNotEmpty()) {
+            $activityIds = $inlineRows
+                ->map(fn (TravelDayItem $item) => (int) data_get($item->options_json, 'activity_id', 0))
+                ->filter(fn (int $id) => $id > 0)
+                ->unique()
+                ->values()
+                ->all();
+            $activityCatalog = $activityIds === []
+                ? collect()
+                : Activity::query()->whereIn('id', $activityIds)->get()->keyBy('id');
+
+            foreach ($inlineRows as $row) {
+                $activityId = (int) data_get($row->options_json, 'activity_id', 0);
+                $activity = $activityId > 0 ? $activityCatalog->get($activityId) : null;
+                $pricingType = data_get($row->options_json, 'pricing_type') === 'fixed' ? 'fixed' : 'per_person';
+                $unitPrice = (float) data_get($row->options_json, 'unit_price', ((int) ($row->price_delta_per_person ?? 0)) / 100);
+                if ($unitPrice <= 0 && $activity) {
+                    $unitPrice = (float) ($activity->adult_price ?? $activity->base_price ?? 0);
+                }
+                $childPrice = $activity ? (float) ($activity->child_price ?? $unitPrice) : $unitPrice;
+                $push([
+                    'id' => 'act_tdi_'.$row->id,
+                    'activity_id' => $activityId > 0 ? $activityId : null,
+                    'name' => trim((string) ($row->title ?? $activity?->title ?? 'Activité')),
+                    'desc' => 'Activité voyage',
+                    'price_adult' => $unitPrice,
+                    'price_child' => $childPrice > 0 ? $childPrice : $unitPrice,
+                    'unit_price' => $unitPrice,
+                    'quantity_default' => max(1, (int) data_get($row->options_json, 'quantity', 1)),
+                    'selection_mode' => 'line_item',
+                    'pricing_type' => $pricingType,
+                    'extra_type' => 'activity',
+                    'icon' => $activity?->icon ?: 'fa-person-hiking',
+                ]);
+            }
+        }
+
+        if ($voyage->wp_post_id) {
+            $dayRows = TourDayActivity::query()
+                ->with('activity')
+                ->where('tour_id', (int) $voyage->wp_post_id)
+                ->orderBy('day_id')
+                ->orderBy('sort_order')
+                ->get();
+
+            foreach ($dayRows as $row) {
+                $activity = $row->activity;
+                if (! $activity) {
+                    continue;
+                }
+                $unitPrice = (float) ($row->custom_price ?? $activity->adult_price ?? $activity->base_price ?? 0);
+                $childPrice = (float) ($activity->child_price ?? $unitPrice);
+                $push([
+                    'id' => 'act_wp_'.$row->id,
+                    'activity_id' => (int) $activity->id,
+                    'name' => trim((string) ($row->custom_title ?: $activity->title ?: 'Activité')),
+                    'desc' => trim((string) ($row->custom_description ?: ($activity->activity_type ?? 'Activité voyage'))),
+                    'price_adult' => $unitPrice,
+                    'price_child' => $childPrice > 0 ? $childPrice : $unitPrice,
+                    'unit_price' => $unitPrice,
+                    'quantity_default' => 1,
+                    'selection_mode' => 'line_item',
+                    'pricing_type' => 'per_person',
+                    'extra_type' => 'activity',
+                    'icon' => $activity->icon ?: 'fa-person-hiking',
+                ]);
+            }
+        }
+
+        if ($out !== []) {
+            return $out;
+        }
+
+        return $this->resolveFallbackActivityExtrasCatalog($voyage);
+    }
+
+    /**
+     * Fallback prudent pour les bases où les liens explicites n'ont pas encore été persistés.
+     * On retient d'abord les activités dont la région/localisation correspond au voyage, sinon
+     * les activités tarifées avec région/localisation renseignée.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function resolveFallbackActivityExtrasCatalog(Voyage $voyage): array
+    {
+        $terms = $this->voyageActivitySearchTerms($voyage);
+        $query = Activity::query()->where('is_active', true)->orderBy('title');
+        if ($terms !== []) {
+            $query->where(function ($sub) use ($terms) {
+                foreach ($terms as $term) {
+                    $like = '%'.$term.'%';
+                    $sub->orWhere('region_name', 'like', $like)
+                        ->orWhere('location_text', 'like', $like)
+                        ->orWhere('title', 'like', $like)
+                        ->orWhere('slug', 'like', $like);
+                }
+            });
+        }
+        $rows = $query->limit(12)->get();
+        if ($rows->isEmpty()) {
+            $rows = Activity::query()
+                ->where('is_active', true)
+                ->where(function ($sub) {
+                    $sub->whereNotNull('region_name')->where('region_name', '!=', '')
+                        ->orWhere(function ($q) {
+                            $q->whereNotNull('location_text')->where('location_text', '!=', '');
+                        });
+                })
+                ->where(function ($sub) {
+                    $sub->where('adult_price', '>', 0);
+                })
+                ->orderBy('title')
+                ->limit(12)
+                ->get();
+        }
+
+        return $rows->map(function (Activity $activity) {
+            $adult = (float) ($activity->adult_price ?? $activity->base_price ?? 0);
+            $child = (float) ($activity->child_price ?? $adult);
+
+            return [
+                'id' => 'act_cat_'.$activity->id,
+                'activity_id' => (int) $activity->id,
+                'name' => trim((string) ($activity->title ?? 'Activité')),
+                'desc' => trim((string) ($activity->region_name ?: $activity->location_text ?: ($activity->activity_type ?? 'Activité voyage'))),
+                'price_adult' => $adult,
+                'price_child' => $child > 0 ? $child : $adult,
+                'unit_price' => $adult,
+                'quantity_default' => 1,
+                'selection_mode' => 'line_item',
+                'pricing_type' => 'per_person',
+                'extra_type' => 'activity',
+                'icon' => $activity->icon ?: 'fa-person-hiking',
+            ];
+        })->filter(fn (array $row) => (float) ($row['unit_price'] ?? 0) > 0)->values()->all();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function voyageActivitySearchTerms(Voyage $voyage): array
+    {
+        $terms = [];
+        foreach ([
+            $voyage->destination,
+            $voyage->name,
+            $voyage->slug,
+            $voyage->wp_post_id ? WpPost::query()->where('ID', (int) $voyage->wp_post_id)->value('post_title') : null,
+            $voyage->wp_post_id ? WpPost::query()->where('ID', (int) $voyage->wp_post_id)->value('post_name') : null,
+        ] as $value) {
+            $value = trim((string) ($value ?? ''));
+            if ($value === '') {
+                continue;
+            }
+            $terms[] = mb_strtolower($value);
+            foreach (preg_split('/[\s,;|\/_-]+/u', $value) ?: [] as $part) {
+                $part = mb_strtolower(trim((string) $part));
+                if ($part !== '' && mb_strlen($part) >= 4) {
+                    $terms[] = $part;
+                }
+            }
+        }
+
+        return array_values(array_unique(array_filter($terms)));
     }
 
     private function availabilityUiFromBand(string $band, bool $hasPastOnlyDates): array

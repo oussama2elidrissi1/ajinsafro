@@ -31,7 +31,9 @@
         <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
                 <tr class="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    <th class="py-4 px-6">Voyage</th>
+                    <th class="py-4 px-6">Offre</th>
+                    <th class="py-4 px-6">Créée par</th>
+                    <th class="py-4 px-6">Agence</th>
                     <th class="py-4 px-6">Client</th>
                     <th class="py-4 px-6">Statut</th>
                     <th class="py-4 px-6">Créée le</th>
@@ -45,7 +47,9 @@
                         $badge = $status === \App\Models\Reservation::STATUS_VALIDEE ? 'bg-green-50 text-green-700 border-green-200' : ($status === \App\Models\Reservation::STATUS_ANNULEE ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200');
                     @endphp
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="py-4 px-6 font-semibold text-gray-800">{{ $reservation->tour?->name ?? '—' }}</td>
+                        <td class="py-4 px-6 font-semibold text-gray-800">{{ $reservation->offer?->name ?? '—' }}</td>
+                        <td class="py-4 px-6 text-gray-600">{{ $reservation->creator?->name ?? '—' }}</td>
+                        <td class="py-4 px-6 text-gray-600">{{ $reservation->agency_label ?? '—' }}</td>
                         <td class="py-4 px-6 text-gray-600">{{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—' }}</td>
                         <td class="py-4 px-6">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border {{ $badge }}">{{ $status }}</span>
@@ -58,7 +62,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="py-10 px-6 text-center text-gray-500">Aucune réservation.</td></tr>
+                    <tr><td colspan="7" class="py-10 px-6 text-center text-gray-500">Aucune réservation.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -68,4 +72,3 @@
     </div>
 </div>
 @endsection
-

@@ -13,7 +13,18 @@
                 {{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—' }}
             @endif
         </td>
-        <td>{{ $reservation->tour?->name ?? '—' }}</td>
+        <td>{{ $reservation->offer?->name ?? '—' }}</td>
+        <td>
+            @if($reservation->creator)
+                <strong>{{ $reservation->creator->name }}</strong>
+                @if($reservation->creator->email)
+                    <span class="text-muted small d-block">{{ $reservation->creator->email }}</span>
+                @endif
+            @else
+                <span class="text-muted">—</span>
+            @endif
+        </td>
+        <td>{{ $reservation->agency_label ?? '—' }}</td>
         <td class="small">
             @if($reservation->travelDate?->date)
                 {{ $reservation->travelDate->date->format('d/m/Y') }}
@@ -74,6 +85,6 @@
     </tr>
 @empty
     <tr>
-        <td colspan="9" class="text-center text-muted py-5">Aucune réservation trouvée.</td>
+        <td colspan="11" class="text-center text-muted py-5">Aucune réservation trouvée.</td>
     </tr>
 @endforelse

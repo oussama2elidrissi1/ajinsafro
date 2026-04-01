@@ -3247,12 +3247,24 @@ document.addEventListener('DOMContentLoaded', function () {
             var page = 1;
             var pageSize = 8;
 
+            function fullCatalog() {
+                return Array.isArray(window.ALL_TOUR_ACTIVITIES_CATALOG) ? window.ALL_TOUR_ACTIVITIES_CATALOG : [];
+            }
+
             function getCatalog() {
+                var all = fullCatalog();
                 if (window.AjinsafroActivityRegionFilter && typeof window.AjinsafroActivityRegionFilter.getFilteredCatalog === 'function') {
-                    return window.AjinsafroActivityRegionFilter.getFilteredCatalog('tour');
+                    var filtered = window.AjinsafroActivityRegionFilter.getFilteredCatalog('tour');
+                    if (Array.isArray(filtered) && filtered.length > 0) {
+                        return filtered;
+                    }
                 }
 
-                return Array.isArray(window.TOUR_ACTIVITIES_CATALOG) ? window.TOUR_ACTIVITIES_CATALOG : [];
+                if (Array.isArray(window.TOUR_ACTIVITIES_CATALOG) && window.TOUR_ACTIVITIES_CATALOG.length > 0) {
+                    return window.TOUR_ACTIVITIES_CATALOG;
+                }
+
+                return all;
             }
 
             function esc(str) {
@@ -3563,6 +3575,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (modalEl) {
                 modalEl.addEventListener('shown.bs.modal', function() {
                     refreshCatalog();
+                    if (regionHint) {
+                        var filtered = Array.isArray(window.TOUR_ACTIVITIES_CATALOG) ? window.TOUR_ACTIVITIES_CATALOG : [];
+                        var all = fullCatalog();
+                        regionHint.textContent = filtered.length > 0
+                            ? 'Le catalogue est filtré automatiquement selon la destination du voyage.'
+                            : 'Aucune activité ne correspond au filtre destination. Le catalogue global est affiché.';
+                    }
                     if (searchInput) searchInput.focus();
                 });
             }

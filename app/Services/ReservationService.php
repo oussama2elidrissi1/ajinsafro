@@ -17,6 +17,10 @@ use Illuminate\Support\Facades\Storage;
 
 class ReservationService
 {
+    private ?bool $reservationsHasBasePriceColumn = null;
+
+    private ?bool $reservationsHasRoomSupplementTotalColumn = null;
+
     public function __construct(
         private readonly WordPressMediaService $mediaService,
         private readonly PartnerCommissionService $commissionService,
@@ -200,11 +204,17 @@ class ReservationService
 
         $reservation->notes = $data['notes'] ?? $reservation->notes;
 
-        $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
         if (array_key_exists('paid_amount', $data)) {
             $reservation->paid_amount = $data['paid_amount'] !== '' && $data['paid_amount'] !== null
                 ? (float) $data['paid_amount']
                 : null;
+        } elseif (array_key_exists('base_price', $data)) {
+            $reservation->paid_amount = $data['base_price'] !== '' && $data['base_price'] !== null
+                ? (float) $data['base_price']
+                : null;
+        }
+        if ($this->reservationsHasBasePriceColumn()) {
+            $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
         }
         if (array_key_exists('prestation_type', $data)) {
             $reservation->prestation_type = $data['prestation_type'] ?: null;
@@ -379,7 +389,9 @@ class ReservationService
         }
 
         ReservationRoom::where('reservation_id', $reservation->id)->whereNotIn('id', $keepIds)->delete();
-        $reservation->room_supplement_total = $totalSupplement;
+        if ($this->reservationsHasRoomSupplementTotalColumn()) {
+            $reservation->room_supplement_total = $totalSupplement;
+        }
         $reservation->save();
     }
 
@@ -702,7 +714,9 @@ class ReservationService
             }
         }
 
-        $reservation->room_supplement_total = $totalSupplement;
+        if ($this->reservationsHasRoomSupplementTotalColumn()) {
+            $reservation->room_supplement_total = $totalSupplement;
+        }
         $reservation->save();
 
         // 4) Recalculer le stock restant côté WP (seats = capacity - occupied).
@@ -723,5 +737,17 @@ class ReservationService
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    private function reservationsHasBasePriceColumn(): bool
+    {
+        return $this->reservationsHasBasePriceColumn
+            ??= Schema::connection('mysql')->hasColumn('reservations', 'base_price');
+    }
+
+    private function reservationsHasRoomSupplementTotalColumn(): bool
+    {
+        return $this->reservationsHasRoomSupplementTotalColumn
+            ??= Schema::connection('mysql')->hasColumn('reservations', 'room_supplement_total');
     }
 }

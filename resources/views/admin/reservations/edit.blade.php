@@ -28,6 +28,36 @@
     </div>
     @endunless
 
+    <div class="card mb-3 border shadow-sm">
+        <div class="card-body">
+            <div class="row g-3 small">
+                <div class="col-md-6 col-xl-4">
+                    <div class="text-muted text-uppercase fw-semibold mb-1">Offre liée</div>
+                    <div class="fw-semibold">{{ $reservation->offer?->name ?? '—' }}</div>
+                </div>
+                <div class="col-md-6 col-xl-4">
+                    <div class="text-muted text-uppercase fw-semibold mb-1">Créée par</div>
+                    <div class="fw-semibold">{{ $reservation->creator?->name ?? '—' }}</div>
+                    @if($reservation->creator?->email)
+                        <div class="text-muted">{{ $reservation->creator->email }}</div>
+                    @endif
+                </div>
+                <div class="col-md-6 col-xl-4">
+                    <div class="text-muted text-uppercase fw-semibold mb-1">Agence / branche</div>
+                    <div class="fw-semibold">{{ $reservation->agency_label ?? '—' }}</div>
+                </div>
+                <div class="col-md-6 col-xl-4">
+                    <div class="text-muted text-uppercase fw-semibold mb-1">Date de création</div>
+                    <div class="fw-semibold">{{ $reservation->created_at?->format('d/m/Y H:i') ?? '—' }}</div>
+                </div>
+                <div class="col-md-6 col-xl-4">
+                    <div class="text-muted text-uppercase fw-semibold mb-1">Statut</div>
+                    <div class="fw-semibold">{{ $reservation->status ?? '—' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form method="post" action="{{ route('admin.reservations.update', $reservation) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
@@ -43,7 +73,7 @@
                 <h6 class="card-title mb-3 text-secondary"><i class="bx bx-trip me-1"></i>Informations générales</h6>
                 <div class="row g-2">
                     <div class="col-md-6">
-                        <label class="form-label">Voyage à réserver <span class="text-danger">*</span></label>
+                        <label class="form-label">Offre / voyage <span class="text-danger">*</span></label>
                         <select name="tour_id" class="form-select" required>
                             <option value="">Sélectionner un voyage…</option>
                             @foreach($voyages as $voyage)

@@ -292,6 +292,15 @@ final class ReservationWorkspaceBookingService
             if (! is_array($def)) {
                 continue;
             }
+            $selectionMode = (string) ($def['selection_mode'] ?? 'per_pax');
+            if ($selectionMode === 'line_item') {
+                $quantity = max(1, (int) ($ex['quantity'] ?? 1));
+                $unit = isset($def['unit_price']) && is_numeric($def['unit_price'])
+                    ? (float) $def['unit_price']
+                    : (float) ($def['price_adult'] ?? 0);
+                $sum += $unit * $quantity;
+                continue;
+            }
             $paxKey = (string) ($ex['pax'] ?? '');
             $ptype = $this->resolveWorkspacePaxTypeForKey($paxKey, $passengersNormalized);
             $unit = match ($ptype) {

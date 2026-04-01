@@ -74,7 +74,7 @@
                     <dl class="row mb-0 small">
                         <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">N° réservation</dt>
                         <dd class="col-sm-8 col-md-9 mb-1"><strong>#{{ $reservationCreated['id'] ?? '—' }}</strong></dd>
-                        <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Voyage</dt>
+                        <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Offre liée</dt>
                         <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['voyage_name'] ?? '—' }}</dd>
                         <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Date de départ</dt>
                         <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['departure_label'] ?? '—' }}</dd>
@@ -98,7 +98,7 @@
         <div class="card-body">
             <form method="get" action="{{ route('admin.reservations.index') }}" class="row g-2 align-items-end">
                 <div class="col-md-3">
-                    <label class="form-label small text-muted mb-0">Voyage</label>
+                    <label class="form-label small text-muted mb-0">Offre</label>
                     <select name="voyage_id" class="form-select form-select-sm">
                         <option value="">— Tous —</option>
                         @foreach($voyageOptions as $v)
@@ -176,7 +176,9 @@
                     <tr>
                         <th class="ps-3">#</th>
                         <th>Client</th>
-                        <th>Voyage</th>
+                        <th>Offre</th>
+                        <th>Créée par</th>
+                        <th>Agence</th>
                         <th>Départ</th>
                         <th>Passagers</th>
                         <th>Paiement</th>
@@ -227,9 +229,9 @@
                     <div class="table-responsive" style="max-height:50vh;">
                         <table class="table table-sm table-bordered align-middle mb-0" id="resHubDebugTable">
                             <thead class="table-light"><tr>
-                                <th>#</th><th>Client</th><th>tour_id</th><th>Voyage</th><th>wp tour</th><th>catalog</th><th>vol id</th><th>prest.</th><th>td id</th><th>Départ</th><th>Statut</th><th>Créée</th><th>Pax</th>
+                                <th>#</th><th>Client</th><th>tour_id</th><th>Offre</th><th>Créée par</th><th>Agence</th><th>wp tour</th><th>catalog</th><th>vol id</th><th>prest.</th><th>td id</th><th>Départ</th><th>Statut</th><th>Créée</th><th>Pax</th>
                             </tr></thead>
-                            <tbody id="resHubDebugTbody"><tr><td colspan="13" class="text-muted">Ouvrez le modal pour charger…</td></tr></tbody>
+                            <tbody id="resHubDebugTbody"><tr><td colspan="15" class="text-muted">Ouvrez le modal pour charger…</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -365,13 +367,14 @@
                     var h = '<dl class="row mb-0">';
                     h += '<dt class="col-sm-4">Statut</dt><dd class="col-sm-8">' + esc(d.status) + '</dd>';
                     h += '<dt class="col-sm-4">Client</dt><dd class="col-sm-8">' + esc(d.client_label || '—') + (d.client_code ? ' <span class="text-muted">(' + esc(d.client_code) + ')</span>' : '') + '</dd>';
-                    h += '<dt class="col-sm-4">Voyage</dt><dd class="col-sm-8">' + esc(d.tour_name || '—') + '</dd>';
+                    h += '<dt class="col-sm-4">Offre liée</dt><dd class="col-sm-8">' + esc(d.tour_name || '—') + '</dd>';
+                    h += '<dt class="col-sm-4">Créée par</dt><dd class="col-sm-8">' + esc(d.creator_name || '—') + (d.creator_email ? ' <span class="text-muted">(' + esc(d.creator_email) + ')</span>' : '') + '</dd>';
                     h += '<dt class="col-sm-4">Départ</dt><dd class="col-sm-8">' + esc(d.travel_date_label || '—') + (d.travel_date_id ? ' <code class="small">id ' + esc(String(d.travel_date_id)) + '</code>' : '') + '</dd>';
                     h += '<dt class="col-sm-4">Type prestation</dt><dd class="col-sm-8">' + esc(d.prestation_type || '—') + '</dd>';
                     h += '<dt class="col-sm-4">Montants</dt><dd class="col-sm-8">Total : ' + esc(String(d.base_price ?? '—')) + ' · Payé : ' + esc(String(d.paid_amount ?? '—')) + '</dd>';
                     h += '<dt class="col-sm-4">Paiement</dt><dd class="col-sm-8">' + esc(d.payment_type || '—') + '</dd>';
                     h += '<dt class="col-sm-4">Créée</dt><dd class="col-sm-8">' + esc(d.created_at || '—') + '</dd>';
-                    if (d.branch) h += '<dt class="col-sm-4">Agence</dt><dd class="col-sm-8">' + esc(d.branch) + '</dd>';
+                    if (d.agency || d.branch) h += '<dt class="col-sm-4">Agence</dt><dd class="col-sm-8">' + esc(d.agency || d.branch) + '</dd>';
                     h += '</dl>';
                     el.innerHTML = h;
                 });
@@ -426,7 +429,7 @@
             var tbody = document.getElementById('resHubDebugTbody');
             if (metaEl) metaEl.innerHTML = '<li>Chargement…</li>';
             if (jsonEl) jsonEl.textContent = '';
-            if (tbody) tbody.innerHTML = '<tr><td colspan="13" class="text-muted">Chargement…</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="15" class="text-muted">Chargement…</td></tr>';
             var u = hubDebugUrl + (window.location.search || '');
             fetch(u, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
                 .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
@@ -443,7 +446,7 @@
                     if (tbody) {
                         var list = data.reservations || [];
                         if (!list.length) {
-                            tbody.innerHTML = '<tr><td colspan="13" class="text-muted">Aucune réservation.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="15" class="text-muted">Aucune réservation.</td></tr>';
                             return;
                         }
                         var h = '';
@@ -454,6 +457,8 @@
                                 '<td class="small">' + esc(row.client_snapshot || '—') + '</td>' +
                                 '<td>' + esc(String(row.tour_id ?? '—')) + '</td>' +
                                 '<td class="small">' + esc(row.tour_name || '—') + '</td>' +
+                                '<td class="small">' + esc(row.creator_name || '—') + '</td>' +
+                                '<td class="small">' + esc(row.agency_name || '—') + '</td>' +
                                 '<td class="small">' + esc(String(row.tour_wp_post_id ?? '—')) + ' / ' + esc(String(row.wp_tour_post_id ?? '—')) + '</td>' +
                                 '<td class="small">' + esc(row.catalog_source_code || '—') + '</td>' +
                                 '<td>' + esc(String(row.voyage_flight_id ?? '—')) + '</td>' +
@@ -470,7 +475,7 @@
                 })
                 .catch(function () {
                     if (metaEl) metaEl.innerHTML = '<li class="text-danger">Erreur de chargement (vérifiez APP_DEBUG et la route).</li>';
-                    if (tbody) tbody.innerHTML = '<tr><td colspan="13" class="text-danger">Échec du chargement.</td></tr>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="15" class="text-danger">Échec du chargement.</td></tr>';
                 });
         });
     }

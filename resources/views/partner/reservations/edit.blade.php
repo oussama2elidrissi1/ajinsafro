@@ -27,12 +27,12 @@
         @method('PUT')
         <div class="card mb-3">
             <div class="card-header bg-light">
-                <h6 class="mb-0">Voyage</h6>
+                <h6 class="mb-0">Offre</h6>
             </div>
             <div class="card-body">
                 <div class="row g-2">
                     <div class="col-md-6">
-                        <label class="form-label">Voyage <span class="text-danger">*</span></label>
+                        <label class="form-label">Offre / voyage <span class="text-danger">*</span></label>
                         <select name="tour_id" class="form-select" required>
                             @foreach($voyages as $voyage)
                                 <option value="{{ $voyage->id }}" {{ old('tour_id', $reservation->tour_id) == $voyage->id ? 'selected' : '' }}>{{ $voyage->name }}</option>

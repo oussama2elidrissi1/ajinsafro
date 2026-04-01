@@ -235,11 +235,20 @@ class ReservationWorkspaceController extends Controller
                 if ($name === '') {
                     continue;
                 }
+                $selectionMode = (string) ($extra['selection_mode'] ?? '');
+                $quantity = max(1, (int) ($extra['quantity'] ?? 1));
+                $passengerKey = isset($extra['pax']) ? (string) $extra['pax'] : null;
+                if ($selectionMode === 'line_item') {
+                    $name = $quantity > 1 ? ($name.' x'.$quantity) : $name;
+                    $passengerKey = isset($extra['activity_id']) && (int) $extra['activity_id'] > 0
+                        ? 'activity:'.(int) $extra['activity_id']
+                        : null;
+                }
                 ReservationExtra::query()->create([
                     'reservation_id' => $reservation->id,
                     'name' => $name,
                     'price' => isset($extra['price']) ? (float) $extra['price'] : 0,
-                    'passenger_key' => isset($extra['pax']) ? (string) $extra['pax'] : null,
+                    'passenger_key' => $passengerKey,
                 ]);
             }
 

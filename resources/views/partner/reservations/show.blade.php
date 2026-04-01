@@ -22,7 +22,9 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-2">
-                        <div class="col-md-6"><strong>Voyage</strong><br>{{ $reservation->tour?->name ?? '—' }}</div>
+                        <div class="col-md-6"><strong>Offre</strong><br>{{ $reservation->offer?->name ?? '—' }}</div>
+                        <div class="col-md-6"><strong>Créée par</strong><br>{{ $reservation->creator?->name ?? '—' }}</div>
+                        <div class="col-md-6"><strong>Agence</strong><br>{{ $reservation->agency_label ?? '—' }}</div>
                         <div class="col-md-6"><strong>Statut</strong><br><span class="badge bg-{{ $reservation->status === \App\Models\Reservation::STATUS_VALIDEE ? 'success' : ($reservation->status === \App\Models\Reservation::STATUS_ANNULEE ? 'danger' : 'warning text-dark') }}">{{ $reservation->status }}</span></div>
                         <div class="col-md-6"><strong>Client</strong><br>{{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—' }}</div>
                         <div class="col-md-6"><strong>Email</strong><br>{{ $reservation->client_email ?? '—' }}</div>

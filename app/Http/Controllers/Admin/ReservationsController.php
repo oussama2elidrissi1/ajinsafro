@@ -56,7 +56,14 @@ class ReservationsController extends Controller
         $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
 
         $rows = (clone $base)
-            ->with(['passengers:id,reservation_id,first_name,last_name', 'tour:id,name,wp_post_id', 'travelDate:id,date'])
+            ->with([
+                'passengers:id,reservation_id,first_name,last_name',
+                'offer:id,name,wp_post_id',
+                'travelDate:id,date',
+                'creator:id,name,email',
+                'branch:id,name',
+                'partner:id,name',
+            ])
             ->orderByDesc('created_at')
             ->limit(500)
             ->get();
@@ -65,8 +72,8 @@ class ReservationsController extends Controller
             return [
                 'id' => $r->id,
                 'tour_id' => $r->tour_id,
-                'tour_name' => $r->tour?->name,
-                'tour_wp_post_id' => $r->tour?->wp_post_id,
+                'tour_name' => $r->offer?->name,
+                'tour_wp_post_id' => $r->offer?->wp_post_id,
                 'wp_tour_post_id' => $r->wp_tour_post_id ?? null,
                 'catalog_source_code' => $r->catalog_source_code ?? null,
                 'voyage_flight_id' => $r->voyage_flight_id ?? null,
@@ -75,6 +82,8 @@ class ReservationsController extends Controller
                 'travel_date' => $r->travelDate?->date?->format('Y-m-d'),
                 'status' => $r->status,
                 'created_at' => $r->created_at?->toIso8601String(),
+                'creator_name' => $r->creator?->name,
+                'agency_name' => $r->agency_label,
                 'client_snapshot' => trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')),
                 'passengers_count' => $r->passengers->count(),
                 'passengers_preview' => $r->passengers->take(6)->map(fn ($p) => trim(($p->first_name ?? '').' '.($p->last_name ?? '')))->filter()->values()->all(),
@@ -145,7 +154,7 @@ class ReservationsController extends Controller
     {
         abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
 
-        $reservation->load(['passengers', 'client', 'tour', 'travelDate', 'branch']);
+        $reservation->load(['passengers', 'client', 'offer', 'travelDate', 'branch', 'partner', 'creator']);
 
         $clientLabel = $reservation->client
             ? $reservation->client->full_name
@@ -157,7 +166,7 @@ class ReservationsController extends Controller
             'created_at' => $reservation->created_at?->format('d/m/Y H:i'),
             'client_label' => $clientLabel !== '' ? $clientLabel : null,
             'client_code' => $reservation->client?->client_code,
-            'tour_name' => $reservation->tour?->name,
+            'tour_name' => $reservation->offer?->name,
             'tour_id' => $reservation->tour_id,
             'travel_date_id' => $reservation->travel_date_id,
             'travel_date_label' => $reservation->travelDate?->date
@@ -168,6 +177,9 @@ class ReservationsController extends Controller
             'paid_amount' => $reservation->paid_amount,
             'payment_type' => $reservation->payment_type,
             'branch' => $reservation->branch?->name,
+            'agency' => $reservation->agency_label,
+            'creator_name' => $reservation->creator?->name,
+            'creator_email' => $reservation->creator?->email,
             'passengers' => $reservation->passengers->map(fn ($p) => [
                 'first_name' => $p->first_name,
                 'last_name' => $p->last_name,
@@ -319,6 +331,10 @@ class ReservationsController extends Controller
             'passengers.*.document_type' => 'nullable|string|max:50',
             'passengers.*.document_number' => 'nullable|string|max:100',
         ]);
+        if (array_key_exists('base_price', $data)) {
+            $data['paid_amount'] = $data['base_price'];
+            unset($data['base_price']);
+        }
 
         $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
         $this->validateRoomCapacity(
@@ -382,7 +398,7 @@ class ReservationsController extends Controller
     public function edit(Request $request, Reservation $reservation): View
     {
         abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
-        $reservation->load(['passengers', 'client', 'tour', 'reservationRooms']);
+        $reservation->load(['passengers', 'client', 'offer', 'reservationRooms', 'branch', 'partner', 'creator']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
         $this->branchScope->scopeClients($clientsQuery, $request->user());
@@ -446,6 +462,10 @@ class ReservationsController extends Controller
             'passengers.*.document_type' => 'nullable|string|max:50',
             'passengers.*.document_number' => 'nullable|string|max:100',
         ]);
+        if (array_key_exists('base_price', $data)) {
+            $data['paid_amount'] = $data['base_price'];
+            unset($data['base_price']);
+        }
 
         $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
         $this->validateRoomCapacity(
@@ -677,7 +697,7 @@ class ReservationsController extends Controller
         $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
 
         $reservations = (clone $base)
-            ->with(['passengers', 'client', 'tour', 'branch', 'travelDate'])
+            ->with(['passengers', 'client', 'offer', 'branch', 'partner', 'travelDate', 'creator'])
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString();
@@ -906,7 +926,7 @@ class ReservationsController extends Controller
         }
 
         $reservationQuery = Reservation::query()
-            ->with(['tour:id,name,wp_post_id'])
+            ->with(['offer:id,name,wp_post_id', 'creator:id,name,email', 'branch:id,name', 'partner:id,name'])
             ->whereNotNull('travel_date_id')
             ->whereHas('travelDate', function (Builder $q) use ($wpTourIds, $applyTravelDateWindow) {
                 $q->where('is_active', true)->whereIn('travel_id', $wpTourIds);
@@ -921,7 +941,7 @@ class ReservationsController extends Controller
                     ->orWhere('client_last_name', 'like', '%'.$search.'%')
                     ->orWhere('client_email', 'like', '%'.$search.'%')
                     ->orWhere('client_phone', 'like', '%'.$search.'%')
-                    ->orWhereHas('tour', fn (Builder $q2) => $q2->where('name', 'like', '%'.$search.'%'));
+                    ->orWhereHas('offer', fn (Builder $q2) => $q2->where('name', 'like', '%'.$search.'%'));
             });
         }
 
@@ -932,7 +952,7 @@ class ReservationsController extends Controller
             }
             $dateStr = $td->date->format('Y-m-d');
             $client = trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''));
-            $tourName = $reservation->tour?->name ?? 'Voyage';
+            $tourName = $reservation->offer?->name ?? 'Voyage';
             $chip = '#'.$reservation->id.' · '.($client !== '' ? $client : 'Client');
             $events[] = [
                 'id' => 'res-'.$reservation->id,
@@ -968,7 +988,7 @@ class ReservationsController extends Controller
         }
 
         $query = Reservation::query()
-            ->with(['tour:id,name,wp_post_id', 'travelDate', 'client:id,full_name,email,phone', 'branch:id,name'])
+            ->with(['offer:id,name,wp_post_id', 'travelDate', 'client:id,full_name,email,phone', 'branch:id,name', 'partner:id,name', 'creator:id,name,email'])
             ->whereKey($id);
 
         $this->scopeReservationAccessForCalendar($query, $request->user());
@@ -990,8 +1010,10 @@ class ReservationsController extends Controller
                 ?: ($reservation->client?->full_name ?? '—'),
             'email' => $reservation->client_email ?: $reservation->client?->email,
             'phone' => $reservation->client_phone ?: $reservation->client?->phone,
-            'tour_name' => $reservation->tour?->name ?? '—',
+            'tour_name' => $reservation->offer?->name ?? '—',
             'branch' => $reservation->branch?->name,
+            'agency' => $reservation->agency_label,
+            'creator_name' => $reservation->creator?->name,
             'departure_date' => $departure,
             'departure_date_formatted' => $departureFormatted,
             'payment_type' => $reservation->payment_type,

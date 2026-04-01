@@ -41,7 +41,7 @@
                 @endphp
                 <div class="row g-2">
                     <div class="col-md-6">
-                        <label class="form-label">Voyage à réserver <span class="text-danger">*</span></label>
+                        <label class="form-label">Offre / voyage <span class="text-danger">*</span></label>
                         <select name="tour_id" class="form-select" required id="select-tour-id">
                             <option value="">Sélectionner un voyage…</option>
                             @foreach($voyages as $voyage)
@@ -285,4 +285,3 @@
         })();
     </script>
 @endpush
-

@@ -189,6 +189,12 @@
                     priceAdult: e.price_adult != null ? Number(e.price_adult) : 0,
                     priceChild: e.price_child != null ? Number(e.price_child) : 0,
                     icon: e.icon || 'fa-plus-circle',
+                    selectionMode: e.selection_mode || 'per_pax',
+                    pricingType: e.pricing_type || 'per_person',
+                    unitPrice: e.unit_price != null ? Number(e.unit_price) : (e.price_adult != null ? Number(e.price_adult) : 0),
+                    quantityDefault: e.quantity_default != null ? Math.max(1, Number(e.quantity_default) || 1) : 1,
+                    extraType: e.extra_type || '',
+                    activityId: e.activity_id != null ? Number(e.activity_id) : null,
                 };
             });
         }
@@ -392,15 +398,39 @@
             counts.bebe * currentPrices.bebe * modifier;
 
         var extrasTotal = 0;
+        var list = getExtrasListForType(typePrestation);
         document.querySelectorAll('.extra-pax-cb:checked').forEach(function (cb) {
             var extId = cb.dataset.ext;
             var paxId = cb.dataset.pax;
             var paxList = getPassengersList();
             var pax = paxList.find(function (p) { return p.id === paxId; });
-            var list = getExtrasListForType(typePrestation);
             var extraData = list.find(function (e) { return e.id === extId; });
             if (pax && extraData) {
                 extrasTotal += pax.type === 'enfant' ? extraData.priceChild : extraData.priceAdult;
+            }
+        });
+        document.querySelectorAll('.extra-item-cb:checked').forEach(function (cb) {
+            var extId = cb.dataset.ext;
+            var extraData = list.find(function (e) { return e.id === extId; });
+            if (!extraData) return;
+            var qtyInput = document.querySelector('.extra-item-qty[data-ext="' + extId + '"]');
+            var qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+            if (!qty || qty < 1) qty = 1;
+            extrasTotal += (Number(extraData.unitPrice) || 0) * qty;
+            var lineTotal = document.querySelector('.extra-item-total[data-ext="' + extId + '"]');
+            if (lineTotal) {
+                lineTotal.textContent = (Math.round(((Number(extraData.unitPrice) || 0) * qty))).toLocaleString('fr-FR') + ' ' + cur;
+            }
+        });
+        document.querySelectorAll('.extra-item-qty').forEach(function (qtyInput) {
+            var extId = qtyInput.dataset.ext;
+            var extraData = list.find(function (e) { return e.id === extId; });
+            if (!extraData) return;
+            var qty = parseInt(qtyInput.value || '1', 10);
+            if (!qty || qty < 1) qty = 1;
+            var lineTotal = document.querySelector('.extra-item-total[data-ext="' + extId + '"]');
+            if (lineTotal) {
+                lineTotal.textContent = (Math.round(((Number(extraData.unitPrice) || 0) * qty))).toLocaleString('fr-FR') + ' ' + cur;
             }
         });
 
@@ -499,6 +529,9 @@
         container.querySelectorAll('.extra-pax-cb:checked').forEach(function (cb) {
             checkedState[cb.dataset.ext + '_' + cb.dataset.pax] = true;
         });
+        container.querySelectorAll('.extra-item-cb:checked').forEach(function (cb) {
+            checkedState[cb.dataset.ext + '_item'] = true;
+        });
 
         container.innerHTML = '';
         var extras = getExtrasListForType(type);
@@ -513,6 +546,30 @@
         }
 
         extras.forEach(function (extra) {
+            if (extra.selectionMode === 'line_item') {
+                var checked = checkedState[extra.id + '_item'] ? 'checked' : '';
+                var qty = Math.max(1, Number(extra.quantityDefault) || 1);
+                var priceLabel = extra.pricingType === 'fixed' ? 'Fixe' : 'Par personne';
+                container.innerHTML +=
+                    '<div class="ws-extra-card">' +
+                    '<div class="ws-extra-card__head"><i class="fas ' + extra.icon + ' ws-extra-card__ico"></i><div>' +
+                    '<div class="ws-extra-card__title">' + escapeWsHtml(extra.name) + '</div>' +
+                    '<div class="ws-extra-card__desc">' + escapeWsHtml(extra.desc || '') + '</div></div></div>' +
+                    '<label class="ws-extra-line">' +
+                    '<span class="ws-extra-line__cb"><input type="checkbox" class="extra-item-cb" data-ext="' + extra.id + '" ' + checked + '></span>' +
+                    '<span class="ws-extra-line__who">' + escapeWsHtml(priceLabel) + '</span>' +
+                    '<span class="ws-extra-line__price">+ ' + (Math.round(Number(extra.unitPrice) || 0)).toLocaleString('fr-FR') + ' ' + curX + '</span>' +
+                    '</label>' +
+                    '<div class="mt-3 flex items-end gap-3">' +
+                    '<label class="flex-1 text-xs font-semibold text-slate-500">Quantité' +
+                    '<input type="number" min="1" step="1" value="' + qty + '" class="extra-item-qty mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm" data-ext="' + extra.id + '">' +
+                    '</label>' +
+                    '<div class="text-right">' +
+                    '<div class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Total</div>' +
+                    '<div class="extra-item-total text-sm font-bold text-[#0e3a5a]" data-ext="' + extra.id + '">' + ((Math.round((Number(extra.unitPrice) || 0) * qty))).toLocaleString('fr-FR') + ' ' + curX + '</div>' +
+                    '</div></div></div>';
+                return;
+            }
             var paxHtml = '';
             if (paxList.length > 0) {
                 paxHtml = '<div class="ws-extra-pax">';
@@ -542,6 +599,13 @@
         container.querySelectorAll('.extra-pax-cb').forEach(function (cb) {
             cb.addEventListener('change', calculateTotal);
         });
+        container.querySelectorAll('.extra-item-cb').forEach(function (cb) {
+            cb.addEventListener('change', calculateTotal);
+        });
+        container.querySelectorAll('.extra-item-qty').forEach(function (input) {
+            input.addEventListener('input', calculateTotal);
+            input.addEventListener('change', calculateTotal);
+        });
     }
 
     function updateExtrasView() {
@@ -566,6 +630,29 @@
                 name: extraData.name + ' (' + pax.label + ')',
                 price: price,
                 pax: paxId,
+                selection_mode: 'per_pax',
+            });
+        });
+
+        document.querySelectorAll('.extra-item-cb:checked').forEach(function (cb) {
+            var extId = cb.dataset.ext;
+            var extraData = list.find(function (e) { return e.id === extId; });
+            if (!extraData) return;
+            var qtyInput = document.querySelector('.extra-item-qty[data-ext="' + extId + '"]');
+            var qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+            if (!qty || qty < 1) qty = 1;
+            var unitPrice = Number(extraData.unitPrice) || 0;
+            out.push({
+                voyage_extra_id: extId,
+                activity_id: extraData.activityId,
+                name: extraData.name,
+                price: unitPrice * qty,
+                pax: null,
+                quantity: qty,
+                unit_price: unitPrice,
+                pricing_type: extraData.pricingType || 'per_person',
+                selection_mode: 'line_item',
+                item_type: extraData.extraType || 'activity',
             });
         });
 
