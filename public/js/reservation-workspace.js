@@ -630,7 +630,10 @@
                 name: extraData.name + ' (' + pax.label + ')',
                 price: price,
                 pax: paxId,
+                activity_id: extraData.activityId,
                 selection_mode: 'per_pax',
+                pricing_type: extraData.pricingType || 'per_person',
+                item_type: extraData.extraType || '',
             });
         });
 
