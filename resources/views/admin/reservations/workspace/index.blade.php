@@ -727,13 +727,6 @@
         </div>
     </div>
 </div>
-@if(config('app.debug') && isset($catalogMeta))
-    @include('admin.reservations.workspace.partials.debug-catalog-panel', [
-        'catalogMeta' => $catalogMeta,
-        'catalogTotalCount' => $catalogTotalCount ?? null,
-        'catalogRows' => $catalogRows,
-    ])
-@endif
 @endpush
 
 @push('scripts')

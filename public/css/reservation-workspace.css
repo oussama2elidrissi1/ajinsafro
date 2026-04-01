@@ -4,9 +4,10 @@
  */
 
 .ws-booking-form {
-    max-width: 920px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 /* —— Cartes sections —— */
@@ -237,6 +238,7 @@
 .ws-extra-card {
     display: flex;
     flex-direction: column;
+    min-width: 0;
     padding: 1rem 1.125rem;
     background: #fafbfc;
     border: 1px solid #e8eef4;
@@ -339,7 +341,8 @@
 
 @media (min-width: 1024px) {
     .ws-recap-grid {
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: minmax(0, 1.65fr) minmax(320px, 380px);
+        align-items: start;
     }
 }
 
@@ -381,6 +384,13 @@
     padding: 1.25rem 1.5rem;
 }
 
+@media (min-width: 1024px) {
+    .ws-pay {
+        position: sticky;
+        top: 1.5rem;
+    }
+}
+
 .ws-pay__label {
     font-size: 0.625rem;
     font-weight: 700;
@@ -417,6 +427,35 @@
 .ws-pax-inline strong {
     color: #0e3a5a;
     font-size: 1.0625rem;
+}
+
+@media (max-width: 767.98px) {
+    .ws-hero__actions,
+    .ws-toolbar__views,
+    .ws-toolbar__row--search,
+    .ws-toolbar__row--filters {
+        width: 100%;
+    }
+
+    .ws-hero__btn,
+    .ws-btn-reset,
+    .ws-seg {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ws-toolbar__views {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ws-field--actions {
+        width: 100%;
+    }
+
+    .ws-table-scroll {
+        max-height: none;
+    }
 }
 
 .ws-departure-label {

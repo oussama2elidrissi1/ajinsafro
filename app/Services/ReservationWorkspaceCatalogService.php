@@ -1430,7 +1430,6 @@ class ReservationWorkspaceCatalogService
             'routes' => [
                 'reservations' => $laravelId ? route('admin.reservations.index', array_filter([
                     'voyage_id' => $laravelId,
-                    'travel_date_id' => $preferredTravelDateId,
                 ], fn ($v) => $v !== null && $v !== '')) : null,
                 'create' => $laravelId ? route('admin.reservations.create', array_filter([
                     'tour_id' => $laravelId,
@@ -1474,7 +1473,6 @@ class ReservationWorkspaceCatalogService
             'routes' => [
                 'reservations' => route('admin.reservations.index', array_filter([
                     'voyage_id' => $tourId,
-                    'travel_date_id' => $travelDateId,
                 ], fn ($v) => $v !== null && $v !== '')),
                 'create' => route('admin.reservations.create', array_filter([
                     'tour_id' => $tourId,
@@ -1685,7 +1683,6 @@ class ReservationWorkspaceCatalogService
             'routes' => [
                 'reservations' => route('admin.reservations.index', array_filter([
                     'voyage_id' => $tid,
-                    'travel_date_id' => $preferredTravelDateId,
                 ], fn ($v) => $v !== null && $v !== '')),
                 'create' => route('admin.reservations.create', array_filter([
                     'tour_id' => $tid,
