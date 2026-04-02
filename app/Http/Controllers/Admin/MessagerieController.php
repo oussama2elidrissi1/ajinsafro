@@ -8,7 +8,9 @@ use App\Models\ChatChannelMember;
 use App\Models\ChatMessage;
 use App\Models\Reservation;
 use App\Services\BranchScopeService;
+use App\Services\View\AgentPortalLayout;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -18,8 +20,12 @@ class MessagerieController extends Controller
         protected BranchScopeService $branchScope
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        if (AgentPortalLayout::shouldUse($request->user()) && \Illuminate\Support\Facades\Route::has('agent.messagerie.index')) {
+            return redirect()->route('agent.messagerie.index', $request->query());
+        }
+
         $user = $request->user();
         $reservationQuery = Reservation::query()->orderByDesc('id')->limit(200);
         $this->branchScope->scopeReservations($reservationQuery, $user);

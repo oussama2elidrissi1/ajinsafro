@@ -96,9 +96,7 @@
                             $senderName = $message->sender?->name ?? 'Message';
                             $initials = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(\Illuminate\Support\Str::of($senderName)->replace(' ', ''), 0, 2));
                         @endphp
-                        <div class="group border-b border-[#edf2fa] px-4 py-3 transition hover:relative hover:z-[1] hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)] {{ $message->read ? 'bg-white' : 'bg-[#f3f8ff]' }} sm:px-6"
-                             data-message-row
-                             data-message-url="{{ route($routeBase.'.show', $message) }}">
+                        <div class="group border-b border-[#edf2fa] px-4 py-3 transition hover:relative hover:z-[1] hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)] {{ $message->read ? 'bg-white' : 'bg-[#f3f8ff]' }} sm:px-6">
                             <div class="flex items-start gap-3">
                                 <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0083c4] text-xs font-bold text-white">
                                     {{ $initials }}
@@ -106,7 +104,7 @@
 
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
-                                        <div class="min-w-0 flex-1 cursor-pointer">
+                                        <div class="min-w-0">
                                             <p class="truncate text-sm {{ !$message->read ? 'font-bold text-[#0b3558]' : 'font-medium text-[#3c4043]' }}">
                                                 {{ $senderName }}
                                             </p>
@@ -118,11 +116,6 @@
                                         </div>
 
                                         <div class="flex shrink-0 items-center gap-1 pl-0 lg:pl-4">
-                                            <a href="{{ route($routeBase.'.show', $message) }}"
-                                               class="hidden h-9 w-9 items-center justify-center rounded-full text-gray-500 transition hover:bg-[#eef3fd] hover:text-[#0b57d0] group-hover:inline-flex"
-                                               title="Ouvrir le message">
-                                                <i class="fas fa-eye text-xs"></i>
-                                            </a>
                                             <form method="POST" action="{{ route($routeBase.'.star', $message) }}">
                                                 @csrf
                                                 @method('PATCH')
@@ -229,10 +222,6 @@
 @endsection
 
 @push('styles')
-    @if(($routeBase ?? '') === 'admin.messagerie')
-        @vite(['resources/css/partner-v2.css'])
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    @endif
     <style>
         .gmail-scroll {
             scrollbar-gutter: stable;
@@ -280,19 +269,6 @@
             document.querySelectorAll('[data-modal-close]').forEach(function (button) {
                 button.addEventListener('click', function () {
                     closeModal(this.dataset.modalClose);
-                });
-            });
-
-            document.querySelectorAll('[data-message-row]').forEach(function (row) {
-                row.addEventListener('click', function (event) {
-                    if (event.target.closest('a, button, form, input, select, textarea, label')) {
-                        return;
-                    }
-
-                    const url = row.dataset.messageUrl;
-                    if (url) {
-                        window.location.href = url;
-                    }
                 });
             });
 
