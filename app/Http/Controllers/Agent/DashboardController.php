@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Departure;
+use App\Models\PartnerCommission;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Voyage;
@@ -90,10 +91,11 @@ class DashboardController extends Controller
                 'tour:id,name',
                 'branch:id,name',
                 'agent:id,name',
+                'partnerCommission:id,reservation_id,amount,status',
             ])
             ->latest()
             ->limit(8)
-            ->get(['id', 'tour_id', 'branch_id', 'agent_id', 'client_first_name', 'client_last_name', 'status', 'created_at']);
+            ->get(['id', 'tour_id', 'branch_id', 'agent_id', 'client_first_name', 'client_last_name', 'status', 'paid_amount', 'created_at']);
 
         $recentClients = (clone $clientsForLists)
             ->with('branch:id,name')
@@ -113,6 +115,9 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'job_title']);
 
+        $quickRange = $this->normalizeQuickRange($request->query('range'));
+        $topOffers = $this->buildTopOffersSnapshot(clone $reservationsForLists);
+
         return view('agent.dashboard', [
             'isManager' => $isManager,
             'stats' => $stats,
@@ -128,6 +133,8 @@ class DashboardController extends Controller
             'filterAgentId' => $request->integer('agent_id') ?: null,
             'filterReservationStatus' => $request->query('res_status'),
             'filterClientAgentId' => $request->integer('client_agent_id') ?: null,
+            'quickRange' => $quickRange,
+            'topOffers' => $topOffers,
         ]);
     }
 
@@ -139,6 +146,12 @@ class DashboardController extends Controller
      */
     private function applyDashboardReservationFilters(Request $request, Builder $query, User $user, array $ownershipIds): void
     {
+        $range = $this->normalizeQuickRange($request->query('range'));
+        if ($range !== null) {
+            [$from, $to] = $this->rangeDates($range);
+            $query->whereBetween('created_at', [$from, $to]);
+        }
+
         if ($request->filled('agent_id')) {
             $aid = $request->integer('agent_id');
             if (in_array($aid, $ownershipIds, true)) {
@@ -182,7 +195,7 @@ class DashboardController extends Controller
     /**
      * @param  Builder<\App\Models\Reservation>  $reservationsQuery
      * @param  Builder<\App\Models\Client>  $clientsQuery
-     * @return array<string, int>
+     * @return array<string, int|float>
      */
     private function buildStatsFromQueries(Builder $reservationsQuery, Builder $clientsQuery): array
     {
@@ -196,7 +209,74 @@ class DashboardController extends Controller
                 ->whereDate('start_date', '>=', Carbon::today())
                 ->where('status', Departure::STATUS_OPEN)
                 ->count(),
+            'revenue_generated' => (float) (clone $reservationsQuery)->sum('paid_amount'),
+            'commission_earned' => (float) PartnerCommission::query()
+                ->whereNotIn('status', [PartnerCommission::STATUS_CANCELLED])
+                ->whereIn('reservation_id', (clone $reservationsQuery)->select('id'))
+                ->sum('amount'),
         ];
+    }
+
+    /**
+     * @return 'today'|'week'|'month'|null
+     */
+    private function normalizeQuickRange(mixed $value): ?string
+    {
+        $value = is_string($value) ? strtolower(trim($value)) : null;
+        if (in_array($value, ['today', 'week', 'month'], true)) {
+            return $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  'today'|'week'|'month'  $range
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function rangeDates(string $range): array
+    {
+        $now = Carbon::now();
+
+        return match ($range) {
+            'today' => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
+            'week' => [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()],
+            'month' => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
+            default => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
+        };
+    }
+
+    /**
+     * @return array{labels: list<string>, bookings: list<int>, revenue: list<float>}
+     */
+    private function buildTopOffersSnapshot(Builder $reservationsQuery): array
+    {
+        $rows = (clone $reservationsQuery)
+            ->selectRaw('tour_id, COUNT(*) as bookings, COALESCE(SUM(paid_amount), 0) as revenue')
+            ->whereNotNull('tour_id')
+            ->groupBy('tour_id')
+            ->orderByDesc('bookings')
+            ->limit(8)
+            ->get();
+
+        $tourIds = $rows->pluck('tour_id')->filter()->values()->all();
+        $toursById = Voyage::query()
+            ->whereIn('id', $tourIds)
+            ->get(['id', 'name'])
+            ->keyBy('id');
+
+        $labels = [];
+        $bookings = [];
+        $revenue = [];
+
+        foreach ($rows as $row) {
+            $tourId = (int) $row->tour_id;
+            $labels[] = (string) ($toursById[$tourId]->name ?? ('Offre #' . $tourId));
+            $bookings[] = (int) $row->bookings;
+            $revenue[] = (float) $row->revenue;
+        }
+
+        return compact('labels', 'bookings', 'revenue');
     }
 
     /**

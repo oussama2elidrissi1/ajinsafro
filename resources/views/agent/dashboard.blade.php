@@ -2,6 +2,10 @@
 
 @section('title', 'Tableau de bord')
 
+@push('css')
+    <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
+@endpush
+
 @section('content')
 @php
     use Illuminate\Support\Facades\Route;
@@ -21,34 +25,12 @@
     $canOpenReservation = Route::has('admin.reservations.show') && $user->can('reservations.view');
 @endphp
 
-<div class="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-    <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-[#0e3a5a]">Tableau de bord</h1>
-        @if($isManager ?? false)
-            <p class="text-sm text-gray-500 mt-1">
-                Espace manager — vue consolidée équipe et <span class="font-semibold text-[#0083c4]">{{ $displayName }}</span>
-            </p>
-        @else
-            <p class="text-sm text-gray-500 mt-1">Bienvenue dans votre espace agent, <span class="font-semibold text-[#0083c4]">{{ $displayName }}</span>.</p>
-        @endif
-    </div>
-    <div class="flex flex-wrap gap-2">
-        @if(Route::has('admin.reservations.create') && $user->can('reservations.create'))
-            <a href="{{ route('admin.reservations.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0083c4] text-white text-sm font-bold shadow-sm hover:opacity-95 transition-opacity">
-                <i class="fas fa-plus-circle"></i>
-                Nouvelle réservation
-            </a>
-        @endif
-        @if(Route::has('admin.customers.clients.create') && $user->can('customers.clients.view'))
-            <a href="{{ route('admin.customers.clients.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#0083c4] text-[#0083c4] text-sm font-bold bg-white hover:bg-[#e6f3fa]/40 transition-colors">
-                <i class="fas fa-user-plus"></i>
-                Nouveau client
-            </a>
-        @endif
-    </div>
-</div>
+@include('agent.partials.dashboard-header', [
+    'user' => $user,
+    'isManager' => $isManager ?? false,
+    'stats' => $stats ?? [],
+    'quickRange' => $quickRange ?? null,
+])
 
 @if($isManager ?? false)
     <div class="mb-4 rounded-xl border border-[#0083c4]/20 bg-[#e6f3fa]/40 px-4 py-3 text-sm text-[#0e3a5a]">
@@ -81,9 +63,17 @@
     'reservationsListUrl' => $reservationsListUrl,
     'canOpenReservation' => $canOpenReservation,
     'isManager' => $isManager ?? false,
+    'quickRange' => $quickRange ?? null,
 ])
+
+@include('agent.partials.dashboard-performance', ['topOffers' => $topOffers ?? ['labels' => [], 'bookings' => [], 'revenue' => []]])
 
 @include('agent.partials.dashboard-calendar', ['calendarEvents' => $calendarEvents])
 
 @include('agent.partials.dashboard-activity', ['recentActivityReservations' => $recentActivityReservations])
 @endsection
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script src="{{ URL::asset('js/agent-dashboard.js') }}"></script>
+@endpush

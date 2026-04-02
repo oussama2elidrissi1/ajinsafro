@@ -1,0 +1,51 @@
+:root {
+  --aj-blue: #0083c4;
+  --aj-navy: #0e3a5a;
+  --aj-surface: #ffffff;
+  --aj-muted: #64748b;
+  --aj-border: rgba(15, 23, 42, 0.08);
+  --aj-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+}
+
+.agent-portal-main .shadow-custom {
+  box-shadow: var(--aj-shadow);
+}
+
+.agent-dashboard-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.agent-dashboard-hero:before {
+  content: "";
+  position: absolute;
+  inset: -140px -120px auto auto;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 131, 196, 0.25), rgba(0, 131, 196, 0));
+  transform: rotate(12deg);
+  pointer-events: none;
+}
+
+.agent-dashboard-hero:after {
+  content: "";
+  position: absolute;
+  inset: auto -120px -160px auto;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle at 30% 30%, rgba(14, 58, 90, 0.14), rgba(14, 58, 90, 0));
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.agent-portal-main table th,
+.agent-portal-main table td {
+  vertical-align: middle;
+}
+
+.agent-dashboard-range a[aria-current="page"] {
+  background: rgba(0, 131, 196, 0.10);
+  border-color: rgba(0, 131, 196, 0.25);
+  color: var(--aj-navy);
+}
+
