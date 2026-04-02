@@ -22,7 +22,6 @@ use App\Http\Controllers\Admin\ProductsController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\ReportingController;
-use App\Http\Controllers\Admin\ReservationMessageController;
 use App\Http\Controllers\Admin\ReservationsController;
 use App\Http\Controllers\Admin\RoleAccessController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -133,14 +132,14 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('reservations/calendrier/event-details', [ReservationsController::class, 'calendarEventDetails'])->name('reservations.calendrier.event-details');
     Route::get('reservations/paiements', [ReservationsController::class, 'page'])->name('reservations.paiements')->defaults('submenu', 'paiements');
 
-    Route::get('reservations/messages', [ReservationMessageController::class, 'index'])->name('reservations.messages');
-    Route::get('reservations/messages/create', [ReservationMessageController::class, 'create'])->name('reservations.messages.create');
-    Route::post('reservations/messages', [ReservationMessageController::class, 'store'])->name('reservations.messages.store');
-    Route::get('reservations/messages/{message}', [ReservationMessageController::class, 'show'])->name('reservations.messages.show')->whereNumber('message');
-    Route::post('reservations/messages/{message}/star', [ReservationMessageController::class, 'toggleStar'])->name('reservations.messages.star')->whereNumber('message');
-    Route::post('reservations/messages/{message}/trash', [ReservationMessageController::class, 'moveToTrash'])->name('reservations.messages.trash')->whereNumber('message');
-    Route::post('reservations/messages/{message}/label', [ReservationMessageController::class, 'setLabel'])->name('reservations.messages.label')->whereNumber('message');
-    Route::post('reservations/messages/{message}/important', [ReservationMessageController::class, 'setImportant'])->name('reservations.messages.important')->whereNumber('message');
+    Route::get('reservations/messages', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages');
+    Route::get('reservations/messages/create', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.create');
+    Route::post('reservations/messages', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.store');
+    Route::get('reservations/messages/{message}', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.show')->whereNumber('message');
+    Route::post('reservations/messages/{message}/star', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.star')->whereNumber('message');
+    Route::post('reservations/messages/{message}/trash', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.trash')->whereNumber('message');
+    Route::post('reservations/messages/{message}/label', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.label')->whereNumber('message');
+    Route::post('reservations/messages/{message}/important', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.important')->whereNumber('message');
 
     Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
     Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');

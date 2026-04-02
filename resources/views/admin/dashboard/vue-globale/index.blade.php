@@ -173,7 +173,7 @@
                         <p class="text-muted small mb-0">Boîte Réservations</p>
                         <h3 class="mb-0 mt-1">{{ $stats['messages_count'] }}</h3>
                     </div>
-                    <a href="{{ route('admin.reservations.messages') }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route('admin.messagerie.index') }}" class="btn btn-primary btn-sm">
                         <i class="bx bx-envelope me-1"></i> Ouvrir
                     </a>
                 </div>

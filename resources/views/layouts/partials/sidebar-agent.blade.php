@@ -104,6 +104,18 @@
                         </li>
                     @endif
                 @endforeach
+
+                @if(\Illuminate\Support\Facades\Route::has('agent.messagerie.index'))
+                    <li>
+                        <a href="{{ route('agent.messagerie.index') }}" class="waves-effect {{ $navActive('agent.messagerie.index') ? 'active' : '' }}">
+                            <i class="bx bx-envelope"></i>
+                            <span>Messagerie</span>
+                            @if(($unreadCount ?? 0) > 0)
+                                <span class="badge rounded-pill bg-primary float-end">{{ $unreadCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endif
             </ul>
         </div>
     </div>

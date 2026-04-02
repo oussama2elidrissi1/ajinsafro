@@ -164,6 +164,21 @@
                 </details>
             @endforeach
 
+            @php $messagerieActive = $navActive('agent.messagerie.index'); @endphp
+            @if(Route::has('agent.messagerie.index'))
+                <a href="{{ route('agent.messagerie.index') }}"
+                   data-partner-nav
+                   class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl mt-1 {{ $messagerieActive ? 'bg-[#e6f3fa]/60 text-[#0083c4] font-semibold' : 'hover:bg-gray-50 text-gray-600 hover:text-[#0083c4] font-medium' }} transition-colors">
+                    <span class="flex items-center gap-3">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $messagerieActive ? 'bg-[#0083c4]' : 'bg-gray-200' }}"></span>
+                        <span class="leading-snug">Messagerie</span>
+                    </span>
+                    @if(($unreadCount ?? 0) > 0)
+                        <span class="rounded-full bg-[#0b57d0] px-2 py-0.5 text-[11px] font-semibold text-white">{{ $unreadCount }}</span>
+                    @endif
+                </a>
+            @endif
+
             <details class="agent-nav-group rounded-xl border border-transparent hover:border-gray-100 mt-1 {{ $accountOpen ? 'bg-gray-50/80' : '' }}" {{ $accountOpen ? 'open' : '' }}>
                 <summary class="flex items-center justify-between gap-2 px-4 py-2.5 cursor-pointer list-none select-none text-[11px] font-bold uppercase tracking-wider text-[#0e3a5a] [&::-webkit-details-marker]:hidden">
                     <span>Compte</span>

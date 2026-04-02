@@ -92,6 +92,13 @@ return [
             ],
         ],
         [
+            'key' => 'messagerie',
+            'label' => 'Messagerie',
+            'icon' => 'bx bx-envelope',
+            'permission' => 'dashboard.view',
+            'route' => 'admin.messagerie.index',
+        ],
+        [
             'key' => 'finance',
             'label' => 'Finance',
             'icon' => 'bx bx-wallet',

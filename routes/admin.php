@@ -12,7 +12,6 @@ use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\HomePageSettingsController;
-use App\Http\Controllers\Admin\MessagerieController;
 use App\Http\Controllers\Admin\OperationsController;
 use App\Http\Controllers\Admin\PartnerAccountController;
 use App\Http\Controllers\Admin\PartnerCommissionRuleController;
@@ -21,7 +20,6 @@ use App\Http\Controllers\Admin\ProductsController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\ReportingController;
-use App\Http\Controllers\Admin\ReservationMessageController;
 use App\Http\Controllers\Admin\ReservationsController;
 use App\Http\Controllers\Admin\ReservationWorkspaceController;
 use App\Http\Controllers\Admin\RoleAccessController;
@@ -41,6 +39,7 @@ use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\DemoController;
+use App\Http\Controllers\MessagerieController as AgentMessagerieController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -120,14 +119,14 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/calendrier/reservation-details', [ReservationsController::class, 'calendarReservationDetails'])->name('reservations.calendrier.reservation-details');
         Route::get('reservations/paiements', [ReservationsController::class, 'page'])->name('reservations.paiements')->defaults('submenu', 'paiements');
 
-        Route::get('reservations/messages', [ReservationMessageController::class, 'index'])->name('reservations.messages');
-        Route::get('reservations/messages/create', [ReservationMessageController::class, 'create'])->name('reservations.messages.create');
-        Route::post('reservations/messages', [ReservationMessageController::class, 'store'])->name('reservations.messages.store');
-        Route::get('reservations/messages/{message}', [ReservationMessageController::class, 'show'])->name('reservations.messages.show')->whereNumber('message');
-        Route::post('reservations/messages/{message}/star', [ReservationMessageController::class, 'toggleStar'])->name('reservations.messages.star')->whereNumber('message');
-        Route::post('reservations/messages/{message}/trash', [ReservationMessageController::class, 'moveToTrash'])->name('reservations.messages.trash')->whereNumber('message');
-        Route::post('reservations/messages/{message}/label', [ReservationMessageController::class, 'setLabel'])->name('reservations.messages.label')->whereNumber('message');
-        Route::post('reservations/messages/{message}/important', [ReservationMessageController::class, 'setImportant'])->name('reservations.messages.important')->whereNumber('message');
+        Route::get('reservations/messages', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages');
+        Route::get('reservations/messages/create', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.create');
+        Route::post('reservations/messages', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.store');
+        Route::get('reservations/messages/{message}', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.show')->whereNumber('message');
+        Route::post('reservations/messages/{message}/star', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.star')->whereNumber('message');
+        Route::post('reservations/messages/{message}/trash', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.trash')->whereNumber('message');
+        Route::post('reservations/messages/{message}/label', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.label')->whereNumber('message');
+        Route::post('reservations/messages/{message}/important', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.important')->whereNumber('message');
 
         Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
@@ -329,11 +328,16 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::match(['put', 'patch'], 'branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
         Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
 
-        Route::get('messagerie', [MessagerieController::class, 'index'])->name('messagerie.index');
-        Route::get('messagerie/channels', [MessagerieController::class, 'channels'])->name('messagerie.channels');
-        Route::get('messagerie/channels/{channel}/messages', [MessagerieController::class, 'messages'])->name('messagerie.messages');
-        Route::post('messagerie/channels/{channel}/messages', [MessagerieController::class, 'send'])->name('messagerie.send');
-        Route::post('messagerie/channels', [MessagerieController::class, 'createChannel'])->name('messagerie.channels.create');
+        Route::prefix('messagerie')
+            ->name('messagerie.')
+            ->group(function () {
+                Route::get('/', [AgentMessagerieController::class, 'index'])->name('index');
+                Route::post('/', [AgentMessagerieController::class, 'store'])->name('store');
+                Route::get('{message}', [AgentMessagerieController::class, 'show'])->name('show')->whereNumber('message');
+                Route::patch('{message}/read', [AgentMessagerieController::class, 'markRead'])->name('read')->whereNumber('message');
+                Route::patch('{message}/star', [AgentMessagerieController::class, 'toggleStar'])->name('star')->whereNumber('message');
+                Route::delete('{message}', [AgentMessagerieController::class, 'destroy'])->name('destroy')->whereNumber('message');
+            });
 
         Route::prefix('wordpress')->name('wordpress.')->group(function () {
             Route::get('hotels', [HotelController::class, 'index'])->name('hotels.index');
@@ -357,6 +361,16 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked'])
     ->name('agent.')
     ->group(function () {
         Route::get('dashboard', [AgentDashboardController::class, 'index'])->name('dashboard');
+        Route::prefix('messagerie')
+            ->name('messagerie.')
+            ->group(function () {
+                Route::get('/', [AgentMessagerieController::class, 'index'])->name('index');
+                Route::post('/', [AgentMessagerieController::class, 'store'])->name('store');
+                Route::get('{message}', [AgentMessagerieController::class, 'show'])->name('show')->whereNumber('message');
+                Route::patch('{message}/read', [AgentMessagerieController::class, 'markRead'])->name('read')->whereNumber('message');
+                Route::patch('{message}/star', [AgentMessagerieController::class, 'toggleStar'])->name('star')->whereNumber('message');
+                Route::delete('{message}', [AgentMessagerieController::class, 'destroy'])->name('destroy')->whereNumber('message');
+            });
     });
 
 Route::middleware('auth')->prefix('demo')->name('demo.')->group(function () {

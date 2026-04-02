@@ -101,12 +101,28 @@
                                     $sectionHref = !empty($section['query']) ? route($sectionRoute, $section['query']) : route($sectionRoute);
                                 @endphp
                                 <a href="{{ $sectionHref }}" class="waves-effect {{ $sectionActive ? 'mm-active active' : '' }}">
-                                    <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i><span>{{ $section['label'] }}</span>
+                                    <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i>
+                                    <span>{{ $section['label'] }}</span>
+                                    @if(($section['key'] ?? null) === 'messagerie' && ($unreadCount ?? 0) > 0)
+                                        <span class="badge rounded-pill bg-primary float-end">{{ $unreadCount }}</span>
+                                    @endif
                                 </a>
                             @endif
                         </li>
                     @endif
                 @endforeach
+
+                @if(Route::has('admin.messagerie.index'))
+                    <li>
+                        <a href="{{ route('admin.messagerie.index') }}" class="waves-effect {{ str_starts_with((string) $currentRoute, 'admin.messagerie.') ? 'mm-active active' : '' }}">
+                            <i class="bx bx-envelope"></i>
+                            <span>Messagerie</span>
+                            @if(($unreadCount ?? 0) > 0)
+                                <span class="badge rounded-pill bg-primary float-end">{{ $unreadCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endif
 
                 <li class="menu-title mt-3">Compte</li>
                 @can('dashboard.view')
