@@ -7,7 +7,9 @@
 
     $messageUrl = Route::has('partner.messages.index')
         ? route('partner.messages.index')
-        : (Route::has('admin.messagerie.index') ? route('admin.messagerie.index') : '#');
+        : (Route::has('agent.messagerie.index')
+            ? route('agent.messagerie.index')
+            : (Route::has('admin.messagerie.index') ? route('admin.messagerie.index') : '#'));
 
     $footerCols = [
         [
@@ -93,4 +95,3 @@
 
     <div style="height:128px;"></div>
 </footer>
-
