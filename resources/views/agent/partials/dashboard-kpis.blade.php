@@ -3,6 +3,13 @@
     'subtitle' => null,
 ])
 
+@php
+    $fmtMoney = function ($value) {
+        $num = is_numeric($value) ? (float) $value : 0.0;
+        return number_format($num, 0, ',', ' ') . ' DH';
+    };
+@endphp
+
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
     <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-[#0083c4] text-xl">
@@ -21,7 +28,7 @@
             <i class="fas fa-hourglass-half"></i>
         </div>
         <div>
-            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">En cours</p>
+            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">En attente</p>
             <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ $stats['reservations_en_cours'] ?? 0 }}</h4>
         </div>
     </div>
@@ -35,30 +42,30 @@
         </div>
     </div>
     <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
+        <div class="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 text-emerald-700 text-xl">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div>
+            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Revenu généré</p>
+            <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ $fmtMoney($stats['revenue_generated'] ?? 0) }}</h4>
+        </div>
+    </div>
+    <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
+        <div class="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 text-indigo-700 text-xl">
+            <i class="fas fa-hand-holding-dollar"></i>
+        </div>
+        <div>
+            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Commission</p>
+            <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ $fmtMoney($stats['commission_earned'] ?? 0) }}</h4>
+        </div>
+    </div>
+    <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center shrink-0 text-[#f37a1f] text-xl">
             <i class="fas fa-users"></i>
         </div>
         <div>
             <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Clients</p>
             <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ $stats['clients_count'] ?? 0 }}</h4>
-        </div>
-    </div>
-    <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center shrink-0 text-purple-600 text-xl">
-            <i class="fas fa-plane-departure"></i>
-        </div>
-        <div>
-            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Voyages (catalogue)</p>
-            <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ $stats['voyages_count'] ?? 0 }}</h4>
-        </div>
-    </div>
-    <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 text-indigo-600 text-xl">
-            <i class="fas fa-calendar-check"></i>
-        </div>
-        <div>
-            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Départs à venir</p>
-            <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ $stats['departures_upcoming'] ?? 0 }}</h4>
         </div>
     </div>
 </div>
