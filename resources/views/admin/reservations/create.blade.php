@@ -17,6 +17,7 @@
             </div>
         </div>
     </div>
+    
 
     <form method="post" action="{{ route('admin.reservations.store') }}" enctype="multipart/form-data">
         @csrf
