@@ -26,10 +26,11 @@ return new class extends Migration
             $table->decimal('supplement', 12, 2)->default(0);
             $table->timestamps();
 
-            $table->unique(['tour_hotel_room_id', 'travel_date_id'], 'tour_room_travel_date_unique');
-            $table->index(['tour_id', 'travel_date_id'], 'tour_room_date_tour_date_idx');
-            $table->index('tour_hotel_id');
-            $table->index('tour_hotel_room_id');
+            // Short index names: MySQL max identifier length is 64 chars (prefix + auto names exceed it).
+            $table->unique(['tour_hotel_room_id', 'travel_date_id'], 'aj_thrda_uniq_room_date');
+            $table->index(['tour_id', 'travel_date_id'], 'aj_thrda_idx_tour_tdate');
+            $table->index('tour_hotel_id', 'aj_thrda_idx_thotel');
+            $table->index('tour_hotel_room_id', 'aj_thrda_idx_throom');
         });
     }
 
