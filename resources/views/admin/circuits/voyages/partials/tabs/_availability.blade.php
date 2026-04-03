@@ -22,7 +22,8 @@
                         <div class="alert alert-light border small mb-4 py-3">
                             <strong class="d-block mb-1">Une seule source pour les dates</strong>
                             Les dates de départ se gèrent dans la section <strong>« Dates disponibles (Travelling on) »</strong> ci-dessous (table WordPress <code>aj_travel_dates</code>).
-                            À l’enregistrement du voyage, chaque ligne est synchronisée vers un <strong>départ Laravel</strong> unique (<code>voyage_id</code> + date + <code>wp_travel_date_id</code>) — pas de second flux parallèle.
+                            La synchronisation vers les <strong>départs Laravel</strong> est automatique (onglet disponibilité, modal stock, page détail départ) avec déduplication.
+                            Si une date WP est supprimée/inactive, le départ Laravel est archivé (statut fermé) au lieu d’être supprimé pour préserver les réservations.
                             @if(isset($laravelVoyage) && $laravelVoyage)
                                 @php $firstDepartureRow = $departureRows->first(); @endphp
                                 <span class="d-block mt-2">

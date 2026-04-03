@@ -7,8 +7,11 @@ use App\Models\Departure;
 use App\Models\DepartureHotel;
 use App\Models\DepartureHotelRoom;
 use App\Models\Hotel;
+use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Services\Booking\DepartureRoomStockService;
+use App\Services\VoyageAvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +20,13 @@ use Illuminate\View\View;
 
 class VoyageDepartureManageController extends Controller
 {
+    private VoyageAvailabilityService $voyageAvailabilityService;
+
+    public function __construct(VoyageAvailabilityService $voyageAvailabilityService)
+    {
+        $this->voyageAvailabilityService = $voyageAvailabilityService;
+    }
+
     private function assertDepartureBelongsToVoyage(Voyage $voyage, Departure $departure): void
     {
         if ((int) $departure->voyage_id !== (int) $voyage->id) {
@@ -38,7 +48,7 @@ class VoyageDepartureManageController extends Controller
 
     public function modalDeparturesJson(Voyage $voyage): JsonResponse
     {
-        $departures = $voyage->departures()->orderBy('start_date')->orderBy('id')->get();
+        $departures = $this->voyageAvailabilityService->syncFromWpDates($voyage);
 
         Log::info('ROOM_STOCK_MODAL_DEPARTURES', [
             'laravel_voyage_id' => (int) $voyage->id,
@@ -46,7 +56,7 @@ class VoyageDepartureManageController extends Controller
             'found_departures_count' => $departures->count(),
             'departures_for_selector' => $departures->map(fn (Departure $d) => [
                 'id' => $d->id,
-                'start_date' => $d->start_date?->format('Y-m-d'),
+                'start_date' => $d->start_date ? Carbon::parse($d->start_date)->format('Y-m-d') : null,
                 'wp_travel_date_id' => $d->wp_travel_date_id,
                 'status' => $d->status,
             ])->values()->all(),
@@ -55,8 +65,8 @@ class VoyageDepartureManageController extends Controller
         return response()->json([
             'departures' => $departures->map(fn (Departure $d) => [
                 'id' => $d->id,
-                'start_date' => $d->start_date?->format('Y-m-d'),
-                'end_date' => $d->end_date?->format('Y-m-d'),
+                'start_date' => $d->start_date ? Carbon::parse($d->start_date)->format('Y-m-d') : null,
+                'end_date' => $d->end_date ? Carbon::parse($d->end_date)->format('Y-m-d') : null,
                 'status' => $d->status,
                 'status_label' => $d->status_label,
                 'total_capacity' => (int) ($d->total_capacity ?? 0),
@@ -66,8 +76,45 @@ class VoyageDepartureManageController extends Controller
         ]);
     }
 
+    public function syncDepartures(Voyage $voyage): JsonResponse
+    {
+        $wpPostId = (int) ($voyage->wp_post_id ?? 0);
+        $wpDates = $wpPostId > 0
+            ? TravelDate::query()->where('travel_id', $wpPostId)->orderBy('date')->orderBy('id')->get()
+            : collect();
+
+        $departures = $this->voyageAvailabilityService->syncFromWpDates($voyage);
+
+        Log::info('ROOM_STOCK_MODAL_SYNC', [
+            'received_voyage_id' => (int) $voyage->id,
+            'received_wp_post_id' => $wpPostId,
+            'wp_travel_dates_count' => $wpDates->count(),
+            'wp_travel_dates' => $wpDates->map(fn (TravelDate $td) => [
+                'id' => (int) $td->id,
+                'date' => $td->date ? Carbon::parse($td->date)->format('Y-m-d') : null,
+                'is_active' => (bool) $td->is_active,
+            ])->values()->all(),
+            'laravel_departures_count' => $departures->count(),
+            'departures' => $departures->map(fn (Departure $d) => [
+                'id' => (int) $d->id,
+                'start_date' => $d->start_date ? Carbon::parse($d->start_date)->format('Y-m-d') : null,
+                'wp_travel_date_id' => $d->wp_travel_date_id,
+                'status' => $d->status,
+            ])->values()->all(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'wp_dates_count' => $wpDates->count(),
+            'departures_count' => $departures->count(),
+        ]);
+    }
+
     public function modalDeparturePanel(Voyage $voyage, Departure $departure): View
     {
+        $this->voyageAvailabilityService->syncFromWpDates($voyage, [
+            'preferred_departure_id' => (int) $departure->id,
+        ]);
         $this->assertDepartureBelongsToVoyage($voyage, $departure);
 
         $departure->load([
@@ -87,6 +134,9 @@ class VoyageDepartureManageController extends Controller
 
     public function show(Voyage $voyage, Departure $departure): View
     {
+        $this->voyageAvailabilityService->syncFromWpDates($voyage, [
+            'preferred_departure_id' => (int) $departure->id,
+        ]);
         $this->assertDepartureBelongsToVoyage($voyage, $departure);
 
         $departure->load([

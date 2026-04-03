@@ -326,7 +326,7 @@ class HomePageSettingsController extends Controller
 		$settings['promotions']['autoplay_delay_ms'] = $this->clampInt($promotions['autoplay_delay_ms'] ?? 5000, 2000, 60000, 5000);
 		$settings['promotions']['default_active_index'] = max(0, (int) ($promotions['default_active_index'] ?? 0));
 		$settings['promotions']['max_slides'] = $this->clampInt($promotions['max_slides'] ?? 8, 1, 20, 8);
-		$settings['promotions']['arrows_enabled'] = $this->truthy($promotions['arrows_enabled'] ?? true);
+		$settings['promotions']['arrows_enabled'] = $this->truthy($promotions['arrows_enabled'] ?? false);
 
 		$promoItems = [];
 		$removeMap = is_array($request->input('promotion_item_remove_image', [])) ? $request->input('promotion_item_remove_image', []) : [];
@@ -532,10 +532,19 @@ class HomePageSettingsController extends Controller
 		}
 
 		usort($normalized, static fn (array $a, array $b): int => ($a['sort_order'] ?? 0) <=> ($b['sort_order'] ?? 0));
+
+		$nonEmptyTitles = count(array_filter(
+			$normalized,
+			static fn (array $item): bool => trim((string) ($item['title'] ?? '')) !== ''
+		));
+		if (count($normalized) < 5 || $nonEmptyTitles < 2) {
+			$normalized = $this->defaultPromotionItemsPrototype();
+		}
+
 		$out['items'] = $normalized;
 		$out['enabled'] = $this->truthy($out['enabled'] ?? true);
 		$out['autoplay'] = $this->truthy($out['autoplay'] ?? true);
-		$out['arrows_enabled'] = $this->truthy($out['arrows_enabled'] ?? true);
+		$out['arrows_enabled'] = $this->truthy($out['arrows_enabled'] ?? false);
 		$out['autoplay_delay_ms'] = $this->clampInt($out['autoplay_delay_ms'] ?? 5000, 2000, 60000, 5000);
 		$out['default_active_index'] = max(0, (int) ($out['default_active_index'] ?? 0));
 		$out['max_slides'] = $this->clampInt($out['max_slides'] ?? 8, 1, 20, 8);
@@ -606,7 +615,7 @@ class HomePageSettingsController extends Controller
 				'description' => '',
 				'image_url' => 'https://i.ibb.co/tTrXK11z/Voyagez-Plus-Gagnez-Plus.png',
 				'image' => 'https://i.ibb.co/tTrXK11z/Voyagez-Plus-Gagnez-Plus.png',
-				'link_url' => 'https://www.ajinsafro.ma/fidelite',
+				'link_url' => '',
 				'link_target' => '_self',
 				'button_text' => "S'inscrire !",
 				'button_url' => 'https://www.ajinsafro.ma/fidelite',
@@ -787,7 +796,7 @@ class HomePageSettingsController extends Controller
 				'autoplay_delay_ms' => 5000,
 				'default_active_index' => 0,
 				'max_slides' => 8,
-				'arrows_enabled' => true,
+				'arrows_enabled' => false,
 				'images' => ['', '', ''],
 				'items' => $this->defaultPromotionItemsPrototype(),
 			],

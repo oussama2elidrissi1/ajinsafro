@@ -737,7 +737,7 @@
                         <div class="col-md-6 col-lg-4">
                             <input type="hidden" name="promotions[arrows_enabled]" value="0">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="promotions[arrows_enabled]" value="1" id="promotions_arrows" {{ old('promotions.arrows_enabled', data_get($settings, 'promotions.arrows_enabled', true)) ? 'checked' : '' }}>
+                                <input class="form-check-input" type="checkbox" name="promotions[arrows_enabled]" value="1" id="promotions_arrows" {{ old('promotions.arrows_enabled', data_get($settings, 'promotions.arrows_enabled', false)) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="promotions_arrows">Flèches précédent / suivant</label>
                             </div>
                         </div>

@@ -23,10 +23,8 @@ use App\Models\TravelDepartureFlight;
 use App\Models\VoyageDeparturePlace;
 use App\Models\TravelDate;
 use App\Models\Departure;
-use App\Models\DepartureHotel;
-use App\Models\Reservation;
-use App\Models\StockMovement;
 use App\Services\AdminWpTourCatalogQuery;
+use App\Services\VoyageAvailabilityService;
 use App\Services\VoyageFlightService;
 use App\Services\VoyageFlightOptionService;
 use App\Services\Wp\ProgramJsonService;
@@ -56,13 +54,16 @@ class VoyageController extends Controller
 
     protected ProgramJsonService $programJsonService;
 
-    public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $voyageFlightService, VoyageFlightOptionService $voyageFlightOptionService, ProgramJsonService $programJsonService)
+    protected VoyageAvailabilityService $voyageAvailabilityService;
+
+    public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $voyageFlightService, VoyageFlightOptionService $voyageFlightOptionService, ProgramJsonService $programJsonService, VoyageAvailabilityService $voyageAvailabilityService)
     {
         $this->repository = $repository;
         $this->programService = $programService;
         $this->voyageFlightService = $voyageFlightService;
         $this->voyageFlightOptionService = $voyageFlightOptionService;
         $this->programJsonService = $programJsonService;
+        $this->voyageAvailabilityService = $voyageAvailabilityService;
     }
 
     /**
@@ -617,6 +618,20 @@ class VoyageController extends Controller
 
         // Charger les dates disponibles
         $travelDates = TravelDate::getDatesForTour($id);
+
+        try {
+            $this->voyageAvailabilityService->syncFromWpDates($laravelVoyage, [
+                'duration_days' => $lastDayNumber,
+                'base_price' => $meta['base_price'] ?? $meta['adult_price'] ?? null,
+                'sale_price' => $meta['sale_price'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('VoyageController@edit: availability sync failed', [
+                'tour_id' => $id,
+                'voyage_id' => $laravelVoyage->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         $programJson = [];
         $programApiUrl = route('admin.circuits.voyages.program.save', ['id' => $id]);
@@ -1515,110 +1530,16 @@ class VoyageController extends Controller
             return;
         }
 
-        if ($travelDates->isEmpty()) {
-            Departure::query()
-                ->where('voyage_id', $laravelVoyage->id)
-                ->whereNotNull('wp_travel_date_id')
-                ->delete();
-
-            return;
-        }
-
         $basePrice = $request->input('base_price');
         if ($basePrice === null || $basePrice === '') {
             $basePrice = $request->input('adult_price');
         }
-        $salePrice = $request->input('sale_price');
 
-        $keptIds = [];
-
-        foreach ($travelDates as $travelDate) {
-            if (! $travelDate instanceof TravelDate) {
-                continue;
-            }
-            $wpTravelDateId = (int) ($travelDate->id ?? 0);
-            if ($wpTravelDateId <= 0 || ! $travelDate->date) {
-                continue;
-            }
-
-            $start = $travelDate->date->copy();
-            $startKey = $start->format('Y-m-d');
-            $end = $lastDayNumber > 1 ? $start->copy()->addDays($lastDayNumber - 1) : null;
-            $status = ! $travelDate->is_active ? Departure::STATUS_CLOSED : Departure::STATUS_OPEN;
-            $totalCapacity = max(0, (int) ($travelDate->seats ?? 0));
-
-            // 1) Même source WP : wp_travel_date_id. 2) Sinon même jour (départ sans lien WP ou doublon historique).
-            $dep = Departure::query()
-                ->where('voyage_id', $laravelVoyage->id)
-                ->where(function ($q) use ($wpTravelDateId, $startKey) {
-                    $q->where('wp_travel_date_id', $wpTravelDateId)
-                        ->orWhereDate('start_date', $startKey);
-                })
-                ->orderByRaw('CASE WHEN wp_travel_date_id IS NULL THEN 1 ELSE 0 END')
-                ->orderBy('id')
-                ->first();
-
-            if (! $dep) {
-                $dep = new Departure([
-                    'voyage_id' => $laravelVoyage->id,
-                ]);
-            }
-
-            $dep->fill([
-                'voyage_id' => $laravelVoyage->id,
-                'wp_travel_date_id' => $wpTravelDateId,
-                'start_date' => $start,
-                'end_date' => $end,
-                'status' => $status,
-                'total_capacity' => $totalCapacity,
-                'available_capacity' => $totalCapacity,
-                'base_price' => ($basePrice !== null && $basePrice !== '' && is_numeric($basePrice)) ? (float) $basePrice : null,
-                'sale_price' => ($salePrice !== null && $salePrice !== '' && is_numeric($salePrice)) ? (float) $salePrice : null,
-            ]);
-
-            $dep->save();
-            $keptIds[] = (int) $dep->id;
-
-            // Supprimer les autres lignes en conflit (même voyage + même date ou même wp id), après fusion des FKs.
-            $dupes = Departure::query()
-                ->where('voyage_id', $laravelVoyage->id)
-                ->where('id', '!=', $dep->id)
-                ->where(function ($q) use ($wpTravelDateId, $startKey) {
-                    $q->where('wp_travel_date_id', $wpTravelDateId)
-                        ->orWhereDate('start_date', $startKey);
-                })
-                ->orderBy('id')
-                ->get();
-
-            foreach ($dupes as $dup) {
-                $this->mergeDepartureInto($dup, $dep);
-            }
-        }
-
-        if (! empty($keptIds)) {
-            Departure::query()
-                ->where('voyage_id', $laravelVoyage->id)
-                ->whereNotNull('wp_travel_date_id')
-                ->whereNotIn('id', $keptIds)
-                ->delete();
-        }
-    }
-
-    /**
-     * Réattribue les enregistrements liés puis supprime le départ doublon.
-     */
-    private function mergeDepartureInto(Departure $from, Departure $into): void
-    {
-        if ((int) $from->id === (int) $into->id) {
-            return;
-        }
-
-        DepartureHotel::query()->where('departure_id', $from->id)->update(['departure_id' => $into->id]);
-        Reservation::query()->where('departure_id', $from->id)->update(['departure_id' => $into->id]);
-        if (Schema::hasTable('stock_movements')) {
-            StockMovement::query()->where('departure_id', $from->id)->update(['departure_id' => $into->id]);
-        }
-        $from->delete();
+        $this->voyageAvailabilityService->syncFromTravelDates($laravelVoyage, $travelDates, [
+            'duration_days' => $lastDayNumber,
+            'base_price' => $basePrice,
+            'sale_price' => $request->input('sale_price'),
+        ]);
     }
 
     /**
@@ -1679,6 +1600,39 @@ class VoyageController extends Controller
         }
         
         return $result;
+    }
+
+    public function syncDepartures(int $voyageId): JsonResponse
+    {
+        $voyage = Voyage::findOrFail($voyageId);
+
+        Log::info('[AVAILABILITY_SYNC_MODAL] syncing departures from WP', [
+            'voyage_id' => (int) $voyage->id,
+            'wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
+        ]);
+
+        $departures = $this->voyageAvailabilityService->syncFromWpDates($voyage);
+
+        return response()->json(['success' => true, 'departures_count' => $departures->count()]);
+    }
+
+    public function syncDeparturesFromWp(int $wpPostId, int $voyageId): void
+    {
+        if ($voyageId <= 0) {
+            return;
+        }
+
+        $voyage = Voyage::find($voyageId);
+        if (! $voyage) {
+            return;
+        }
+
+        if ($wpPostId > 0 && (int) ($voyage->wp_post_id ?? 0) !== $wpPostId) {
+            $voyage->wp_post_id = $wpPostId;
+            $voyage->save();
+        }
+
+        $this->voyageAvailabilityService->syncFromWpDates($voyage);
     }
 
     /**

@@ -18,9 +18,11 @@
 <body data-layout="detached" data-topbar="colored" class="partner-v2 text-gray-800 antialiased font-sans{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
     <div class="container-fluid">
         <div id="layout-wrapper">
-            @unless($hideInternalV2Topbar)
+            @if($hideInternalV2Topbar)
+                @include('layouts.partials.internal-v2-topbar')
+            @else
                 @include('partner_v2.partials.header')
-            @endunless
+            @endif
             @include('layouts.partials.sidebar-partner')
             @if($hideInternalV2Topbar)
                 <button type="button" class="btn btn-primary d-lg-none internal-v2-menu-toggle" id="vertical-menu-btn" aria-label="Ouvrir le menu">

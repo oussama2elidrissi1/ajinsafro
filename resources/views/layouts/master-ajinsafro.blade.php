@@ -36,9 +36,11 @@
     @stack('styles')
 </head>
 <body class="partner-v2 text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
-    @unless($hideInternalV2Topbar)
+    @if($hideInternalV2Topbar)
+        @include('layouts.partials.internal-v2-topbar')
+    @else
         @include('partner_v2.partials.header', ['portalLogoutUsesPartner' => false])
-    @endunless
+    @endif
 
     <main class="flex-grow w-full relative">
         <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 mt-4 sm:mt-8 mb-16 fade-in">

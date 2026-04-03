@@ -239,6 +239,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::match(['put', 'patch'], 'circuits/voyages/{voyage}/departures/{departure}', [DepartureController::class, 'update'])->name('circuits.voyages.departures.update');
         Route::delete('circuits/voyages/{voyage}/departures/{departure}', [DepartureController::class, 'destroy'])->name('circuits.voyages.departures.destroy');
 
+        Route::post('circuits/voyages/{voyage}/room-availability/sync-departures', [VoyageDepartureManageController::class, 'syncDepartures'])->name('circuits.voyages.sync-departures');
         Route::get('circuits/voyages/{voyage}/room-availability/departures', [VoyageDepartureManageController::class, 'modalDeparturesJson'])->name('circuits.voyages.room-availability.departures');
         Route::get('circuits/voyages/{voyage}/room-availability/departures/{departure}/panel', [VoyageDepartureManageController::class, 'modalDeparturePanel'])->name('circuits.voyages.room-availability.departure-panel');
 

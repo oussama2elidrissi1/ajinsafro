@@ -7,6 +7,7 @@
   if (!modalEl) return;
 
   var departuresUrl = modalEl.getAttribute('data-departures-url');
+  var syncDeparturesUrl = modalEl.getAttribute('data-sync-departures-url');
   var panelBase = modalEl.getAttribute('data-panel-base');
   var selectEl = document.getElementById('ra-departure-select');
   var contentEl = document.getElementById('ra-departure-content');
@@ -50,11 +51,26 @@
     });
   }
 
+  function getDomTravelDatesStats() {
+    var rows = document.querySelectorAll('#travel-dates-container .travel-date-row');
+    var activeRows = 0;
+    rows.forEach(function (row) {
+      var activeInput = row.querySelector('input[name*="[is_active]"]');
+      if (!activeInput || activeInput.checked) activeRows += 1;
+    });
+
+    return {
+      totalRows: rows.length,
+      activeRows: activeRows,
+      serverWpRows: parseInt(modalEl.getAttribute('data-server-wp-travel-dates-count') || '0', 10) || 0,
+      serverLaravelRows: parseInt(modalEl.getAttribute('data-server-laravel-departures-count') || '0', 10) || 0,
+    };
+  }
+
   function applyDeparturesEmptyState(departures) {
     if (!syncHintEl) return;
     var count = (departures || []).length;
-    var serverWp = parseInt(modalEl.getAttribute('data-server-wp-travel-dates-count') || '0', 10);
-    var domRows = document.querySelectorAll('#travel-dates-container .travel-date-row').length;
+    var stats = getDomTravelDatesStats();
 
     if (count > 0) {
       syncHintEl.classList.add('d-none');
@@ -69,14 +85,11 @@
     syncHintEl.classList.remove('d-none');
     selectEl.disabled = true;
 
-    var msg = '';
-    if (domRows > serverWp) {
-      msg =
-        'Vous avez ajouté ou modifié des dates sans enregistrer le voyage : enregistrez d’abord pour que les départs Laravel soient créés ou mis à jour.';
-    } else if (serverWp > 0) {
-      msg =
-        'Des dates existent dans WordPress mais aucun départ Laravel n’a été trouvé pour ce voyage. Enregistrez à nouveau le voyage pour relancer la synchronisation, ou consultez les journaux (AVAILABILITY_SYNC_CHECK, ROOM_STOCK_MODAL_DEPARTURES).';
-    }
+    var hasUnsavedDatesInForm = stats.activeRows > 0 && stats.activeRows > stats.serverWpRows;
+    var msg = hasUnsavedDatesInForm
+      ? 'Les dates de départ visibles dans le formulaire doivent être enregistrées pour générer les départs Laravel utilisables dans la gestion du stock.'
+      : 'Aucun départ synchronisé disponible. Vérifiez que des dates actives existent dans « Dates disponibles (Travelling on) », puis enregistrez le voyage.';
+
     if (syncHintResyncEl) {
       if (msg) {
         syncHintResyncEl.textContent = msg;
@@ -86,6 +99,25 @@
         syncHintResyncEl.textContent = '';
       }
     }
+  }
+
+  function syncDeparturesFromWp() {
+    if (!syncDeparturesUrl) return Promise.resolve({ success: true });
+
+    return fetch(syncDeparturesUrl, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': csrfToken(),
+      },
+      credentials: 'same-origin',
+    }).then(function (res) {
+      if (!res.ok) {
+        throw new Error('Synchronisation des départs impossible.');
+      }
+      return res.json();
+    });
   }
 
   function fillDepartureSelect(departures) {
@@ -271,32 +303,57 @@
 
   modalEl.addEventListener('show.bs.modal', function () {
     showAlert('');
+    setLoading(true);
     if (typeof console !== 'undefined' && console.info) {
+      var stats = getDomTravelDatesStats();
       console.info('[room-stock-modal]', {
         laravelVoyageId: modalEl.getAttribute('data-laravel-voyage-id'),
         wpTourPostId: modalEl.getAttribute('data-wp-tour-post-id'),
         departuresUrl: departuresUrl,
+        syncDeparturesUrl: syncDeparturesUrl,
         panelBase: panelBase,
         loadMethod: 'AJAX GET JSON',
         serverWpTravelDatesCount: modalEl.getAttribute('data-server-wp-travel-dates-count'),
         serverLaravelDeparturesCount: modalEl.getAttribute('data-server-laravel-departures-count'),
+        domTravelDatesCount: stats.totalRows,
+        domActiveTravelDatesCount: stats.activeRows,
       });
     }
-    loadDepartures()
+
+    syncDeparturesFromWp()
+      .catch(function () {
+        showAlert('Synchronisation WordPress indisponible, affichage des départs existants.');
+      })
+      .then(function () {
+        return loadDepartures();
+      })
       .then(function (data) {
         var list = data.departures || [];
         if (typeof console !== 'undefined' && console.info) {
           console.info('[room-stock-modal] departures response', { count: list.length, ids: list.map(function (d) { return d.id; }) });
         }
         fillDepartureSelect(list);
+
+        var selectedId = '';
         if (pendingDep) {
-          selectEl.value = pendingDep;
+          selectedId = String(pendingDep);
           pendingDep = null;
-          updateBadgesFromOption(selectEl.selectedOptions[0]);
-          return loadPanel(selectEl.value);
+        } else if (list.length > 0) {
+          selectedId = String(list[0].id);
         }
+
+        if (selectedId) {
+          selectEl.value = selectedId;
+          updateBadgesFromOption(selectEl.selectedOptions[0]);
+          return loadPanel(selectedId);
+        }
+
+        contentEl.innerHTML = placeholderHtml();
+        setLoading(false);
+        return Promise.resolve();
       })
       .catch(function (e) {
+        setLoading(false);
         showAlert(e.message || 'Impossible de charger les départs.');
       });
   });
