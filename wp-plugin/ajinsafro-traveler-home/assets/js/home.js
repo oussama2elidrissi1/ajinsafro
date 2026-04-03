@@ -90,6 +90,126 @@
         });
     }
 
+    /* ── Promotions accordion (horizontal expand + autoplay) ─────── */
+    function initPromoAccordion() {
+        var root = document.getElementById('aj-promos') ? document.querySelector('#aj-promos .aj-promo-acc') : null;
+        if (!root) return;
+
+        var strip = root.querySelector('.aj-promo-acc__strip');
+        if (!strip) return;
+
+        var panels = strip.querySelectorAll('.aj-promo-acc__panel');
+        if (!panels.length) return;
+
+        var autoplay = root.getAttribute('data-autoplay') === '1';
+        var delay = parseInt(root.getAttribute('data-delay') || '5000', 10);
+        if (isNaN(delay) || delay < 2000) delay = 5000;
+
+        var defIdx = parseInt(root.getAttribute('data-default-index') || '0', 10);
+        if (isNaN(defIdx)) defIdx = 0;
+        if (defIdx >= panels.length) defIdx = 0;
+
+        var timer = null;
+        var active = defIdx;
+
+        function setActive(i) {
+            if (!panels.length) return;
+            var n = ((i % panels.length) + panels.length) % panels.length;
+            active = n;
+            panels.forEach(function (p, idx) {
+                var on = idx === n;
+                p.classList.toggle('is-active', on);
+                p.setAttribute('aria-expanded', on ? 'true' : 'false');
+            });
+        }
+
+        function clearTimer() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        function startTimer() {
+            clearTimer();
+            if (!autoplay || panels.length < 2) return;
+            timer = setInterval(function () {
+                setActive(active + 1);
+            }, delay);
+        }
+
+        strip.addEventListener('click', function (e) {
+            var innerBtn = e.target.closest('.aj-promo-acc__btn');
+            if (innerBtn) return;
+
+            var surf = e.target.closest('.aj-promo-acc__surface');
+            if (!surf || !strip.contains(surf)) return;
+
+            var panel = surf.closest('.aj-promo-acc__panel');
+            if (!panel) return;
+
+            var idx = parseInt(panel.getAttribute('data-index') || '0', 10);
+            if (isNaN(idx)) return;
+
+            var isLink = surf.classList.contains('aj-promo-acc__surface--link');
+            if (isLink && panel.classList.contains('is-active')) {
+                return;
+            }
+            if (isLink && !panel.classList.contains('is-active')) {
+                e.preventDefault();
+                setActive(idx);
+                clearTimer();
+                startTimer();
+                return;
+            }
+            if (!isLink) {
+                setActive(idx);
+                clearTimer();
+                startTimer();
+            }
+        });
+
+        strip.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            var surf = e.target.closest('.aj-promo-acc__surface--static');
+            if (!surf || !strip.contains(surf)) return;
+            e.preventDefault();
+            var panel = surf.closest('.aj-promo-acc__panel');
+            if (!panel) return;
+            var idx = parseInt(panel.getAttribute('data-index') || '0', 10);
+            setActive(idx);
+            clearTimer();
+            startTimer();
+        });
+
+        root.addEventListener('mouseenter', clearTimer);
+        root.addEventListener('mouseleave', startTimer);
+
+        var rid = root.getAttribute('data-root') || '';
+        var prevBtn = document.querySelector('.aj-promo-acc__prev[aria-controls="' + rid + '-strip"]');
+        var nextBtn = document.querySelector('.aj-promo-acc__next[aria-controls="' + rid + '-strip"]');
+        if (!prevBtn) prevBtn = root.parentElement ? root.parentElement.querySelector('.aj-promo-acc__prev') : null;
+        if (!nextBtn) nextBtn = root.parentElement ? root.parentElement.querySelector('.aj-promo-acc__next') : null;
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function () {
+                setActive(active - 1);
+                clearTimer();
+                startTimer();
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function () {
+                setActive(active + 1);
+                clearTimer();
+                startTimer();
+            });
+        }
+
+        setActive(defIdx);
+        startTimer();
+    }
+
     /* ── Generic Slider (prev/next arrows) ──────────────────────── */
     function initSlider(trackId, prevSelector, nextSelector) {
         var track = document.getElementById(trackId);
@@ -121,7 +241,7 @@
         initSlider('aj-lm-track', '.aj-arrow--prev', '.aj-arrow--next');
         initSlider('aj-accom-track', '.aj-accom-prev', '.aj-accom-next');
         initSlider('aj-theme-track', '.aj-theme-prev', '.aj-theme-next');
-        initSlider('aj-promos-track', '.aj-promos-prev', '.aj-promos-next');
+        initPromoAccordion();
     }
 
     if (document.readyState === 'loading') {

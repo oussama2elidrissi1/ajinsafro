@@ -12,12 +12,21 @@
     <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
     @vite(['resources/css/partner-v2.css', 'resources/js/partner-v2.js'])
     @include('layouts.head-css')
+    <link href="{{ URL::asset('css/internal-v2-layout.css') }}" rel="stylesheet" type="text/css" />
 </head>
-<body data-layout="detached" data-topbar="colored" class="partner-v2 text-gray-800 antialiased font-sans">
+@php($hideInternalV2Topbar = \App\Services\View\InternalV2Topbar::shouldHide(auth()->user()))
+<body data-layout="detached" data-topbar="colored" class="partner-v2 text-gray-800 antialiased font-sans{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
     <div class="container-fluid">
         <div id="layout-wrapper">
-            @include('partner_v2.partials.header')
+            @unless($hideInternalV2Topbar)
+                @include('partner_v2.partials.header')
+            @endunless
             @include('layouts.partials.sidebar-partner')
+            @if($hideInternalV2Topbar)
+                <button type="button" class="btn btn-primary d-lg-none internal-v2-menu-toggle" id="vertical-menu-btn" aria-label="Ouvrir le menu">
+                    <i class="fa fa-fw fa-bars"></i>
+                </button>
+            @endif
             <div class="main-content">
                 <div class="page-content">
                     @yield('content')

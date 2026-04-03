@@ -1,6 +1,7 @@
 @php
     $useAgentPortal = \App\Services\View\AgentPortalLayout::shouldUse(auth()->user());
     $voyageLayoutPage = request()->routeIs('admin.circuits.voyages.create', 'admin.circuits.voyages.edit');
+    $hideInternalV2Topbar = \App\Services\View\InternalV2Topbar::shouldHide(auth()->user());
 @endphp
 
 @if($useAgentPortal)
@@ -30,11 +31,14 @@
     <link href="{{ URL::asset('build/css/app.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('css/admin-branding.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('css/agent-portal-bootstrap-bridge.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('css/internal-v2-layout.css') }}" rel="stylesheet" type="text/css" />
 
     @stack('styles')
 </head>
-<body class="partner-v2 text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}">
-    @include('partner_v2.partials.header', ['portalLogoutUsesPartner' => false])
+<body class="partner-v2 text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
+    @unless($hideInternalV2Topbar)
+        @include('partner_v2.partials.header', ['portalLogoutUsesPartner' => false])
+    @endunless
 
     <main class="flex-grow w-full relative">
         <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 mt-4 sm:mt-8 mb-16 fade-in">
@@ -72,12 +76,19 @@
     @stack('styles')
 </head>
 
-<body class="{{ $voyageLayoutPage ? 'voyage-layout-page' : '' }}" data-layout="detached" data-topbar="colored">
+<body class="{{ $voyageLayoutPage ? 'voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}" data-layout="detached" data-topbar="colored">
     <!-- Begin page -->
     <div class="container-fluid">
         <div id="layout-wrapper">
-            @include('layouts.partials.topbar-ajinsafro')
+            @unless($hideInternalV2Topbar)
+                @include('layouts.partials.topbar-ajinsafro')
+            @endunless
             @include('layouts.partials.sidebar-ajinsafro')
+            @if($hideInternalV2Topbar)
+                <button type="button" class="btn btn-primary d-lg-none internal-v2-menu-toggle" id="vertical-menu-btn" aria-label="Ouvrir le menu">
+                    <i class="fa fa-fw fa-bars"></i>
+                </button>
+            @endif
             <div class="main-content">
                 <div class="page-content">
                     @yield('content')

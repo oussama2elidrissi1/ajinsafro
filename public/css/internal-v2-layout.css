@@ -1,0 +1,35 @@
+.internal-v2-topbar-hidden #page-topbar {
+    display: none;
+}
+
+.internal-v2-topbar-hidden .vertical-menu {
+    top: 0;
+}
+
+.internal-v2-topbar-hidden .page-content {
+    padding-top: 0.75rem;
+}
+
+.internal-v2-topbar-hidden .main-content .content {
+    margin-top: 0;
+}
+
+.internal-v2-menu-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1003;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 30px rgba(14, 58, 90, 0.18);
+}
+
+@media (min-width: 992px) {
+    .internal-v2-menu-toggle {
+        display: none;
+    }
+}

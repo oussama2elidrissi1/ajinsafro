@@ -7,6 +7,7 @@ use App\Models\Departure;
 use App\Models\Voyage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DepartureController extends Controller
 {
@@ -14,12 +15,26 @@ class DepartureController extends Controller
     {
         $validated = $request->validate([
             'start_date' => 'required|date',
-            'status' => 'required|in:open,full,canceled',
+            'status' => ['required', 'string', Rule::in(Departure::STATUSES)],
         ]);
-        $validated['voyage_id'] = $voyage->id;
-        Departure::create($validated);
-        return redirect()->route('admin.circuits.voyages.edit', $voyage)
-            ->with('success', 'Départ ajouté.');
+
+        $already = Departure::query()
+            ->where('voyage_id', $voyage->id)
+            ->whereDate('start_date', $validated['start_date'])
+            ->exists();
+
+        Departure::updateOrCreate(
+            [
+                'voyage_id' => $voyage->id,
+                'start_date' => $validated['start_date'],
+            ],
+            [
+                'status' => $validated['status'],
+            ]
+        );
+
+        return redirect()->route('admin.circuits.voyages.edit', $voyage->wp_post_id ?? $voyage->id)
+            ->with('success', $already ? 'Départ mis à jour (date déjà existante pour ce voyage).' : 'Départ ajouté.');
     }
 
     public function update(Request $request, Voyage $voyage, Departure $departure): RedirectResponse
@@ -29,10 +44,22 @@ class DepartureController extends Controller
         }
         $validated = $request->validate([
             'start_date' => 'required|date',
-            'status' => 'required|in:open,full,canceled',
+            'status' => ['required', 'string', Rule::in(Departure::STATUSES)],
         ]);
+
+        $other = Departure::query()
+            ->where('voyage_id', $voyage->id)
+            ->where('id', '!=', $departure->id)
+            ->whereDate('start_date', $validated['start_date'])
+            ->first();
+
+        if ($other) {
+            return redirect()->route('admin.circuits.voyages.edit', $voyage->wp_post_id ?? $voyage->id)
+                ->withErrors(['start_date' => 'Une autre ligne existe déjà pour cette date de départ. Modifiez-la ou fusionnez les départs.']);
+        }
+
         $departure->update($validated);
-        return redirect()->route('admin.circuits.voyages.edit', $voyage)
+        return redirect()->route('admin.circuits.voyages.edit', $voyage->wp_post_id ?? $voyage->id)
             ->with('success', 'Départ mis à jour.');
     }
 
@@ -42,7 +69,7 @@ class DepartureController extends Controller
             abort(404);
         }
         $departure->delete();
-        return redirect()->route('admin.circuits.voyages.edit', $voyage)
+        return redirect()->route('admin.circuits.voyages.edit', $voyage->wp_post_id ?? $voyage->id)
             ->with('success', 'Départ supprimé.');
     }
 }

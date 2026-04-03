@@ -143,12 +143,22 @@ class HomePageSettingsController extends Controller
                 'holiday_theme_item_files.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
 
                 'promotions.title' => ['nullable', 'string', 'max:255'],
+                'promotions.enabled' => ['nullable', 'boolean'],
+                'promotions.autoplay' => ['nullable', 'boolean'],
+                'promotions.autoplay_delay_ms' => ['nullable', 'integer', 'min:2000', 'max:60000'],
+                'promotions.default_active_index' => ['nullable', 'integer', 'min:0', 'max:50'],
+                'promotions.max_slides' => ['nullable', 'integer', 'min:1', 'max:20'],
+                'promotions.arrows_enabled' => ['nullable', 'boolean'],
                 'promotions.items' => ['nullable', 'array'],
                 'promotions.items.*.title' => ['nullable', 'string', 'max:255'],
                 'promotions.items.*.subtitle' => ['nullable', 'string', 'max:1000'],
                 'promotions.items.*.image_url' => ['nullable', 'string', 'max:2048'],
+                'promotions.items.*.link_url' => ['nullable', 'string', 'max:2048'],
+                'promotions.items.*.link_target' => ['nullable', 'string', 'in:_self,_blank'],
                 'promotions.items.*.button_text' => ['nullable', 'string', 'max:120'],
                 'promotions.items.*.button_url' => ['nullable', 'string', 'max:2048'],
+                'promotions.items.*.button_enabled' => ['nullable', 'boolean'],
+                'promotions.items.*.accent_color' => ['nullable', 'string', 'max:20'],
                 'promotions.items.*.is_active' => ['nullable', 'boolean'],
                 'promotions.items.*.sort_order' => ['nullable', 'integer', 'min:0'],
                 'promotions.images' => ['nullable', 'array'],
@@ -701,7 +711,13 @@ class HomePageSettingsController extends Controller
             ],
             'good_spots_title' => 'Les bons coins sur votre destination',
             'promotions' => [
+                'enabled' => true,
                 'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
+                'autoplay' => true,
+                'autoplay_delay_ms' => 5000,
+                'default_active_index' => 0,
+                'max_slides' => 8,
+                'arrows_enabled' => true,
                 'images' => ['', '', ''],
                 'items' => [],
             ],
@@ -814,7 +830,13 @@ class HomePageSettingsController extends Controller
     private function normalizePromotionsForRead(array $settings): array
     {
         $defaults = [
+            'enabled' => true,
             'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
+            'autoplay' => true,
+            'autoplay_delay_ms' => 5000,
+            'default_active_index' => 0,
+            'max_slides' => 8,
+            'arrows_enabled' => true,
             'images' => ['', '', ''],
             'items' => [],
         ];
@@ -822,6 +844,7 @@ class HomePageSettingsController extends Controller
         if (!is_array($promo)) {
             $promo = [];
         }
+        $promo = array_replace_recursive($defaults, $promo);
         $title = trim((string) ($promo['title'] ?? $defaults['title']));
         $items = $this->normalizePromotionItemsForRead($promo['items'] ?? []);
         if (empty($items)) {
@@ -835,8 +858,12 @@ class HomePageSettingsController extends Controller
                     'title' => '',
                     'subtitle' => '',
                     'image_url' => $normalizedUrl,
+                    'link_url' => '',
+                    'link_target' => '_self',
                     'button_text' => '',
                     'button_url' => '',
+                    'button_enabled' => true,
+                    'accent_color' => '',
                     'is_active' => true,
                     'sort_order' => (int) $idx,
                 ];
@@ -847,7 +874,13 @@ class HomePageSettingsController extends Controller
         $images = $this->buildPromotionImagesFromItems($items);
 
         $settings['promotions'] = [
+            'enabled' => (bool) ($promo['enabled'] ?? true),
             'title' => $title !== '' ? $title : $defaults['title'],
+            'autoplay' => (bool) ($promo['autoplay'] ?? true),
+            'autoplay_delay_ms' => max(2000, min(60000, (int) ($promo['autoplay_delay_ms'] ?? 5000))),
+            'default_active_index' => max(0, (int) ($promo['default_active_index'] ?? 0)),
+            'max_slides' => max(1, min(20, (int) ($promo['max_slides'] ?? 8))),
+            'arrows_enabled' => (bool) ($promo['arrows_enabled'] ?? true),
             'images' => $images,
             'items' => array_values($items),
         ];
@@ -859,6 +892,7 @@ class HomePageSettingsController extends Controller
     {
         $defaultTitle = 'Explorez plus, voyagez mieux avec AjinSafro';
         $title = trim((string) ($validated['promotions']['title'] ?? ($current['promotions']['title'] ?? $defaultTitle)));
+        $cur = is_array($current['promotions'] ?? null) ? $current['promotions'] : [];
         $items = [];
         $itemsInput = $request->input('promotions.items', []);
         if (!is_array($itemsInput)) {
@@ -874,6 +908,7 @@ class HomePageSettingsController extends Controller
             $subtitle = trim((string) ($item['subtitle'] ?? ''));
             $buttonText = trim((string) ($item['button_text'] ?? ''));
             $buttonUrl = trim((string) ($item['button_url'] ?? ''));
+            $linkUrl = trim((string) ($item['link_url'] ?? ''));
             $imageUrl = trim((string) ($item['image_url'] ?? ''));
 
             if ($request->hasFile("promotion_item_files.$idx")) {
@@ -892,21 +927,31 @@ class HomePageSettingsController extends Controller
                 $subtitle === '' &&
                 $imageUrl === '' &&
                 $buttonText === '' &&
-                $buttonUrl === ''
+                $buttonUrl === '' &&
+                $linkUrl === ''
             ) {
                 continue;
             }
 
             $sortOrder = isset($item['sort_order']) ? (int) $item['sort_order'] : (int) $idx;
             $isActive = $request->boolean("promotions.items.$idx.is_active", true);
+            $linkTarget = ($item['link_target'] ?? '_self') === '_blank' ? '_blank' : '_self';
+            $accent = trim((string) ($item['accent_color'] ?? ''));
+            if ($accent !== '' && ! preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $accent)) {
+                $accent = '';
+            }
 
             $items[] = [
                 'title' => $titleValue,
                 'subtitle' => $subtitle,
                 'image_url' => $imageUrl,
                 'image' => $imageUrl,
+                'link_url' => $linkUrl,
+                'link_target' => $linkTarget,
                 'button_text' => $buttonText,
                 'button_url' => $buttonUrl,
+                'button_enabled' => $request->boolean("promotions.items.$idx.button_enabled", true),
+                'accent_color' => $accent,
                 'is_active' => $isActive,
                 'active' => $isActive,
                 'sort_order' => $sortOrder,
@@ -925,8 +970,12 @@ class HomePageSettingsController extends Controller
                     'subtitle' => '',
                     'image_url' => $imageUrl,
                     'image' => $imageUrl,
+                    'link_url' => '',
+                    'link_target' => '_self',
                     'button_text' => '',
                     'button_url' => '',
+                    'button_enabled' => true,
+                    'accent_color' => '',
                     'is_active' => true,
                     'active' => true,
                     'sort_order' => $idx,
@@ -939,7 +988,13 @@ class HomePageSettingsController extends Controller
         $images = $this->buildPromotionImagesFromItems($items);
 
         return [
+            'enabled' => $request->boolean('promotions.enabled', true),
             'title' => $title !== '' ? $title : $defaultTitle,
+            'autoplay' => $request->boolean('promotions.autoplay', true),
+            'autoplay_delay_ms' => max(2000, min(60000, (int) $request->input('promotions.autoplay_delay_ms', (int) ($cur['autoplay_delay_ms'] ?? 5000)))),
+            'default_active_index' => max(0, (int) $request->input('promotions.default_active_index', (int) ($cur['default_active_index'] ?? 0))),
+            'max_slides' => max(1, min(20, (int) $request->input('promotions.max_slides', (int) ($cur['max_slides'] ?? 8)))),
+            'arrows_enabled' => $request->boolean('promotions.arrows_enabled', true),
             'images' => $images,
             'items' => array_values($items),
         ];
@@ -962,17 +1017,27 @@ class HomePageSettingsController extends Controller
             $subtitle = trim((string) ($item['subtitle'] ?? $item['description'] ?? ''));
             $buttonText = trim((string) ($item['button_text'] ?? ''));
             $buttonUrl = trim((string) ($item['button_url'] ?? ''));
+            $linkUrl = trim((string) ($item['link_url'] ?? ''));
 
-            if ($title === '' && $subtitle === '' && $imageUrl === '' && $buttonText === '' && $buttonUrl === '') {
+            if ($title === '' && $subtitle === '' && $imageUrl === '' && $buttonText === '' && $buttonUrl === '' && $linkUrl === '') {
                 continue;
+            }
+
+            $accent = trim((string) ($item['accent_color'] ?? ''));
+            if ($accent !== '' && ! preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $accent)) {
+                $accent = '';
             }
 
             $normalized[] = [
                 'title' => $title,
                 'subtitle' => $subtitle,
                 'image_url' => $imageUrl,
+                'link_url' => $linkUrl,
+                'link_target' => ($item['link_target'] ?? '_self') === '_blank' ? '_blank' : '_self',
                 'button_text' => $buttonText,
                 'button_url' => $buttonUrl,
+                'button_enabled' => (bool) ($item['button_enabled'] ?? true),
+                'accent_color' => $accent,
                 'is_active' => (bool) ($item['is_active'] ?? $item['active'] ?? true),
                 'sort_order' => isset($item['sort_order']) ? (int) $item['sort_order'] : (isset($item['order']) ? (int) $item['order'] : (int) $idx),
             ];

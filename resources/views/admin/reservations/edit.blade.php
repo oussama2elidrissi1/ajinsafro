@@ -37,9 +37,27 @@
                 </div>
                 <div class="col-md-6 col-xl-4">
                     <div class="text-muted text-uppercase fw-semibold mb-1">Créée par</div>
-                    <div class="fw-semibold">{{ $reservation->creator?->name ?? '—' }}</div>
-                    @if($reservation->creator?->email)
-                        <div class="text-muted">{{ $reservation->creator->email }}</div>
+                    @php $createdByUser = $reservation->creator ?? $reservation->createdBy; @endphp
+                    <div class="fw-semibold">{{ $createdByUser?->name ?? '—' }}</div>
+                    @if($createdByUser?->email)
+                        <div class="text-muted">{{ $createdByUser->email }}</div>
+                    @endif
+                </div>
+                <div class="col-md-6 col-xl-4">
+                    <div class="text-muted text-uppercase fw-semibold mb-1">Départ</div>
+                    @if($reservation->departure)
+                        <div class="fw-semibold">
+                            {{ $reservation->departure->start_date?->format('d/m/Y') ?? '—' }}
+                            @if($reservation->departure->end_date)
+                                → {{ $reservation->departure->end_date->format('d/m/Y') }}
+                            @endif
+                        </div>
+                        <div class="text-muted small">Statut départ : {{ $reservation->departure->status_label ?? $reservation->departure->status }}</div>
+                    @elseif($reservation->travel_date_id)
+                        <div class="fw-semibold">Date WP #{{ $reservation->travel_date_id }}</div>
+                        <div class="text-muted small">Ancien rattachement (sans fiche départ Laravel)</div>
+                    @else
+                        <div class="fw-semibold">—</div>
                     @endif
                 </div>
                 <div class="col-md-6 col-xl-4">
@@ -74,7 +92,7 @@
                 <div class="row g-2">
                     <div class="col-md-6">
                         <label class="form-label">Offre / voyage <span class="text-danger">*</span></label>
-                        <select name="tour_id" class="form-select" required>
+                        <select name="tour_id" id="select-tour-id" class="form-select" required>
                             <option value="">Sélectionner un voyage…</option>
                             @foreach($voyages as $voyage)
                                 <option value="{{ $voyage->id }}" {{ old('tour_id', $reservation->tour_id) == $voyage->id ? 'selected' : '' }}>
@@ -206,6 +224,8 @@
             'tourHotelsWithRooms' => $tourHotelsWithRooms ?? collect(),
             'reservation' => $reservation,
             'hotelsRoomsUrl' => route('admin.reservations.hotels-rooms'),
+            'voyageDeparturesUrl' => route('admin.reservations.voyage-departures'),
+            'departureHotelsRoomsUrl' => route('admin.reservations.departure-hotels-rooms'),
         ])
 
         <div class="card mb-3 border">

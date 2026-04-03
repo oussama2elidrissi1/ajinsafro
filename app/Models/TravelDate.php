@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TravelDate extends Model
 {
@@ -38,6 +39,14 @@ class TravelDate extends Model
             ->get();
     }
 
+    public static function getDatesForTour(int $tourId)
+    {
+        return self::where('travel_id', $tourId)
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+    }
+
     /**
      * Récupérer les dates disponibles formatées pour le calendrier (array simple des dates)
      */
@@ -62,5 +71,12 @@ class TravelDate extends Model
             ->where('date', $date)
             ->where('is_active', true)
             ->exists();
+    }
+
+    public function roomAvailabilities(): HasMany
+    {
+        return $this->hasMany(TourHotelRoomAvailability::class, 'travel_date_id')
+            ->orderBy('tour_hotel_id')
+            ->orderBy('tour_hotel_room_id');
     }
 }

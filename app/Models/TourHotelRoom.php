@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TourHotelRoom extends Model
 {
@@ -43,5 +44,12 @@ class TourHotelRoom extends Model
     public function tourHotel(): BelongsTo
     {
         return $this->belongsTo(TourHotel::class, 'tour_hotel_id');
+    }
+
+    public function dateAvailabilities(): HasMany
+    {
+        return $this->hasMany(TourHotelRoomAvailability::class, 'tour_hotel_room_id')
+            ->orderBy('travel_date_id')
+            ->orderBy('id');
     }
 }

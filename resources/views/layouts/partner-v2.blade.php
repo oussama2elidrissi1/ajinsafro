@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+@php($hideInternalV2Topbar = \App\Services\View\InternalV2Topbar::shouldHide(auth()->user()))
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,10 @@
     @vite(['resources/css/partner-v2.css', 'resources/js/partner-v2.js'])
     @stack('css')
 </head>
-<body class="partner-v2 text-gray-800 antialiased font-sans">
-    @include('partner.v2.partials.topbar')
+<body class="partner-v2 text-gray-800 antialiased font-sans{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
+    @unless($hideInternalV2Topbar)
+        @include('partner.v2.partials.topbar')
+    @endunless
     @include('partner.v2.partials.navbar')
 
     <main class="flex-grow w-full z-10 relative">
@@ -29,4 +32,3 @@
     @stack('script')
 </body>
 </html>
-

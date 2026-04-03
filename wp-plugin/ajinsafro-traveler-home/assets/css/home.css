@@ -220,6 +220,238 @@
     }
 }
 
+/* ==========================================================================
+   Promotions — horizontal accordion (settings-driven)
+   Min-height avoids layout shift before images load.
+   ========================================================================== */
+.aj-promos--accordion {
+    padding: 12px 0 22px;
+}
+
+.aj-promos__frame--accordion {
+    min-height: 360px;
+}
+
+.aj-section-head--accordion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.aj-promo-acc {
+    --aj-promo-accent: #0083c4;
+    position: relative;
+    width: 100%;
+    min-height: clamp(280px, 32vw, 380px);
+}
+
+.aj-promo-acc__strip {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+    min-height: clamp(280px, 32vw, 380px);
+}
+
+.aj-promo-acc__panel {
+    position: relative;
+    flex: 0 0 64px;
+    min-width: 56px;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: linear-gradient(145deg, #0e3a5a 0%, #145374 100%);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1);
+    transition: flex 0.5s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
+    will-change: flex;
+}
+
+.aj-promo-acc__panel.is-active {
+    flex: 1 1 52%;
+    min-width: min(100%, 420px);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+    z-index: 2;
+}
+
+.aj-promo-acc__surface {
+    position: relative;
+    display: grid;
+    grid-template: 1fr / 1fr;
+    width: 100%;
+    height: 100%;
+    min-height: clamp(280px, 32vw, 380px);
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.aj-promo-acc__surface--static {
+    cursor: pointer;
+}
+
+.aj-promo-acc__media {
+    grid-area: 1 / 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.aj-promo-acc__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.02);
+    transition: transform 0.6s ease;
+}
+
+.aj-promo-acc__panel.is-active .aj-promo-acc__media img {
+    transform: scale(1);
+}
+
+.aj-promo-acc__fallback {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: clamp(280px, 32vw, 380px);
+    background:
+        linear-gradient(135deg, rgba(0, 131, 196, 0.35) 0%, rgba(14, 58, 90, 0.85) 100%),
+        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.15), transparent 55%);
+}
+
+.aj-promo-acc__scrim {
+    grid-area: 1 / 1;
+    align-self: stretch;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.05) 0%, rgba(15, 23, 42, 0.72) 100%);
+    pointer-events: none;
+}
+
+.aj-promo-acc__content {
+    grid-area: 1 / 1;
+    align-self: end;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 14px 16px;
+    z-index: 1;
+    color: #fff;
+    pointer-events: none;
+}
+
+.aj-promo-acc__panel.is-active .aj-promo-acc__content {
+    pointer-events: auto;
+}
+
+.aj-promo-acc__title {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 12ch;
+}
+
+.aj-promo-acc__panel.is-active .aj-promo-acc__title {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    white-space: normal;
+    max-width: none;
+    text-transform: none;
+    letter-spacing: -0.01em;
+}
+
+.aj-promo-acc__title--link {
+    color: inherit;
+    text-decoration: none;
+    pointer-events: auto;
+}
+
+.aj-promo-acc__title--link:hover {
+    text-decoration: underline;
+}
+
+.aj-promo-acc__desc {
+    display: none;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.88);
+    max-width: 48ch;
+}
+
+.aj-promo-acc__panel.is-active .aj-promo-acc__desc {
+    display: block;
+}
+
+.aj-promo-acc__btn-wrap {
+    margin-top: 4px;
+}
+
+.aj-promo-acc__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #fff;
+    background: var(--aj-promo-accent);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    pointer-events: auto;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.aj-promo-acc__btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.aj-promo-acc__btn--text {
+    background: rgba(255, 255, 255, 0.14);
+    pointer-events: none;
+}
+
+@media (max-width: 767.98px) {
+    .aj-promo-acc__strip {
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .aj-promo-acc__panel {
+        flex: 0 0 auto;
+        width: 100%;
+        min-height: 72px;
+        min-width: 0;
+    }
+
+    .aj-promo-acc__panel.is-active {
+        flex: 1 1 auto;
+        min-height: 220px;
+        min-width: 0;
+    }
+
+    .aj-promo-acc__surface {
+        min-height: 72px;
+    }
+
+    .aj-promo-acc__panel.is-active .aj-promo-acc__surface {
+        min-height: 220px;
+    }
+
+    .aj-promo-acc,
+    .aj-promo-acc__strip {
+        min-height: 0;
+    }
+}
+
 .aj-container {
     max-width: 1280px;
     width: 100%;

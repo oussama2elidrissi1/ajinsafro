@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\Departure;
 use App\Models\Reservation;
 use App\Models\TourHotel;
 use App\Models\TravelDate;
@@ -23,6 +24,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -154,7 +156,18 @@ class ReservationsController extends Controller
     {
         abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
 
-        $reservation->load(['passengers', 'client', 'offer', 'travelDate', 'branch', 'partner', 'creator']);
+        $reservation->load([
+            'passengers',
+            'client',
+            'offer',
+            'travelDate',
+            'departure',
+            'reservationRooms.departureHotelRoom',
+            'branch',
+            'partner',
+            'creator',
+            'createdBy',
+        ]);
 
         $clientLabel = $reservation->client
             ? $reservation->client->full_name
@@ -172,14 +185,30 @@ class ReservationsController extends Controller
             'travel_date_label' => $reservation->travelDate?->date
                 ? $reservation->travelDate->date->format('d/m/Y')
                 : null,
+            'departure_id' => $reservation->departure_id,
+            'departure_start' => $reservation->departure?->start_date?->format('Y-m-d'),
+            'departure_end' => $reservation->departure?->end_date?->format('Y-m-d'),
+            'departure_label' => $reservation->departure
+                ? ($reservation->departure->start_date?->format('d/m/Y')
+                    .($reservation->departure->end_date ? ' → '.$reservation->departure->end_date->format('d/m/Y') : ''))
+                : null,
+            'hotel_room_lines' => $reservation->reservationRooms->map(function ($rr) {
+                $dhr = $rr->departureHotelRoom;
+
+                return [
+                    'room_type' => $dhr?->room_type,
+                    'room_count' => $rr->room_count,
+                    'departure_hotel_room_id' => $rr->departure_hotel_room_id,
+                ];
+            })->values()->all(),
             'prestation_type' => $reservation->prestation_type,
             'base_price' => $reservation->base_price,
             'paid_amount' => $reservation->paid_amount,
             'payment_type' => $reservation->payment_type,
             'branch' => $reservation->branch?->name,
             'agency' => $reservation->agency_label,
-            'creator_name' => $reservation->creator?->name,
-            'creator_email' => $reservation->creator?->email,
+            'creator_name' => ($reservation->creator ?? $reservation->createdBy)?->name,
+            'creator_email' => ($reservation->creator ?? $reservation->createdBy)?->email,
             'passengers' => $reservation->passengers->map(fn ($p) => [
                 'first_name' => $p->first_name,
                 'last_name' => $p->last_name,
@@ -297,12 +326,87 @@ class ReservationsController extends Controller
     }
 
     /**
+     * Liste des départs Laravel pour un voyage (sélection réservation).
+     */
+    public function voyageDepartures(Request $request): JsonResponse
+    {
+        $tourId = (int) $request->query('tour_id', 0);
+        if ($tourId <= 0) {
+            return response()->json(['departures' => []]);
+        }
+        $voyage = Voyage::find($tourId);
+        if (! $voyage) {
+            return response()->json(['departures' => []]);
+        }
+        $deps = Departure::query()
+            ->where('voyage_id', $voyage->id)
+            ->orderBy('start_date')
+            ->orderBy('id')
+            ->get();
+
+        return response()->json([
+            'departures' => $deps->map(fn (Departure $d) => [
+                'id' => $d->id,
+                'label' => ($d->start_date ? $d->start_date->format('d/m/Y') : '—')
+                    .($d->end_date ? ' → '.$d->end_date->format('d/m/Y') : ''),
+                'status' => $d->status,
+                'available_capacity' => (int) ($d->available_capacity ?? 0),
+                'wp_travel_date_id' => $d->wp_travel_date_id,
+            ])->values()->all(),
+        ]);
+    }
+
+    /**
+     * Hôtels + chambres (stock départ) pour un départ donné.
+     */
+    public function departureHotelsRooms(Request $request): JsonResponse
+    {
+        $departureId = (int) $request->query('departure_id', 0);
+        if ($departureId <= 0) {
+            return response()->json(['hotels' => [], 'currency' => 'DH', 'departure_id' => null]);
+        }
+        $departure = Departure::query()
+            ->with(['departureHotels' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'), 'departureHotels.rooms'])
+            ->find($departureId);
+        if (! $departure) {
+            return response()->json(['hotels' => [], 'currency' => 'DH', 'departure_id' => null]);
+        }
+        $voyage = Voyage::find($departure->voyage_id);
+        $currency = $voyage?->currency_symbol ?? ($voyage?->currency ?? 'DH');
+
+        $hotels = $departure->departureHotels->where('is_active', true)->values()->map(function ($dh) {
+            return [
+                'departure_hotel_id' => $dh->id,
+                'hotel_name' => $dh->hotel_name ?: 'Hôtel',
+                'rooms' => $dh->rooms->map(fn ($r) => [
+                    'departure_hotel_room_id' => $r->id,
+                    'room_type' => $r->room_type,
+                    'capacity_total' => (int) $r->capacity_total,
+                    'available_rooms' => (int) $r->available_rooms,
+                    'available_places' => (int) $r->available_places,
+                    'supplement' => (float) $r->supplement,
+                    'status' => $r->status,
+                ])->values()->all(),
+            ];
+        })->all();
+
+        return response()->json([
+            'departure_id' => $departure->id,
+            'hotels' => $hotels,
+            'currency' => is_string($currency) ? $currency : 'DH',
+        ]);
+    }
+
+    /**
      * Enregistrement d'une réservation (avec chambres et validation capacité).
      */
     public function store(Request $request)
     {
+        $this->mergeDepartureFromLegacyRequest($request);
+
         $data = $request->validate([
             'tour_id' => 'required|integer',
+            'departure_id' => 'required|integer|exists:departures,id',
             'travel_date_id' => 'nullable|integer',
             'client_mode' => 'required|in:existing,new',
             'client_external_id' => 'required_if:client_mode,existing|nullable|integer|exists:clients,id',
@@ -316,9 +420,10 @@ class ReservationsController extends Controller
             'payment_receipt' => 'nullable|file|max:5120',
             'base_price' => 'nullable|numeric|min:0',
             'hotel_rooms' => 'nullable|array',
-            'hotel_rooms.*.tour_hotel_id' => 'required_with:hotel_rooms.*|nullable|integer',
-            'hotel_rooms.*.tour_hotel_room_id' => 'required_with:hotel_rooms.*|nullable|integer',
-            'hotel_rooms.*.room_count' => 'required_with:hotel_rooms.*|nullable|integer|min:0',
+            'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',
+            'hotel_rooms.*.tour_hotel_id' => 'nullable|integer',
+            'hotel_rooms.*.tour_hotel_room_id' => 'nullable|integer',
+            'hotel_rooms.*.room_count' => 'nullable|integer|min:0',
             'visa_ok' => 'nullable|boolean',
             'visa_notes' => 'nullable|string|max:2000',
             'visa_status' => 'nullable|in:not_required,pending,approved,rejected',
@@ -331,6 +436,8 @@ class ReservationsController extends Controller
             'passengers.*.document_type' => 'nullable|string|max:50',
             'passengers.*.document_number' => 'nullable|string|max:100',
         ]);
+        $this->validateDepartureMatchesTour($data);
+
         if (array_key_exists('base_price', $data)) {
             $data['paid_amount'] = $data['base_price'];
             unset($data['base_price']);
@@ -338,8 +445,9 @@ class ReservationsController extends Controller
 
         $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
         $this->validateRoomCapacity(
-            (int) $request->input('travel_date_id', 0),
-            (int) $request->input('tour_id', 0),
+            (int) $data['departure_id'],
+            (int) ($data['travel_date_id'] ?? 0),
+            (int) $data['tour_id'],
             $totalTravelers
         );
 
@@ -352,6 +460,7 @@ class ReservationsController extends Controller
         $data['sales_manager_id'] = $ownership['sales_manager_id'];
         $data['agent_id'] = $user->id;
         $data['created_by'] = $user->id;
+        $data['created_by_user_id'] = $user->id;
 
         $voyageRef = Voyage::query()->find((int) $data['tour_id']);
         $data['wp_tour_post_id'] = $voyageRef && $voyageRef->wp_post_id ? (int) $voyageRef->wp_post_id : null;
@@ -398,7 +507,7 @@ class ReservationsController extends Controller
     public function edit(Request $request, Reservation $reservation): View
     {
         abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
-        $reservation->load(['passengers', 'client', 'offer', 'reservationRooms', 'branch', 'partner', 'creator']);
+        $reservation->load(['passengers', 'client', 'offer', 'reservationRooms.departureHotelRoom', 'departure', 'branch', 'partner', 'creator', 'createdBy']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
         $this->branchScope->scopeClients($clientsQuery, $request->user());
@@ -431,8 +540,11 @@ class ReservationsController extends Controller
     public function update(Request $request, Reservation $reservation): RedirectResponse|HttpResponse
     {
         abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        $this->mergeDepartureFromLegacyRequest($request, $reservation);
+
         $data = $request->validate([
             'tour_id' => 'required|integer',
+            'departure_id' => 'required|integer|exists:departures,id',
             'travel_date_id' => 'nullable|integer',
             'client_mode' => 'required|in:existing,new',
             'client_external_id' => 'required_if:client_mode,existing|nullable|integer|exists:clients,id',
@@ -446,9 +558,10 @@ class ReservationsController extends Controller
             'payment_receipt' => 'nullable|file|max:5120',
             'base_price' => 'nullable|numeric|min:0',
             'hotel_rooms' => 'nullable|array',
-            'hotel_rooms.*.tour_hotel_id' => 'required_with:hotel_rooms.*|nullable|integer',
-            'hotel_rooms.*.tour_hotel_room_id' => 'required_with:hotel_rooms.*|nullable|integer',
-            'hotel_rooms.*.room_count' => 'required_with:hotel_rooms.*|nullable|integer|min:0',
+            'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',
+            'hotel_rooms.*.tour_hotel_id' => 'nullable|integer',
+            'hotel_rooms.*.tour_hotel_room_id' => 'nullable|integer',
+            'hotel_rooms.*.room_count' => 'nullable|integer|min:0',
             'visa_ok' => 'nullable|boolean',
             'visa_notes' => 'nullable|string|max:2000',
             'visa_status' => 'nullable|in:not_required,pending,approved,rejected',
@@ -462,6 +575,8 @@ class ReservationsController extends Controller
             'passengers.*.document_type' => 'nullable|string|max:50',
             'passengers.*.document_number' => 'nullable|string|max:100',
         ]);
+        $this->validateDepartureMatchesTour($data);
+
         if (array_key_exists('base_price', $data)) {
             $data['paid_amount'] = $data['base_price'];
             unset($data['base_price']);
@@ -469,8 +584,9 @@ class ReservationsController extends Controller
 
         $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
         $this->validateRoomCapacity(
-            (int) $request->input('travel_date_id', 0),
-            (int) $request->input('tour_id', 0),
+            (int) $data['departure_id'],
+            (int) ($data['travel_date_id'] ?? 0),
+            (int) $data['tour_id'],
             $totalTravelers
         );
 
@@ -521,13 +637,83 @@ class ReservationsController extends Controller
     }
 
     /**
+     * Si le client envoie seulement travel_date_id (flux historique), déduit departure_id
+     * à partir du voyage + wp_travel_date_id. Peut aussi reprendre departure_id / travel_date_id
+     * depuis la réservation en édition.
+     */
+    protected function mergeDepartureFromLegacyRequest(Request $request, ?Reservation $reservation = null): void
+    {
+        if ($reservation) {
+            if ((int) $request->input('tour_id', 0) <= 0 && (int) $reservation->tour_id > 0) {
+                $request->merge(['tour_id' => (int) $reservation->tour_id]);
+            }
+            if ((int) $request->input('travel_date_id', 0) <= 0 && (int) ($reservation->travel_date_id ?? 0) > 0) {
+                $request->merge(['travel_date_id' => (int) $reservation->travel_date_id]);
+            }
+        }
+
+        if ((int) $request->input('departure_id', 0) > 0) {
+            return;
+        }
+
+        $voyageId = (int) $request->input('tour_id', 0);
+        $tdId = (int) $request->input('travel_date_id', 0);
+        if ($voyageId > 0 && $tdId > 0) {
+            $dep = Departure::query()
+                ->where('voyage_id', $voyageId)
+                ->where('wp_travel_date_id', $tdId)
+                ->first();
+            if ($dep) {
+                $request->merge(['departure_id' => $dep->id]);
+
+                return;
+            }
+        }
+
+        if ($reservation && (int) ($reservation->departure_id ?? 0) > 0) {
+            $request->merge(['departure_id' => (int) $reservation->departure_id]);
+        }
+    }
+
+    private function validateDepartureMatchesTour(array $data): void
+    {
+        $depId = (int) ($data['departure_id'] ?? 0);
+        $tourId = (int) ($data['tour_id'] ?? 0);
+        if ($depId <= 0 || $tourId <= 0) {
+            return;
+        }
+        $dep = Departure::query()->find($depId);
+        if (! $dep || (int) $dep->voyage_id !== $tourId) {
+            throw ValidationException::withMessages([
+                'departure_id' => ['Le départ sélectionné ne correspond pas à ce voyage.'],
+            ]);
+        }
+    }
+
+    /**
      * Vérifie que la capacité disponible sur la date de départ couvre le nombre de voyageurs.
      * La capacité vient des chambres configurées dans l’hôtel du voyage + l’occupation (stock réel).
      */
-    private function validateRoomCapacity(int $travelDateId, int $tourId, int $totalTravelers): void
+    private function validateRoomCapacity(int $departureId, int $travelDateId, int $tourId, int $totalTravelers): void
     {
-        if ($totalTravelers <= 0 || $travelDateId <= 0 || $tourId <= 0) {
-            // Si pas de date de départ, on ne peut pas gérer le stock par départ.
+        if ($totalTravelers <= 0 || $tourId <= 0) {
+            return;
+        }
+
+        if ($departureId > 0) {
+            $dep = Departure::query()->find($departureId);
+            if ($dep && (int) $dep->available_capacity < $totalTravelers) {
+                throw ValidationException::withMessages([
+                    'hotel_rooms' => [
+                        "Capacité insuffisante sur ce départ ({$dep->available_capacity} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
+                    ],
+                ]);
+            }
+
+            return;
+        }
+
+        if ($travelDateId <= 0) {
             return;
         }
 

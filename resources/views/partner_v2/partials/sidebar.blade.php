@@ -13,7 +13,7 @@
 @endphp
 
 <aside class="w-full lg:w-72 shrink-0">
-    <div class="bg-white rounded-2xl shadow-custom overflow-hidden sticky top-28 border border-gray-100">
+    <div class="partner-v2-sidebar-sticky bg-white rounded-2xl shadow-custom overflow-hidden sticky top-28 border border-gray-100">
         <div class="p-6 text-center border-b border-gray-100 bg-[#e6f3fa]/30">
             <img src="{{ auth()->user()->avatar_url }}" alt="Avatar" class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm mx-auto mb-3">
             <h3 class="font-bold text-[#0e3a5a] text-lg leading-tight">{{ $partner?->display_name ?? auth()->user()->name }}</h3>
@@ -42,4 +42,3 @@
         </nav>
     </div>
 </aside>
-

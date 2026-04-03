@@ -11,6 +11,10 @@ class ReservationRoom extends Model
 
     protected $fillable = [
         'reservation_id',
+        'departure_hotel_room_id',
+        'departure_hotel_id',
+        'room_type_snapshot',
+        'passenger_count',
         'tour_hotel_id',
         'tour_hotel_room_id',
         'room_count',
@@ -20,6 +24,9 @@ class ReservationRoom extends Model
 
     protected $casts = [
         'reservation_id' => 'integer',
+        'departure_hotel_room_id' => 'integer',
+        'departure_hotel_id' => 'integer',
+        'passenger_count' => 'integer',
         'tour_hotel_id' => 'integer',
         'tour_hotel_room_id' => 'integer',
         'room_count' => 'integer',
@@ -46,5 +53,15 @@ class ReservationRoom extends Model
     public function tourHotelRoom(): BelongsTo
     {
         return $this->belongsTo(TourHotelRoom::class, 'tour_hotel_room_id');
+    }
+
+    public function departureHotelRoom(): BelongsTo
+    {
+        return $this->belongsTo(DepartureHotelRoom::class, 'departure_hotel_room_id');
+    }
+
+    public function departureHotel(): BelongsTo
+    {
+        return $this->belongsTo(DepartureHotel::class, 'departure_hotel_id');
     }
 }

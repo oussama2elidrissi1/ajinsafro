@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\Departure;
+use App\Models\DepartureHotelRoom;
 use App\Models\Reservation;
 use App\Models\ReservationPassenger;
 use App\Models\ReservationRoom;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Models\Voyage;
+use App\Services\Booking\ReservationLifecycleService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +27,8 @@ class ReservationService
     public function __construct(
         private readonly WordPressMediaService $mediaService,
         private readonly PartnerCommissionService $commissionService,
+        private readonly DepartureStockService $departureStock,
+        private readonly ReservationLifecycleService $reservationLifecycle,
     ) {}
 
     /**
@@ -64,7 +69,7 @@ class ReservationService
             $this->fillReservation($reservation, $data);
 
             if (empty($reservation->status)) {
-                $reservation->status = Reservation::STATUS_EN_COURS;
+                $reservation->status = Reservation::STATUS_PENDING;
             }
 
             $reservation->save();
@@ -80,8 +85,12 @@ class ReservationService
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
-            // Stock & allocation progressive : uniquement si date + tables migrées + voyage lié à un tour WP.
-            if (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation)) {
+            if ($this->usesDepartureHotelRooms($data['hotel_rooms'] ?? []) && ! empty($reservation->departure_id)) {
+                $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
+                $synced = $reservation->fresh(['reservationRooms']);
+                $this->reservationLifecycle->validateAvailabilityIfNeeded($synced);
+                $this->reservationLifecycle->commitAfterPersist($synced);
+            } elseif (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation)) {
                 $this->allocateAndSyncReservationRooms($reservation);
             } else {
                 if (! empty($reservation->travel_date_id)) {
@@ -133,7 +142,12 @@ class ReservationService
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
-            if (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation)) {
+            if ($this->usesDepartureHotelRooms($data['hotel_rooms'] ?? []) && ! empty($reservation->departure_id)) {
+                $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
+                $fresh = $reservation->fresh(['reservationRooms']);
+                $this->reservationLifecycle->validateAvailabilityIfNeeded($fresh);
+                $this->reservationLifecycle->commitAfterPersist($fresh);
+            } elseif (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation)) {
                 $this->allocateAndSyncReservationRooms($reservation);
             } else {
                 if (! empty($reservation->travel_date_id)) {
@@ -152,13 +166,24 @@ class ReservationService
 
     public function validateReservation(Reservation $reservation): Reservation
     {
-        $reservation->status = Reservation::STATUS_VALIDEE;
-        $reservation->save();
-        if ($reservation->partner_id) {
-            $this->commissionService->validateCommissionForReservation($reservation);
-        }
+        return DB::transaction(function () use ($reservation) {
+            if (in_array($reservation->status, [
+                Reservation::STATUS_CONFIRMED,
+                Reservation::STATUS_PARTIALLY_PAID,
+                Reservation::STATUS_PAID,
+            ], true)) {
+                return $reservation->fresh();
+            }
 
-        return $reservation;
+            $reservation->status = Reservation::STATUS_CONFIRMED;
+            $reservation->save();
+            if ($reservation->partner_id) {
+                $this->commissionService->validateCommissionForReservation($reservation);
+            }
+            $this->reservationLifecycle->commitAfterPersist($reservation->fresh());
+
+            return $reservation->fresh();
+        });
     }
 
     public function delete(Reservation $reservation): void
@@ -180,11 +205,39 @@ class ReservationService
                 $reservation->tour_id = Voyage::canonicalVoyageId((int) $rawTour);
             }
         }
+        if (array_key_exists('departure_id', $data)) {
+            $rawDep = $data['departure_id'];
+            $reservation->departure_id = $rawDep !== null && $rawDep !== '' && $rawDep !== 'null'
+                ? (int) $rawDep
+                : null;
+        }
+
         $travelDateId = $data['travel_date_id'] ?? null;
         if ($travelDateId !== null && $travelDateId !== '' && $travelDateId !== 'null') {
             $reservation->travel_date_id = (int) $travelDateId;
         } else {
             $reservation->travel_date_id = null;
+        }
+
+        if (! empty($reservation->departure_id)) {
+            $dep = Departure::query()->find((int) $reservation->departure_id);
+            if ($dep && $dep->wp_travel_date_id) {
+                $reservation->travel_date_id = (int) $dep->wp_travel_date_id;
+            }
+        }
+
+        if (! empty($reservation->tour_id)) {
+            $reservation->voyage_id = Voyage::canonicalVoyageId((int) $reservation->tour_id);
+        }
+        if (array_key_exists('voyage_id', $data) && $data['voyage_id'] !== null && $data['voyage_id'] !== '') {
+            $reservation->voyage_id = (int) $data['voyage_id'];
+        }
+
+        if (array_key_exists('created_by_user_id', $data)) {
+            $rawCb = $data['created_by_user_id'];
+            $reservation->created_by_user_id = $rawCb !== null && $rawCb !== '' ? (int) $rawCb : null;
+        } elseif (! empty($reservation->created_by) && empty($reservation->created_by_user_id)) {
+            $reservation->created_by_user_id = (int) $reservation->created_by;
         }
         $reservation->client_mode = $data['client_mode'] ?? $reservation->client_mode ?? 'existing';
         $reservation->client_external_id = $data['client_external_id'] ?? $reservation->client_external_id;
@@ -353,6 +406,52 @@ class ReservationService
             if (! is_array($row)) {
                 continue;
             }
+            $dhrId = isset($row['departure_hotel_room_id']) ? (int) $row['departure_hotel_room_id'] : 0;
+            if ($dhrId > 0) {
+                $roomCount = max(0, (int) ($row['room_count'] ?? 0));
+                if ($roomCount < 1) {
+                    continue;
+                }
+                $dhr = DepartureHotelRoom::find($dhrId);
+                if (! $dhr) {
+                    continue;
+                }
+                $supplementUnit = (float) $dhr->supplement;
+                $supplementTotal = $supplementUnit * $roomCount;
+                $totalSupplement += $supplementTotal;
+
+                $existing = ReservationRoom::where('reservation_id', $reservation->id)
+                    ->where('departure_hotel_room_id', $dhrId)
+                    ->first();
+
+                if ($existing) {
+                    $existing->room_count = $roomCount;
+                    $existing->departure_hotel_room_id = $dhrId;
+                    $existing->departure_hotel_id = $dhr->departure_hotel_id;
+                    $existing->room_type_snapshot = $dhr->room_type;
+                    $existing->tour_hotel_id = null;
+                    $existing->tour_hotel_room_id = null;
+                    $existing->supplement_unit = $supplementUnit;
+                    $existing->supplement_total = $supplementTotal;
+                    $existing->save();
+                    $keepIds[] = $existing->id;
+                } else {
+                    $created = $reservation->reservationRooms()->create([
+                        'departure_hotel_room_id' => $dhrId,
+                        'departure_hotel_id' => $dhr->departure_hotel_id,
+                        'room_type_snapshot' => $dhr->room_type,
+                        'tour_hotel_id' => null,
+                        'tour_hotel_room_id' => null,
+                        'room_count' => $roomCount,
+                        'supplement_unit' => $supplementUnit,
+                        'supplement_total' => $supplementTotal,
+                    ]);
+                    $keepIds[] = $created->id;
+                }
+
+                continue;
+            }
+
             $tourHotelId = isset($row['tour_hotel_id']) ? (int) $row['tour_hotel_id'] : 0;
             $tourHotelRoomId = isset($row['tour_hotel_room_id']) ? (int) $row['tour_hotel_room_id'] : 0;
             $roomCount = max(0, (int) ($row['room_count'] ?? 0));
@@ -398,6 +497,23 @@ class ReservationService
     /**
      * Tables sur la connexion Laravel par défaut (pas WP).
      */
+    /**
+     * @param  array<int, array<string, mixed>>  $hotelRooms
+     */
+    private function usesDepartureHotelRooms(array $hotelRooms): bool
+    {
+        foreach ($hotelRooms as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            if (! empty($row['departure_hotel_room_id'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function roomOccupancyTablesReady(): bool
     {
         try {
@@ -443,6 +559,11 @@ class ReservationService
      */
     private function rollbackReservationAllocations(int $reservationId): void
     {
+        $reservation = Reservation::with('reservationRooms')->find($reservationId);
+        if ($reservation) {
+            $this->reservationLifecycle->releaseBeforeMutation($reservation);
+        }
+
         if (! $this->roomOccupancyTablesReady()) {
             ReservationRoom::query()->where('reservation_id', $reservationId)->delete();
 

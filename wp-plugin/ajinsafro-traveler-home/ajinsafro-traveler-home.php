@@ -3,7 +3,7 @@
  * Plugin Name: Ajinsafro Traveler Home
  * Plugin URI:  https://ajinsafro.com
  * Description: Surcharge la page d'accueil (front page) du thème Traveler avec une mise en page personnalisée : Hero, barre de recherche, offres dernière minute, destinations par région et bons coins.
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      Ajinsafro
  * Author URI:  https://ajinsafro.com
  * Text Domain: ajinsafro-traveler-home
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /* ──────────────────────────────────────────────
  * Constants
  * ────────────────────────────────────────────── */
-define( 'AJTH_VERSION', '1.0.0' );
+define( 'AJTH_VERSION', '1.0.1' );
 define( 'AJTH_FILE',    __FILE__ );
 define( 'AJTH_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'AJTH_URL',     plugin_dir_url( __FILE__ ) );
@@ -427,7 +427,13 @@ function ajth_get_settings() {
         ),
         'good_spots_title' => 'Les bons coins sur votre destination',
         'promotions' => array(
+            'enabled' => true,
             'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
+            'autoplay' => true,
+            'autoplay_delay_ms' => 5000,
+            'default_active_index' => 0,
+            'max_slides' => 8,
+            'arrows_enabled' => true,
             'images' => array( '', '', '' ),
             'items' => array(),
         ),
@@ -599,17 +605,28 @@ function ajth_normalize_promotions_settings( $promo, array $defaults ): array {
         $subtitle = trim( (string) ( $item['subtitle'] ?? $item['description'] ?? '' ) );
         $button_text = trim( (string) ( $item['button_text'] ?? '' ) );
         $button_url = trim( (string) ( $item['button_url'] ?? '' ) );
+        $link_url = trim( (string) ( $item['link_url'] ?? '' ) );
 
-        if ( '' === $title && '' === $subtitle && '' === $image_url && '' === $button_text && '' === $button_url ) {
+        if ( '' === $title && '' === $subtitle && '' === $image_url && '' === $button_text && '' === $button_url && '' === $link_url ) {
             continue;
+        }
+
+        $link_target = strtolower( trim( (string) ( $item['link_target'] ?? '_self' ) ) ) === '_blank' ? '_blank' : '_self';
+        $accent = trim( (string) ( $item['accent_color'] ?? '' ) );
+        if ( $accent !== '' && ! preg_match( '/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $accent ) ) {
+            $accent = '';
         }
 
         $normalized[] = array(
             'title' => $title,
             'subtitle' => $subtitle,
             'image_url' => $image_url,
+            'link_url' => $link_url,
+            'link_target' => $link_target,
             'button_text' => $button_text,
             'button_url' => $button_url,
+            'button_enabled' => ajth_truthy( $item['button_enabled'] ?? true ),
+            'accent_color' => $accent,
             'is_active' => ajth_truthy( $item['is_active'] ?? $item['active'] ?? true ),
             'sort_order' => isset( $item['sort_order'] ) ? (int) $item['sort_order'] : ( isset( $item['order'] ) ? (int) $item['order'] : (int) $idx ),
         );
@@ -625,8 +642,12 @@ function ajth_normalize_promotions_settings( $promo, array $defaults ): array {
                 'title' => '',
                 'subtitle' => '',
                 'image_url' => $image_url,
+                'link_url' => '',
+                'link_target' => '_self',
                 'button_text' => '',
                 'button_url' => '',
+                'button_enabled' => true,
+                'accent_color' => '',
                 'is_active' => true,
                 'sort_order' => (int) $idx,
             );
@@ -636,6 +657,8 @@ function ajth_normalize_promotions_settings( $promo, array $defaults ): array {
     usort( $normalized, static function( $a, $b ) {
         return ( (int) ( $a['sort_order'] ?? 0 ) ) <=> ( (int) ( $b['sort_order'] ?? 0 ) );
     } );
+
+    $max_slides = isset( $promo['max_slides'] ) ? max( 1, min( 20, (int) $promo['max_slides'] ) ) : 8;
 
     $images = array();
     foreach ( $normalized as $item ) {
@@ -655,8 +678,22 @@ function ajth_normalize_promotions_settings( $promo, array $defaults ): array {
         $images[] = '';
     }
 
+    $delay = isset( $promo['autoplay_delay_ms'] ) ? max( 2000, min( 60000, (int) $promo['autoplay_delay_ms'] ) ) : 5000;
+    $def_idx = isset( $promo['default_active_index'] ) ? max( 0, (int) $promo['default_active_index'] ) : 0;
+    if ( ! empty( $normalized ) ) {
+        $def_idx = min( $def_idx, count( $normalized ) - 1 );
+    } else {
+        $def_idx = 0;
+    }
+
     return array(
+        'enabled' => ajth_truthy( $promo['enabled'] ?? true ),
         'title' => trim( (string) ( $promo['title'] ?? $defaults['title'] ) ) ?: $defaults['title'],
+        'autoplay' => ajth_truthy( $promo['autoplay'] ?? true ),
+        'autoplay_delay_ms' => $delay,
+        'default_active_index' => $def_idx,
+        'max_slides' => $max_slides,
+        'arrows_enabled' => ajth_truthy( $promo['arrows_enabled'] ?? true ),
         'images' => array_slice( $images, 0, 3 ),
         'items' => array_values( $normalized ),
     );

@@ -1,9 +1,38 @@
-﻿<div class="tab-pane" id="availability" role="tabpanel">
+<div class="tab-pane" id="availability" role="tabpanel">
                 <div class="card ve-pane-card">
                     <div class="card-body">
                         <h4 class="card-title mb-2">DisponibilitÃ© & RÃ©servation</h4>
                         <p class="text-muted small mb-3">Dates de dÃ©part, rÃ©servation et annulation. Les dates sont enregistrÃ©es avec le tour.</p>
                         <div class="alert alert-info border-0 small mb-4 py-3"><i class="bx bx-calendar-check me-1"></i> <strong>DÃ©parts</strong> : une ligne par date â€” bouton <strong>+ Ajouter une date</strong>, <strong>Ã—</strong> pour supprimer. Places = capacitÃ© hÃ´tels (lecture seule).</div>
+
+                        @php
+                            $departureRows = ($laravelVoyage ?? null)
+                                ? ($laravelVoyage->departures()->orderBy('start_date')->get())
+                                : collect();
+                        @endphp
+                        <h5 class="mb-3"><i class="bx bx-calendar"></i> Départs (nouvelle architecture)</h5>
+                        @if(isset($laravelVoyage) && $laravelVoyage)
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#voyageRoomAvailabilityModal">
+                                    <i class="bx bx-bed"></i> Gérer le stock chambres
+                                </button>
+                                <span class="text-muted small">Par date de départ : hôtels et disponibilités dans une fenêtre dédiée.</span>
+                            </div>
+                        @endif
+                        <div class="alert alert-light border small mb-4 py-3">
+                            <strong class="d-block mb-1">Une seule source pour les dates</strong>
+                            Les dates de départ se gèrent dans la section <strong>« Dates disponibles (Travelling on) »</strong> ci-dessous (table WordPress <code>aj_travel_dates</code>).
+                            À l’enregistrement du voyage, chaque ligne est synchronisée vers un <strong>départ Laravel</strong> unique (<code>voyage_id</code> + date + <code>wp_travel_date_id</code>) — pas de second flux parallèle.
+                            @if(isset($laravelVoyage) && $laravelVoyage)
+                                @php $firstDepartureRow = $departureRows->first(); @endphp
+                                <span class="d-block mt-2">
+                                    Départs Laravel synchronisés : <strong>{{ $departureRows->count() }}</strong>
+                                    @if($firstDepartureRow)
+                                        · <a href="{{ route('admin.circuits.voyages.departures.show', [$laravelVoyage, $firstDepartureRow]) }}" target="_blank" rel="noopener">Ouvrir un départ (exemple)</a>
+                                    @endif
+                                </span>
+                            @endif
+                        </div>
                         
                         <div class="mb-3">
                             <label for="tours_booking_period" class="form-label">PÃ©riode de rÃ©servation</label>
@@ -77,6 +106,9 @@
                                     <div class="row g-2 align-items-end">
                                         <div class="col-6 col-md-3">
                                             <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                            @if(!empty($dateItem->id))
+                                                <input type="hidden" name="travel_dates[{{ $di }}][id]" value="{{ $dateItem->id }}">
+                                            @endif
                                             <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
                                         </div>
                                         <div class="col-6 col-md-2">
@@ -111,6 +143,5 @@
 </div>
                 </div>
             </div>
-
 
 
