@@ -112,6 +112,15 @@
             @method('DELETE')
         </form>
     @endif
+
+    @if (! $isCreate && isset($laravelVoyage) && $laravelVoyage)
+        @include('admin.circuits.voyages.partials.room_availability.modal', [
+            'voyage' => $laravelVoyage,
+            'wpTourPostId' => (int) ($voyage->ID ?? 0),
+            'serverWpTravelDatesCount' => isset($travelDates) ? $travelDates->count() : 0,
+            'serverLaravelDeparturesCount' => $laravelVoyage->departures()->count(),
+        ])
+    @endif
 </div>
 @endsection
 
@@ -121,4 +130,7 @@
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-editor-runtime.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-edit-page.js') }}"></script>
+    @if (! $isCreate && isset($laravelVoyage) && $laravelVoyage)
+        <script src="{{ URL::asset('js/voyage-room-availability-modal.js') }}"></script>
+    @endif
 @endpush

@@ -89,12 +89,31 @@ final class ReservationListQueryService
      */
     public function applyStatusFilter(Builder $q, ?string $status): Builder
     {
-        if ($status !== null && $status !== '' && in_array($status, [
-            Reservation::STATUS_EN_COURS,
-            Reservation::STATUS_VALIDEE,
-            Reservation::STATUS_ANNULEE,
-        ], true)) {
-            $q->where('status', $status);
+        if ($status === null || $status === '') {
+            return $q;
+        }
+
+        $legacy = [
+            'EN_COURS' => Reservation::STATUS_PENDING,
+            'VALIDEE' => Reservation::STATUS_CONFIRMED,
+            'ANNULEE' => Reservation::STATUS_CANCELLED,
+        ];
+        $normalized = $legacy[$status] ?? $status;
+
+        $allowed = [
+            Reservation::STATUS_DRAFT,
+            Reservation::STATUS_PENDING,
+            Reservation::STATUS_OPTION,
+            Reservation::STATUS_CONFIRMED,
+            Reservation::STATUS_PARTIALLY_PAID,
+            Reservation::STATUS_PAID,
+            Reservation::STATUS_CANCELLED,
+            Reservation::STATUS_EXPIRED,
+            Reservation::STATUS_REFUNDED,
+        ];
+
+        if (in_array($normalized, $allowed, true)) {
+            $q->where('status', $normalized);
         }
 
         return $q;

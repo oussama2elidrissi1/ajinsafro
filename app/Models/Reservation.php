@@ -15,11 +15,32 @@ class Reservation extends Model
 
     protected $table = 'reservations';
 
-    public const STATUS_EN_COURS = 'EN_COURS';
+    public const STATUS_DRAFT = 'draft';
 
-    public const STATUS_VALIDEE = 'VALIDEE';
+    public const STATUS_PENDING = 'pending';
 
-    public const STATUS_ANNULEE = 'ANNULEE';
+    public const STATUS_OPTION = 'option';
+
+    public const STATUS_CONFIRMED = 'confirmed';
+
+    public const STATUS_PARTIALLY_PAID = 'partially_paid';
+
+    public const STATUS_PAID = 'paid';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUS_EXPIRED = 'expired';
+
+    public const STATUS_REFUNDED = 'refunded';
+
+    /** @deprecated Utiliser STATUS_PENDING — alias rétrocompatibilité */
+    public const STATUS_EN_COURS = 'pending';
+
+    /** @deprecated Utiliser STATUS_CONFIRMED */
+    public const STATUS_VALIDEE = 'confirmed';
+
+    /** @deprecated Utiliser STATUS_CANCELLED */
+    public const STATUS_ANNULEE = 'cancelled';
 
     public const PAYMENT_CASHPLUS = 'CASHPLUS';
 
@@ -41,8 +62,11 @@ class Reservation extends Model
         'sales_manager_id',
         'agent_id',
         'created_by',
+        'created_by_user_id',
         'updated_by',
         'tour_id',
+        'voyage_id',
+        'departure_id',
         'wp_tour_post_id',
         'catalog_source_code',
         'voyage_flight_id',
@@ -70,6 +94,8 @@ class Reservation extends Model
 
     protected $casts = [
         'tour_id' => 'integer',
+        'voyage_id' => 'integer',
+        'departure_id' => 'integer',
         'wp_tour_post_id' => 'integer',
         'voyage_flight_id' => 'integer',
         'travel_date_id' => 'integer',
@@ -79,6 +105,7 @@ class Reservation extends Model
         'sales_manager_id' => 'integer',
         'agent_id' => 'integer',
         'created_by' => 'integer',
+        'created_by_user_id' => 'integer',
         'updated_by' => 'integer',
         'passengers_count' => 'integer',
         'paid_amount' => 'decimal:2',
@@ -120,6 +147,16 @@ class Reservation extends Model
         return $this->belongsTo(TravelDate::class, 'travel_date_id');
     }
 
+    public function departure(): BelongsTo
+    {
+        return $this->belongsTo(Departure::class, 'departure_id');
+    }
+
+    public function voyage(): BelongsTo
+    {
+        return $this->belongsTo(Voyage::class, 'voyage_id');
+    }
+
     public function partner(): BelongsTo
     {
         return $this->belongsTo(Partner::class);
@@ -157,7 +194,7 @@ class Reservation extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     public function updatedBy(): BelongsTo

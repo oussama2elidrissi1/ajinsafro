@@ -56,4 +56,11 @@ class TourHotel extends Model
     {
         return $this->hasMany(TourHotelRoom::class, 'tour_hotel_id')->orderBy('sort_order')->orderBy('id');
     }
+
+    public function roomAvailabilities(): HasMany
+    {
+        return $this->hasMany(TourHotelRoomAvailability::class, 'tour_hotel_id')
+            ->orderBy('travel_date_id')
+            ->orderBy('id');
+    }
 }

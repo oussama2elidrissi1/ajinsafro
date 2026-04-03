@@ -707,7 +707,42 @@
                         <label class="form-label">Titre de la section</label>
                         <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Explorez plus, voyagez mieux avec AjinSafro')) }}" placeholder="Ex. Explorez plus, voyagez mieux avec AjinSafro">
                     </div>
-                    <p class="text-muted small mb-3">Gérez ici les cards du slider compact. Vous pouvez ajouter, réordonner, activer ou désactiver chaque bannière promo, puis remplacer son image si nécessaire.</p>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6 col-lg-4">
+                            <input type="hidden" name="promotions[enabled]" value="0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="promotions[enabled]" value="1" id="promotions_enabled" {{ old('promotions.enabled', data_get($settings, 'promotions.enabled', true)) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="promotions_enabled">Bloc promotions actif (front)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <input type="hidden" name="promotions[autoplay]" value="0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="promotions[autoplay]" value="1" id="promotions_autoplay" {{ old('promotions.autoplay', data_get($settings, 'promotions.autoplay', true)) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="promotions_autoplay">Défilement automatique</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <label class="form-label small">Délai (ms)</label>
+                            <input type="number" class="form-control form-control-sm" name="promotions[autoplay_delay_ms]" min="2000" max="60000" step="500" value="{{ old('promotions.autoplay_delay_ms', data_get($settings, 'promotions.autoplay_delay_ms', 5000)) }}">
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <label class="form-label small">Panneau actif (index)</label>
+                            <input type="number" class="form-control form-control-sm" name="promotions[default_active_index]" min="0" max="50" value="{{ old('promotions.default_active_index', data_get($settings, 'promotions.default_active_index', 0)) }}">
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <label class="form-label small">Nombre max de slides</label>
+                            <input type="number" class="form-control form-control-sm" name="promotions[max_slides]" min="1" max="20" value="{{ old('promotions.max_slides', data_get($settings, 'promotions.max_slides', 8)) }}">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <input type="hidden" name="promotions[arrows_enabled]" value="0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="promotions[arrows_enabled]" value="1" id="promotions_arrows" {{ old('promotions.arrows_enabled', data_get($settings, 'promotions.arrows_enabled', true)) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="promotions_arrows">Flèches précédent / suivant</label>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-3">Accordéon horizontal sur la page d’accueil : ajoutez des panneaux, images, liens et boutons optionnels. Les éléments désactivés restent en base mais ne s’affichent pas.</p>
                     @php
                         $promoItems = old('promotions.items', data_get($settings, 'promotions.items', []));
                         $promoItems = is_array($promoItems) ? $promoItems : [];
@@ -721,6 +756,10 @@
                                 $promoImage = old("promotions.items.$pi.image_url", data_get($promoItem, 'image_url', data_get($promoItem, 'image', '')));
                                 $promoButtonText = old("promotions.items.$pi.button_text", data_get($promoItem, 'button_text', ''));
                                 $promoButtonUrl = old("promotions.items.$pi.button_url", data_get($promoItem, 'button_url', ''));
+                                $promoLinkUrl = old("promotions.items.$pi.link_url", data_get($promoItem, 'link_url', ''));
+                                $promoLinkTarget = old("promotions.items.$pi.link_target", data_get($promoItem, 'link_target', '_self'));
+                                $promoBtnEnabled = old("promotions.items.$pi.button_enabled", data_get($promoItem, 'button_enabled', true));
+                                $promoAccent = old("promotions.items.$pi.accent_color", data_get($promoItem, 'accent_color', ''));
                                 $promoSort = old("promotions.items.$pi.sort_order", data_get($promoItem, 'sort_order', data_get($promoItem, 'order', $pi)));
                                 $promoActive = old("promotions.items.$pi.is_active", data_get($promoItem, 'is_active', data_get($promoItem, 'active', true)));
                                 $promoRemoveImage = old("promotion_item_remove_image.$pi", 0);
@@ -778,6 +817,29 @@
                                     <div class="col-xl-5 col-md-8">
                                         <label class="form-label small mb-1">Lien bouton</label>
                                         <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][button_url]" value="{{ $promoButtonUrl }}" placeholder="https://... ou /voyages">
+                                    </div>
+                                    <div class="col-xl-4 col-md-6">
+                                        <label class="form-label small mb-1">Lien du panneau (clic / carte)</label>
+                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][link_url]" value="{{ $promoLinkUrl }}" placeholder="Optionnel — URL du panneau entier">
+                                    </div>
+                                    <div class="col-xl-2 col-md-3">
+                                        <label class="form-label small mb-1">Cible lien</label>
+                                        <select class="form-select form-select-sm" name="promotions[items][{{ $pi }}][link_target]">
+                                            <option value="_self" {{ $promoLinkTarget === '_blank' ? '' : 'selected' }}>Même onglet</option>
+                                            <option value="_blank" {{ $promoLinkTarget === '_blank' ? 'selected' : '' }}>Nouvel onglet</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-xl-2 col-md-3">
+                                        <label class="form-label small d-block mb-1">Bouton</label>
+                                        <input type="hidden" name="promotions[items][{{ $pi }}][button_enabled]" value="0">
+                                        <div class="form-check form-switch mt-1">
+                                            <input class="form-check-input" type="checkbox" name="promotions[items][{{ $pi }}][button_enabled]" value="1" {{ (string) $promoBtnEnabled === '0' ? '' : ($promoBtnEnabled ? 'checked' : '') }}>
+                                            <label class="form-check-label small">Afficher le bouton</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-2 col-md-3">
+                                        <label class="form-label small mb-1">Couleur accent (#hex)</label>
+                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][accent_color]" value="{{ $promoAccent }}" placeholder="#0083c4" maxlength="20">
                                     </div>
                                     <div class="col-xl-4">
                                         <label class="form-label small d-block mb-1">Aperçu compact</label>
@@ -1378,6 +1440,10 @@
             '<div class="col-xl-3 col-md-6"><label class="form-label small d-block mb-1">Image actuelle</label><div class="form-check mt-1"><input type="hidden" name="promotion_item_remove_image[' + idx + ']" value="0"><input class="form-check-input" type="checkbox" name="promotion_item_remove_image[' + idx + ']" value="1"><label class="form-check-label small">Supprimer l’image</label></div></div>' +
             '<div class="col-xl-3 col-md-4"><label class="form-label small mb-1">Texte bouton</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][button_text]" placeholder="Découvrir"></div>' +
             '<div class="col-xl-5 col-md-8"><label class="form-label small mb-1">Lien bouton</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][button_url]" placeholder="https://... ou /voyages"></div>' +
+            '<div class="col-xl-4 col-md-6"><label class="form-label small mb-1">Lien du panneau</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][link_url]" placeholder="Optionnel"></div>' +
+            '<div class="col-xl-2 col-md-3"><label class="form-label small mb-1">Cible lien</label><select class="form-select form-select-sm" name="promotions[items][' + idx + '][link_target]"><option value="_self" selected>Même onglet</option><option value="_blank">Nouvel onglet</option></select></div>' +
+            '<div class="col-xl-2 col-md-3"><label class="form-label small d-block mb-1">Bouton</label><input type="hidden" name="promotions[items][' + idx + '][button_enabled]" value="0"><div class="form-check form-switch mt-1"><input class="form-check-input" type="checkbox" name="promotions[items][' + idx + '][button_enabled]" value="1" checked><label class="form-check-label small">Afficher le bouton</label></div></div>' +
+            '<div class="col-xl-2 col-md-3"><label class="form-label small mb-1">Couleur accent (#hex)</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][accent_color]" placeholder="#0083c4" maxlength="20"></div>' +
             '<div class="col-xl-4"><label class="form-label small d-block mb-1">Aperçu compact</label><div class="promo-preview"><div class="promo-preview__img"></div><div class="promo-preview__body"><div class="promo-preview__title">Titre de la card</div><div class="promo-preview__subtitle">Sous-titre de la bannière promo</div></div></div></div>' +
             '</div></div>';
     }

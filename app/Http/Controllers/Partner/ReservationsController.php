@@ -11,6 +11,7 @@ use App\Services\ReservationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ReservationsController extends Controller
@@ -128,8 +129,33 @@ class ReservationsController extends Controller
             'client_phone' => ['nullable', 'string', 'max:50'],
             'payment_type' => ['nullable', 'string', 'max:20'],
             'notes' => ['nullable', 'string'],
-            'status' => ['in:EN_COURS,VALIDEE,ANNULEE'],
+            'status' => [
+                'nullable',
+                'string',
+                Rule::in([
+                    Reservation::STATUS_DRAFT,
+                    Reservation::STATUS_PENDING,
+                    Reservation::STATUS_OPTION,
+                    Reservation::STATUS_CONFIRMED,
+                    Reservation::STATUS_PARTIALLY_PAID,
+                    Reservation::STATUS_PAID,
+                    Reservation::STATUS_CANCELLED,
+                    Reservation::STATUS_EXPIRED,
+                    Reservation::STATUS_REFUNDED,
+                    'EN_COURS',
+                    'VALIDEE',
+                    'ANNULEE',
+                ]),
+            ],
         ]);
+        if (! empty($data['status'])) {
+            $data['status'] = match ($data['status']) {
+                'EN_COURS' => Reservation::STATUS_PENDING,
+                'VALIDEE' => Reservation::STATUS_CONFIRMED,
+                'ANNULEE' => Reservation::STATUS_CANCELLED,
+                default => $data['status'],
+            };
+        }
         $data['partner_id'] = $partner->id;
         $data['updated_by'] = $request->user()->id;
         $data['passengers'] = $reservation->passengers->toArray();

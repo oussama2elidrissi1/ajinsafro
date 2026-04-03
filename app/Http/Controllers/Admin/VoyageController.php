@@ -16,11 +16,16 @@ use App\Models\TravelDayItem;
 use App\Models\Airline;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
+use App\Models\TourHotelRoomAvailability;
 use App\Models\TourTransfer;
 use App\Models\TravelDeparturePlace;
 use App\Models\TravelDepartureFlight;
 use App\Models\VoyageDeparturePlace;
 use App\Models\TravelDate;
+use App\Models\Departure;
+use App\Models\DepartureHotel;
+use App\Models\Reservation;
+use App\Models\StockMovement;
 use App\Services\AdminWpTourCatalogQuery;
 use App\Services\VoyageFlightService;
 use App\Services\VoyageFlightOptionService;
@@ -36,6 +41,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class VoyageController extends Controller
@@ -104,21 +110,21 @@ class VoyageController extends Controller
     }
 
     /**
-     * Show single tour (détail).
+     * Show single tour (dÃ©tail).
      */
     public function show(int $id): View
     {
         $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
         
-        // Créer un objet compatible avec les vues existantes
+        // CrÃ©er un objet compatible avec les vues existantes
         $voyage = $wpPost;
-        $voyage->name = $wpPost->post_title; // Alias pour compatibilité
+        $voyage->name = $wpPost->post_title; // Alias pour compatibilitÃ©
         $voyage->slug = $wpPost->post_name;
         $voyage->description = $wpPost->post_content;
         $voyage->updated_at = $wpPost->post_modified;
         $voyage->created_at = $wpPost->post_date;
         
-        // Charger les metas (max_people et places sont calculés à partir des chambres et enregistrés à la sauvegarde)
+        // Charger les metas (max_people et places sont calculÃ©s Ã  partir des chambres et enregistrÃ©s Ã  la sauvegarde)
         $meta = [
             'adult_price' => $wpPost->getMeta('adult_price'),
             'child_price' => $wpPost->getMeta('child_price'),
@@ -134,7 +140,7 @@ class VoyageController extends Controller
             'gallery' => $wpPost->getMeta('gallery'),
         ];
 
-        // Programme par jours (aj_tour_days + activités) pour la timeline "Programme du circuit"
+        // Programme par jours (aj_tour_days + activitÃ©s) pour la timeline "Programme du circuit"
         $programDays = collect();
         try {
             $programDays = $this->programService->loadProgram((int) $id);
@@ -204,7 +210,7 @@ class VoyageController extends Controller
             $airlines = collect();
         }
 
-        // Pas de modèle Voyage Laravel tant que le tour WP n’existe pas : null évite les accès à des attributs manquants dans la vue partagée create/edit.
+        // Pas de modÃ¨le Voyage Laravel tant que le tour WP nâ€™existe pas : null Ã©vite les accÃ¨s Ã  des attributs manquants dans la vue partagÃ©e create/edit.
         $laravelVoyage = null;
         $outboundFlight = null;
         $inboundFlight = null;
@@ -257,7 +263,7 @@ class VoyageController extends Controller
     {
         $validated = $request->validated();
 
-        // Générer slug si vide
+        // GÃ©nÃ©rer slug si vide
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['title']);
         }
@@ -313,7 +319,7 @@ class VoyageController extends Controller
     {
         $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
         
-        // Créer un objet compatible avec les vues existantes
+        // CrÃ©er un objet compatible avec les vues existantes
         $voyage = $wpPost;
         $voyage->name = $wpPost->post_title;
         $voyage->slug = $wpPost->post_name;
@@ -323,7 +329,7 @@ class VoyageController extends Controller
         $voyage->created_at = $wpPost->post_date;
         $voyage->status = $wpPost->post_status;
         
-        // Charger TOUTES les metas Traveler (lecture complète)
+        // Charger TOUTES les metas Traveler (lecture complÃ¨te)
         $meta = [
             // LOCATION
             'address' => $wpPost->getMeta('address'),
@@ -414,7 +420,7 @@ class VoyageController extends Controller
         // Charger les taxonomies disponibles
         $availableTaxonomies = $this->getAvailableTaxonomies();
         
-        // Charger les taxonomies assignées à ce tour
+        // Charger les taxonomies assignÃ©es Ã  ce tour
         $assignedTaxonomies = $this->getPostTaxonomies($id);
         
         // Charger les locations (tree)
@@ -430,9 +436,9 @@ class VoyageController extends Controller
         $worldCities = config('world_cities', []);
         $mergedCitiesByCode = $this->buildMergedCitiesByCode($worldCountries, $worldCities, $countryCitiesData);
 
-        // Programme par jours (Laravel: aj_tour_days + activités). The Blade loop iterates over
+        // Programme par jours (Laravel: aj_tour_days + activitÃ©s). The Blade loop iterates over
         // loadProgram() (WP aj_tour_days). If duration_day meta is stale (e.g. 4) but travel_program_days
-        // has 7 rows, ensureDaysExist() only used meta and WP stayed at 4 days — the UI showed 4 cards.
+        // has 7 rows, ensureDaysExist() only used meta and WP stayed at 4 days â€” the UI showed 4 cards.
         $laravelVoyage = Voyage::firstOrCreate(
             ['wp_post_id' => $id],
             ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
@@ -476,7 +482,7 @@ class VoyageController extends Controller
         }
 
         // Charger les TravelProgramDay avec relations hotels/transfers pour le modal par jour
-        // Clé par index du jour (0, 1, 2...) pour correspondre à $dayIndex dans la vue (programme_days)
+        // ClÃ© par index du jour (0, 1, 2...) pour correspondre Ã  $dayIndex dans la vue (programme_days)
         $programDayHotelsTransfers = [];
         $travelProgramDaysWithRelations = collect();
         try {
@@ -568,10 +574,12 @@ class VoyageController extends Controller
             $heroImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
         }
 
-        // Hôtel + Transferts (aj_tour_hotels, aj_tour_transfers) — multi-row support
-        $tourHotels = TourHotel::getAllForTour($id);
+        // HÃ´tel + Transferts (aj_tour_hotels, aj_tour_transfers) â€” multi-row support
+        $tourHotels = TourHotel::getAllForTour($id)->load([
+            'rooms.dateAvailabilities' => fn ($query) => $query->orderBy('travel_date_id')->orderBy('id'),
+        ]);
         $tourHotel = $tourHotels->first();
-        // Liste d’hôtels d’autres voyages pour « Choisir un hôtel existant » (copie des données)
+        // Liste dâ€™hÃ´tels dâ€™autres voyages pour Â« Choisir un hÃ´tel existant Â» (copie des donnÃ©es)
         $otherTourHotelsForCopy = TourHotel::where('tour_id', '!=', $id)->orderBy('hotel_name')->get();
         $otherTourTitles = [];
         if ($otherTourHotelsForCopy->isNotEmpty()) {
@@ -582,7 +590,7 @@ class VoyageController extends Controller
         $transferDepartures = $transfers['departure'];
         $transferArrival = $transferArrivals->first();
         $transferDeparture = $transferDepartures->first();
-        // Valeurs suggérées : transfert aller = aéroport d'arrivée (vol aller to_city) → hôtel ; transfert retour = hôtel → aéroport de départ (vol retour from_city)
+        // Valeurs suggÃ©rÃ©es : transfert aller = aÃ©roport d'arrivÃ©e (vol aller to_city) â†’ hÃ´tel ; transfert retour = hÃ´tel â†’ aÃ©roport de dÃ©part (vol retour from_city)
         $suggestedArrivalFrom = $outboundFlight ? trim($outboundFlight->to_city ?? $outboundFlight->to_label ?? '') : '';
         $suggestedArrivalTo = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
         $suggestedDepartureFrom = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
@@ -592,11 +600,11 @@ class VoyageController extends Controller
         $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
         $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
 
-        // Lieux de départ : source Laravel (voyage_departure_places) pour affichage et ajout dans l'onglet Vols
+        // Lieux de dÃ©part : source Laravel (voyage_departure_places) pour affichage et ajout dans l'onglet Vols
         $departurePlaces = $laravelVoyage
             ? VoyageDeparturePlace::where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
             : collect();
-        // Vols associés par lieu (source unique : aj_tour_flights.departure_place_id) pour l'onglet Lieux de départ en lecture seule
+        // Vols associÃ©s par lieu (source unique : aj_tour_flights.departure_place_id) pour l'onglet Lieux de dÃ©part en lecture seule
         $departurePlaceFlightsFromTour = collect();
         try {
             if (\Illuminate\Support\Facades\Schema::connection('wp')->hasColumn('aj_tour_flights', 'departure_place_id')) {
@@ -608,7 +616,7 @@ class VoyageController extends Controller
         }
 
         // Charger les dates disponibles
-        $travelDates = TravelDate::getActiveDatesForTour($id);
+        $travelDates = TravelDate::getDatesForTour($id);
 
         $programJson = [];
         $programApiUrl = route('admin.circuits.voyages.program.save', ['id' => $id]);
@@ -618,7 +626,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        // Total places calculé à partir des chambres (affiché en lecture seule dans paramètres généraux)
+        // Total places calculÃ© Ã  partir des chambres (affichÃ© en lecture seule dans paramÃ¨tres gÃ©nÃ©raux)
         $totalPlacesVoyage = $this->computeTourTotalPlacesFromRooms($id);
 
         $voyageExtras = ($laravelVoyage && $this->voyageExtrasTableAvailable())
@@ -676,7 +684,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Associer les pays du monde (config) aux locations WP (arbre) et produire les données pour le select + villes.
+     * Associer les pays du monde (config) aux locations WP (arbre) et produire les donnÃ©es pour le select + villes.
      *
      * @param array $worldCountries [ code => nom ]
      * @param array $locationsTree  [ [ 'id', 'title', 'children' => [...] ], ... ]
@@ -716,7 +724,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Construire la liste fusionnée Pays → Villes (catalogue + WP) pour l’UI.
+     * Construire la liste fusionnÃ©e Pays â†’ Villes (catalogue + WP) pour lâ€™UI.
      * Chaque ville a : id (WP ou null), title, needsCreate (true si pas encore en WP).
      *
      * @param array $worldCountries [ code => nom ]
@@ -745,7 +753,7 @@ class VoyageController extends Controller
             $list = [];
             $seenNorm = [];
 
-            // D’abord les villes du catalogue world_cities
+            // Dâ€™abord les villes du catalogue world_cities
             foreach ($worldCities[$code] ?? [] as $title) {
                 $norm = $normalize($title);
                 $seenNorm[$norm] = true;
@@ -816,87 +824,106 @@ class VoyageController extends Controller
 
     /**
      * Sync hotels for tour: replace all by request data (tour_hotels[] or tour_hotel).
-     * Règle métier : un seul hôtel par voyage (premier élément conservé si plusieurs).
+     * RÃ¨gle mÃ©tier : un seul hÃ´tel par voyage (premier Ã©lÃ©ment conservÃ© si plusieurs).
      *
-     * @return int[] IDs des enregistrements TourHotel créés, dans l’ordre d’affichage (pour sync des chambres).
+     * @return int[] IDs des enregistrements TourHotel crÃ©Ã©s, dans lâ€™ordre dâ€™affichage (pour sync des chambres).
      */
-    private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): array
+        private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): array
     {
-    $items = [];
-
-    $inputHotels = $request->has('tour_hotels') && is_array($request->input('tour_hotels'))
-        ? $request->input('tour_hotels')
-        : ($request->has('tour_hotel') ? [$request->input('tour_hotel', [])] : []);
-
-    // Règle métier : 1 seul hôtel par voyage
-    if (is_array($inputHotels) && count($inputHotels) > 1) {
-        $inputHotels = [reset($inputHotels)];
-    }
-
-    foreach ($inputHotels as $raw) {
-        if (!is_array($raw)) continue;
-
-        $checkInDay = isset($raw['check_in_day']) && $raw['check_in_day'] !== '' ? max(1, (int) $raw['check_in_day']) : null;
-        $checkOutDay = isset($raw['check_out_day']) && $raw['check_out_day'] !== '' ? max(1, (int) $raw['check_out_day']) : null;
-
-        $oldDayNumber = isset($raw['day_number']) && $raw['day_number'] !== '' ? max(1, (int) $raw['day_number']) : null;
-
-        if (!$checkInDay && $oldDayNumber) $checkInDay = $oldDayNumber;
-        if (!$checkOutDay && $oldDayNumber) $checkOutDay = $oldDayNumber;
-
-        if (!$checkInDay) $checkInDay = 1;
-        if (!$checkOutDay) $checkOutDay = 1;
-
-        if ($checkOutDay < $checkInDay) {
-            $checkOutDay = $checkInDay;
-        }
-
-        $items[] = [
-            'check_in_day' => $checkInDay,
-            'check_out_day' => $checkOutDay,
-            'day_number' => $oldDayNumber ?? $checkInDay,
-            'is_optional' => !empty($raw['is_optional']) ? 1 : 0,
-            'hotel_name' => $raw['hotel_name'] ?? null,
-            'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
-            'address' => $raw['address'] ?? null,
-            'room_type' => $raw['room_type'] ?? null,
-            'meal_plan' => $raw['meal_plan'] ?? null,
-            'notes' => $raw['notes'] ?? null,
-            'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
-        ];
-    }
-
-        TourHotel::where('tour_id', $tourId)->delete();
-
+        $inputHotels = $request->has('tour_hotels') && is_array($request->input('tour_hotels'))
+            ? array_values($request->input('tour_hotels'))
+            : ($request->has('tour_hotel') ? [$request->input('tour_hotel', [])] : []);
+        $existingHotels = TourHotel::where('tour_id', $tourId)->get()->keyBy('id');
+        $keptHotelIds = [];
+        $savedHotelIds = [];
         $sortOrder = 0;
-        $createdIds = [];
-
-        foreach ($items as $data) {
-            $payload = array_merge($data, [
+        foreach ($inputHotels as $raw) {
+            if (! is_array($raw)) {
+                continue;
+            }
+            $checkInDay = isset($raw['check_in_day']) && $raw['check_in_day'] !== '' ? max(1, (int) $raw['check_in_day']) : null;
+            $checkOutDay = isset($raw['check_out_day']) && $raw['check_out_day'] !== '' ? max(1, (int) $raw['check_out_day']) : null;
+            $oldDayNumber = isset($raw['day_number']) && $raw['day_number'] !== '' ? max(1, (int) $raw['day_number']) : null;
+            if (! $checkInDay && $oldDayNumber) {
+                $checkInDay = $oldDayNumber;
+            }
+            if (! $checkOutDay && $oldDayNumber) {
+                $checkOutDay = $oldDayNumber;
+            }
+            $checkInDay = $checkInDay ?: 1;
+            $checkOutDay = max($checkInDay, $checkOutDay ?: 1);
+            $hotelName = trim((string) ($raw['hotel_name'] ?? ''));
+            $address = trim((string) ($raw['address'] ?? ''));
+            $mealPlan = trim((string) ($raw['meal_plan'] ?? ''));
+            $notes = trim((string) ($raw['notes'] ?? ''));
+            $roomType = trim((string) ($raw['room_type'] ?? ''));
+            $rooms = isset($raw['rooms']) && is_array($raw['rooms']) ? $raw['rooms'] : [];
+            $hasRoomPayload = collect($rooms)->contains(function ($room) {
+                return is_array($room) && trim((string) ($room['room_type'] ?? '')) !== '';
+            });
+            $hasHotelPayload = $hotelName !== ''
+                || $address !== ''
+                || $mealPlan !== ''
+                || $notes !== ''
+                || $roomType !== ''
+                || ! empty($raw['image_id'])
+                || ! empty($raw['is_optional'])
+                || $hasRoomPayload;
+            if (! $hasHotelPayload) {
+                continue;
+            }
+            $payload = [
                 'tour_id' => $tourId,
+                'check_in_day' => $checkInDay,
+                'check_out_day' => $checkOutDay,
+                'day_number' => $oldDayNumber ?? $checkInDay,
+                'is_optional' => ! empty($raw['is_optional']) ? 1 : 0,
+                'hotel_name' => $hotelName !== '' ? $hotelName : null,
+                'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
+                'address' => $address !== '' ? $address : null,
+                'room_type' => $roomType !== '' ? $roomType : null,
+                'meal_plan' => $mealPlan !== '' ? $mealPlan : null,
+                'notes' => $notes !== '' ? $notes : null,
+                'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
                 'sort_order' => $sortOrder++,
-            ]);
-
-            $createdIds[] = (int) TourHotel::create($payload)->id;
+            ];
+            $hotelId = isset($raw['id']) && $raw['id'] !== '' ? (int) $raw['id'] : 0;
+            $hotel = $hotelId > 0 ? $existingHotels->get($hotelId) : null;
+            if ($hotel) {
+                $hotel->fill($payload);
+                $hotel->save();
+            } else {
+                $hotel = TourHotel::create($payload);
+            }
+            $savedHotelIds[] = (int) $hotel->id;
+            $keptHotelIds[] = (int) $hotel->id;
         }
-
-        return $createdIds;
+        $hotelIdsToDelete = $existingHotels->keys()
+            ->map(fn ($value) => (int) $value)
+            ->diff($keptHotelIds)
+            ->values();
+        if ($hotelIdsToDelete->isNotEmpty()) {
+            $roomIdsToDelete = TourHotelRoom::whereIn('tour_hotel_id', $hotelIdsToDelete->all())->pluck('id');
+            if ($roomIdsToDelete->isNotEmpty()) {
+                TourHotelRoomAvailability::whereIn('tour_hotel_room_id', $roomIdsToDelete->all())->delete();
+            }
+            TourHotelRoomAvailability::whereIn('tour_hotel_id', $hotelIdsToDelete->all())->delete();
+            TourHotelRoom::whereIn('tour_hotel_id', $hotelIdsToDelete->all())->delete();
+            TourHotel::whereIn('id', $hotelIdsToDelete->all())->delete();
+        }
+        return $savedHotelIds;
     }
+
     /**
      * Sync rooms for each tour hotel. Expects hotel ids in same order as tour_hotels request array.
      */
-    private function syncTourHotelRooms(int $tourId, \Illuminate\Http\Request $request, array $hotelIdsOrdered): void
+        private function syncTourHotelRooms(int $tourId, \Illuminate\Http\Request $request, array $hotelIdsOrdered): array
     {
         $tourHotelsInput = $request->input('tour_hotels', []);
         if (!is_array($tourHotelsInput)) {
-            return;
+            return [];
         }
-
-        // Le formulaire peut envoyer des indices non consécutifs (ex: suppression d'une ligne).
-        // On re-indexe pour que l'index (0..N-1) corresponde bien à $hotelIdsOrdered.
         $tourHotelsInput = array_values($tourHotelsInput);
-
-        // Robustesse UI: mapper les rooms par tour_hotel_id (si id présent) et par index (fallback pour nouvel hôtel).
         $roomsByTourHotelId = [];
         $roomsByIndex = [];
         foreach ($tourHotelsInput as $idx => $maybeTourHotel) {
@@ -910,15 +937,14 @@ class VoyageController extends Controller
             }
             $roomsByIndex[$idx] = $roomList;
         }
-
+        $savedRoomIdsByHotelIndex = [];
         foreach ($hotelIdsOrdered as $index => $tourHotelId) {
             $roomsInput = $roomsByTourHotelId[$tourHotelId] ?? ($roomsByIndex[$index] ?? ($tourHotelsInput[$index]['rooms'] ?? []));
             if (!is_array($roomsInput)) {
                 $roomsInput = [];
             }
-            // Réindexer en tableau numérique (au cas où les clés seraient associatives)
             $roomsInput = array_values($roomsInput);
-
+            $existingRooms = TourHotelRoom::where('tour_hotel_id', $tourHotelId)->get()->keyBy('id');
             try {
                 $firstRoom = null;
                 foreach ($roomsInput as $rr) {
@@ -943,12 +969,11 @@ class VoyageController extends Controller
                     ] : null,
                 ]);
             } catch (\Throwable $e) {
-                // Ignore logging failures
             }
-
             $keptRoomIds = [];
+            $savedRoomIdsByRoomIndex = [];
             $sortOrder = 0;
-            foreach ($roomsInput as $r) {
+            foreach ($roomsInput as $roomIndex => $r) {
                 if (!is_array($r)) {
                     continue;
                 }
@@ -961,11 +986,9 @@ class VoyageController extends Controller
                 $children = max(0, (int) ($r['capacity_children'] ?? 0));
                 $rawCapTotal = $r['capacity_total'] ?? null;
                 $rawCapTotalProvided = ! ($rawCapTotal === null || $rawCapTotal === '');
-                // Aligné TourPlacesCalculator : cap. tot. explicite si fournie, sinon somme A+E (peut être 0 — pas de min(1) artificiel).
                 $capTotalStored = $rawCapTotalProvided
                     ? max(0, (int) $rawCapTotal)
                     : max(0, $adults + $children);
-
                 $payload = [
                     'tour_hotel_id' => $tourHotelId,
                     'room_type' => $roomType,
@@ -977,31 +1000,38 @@ class VoyageController extends Controller
                     'capacity_total' => $capTotalStored,
                     'supplement' => max(0, (float) ($r['supplement'] ?? 0)),
                     'description' => $r['description'] ?? null,
-                    // Hidden 0 + checkbox 1 : actif ssi valeur finale 1 (aligné TourPlacesCalculator / JS).
                     'is_active' => (int) ($r['is_active'] ?? 0) === 1,
                     'sort_order' => $sortOrder++,
                     'is_default' => ! empty($r['is_default']),
                     'notes' => $r['notes'] ?? null,
                 ];
-                if ($roomId && TourHotelRoom::where('tour_hotel_id', $tourHotelId)->where('id', $roomId)->exists()) {
-                    TourHotelRoom::where('id', $roomId)->update($payload);
-                    $keptRoomIds[] = $roomId;
+                if ($roomId && $existingRooms->has($roomId)) {
+                    $room = $existingRooms->get($roomId);
+                    $room->fill($payload);
+                    $room->save();
                 } else {
-                    // Sécurité : certaines bases WP existantes n'ont pas de DEFAULT/AUTO_INCREMENT correct sur `id`.
-                    // On force donc un id explicite lors de la création pour éviter l'erreur SQLSTATE: 'id' doesn't have a default value.
                     $maxId = (int) TourHotelRoom::query()->max('id');
                     $payload['id'] = $maxId > 0 ? ($maxId + 1) : 1;
                     $room = TourHotelRoom::create($payload);
-                    $keptRoomIds[] = $room->id;
                 }
+                $keptRoomIds[] = (int) $room->id;
+                $savedRoomIdsByRoomIndex[$roomIndex] = (int) $room->id;
             }
-            TourHotelRoom::where('tour_hotel_id', $tourHotelId)->whereNotIn('id', $keptRoomIds)->delete();
+            $roomIdsToDelete = $existingRooms->keys()
+                ->map(fn ($value) => (int) $value)
+                ->diff($keptRoomIds)
+                ->values();
+            if ($roomIdsToDelete->isNotEmpty()) {
+                TourHotelRoomAvailability::whereIn('tour_hotel_room_id', $roomIdsToDelete->all())->delete();
+                TourHotelRoom::whereIn('id', $roomIdsToDelete->all())->delete();
+            }
+            $savedRoomIdsByHotelIndex[$index] = $savedRoomIdsByRoomIndex;
         }
+        return $savedRoomIdsByHotelIndex;
     }
 
-
     /**
-     * @see TourPlacesCalculator Logique unique partagée avec le formulaire (JS).
+     * @see TourPlacesCalculator Logique unique partagÃ©e avec le formulaire (JS).
      */
     private function computeTourTotalPlacesFromRooms(int $tourId): int
     {
@@ -1022,7 +1052,7 @@ class VoyageController extends Controller
     {
         $transfers = [];
         
-        // Nouveau format unifié : tour_transfers[]
+        // Nouveau format unifiÃ© : tour_transfers[]
         if ($request->has('tour_transfers') && is_array($request->input('tour_transfers'))) {
             foreach ($request->input('tour_transfers') as $transfer) {
                 if (is_array($transfer) && (isset($transfer['from_label']) || isset($transfer['to_label']) || isset($transfer['pickup_time']))) {
@@ -1031,7 +1061,7 @@ class VoyageController extends Controller
             }
         }
         
-        // Ancien format : tour_transfer_arrivals[] et tour_transfer_departures[] (compatibilité)
+        // Ancien format : tour_transfer_arrivals[] et tour_transfer_departures[] (compatibilitÃ©)
         $arrivals = [];
         if ($request->has('tour_transfer_arrivals') && is_array($request->input('tour_transfer_arrivals'))) {
             foreach ($request->input('tour_transfer_arrivals') as $arr) {
@@ -1060,17 +1090,17 @@ class VoyageController extends Controller
             }
         }
         
-        // Si nouveau format utilisé, ignorer l'ancien format
+        // Si nouveau format utilisÃ©, ignorer l'ancien format
         if (!empty($transfers)) {
             TourTransfer::where('tour_id', $tourId)->delete();
             $sortOrder = 0;
             foreach ($transfers as $transfer) {
                 $dayNumber = isset($transfer['day_number']) && $transfer['day_number'] !== '' ? max(1, (int) $transfer['day_number']) : 1;
-                // Par défaut, on utilise 'arrival' comme direction (peut être changé plus tard si nécessaire)
-                // Pour l'instant, on garde la compatibilité avec le modèle qui nécessite une direction
+                // Par dÃ©faut, on utilise 'arrival' comme direction (peut Ãªtre changÃ© plus tard si nÃ©cessaire)
+                // Pour l'instant, on garde la compatibilitÃ© avec le modÃ¨le qui nÃ©cessite une direction
                 TourTransfer::create([
                     'tour_id' => $tourId,
-                    'direction' => TourTransfer::DIRECTION_ARRIVAL, // Par défaut, peut être adapté selon besoin
+                    'direction' => TourTransfer::DIRECTION_ARRIVAL, // Par dÃ©faut, peut Ãªtre adaptÃ© selon besoin
                     'day_number' => $dayNumber,
                     'sort_order' => $sortOrder++,
                     'is_optional' => !empty($transfer['is_optional']) ? 1 : 0,
@@ -1189,7 +1219,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Extras réservation (workspace) : une ligne par option, liée au voyage Laravel.
+     * Extras rÃ©servation (workspace) : une ligne par option, liÃ©e au voyage Laravel.
      */
     private function syncVoyageExtras(Voyage $voyage, Request $request): void
     {
@@ -1269,53 +1299,326 @@ class VoyageController extends Controller
     /**
      * Sync travel dates for tour.
      */
-    private function syncTravelDates(int $tourId, \Illuminate\Http\Request $request): void
+        private function syncTravelDates(int $tourId, \Illuminate\Http\Request $request): Collection
     {
         $dates = $request->input('travel_dates', []);
         if (!is_array($dates)) {
-            return;
+            return collect();
         }
-
-        // Places calculées à partir des chambres configurées dans l’hôtel du voyage.
-        // La valeur saisie dans l’écran UI n’est plus utilisée.
-        $seatsTotal = 0;
-        try {
-            $tourHotels = TourHotel::getAllForTour($tourId)->load('rooms');
-            foreach ($tourHotels as $hotel) {
-                foreach ($hotel->rooms->where('is_active', true) as $room) {
-                    $cap = (int) ($room->capacity_total ?? 0);
-                    $count = (int) ($room->room_count ?? 0);
-                    if ($cap > 0 && $count > 0) {
-                        $seatsTotal += $count * $cap;
-                    }
-                }
-            }
-        } catch (\Throwable $e) {
-            $seatsTotal = 0;
+        $existingDates = TravelDate::where('travel_id', $tourId)->orderBy('date')->orderBy('id')->get();
+        $existingById = $existingDates->keyBy('id');
+        $existingByDate = $existingDates->keyBy(fn (TravelDate $travelDate) => optional($travelDate->date)->format('Y-m-d'));
+        /** @var array<string, TravelDate> Même requête : évite plusieurs lignes aj_travel_dates pour la même date (clé unique travel_id+date). */
+        $resolvedByDate = [];
+        foreach ($existingByDate as $ymd => $td) {
+            $resolvedByDate[$ymd] = $td;
         }
-
-        // Supprimer les anciennes dates
-        TravelDate::where('travel_id', $tourId)->delete();
-
-        // Créer les nouvelles dates
-        foreach ($dates as $dateData) {
-            if (!is_array($dateData)) {
+        $keptDateIds = [];
+        $persistedDates = collect();
+        foreach (array_values($dates) as $dateData) {
+            if (! is_array($dateData)) {
                 continue;
             }
-
-            $date = $dateData['date'] ?? null;
-            if (empty($date)) {
-                continue; // Ignorer si pas de date
+            $date = trim((string) ($dateData['date'] ?? ''));
+            if ($date === '') {
+                continue;
             }
-
-            TravelDate::create([
+            $travelDateId = isset($dateData['id']) && $dateData['id'] !== '' ? (int) $dateData['id'] : 0;
+            $travelDate = $travelDateId > 0 ? $existingById->get($travelDateId) : null;
+            if (! $travelDate) {
+                $travelDate = $resolvedByDate[$date] ?? null;
+            }
+            if (! $travelDate) {
+                $travelDate = $existingByDate->get($date);
+            }
+            $payload = [
                 'travel_id' => $tourId,
                 'date' => $date,
                 'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
-                'seats' => $seatsTotal,
                 'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? $dateData['price_override'] : null,
-            ]);
+            ];
+            if ($travelDate) {
+                $travelDate->fill($payload);
+                $travelDate->save();
+            } else {
+                $payload['seats'] = isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : 0;
+                $travelDate = TravelDate::create($payload);
+            }
+            $resolvedByDate[$date] = $travelDate->fresh();
+            $keptDateIds[] = (int) $travelDate->id;
+            $persistedDates->push($travelDate->fresh());
         }
+        $persistedDates = $persistedDates->unique('id')->values();
+        $dateIdsToDelete = $existingDates->pluck('id')
+            ->map(fn ($value) => (int) $value)
+            ->diff($keptDateIds)
+            ->values();
+        if ($dateIdsToDelete->isNotEmpty()) {
+            TourHotelRoomAvailability::whereIn('travel_date_id', $dateIdsToDelete->all())->delete();
+            TravelDate::whereIn('id', $dateIdsToDelete->all())->delete();
+        }
+        return $persistedDates->sortBy('date')->values();
+    }
+    private function syncTourHotelRoomDateAvailabilities(int $tourId, \Illuminate\Http\Request $request, array $hotelIdsOrdered, array $roomIdsByHotelIndex, Collection $travelDates): void
+    {
+        $tourHotelsInput = $request->input('tour_hotels', []);
+        if (! is_array($tourHotelsInput)) {
+            $tourHotelsInput = [];
+        }
+        $tourHotelsInput = array_values($tourHotelsInput);
+        $travelDatesById = $travelDates->keyBy('id');
+        $travelDatesByDate = $travelDates->keyBy(fn (TravelDate $travelDate) => optional($travelDate->date)->format('Y-m-d'));
+        $validTravelDateIds = $travelDatesById->keys()->map(fn ($value) => (int) $value)->all();
+        foreach ($hotelIdsOrdered as $hotelIndex => $tourHotelId) {
+            $hotelInput = $tourHotelsInput[$hotelIndex] ?? [];
+            $roomsInput = isset($hotelInput['rooms']) && is_array($hotelInput['rooms']) ? array_values($hotelInput['rooms']) : [];
+            $savedRoomIds = $roomIdsByHotelIndex[$hotelIndex] ?? [];
+            foreach ($roomsInput as $roomIndex => $roomInput) {
+                if (! is_array($roomInput)) {
+                    continue;
+                }
+                $roomId = $savedRoomIds[$roomIndex] ?? null;
+                if (! $roomId) {
+                    continue;
+                }
+                $roomModel = TourHotelRoom::find($roomId);
+                if (! $roomModel) {
+                    continue;
+                }
+                $existingAvailabilities = TourHotelRoomAvailability::where('tour_hotel_room_id', $roomId)->get()->keyBy('travel_date_id');
+                $postedRows = isset($roomInput['date_availabilities']) && is_array($roomInput['date_availabilities']) ? array_values($roomInput['date_availabilities']) : [];
+                $postedByTravelDateId = [];
+                foreach ($postedRows as $availabilityInput) {
+                    if (! is_array($availabilityInput)) {
+                        continue;
+                    }
+                    $travelDate = null;
+                    $travelDateId = isset($availabilityInput['travel_date_id']) && $availabilityInput['travel_date_id'] !== '' ? (int) $availabilityInput['travel_date_id'] : 0;
+                    if ($travelDateId > 0) {
+                        $travelDate = $travelDatesById->get($travelDateId);
+                    }
+                    if (! $travelDate) {
+                        $dateKey = trim((string) ($availabilityInput['date'] ?? ''));
+                        if ($dateKey !== '') {
+                            $travelDate = $travelDatesByDate->get($dateKey);
+                        }
+                    }
+                    if (! $travelDate) {
+                        continue;
+                    }
+                    $postedByTravelDateId[(int) $travelDate->id] = $availabilityInput;
+                }
+                foreach ($travelDates as $travelDate) {
+                    $travelDateId = (int) $travelDate->id;
+                    $availabilityInput = $postedByTravelDateId[$travelDateId] ?? [];
+                    $availability = $existingAvailabilities->get($travelDateId) ?: new TourHotelRoomAvailability([
+                        'tour_id' => $tourId,
+                        'tour_hotel_id' => $tourHotelId,
+                        'tour_hotel_room_id' => $roomId,
+                        'travel_date_id' => $travelDateId,
+                    ]);
+                    $defaults = $this->buildDefaultRoomDateAvailabilityPayload($roomModel);
+                    $availableRooms = isset($availabilityInput['available_rooms']) && $availabilityInput['available_rooms'] !== ''
+                        ? max(0, (int) $availabilityInput['available_rooms'])
+                        : $defaults['available_rooms'];
+                    $availablePlaces = isset($availabilityInput['available_places']) && $availabilityInput['available_places'] !== ''
+                        ? max(0, (int) $availabilityInput['available_places'])
+                        : max(0, $availableRooms * $defaults['capacity_per_room']);
+                    $status = $this->normalizeRoomAvailabilityStatus($availabilityInput['status'] ?? $defaults['status']);
+                    if (in_array($status, [TourHotelRoomAvailability::STATUS_FULL, TourHotelRoomAvailability::STATUS_CLOSED], true)) {
+                        $availableRooms = 0;
+                        $availablePlaces = 0;
+                    }
+                    $availability->fill([
+                        'tour_id' => $tourId,
+                        'tour_hotel_id' => $tourHotelId,
+                        'tour_hotel_room_id' => $roomId,
+                        'travel_date_id' => $travelDateId,
+                        'available_rooms' => $availableRooms,
+                        'available_places' => $availablePlaces,
+                        'status' => $status,
+                        'supplement' => isset($availabilityInput['supplement']) && $availabilityInput['supplement'] !== ''
+                            ? max(0, (float) $availabilityInput['supplement'])
+                            : $defaults['supplement'],
+                    ]);
+                    $availability->save();
+                }
+                if (! empty($validTravelDateIds)) {
+                    TourHotelRoomAvailability::where('tour_hotel_room_id', $roomId)
+                        ->whereNotIn('travel_date_id', $validTravelDateIds)
+                        ->delete();
+                } else {
+                    TourHotelRoomAvailability::where('tour_hotel_room_id', $roomId)->delete();
+                }
+            }
+        }
+    }
+    private function syncTravelDateSeatsFromRoomAvailabilities(int $tourId, Collection $travelDates, int $fallbackSeats): int
+    {
+        if ($travelDates->isEmpty()) {
+            return $fallbackSeats;
+        }
+        $availabilityTotals = TourHotelRoomAvailability::where('tour_id', $tourId)
+            ->whereIn('travel_date_id', $travelDates->pluck('id')->all())
+            ->get()
+            ->groupBy('travel_date_id')
+            ->map(function (Collection $items) {
+                return $items->sum(function (TourHotelRoomAvailability $item) {
+                    if (in_array($item->status, [TourHotelRoomAvailability::STATUS_FULL, TourHotelRoomAvailability::STATUS_CLOSED], true)) {
+                        return 0;
+                    }
+                    return max(0, (int) $item->available_places);
+                });
+            });
+        $maxSeats = 0;
+        foreach ($travelDates as $travelDate) {
+            $seats = $availabilityTotals->has($travelDate->id)
+                ? (int) $availabilityTotals->get($travelDate->id)
+                : $fallbackSeats;
+            $travelDate->seats = $seats;
+            $travelDate->save();
+            $maxSeats = max($maxSeats, $seats);
+        }
+        return $maxSeats;
+    }
+    private function buildDefaultRoomDateAvailabilityPayload(TourHotelRoom $room): array
+    {
+        $capacityPerRoom = TourPlacesCalculator::effectiveCapacity(
+            (int) ($room->capacity_total ?? 0),
+            (int) ($room->capacity_adults ?? 0),
+            (int) ($room->capacity_children ?? 0),
+        );
+        $availableRooms = max(0, (int) ($room->room_count ?? 0));
+        return [
+            'available_rooms' => $availableRooms,
+            'capacity_per_room' => $capacityPerRoom,
+            'available_places' => max(0, $availableRooms * $capacityPerRoom),
+            'status' => $availableRooms > 0 ? TourHotelRoomAvailability::STATUS_AVAILABLE : TourHotelRoomAvailability::STATUS_FULL,
+            'supplement' => max(0, (float) ($room->supplement ?? 0)),
+        ];
+    }
+    private function normalizeRoomAvailabilityStatus(mixed $status): string
+    {
+        $status = strtolower(trim((string) $status));
+        return in_array($status, TourHotelRoomAvailability::STATUSES, true)
+            ? $status
+            : TourHotelRoomAvailability::STATUS_AVAILABLE;
+    }
+
+    /**
+     * Compatibilité : 1 date WP (aj_travel_dates) = 1 départ Laravel (departures).
+     * Stocke wp_travel_date_id pour faire le lien avec les réservations existantes (travel_date_id).
+     */
+    private function syncLaravelDeparturesFromWpTravelDates(Voyage $laravelVoyage, Collection $travelDates, int $lastDayNumber, Request $request): void
+    {
+        if (! $laravelVoyage) {
+            return;
+        }
+
+        if ($travelDates->isEmpty()) {
+            Departure::query()
+                ->where('voyage_id', $laravelVoyage->id)
+                ->whereNotNull('wp_travel_date_id')
+                ->delete();
+
+            return;
+        }
+
+        $basePrice = $request->input('base_price');
+        if ($basePrice === null || $basePrice === '') {
+            $basePrice = $request->input('adult_price');
+        }
+        $salePrice = $request->input('sale_price');
+
+        $keptIds = [];
+
+        foreach ($travelDates as $travelDate) {
+            if (! $travelDate instanceof TravelDate) {
+                continue;
+            }
+            $wpTravelDateId = (int) ($travelDate->id ?? 0);
+            if ($wpTravelDateId <= 0 || ! $travelDate->date) {
+                continue;
+            }
+
+            $start = $travelDate->date->copy();
+            $startKey = $start->format('Y-m-d');
+            $end = $lastDayNumber > 1 ? $start->copy()->addDays($lastDayNumber - 1) : null;
+            $status = ! $travelDate->is_active ? Departure::STATUS_CLOSED : Departure::STATUS_OPEN;
+            $totalCapacity = max(0, (int) ($travelDate->seats ?? 0));
+
+            // 1) Même source WP : wp_travel_date_id. 2) Sinon même jour (départ sans lien WP ou doublon historique).
+            $dep = Departure::query()
+                ->where('voyage_id', $laravelVoyage->id)
+                ->where(function ($q) use ($wpTravelDateId, $startKey) {
+                    $q->where('wp_travel_date_id', $wpTravelDateId)
+                        ->orWhereDate('start_date', $startKey);
+                })
+                ->orderByRaw('CASE WHEN wp_travel_date_id IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('id')
+                ->first();
+
+            if (! $dep) {
+                $dep = new Departure([
+                    'voyage_id' => $laravelVoyage->id,
+                ]);
+            }
+
+            $dep->fill([
+                'voyage_id' => $laravelVoyage->id,
+                'wp_travel_date_id' => $wpTravelDateId,
+                'start_date' => $start,
+                'end_date' => $end,
+                'status' => $status,
+                'total_capacity' => $totalCapacity,
+                'available_capacity' => $totalCapacity,
+                'base_price' => ($basePrice !== null && $basePrice !== '' && is_numeric($basePrice)) ? (float) $basePrice : null,
+                'sale_price' => ($salePrice !== null && $salePrice !== '' && is_numeric($salePrice)) ? (float) $salePrice : null,
+            ]);
+
+            $dep->save();
+            $keptIds[] = (int) $dep->id;
+
+            // Supprimer les autres lignes en conflit (même voyage + même date ou même wp id), après fusion des FKs.
+            $dupes = Departure::query()
+                ->where('voyage_id', $laravelVoyage->id)
+                ->where('id', '!=', $dep->id)
+                ->where(function ($q) use ($wpTravelDateId, $startKey) {
+                    $q->where('wp_travel_date_id', $wpTravelDateId)
+                        ->orWhereDate('start_date', $startKey);
+                })
+                ->orderBy('id')
+                ->get();
+
+            foreach ($dupes as $dup) {
+                $this->mergeDepartureInto($dup, $dep);
+            }
+        }
+
+        if (! empty($keptIds)) {
+            Departure::query()
+                ->where('voyage_id', $laravelVoyage->id)
+                ->whereNotNull('wp_travel_date_id')
+                ->whereNotIn('id', $keptIds)
+                ->delete();
+        }
+    }
+
+    /**
+     * Réattribue les enregistrements liés puis supprime le départ doublon.
+     */
+    private function mergeDepartureInto(Departure $from, Departure $into): void
+    {
+        if ((int) $from->id === (int) $into->id) {
+            return;
+        }
+
+        DepartureHotel::query()->where('departure_id', $from->id)->update(['departure_id' => $into->id]);
+        Reservation::query()->where('departure_id', $from->id)->update(['departure_id' => $into->id]);
+        if (Schema::hasTable('stock_movements')) {
+            StockMovement::query()->where('departure_id', $from->id)->update(['departure_id' => $into->id]);
+        }
+        $from->delete();
     }
 
     /**
@@ -1385,7 +1688,7 @@ class VoyageController extends Controller
     {
         $validated = $request->validated();
 
-        // Option "Utiliser l'image principale comme image à la une WP"
+        // Option "Utiliser l'image principale comme image Ã  la une WP"
         if (!empty($validated['hero_use_as_thumbnail']) && !empty($validated['hero_image_id'])) {
             $validated['thumbnail_id'] = $validated['hero_image_id'];
         }
@@ -1398,7 +1701,7 @@ class VoyageController extends Controller
         try {
             $this->repository->updateTour($id, $validated);
 
-            // Programme par jours uniquement (aj_tour_days + aj_tour_day_activities). Plus d'édition tours_program.
+            // Programme par jours uniquement (aj_tour_days + aj_tour_day_activities). Plus d'Ã©dition tours_program.
             if ($request->has('programme_days')) {
                 try {
                     $voyage = Voyage::firstOrCreate(
@@ -1455,7 +1758,7 @@ class VoyageController extends Controller
                 // keep 1
             }
             
-            // Log TOUTES les clés de la requête pour diagnostic
+            // Log TOUTES les clÃ©s de la requÃªte pour diagnostic
             \Log::info('VoyageController@update - Request keys received', [
                 'tour_id' => $id,
                 'has_flight_options' => $request->has('flight_options'),
@@ -1464,7 +1767,7 @@ class VoyageController extends Controller
                 'flight_options_count' => $request->has('flight_options') ? count($request->input('flight_options', [])) : 0,
             ]);
 
-            // Diagnostic chambres: vérifier si le payload contient bien tour_hotels[*].rooms
+            // Diagnostic chambres: vÃ©rifier si le payload contient bien tour_hotels[*].rooms
             try {
                 $tourHotels = $request->input('tour_hotels', []);
                 $tourHotels = is_array($tourHotels) ? $tourHotels : [];
@@ -1531,11 +1834,11 @@ class VoyageController extends Controller
                 }
             }
 
-            // Hôtels puis chambres (IDs nouveaux après delete/create) — un seul sync hôtels
+            // HÃ´tels puis chambres (IDs nouveaux aprÃ¨s delete/create) â€” un seul sync hÃ´tels
             $hotelIdsOrdered = $this->syncTourHotels($id, $request);
-            $this->syncTourHotelRooms($id, $request, $hotelIdsOrdered);
+            $roomIdsByHotelIndex = $this->syncTourHotelRooms($id, $request, $hotelIdsOrdered);
 
-            // Calcul automatique des places (TourPlacesCalculator = même règles que le JS formulaire)
+            // Calcul automatique des places (TourPlacesCalculator = mÃªme rÃ¨gles que le JS formulaire)
             $totalPlaces = $this->computeTourTotalPlacesFromRooms($id);
             if (config('app.debug')) {
                 $hotelsForLog = TourHotel::getAllForTour($id)->load('rooms');
@@ -1555,17 +1858,53 @@ class VoyageController extends Controller
                     'request_vs_db_total_diff' => $reqExplain['total'] - $dbExplain['total'],
                 ]);
             }
-            $this->repository->updateTour($id, ['max_people' => $totalPlaces, 'places' => $totalPlaces]);
-
             $this->syncTourTransfers($id, $request, $lastDayNumber);
 
-            // Synchroniser les lieux de départ et les dates disponibles
+            // Synchroniser les lieux de d?part et les dates disponibles
             $this->syncDeparturePlaces($id, $request);
             $this->syncTravelDates($id, $request);
+            // Vérité terrain après écriture WP : la collection retournée par syncTravelDates peut être vide
+            // si le POST ne repasse pas travel_dates (ex. soumission partielle), alors que aj_travel_dates contient déjà des lignes.
+            $travelDates = TravelDate::getDatesForTour($id);
+
+            \Log::info('AVAILABILITY_SYNC_CHECK', [
+                'laravel_voyage_id' => $laravelVoyage->id,
+                'wp_tour_post_id' => $id,
+                'travel_dates_in_request' => is_array($request->input('travel_dates')) ? count($request->input('travel_dates')) : null,
+                'wp_travel_dates_count_after_db_reload' => $travelDates->count(),
+                'wp_travel_dates' => $travelDates->map(fn (TravelDate $td) => [
+                    'id' => $td->id,
+                    'date' => $td->date?->format('Y-m-d'),
+                ])->values()->all(),
+                'laravel_departures_count_before_sync' => Departure::query()->where('voyage_id', $laravelVoyage->id)->count(),
+            ]);
+
+            $this->syncTourHotelRoomDateAvailabilities($id, $request, $hotelIdsOrdered, $roomIdsByHotelIndex, $travelDates);
+            $maxPeople = $this->syncTravelDateSeatsFromRoomAvailabilities($id, $travelDates, $totalPlaces);
+            $this->repository->updateTour($id, ['max_people' => $maxPeople, 'places' => $maxPeople]);
+            $this->syncLaravelDeparturesFromWpTravelDates($laravelVoyage, $travelDates, $lastDayNumber, $request);
+
+            \Log::info('AVAILABILITY_SYNC_CHECK', [
+                'laravel_voyage_id' => $laravelVoyage->id,
+                'wp_tour_post_id' => $id,
+                'phase' => 'after_laravel_departure_sync',
+                'laravel_departures_count' => Departure::query()->where('voyage_id', $laravelVoyage->id)->count(),
+                'laravel_departures' => Departure::query()
+                    ->where('voyage_id', $laravelVoyage->id)
+                    ->orderBy('start_date')
+                    ->get(['id', 'start_date', 'wp_travel_date_id', 'status'])
+                    ->map(fn (Departure $d) => [
+                        'id' => $d->id,
+                        'start_date' => $d->start_date?->format('Y-m-d'),
+                        'wp_travel_date_id' => $d->wp_travel_date_id,
+                        'status' => $d->status,
+                    ])
+                    ->values()
+                    ->all(),
+            ]);
 
             $this->syncVoyageExtras($laravelVoyage, $request);
-
-            // Toujours synchroniser les vols Laravel → WP après chaque enregistrement (pour que le plugin affiche les vols)
+            // Toujours synchroniser les vols Laravel â†’ WP aprÃ¨s chaque enregistrement (pour que le plugin affiche les vols)
             if ($laravelVoyage && $laravelVoyage->wp_post_id) {
                 try {
                     $this->voyageFlightOptionService->syncOptionsToWp(
@@ -1677,7 +2016,7 @@ class VoyageController extends Controller
                 }
             }
 
-            // Sync hotel & transfers for this day (TravelProgramDay, résolu depuis TourDay)
+            // Sync hotel & transfers for this day (TravelProgramDay, rÃ©solu depuis TourDay)
             $this->syncDayHotelsAndTransfers($tourId, $dayId, is_array($dayRow) ? $dayRow : []);
         }
 
@@ -1703,7 +2042,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Sync inline "Activités" tab rows for a voyage (save-global strategy).
+     * Sync inline "ActivitÃ©s" tab rows for a voyage (save-global strategy).
      * Stores rows in travel_day_items with type=activity and source=voyage_activities_tab.
      */
     protected function syncActivities(Voyage $voyage, UpdateWpTourRequest $request): void
@@ -1787,9 +2126,9 @@ class VoyageController extends Controller
     /**
      * Sync hotel and transfers for a specific day.
      * - $tourId: WP tour id (wp_posts.ID)
-     * - $dayId: TourDay.id (aj_tour_days) envoyé par le formulaire
+     * - $dayId: TourDay.id (aj_tour_days) envoyÃ© par le formulaire
      * - $dayRow: current programme_days[$i] request array
-     * On résout TourDay -> day_number puis TravelProgramDay par voyage_id + day_number.
+     * On rÃ©sout TourDay -> day_number puis TravelProgramDay par voyage_id + day_number.
      */
     protected function syncDayHotelsAndTransfers(int $tourId, int $dayId, array $dayRow): void
     {
@@ -1806,7 +2145,7 @@ class VoyageController extends Controller
             return;
         }
 
-        // Syncer l'hôtel (0..1). Si hotel_id vide, lier au TourHotel créé pour ce jour (ex. ajout depuis le drawer).
+        // Syncer l'hÃ´tel (0..1). Si hotel_id vide, lier au TourHotel crÃ©Ã© pour ce jour (ex. ajout depuis le drawer).
         $hotelId = !empty($dayRow['hotel_id']) ? (int) $dayRow['hotel_id'] : null;
         if ($hotelId) {
             $hotel = TourHotel::find($hotelId);
@@ -1816,7 +2155,7 @@ class VoyageController extends Controller
                 $day->update(['hotel_id' => null]);
             }
         } else {
-            // Chercher un hôtel où le jour est dans la plage check-in -> check-out
+            // Chercher un hÃ´tel oÃ¹ le jour est dans la plage check-in -> check-out
             $dayNumber = (int) $tourDay->day_number;
             $hotelForDay = TourHotel::where('tour_id', $tourId)
                 ->where(function($query) use ($dayNumber) {
@@ -1827,7 +2166,7 @@ class VoyageController extends Controller
                           ->where('check_in_day', '<=', $dayNumber)
                           ->where('check_out_day', '>=', $dayNumber);
                     })
-                    // Compatibilité ancien format : day_number
+                    // CompatibilitÃ© ancien format : day_number
                     ->orWhere(function($q) use ($dayNumber) {
                         $q->whereNull('check_in_day')
                           ->whereNull('check_out_day')
@@ -1856,7 +2195,7 @@ class VoyageController extends Controller
 
         // Valider que chaque transfert existe, puis syncer
         // Utiliser directement DB::connection('mysql') pour forcer la bonne connexion pour la table pivot
-        // car la relation belongsToMany utilise la connexion du modèle lié (TourTransfer sur 'wp')
+        // car la relation belongsToMany utilise la connexion du modÃ¨le liÃ© (TourTransfer sur 'wp')
         if (!empty($transferIds)) {
             $validIds = TourTransfer::whereIn('id', $transferIds)->pluck('id')->toArray();
             
@@ -1869,7 +2208,7 @@ class VoyageController extends Controller
                 ->where('program_day_id', $programDayId)
                 ->delete();
             
-            // Insérer les nouvelles associations
+            // InsÃ©rer les nouvelles associations
             if (!empty($validIds)) {
                 $insertData = array_map(function($transferId) use ($programDayId) {
                     return [

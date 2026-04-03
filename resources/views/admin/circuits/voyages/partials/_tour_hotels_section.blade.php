@@ -204,6 +204,18 @@
                                             <textarea class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][notes]" rows="1" placeholder="Optionnel">{{ $notesVal }}</textarea>
                                         </div>
                                     </div>
+
+                                    @include('admin.circuits.voyages.partials._tour_hotel_room_date_availability', [
+                                        'hi' => $hi,
+                                        'ri' => $ri,
+                                        'room' => $room,
+                                        'travelDates' => $travelDates ?? collect(),
+                                        'roomCountVal' => $roomCountVal,
+                                        'capAdultsVal' => $capAdultsVal,
+                                        'capChildrenVal' => $capChildrenVal,
+                                        'capTotalVal' => $capTotalVal,
+                                        'supplementVal' => $supplementVal,
+                                    ])
                                 </div>
                             </div>
                             @endforeach
@@ -581,6 +593,282 @@
                 })
                 .catch(function(){ alert('Impossible de charger l\'hôtel.'); });
         });
+    }
+})();
+</script>
+<script>
+(function () {
+    if (window.tourHotelDateAvailabilitySyncBound) return;
+    window.tourHotelDateAvailabilitySyncBound = true;
+
+    function toInt(value) {
+        var parsed = parseInt(String(value == null ? '' : value).trim(), 10);
+        return isNaN(parsed) || parsed < 0 ? 0 : parsed;
+    }
+
+    function toMoney(value) {
+        var parsed = parseFloat(String(value == null ? '' : value).trim().replace(',', '.'));
+        return isNaN(parsed) || parsed < 0 ? 0 : parsed;
+    }
+
+    function roomCapacity(roomRow) {
+        if (!roomRow) return 0;
+        var total = toInt((roomRow.querySelector('input[name$="[capacity_total]"]') || {}).value);
+        if (total > 0) return total;
+        return toInt((roomRow.querySelector('input[name$="[capacity_adults]"]') || {}).value)
+            + toInt((roomRow.querySelector('input[name$="[capacity_children]"]') || {}).value);
+    }
+
+    function roomDefaults(roomRow) {
+        var availableRooms = toInt((roomRow.querySelector('input[name$="[room_count]"]') || {}).value);
+        var capacityPerRoom = roomCapacity(roomRow);
+        return {
+            availableRooms: availableRooms,
+            availablePlaces: availableRooms * capacityPerRoom,
+            supplement: toMoney((roomRow.querySelector('input[name$="[supplement]"]') || {}).value),
+            status: availableRooms > 0 ? 'available' : 'full'
+        };
+    }
+
+    function getTravelDates() {
+        return Array.from(document.querySelectorAll('#travel-dates-container .travel-date-row')).map(function (row, index) {
+            var dateInput = row.querySelector('input[name$="[date]"]');
+            var idInput = row.querySelector('input[name$="[id]"]');
+            var seatsInput = row.querySelector('input[name$="[seats]"]');
+            var dateValue = dateInput ? String(dateInput.value || '') : '';
+            var label = dateValue ? dateValue.split('-').reverse().join('/') : 'Date';
+
+            return {
+                index: index,
+                id: idInput ? String(idInput.value || '') : '',
+                date: dateValue,
+                label: label,
+                seatsInput: seatsInput || null
+            };
+        }).filter(function (item) {
+            return item.date !== '';
+        });
+    }
+
+    function availabilityKey(item) {
+        if (!item) return '';
+        if (item.id) return 'id:' + item.id;
+        return 'date:' + item.date;
+    }
+
+    function collectExistingAvailability(roomRow) {
+        var map = {};
+        roomRow.querySelectorAll('.tour-room-date-availability-row').forEach(function (row) {
+            var key = availabilityKey({
+                id: row.getAttribute('data-travel-date-id') || '',
+                date: row.getAttribute('data-date') || ''
+            });
+            if (!key) return;
+
+            var idInput = row.querySelector('input[name$="[id]"]');
+            var roomsInput = row.querySelector('.tour-room-date-available-rooms');
+            var placesInput = row.querySelector('.tour-room-date-available-places');
+            var statusInput = row.querySelector('.tour-room-date-status');
+            var supplementInput = row.querySelector('.tour-room-date-supplement');
+
+            map[key] = {
+                id: idInput ? String(idInput.value || '') : '',
+                availableRooms: roomsInput ? String(roomsInput.value || '') : '',
+                availablePlaces: placesInput ? String(placesInput.value || '') : '',
+                status: statusInput ? String(statusInput.value || '') : '',
+                supplement: supplementInput ? String(supplementInput.value || '') : ''
+            };
+        });
+        return map;
+    }
+
+    function ensureAvailabilityPanel(roomRow) {
+        var body = roomRow ? roomRow.querySelector('.card-body') : null;
+        if (!body) return null;
+
+        var panel = roomRow.querySelector('.tour-room-date-availability-panel');
+        if (panel) return panel;
+
+        var wrapper = document.createElement('details');
+        wrapper.className = 'tour-room-date-availability-panel mt-3';
+        wrapper.innerHTML = '' +
+            '<summary class="small fw-semibold text-primary">Disponibilité par date <span class="text-muted fw-normal">(0 départ)</span></summary>' +
+            '<div class="tour-room-date-availability-empty alert alert-warning py-2 px-3 small mt-2 mb-0">Ajoutez d\'abord des dates dans l\'onglet Disponibilité.</div>' +
+            '<div class="table-responsive mt-2 d-none">' +
+            '  <table class="table table-sm align-middle mb-0 tour-room-date-availability-table">' +
+            '    <thead><tr><th>Date</th><th>Chambres</th><th>Places</th><th>Statut</th><th>Supplément</th></tr></thead>' +
+            '    <tbody></tbody>' +
+            '  </table>' +
+            '</div>';
+        body.appendChild(wrapper);
+
+        return wrapper;
+    }
+
+    function buildAvailabilityRow(roomRow, travelDate, existing) {
+        var hotelIndex = roomRow.getAttribute('data-hotel-index') || '0';
+        var roomIndex = roomRow.getAttribute('data-room-index') || '0';
+        var defaults = roomDefaults(roomRow);
+        var keyBase = 'tour_hotels[' + hotelIndex + '][rooms][' + roomIndex + '][date_availabilities][' + travelDate.index + ']';
+        var status = (existing && existing.status) ? existing.status : defaults.status;
+        var availableRooms = existing && existing.availableRooms !== '' ? existing.availableRooms : String(defaults.availableRooms);
+        var availablePlaces = existing && existing.availablePlaces !== '' ? existing.availablePlaces : String(defaults.availablePlaces);
+        var supplement = existing && existing.supplement !== '' ? existing.supplement : String(defaults.supplement);
+        var idHtml = existing && existing.id
+            ? '<input type="hidden" name="' + keyBase + '[id]" value="' + existing.id + '">'
+            : '';
+
+        return '' +
+            '<tr class="tour-room-date-availability-row" data-date-index="' + travelDate.index + '" data-travel-date-id="' + travelDate.id + '" data-date="' + travelDate.date + '">' +
+            '  <td>' +
+            '    <div class="fw-semibold small">' + travelDate.label + '</div>' +
+            '    <div class="text-muted x-small">' + travelDate.date + '</div>' +
+                 idHtml +
+            '    <input type="hidden" name="' + keyBase + '[travel_date_id]" value="' + travelDate.id + '">' +
+            '    <input type="hidden" name="' + keyBase + '[date]" value="' + travelDate.date + '">' +
+            '  </td>' +
+            '  <td><input type="number" class="form-control form-control-sm tour-room-date-available-rooms" name="' + keyBase + '[available_rooms]" value="' + availableRooms + '" min="0"></td>' +
+            '  <td><input type="number" class="form-control form-control-sm tour-room-date-available-places" name="' + keyBase + '[available_places]" value="' + availablePlaces + '" min="0"></td>' +
+            '  <td><select class="form-select form-select-sm tour-room-date-status" name="' + keyBase + '[status]">' +
+            '      <option value="available"' + (status === 'available' ? ' selected' : '') + '>Disponible</option>' +
+            '      <option value="limited"' + (status === 'limited' ? ' selected' : '') + '>Limité</option>' +
+            '      <option value="full"' + (status === 'full' ? ' selected' : '') + '>Complet</option>' +
+            '      <option value="closed"' + (status === 'closed' ? ' selected' : '') + '>Fermé</option>' +
+            '  </select></td>' +
+            '  <td><input type="number" class="form-control form-control-sm tour-room-date-supplement" name="' + keyBase + '[supplement]" value="' + supplement + '" min="0" step="0.01"></td>' +
+            '</tr>';
+    }
+
+    function syncTravelDateSeatPreview() {
+        var travelDates = getTravelDates();
+        if (!travelDates.length) return;
+
+        travelDates.forEach(function (travelDate) {
+            var total = 0;
+            document.querySelectorAll('.tour-room-row').forEach(function (roomRow) {
+                var activeCheckbox = roomRow.querySelector('.tour-room-is-active');
+                if (activeCheckbox && !activeCheckbox.checked) return;
+
+                var row = roomRow.querySelector('.tour-room-date-availability-row[data-travel-date-id="' + travelDate.id + '"]')
+                    || roomRow.querySelector('.tour-room-date-availability-row[data-date="' + travelDate.date + '"]');
+                if (!row) return;
+
+                var statusInput = row.querySelector('.tour-room-date-status');
+                var status = statusInput ? String(statusInput.value || 'available') : 'available';
+                if (status === 'full' || status === 'closed') return;
+
+                var placesInput = row.querySelector('.tour-room-date-available-places');
+                total += toInt(placesInput ? placesInput.value : 0);
+            });
+
+            if (travelDate.seatsInput) {
+                travelDate.seatsInput.value = total;
+            }
+        });
+    }
+
+    function syncRoomAvailability(roomRow) {
+        if (!roomRow) return;
+
+        var panel = ensureAvailabilityPanel(roomRow);
+        if (!panel) return;
+
+        var summaryCount = panel.querySelector('summary .text-muted');
+        var emptyState = panel.querySelector('.tour-room-date-availability-empty');
+        var tableWrap = panel.querySelector('.table-responsive');
+        var tbody = panel.querySelector('tbody');
+        var travelDates = getTravelDates();
+        var existingRows = collectExistingAvailability(roomRow);
+
+        if (summaryCount) {
+            summaryCount.textContent = '(' + travelDates.length + ' départ' + (travelDates.length > 1 ? 's' : '') + ')';
+        }
+
+        if (!travelDates.length) {
+            if (emptyState) emptyState.classList.remove('d-none');
+            if (tableWrap) tableWrap.classList.add('d-none');
+            if (tbody) tbody.innerHTML = '';
+            return;
+        }
+
+        if (emptyState) emptyState.classList.add('d-none');
+        if (tableWrap) tableWrap.classList.remove('d-none');
+        if (tbody) {
+            tbody.innerHTML = travelDates.map(function (travelDate) {
+                var key = availabilityKey(travelDate);
+                return buildAvailabilityRow(roomRow, travelDate, existingRows[key]);
+            }).join('');
+        }
+    }
+
+    function syncAllRoomAvailabilities() {
+        document.querySelectorAll('.tour-room-row').forEach(syncRoomAvailability);
+        syncTravelDateSeatPreview();
+    }
+
+    window.syncTourHotelRoomAvailabilityTables = syncAllRoomAvailabilities;
+    window.syncTravelDateSeatPreview = syncTravelDateSeatPreview;
+
+    document.addEventListener('voyage:travel-dates-changed', function () {
+        syncAllRoomAvailabilities();
+    });
+
+    document.addEventListener('change', function (event) {
+        var target = event.target;
+        if (!target) return;
+
+        if (target.name && target.name.indexOf('travel_dates[') === 0) {
+            syncAllRoomAvailabilities();
+            return;
+        }
+
+        if (target.closest('.tour-room-row') && (
+            (target.name && target.name.indexOf('[room_count]') !== -1) ||
+            (target.name && target.name.indexOf('[capacity_adults]') !== -1) ||
+            (target.name && target.name.indexOf('[capacity_children]') !== -1) ||
+            (target.name && target.name.indexOf('[capacity_total]') !== -1) ||
+            (target.name && target.name.indexOf('[supplement]') !== -1 && target.name.indexOf('[date_availabilities]') === -1)
+        )) {
+            syncRoomAvailability(target.closest('.tour-room-row'));
+            syncTravelDateSeatPreview();
+            return;
+        }
+
+        if (target.classList.contains('tour-room-date-status')) {
+            var row = target.closest('.tour-room-date-availability-row');
+            if (row && (target.value === 'full' || target.value === 'closed')) {
+                var roomsInput = row.querySelector('.tour-room-date-available-rooms');
+                var placesInput = row.querySelector('.tour-room-date-available-places');
+                if (roomsInput) roomsInput.value = '0';
+                if (placesInput) placesInput.value = '0';
+            }
+            syncTravelDateSeatPreview();
+            return;
+        }
+
+        if (target.classList.contains('tour-room-date-available-rooms') || target.classList.contains('tour-room-date-available-places')) {
+            syncTravelDateSeatPreview();
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        var target = event.target;
+        if (!target) return;
+
+        if (target.classList.contains('tour-add-room')
+            || target.classList.contains('tour-remove-room')
+            || target.classList.contains('tour-remove-row')
+            || target.id === 'tour-add-hotel'
+            || target.classList.contains('remove-travel-date')
+            || target.id === 'add-travel-date') {
+            setTimeout(syncAllRoomAvailabilities, 0);
+        }
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncAllRoomAvailabilities);
+    } else {
+        syncAllRoomAvailabilities();
     }
 })();
 </script>

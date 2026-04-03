@@ -48,12 +48,21 @@
                             @endforeach
                         </select>
                     </div>
+                    @php
+                        $statusCur = old('status', $reservation->status);
+                        $statusNorm = match ($statusCur) {
+                            'EN_COURS' => 'pending',
+                            'VALIDEE' => 'confirmed',
+                            'ANNULEE' => 'cancelled',
+                            default => $statusCur,
+                        };
+                    @endphp
                     <div class="col-md-6">
                         <label class="form-label">Statut</label>
                         <select name="status" class="form-select">
-                            <option value="EN_COURS" {{ old('status', $reservation->status) === 'EN_COURS' ? 'selected' : '' }}>En cours</option>
-                            <option value="VALIDEE" {{ old('status', $reservation->status) === 'VALIDEE' ? 'selected' : '' }}>Validée</option>
-                            <option value="ANNULEE" {{ old('status', $reservation->status) === 'ANNULEE' ? 'selected' : '' }}>Annulée</option>
+                            <option value="pending" {{ $statusNorm === 'pending' ? 'selected' : '' }}>En attente</option>
+                            <option value="confirmed" {{ $statusNorm === 'confirmed' ? 'selected' : '' }}>Confirmée</option>
+                            <option value="cancelled" {{ $statusNorm === 'cancelled' ? 'selected' : '' }}>Annulée</option>
                         </select>
                     </div>
                     <div class="col-md-6">

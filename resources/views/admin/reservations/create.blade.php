@@ -33,7 +33,6 @@
                     <div class="alert alert-info py-2 mb-3 small">
                         <i class="bx bx-calendar me-1"></i> <strong>Date de départ choisie :</strong> {{ $selectedTravelDate->date->translatedFormat('l j F Y') }}
                     </div>
-                    <input type="hidden" name="travel_date_id" value="{{ $selectedTravelDate->id }}">
                 @endif
                 @php
                     $selectedTourId = (int) ($preselectedTourId ?? old('tour_id'));
@@ -58,7 +57,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Statut</label>
-                        <input type="text" class="form-control" value="EN_COURS" disabled>
+                        <input type="text" class="form-control" value="{{ \App\Models\Reservation::STATUS_PENDING }} (en attente)" disabled>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Type de paiement</label>
@@ -149,6 +148,9 @@
             'tourHotelsWithRooms' => collect(),
             'reservation' => null,
             'hotelsRoomsUrl' => route('admin.reservations.hotels-rooms'),
+            'voyageDeparturesUrl' => route('admin.reservations.voyage-departures'),
+            'departureHotelsRoomsUrl' => route('admin.reservations.departure-hotels-rooms'),
+            'selectedTravelDate' => $selectedTravelDate ?? null,
         ])
 
         <div class="card mb-3 border">

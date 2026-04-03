@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\UserAccessController;
 use App\Http\Controllers\Admin\VisaController;
 use App\Http\Controllers\Admin\VoyageController;
+use App\Http\Controllers\Admin\VoyageDepartureManageController;
 use App\Http\Controllers\Admin\VoyageReservationDataController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpMediaController;
@@ -130,6 +131,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
 
         Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
+        Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');
+        Route::get('reservations/departure-hotels-rooms', [ReservationsController::class, 'departureHotelsRooms'])->name('reservations.departure-hotels-rooms');
         Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');
         Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
         Route::get('reservations/hub-debug', [ReservationsController::class, 'hubDebug'])->name('reservations.hub-debug');
@@ -235,6 +238,18 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('circuits/voyages/{voyage}/departures', [DepartureController::class, 'store'])->name('circuits.voyages.departures.store');
         Route::match(['put', 'patch'], 'circuits/voyages/{voyage}/departures/{departure}', [DepartureController::class, 'update'])->name('circuits.voyages.departures.update');
         Route::delete('circuits/voyages/{voyage}/departures/{departure}', [DepartureController::class, 'destroy'])->name('circuits.voyages.departures.destroy');
+
+        Route::get('circuits/voyages/{voyage}/room-availability/departures', [VoyageDepartureManageController::class, 'modalDeparturesJson'])->name('circuits.voyages.room-availability.departures');
+        Route::get('circuits/voyages/{voyage}/room-availability/departures/{departure}/panel', [VoyageDepartureManageController::class, 'modalDeparturePanel'])->name('circuits.voyages.room-availability.departure-panel');
+
+        Route::get('circuits/voyages/{voyage}/departures/{departure}', [VoyageDepartureManageController::class, 'show'])->name('circuits.voyages.departures.show');
+        Route::put('circuits/voyages/{voyage}/departures/{departure}/settings', [VoyageDepartureManageController::class, 'updateSettings'])->name('circuits.voyages.departures.settings.update');
+        Route::post('circuits/voyages/{voyage}/departures/{departure}/hotels', [VoyageDepartureManageController::class, 'storeHotel'])->name('circuits.voyages.departures.hotels.store');
+        Route::put('circuits/voyages/{voyage}/departures/hotels/{departureHotel}', [VoyageDepartureManageController::class, 'updateHotel'])->name('circuits.voyages.departures.hotels.update');
+        Route::delete('circuits/voyages/{voyage}/departures/hotels/{departureHotel}', [VoyageDepartureManageController::class, 'destroyHotel'])->name('circuits.voyages.departures.hotels.destroy');
+        Route::post('circuits/voyages/{voyage}/departures/hotels/{departureHotel}/rooms', [VoyageDepartureManageController::class, 'storeRoom'])->name('circuits.voyages.departures.rooms.store');
+        Route::put('circuits/voyages/{voyage}/departures/rooms/{departureHotelRoom}', [VoyageDepartureManageController::class, 'updateRoom'])->name('circuits.voyages.departures.rooms.update');
+        Route::delete('circuits/voyages/{voyage}/departures/rooms/{departureHotelRoom}', [VoyageDepartureManageController::class, 'destroyRoom'])->name('circuits.voyages.departures.rooms.destroy');
 
         Route::post('circuits/voyages/{voyage}/items', [TravelDayItemController::class, 'store'])->name('circuits.voyages.items.store');
         Route::get('circuits/voyages/{voyage}/items/{item}/edit', [TravelDayItemController::class, 'edit'])->name('circuits.voyages.items.edit');

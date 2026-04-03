@@ -28,7 +28,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#availability" role="tab">
-                    <i class="bx bx-calendar"></i> <span class="ve-tab-label">Disponibilite</span>
+                    <i class="bx bx-calendar"></i> <span class="ve-tab-label">Départs</span>
                 </a>
             </li>
             <li class="nav-item">

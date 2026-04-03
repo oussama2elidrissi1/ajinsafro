@@ -363,6 +363,10 @@ body.partner-v2::after {
   width: 100%;
 }
 
+body.internal-v2-topbar-hidden .partner-v2-sidebar-sticky {
+  top: 2rem;
+}
+
 .aj-nav-list {
   list-style: none;
   margin: 0;
