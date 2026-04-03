@@ -521,16 +521,27 @@
 /* ==========================================================================
    Promotions — accordéon prototype (Tailwind reference: onglets + flex-1)
    ========================================================================== */
-.aj-promos--proto-accordion {
+.aj-promos.aj-promos--proto-accordion {
     padding: 12px 0 22px;
+    margin-top: 0;
+    background: transparent;
+    overflow: visible;
+    font-family: 'Poppins', Arial, sans-serif;
 }
 
-.aj-promos__proto-title {
+.aj-promos--proto-accordion .aj-promos__proto-title {
     margin: 0 0 14px;
     font-size: clamp(0.95rem, 1.5vw, 1.12rem);
     font-weight: 700;
     color: #0081bc;
     letter-spacing: -0.02em;
+}
+
+.aj-promos--proto-accordion .aj-container {
+	max-width: 1280px;
+	width: 100%;
+	margin: 0 auto;
+	padding: 0 16px;
 }
 
 @keyframes aj-pulse-soft {
@@ -543,67 +554,60 @@
     }
 }
 
-.aj-accordion-slider {
+.aj-promos--proto-accordion .aj-accordion-slider {
     display: flex;
     flex-direction: row;
     align-items: stretch;
     width: 100%;
     max-width: 72rem;
     margin: 0 auto;
-    height: 420px;
+    height: 380px;
     overflow: hidden;
     background: #fff;
-    border-radius: 8px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-@media (min-width: 640px) {
-    .aj-accordion-slider {
-        height: 380px;
-    }
-}
-
 @media (min-width: 768px) {
-    .aj-accordion-slider {
+    .aj-promos--proto-accordion .aj-accordion-slider {
         height: 320px;
     }
 }
 
-.aj-accordion-slide {
+.aj-promos--proto-accordion .aj-accordion-slide {
     display: flex;
     flex-direction: row;
     height: 100%;
     overflow: hidden;
     cursor: pointer;
     flex: 0 0 auto;
-    width: 2rem;
-    min-width: 2rem;
-    transition: flex 0.7s ease-in-out, width 0.7s ease-in-out, min-width 0.7s ease-in-out;
+    width: 2.5rem;
+    min-width: 2.5rem;
+    transition: all 0.7s ease-in-out;
 }
 
 @media (min-width: 640px) {
-    .aj-accordion-slide:not(.is-active) {
+    .aj-promos--proto-accordion .aj-accordion-slide:not(.is-active) {
         width: 2.5rem;
         min-width: 2.5rem;
     }
 }
 
 @media (min-width: 768px) {
-    .aj-accordion-slide:not(.is-active) {
+    .aj-promos--proto-accordion .aj-accordion-slide:not(.is-active) {
         width: 3.5rem;
         min-width: 3.5rem;
     }
 }
 
-.aj-accordion-slide.is-active {
+.aj-promos--proto-accordion .aj-accordion-slide.is-active {
     flex: 1 1 0%;
     width: auto;
     min-width: 0;
 }
 
-.aj-accordion-slide__tab {
-    flex: 0 0 2rem;
-    width: 2rem;
+.aj-promos--proto-accordion .aj-accordion-slide__tab {
+    flex: 0 0 2.5rem;
+    width: 2.5rem;
     height: 100%;
     display: flex;
     align-items: center;
@@ -615,20 +619,20 @@
 }
 
 @media (min-width: 640px) {
-    .aj-accordion-slide__tab {
+    .aj-promos--proto-accordion .aj-accordion-slide__tab {
         flex-basis: 2.5rem;
         width: 2.5rem;
     }
 }
 
 @media (min-width: 768px) {
-    .aj-accordion-slide__tab {
+    .aj-promos--proto-accordion .aj-accordion-slide__tab {
         flex-basis: 3.5rem;
         width: 3.5rem;
     }
 }
 
-.aj-accordion-slide__tab:hover {
+.aj-promos--proto-accordion .aj-accordion-slide__tab:hover {
     filter: brightness(1.1);
 }
 
@@ -652,34 +656,34 @@
     background: linear-gradient(to bottom, #ef4444, #b91c1c);
 }
 
-.aj-accordion-slide__tab-text {
+.aj-promos--proto-accordion .aj-accordion-slide__tab-text {
     position: absolute;
     transform: rotate(90deg);
     white-space: nowrap;
     font-weight: 600;
     color: #fff;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    font-size: 10px;
+    letter-spacing: 0.1em;
+    font-size: 0.875rem;
     max-width: 280px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 @media (min-width: 640px) {
-    .aj-accordion-slide__tab-text {
-        font-size: 0.75rem;
+    .aj-promos--proto-accordion .aj-accordion-slide__tab-text {
+        font-size: 0.875rem;
     }
 }
 
 @media (min-width: 768px) {
-    .aj-accordion-slide__tab-text {
+    .aj-promos--proto-accordion .aj-accordion-slide__tab-text {
         font-size: 1.125rem;
         letter-spacing: 0.25em;
     }
 }
 
-.aj-accordion-slide__content {
+.aj-promos--proto-accordion .aj-accordion-slide__content {
     position: relative;
     flex: 1 1 0%;
     min-width: 0;
@@ -694,15 +698,15 @@
     background: #d1d5db;
 }
 
-.aj-accordion-slide__content.is-obscured {
+.aj-promos--proto-accordion .aj-accordion-slide__content.is-obscured {
     opacity: 0;
 }
 
-.aj-accordion-slide__content.is-visible {
+.aj-promos--proto-accordion .aj-accordion-slide__content.is-visible {
     opacity: 1;
 }
 
-.aj-accordion-slide__img {
+.aj-promos--proto-accordion .aj-accordion-slide__img {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -711,7 +715,7 @@
     display: block;
 }
 
-.aj-accordion-slide__overlay {
+.aj-promos--proto-accordion .aj-accordion-slide__overlay {
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -735,7 +739,7 @@
     background: transparent;
 }
 
-.aj-accordion-slide__placeholder {
+.aj-promos--proto-accordion .aj-accordion-slide__placeholder {
     position: absolute;
     inset: 0;
     display: flex;
@@ -753,41 +757,41 @@
     background: #e5e7eb;
 }
 
-.aj-accordion-slide__placeholder-text {
+.aj-promos--proto-accordion .aj-accordion-slide__placeholder-text {
     font-weight: 700;
     color: #6b7280;
     font-size: clamp(1.25rem, 4vw, 3rem);
 }
 
 @media (min-width: 768px) {
-    .aj-accordion-slide__placeholder-text {
+    .aj-promos--proto-accordion .aj-accordion-slide__placeholder-text {
         font-size: clamp(2.5rem, 5vw, 3.75rem);
     }
 }
 
-.aj-accordion-slide__cta-wrap {
+.aj-promos--proto-accordion .aj-accordion-slide__cta-wrap {
     position: absolute;
     bottom: 10%;
     right: 5%;
     z-index: 3;
 }
 
-.aj-accordion-slide__cta-wrap--orange {
-    bottom: 10%;
-    right: 5%;
+.aj-promos--proto-accordion .aj-accordion-slide__cta-wrap--orange {
+    bottom: 13%;
+    right: 10%;
 }
 
 @media (min-width: 640px) {
-    .aj-accordion-slide__cta-wrap--orange {
+    .aj-promos--proto-accordion .aj-accordion-slide__cta-wrap--orange {
         bottom: 13%;
-        right: 7%;
+        right: 10%;
     }
 }
 
 @media (min-width: 768px) {
-    .aj-accordion-slide__cta-wrap--orange {
-        bottom: 15%;
-        right: 10%;
+    .aj-promos--proto-accordion .aj-accordion-slide__cta-wrap--orange {
+        bottom: 16%;
+        right: 13%;
     }
 }
 
@@ -810,13 +814,13 @@
     }
 }
 
-.aj-accordion-slide__cta {
+.aj-promos--proto-accordion .aj-accordion-slide__cta {
     display: inline-block;
     text-decoration: none;
     cursor: pointer;
 }
 
-.aj-accordion-slide__cta--orange {
+.aj-promos--proto-accordion .aj-accordion-slide__cta--orange {
     background: #ff7200;
     color: #fff;
     font-weight: 700;

@@ -1,6 +1,7 @@
 {{-- Modal : gestion stock chambres par date de départ (voyage Laravel requis). --}}
 @php
     $raDeparturesUrl = route('admin.circuits.voyages.room-availability.departures', $voyage);
+    $raSyncDeparturesUrl = route('admin.circuits.voyages.sync-departures', $voyage);
     $raPanelBase = url('/admin/circuits/voyages/'.$voyage->id.'/room-availability/departures');
     $raWpTourPostId = (int) ($wpTourPostId ?? 0);
     $raServerWpDates = (int) ($serverWpTravelDatesCount ?? 0);
@@ -18,6 +19,7 @@
     data-server-wp-travel-dates-count="{{ $raServerWpDates }}"
     data-server-laravel-departures-count="{{ $raServerLaravelDeps }}"
     data-departures-url="{{ $raDeparturesUrl }}"
+    data-sync-departures-url="{{ $raSyncDeparturesUrl }}"
     data-panel-base="{{ $raPanelBase }}"
 >
     <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
@@ -33,7 +35,7 @@
             </div>
             <div class="modal-body">
                 <div id="ra-sync-hint" class="alert alert-info small mb-3 d-none" role="status">
-                    <p class="mb-2"><strong>Information.</strong> Les dates de départ visibles dans le formulaire doivent être enregistrées pour générer les départs Laravel utilisables dans la gestion du stock.</p>
+                    <p class="mb-2"><strong>Information.</strong> Les départs sont synchronisés automatiquement depuis WordPress à l’ouverture de cette fenêtre.</p>
                     <p class="mb-0 d-none" id="ra-sync-hint-resync"></p>
                 </div>
                 <div class="row g-3 mb-3">

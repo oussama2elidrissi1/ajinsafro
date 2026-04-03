@@ -16,6 +16,7 @@ class DepartureController extends Controller
         $validated = $request->validate([
             'start_date' => 'required|date',
             'status' => ['required', 'string', Rule::in(Departure::STATUSES)],
+            'base_price' => 'nullable|numeric|min:0',
         ]);
 
         $already = Departure::query()
@@ -30,6 +31,7 @@ class DepartureController extends Controller
             ],
             [
                 'status' => $validated['status'],
+                'base_price' => $validated['base_price'] ?? null,
             ]
         );
 
@@ -45,6 +47,7 @@ class DepartureController extends Controller
         $validated = $request->validate([
             'start_date' => 'required|date',
             'status' => ['required', 'string', Rule::in(Departure::STATUSES)],
+            'base_price' => 'nullable|numeric|min:0',
         ]);
 
         $other = Departure::query()
@@ -58,7 +61,11 @@ class DepartureController extends Controller
                 ->withErrors(['start_date' => 'Une autre ligne existe déjà pour cette date de départ. Modifiez-la ou fusionnez les départs.']);
         }
 
-        $departure->update($validated);
+        $departure->update([
+            'start_date' => $validated['start_date'],
+            'status' => $validated['status'],
+            'base_price' => $validated['base_price'] ?? null,
+        ]);
         return redirect()->route('admin.circuits.voyages.edit', $voyage->wp_post_id ?? $voyage->id)
             ->with('success', 'Départ mis à jour.');
     }

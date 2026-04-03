@@ -24,6 +24,13 @@ define( 'AJTH_FILE',    __FILE__ );
 define( 'AJTH_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'AJTH_URL',     plugin_dir_url( __FILE__ ) );
 
+if ( ! defined( 'AJINSAFRO_HOME_DIR' ) ) {
+    define( 'AJINSAFRO_HOME_DIR', AJTH_DIR );
+}
+if ( ! defined( 'AJINSAFRO_HOME_URL' ) ) {
+    define( 'AJINSAFRO_HOME_URL', AJTH_URL );
+}
+
 /* ──────────────────────────────────────────────
  * Autoload includes
  * ────────────────────────────────────────────── */
@@ -166,6 +173,32 @@ function ajth_homepage_shortcode( $atts ) {
     return ob_get_clean();
 }
 add_shortcode( 'ajth_homepage', 'ajth_homepage_shortcode' );
+
+/**
+ * Shortcode: [ajinsafro_slider]
+ * Renders the standalone accordion slider template.
+ */
+function ajinsafro_slider_shortcode( $atts ) {
+    wp_enqueue_style(
+        'ajinsafro-accordion-slider-css',
+        AJTH_URL . 'assets/css/accordion-slider.css',
+        array(),
+        AJTH_VERSION
+    );
+
+    wp_enqueue_script(
+        'ajinsafro-accordion-slider-js',
+        AJTH_URL . 'assets/js/accordion-slider.js',
+        array(),
+        AJTH_VERSION,
+        true
+    );
+
+    ob_start();
+    include AJTH_DIR . 'templates/accordion-slider.php';
+    return ob_get_clean();
+}
+add_shortcode( 'ajinsafro_slider', 'ajinsafro_slider_shortcode' );
 
 /* ──────────────────────────────────────────────
  * Header settings managed from Laravel admin
@@ -395,7 +428,7 @@ function ajth_default_promotion_items_prototype(): array {
 			'title'             => 'PROGRAMME DE FIDÉLITÉ',
 			'subtitle'          => '',
 			'image_url'         => 'https://i.ibb.co/tTrXK11z/Voyagez-Plus-Gagnez-Plus.png',
-			'link_url'          => 'https://www.ajinsafro.ma/fidelite',
+            'link_url'          => '',
 			'link_target'       => '_self',
 			'button_text'       => "S'inscrire !",
 			'button_url'        => 'https://www.ajinsafro.ma/fidelite',
@@ -536,7 +569,7 @@ function ajth_get_settings() {
             'autoplay_delay_ms' => 5000,
             'default_active_index' => 0,
             'max_slides' => 8,
-            'arrows_enabled' => true,
+            'arrows_enabled' => false,
             'images' => array( '', '', '' ),
             'items' => ajth_default_promotion_items_prototype(),
         ),
@@ -771,6 +804,16 @@ function ajth_normalize_promotions_settings( $promo, array $defaults ): array {
         return ( (int) ( $a['sort_order'] ?? 0 ) ) <=> ( (int) ( $b['sort_order'] ?? 0 ) );
     } );
 
+    $non_empty_titles = 0;
+    foreach ( $normalized as $item ) {
+        if ( trim( (string) ( $item['title'] ?? '' ) ) !== '' ) {
+            $non_empty_titles++;
+        }
+    }
+    if ( count( $normalized ) < 5 || $non_empty_titles < 2 ) {
+        $normalized = ajth_default_promotion_items_prototype();
+    }
+
     $max_slides = isset( $promo['max_slides'] ) ? max( 1, min( 20, (int) $promo['max_slides'] ) ) : 8;
 
     $images = array();
@@ -806,7 +849,7 @@ function ajth_normalize_promotions_settings( $promo, array $defaults ): array {
         'autoplay_delay_ms' => $delay,
         'default_active_index' => $def_idx,
         'max_slides' => $max_slides,
-        'arrows_enabled' => ajth_truthy( $promo['arrows_enabled'] ?? true ),
+        'arrows_enabled' => ajth_truthy( $promo['arrows_enabled'] ?? false ),
         'images' => array_slice( $images, 0, 3 ),
         'items' => array_values( $normalized ),
     );
