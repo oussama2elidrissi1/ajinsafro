@@ -1,117 +1,105 @@
+/**
+ * AjiNsafro Accordion Slider
+ * Matches Slide(3).html reference: autoplay bounce, pause on hover, click to expand.
+ */
 (function () {
-  'use strict';
+	'use strict';
 
-  function initAjiSlider() {
-    var sliders = document.querySelectorAll('#aji-accordion-slider, .aji-accordion-slider');
+	function initAjiAccordion() {
+		var slider = document.getElementById('aji-accordion');
+		if (!slider) {
+			return;
+		}
 
-    sliders.forEach(function (slider) {
-      var slides = Array.prototype.slice.call(slider.querySelectorAll('.aji-slide'));
-      if (!slides.length) {
-        return;
-      }
+		var panels = Array.prototype.slice.call(slider.querySelectorAll('.aji-panel'));
+		if (!panels.length) {
+			return;
+		}
 
-      var tabs = Array.prototype.slice.call(slider.querySelectorAll('.aji-tab-bar'));
-      var current = 0;
-      var direction = 1;
-      var timer = null;
-      var delayMs = 5000;
+		var currentIndex = 0;
+		var direction = 1;
+		var autoplayTimer = null;
+		var DELAY_MS = 5000;
 
-      function setActive(index) {
-        var next = ((index % slides.length) + slides.length) % slides.length;
-        current = next;
+		function setActive(index) {
+			currentIndex = index;
+			panels.forEach(function (panel, i) {
+				if (i === index) {
+					panel.classList.add('aji-panel--active');
+				} else {
+					panel.classList.remove('aji-panel--active');
+				}
+			});
+		}
 
-        slides.forEach(function (slide, i) {
-          var active = i === current;
-          slide.classList.toggle('aji-slide--active', active);
-          if (tabs[i]) {
-            tabs[i].setAttribute('aria-pressed', active ? 'true' : 'false');
-          }
-        });
-      }
+		function step() {
+			if (currentIndex >= panels.length - 1) {
+				direction = -1;
+			} else if (currentIndex <= 0) {
+				direction = 1;
+			}
+			setActive(currentIndex + direction);
+		}
 
-      function step() {
-        if (current >= slides.length - 1) {
-          direction = -1;
-        } else if (current <= 0) {
-          direction = 1;
-        }
-        setActive(current + direction);
-      }
+		function startAutoplay() {
+			clearInterval(autoplayTimer);
+			autoplayTimer = setInterval(step, DELAY_MS);
+		}
 
-      function stopAutoplay() {
-        if (timer) {
-          clearInterval(timer);
-          timer = null;
-        }
-      }
+		function stopAutoplay() {
+			clearInterval(autoplayTimer);
+			autoplayTimer = null;
+		}
 
-      function startAutoplay() {
-        stopAutoplay();
-        timer = setInterval(step, delayMs);
-      }
+		panels.forEach(function (panel) {
+			panel.addEventListener('click', function () {
+				var idx = parseInt(panel.getAttribute('data-index'), 10);
+				setActive(idx);
+				stopAutoplay();
+				startAutoplay();
+			});
 
-      function resetAutoplay() {
-        stopAutoplay();
-        startAutoplay();
-      }
+			panel.addEventListener('keydown', function (e) {
+				var idx = parseInt(panel.getAttribute('data-index'), 10);
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					setActive(idx);
+					stopAutoplay();
+					startAutoplay();
+				} else if (e.key === 'ArrowRight') {
+					e.preventDefault();
+					var next = (idx + 1) % panels.length;
+					setActive(next);
+					panels[next].focus();
+					stopAutoplay();
+					startAutoplay();
+				} else if (e.key === 'ArrowLeft') {
+					e.preventDefault();
+					var prev = (idx - 1 + panels.length) % panels.length;
+					setActive(prev);
+					panels[prev].focus();
+					stopAutoplay();
+					startAutoplay();
+				}
+			});
+		});
 
-      tabs.forEach(function (tab, i) {
-        tab.addEventListener('click', function () {
-          setActive(i);
-          resetAutoplay();
-        });
+		slider.addEventListener('mouseenter', stopAutoplay);
+		slider.addEventListener('mouseleave', startAutoplay);
+		slider.addEventListener('focusin', stopAutoplay);
+		slider.addEventListener('focusout', function () {
+			if (!slider.contains(document.activeElement)) {
+				startAutoplay();
+			}
+		});
 
-        tab.addEventListener('keydown', function (e) {
-          if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            var next = (i + 1) % tabs.length;
-            setActive(next);
-            tabs[next].focus();
-            resetAutoplay();
-          } else if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            var prev = (i - 1 + tabs.length) % tabs.length;
-            setActive(prev);
-            tabs[prev].focus();
-            resetAutoplay();
-          } else if (e.key === 'Home') {
-            e.preventDefault();
-            setActive(0);
-            tabs[0].focus();
-            resetAutoplay();
-          } else if (e.key === 'End') {
-            e.preventDefault();
-            var last = tabs.length - 1;
-            setActive(last);
-            tabs[last].focus();
-            resetAutoplay();
-          }
-        });
-      });
+		setActive(0);
+		startAutoplay();
+	}
 
-      slider.addEventListener('mouseenter', stopAutoplay);
-      slider.addEventListener('mouseleave', startAutoplay);
-      slider.addEventListener('focusin', stopAutoplay);
-      slider.addEventListener('focusout', function () {
-        if (!slider.contains(document.activeElement)) {
-          startAutoplay();
-        }
-      });
-
-      setActive(0);
-      startAutoplay();
-    });
-  }
-
-  function scheduleInit() {
-    setTimeout(function () {
-      initAjiSlider();
-    }, 100);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', scheduleInit);
-  } else {
-    scheduleInit();
-  }
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initAjiAccordion);
+	} else {
+		initAjiAccordion();
+	}
 })();
