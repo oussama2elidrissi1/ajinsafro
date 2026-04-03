@@ -705,7 +705,7 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Titre de la section</label>
-                        <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Explorez plus, voyagez mieux avec AjinSafro')) }}" placeholder="Ex. Explorez plus, voyagez mieux avec AjinSafro">
+                        <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Explorez plus, voyagez mieux avec AjiNsafro')) }}" placeholder="Ex. Explorez plus, voyagez mieux avec AjiNsafro">
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6 col-lg-4">
