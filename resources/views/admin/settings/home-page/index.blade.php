@@ -9,7 +9,7 @@
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.settings.index') }}">Paramètres</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.settings.index') }}">ParamÃ¨tres</a></li>
                         <li class="breadcrumb-item active">Home page</li>
                     </ol>
                 </div>
@@ -42,7 +42,7 @@
         </div>
     @endif
 
-    {{-- ═══════ TABS ═══════ --}}
+    {{-- â•â•â•â•â•â•â• TABS â•â•â•â•â•â•â• --}}
     <ul class="nav nav-tabs mb-4" role="tablist">
         <li class="nav-item">
             <a class="nav-link {{ ($tab ?? 'header') === 'header' ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-header" role="tab">Header</a>
@@ -54,9 +54,9 @@
 
     <div class="tab-content">
 
-    {{-- ═══════════════════════════════════════════
-         TAB 1 — HEADER (topbar + navbar)
-         ═══════════════════════════════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 1 â€” HEADER (topbar + navbar)
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     <div class="tab-pane fade {{ ($tab ?? 'header') === 'header' ? 'show active' : '' }}" id="tab-header" role="tabpanel">
         <form action="{{ url('/admin/settings/home-page/header') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -68,19 +68,19 @@
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="header[enabled]" value="1" id="hdr_enabled"
                                {{ old('header.enabled', data_get($header, 'enabled')) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="hdr_enabled">Activer le header personnalisé</label>
+                        <label class="form-check-label" for="hdr_enabled">Activer le header personnalisÃ©</label>
                     </div>
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="header[show_header_sitewide]" value="1" id="hdr_sitewide"
                                {{ old('header.show_header_sitewide', data_get($header, 'show_header_sitewide')) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="hdr_sitewide">Appliquer le header à toutes les pages WordPress</label>
+                        <label class="form-check-label" for="hdr_sitewide">Appliquer le header Ã  toutes les pages WordPress</label>
                     </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" name="header[show_footer_sitewide]" value="1" id="hdr_footer_sitewide"
                                {{ old('header.show_footer_sitewide', data_get($header, 'show_footer_sitewide', true)) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="hdr_footer_sitewide">Appliquer le footer personnalisé à toutes les pages</label>
+                        <label class="form-check-label" for="hdr_footer_sitewide">Appliquer le footer personnalisÃ© Ã  toutes les pages</label>
                     </div>
-                    <p class="small text-muted mt-1 mb-0">Le header et le footer personnalisés remplacent ceux du thème WordPress sur toutes les pages.</p>
+                    <p class="small text-muted mt-1 mb-0">Le header et le footer personnalisÃ©s remplacent ceux du thÃ¨me WordPress sur toutes les pages.</p>
                 </div>
             </div>
 
@@ -95,7 +95,7 @@
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Téléphone</label>
+                            <label class="form-label">TÃ©lÃ©phone</label>
                             <input type="text" class="form-control" name="header[phone]"
                                    value="{{ old('header.phone', data_get($header, 'phone')) }}">
                         </div>
@@ -105,7 +105,7 @@
                                    value="{{ old('header.email', data_get($header, 'email')) }}">
                         </div>
                     </div>
-                    <h6 class="mt-3 mb-2">Réseaux sociaux</h6>
+                    <h6 class="mt-3 mb-2">RÃ©seaux sociaux</h6>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Facebook</label>
@@ -205,7 +205,7 @@
                     <div id="hdr_links_wrap" class="mt-3" style="display:none">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-bold mb-0">Liens du menu</label>
-                            <small class="text-muted"><i class="fas fa-arrows-alt"></i> Utilisez les flèches pour réorganiser l'ordre</small>
+                            <small class="text-muted"><i class="fas fa-arrows-alt"></i> Utilisez les flÃ¨ches pour rÃ©organiser l'ordre</small>
                         </div>
                         <div id="hdr-links-container" class="vstack gap-3">
                             @foreach(old('header.links', data_get($header, 'links', [])) as $li => $link)
@@ -230,7 +230,7 @@
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][url]" value="{{ data_get($link, 'url') }}" placeholder="Ex: /hotel">
                                         </div>
                                         <div class="col-md-2">
-                                            <label class="form-label small mb-0">Icône FA</label>
+                                            <label class="form-label small mb-0">IcÃ´ne FA</label>
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][icon]" value="{{ data_get($link, 'icon') }}" placeholder="fas fa-hotel">
                                         </div>
                                         <div class="col-auto d-flex align-items-end gap-2">
@@ -242,7 +242,7 @@
                                         <div class="col-auto d-flex align-items-end">
                                             <button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button>
                                         </div>
-                                        <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>
+                                        <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">Ã—</button></div>
                                     </div>
                                     {{-- Sub-menus with ordering --}}
                                     <div class="hdr-children-list ms-4 ps-3 border-start border-2 border-primary">
@@ -259,8 +259,8 @@
                                                 <div class="col-auto"><span class="badge bg-secondary hdr-child-order-display">{{ data_get($child, 'order', $ci + 1) }}</span></div>
                                                 <div class="col-3"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][label]" value="{{ data_get($child, 'label') }}" placeholder="Label"></div>
                                                 <div class="col-3"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][url]" value="{{ data_get($child, 'url') }}" placeholder="URL"></div>
-                                                <div class="col-2"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][icon]" value="{{ data_get($child, 'icon', '') }}" placeholder="Icône FA"></div>
-                                                <div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">×</button></div>
+                                                <div class="col-2"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][icon]" value="{{ data_get($child, 'icon', '') }}" placeholder="IcÃ´ne FA"></div>
+                                                <div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">Ã—</button></div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -281,7 +281,7 @@
                                {{ old('header.lowcost_enabled', data_get($header, 'lowcost_enabled', true)) ? 'checked' : '' }}>
                         <label class="form-check-label" for="hdr_lowcost">Afficher le bouton "Formule Low Cost"</label>
                     </div>
-                    <p class="small text-muted mb-3">Ce bouton s'affiche à droite de la navbar avec un effet de gradient orange/rouge et une animation.</p>
+                    <p class="small text-muted mb-3">Ce bouton s'affiche Ã  droite de la navbar avec un effet de gradient orange/rouge et une animation.</p>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Texte du bouton</label>
@@ -301,9 +301,9 @@
         </form>
     </div>
 
-    {{-- ═══════════════════════════════════════════
-         TAB 2 — CONTENU (hero, sections, regions…)
-         ═══════════════════════════════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         TAB 2 â€” CONTENU (hero, sections, regionsâ€¦)
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     <div class="tab-pane fade {{ ($tab ?? 'header') === 'content' ? 'show active' : '' }}" id="tab-content" role="tabpanel">
         <form action="{{ route('admin.settings.home-page.update') }}" method="POST" enctype="multipart/form-data" id="home-page-settings-form">
             @csrf
@@ -316,7 +316,7 @@
                             <label class="form-label">Type</label>
                             <select class="form-select" name="hero[type]" id="hero_type" required>
                                 <option value="image" {{ old('hero.type', data_get($settings, 'hero.type')) === 'image' ? 'selected' : '' }}>Image</option>
-                                <option value="video" {{ old('hero.type', data_get($settings, 'hero.type')) === 'video' ? 'selected' : '' }}>Vidéo</option>
+                                <option value="video" {{ old('hero.type', data_get($settings, 'hero.type')) === 'video' ? 'selected' : '' }}>VidÃ©o</option>
                             </select>
                         </div>
                         <div class="col-md-8">
@@ -336,13 +336,13 @@
                             <input type="file" class="form-control" name="hero[image_file]" accept="image/*">
                         </div>
                         <div class="col-md-6" id="hero_video_url_wrap">
-                            <label class="form-label">Vidéo URL (YouTube/Vimeo/mp4)</label>
+                            <label class="form-label">VidÃ©o URL (YouTube/Vimeo/mp4)</label>
                             <input type="url" class="form-control" name="hero[video_url]" value="{{ old('hero.video_url', data_get($settings, 'hero.video_url')) }}" placeholder="https://...">
                         </div>
                         <div class="col-md-6" id="hero_video_file_wrap">
                             <label class="form-label">Upload mp4</label>
                             <input type="file" class="form-control" name="hero_video_file" accept="video/mp4">
-                            <small class="text-muted d-block mt-1">Max 50MB. Si l'upload échoue, utilisez un lien vidéo.</small>
+                            <small class="text-muted d-block mt-1">Max 50MB. Si l'upload Ã©choue, utilisez un lien vidÃ©o.</small>
                             @error('hero_video_file') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                         </div>
                         <div class="col-md-6">
@@ -367,37 +367,36 @@
                 $sectionLabels = [
                     'search' => 'Search',
                     'last_minute' => 'Tendances du moment',
-                    'accommodations' => 'Séjours uniques',
-                    'holiday_theme' => 'Voyages par thème',
+                    'accommodations' => 'SÃ©jours uniques',
+                    'holiday_theme' => 'Voyages par thÃ¨me',
                     'regions' => 'Destinations',
                     'good_spots' => 'Bons coins',
-                    'promotions' => 'Promotions',
-                    'whatsapp_banner' => 'Bannière WhatsApp',
-                    'cruises' => 'Croisières',
+                    'whatsapp_banner' => 'BanniÃ¨re WhatsApp',
+                    'cruises' => 'CroisiÃ¨res',
                     'newsletter' => 'Newsletter',
                 ];
-                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter']));
+                $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'whatsapp_banner', 'cruises', 'newsletter']));
                 $sectionOrder = is_array($sectionOrder) ? $sectionOrder : [];
                 $customSections = old('custom_sections', data_get($settings, 'custom_sections', []));
                 $customSections = is_array($customSections) ? $customSections : [];
             @endphp
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="card-title mb-0">Ordre et visibilité des sections</h5>
+                    <h5 class="card-title mb-0">Ordre et visibilitÃ© des sections</h5>
                     <div class="d-flex gap-2 align-items-center">
                         <select class="form-select form-select-sm" id="section-add-builtin" style="width:auto;">
-                            <option value="">Ajouter une section…</option>
+                            <option value="">Ajouter une sectionâ€¦</option>
                             @foreach($sectionLabels as $sKey => $sLabel)
                                 @if(!in_array($sKey, $sectionOrder))
                                     <option value="{{ $sKey }}">{{ $sLabel }}</option>
                                 @endif
                             @endforeach
                         </select>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="section-add-custom">Section personnalisée</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="section-add-custom">Section personnalisÃ©e</button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">Réordonnez les sections avec les flèches. Décochez pour masquer une section sur la page d'accueil.</p>
+                    <p class="text-muted small mb-3">RÃ©ordonnez les sections avec les flÃ¨ches. DÃ©cochez pour masquer une section sur la page d'accueil.</p>
                     <div id="section-order-container" class="vstack gap-2">
                         @foreach($sectionOrder as $idx => $secKey)
                             @if(str_starts_with((string)$secKey, 'custom_'))
@@ -406,8 +405,8 @@
                                     <input type="hidden" name="section_order[]" value="{{ $secKey }}">
                                     <div class="d-flex align-items-start gap-2 flex-wrap">
                                         <div class="d-flex flex-column gap-0">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">↑</button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">↓</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">â†‘</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">â†“</button>
                                         </div>
                                         <div class="form-check form-switch align-self-center">
                                             <input class="form-check-input" type="checkbox" name="sections[{{ $secKey }}]" value="1"
@@ -415,13 +414,13 @@
                                             <label class="form-check-label">Activer</label>
                                         </div>
                                         <div class="flex-grow-1">
-                                            <label class="form-label small mb-0">Section personnalisée — Titre</label>
+                                            <label class="form-label small mb-0">Section personnalisÃ©e â€” Titre</label>
                                             <input type="text" class="form-control form-control-sm" name="custom_sections[{{ $secKey }}][title]" value="{{ data_get($custom, 'title') }}" placeholder="Titre de la section">
                                             <label class="form-label small mb-0 mt-1">Contenu (HTML / shortcodes)</label>
                                             <textarea class="form-control form-control-sm" name="custom_sections[{{ $secKey }}][content]" rows="3" placeholder="<p>...</p> ou [shortcode]">{{ data_get($custom, 'content') }}</textarea>
                                         </div>
                                         <div class="align-self-center">
-                                            <button type="button" class="btn btn-sm btn-outline-danger section-remove">×</button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger section-remove">Ã—</button>
                                         </div>
                                     </div>
                                 </div>
@@ -429,8 +428,8 @@
                                 <div class="border rounded p-2 section-order-row d-flex align-items-center gap-2" data-section-key="{{ $secKey }}">
                                     <input type="hidden" name="section_order[]" value="{{ $secKey }}">
                                     <div class="d-flex flex-column gap-0">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">↑</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">↓</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">â†‘</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">â†“</button>
                                     </div>
                                     <div class="form-check form-switch mb-0">
                                         <input class="form-check-input" type="checkbox" name="sections[{{ $secKey }}]" value="1"
@@ -438,7 +437,7 @@
                                         <label class="form-check-label">{{ $sectionLabels[$secKey] ?? $secKey }}</label>
                                     </div>
                                     <div class="ms-auto">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">×</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">Ã—</button>
                                     </div>
                                 </div>
                             @endif
@@ -483,23 +482,23 @@
 
             {{-- Accommodations --}}
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Découvrez des séjours uniques</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">DÃ©couvrez des sÃ©jours uniques</h5></div>
                 <div class="card-body row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Titre</label>
-                        <input type="text" class="form-control" name="accommodations[title]" value="{{ old('accommodations.title', data_get($settings, 'accommodations.title', 'Découvrez des séjours uniques')) }}">
+                        <input type="text" class="form-control" name="accommodations[title]" value="{{ old('accommodations.title', data_get($settings, 'accommodations.title', 'DÃ©couvrez des sÃ©jours uniques')) }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Nombre d'items</label>
                         <input type="number" class="form-control" min="1" max="20" name="accommodations[count]" value="{{ old('accommodations.count', data_get($settings, 'accommodations.count', 4)) }}">
                     </div>
                     <div class="col-12">
-                        <p class="text-muted small mb-0">Affiche les hôtels et locations (post types: st_hotel, st_rental) les plus récents.</p>
+                        <p class="text-muted small mb-0">Affiche les hÃ´tels et locations (post types: st_hotel, st_rental) les plus rÃ©cents.</p>
                     </div>
                 </div>
             </div>
 
-            {{-- Voyages par thème --}}
+            {{-- Voyages par thÃ¨me --}}
             @php
                 $holidayTheme = old('holiday_theme', data_get($settings, 'holiday_theme', []));
                 $holidayItems = data_get($holidayTheme, 'items', []);
@@ -507,19 +506,19 @@
             @endphp
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Voyages par thème</h5>
+                    <h5 class="card-title mb-0">Voyages par thÃ¨me</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="holiday-add-item">Ajouter une carte</button>
                 </div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="holiday_theme[enabled]" value="1" id="holiday_enabled"
                                {{ old('holiday_theme.enabled', data_get($holidayTheme, 'enabled', true)) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="holiday_enabled">Activer la section Voyages par thème</label>
+                        <label class="form-check-label" for="holiday_enabled">Activer la section Voyages par thÃ¨me</label>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Sur-titre</label>
-                            <input type="text" class="form-control" name="holiday_theme[eyebrow]" value="{{ old('holiday_theme.eyebrow', data_get($holidayTheme, 'eyebrow', 'Voyages par thème')) }}">
+                            <input type="text" class="form-control" name="holiday_theme[eyebrow]" value="{{ old('holiday_theme.eyebrow', data_get($holidayTheme, 'eyebrow', 'Voyages par thÃ¨me')) }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Titre ligne 1</label>
@@ -546,11 +545,11 @@
                             <input type="file" class="form-control" name="holiday_theme_left_image_file" accept="image/*">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Image déco URL</label>
+                            <label class="form-label">Image dÃ©co URL</label>
                             <input type="text" class="form-control" name="holiday_theme[deco_image_url]" value="{{ old('holiday_theme.deco_image_url', data_get($holidayTheme, 'deco_image_url')) }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Upload image déco</label>
+                            <label class="form-label">Upload image dÃ©co</label>
                             <input type="file" class="form-control" name="holiday_theme_deco_image_file" accept="image/*">
                         </div>
                         <div class="col-md-6">
@@ -563,14 +562,14 @@
                         </div>
                     </div>
 
-                    <h6 class="mb-2">Cartes voyages par thème</h6>
+                    <h6 class="mb-2">Cartes voyages par thÃ¨me</h6>
                     <div id="holiday-items-container" class="vstack gap-2">
                         @foreach($holidayItems as $idx => $item)
                             <div class="border rounded p-2 holiday-row" data-index="{{ $idx }}">
                                 <div class="row g-2 align-items-center">
                                     <div class="col-auto d-flex flex-column gap-0">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">↑</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">↓</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">â†‘</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">â†“</button>
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label small mb-0">Titre</label>
@@ -612,7 +611,7 @@
                                     </div>
                                     <div class="col-auto">
                                         <input type="hidden" class="holiday-order" name="holiday_theme[items][{{ $idx }}][order]" value="{{ data_get($item, 'order', $idx) }}">
-                                        <button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">×</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">Ã—</button>
                                     </div>
                                     <div class="col-12">
                                         <div class="holiday-preview border rounded p-2 d-flex align-items-center gap-2">
@@ -632,19 +631,19 @@
 
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Destinations par région</h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="dbr-add-item">Ajouter une région</button>
+                    <h5 class="card-title mb-0">Destinations par rÃ©gion</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="dbr-add-item">Ajouter une rÃ©gion</button>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">Grille 2×4 côté WordPress. Label obligatoire ; image et lien optionnels.</p>
+                    <p class="text-muted small mb-3">Grille 2Ã—4 cÃ´tÃ© WordPress. Label obligatoire ; image et lien optionnels.</p>
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="destinations_by_region[enabled]" value="1" id="dbr-enabled"
                                {{ old('destinations_by_region.enabled', data_get($destinationsByRegion, 'enabled', true)) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="dbr-enabled">Activer la section Destinations par région</label>
+                        <label class="form-check-label" for="dbr-enabled">Activer la section Destinations par rÃ©gion</label>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Titre de la section</label>
-                        <input type="text" class="form-control" name="destinations_by_region[title]" value="{{ old('destinations_by_region.title', data_get($destinationsByRegion, 'title', 'Destinations par région')) }}" placeholder="Destinations par région">
+                        <input type="text" class="form-control" name="destinations_by_region[title]" value="{{ old('destinations_by_region.title', data_get($destinationsByRegion, 'title', 'Destinations par rÃ©gion')) }}" placeholder="Destinations par rÃ©gion">
                     </div>
                     <div id="dbr-items-container" class="vstack gap-2">
                         @php
@@ -655,15 +654,15 @@
                             <div class="border rounded p-2 dbr-row align-items-center" data-index="{{ $idx }}">
                                 <div class="row g-2 align-items-center">
                                     <div class="col-auto d-flex flex-column gap-0">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">↑</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">↓</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">â†‘</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">â†“</button>
                                     </div>
                                     <div class="col"><input type="hidden" name="destinations_by_region[items][{{ $idx }}][order]" class="dbr-order" value="{{ data_get($item, 'order', $idx + 1) }}"><label class="form-label small mb-0">Ordre</label><span class="dbr-order-display">{{ data_get($item, 'order', $idx + 1) }}</span></div>
                                     <div class="col"><label class="form-label small mb-0">Label <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][label]" value="{{ data_get($item, 'label') }}" placeholder="Ex: CAP NORD" required></div>
                                     <div class="col"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][image_url]" value="{{ data_get($item, 'image_url') }}" placeholder="https://..."></div>
                                     <div class="col-auto"><label class="form-label small mb-0">Choisir</label><input type="file" class="form-control form-control-sm dbr-file" name="destinations_by_region_files[{{ $idx }}]" accept="image/*" data-index="{{ $idx }}"></div>
                                     <div class="col"><label class="form-label small mb-0">Lien URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][link_url]" value="{{ data_get($item, 'link_url') }}" placeholder="https://..."></div>
-                                    <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">×</button></div>
+                                    <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">Ã—</button></div>
                                 </div>
                             </div>
                         @endforeach
@@ -685,7 +684,7 @@
                             <div class="row g-2">
                                 <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][title]" value="{{ data_get($spot, 'title') }}" placeholder="Titre"></div>
                                 <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][subtitle]" value="{{ data_get($spot, 'subtitle') }}" placeholder="Sous-titre"></div>
-                                <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][icon]" value="{{ data_get($spot, 'icon') }}" placeholder="Icône FA (ex: fas fa-utensils)"></div>
+                                <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][icon]" value="{{ data_get($spot, 'icon') }}" placeholder="IcÃ´ne FA (ex: fas fa-utensils)"></div>
                                 <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][link_url]" value="{{ data_get($spot, 'link_url') }}" placeholder="Link URL"></div>
                                 <div class="col-md-6"><input class="form-control" name="good_spots[{{ $idx }}][image_url]" value="{{ data_get($spot, 'image_url') }}" placeholder="Image URL"></div>
                                 <div class="col-md-6"><input type="file" class="form-control" name="good_spots_files[{{ $idx }}]" accept="image/*"></div>
@@ -696,158 +695,98 @@
                 </div>
             </div>
 
-            {{-- Promotions — 3 visuels (titre + images) --}}
+            @php
+                $accordionSlider = old('accordion_slider', data_get($settings, 'accordion_slider', []));
+                $accordionSlides = data_get($accordionSlider, 'slides', []);
+                $accordionSlides = is_array($accordionSlides) ? $accordionSlides : [];
+            @endphp
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="card-title mb-0">Explorez plus (promotions)</h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="promo-add-item">Ajouter une card</button>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Accordion Slider / Promo Slider</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="accordion-slider-add-item">Ajouter un slide</button>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Titre de la section</label>
-                        <input type="text" class="form-control" name="promotions[title]" value="{{ old('promotions.title', data_get($settings, 'promotions.title', 'Explorez plus, voyagez mieux avec AjiNsafro')) }}" placeholder="Ex. Explorez plus, voyagez mieux avec AjiNsafro">
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6 col-lg-4">
-                            <input type="hidden" name="promotions[enabled]" value="0">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="promotions[enabled]" value="1" id="promotions_enabled" {{ old('promotions.enabled', data_get($settings, 'promotions.enabled', true)) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="promotions_enabled">Bloc promotions actif (front)</label>
+                                <input class="form-check-input" type="checkbox" name="accordion_slider[enabled]" value="1" id="accordion_slider_enabled"
+                                       {{ old('accordion_slider.enabled', data_get($accordionSlider, 'enabled', true)) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="accordion_slider_enabled">Activer la section accordéon</label>
                             </div>
                         </div>
-                        <div class="col-md-6 col-lg-4">
-                            <input type="hidden" name="promotions[autoplay]" value="0">
+                        <div class="col-md-4">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="promotions[autoplay]" value="1" id="promotions_autoplay" {{ old('promotions.autoplay', data_get($settings, 'promotions.autoplay', true)) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="promotions_autoplay">Défilement automatique</label>
+                                <input class="form-check-input" type="checkbox" name="accordion_slider[autoplay]" value="1" id="accordion_slider_autoplay"
+                                       {{ old('accordion_slider.autoplay', data_get($accordionSlider, 'autoplay', true)) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="accordion_slider_autoplay">Activer l'autoplay</label>
                             </div>
                         </div>
-                        <div class="col-md-4 col-lg-2">
-                            <label class="form-label small">Délai (ms)</label>
-                            <input type="number" class="form-control form-control-sm" name="promotions[autoplay_delay_ms]" min="2000" max="60000" step="500" value="{{ old('promotions.autoplay_delay_ms', data_get($settings, 'promotions.autoplay_delay_ms', 5000)) }}">
-                        </div>
-                        <div class="col-md-4 col-lg-2">
-                            <label class="form-label small">Panneau actif (index)</label>
-                            <input type="number" class="form-control form-control-sm" name="promotions[default_active_index]" min="0" max="50" value="{{ old('promotions.default_active_index', data_get($settings, 'promotions.default_active_index', 0)) }}">
-                        </div>
-                        <div class="col-md-4 col-lg-2">
-                            <label class="form-label small">Nombre max de slides</label>
-                            <input type="number" class="form-control form-control-sm" name="promotions[max_slides]" min="1" max="20" value="{{ old('promotions.max_slides', data_get($settings, 'promotions.max_slides', 8)) }}">
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <input type="hidden" name="promotions[arrows_enabled]" value="0">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="promotions[arrows_enabled]" value="1" id="promotions_arrows" {{ old('promotions.arrows_enabled', data_get($settings, 'promotions.arrows_enabled', false)) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="promotions_arrows">Flèches précédent / suivant</label>
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Vitesse autoplay (ms)</label>
+                            <input type="number" class="form-control" min="2000" step="500" name="accordion_slider[autoplay_speed]"
+                                   value="{{ old('accordion_slider.autoplay_speed', data_get($accordionSlider, 'autoplay_speed', 5000)) }}">
                         </div>
                     </div>
-                    <p class="text-muted small mb-3">Accordéon horizontal sur la page d’accueil : ajoutez des panneaux, images, liens et boutons optionnels. Les éléments désactivés restent en base mais ne s’affichent pas.</p>
-                    @php
-                        $promoItems = old('promotions.items', data_get($settings, 'promotions.items', []));
-                        $promoItems = is_array($promoItems) ? $promoItems : [];
-                    @endphp
-                    <div id="promo-items-container" class="vstack gap-3 mb-3">
-                        @foreach($promoItems as $pi => $promoItem)
-                            @php
-                                $promoItem = is_array($promoItem) ? $promoItem : [];
-                                $promoTitle = old("promotions.items.$pi.title", data_get($promoItem, 'title', ''));
-                                $promoSubtitle = old("promotions.items.$pi.subtitle", data_get($promoItem, 'subtitle', data_get($promoItem, 'description', '')));
-                                $promoImage = old("promotions.items.$pi.image_url", data_get($promoItem, 'image_url', data_get($promoItem, 'image', '')));
-                                $promoButtonText = old("promotions.items.$pi.button_text", data_get($promoItem, 'button_text', ''));
-                                $promoButtonUrl = old("promotions.items.$pi.button_url", data_get($promoItem, 'button_url', ''));
-                                $promoLinkUrl = old("promotions.items.$pi.link_url", data_get($promoItem, 'link_url', ''));
-                                $promoLinkTarget = old("promotions.items.$pi.link_target", data_get($promoItem, 'link_target', '_self'));
-                                $promoBtnEnabled = old("promotions.items.$pi.button_enabled", data_get($promoItem, 'button_enabled', true));
-                                $promoAccent = old("promotions.items.$pi.accent_color", data_get($promoItem, 'accent_color', ''));
-                                $promoSort = old("promotions.items.$pi.sort_order", data_get($promoItem, 'sort_order', data_get($promoItem, 'order', $pi)));
-                                $promoActive = old("promotions.items.$pi.is_active", data_get($promoItem, 'is_active', data_get($promoItem, 'active', true)));
-                                $promoRemoveImage = old("promotion_item_remove_image.$pi", 0);
-                            @endphp
-                            <div class="border rounded p-3 promo-row bg-light" data-index="{{ $pi }}">
-                                <div class="row g-3">
-                                    <div class="col-auto d-flex flex-column gap-1">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary promo-move-up" title="Monter">↑</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary promo-move-down" title="Descendre">↓</button>
+                    <p class="text-muted small mb-3">Le design et le comportement front restent identiques. Les slides ci-dessous remplacent seulement les contenus dynamiques.</p>
+                    <div id="accordion-slider-items-container" class="vstack gap-3">
+                        @foreach($accordionSlides as $idx => $slide)
+                            <div class="border rounded p-3 accordion-slider-row" data-index="{{ $idx }}">
+                                <div class="row g-2 align-items-start">
+                                    <div class="col-auto d-flex flex-column gap-0">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-up" title="Monter">↑</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-down" title="Descendre">↓</button>
                                     </div>
-                                    <div class="col-xl-3 col-lg-4">
-                                        <label class="form-label small mb-1">Titre</label>
-                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][title]" value="{{ $promoTitle }}" placeholder="Titre de la card">
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Titre vertical <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control form-control-sm" name="accordion_slider[slides][{{ $idx }}][title]" value="{{ data_get($slide, 'title') }}" required>
                                     </div>
-                                    <div class="col-xl-4 col-lg-5">
-                                        <label class="form-label small mb-1">Sous-titre</label>
-                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][subtitle]" value="{{ $promoSubtitle }}" placeholder="Texte court lisible sur la bannière">
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Sous-titre</label>
+                                        <input type="text" class="form-control form-control-sm" name="accordion_slider[slides][{{ $idx }}][subtitle]" value="{{ data_get($slide, 'subtitle') }}">
                                     </div>
-                                    <div class="col-xl-2 col-md-3">
-                                        <label class="form-label small mb-1">Ordre</label>
-                                        <input type="number" class="form-control form-control-sm promo-order" name="promotions[items][{{ $pi }}][sort_order]" value="{{ $promoSort }}" min="0">
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Image URL</label>
+                                        <input type="text" class="form-control form-control-sm accordion-slider-image-input" name="accordion_slider[slides][{{ $idx }}][image]" value="{{ data_get($slide, 'image') }}" placeholder="https://...">
                                     </div>
-                                    <div class="col-auto">
-                                        <label class="form-label small d-block mb-1">État</label>
-                                        <input type="hidden" name="promotions[items][{{ $pi }}][is_active]" value="0">
-                                        <div class="form-check form-switch mt-1">
-                                            <input class="form-check-input" type="checkbox" name="promotions[items][{{ $pi }}][is_active]" value="1" {{ (string) $promoActive === '0' ? '' : ($promoActive ? 'checked' : '') }}>
-                                            <label class="form-check-label small">Actif</label>
-                                        </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Upload image</label>
+                                        <input type="file" class="form-control form-control-sm" name="accordion_slider_files[{{ $idx }}]" accept="image/*">
                                     </div>
-                                    <div class="col-auto ms-auto">
-                                        <label class="form-label small d-block mb-1 opacity-0">Action</label>
-                                        <button type="button" class="btn btn-sm btn-outline-danger promo-remove">Supprimer</button>
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Lien</label>
+                                        <input type="text" class="form-control form-control-sm" name="accordion_slider[slides][{{ $idx }}][link]" value="{{ data_get($slide, 'link', '#') }}" placeholder="https://...">
                                     </div>
-                                    <div class="col-xl-6">
-                                        <label class="form-label small mb-1">Image URL</label>
-                                        <input type="text" class="form-control form-control-sm promo-image-url" name="promotions[items][{{ $pi }}][image_url]" value="{{ $promoImage }}" placeholder="https://...">
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Texte bouton</label>
+                                        <input type="text" class="form-control form-control-sm" name="accordion_slider[slides][{{ $idx }}][button_text]" value="{{ data_get($slide, 'button_text') }}" placeholder="S'inscrire">
                                     </div>
-                                    <div class="col-xl-3 col-md-6">
-                                        <label class="form-label small mb-1">Remplacer (upload)</label>
-                                        <input type="file" class="form-control form-control-sm" name="promotion_item_files[{{ $pi }}]" accept="image/*">
-                                    </div>
-                                    <div class="col-xl-3 col-md-6">
-                                        <label class="form-label small d-block mb-1">Image actuelle</label>
-                                        <div class="form-check mt-1">
-                                            <input type="hidden" name="promotion_item_remove_image[{{ $pi }}]" value="0">
-                                            <input class="form-check-input" type="checkbox" name="promotion_item_remove_image[{{ $pi }}]" value="1" {{ (string) $promoRemoveImage === '1' ? 'checked' : '' }}>
-                                            <label class="form-check-label small">Supprimer l’image</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-3 col-md-4">
-                                        <label class="form-label small mb-1">Texte bouton</label>
-                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][button_text]" value="{{ $promoButtonText }}" placeholder="Découvrir">
-                                    </div>
-                                    <div class="col-xl-5 col-md-8">
-                                        <label class="form-label small mb-1">Lien bouton</label>
-                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][button_url]" value="{{ $promoButtonUrl }}" placeholder="https://... ou /voyages">
-                                    </div>
-                                    <div class="col-xl-4 col-md-6">
-                                        <label class="form-label small mb-1">Lien du panneau (clic / carte)</label>
-                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][link_url]" value="{{ $promoLinkUrl }}" placeholder="Optionnel — URL du panneau entier">
-                                    </div>
-                                    <div class="col-xl-2 col-md-3">
-                                        <label class="form-label small mb-1">Cible lien</label>
-                                        <select class="form-select form-select-sm" name="promotions[items][{{ $pi }}][link_target]">
-                                            <option value="_self" {{ $promoLinkTarget === '_blank' ? '' : 'selected' }}>Même onglet</option>
-                                            <option value="_blank" {{ $promoLinkTarget === '_blank' ? 'selected' : '' }}>Nouvel onglet</option>
+                                    <div class="col-md-2">
+                                        <label class="form-label small mb-0">Style bouton</label>
+                                        <select class="form-select form-select-sm" name="accordion_slider[slides][{{ $idx }}][button_style]">
+                                            @php $buttonStyle = data_get($slide, 'button_style', 'orange'); @endphp
+                                            <option value="orange" {{ $buttonStyle === 'orange' ? 'selected' : '' }}>Orange</option>
+                                            <option value="white" {{ $buttonStyle === 'white' ? 'selected' : '' }}>White</option>
+                                            <option value="white-arabic" {{ $buttonStyle === 'white-arabic' ? 'selected' : '' }}>White Arabic</option>
                                         </select>
                                     </div>
-                                    <div class="col-xl-2 col-md-3">
-                                        <label class="form-label small d-block mb-1">Bouton</label>
-                                        <input type="hidden" name="promotions[items][{{ $pi }}][button_enabled]" value="0">
-                                        <div class="form-check form-switch mt-1">
-                                            <input class="form-check-input" type="checkbox" name="promotions[items][{{ $pi }}][button_enabled]" value="1" {{ (string) $promoBtnEnabled === '0' ? '' : ($promoBtnEnabled ? 'checked' : '') }}>
-                                            <label class="form-check-label small">Afficher le bouton</label>
-                                        </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-0">Overlay / gradient</label>
+                                        <input type="text" class="form-control form-control-sm" name="accordion_slider[slides][{{ $idx }}][overlay_color]" value="{{ data_get($slide, 'overlay_color') }}" placeholder="linear-gradient(...)">
                                     </div>
-                                    <div class="col-xl-2 col-md-3">
-                                        <label class="form-label small mb-1">Couleur accent (#hex)</label>
-                                        <input type="text" class="form-control form-control-sm" name="promotions[items][{{ $pi }}][accent_color]" value="{{ $promoAccent }}" placeholder="#0083c4" maxlength="20">
+                                    <div class="col-md-1">
+                                        <label class="form-label small mb-0">Ordre</label>
+                                        <input type="hidden" class="accordion-slider-order" name="accordion_slider[slides][{{ $idx }}][order]" value="{{ data_get($slide, 'order', $idx + 1) }}">
+                                        <div class="form-control form-control-sm accordion-slider-order-display">{{ data_get($slide, 'order', $idx + 1) }}</div>
                                     </div>
-                                    <div class="col-xl-4">
-                                        <label class="form-label small d-block mb-1">Aperçu compact</label>
+                                    <div class="col-auto d-flex align-items-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger accordion-slider-remove">×</button>
+                                    </div>
+                                    <div class="col-12">
                                         <div class="promo-preview">
-                                            <div class="promo-preview__img" @if($promoImage) style="background-image:url('{{ e($promoImage) }}')" @endif></div>
-                                            <div class="promo-preview__body">
-                                                <div class="promo-preview__title">{{ $promoTitle !== '' ? $promoTitle : 'Titre de la card' }}</div>
-                                                <div class="promo-preview__subtitle">{{ $promoSubtitle !== '' ? $promoSubtitle : 'Sous-titre de la bannière promo' }}</div>
+                                            <div class="promo-preview__img accordion-slider-preview-img" style="background-image:url('{{ e((string) data_get($slide, 'image', '')) }}');"></div>
+                                            <div>
+                                                <div class="promo-preview__title accordion-slider-preview-title">{{ data_get($slide, 'title', 'Titre') }}</div>
+                                                <div class="promo-preview__subtitle accordion-slider-preview-subtitle">{{ data_get($slide, 'button_text', '') }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -855,71 +794,30 @@
                             </div>
                         @endforeach
                     </div>
-                    <fieldset class="d-none" disabled>
-                    <p class="text-muted small mb-3">Trois images affichées côte à côte sur la page d’accueil. Corrigez l’URL si besoin ou uploadez un fichier. Laissez vide ou cochez « Supprimer » pour retirer une carte.</p>
-                    @php
-                        $promoImages = old('promotions.images', data_get($settings, 'promotions.images', ['', '', '']));
-                        if (!is_array($promoImages)) {
-                            $promoImages = ['', '', ''];
-                        }
-                        while (count($promoImages) < 3) {
-                            $promoImages[] = '';
-                        }
-                        $promoImages = array_slice($promoImages, 0, 3);
-                    @endphp
-                    <div class="vstack gap-3">
-                        @foreach($promoImages as $pi => $imgUrl)
-                        <div class="border rounded p-3">
-                            <h6 class="mb-2">Image {{ $pi + 1 }}</h6>
-                            <div class="row g-2 align-items-end">
-                                <div class="col-md-8">
-                                    <label class="form-label small mb-0">URL de l’image</label>
-                                    <input type="text" class="form-control" name="promotions[images][{{ $pi }}]" value="{{ $imgUrl }}" placeholder="https://…">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small mb-0">Remplacer (upload)</label>
-                                    <input type="file" class="form-control" name="promotion_image_{{ $pi + 1 }}" accept="image/*">
-                                </div>
-                                @if($imgUrl !== '')
-                                <div class="col-12">
-                                    <div class="d-flex flex-wrap align-items-center gap-3">
-                                        <img src="{{ $imgUrl }}" alt="Aperçu promotion {{ $pi + 1 }}" class="img-thumbnail rounded" style="max-height:140px;object-fit:contain">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="promotion_remove_{{ $pi + 1 }}" value="1" id="promotion_remove_{{ $pi + 1 }}" {{ old('promotion_remove_' . ($pi + 1)) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="promotion_remove_{{ $pi + 1 }}">Supprimer cette image</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    </fieldset>
                 </div>
             </div>
 
             {{-- WhatsApp Banner --}}
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Bannière WhatsApp</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">BanniÃ¨re WhatsApp</h5></div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="whatsapp_banner[enabled]" value="1" id="whatsapp_enabled"
                                {{ old('whatsapp_banner.enabled', data_get($settings, 'whatsapp_banner.enabled')) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="whatsapp_enabled">Activer la bannière WhatsApp</label>
+                        <label class="form-check-label" for="whatsapp_enabled">Activer la banniÃ¨re WhatsApp</label>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'Rejoignez notre chaîne WhatsApp pour suivre nos actualités voyage')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'Rejoignez notre chaÃ®ne WhatsApp pour suivre nos actualitÃ©s voyage')) }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Texte court (description)</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Restez informé avec AjinSafro')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Restez informÃ© avec AjinSafro')) }}">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Segments meta conservés pour compatibilité</label>
-                            <p class="text-muted small mb-2">Ces champs restent stockés mais ne sont plus affichés sur la home.</p>
+                            <label class="form-label">Segments meta conservÃ©s pour compatibilitÃ©</label>
+                            <p class="text-muted small mb-2">Ces champs restent stockÃ©s mais ne sont plus affichÃ©s sur la home.</p>
                             @php
                                 $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', []));
                                 $features = is_array($features) ? $features : [];
@@ -955,17 +853,17 @@
 
             {{-- Cruises --}}
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Croisières</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">CroisiÃ¨res</h5></div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="cruises[enabled]" value="1" id="cruises_enabled"
                                {{ old('cruises.enabled', data_get($settings, 'cruises.enabled')) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="cruises_enabled">Activer la section Croisières</label>
+                        <label class="form-check-label" for="cruises_enabled">Activer la section CroisiÃ¨res</label>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="cruises[title]" value="{{ old('cruises.title', data_get($settings, 'cruises.title', 'Croisières')) }}">
+                            <input type="text" class="form-control" name="cruises[title]" value="{{ old('cruises.title', data_get($settings, 'cruises.title', 'CroisiÃ¨res')) }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Image URL</label>
@@ -982,7 +880,7 @@
                         @endif
                         <div class="col-md-6">
                             <label class="form-label">Texte du bouton</label>
-                            <input type="text" class="form-control" name="cruises[button_text]" value="{{ old('cruises.button_text', data_get($settings, 'cruises.button_text', 'Découvrir')) }}">
+                            <input type="text" class="form-control" name="cruises[button_text]" value="{{ old('cruises.button_text', data_get($settings, 'cruises.button_text', 'DÃ©couvrir')) }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">URL du bouton</label>
@@ -997,16 +895,16 @@
                 <div class="card-header"><h5 class="card-title mb-0">Footer</h5></div>
                 <div class="card-body row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Colonne 1 — Titre</label>
+                        <label class="form-label">Colonne 1 â€” Titre</label>
                         <input type="text" class="form-control" name="footer[col1_heading]" value="{{ old('footer.col1_heading', data_get($settings, 'footer.col1_heading', 'En savoir plus')) }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Colonne 2 — Titre</label>
-                        <input type="text" class="form-control" name="footer[col2_heading]" value="{{ old('footer.col2_heading', data_get($settings, 'footer.col2_heading', 'Société')) }}">
+                        <label class="form-label">Colonne 2 â€” Titre</label>
+                        <input type="text" class="form-control" name="footer[col2_heading]" value="{{ old('footer.col2_heading', data_get($settings, 'footer.col2_heading', 'SociÃ©tÃ©')) }}">
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Mentions légales</label>
-                        <textarea class="form-control" name="footer[legal_text]" rows="3" placeholder="Licence N° ... | RC: ...">{{ old('footer.legal_text', data_get($settings, 'footer.legal_text', "Licence N° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU")) }}</textarea>
+                        <label class="form-label">Mentions lÃ©gales</label>
+                        <textarea class="form-control" name="footer[legal_text]" rows="3" placeholder="Licence NÂ° ... | RC: ...">{{ old('footer.legal_text', data_get($settings, 'footer.legal_text', "Licence NÂ° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU")) }}</textarea>
                     </div>
                 </div>
             </div>
@@ -1065,7 +963,7 @@
 @push('script')
 <script>
 (function () {
-    /* ── Header tab JS ─────────────────────────── */
+    /* â”€â”€ Header tab JS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     var menuSource = document.getElementById('hdr_menu_source');
     var wpMenuWrap = document.getElementById('hdr_wp_menu_wrap');
     var linksWrap = document.getElementById('hdr_links_wrap');
@@ -1091,10 +989,10 @@
             '<div class="col-auto text-center" style="min-width:40px"><span class="badge bg-primary hdr-order-display">' + order + '</span></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Texte</label><input class="form-control form-control-sm" name="header[links][' + idx + '][label]" placeholder="Ex: HOTEL"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">URL</label><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="Ex: /hotel"></div>' +
-            '<div class="col-md-2"><label class="form-label small mb-0">Icône FA</label><input class="form-control form-control-sm" name="header[links][' + idx + '][icon]" placeholder="fas fa-hotel"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">IcÃ´ne FA</label><input class="form-control form-control-sm" name="header[links][' + idx + '][icon]" placeholder="fas fa-hotel"></div>' +
             '<div class="col-auto d-flex align-items-end gap-2"><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="header[links][' + idx + '][active]" value="1"><label class="form-check-label small">Actif</label></div></div>' +
             '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button></div>' +
-            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">×</button></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">Ã—</button></div>' +
             '</div>' +
             '<div class="hdr-children-list ms-4 ps-3 border-start border-2 border-primary"><div class="d-flex justify-content-between align-items-center mb-1"><small class="text-muted fw-semibold">Sous-menus</small></div></div>' +
             '</div>';
@@ -1108,8 +1006,8 @@
             '<div class="col-auto"><span class="badge bg-secondary hdr-child-order-display">' + order + '</span></div>' +
             '<div class="col-3"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][label]" placeholder="Label"></div>' +
             '<div class="col-3"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][url]" placeholder="URL"></div>' +
-            '<div class="col-2"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][icon]" placeholder="Icône FA"></div>' +
-            '<div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">×</button></div>' +
+            '<div class="col-2"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][icon]" placeholder="IcÃ´ne FA"></div>' +
+            '<div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">Ã—</button></div>' +
             '</div>';
     }
 
@@ -1217,7 +1115,7 @@
         });
     }
 
-    /* ── Content tab JS (existing) ────────────── */
+    /* â”€â”€ Content tab JS (existing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     var heroType = document.getElementById('hero_type');
     var imageWraps = [document.getElementById('hero_image_url_wrap'), document.getElementById('hero_image_file_wrap')];
     var videoWraps = [document.getElementById('hero_video_url_wrap'), document.getElementById('hero_video_file_wrap')];
@@ -1241,18 +1139,17 @@
     toggleHeroFields();
     syncOverlayValue();
 
-    /* ── Ordre des sections + sections personnalisées ─────────── */
+    /* â”€â”€ Ordre des sections + sections personnalisÃ©es â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     var sectionOrderContainer = document.getElementById('section-order-container');
     var sectionAddCustomBtn = document.getElementById('section-add-custom');
     var sectionLabels = {
         last_minute: 'Tendances du moment',
-        accommodations: 'Séjours uniques',
-        holiday_theme: 'Voyages par thème',
+        accommodations: 'SÃ©jours uniques',
+        holiday_theme: 'Voyages par thÃ¨me',
         regions: 'Destinations',
         good_spots: 'Bons coins',
-        promotions: 'Promotions',
-        whatsapp_banner: 'Bannière WhatsApp',
-        cruises: 'Croisières',
+        whatsapp_banner: 'BanniÃ¨re WhatsApp',
+        cruises: 'CroisiÃ¨res',
         newsletter: 'Newsletter'
     };
     function nextCustomId() {
@@ -1268,29 +1165,29 @@
             '<input type="hidden" name="section_order[]" value="' + secKey + '">' +
             '<div class="d-flex align-items-start gap-2 flex-wrap">' +
             '<div class="d-flex flex-column gap-0">' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">↑</button>' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">↓</button></div>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">â†‘</button>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">â†“</button></div>' +
             '<div class="form-check form-switch align-self-center">' +
             '<input class="form-check-input" type="checkbox" name="sections[' + secKey + ']" value="1" checked>' +
             '<label class="form-check-label">Activer</label></div>' +
             '<div class="flex-grow-1">' +
-            '<label class="form-label small mb-0">Section personnalisée — Titre</label>' +
+            '<label class="form-label small mb-0">Section personnalisÃ©e â€” Titre</label>' +
             '<input type="text" class="form-control form-control-sm" name="custom_sections[' + secKey + '][title]" placeholder="Titre de la section">' +
             '<label class="form-label small mb-0 mt-1">Contenu (HTML / shortcodes)</label>' +
             '<textarea class="form-control form-control-sm" name="custom_sections[' + secKey + '][content]" rows="3" placeholder="<p>...</p> ou [shortcode]"></textarea></div>' +
-            '<div class="align-self-center"><button type="button" class="btn btn-sm btn-outline-danger section-remove">×</button></div></div></div>';
+            '<div class="align-self-center"><button type="button" class="btn btn-sm btn-outline-danger section-remove">Ã—</button></div></div></div>';
     }
     function builtinSectionRowHtml(secKey) {
         var label = sectionLabels[secKey] || secKey;
         return '<div class="border rounded p-2 section-order-row d-flex align-items-center gap-2" data-section-key="' + secKey + '">' +
             '<input type="hidden" name="section_order[]" value="' + secKey + '">' +
             '<div class="d-flex flex-column gap-0">' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">↑</button>' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">↓</button></div>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">â†‘</button>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">â†“</button></div>' +
             '<div class="form-check form-switch mb-0">' +
             '<input class="form-check-input" type="checkbox" name="sections[' + secKey + ']" value="1" checked>' +
             '<label class="form-check-label">' + label + '</label></div>' +
-            '<div class="ms-auto"><button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">×</button></div></div>';
+            '<div class="ms-auto"><button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">Ã—</button></div></div>';
     }
     var sectionAddBuiltin = document.getElementById('section-add-builtin');
     if (sectionAddBuiltin) {
@@ -1333,13 +1230,13 @@
         });
     }
 
-    /* ── Voyages par theme items repeater ─────────── */
+    /* â”€â”€ Voyages par theme items repeater â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     var holidayContainer = document.getElementById('holiday-items-container');
     var holidayAddBtn = document.getElementById('holiday-add-item');
     function holidayRowHtml(idx) {
         return '<div class="border rounded p-2 holiday-row" data-index="' + idx + '">' +
             '<div class="row g-2 align-items-center">' +
-            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">↑</button><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">↓</button></div>' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">â†‘</button><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">â†“</button></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Titre</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][title]"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Badge</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][badge]" placeholder="Nouveau"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Description</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][description]" placeholder="Texte court"></div>' +
@@ -1349,7 +1246,7 @@
             '<div class="col-md-2"><label class="form-label small mb-0">Btn URL</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][button_url]" value="#"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Tags</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][tags]" placeholder="plage, famille, luxe"></div>' +
             '<div class="col-auto"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" name="holiday_theme[items][' + idx + '][active]" value="1" checked><label class="form-check-label small">Actif</label></div></div>' +
-            '<div class="col-auto"><input type="hidden" class="holiday-order" name="holiday_theme[items][' + idx + '][order]" value="' + idx + '"><button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">×</button></div>' +
+            '<div class="col-auto"><input type="hidden" class="holiday-order" name="holiday_theme[items][' + idx + '][order]" value="' + idx + '"><button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">Ã—</button></div>' +
             '<div class="col-12"><div class="holiday-preview border rounded p-2 d-flex align-items-center gap-2"><div class="holiday-preview__img" style="width:64px;height:44px;border-radius:8px;background:#e7edf5 center/cover no-repeat;"></div><div><div class="holiday-preview__title fw-bold small">Titre</div><div class="holiday-preview__meta text-muted small"></div></div></div></div>' +
             '</div></div>';
     }
@@ -1419,112 +1316,91 @@
         });
     }
 
-    /* ── Destinations par région (DBR) ─────────── */
-    /* ── Promotions items repeater ───────────── */
-    var promoContainer = document.getElementById('promo-items-container');
-    var promoAddBtn = document.getElementById('promo-add-item');
-    function promoRowHtml(idx) {
-        return '<div class="border rounded p-3 promo-row bg-light" data-index="' + idx + '">' +
-            '<div class="row g-3">' +
-            '<div class="col-auto d-flex flex-column gap-1">' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary promo-move-up" title="Monter">↑</button>' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary promo-move-down" title="Descendre">↓</button>' +
-            '</div>' +
-            '<div class="col-xl-3 col-lg-4"><label class="form-label small mb-1">Titre</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][title]" placeholder="Titre de la card"></div>' +
-            '<div class="col-xl-4 col-lg-5"><label class="form-label small mb-1">Sous-titre</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][subtitle]" placeholder="Texte court lisible sur la bannière"></div>' +
-            '<div class="col-xl-2 col-md-3"><label class="form-label small mb-1">Ordre</label><input type="number" class="form-control form-control-sm promo-order" name="promotions[items][' + idx + '][sort_order]" value="' + idx + '" min="0"></div>' +
-            '<div class="col-auto"><label class="form-label small d-block mb-1">État</label><input type="hidden" name="promotions[items][' + idx + '][is_active]" value="0"><div class="form-check form-switch mt-1"><input class="form-check-input" type="checkbox" name="promotions[items][' + idx + '][is_active]" value="1" checked><label class="form-check-label small">Actif</label></div></div>' +
-            '<div class="col-auto ms-auto"><label class="form-label small d-block mb-1 opacity-0">Action</label><button type="button" class="btn btn-sm btn-outline-danger promo-remove">Supprimer</button></div>' +
-            '<div class="col-xl-6"><label class="form-label small mb-1">Image URL</label><input type="text" class="form-control form-control-sm promo-image-url" name="promotions[items][' + idx + '][image_url]" placeholder="https://..."></div>' +
-            '<div class="col-xl-3 col-md-6"><label class="form-label small mb-1">Remplacer (upload)</label><input type="file" class="form-control form-control-sm" name="promotion_item_files[' + idx + ']" accept="image/*"></div>' +
-            '<div class="col-xl-3 col-md-6"><label class="form-label small d-block mb-1">Image actuelle</label><div class="form-check mt-1"><input type="hidden" name="promotion_item_remove_image[' + idx + ']" value="0"><input class="form-check-input" type="checkbox" name="promotion_item_remove_image[' + idx + ']" value="1"><label class="form-check-label small">Supprimer l’image</label></div></div>' +
-            '<div class="col-xl-3 col-md-4"><label class="form-label small mb-1">Texte bouton</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][button_text]" placeholder="Découvrir"></div>' +
-            '<div class="col-xl-5 col-md-8"><label class="form-label small mb-1">Lien bouton</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][button_url]" placeholder="https://... ou /voyages"></div>' +
-            '<div class="col-xl-4 col-md-6"><label class="form-label small mb-1">Lien du panneau</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][link_url]" placeholder="Optionnel"></div>' +
-            '<div class="col-xl-2 col-md-3"><label class="form-label small mb-1">Cible lien</label><select class="form-select form-select-sm" name="promotions[items][' + idx + '][link_target]"><option value="_self" selected>Même onglet</option><option value="_blank">Nouvel onglet</option></select></div>' +
-            '<div class="col-xl-2 col-md-3"><label class="form-label small d-block mb-1">Bouton</label><input type="hidden" name="promotions[items][' + idx + '][button_enabled]" value="0"><div class="form-check form-switch mt-1"><input class="form-check-input" type="checkbox" name="promotions[items][' + idx + '][button_enabled]" value="1" checked><label class="form-check-label small">Afficher le bouton</label></div></div>' +
-            '<div class="col-xl-2 col-md-3"><label class="form-label small mb-1">Couleur accent (#hex)</label><input type="text" class="form-control form-control-sm" name="promotions[items][' + idx + '][accent_color]" placeholder="#0083c4" maxlength="20"></div>' +
-            '<div class="col-xl-4"><label class="form-label small d-block mb-1">Aperçu compact</label><div class="promo-preview"><div class="promo-preview__img"></div><div class="promo-preview__body"><div class="promo-preview__title">Titre de la card</div><div class="promo-preview__subtitle">Sous-titre de la bannière promo</div></div></div></div>' +
+    /* â”€â”€ Destinations par rÃ©gion (DBR) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    var accordionSliderContainer = document.getElementById('accordion-slider-items-container');
+    var accordionSliderAddBtn = document.getElementById('accordion-slider-add-item');
+    function accordionSliderRowHtml(idx) {
+        return '<div class="border rounded p-3 accordion-slider-row" data-index="' + idx + '">' +
+            '<div class="row g-2 align-items-start">' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-up" title="Monter">↑</button><button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-down" title="Descendre">↓</button></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Titre vertical <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="accordion_slider[slides][' + idx + '][title]" required></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Sous-titre</label><input type="text" class="form-control form-control-sm" name="accordion_slider[slides][' + idx + '][subtitle]"></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm accordion-slider-image-input" name="accordion_slider[slides][' + idx + '][image]" placeholder="https://..."></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Upload image</label><input type="file" class="form-control form-control-sm" name="accordion_slider_files[' + idx + ']" accept="image/*"></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Lien</label><input type="text" class="form-control form-control-sm" name="accordion_slider[slides][' + idx + '][link]" value="#" placeholder="https://..."></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Texte bouton</label><input type="text" class="form-control form-control-sm" name="accordion_slider[slides][' + idx + '][button_text]" placeholder="S\\'inscrire"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Style bouton</label><select class="form-select form-select-sm" name="accordion_slider[slides][' + idx + '][button_style]"><option value="orange">Orange</option><option value="white">White</option><option value="white-arabic">White Arabic</option></select></div>' +
+            '<div class="col-md-3"><label class="form-label small mb-0">Overlay / gradient</label><input type="text" class="form-control form-control-sm" name="accordion_slider[slides][' + idx + '][overlay_color]" placeholder="linear-gradient(...)"></div>' +
+            '<div class="col-md-1"><label class="form-label small mb-0">Ordre</label><input type="hidden" class="accordion-slider-order" name="accordion_slider[slides][' + idx + '][order]" value="' + (idx + 1) + '"><div class="form-control form-control-sm accordion-slider-order-display">' + (idx + 1) + '</div></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger accordion-slider-remove">×</button></div>' +
+            '<div class="col-12"><div class="promo-preview"><div class="promo-preview__img accordion-slider-preview-img"></div><div><div class="promo-preview__title accordion-slider-preview-title">Titre</div><div class="promo-preview__subtitle accordion-slider-preview-subtitle"></div></div></div></div>' +
             '</div></div>';
     }
-    function updatePromoPreview(row) {
+    function accordionSliderUpdatePreview(row) {
         if (!row) return;
         var title = row.querySelector('input[name*="[title]"]');
-        var subtitle = row.querySelector('input[name*="[subtitle]"]');
-        var image = row.querySelector('.promo-image-url');
-        var previewTitle = row.querySelector('.promo-preview__title');
-        var previewSubtitle = row.querySelector('.promo-preview__subtitle');
-        var previewImage = row.querySelector('.promo-preview__img');
-        if (previewTitle) previewTitle.textContent = title && title.value ? title.value : 'Titre de la card';
-        if (previewSubtitle) previewSubtitle.textContent = subtitle && subtitle.value ? subtitle.value : 'Sous-titre de la bannière promo';
-        if (previewImage) {
-            var imageValue = image && image.value ? image.value.trim() : '';
-            previewImage.style.backgroundImage = imageValue ? 'url("' + imageValue.replace(/"/g, '\\"') + '")' : '';
+        var image = row.querySelector('.accordion-slider-image-input');
+        var buttonText = row.querySelector('input[name*="[button_text]"]');
+        var previewTitle = row.querySelector('.accordion-slider-preview-title');
+        var previewSubtitle = row.querySelector('.accordion-slider-preview-subtitle');
+        var previewImg = row.querySelector('.accordion-slider-preview-img');
+        if (previewTitle) previewTitle.textContent = title && title.value ? title.value : 'Titre';
+        if (previewSubtitle) previewSubtitle.textContent = buttonText && buttonText.value ? buttonText.value : '';
+        if (previewImg) {
+            var val = image && image.value ? image.value.trim() : '';
+            previewImg.style.backgroundImage = val ? 'url("' + val.replace(/"/g, '\\"') + '")' : 'none';
         }
     }
-    function promoRenumber() {
-        if (!promoContainer) return;
-        promoContainer.querySelectorAll('.promo-row').forEach(function (row, idx) {
+    function accordionSliderRenumber() {
+        if (!accordionSliderContainer) return;
+        accordionSliderContainer.querySelectorAll('.accordion-slider-row').forEach(function (row, idx) {
             row.setAttribute('data-index', idx);
-            row.querySelectorAll('[name^="promotions[items]"]').forEach(function (input) {
-                input.name = input.name.replace(/promotions\[items\]\[\d+\]/, 'promotions[items][' + idx + ']');
+            row.querySelectorAll('[name^="accordion_slider[slides]"]').forEach(function (inp) {
+                inp.name = inp.name.replace(/accordion_slider\[slides\]\[\d+\]/, 'accordion_slider[slides][' + idx + ']');
             });
-            row.querySelectorAll('[name^="promotion_item_files"]').forEach(function (input) {
-                input.name = 'promotion_item_files[' + idx + ']';
+            row.querySelectorAll('[name^="accordion_slider_files"]').forEach(function (inp) {
+                inp.name = 'accordion_slider_files[' + idx + ']';
             });
-            row.querySelectorAll('[name^="promotion_item_remove_image"]').forEach(function (input) {
-                input.name = 'promotion_item_remove_image[' + idx + ']';
-            });
-            var orderInput = row.querySelector('.promo-order');
+            var orderInput = row.querySelector('.accordion-slider-order');
+            var orderDisplay = row.querySelector('.accordion-slider-order-display');
             if (orderInput) {
-                orderInput.name = 'promotions[items][' + idx + '][sort_order]';
-                orderInput.value = idx;
+                orderInput.name = 'accordion_slider[slides][' + idx + '][order]';
+                orderInput.value = idx + 1;
             }
+            if (orderDisplay) orderDisplay.textContent = idx + 1;
         });
     }
-    if (promoAddBtn && promoContainer) {
-        promoContainer.querySelectorAll('.promo-row').forEach(function (row) { updatePromoPreview(row); });
-        if (!promoContainer.querySelector('.promo-row')) {
-            promoContainer.insertAdjacentHTML('beforeend', promoRowHtml(0));
-        }
-        promoAddBtn.addEventListener('click', function () {
-            var idx = promoContainer.querySelectorAll('.promo-row').length;
-            promoContainer.insertAdjacentHTML('beforeend', promoRowHtml(idx));
-            var rows = promoContainer.querySelectorAll('.promo-row');
-            updatePromoPreview(rows[rows.length - 1]);
+    if (accordionSliderAddBtn && accordionSliderContainer) {
+        accordionSliderContainer.querySelectorAll('.accordion-slider-row').forEach(function (row) { accordionSliderUpdatePreview(row); });
+        accordionSliderAddBtn.addEventListener('click', function () {
+            var idx = accordionSliderContainer.querySelectorAll('.accordion-slider-row').length;
+            accordionSliderContainer.insertAdjacentHTML('beforeend', accordionSliderRowHtml(idx));
+            var rows = accordionSliderContainer.querySelectorAll('.accordion-slider-row');
+            accordionSliderUpdatePreview(rows[rows.length - 1]);
         });
-        promoContainer.addEventListener('click', function (e) {
-            var target = e.target;
-            if (target.classList.contains('promo-remove')) {
-                var removeRow = target.closest('.promo-row');
-                if (removeRow) {
-                    removeRow.remove();
-                    promoRenumber();
-                    if (!promoContainer.querySelector('.promo-row')) {
-                        promoContainer.insertAdjacentHTML('beforeend', promoRowHtml(0));
-                    }
+        accordionSliderContainer.addEventListener('click', function (e) {
+            if (e.target.classList.contains('accordion-slider-remove')) {
+                var row = e.target.closest('.accordion-slider-row');
+                if (row) { row.remove(); accordionSliderRenumber(); }
+            }
+            if (e.target.classList.contains('accordion-slider-move-up')) {
+                var row = e.target.closest('.accordion-slider-row');
+                if (row && row.previousElementSibling) {
+                    accordionSliderContainer.insertBefore(row, row.previousElementSibling);
+                    accordionSliderRenumber();
                 }
             }
-            if (target.classList.contains('promo-move-up')) {
-                var upRow = target.closest('.promo-row');
-                if (upRow && upRow.previousElementSibling) {
-                    promoContainer.insertBefore(upRow, upRow.previousElementSibling);
-                    promoRenumber();
-                }
-            }
-            if (target.classList.contains('promo-move-down')) {
-                var downRow = target.closest('.promo-row');
-                if (downRow && downRow.nextElementSibling) {
-                    promoContainer.insertBefore(downRow.nextElementSibling, downRow);
-                    promoRenumber();
+            if (e.target.classList.contains('accordion-slider-move-down')) {
+                var row = e.target.closest('.accordion-slider-row');
+                if (row && row.nextElementSibling) {
+                    accordionSliderContainer.insertBefore(row.nextElementSibling, row);
+                    accordionSliderRenumber();
                 }
             }
         });
-        promoContainer.addEventListener('input', function (e) {
-            var row = e.target.closest('.promo-row');
-            if (row) {
-                updatePromoPreview(row);
-            }
+        accordionSliderContainer.addEventListener('input', function (e) {
+            var row = e.target.closest('.accordion-slider-row');
+            if (row) accordionSliderUpdatePreview(row);
         });
     }
 
@@ -1534,13 +1410,13 @@
         label = label || ''; imageUrl = imageUrl || ''; linkUrl = linkUrl || ''; order = order == null ? idx + 1 : order;
         return '<div class="border rounded p-2 dbr-row align-items-center" data-index="' + idx + '">' +
             '<div class="row g-2 align-items-center">' +
-            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">↑</button><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">↓</button></div>' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">â†‘</button><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">â†“</button></div>' +
             '<div class="col"><input type="hidden" name="destinations_by_region[items][' + idx + '][order]" class="dbr-order" value="' + order + '"><label class="form-label small mb-0">Ordre</label><span class="dbr-order-display">' + order + '</span></div>' +
             '<div class="col"><label class="form-label small mb-0">Label <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][label]" value="' + (label.replace(/"/g, '&quot;')) + '" placeholder="Ex: CAP NORD" required></div>' +
             '<div class="col"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][image_url]" value="' + (imageUrl.replace(/"/g, '&quot;')) + '" placeholder="https://..."></div>' +
             '<div class="col-auto"><label class="form-label small mb-0">Choisir</label><input type="file" class="form-control form-control-sm dbr-file" name="destinations_by_region_files[' + idx + ']" accept="image/*" data-index="' + idx + '"></div>' +
             '<div class="col"><label class="form-label small mb-0">Lien URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][link_url]" value="' + (linkUrl.replace(/"/g, '&quot;')) + '" placeholder="https://..."></div>' +
-            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">×</button></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">Ã—</button></div>' +
             '</div></div>';
     }
     function dbrRenumber() {
