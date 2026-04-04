@@ -22,12 +22,7 @@ class AjinsafroHomePageFrenchContentSeeder extends Seeder
             $settings = [];
         }
 
-        $settings['promotions'] = array_replace(
-            is_array($settings['promotions'] ?? null) ? $settings['promotions'] : [],
-            [
-                'title' => 'Explorez plus, voyagez mieux avec AjinSafro',
-            ]
-        );
+        unset($settings['promotions']);
 
         $settings['whatsapp_banner'] = array_replace(
             is_array($settings['whatsapp_banner'] ?? null) ? $settings['whatsapp_banner'] : [],

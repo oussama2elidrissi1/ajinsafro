@@ -57,11 +57,13 @@ add_action( 'plugins_loaded', 'ajth_init' );
  * ────────────────────────────────────────────── */
 function ajth_enqueue_front_assets() {
     $load = is_front_page() || is_home() || is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
+    $load_home_sections = is_front_page() || is_home();
 
     if ( ! $load && is_singular() ) {
         global $post;
         if ( $post && has_shortcode( $post->post_content, 'ajth_homepage' ) ) {
             $load = true;
+            $load_home_sections = true;
         }
     }
 
@@ -106,6 +108,23 @@ function ajth_enqueue_front_assets() {
         AJTH_VERSION,
         true
     );
+
+    if ( $load_home_sections ) {
+        wp_enqueue_style(
+            'ajth-home-reference-accordion-css',
+            AJTH_URL . 'assets/css/home-reference-accordion.css',
+            array( 'ajth-home-css' ),
+            AJTH_VERSION
+        );
+
+        wp_enqueue_script(
+            'ajth-home-reference-accordion-js',
+            AJTH_URL . 'assets/js/home-reference-accordion.js',
+            array(),
+            AJTH_VERSION,
+            true
+        );
+    }
 }
 add_action( 'wp_enqueue_scripts', 'ajth_enqueue_front_assets', 5 );
 
@@ -175,30 +194,20 @@ function ajth_homepage_shortcode( $atts ) {
 add_shortcode( 'ajth_homepage', 'ajth_homepage_shortcode' );
 
 /**
- * Shortcode: [ajinsafro_slider]
- * Renders the standalone accordion slider template.
+ * Render the standalone homepage accordion section based on the approved reference.
+ *
+ * @return void
  */
-function ajinsafro_slider_shortcode( $atts ) {
-    wp_enqueue_style(
-        'ajinsafro-accordion-slider-css',
-        AJTH_URL . 'assets/css/accordion-slider.css',
-        array(),
-        AJTH_VERSION
-    );
+function ajth_render_reference_accordion_section() {
+    $settings = ajth_get_settings();
+    $enabled = ! empty( $settings['accordion_slider']['enabled'] );
+    $enabled = apply_filters( 'ajth_reference_accordion_enabled', $enabled, $settings );
+    if ( ! $enabled ) {
+        return;
+    }
 
-    wp_enqueue_script(
-        'ajinsafro-accordion-slider-js',
-        AJTH_URL . 'assets/js/accordion-slider.js',
-        array(),
-        AJTH_VERSION,
-        true
-    );
-
-    ob_start();
-    include AJTH_DIR . 'templates/accordion-slider.php';
-    return ob_get_clean();
+    include AJTH_DIR . 'parts/reference-accordion.php';
 }
-add_shortcode( 'ajinsafro_slider', 'ajinsafro_slider_shortcode' );
 
 /* ──────────────────────────────────────────────
  * Header settings managed from Laravel admin
@@ -405,103 +414,6 @@ add_action( 'wp_footer', 'ajth_render_footer_sitewide', 1 );
  * @param string $url Raw URL from settings.
  * @return string Sanitized URL or empty string.
  */
-function ajth_sanitize_promo_url( string $url ): string {
-	$url = trim( $url );
-	if ( $url === '' ) {
-		return '';
-	}
-	$lower = strtolower( $url );
-	if ( '#' === $lower || 'javascript:void(0)' === $lower || 'javascript:;' === $lower ) {
-		return '';
-	}
-	return $url;
-}
-
-/**
- * Default “Explorez plus” slides — matches the approved HTML prototype (images + copy).
- *
- * @return array<int, array<string, mixed>>
- */
-function ajth_default_promotion_items_prototype(): array {
-	return array(
-		array(
-			'title'             => 'PROGRAMME DE FIDÉLITÉ',
-			'subtitle'          => '',
-			'image_url'         => 'https://i.ibb.co/tTrXK11z/Voyagez-Plus-Gagnez-Plus.png',
-            'link_url'          => '',
-			'link_target'       => '_self',
-			'button_text'       => "S'inscrire !",
-			'button_url'        => 'https://www.ajinsafro.ma/fidelite',
-			'button_enabled'    => true,
-			'accent_color'      => '',
-			'tab_theme'         => 0,
-			'placeholder_text'  => '',
-			'is_active'         => true,
-			'sort_order'        => 0,
-		),
-		array(
-			'title'             => 'GROUP DEALS TRAVEL',
-			'subtitle'          => '',
-			'image_url'         => 'https://i.ibb.co/KcVS1QKB/plus-on-est-nombreaux-plus-on-voyage-leger.png',
-			'link_url'          => '',
-			'link_target'       => '_self',
-			'button_text'       => '',
-			'button_url'        => '',
-			'button_enabled'    => false,
-			'accent_color'      => '',
-			'tab_theme'         => 1,
-			'placeholder_text'  => '',
-			'is_active'         => true,
-			'sort_order'        => 1,
-		),
-		array(
-			'title'             => "L'7AJZ BKRI B'DHAB MCHRI",
-			'subtitle'          => '',
-            'image_url'         => '',
-			'link_url'          => '',
-			'link_target'       => '_self',
-            'button_text'       => '',
-			'button_url'        => '',
-            'button_enabled'    => false,
-			'accent_color'      => '',
-			'tab_theme'         => 2,
-            'placeholder_text'  => '1000x800',
-			'is_active'         => true,
-			'sort_order'        => 2,
-		),
-		array(
-			'title'             => 'Programme BZTAM eSFAR',
-			'subtitle'          => '',
-			'image_url'         => '',
-			'link_url'          => '',
-			'link_target'       => '_self',
-			'button_text'       => '',
-			'button_url'        => '',
-			'button_enabled'    => false,
-			'accent_color'      => '',
-			'tab_theme'         => 3,
-			'placeholder_text'  => '1000x800',
-			'is_active'         => true,
-			'sort_order'        => 3,
-		),
-		array(
-			'title'             => 'IMPORTANT UPDATES',
-			'subtitle'          => '',
-			'image_url'         => '',
-			'link_url'          => '',
-			'link_target'       => '_self',
-			'button_text'       => '',
-			'button_url'        => '',
-			'button_enabled'    => false,
-			'accent_color'      => '',
-			'tab_theme'         => 4,
-			'placeholder_text'  => '800x800',
-			'is_active'         => true,
-			'sort_order'        => 4,
-		),
-	);
-}
-
 /* ──────────────────────────────────────────────
  * Helper: get plugin settings with defaults
  * ────────────────────────────────────────────── */
@@ -524,7 +436,6 @@ function ajth_get_settings() {
             'holiday_theme' => true,
             'regions' => true,
             'good_spots' => true,
-            'promotions' => true,
             'whatsapp_banner' => true,
             'cruises' => true,
             'newsletter' => true,
@@ -562,16 +473,11 @@ function ajth_get_settings() {
             array( 'title' => 'Shopping', 'subtitle' => 'Lorem ipsum dolor sit amet', 'icon' => 'fas fa-shopping-bag', 'image_url' => 'https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&w=800&q=80', 'link_url' => '#' ),
         ),
         'good_spots_title' => 'Les bons coins sur votre destination',
-        'promotions' => array(
+        'accordion_slider' => array(
             'enabled' => true,
-            'title' => 'Explorez plus, voyagez mieux avec AjiNsafro',
             'autoplay' => true,
-            'autoplay_delay_ms' => 5000,
-            'default_active_index' => 0,
-            'max_slides' => 8,
-            'arrows_enabled' => false,
-            'images' => array( '', '', '' ),
-            'items' => ajth_default_promotion_items_prototype(),
+            'autoplay_speed' => 5000,
+            'slides' => ajth_default_accordion_slider_slides(),
         ),
         'whatsapp_banner' => array(
             'enabled'   => true,
@@ -598,7 +504,7 @@ function ajth_get_settings() {
             'button_text' => 'Découvrir',
             'button_url' => '#',
         ),
-        'section_order' => array( 'last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter' ),
+        'section_order' => array( 'last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'whatsapp_banner', 'cruises', 'newsletter' ),
         'footer' => array(
             'col1_heading' => 'En savoir plus',
             'col2_heading' => 'Société',
@@ -616,15 +522,34 @@ function ajth_get_settings() {
     if ( ! is_array( $saved ) || empty( $saved ) ) {
         $saved = ajth_legacy_settings_to_json();
     }
+    $needs_cleanup = false;
+    if ( isset( $saved['promotions'] ) ) {
+        unset( $saved['promotions'] );
+        $needs_cleanup = true;
+    }
+    if ( isset( $saved['sections']['promotions'] ) ) {
+        unset( $saved['sections']['promotions'] );
+        $needs_cleanup = true;
+    }
+    if ( isset( $saved['section_order'] ) && is_array( $saved['section_order'] ) ) {
+        $clean_order = array_values( array_filter( $saved['section_order'], static fn( $key ) => $key !== 'promotions' ) );
+        if ( $clean_order !== $saved['section_order'] ) {
+            $saved['section_order'] = $clean_order;
+            $needs_cleanup = true;
+        }
+    }
+    if ( $needs_cleanup ) {
+        update_option( 'aj_home_settings', wp_json_encode( $saved, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ), false );
+    }
 
     $settings = array_replace_recursive( $defaults, $saved );
     $settings['holiday_theme'] = ajth_normalize_holiday_theme_settings(
         isset( $settings['holiday_theme'] ) ? $settings['holiday_theme'] : array(),
         $defaults['holiday_theme']
     );
-    $settings['promotions'] = ajth_normalize_promotions_settings(
-        isset( $settings['promotions'] ) ? $settings['promotions'] : array(),
-        $defaults['promotions']
+    $settings['accordion_slider'] = ajth_normalize_accordion_slider_settings(
+        isset( $settings['accordion_slider'] ) ? $settings['accordion_slider'] : array(),
+        $defaults['accordion_slider']
     );
     $settings['section_order'] = ajth_normalize_section_order_with_holiday_theme(
         isset( $settings['section_order'] ) ? $settings['section_order'] : array(),
@@ -639,7 +564,6 @@ function ajth_get_settings() {
     $settings['sections']['holiday_theme'] = ! empty( $settings['sections']['holiday_theme'] ) || ! empty( $settings['holiday_theme']['enabled'] );
     $settings['sections']['regions'] = ! empty( $settings['sections']['regions'] );
     $settings['sections']['good_spots'] = ! empty( $settings['sections']['good_spots'] );
-    $settings['sections']['promotions'] = ! empty( $settings['sections']['promotions'] );
     $settings['sections']['whatsapp_banner'] = ! empty( $settings['sections']['whatsapp_banner'] );
     $settings['sections']['cruises'] = ! empty( $settings['sections']['cruises'] );
     $settings['sections']['newsletter'] = ! empty( $settings['sections']['newsletter'] );
@@ -718,145 +642,121 @@ function ajth_normalize_holiday_theme_settings( $theme, array $defaults ): array
     return $theme;
 }
 
-function ajth_normalize_promotions_settings( $promo, array $defaults ): array {
-    if ( is_string( $promo ) ) {
-        $decoded = json_decode( $promo, true );
-        $promo = is_array( $decoded ) ? $decoded : array();
+function ajth_default_accordion_slider_slides(): array {
+    return array(
+        array(
+            'title' => 'PROGRAMME DE FIDELITE',
+            'subtitle' => '',
+            'image' => AJTH_URL . 'assets/img/slide-1.png',
+            'link' => 'https://www.ajinsafro.ma/fidelite',
+            'button_text' => "S'inscrire !",
+            'button_style' => 'orange',
+            'overlay_color' => 'linear-gradient(to bottom, rgba(0, 163, 224, 0.10), rgba(0, 129, 188, 0.10))',
+            'order' => 1,
+        ),
+        array(
+            'title' => 'GROUP DEALS TRAVEL',
+            'subtitle' => '',
+            'image' => AJTH_URL . 'assets/img/slide-2.png',
+            'link' => '#',
+            'button_text' => '',
+            'button_style' => 'orange',
+            'overlay_color' => 'linear-gradient(to bottom, rgba(74, 222, 128, 0.05), rgba(22, 163, 74, 0.05))',
+            'order' => 2,
+        ),
+        array(
+            'title' => "L'7AJZ BKRI B'DHAB MCHRI",
+            'subtitle' => '',
+            'image' => AJTH_URL . 'assets/img/slide-3.png',
+            'link' => '#',
+            'button_text' => 'احجز الآن',
+            'button_style' => 'white-arabic',
+            'overlay_color' => 'linear-gradient(to bottom, rgba(27, 92, 140, 0.05), rgba(14, 58, 90, 0.05))',
+            'order' => 3,
+        ),
+        array(
+            'title' => 'Programme BZTAM eSFAR',
+            'subtitle' => '',
+            'image' => AJTH_URL . 'assets/img/slide-4.png',
+            'link' => '#',
+            'button_text' => '',
+            'button_style' => 'orange',
+            'overlay_color' => 'linear-gradient(to bottom, rgba(250, 204, 21, 0.10), rgba(249, 115, 22, 0.10))',
+            'order' => 4,
+        ),
+        array(
+            'title' => 'IMPORTANT UPDATES',
+            'subtitle' => '',
+            'image' => '',
+            'link' => '#',
+            'button_text' => '',
+            'button_style' => 'orange',
+            'overlay_color' => '',
+            'order' => 5,
+        ),
+    );
+}
+
+function ajth_normalize_accordion_slider_settings( $accordion, array $defaults ): array {
+    if ( is_string( $accordion ) ) {
+        $decoded = json_decode( $accordion, true );
+        $accordion = is_array( $decoded ) ? $decoded : array();
     }
-    if ( ! is_array( $promo ) ) {
-        $promo = array();
+    if ( ! is_array( $accordion ) ) {
+        $accordion = array();
     }
 
-    $promo = array_replace_recursive( $defaults, $promo );
-    $items = isset( $promo['items'] ) && is_array( $promo['items'] ) ? $promo['items'] : array();
-    if ( empty( $items ) ) {
-        $items = ajth_default_promotion_items_prototype();
+    $accordion = array_replace_recursive( $defaults, $accordion );
+    $accordion['enabled'] = ajth_truthy( $accordion['enabled'] ?? true );
+    $accordion['autoplay'] = ajth_truthy( $accordion['autoplay'] ?? true );
+    $accordion['autoplay_speed'] = max( 2000, min( 30000, (int) ( $accordion['autoplay_speed'] ?? 5000 ) ) );
+
+    $slides = $accordion['slides'] ?? array();
+    if ( is_string( $slides ) ) {
+        $decoded = json_decode( $slides, true );
+        $slides = is_array( $decoded ) ? $decoded : array();
     }
+    if ( ! is_array( $slides ) ) {
+        $slides = array();
+    }
+
     $normalized = array();
-
-    foreach ( $items as $idx => $item ) {
-        if ( ! is_array( $item ) ) {
+    foreach ( $slides as $idx => $slide ) {
+        if ( is_string( $slide ) ) {
+            $decoded = json_decode( $slide, true );
+            $slide = is_array( $decoded ) ? $decoded : array();
+        }
+        if ( ! is_array( $slide ) ) {
             continue;
         }
 
-        $image_url = trim( (string) ( $item['image_url'] ?? $item['image'] ?? '' ) );
-        $title = trim( (string) ( $item['title'] ?? '' ) );
-        $subtitle = trim( (string) ( $item['subtitle'] ?? $item['description'] ?? '' ) );
-        $button_text = trim( (string) ( $item['button_text'] ?? '' ) );
-        $button_url = ajth_sanitize_promo_url( (string) ( $item['button_url'] ?? '' ) );
-        $link_url = ajth_sanitize_promo_url( (string) ( $item['link_url'] ?? '' ) );
-        $placeholder_text = trim( (string) ( $item['placeholder_text'] ?? '' ) );
-        $tab_theme = isset( $item['tab_theme'] ) ? (int) $item['tab_theme'] : (int) $idx;
-        $tab_theme = min( 4, max( 0, $tab_theme ) );
-
-        if ( '' === $title && '' === $subtitle && '' === $image_url && '' === $button_text && '' === $button_url && '' === $link_url && '' === $placeholder_text ) {
+        $title = trim( (string) ( $slide['title'] ?? '' ) );
+        if ( $title === '' ) {
             continue;
-        }
-
-        $link_target = strtolower( trim( (string) ( $item['link_target'] ?? '_self' ) ) ) === '_blank' ? '_blank' : '_self';
-        $accent = trim( (string) ( $item['accent_color'] ?? '' ) );
-        if ( $accent !== '' && ! preg_match( '/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $accent ) ) {
-            $accent = '';
         }
 
         $normalized[] = array(
             'title' => $title,
-            'subtitle' => $subtitle,
-            'image_url' => $image_url,
-            'link_url' => $link_url,
-            'link_target' => $link_target,
-            'button_text' => $button_text,
-            'button_url' => $button_url,
-            'button_enabled' => ajth_truthy( $item['button_enabled'] ?? true ),
-            'accent_color' => $accent,
-            'tab_theme' => $tab_theme,
-            'placeholder_text' => $placeholder_text,
-            'is_active' => ajth_truthy( $item['is_active'] ?? $item['active'] ?? true ),
-            'sort_order' => isset( $item['sort_order'] ) ? (int) $item['sort_order'] : ( isset( $item['order'] ) ? (int) $item['order'] : (int) $idx ),
+            'subtitle' => trim( (string) ( $slide['subtitle'] ?? '' ) ),
+            'image' => trim( (string) ( $slide['image'] ?? '' ) ),
+            'link' => trim( (string) ( $slide['link'] ?? '#' ) ),
+            'button_text' => trim( (string) ( $slide['button_text'] ?? '' ) ),
+            'button_style' => trim( (string) ( $slide['button_style'] ?? 'orange' ) ),
+            'overlay_color' => trim( (string) ( $slide['overlay_color'] ?? '' ) ),
+            'order' => isset( $slide['order'] ) ? (int) $slide['order'] : ( $idx + 1 ),
         );
     }
 
-    if ( empty( $normalized ) && ! empty( $promo['images'] ) && is_array( $promo['images'] ) ) {
-        foreach ( array_values( $promo['images'] ) as $idx => $image_url ) {
-            $image_url = trim( (string) $image_url );
-            if ( '' === $image_url ) {
-                continue;
-            }
-            $normalized[] = array(
-                'title' => '',
-                'subtitle' => '',
-                'image_url' => $image_url,
-                'link_url' => '',
-                'link_target' => '_self',
-                'button_text' => '',
-                'button_url' => '',
-                'button_enabled' => true,
-                'accent_color' => '',
-                'tab_theme' => min( 4, (int) $idx ),
-                'placeholder_text' => '',
-                'is_active' => true,
-                'sort_order' => (int) $idx,
-            );
-        }
-    }
-
     usort( $normalized, static function( $a, $b ) {
-        return ( (int) ( $a['sort_order'] ?? 0 ) ) <=> ( (int) ( $b['sort_order'] ?? 0 ) );
+        return ( (int) ( $a['order'] ?? 0 ) ) <=> ( (int) ( $b['order'] ?? 0 ) );
     } );
+    $accordion['slides'] = $normalized;
 
-    $non_empty_titles = 0;
-    foreach ( $normalized as $item ) {
-        if ( trim( (string) ( $item['title'] ?? '' ) ) !== '' ) {
-            $non_empty_titles++;
-        }
-    }
-    if ( count( $normalized ) < 5 || $non_empty_titles < 2 ) {
-        $normalized = ajth_default_promotion_items_prototype();
-    }
-
-    $max_slides = isset( $promo['max_slides'] ) ? max( 1, min( 20, (int) $promo['max_slides'] ) ) : 8;
-
-    $images = array();
-    foreach ( $normalized as $item ) {
-        if ( ! ajth_truthy( $item['is_active'] ?? true ) ) {
-            continue;
-        }
-        $image_url = trim( (string) ( $item['image_url'] ?? '' ) );
-        if ( '' === $image_url ) {
-            continue;
-        }
-        $images[] = $image_url;
-        if ( count( $images ) >= 3 ) {
-            break;
-        }
-    }
-    while ( count( $images ) < 3 ) {
-        $images[] = '';
-    }
-
-    $delay = isset( $promo['autoplay_delay_ms'] ) ? max( 2000, min( 60000, (int) $promo['autoplay_delay_ms'] ) ) : 5000;
-    $def_idx = isset( $promo['default_active_index'] ) ? max( 0, (int) $promo['default_active_index'] ) : 0;
-    if ( ! empty( $normalized ) ) {
-        $def_idx = min( $def_idx, count( $normalized ) - 1 );
-    } else {
-        $def_idx = 0;
-    }
-
-    return array(
-        'enabled' => ajth_truthy( $promo['enabled'] ?? true ),
-        'title' => trim( (string) ( $promo['title'] ?? $defaults['title'] ) ) ?: $defaults['title'],
-        'autoplay' => ajth_truthy( $promo['autoplay'] ?? true ),
-        'autoplay_delay_ms' => $delay,
-        'default_active_index' => $def_idx,
-        'max_slides' => $max_slides,
-        'arrows_enabled' => ajth_truthy( $promo['arrows_enabled'] ?? false ),
-        'images' => array_slice( $images, 0, 3 ),
-        'items' => array_values( $normalized ),
-    );
+    return $accordion;
 }
 
 function ajth_normalize_section_order_with_holiday_theme( $order, bool $holidayEnabled ): array {
-    $fallback = array( 'last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises' );
+    $fallback = array( 'last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'whatsapp_banner', 'cruises' );
     if ( ! is_array( $order ) ) {
         $order = $fallback;
     }
@@ -870,6 +770,7 @@ function ajth_normalize_section_order_with_holiday_theme( $order, bool $holidayE
             $normalized[] = $key;
         }
     }
+    $normalized = array_values( array_filter( $normalized, static fn( $key ) => $key !== 'promotions' ) );
 
     if ( $holidayEnabled && ! in_array( 'holiday_theme', $normalized, true ) ) {
         $after = array_search( 'accommodations', $normalized, true );

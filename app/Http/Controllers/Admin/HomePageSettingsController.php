@@ -177,6 +177,7 @@ class HomePageSettingsController extends Controller
 		$sections = is_array($request->input('sections', [])) ? $request->input('sections', []) : [];
 		$sectionOrder = $request->input('section_order', $settings['section_order']);
 		$sectionOrder = is_array($sectionOrder) ? array_values(array_filter(array_map('strval', $sectionOrder), static fn (string $k): bool => $k !== '')) : $settings['section_order'];
+		$sectionOrder = array_values(array_filter($sectionOrder, static fn (string $k): bool => $k !== 'promotions'));
 		if (!in_array('newsletter', $sectionOrder, true)) {
 			$sectionOrder[] = 'newsletter';
 		}
@@ -185,6 +186,7 @@ class HomePageSettingsController extends Controller
 		foreach ($settings['section_order'] as $sectionKey) {
 			$settings['sections'][$sectionKey] = $this->truthy($sections[$sectionKey] ?? false);
 		}
+		unset($settings['sections']['promotions']);
 
 		$settings['search']['shortcode'] = $this->cleanText($request->input('search.shortcode', '[traveler_search]'), 255);
 
@@ -316,74 +318,43 @@ class HomePageSettingsController extends Controller
 		}
 		$settings['good_spots'] = array_slice($goodSpots, 0, 4);
 
-		$promotions = is_array($request->input('promotions', [])) ? $request->input('promotions', []) : [];
-		$settings['promotions']['enabled'] = $this->truthy($promotions['enabled'] ?? false);
-		$settings['promotions']['title'] = $this->cleanText(
-			$promotions['title'] ?? 'Explorez plus, voyagez mieux avec AjiNsafro',
-			255
-		) ?: 'Explorez plus, voyagez mieux avec AjiNsafro';
-		$settings['promotions']['autoplay'] = $this->truthy($promotions['autoplay'] ?? true);
-		$settings['promotions']['autoplay_delay_ms'] = $this->clampInt($promotions['autoplay_delay_ms'] ?? 5000, 2000, 60000, 5000);
-		$settings['promotions']['default_active_index'] = max(0, (int) ($promotions['default_active_index'] ?? 0));
-		$settings['promotions']['max_slides'] = $this->clampInt($promotions['max_slides'] ?? 8, 1, 20, 8);
-		$settings['promotions']['arrows_enabled'] = $this->truthy($promotions['arrows_enabled'] ?? false);
+		unset($settings['promotions']);
 
-		$promoItems = [];
-		$removeMap = is_array($request->input('promotion_item_remove_image', [])) ? $request->input('promotion_item_remove_image', []) : [];
-		foreach ((is_array($promotions['items'] ?? null) ? $promotions['items'] : []) as $idx => $item) {
-			if (!is_array($item)) {
+		$accordion = is_array($request->input('accordion_slider', [])) ? $request->input('accordion_slider', []) : [];
+		$settings['accordion_slider']['enabled'] = $this->truthy($accordion['enabled'] ?? false);
+		$settings['accordion_slider']['autoplay'] = $this->truthy($accordion['autoplay'] ?? true);
+		$settings['accordion_slider']['autoplay_speed'] = $this->clampInt($accordion['autoplay_speed'] ?? 5000, 2000, 30000, 5000);
+		$settings['accordion_slider']['slides'] = [];
+		foreach ((is_array($accordion['slides'] ?? null) ? $accordion['slides'] : []) as $idx => $slide) {
+			if (!is_array($slide)) {
 				continue;
 			}
-			$title = $this->cleanText($item['title'] ?? '', 120);
-			$subtitle = $this->cleanText($item['subtitle'] ?? '', 240);
-			$imageUrl = $this->cleanUrl($item['image_url'] ?? '', '');
-			$placeholderText = $this->cleanText($item['placeholder_text'] ?? '', 40);
 
-			if ($this->truthy($removeMap[$idx] ?? false)) {
-				$imageUrl = '';
+			$title = $this->cleanText($slide['title'] ?? '', 160);
+			if ($title === '') {
+				continue;
 			}
-			if ($request->hasFile('promotion_item_files.' . $idx)) {
-				$path = $request->file('promotion_item_files.' . $idx)?->store('front/home/promotions', 'public');
+
+			$imageUrl = $this->cleanUrl($slide['image'] ?? '', '');
+			if ($request->hasFile('accordion_slider_files.' . $idx)) {
+				$path = $request->file('accordion_slider_files.' . $idx)?->store('front/home/accordion-slider', 'public');
 				if (is_string($path) && $path !== '') {
 					$imageUrl = $this->publicStorageUrl($path);
 				}
 			}
 
-			if ($title === '' && $subtitle === '' && $imageUrl === '' && $placeholderText === '') {
-				continue;
-			}
-
-			$promoItems[] = [
+			$settings['accordion_slider']['slides'][] = [
 				'title' => $title,
-				'subtitle' => $subtitle,
-				'description' => $subtitle,
-				'image_url' => $imageUrl,
+				'subtitle' => $this->cleanText($slide['subtitle'] ?? '', 255),
 				'image' => $imageUrl,
-				'link_url' => $this->cleanUrl($item['link_url'] ?? '', ''),
-				'link_target' => ($item['link_target'] ?? '_self') === '_blank' ? '_blank' : '_self',
-				'button_text' => $this->cleanText($item['button_text'] ?? '', 80),
-				'button_url' => $this->cleanUrl($item['button_url'] ?? '', ''),
-				'button_enabled' => $this->truthy($item['button_enabled'] ?? true),
-				'accent_color' => $this->cleanHexColor($item['accent_color'] ?? ''),
-				'tab_theme' => $this->clampInt($item['tab_theme'] ?? $idx, 0, 4, (int) $idx),
-				'placeholder_text' => $placeholderText,
-				'is_active' => $this->truthy($item['is_active'] ?? true),
-				'active' => $this->truthy($item['is_active'] ?? true),
-				'sort_order' => (int) ($item['sort_order'] ?? $idx),
-				'order' => (int) ($item['sort_order'] ?? $idx),
+				'link' => $this->cleanUrl($slide['link'] ?? '#', '#'),
+				'button_text' => $this->cleanText($slide['button_text'] ?? '', 80),
+				'button_style' => $this->cleanText($slide['button_style'] ?? 'orange', 40),
+				'overlay_color' => $this->cleanText($slide['overlay_color'] ?? '', 120),
+				'order' => (int) ($slide['order'] ?? count($settings['accordion_slider']['slides']) + 1),
 			];
 		}
-
-		usort($promoItems, static fn (array $a, array $b): int => ($a['sort_order'] ?? 0) <=> ($b['sort_order'] ?? 0));
-		if ($promoItems === []) {
-			$promoItems = $this->defaultPromotionItemsPrototype();
-		}
-
-		$settings['promotions']['items'] = array_values($promoItems);
-		$settings['promotions']['images'] = array_values(array_pad(array_slice(array_values(array_filter(array_map(
-			static fn (array $item): string => trim((string) ($item['image_url'] ?? '')),
-			array_filter($promoItems, static fn (array $item): bool => !empty($item['is_active']))
-		))), 0, 3), 3, ''));
+		usort($settings['accordion_slider']['slides'], static fn (array $a, array $b): int => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
 
 		$whatsapp = is_array($request->input('whatsapp_banner', [])) ? $request->input('whatsapp_banner', []) : [];
 		$settings['whatsapp_banner']['enabled'] = $this->truthy($whatsapp['enabled'] ?? false);
@@ -475,7 +446,8 @@ class HomePageSettingsController extends Controller
 	private function normalizeHomeSettings(array $settings): array
 	{
 		$merged = array_replace_recursive($this->defaultHomeSettings(), $settings);
-		$merged['promotions'] = $this->normalizePromotions($merged['promotions'] ?? []);
+		unset($merged['promotions']);
+		$merged['accordion_slider'] = $this->normalizeAccordionSlider(is_array($merged['accordion_slider'] ?? null) ? $merged['accordion_slider'] : []);
 		return $merged;
 	}
 
@@ -492,78 +464,6 @@ class HomePageSettingsController extends Controller
 		$items = is_array($out['items'] ?? null) ? $out['items'] : [];
 		usort($items, static fn (array $a, array $b): int => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
 		$out['items'] = $items;
-		return $out;
-	}
-
-	private function normalizePromotions(array $promo): array
-	{
-		$defaults = $this->defaultHomeSettings()['promotions'];
-		$out = array_replace_recursive($defaults, $promo);
-
-		$items = is_array($out['items'] ?? null) ? $out['items'] : [];
-		if ($items === []) {
-			$items = $this->defaultPromotionItemsPrototype();
-		}
-
-		$normalized = [];
-		foreach ($items as $idx => $item) {
-			if (!is_array($item)) {
-				continue;
-			}
-			$normalized[] = [
-				'title' => $this->cleanText($item['title'] ?? '', 120),
-				'subtitle' => $this->cleanText($item['subtitle'] ?? ($item['description'] ?? ''), 240),
-				'description' => $this->cleanText($item['subtitle'] ?? ($item['description'] ?? ''), 240),
-				'image_url' => $this->cleanUrl($item['image_url'] ?? ($item['image'] ?? ''), ''),
-				'image' => $this->cleanUrl($item['image_url'] ?? ($item['image'] ?? ''), ''),
-				'link_url' => $this->cleanUrl($item['link_url'] ?? '', ''),
-				'link_target' => ($item['link_target'] ?? '_self') === '_blank' ? '_blank' : '_self',
-				'button_text' => $this->cleanText($item['button_text'] ?? '', 80),
-				'button_url' => $this->cleanUrl($item['button_url'] ?? '', ''),
-				'button_enabled' => $this->truthy($item['button_enabled'] ?? true),
-				'accent_color' => $this->cleanHexColor($item['accent_color'] ?? ''),
-				'tab_theme' => $this->clampInt($item['tab_theme'] ?? $idx, 0, 4, (int) $idx),
-				'placeholder_text' => $this->cleanText($item['placeholder_text'] ?? '', 40),
-				'is_active' => $this->truthy($item['is_active'] ?? ($item['active'] ?? true)),
-				'active' => $this->truthy($item['is_active'] ?? ($item['active'] ?? true)),
-				'sort_order' => (int) ($item['sort_order'] ?? ($item['order'] ?? $idx)),
-				'order' => (int) ($item['sort_order'] ?? ($item['order'] ?? $idx)),
-			];
-		}
-
-		usort($normalized, static fn (array $a, array $b): int => ($a['sort_order'] ?? 0) <=> ($b['sort_order'] ?? 0));
-
-		$nonEmptyTitles = count(array_filter(
-			$normalized,
-			static fn (array $item): bool => trim((string) ($item['title'] ?? '')) !== ''
-		));
-		if (count($normalized) < 5 || $nonEmptyTitles < 2) {
-			$normalized = $this->defaultPromotionItemsPrototype();
-		}
-
-		$out['items'] = $normalized;
-		$out['enabled'] = $this->truthy($out['enabled'] ?? true);
-		$out['autoplay'] = $this->truthy($out['autoplay'] ?? true);
-		$out['arrows_enabled'] = $this->truthy($out['arrows_enabled'] ?? false);
-		$out['autoplay_delay_ms'] = $this->clampInt($out['autoplay_delay_ms'] ?? 5000, 2000, 60000, 5000);
-		$out['default_active_index'] = max(0, (int) ($out['default_active_index'] ?? 0));
-		$out['max_slides'] = $this->clampInt($out['max_slides'] ?? 8, 1, 20, 8);
-		$out['title'] = $this->cleanText($out['title'] ?? 'Explorez plus, voyagez mieux avec AjiNsafro', 255);
-
-		$images = [];
-		foreach ($normalized as $item) {
-			if (!$this->truthy($item['is_active'] ?? true)) {
-				continue;
-			}
-			$url = trim((string) ($item['image_url'] ?? ''));
-			if ($url !== '') {
-				$images[] = $url;
-			}
-			if (count($images) >= 3) {
-				break;
-			}
-		}
-		$out['images'] = array_values(array_pad(array_slice($images, 0, 3), 3, ''));
 		return $out;
 	}
 
@@ -606,107 +506,6 @@ class HomePageSettingsController extends Controller
 		];
 	}
 
-	private function defaultPromotionItemsPrototype(): array
-	{
-		return [
-			[
-				'title' => 'PROGRAMME DE FIDÉLITÉ',
-				'subtitle' => '',
-				'description' => '',
-				'image_url' => 'https://i.ibb.co/tTrXK11z/Voyagez-Plus-Gagnez-Plus.png',
-				'image' => 'https://i.ibb.co/tTrXK11z/Voyagez-Plus-Gagnez-Plus.png',
-				'link_url' => '',
-				'link_target' => '_self',
-				'button_text' => "S'inscrire !",
-				'button_url' => 'https://www.ajinsafro.ma/fidelite',
-				'button_enabled' => true,
-				'accent_color' => '',
-				'tab_theme' => 0,
-				'placeholder_text' => '',
-				'is_active' => true,
-				'active' => true,
-				'sort_order' => 0,
-				'order' => 0,
-			],
-			[
-				'title' => 'GROUP DEALS TRAVEL',
-				'subtitle' => '',
-				'description' => '',
-				'image_url' => 'https://i.ibb.co/KcVS1QKB/plus-on-est-nombreaux-plus-on-voyage-leger.png',
-				'image' => 'https://i.ibb.co/KcVS1QKB/plus-on-est-nombreaux-plus-on-voyage-leger.png',
-				'link_url' => '',
-				'link_target' => '_self',
-				'button_text' => '',
-				'button_url' => '',
-				'button_enabled' => false,
-				'accent_color' => '',
-				'tab_theme' => 1,
-				'placeholder_text' => '',
-				'is_active' => true,
-				'active' => true,
-				'sort_order' => 1,
-				'order' => 1,
-			],
-			[
-				'title' => "L'7AJZ BKRI B'DHAB MCHRI",
-				'subtitle' => '',
-				'description' => '',
-				'image_url' => '',
-				'image' => '',
-				'link_url' => '',
-				'link_target' => '_self',
-				'button_text' => '',
-				'button_url' => '',
-				'button_enabled' => false,
-				'accent_color' => '',
-				'tab_theme' => 2,
-				'placeholder_text' => '1000x800',
-				'is_active' => true,
-				'active' => true,
-				'sort_order' => 2,
-				'order' => 2,
-			],
-			[
-				'title' => 'Programme BZTAM eSFAR',
-				'subtitle' => '',
-				'description' => '',
-				'image_url' => '',
-				'image' => '',
-				'link_url' => '',
-				'link_target' => '_self',
-				'button_text' => '',
-				'button_url' => '',
-				'button_enabled' => false,
-				'accent_color' => '',
-				'tab_theme' => 3,
-				'placeholder_text' => '1000x800',
-				'is_active' => true,
-				'active' => true,
-				'sort_order' => 3,
-				'order' => 3,
-			],
-			[
-				'title' => 'IMPORTANT UPDATES',
-				'subtitle' => '',
-				'description' => '',
-				'image_url' => '',
-				'image' => '',
-				'link_url' => '',
-				'link_target' => '_self',
-				'button_text' => '',
-				'button_url' => '',
-				'button_enabled' => false,
-				'accent_color' => '',
-				'tab_theme' => 4,
-				'placeholder_text' => '800x800',
-				'is_active' => true,
-				'active' => true,
-				'sort_order' => 4,
-				'order' => 4,
-			],
-		];
-	}
-
 	private function defaultHomeSettings(): array
 	{
 		return [
@@ -727,7 +526,6 @@ class HomePageSettingsController extends Controller
 				'holiday_theme' => true,
 				'regions' => true,
 				'good_spots' => true,
-				'promotions' => true,
 				'whatsapp_banner' => true,
 				'cruises' => true,
 				'newsletter' => true,
@@ -789,16 +587,11 @@ class HomePageSettingsController extends Controller
 				],
 			],
 			'good_spots_title' => 'Les bons coins sur votre destination',
-			'promotions' => [
+			'accordion_slider' => [
 				'enabled' => true,
-				'title' => 'Explorez plus, voyagez mieux avec AjiNsafro',
 				'autoplay' => true,
-				'autoplay_delay_ms' => 5000,
-				'default_active_index' => 0,
-				'max_slides' => 8,
-				'arrows_enabled' => false,
-				'images' => ['', '', ''],
-				'items' => $this->defaultPromotionItemsPrototype(),
+				'autoplay_speed' => 5000,
+				'slides' => $this->defaultAccordionSliderSlides(),
 			],
 			'whatsapp_banner' => [
 				'enabled' => true,
@@ -816,12 +609,112 @@ class HomePageSettingsController extends Controller
 				'button_text' => 'Découvrir',
 				'button_url' => '#',
 			],
-			'section_order' => ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'promotions', 'whatsapp_banner', 'cruises', 'newsletter'],
+			'section_order' => ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'whatsapp_banner', 'cruises', 'newsletter'],
 			'custom_sections' => [],
 			'footer' => [
 				'col1_heading' => 'En savoir plus',
 				'col2_heading' => 'Société',
 				'legal_text' => "Licence N° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU",
+			],
+		];
+	}
+
+	private function normalizeAccordionSlider(array $accordion): array
+	{
+		$defaults = [
+			'enabled' => true,
+			'autoplay' => true,
+			'autoplay_speed' => 5000,
+			'slides' => $this->defaultAccordionSliderSlides(),
+		];
+
+		$out = array_replace_recursive($defaults, $accordion);
+		$out['enabled'] = $this->truthy($out['enabled'] ?? true);
+		$out['autoplay'] = $this->truthy($out['autoplay'] ?? true);
+		$out['autoplay_speed'] = $this->clampInt($out['autoplay_speed'] ?? 5000, 2000, 30000, 5000);
+
+		$slides = is_array($out['slides'] ?? null) ? $out['slides'] : [];
+		$normalized = [];
+		foreach ($slides as $idx => $slide) {
+			if (!is_array($slide)) {
+				continue;
+			}
+
+			$title = $this->cleanText($slide['title'] ?? '', 160);
+			if ($title === '') {
+				continue;
+			}
+
+			$normalized[] = [
+				'title' => $title,
+				'subtitle' => $this->cleanText($slide['subtitle'] ?? '', 255),
+				'image' => $this->cleanUrl($slide['image'] ?? '', ''),
+				'link' => $this->cleanUrl($slide['link'] ?? '#', '#'),
+				'button_text' => $this->cleanText($slide['button_text'] ?? '', 80),
+				'button_style' => $this->cleanText($slide['button_style'] ?? 'orange', 40),
+				'overlay_color' => $this->cleanText($slide['overlay_color'] ?? '', 120),
+				'order' => (int) ($slide['order'] ?? ($idx + 1)),
+			];
+		}
+
+		usort($normalized, static fn (array $a, array $b): int => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+		$out['slides'] = $normalized;
+
+		return $out;
+	}
+
+	private function defaultAccordionSliderSlides(): array
+	{
+		return [
+			[
+				'title' => 'PROGRAMME DE FIDELITE',
+				'subtitle' => '',
+				'image' => 'https://i.ibb.co/tTrXK11z/Voyagez-Plus-Gagnez-Plus.png',
+				'link' => 'https://www.ajinsafro.ma/fidelite',
+				'button_text' => "S'inscrire !",
+				'button_style' => 'orange',
+				'overlay_color' => 'linear-gradient(to bottom, rgba(0, 163, 224, 0.10), rgba(0, 129, 188, 0.10))',
+				'order' => 1,
+			],
+			[
+				'title' => 'GROUP DEALS TRAVEL',
+				'subtitle' => '',
+				'image' => 'https://i.ibb.co/KcVS1QKB/plus-on-est-nombreaux-plus-on-voyage-leger.png',
+				'link' => '#',
+				'button_text' => '',
+				'button_style' => 'orange',
+				'overlay_color' => 'linear-gradient(to bottom, rgba(74, 222, 128, 0.05), rgba(22, 163, 74, 0.05))',
+				'order' => 2,
+			],
+			[
+				'title' => "L'7AJZ BKRI B'DHAB MCHRI",
+				'subtitle' => '',
+				'image' => 'https://i.ibb.co/tP3ByxFZ/7ajz-bkri.png',
+				'link' => '#',
+				'button_text' => 'احجز الآن',
+				'button_style' => 'white-arabic',
+				'overlay_color' => 'linear-gradient(to bottom, rgba(27, 92, 140, 0.05), rgba(14, 58, 90, 0.05))',
+				'order' => 3,
+			],
+			[
+				'title' => 'Programme BZTAM eSFAR',
+				'subtitle' => '',
+				'image' => 'https://i.ibb.co/qLZYDrYz/Voyagez-Plus-Gagnez-Plus-1.png',
+				'link' => '#',
+				'button_text' => '',
+				'button_style' => 'orange',
+				'overlay_color' => 'linear-gradient(to bottom, rgba(250, 204, 21, 0.10), rgba(249, 115, 22, 0.10))',
+				'order' => 4,
+			],
+			[
+				'title' => 'IMPORTANT UPDATES',
+				'subtitle' => '',
+				'image' => '',
+				'link' => '#',
+				'button_text' => '',
+				'button_style' => 'orange',
+				'overlay_color' => '',
+				'order' => 5,
 			],
 		];
 	}
