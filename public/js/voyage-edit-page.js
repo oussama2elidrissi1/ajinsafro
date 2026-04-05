@@ -16,8 +16,8 @@
                                                 <input type="date" class="form-control form-control-sm" name="travel_dates[${nextIndex}][date]" required>
                                             </div>
                                             <div class="col-6 col-md-2">
-                                                <label class="form-label small mb-1">Places <span class="text-muted fw-normal">(auto)</span></label>
-                                                <input type="number" class="form-control form-control-sm bg-light" name="travel_dates[${nextIndex}][seats]" value="0" readonly>
+                                                <label class="form-label small mb-1">Nombre de places <span class="text-danger">*</span></label>
+                                                <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" value="0" min="0" required>
                                             </div>
                                             <div class="col-6 col-md-2">
                                                 <label class="form-label small mb-1">Prix spÃ©cifique</label>
@@ -43,7 +43,467 @@
                                     if (row) row.remove();
                                 }
                             });
-                        })();
+})();
+
+(function () {
+    var manager = document.getElementById('departure-room-allocation-manager');
+    var listEl = document.getElementById('departure-room-allocation-list');
+    var summaryEl = document.getElementById('departure-room-allocation-summary');
+    var travelDatesContainer = document.getElementById('travel-dates-container');
+    var bootstrapEl = document.getElementById('departure-room-allocation-bootstrap');
+    var roomTypesEl = document.getElementById('departure-room-allocation-room-types');
+
+    if (!manager || !listEl || !summaryEl || !travelDatesContainer) return;
+
+    var roomTypeSuggestions = safeJsonParse(roomTypesEl, ['Single', 'Double', 'Twin', 'Triple', 'Quadruple', 'Family', 'Suite']);
+    var bootstrapRows = safeJsonParse(bootstrapEl, []);
+    var allocationState = {};
+    var openState = {};
+
+    bootstrapRows.forEach(function (row) {
+        if (!row) return;
+        var key = stateKey(row);
+        if (!key) return;
+        allocationState[key] = {
+            departureId: row.departure_id || null,
+            travelDateId: row.travel_date_id || null,
+            date: row.date || '',
+            rooms: Array.isArray(row.rooms) ? row.rooms.map(normalizeRoomRow).filter(Boolean) : [],
+            manual: !!row.manual
+        };
+    });
+
+    function safeJsonParse(scriptEl, fallback) {
+        if (!scriptEl) return fallback;
+        try {
+            return JSON.parse(scriptEl.textContent || '');
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function stateKey(row) {
+        if (!row) return '';
+        if (row.travel_date_id) return 'td:' + String(row.travel_date_id);
+        if (row.date) return 'date:' + String(row.date);
+        if (row.departure_id) return 'dep:' + String(row.departure_id);
+        return '';
+    }
+
+    function normalizeRoomRow(row) {
+        if (!row) return null;
+        var roomType = String(row.room_type || '').trim();
+        var quantity = parseInt(String(row.quantity || '0'), 10);
+        var capacityPerRoom = parseInt(String(row.capacity_per_room || '1'), 10);
+
+        if (!roomType && !quantity) return null;
+
+        return {
+            room_type: roomType,
+            quantity: isNaN(quantity) ? 0 : Math.max(0, quantity),
+            capacity_per_room: isNaN(capacityPerRoom) ? 1 : Math.max(1, capacityPerRoom),
+            hotel_id: row.hotel_id || '',
+            hotel_index: row.hotel_index === '' || row.hotel_index == null ? '' : String(row.hotel_index)
+        };
+    }
+
+    function defaultRooms(capacity) {
+        var seats = Math.max(0, parseInt(String(capacity || '0'), 10) || 0);
+        var rows = [];
+        var doubles = Math.floor(seats / 2);
+
+        if (doubles > 0) {
+            rows.push({ room_type: 'Double', quantity: doubles, capacity_per_room: 2, hotel_id: '', hotel_index: '' });
+        }
+
+        if (seats % 2 === 1) {
+            rows.push({ room_type: 'Single', quantity: 1, capacity_per_room: 1, hotel_id: '', hotel_index: '' });
+        }
+
+        return rows;
+    }
+
+    function collectTravelDates() {
+        return Array.prototype.slice.call(travelDatesContainer.querySelectorAll('.travel-date-row')).map(function (row, index) {
+            var idInput = row.querySelector('input[name$="[id]"]');
+            var dateInput = row.querySelector('input[name$="[date]"]');
+            var seatsInput = row.querySelector('input[name$="[seats]"]');
+            var activeInput = row.querySelector('input[name$="[is_active]"]');
+            var date = dateInput ? String(dateInput.value || '').trim() : '';
+            var seats = seatsInput ? Math.max(0, parseInt(String(seatsInput.value || '0'), 10) || 0) : 0;
+            var travelDateId = idInput && idInput.value !== '' ? parseInt(String(idInput.value), 10) || null : null;
+            var isActive = activeInput ? !!activeInput.checked : true;
+            return {
+                index: index,
+                travelDateId: travelDateId,
+                date: date,
+                seats: seats,
+                isActive: isActive,
+                label: formatDate(date)
+            };
+        }).filter(function (item) {
+            return !!item.date;
+        });
+    }
+
+    function formatDate(date) {
+        if (!date) return 'Date sans valeur';
+        var parts = String(date).split('-');
+        if (parts.length !== 3) return date;
+        return parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
+
+    function coverageStats(rooms) {
+        var covered = 0;
+        (rooms || []).forEach(function (room) {
+            covered += (parseInt(String(room.quantity || '0'), 10) || 0) * (parseInt(String(room.capacity_per_room || '1'), 10) || 1);
+        });
+        return covered;
+    }
+
+    function coverageBadge(capacity, covered) {
+        if (covered === capacity) {
+            return '<span class="badge bg-success-subtle text-success border border-success-subtle">Couverture exacte</span>';
+        }
+        if (covered < capacity) {
+            return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Places insuffisantes</span>';
+        }
+        return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Places excédentaires</span>';
+    }
+
+    function coverageStateClass(capacity, covered) {
+        if (covered === capacity) return 've-departure-status--exact';
+        if (covered < capacity) return 've-departure-status--under';
+        return 've-departure-status--over';
+    }
+
+    function collectHotels() {
+        return Array.prototype.slice.call(document.querySelectorAll('#tour-hotels-container .tour-hotel-row')).map(function (row, index) {
+            var idInput = row.querySelector('input[name^="tour_hotels["][name$="[id]"]');
+            var nameInput = row.querySelector('.tour-hotel-name-input');
+            var checkInInput = row.querySelector('.tour-hotel-check-in');
+            var checkOutInput = row.querySelector('.tour-hotel-check-out');
+            var hotelId = idInput && idInput.value !== '' ? String(idInput.value) : '';
+            var name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'Hotel ' + (index + 1);
+            var stay = '';
+            if (checkInInput && checkOutInput) {
+                var checkIn = parseInt(checkInInput.value || '1', 10);
+                var checkOut = parseInt(checkOutInput.value || '1', 10);
+                stay = checkIn === checkOut ? 'Jour ' + checkIn : 'J' + checkIn + ' a J' + checkOut;
+            }
+            return {
+                index: String(index),
+                hotel_id: hotelId,
+                label: stay ? name + ' - ' + stay : name
+            };
+        });
+    }
+
+    function hotelSelectOptions(selectedIndex, selectedHotelId) {
+        var hotels = collectHotels();
+        var hasSelection = false;
+        var options = ['<option value="">Aucun hotel</option>'];
+
+        hotels.forEach(function (hotel) {
+            var selected = selectedHotelId !== ''
+                ? String(selectedHotelId) === String(hotel.hotel_id)
+                : (selectedIndex !== '' && String(selectedIndex) === hotel.index);
+            if (selected) hasSelection = true;
+            options.push('<option value="' + escapeAttr(hotel.index) + '" data-hotel-id="' + escapeAttr(hotel.hotel_id) + '"' + (selected ? ' selected' : '') + '>' + escapeHtml(hotel.label) + '</option>');
+        });
+
+        return {
+            html: options.join(''),
+            hasSelection: hasSelection
+        };
+    }
+
+    function roomOptionsMarkup(selected) {
+        return roomTypeSuggestions.map(function (type) {
+            var isSelected = String(selected || '').trim().toLowerCase() === String(type).toLowerCase();
+            return '<option value="' + escapeHtml(type) + '"' + (isSelected ? ' selected' : '') + '></option>';
+        }).join('');
+    }
+
+    function captureOpenState() {
+        listEl.querySelectorAll('details[data-allocation-key]').forEach(function (details) {
+            openState[details.getAttribute('data-allocation-key')] = !!details.open;
+        });
+    }
+
+    function render() {
+        captureOpenState();
+        var travelDates = collectTravelDates().filter(function (item) { return item.isActive; });
+        var activeKeys = {};
+
+        if (!travelDates.length) {
+            summaryEl.innerHTML = '';
+            listEl.innerHTML = '<div class="alert alert-warning mb-0">Ajoutez au moins une date active avec un nombre de places dans l’onglet Disponibilité.</div>';
+            return;
+        }
+
+        var viewRows = travelDates.map(function (travelDate, index) {
+            var key = travelDate.travelDateId ? 'td:' + String(travelDate.travelDateId) : 'date:' + travelDate.date;
+            activeKeys[key] = true;
+
+            if (!allocationState[key]) {
+                allocationState[key] = {
+                    departureId: null,
+                    travelDateId: travelDate.travelDateId,
+                    date: travelDate.date,
+                    rooms: defaultRooms(travelDate.seats),
+                    manual: false
+                };
+            } else {
+                allocationState[key].travelDateId = travelDate.travelDateId;
+                allocationState[key].date = travelDate.date;
+                if (!allocationState[key].manual) {
+                    allocationState[key].rooms = defaultRooms(travelDate.seats);
+                }
+            }
+
+            var state = allocationState[key];
+            var rooms = Array.isArray(state.rooms) ? state.rooms : [];
+            var covered = coverageStats(rooms);
+            var diff = covered - travelDate.seats;
+
+            return {
+                key: key,
+                index: index,
+                travelDate: travelDate,
+                state: state,
+                rooms: rooms,
+                covered: covered,
+                diff: diff
+            };
+        });
+
+        renderSummary(viewRows);
+        listEl.innerHTML = viewRows.map(function (row) {
+            return '' +
+                '<details class="card border mb-3 ve-departure-card ' + coverageStateClass(row.travelDate.seats, row.covered) + '" data-allocation-key="' + escapeHtml(row.key) + '"' + (openState[row.key] ? ' open' : '') + '>' +
+                '  <summary class="card-body ve-departure-card__summary">' +
+                '    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">' +
+                '      <div>' +
+                '        <h6 class="mb-1">Depart du ' + escapeHtml(row.travelDate.label) + '</h6>' +
+                '        <div class="text-muted small">Capacite cible : <strong>' + row.travelDate.seats + '</strong> place(s)</div>' +
+                '      </div>' +
+                '      <div class="text-end">' +
+                '        <div class="small mb-1">Couvert : <strong>' + row.covered + '</strong> place(s)</div>' +
+                '        ' + coverageBadge(row.travelDate.seats, row.covered) +
+                '        <div class="text-muted small mt-1">' + (row.diff === 0 ? 'Ecart : 0' : 'Ecart : ' + (row.diff > 0 ? '+' : '') + row.diff) + '</div>' +
+                '      </div>' +
+                '    </div>' +
+                '  </summary>' +
+                '  <div class="card-body pt-0">' +
+                '    <input type="hidden" name="departure_allocations[' + row.index + '][departure_id]" value="' + escapeAttr(row.state.departureId || '') + '">' +
+                '    <input type="hidden" name="departure_allocations[' + row.index + '][travel_date_id]" value="' + escapeAttr(row.travelDate.travelDateId || '') + '">' +
+                '    <input type="hidden" name="departure_allocations[' + row.index + '][date]" value="' + escapeAttr(row.travelDate.date) + '">' +
+                '    <div class="table-responsive">' +
+                '      <table class="table table-sm align-middle mb-2">' +
+                '        <thead><tr><th>Type</th><th>Quantite</th><th>Cap./chambre</th><th>Hotel</th><th>Places couvertes</th><th></th></tr></thead>' +
+                '        <tbody>' + renderRooms(row.index, row.rooms) + '</tbody>' +
+                '      </table>' +
+                '    </div>' +
+                '    <div class="d-flex flex-wrap gap-2">' +
+                '      <button type="button" class="btn btn-sm btn-outline-primary" data-allocation-action="add-room" data-allocation-key="' + escapeAttr(row.key) + '">Ajouter un type</button>' +
+                '      <button type="button" class="btn btn-sm btn-outline-secondary" data-allocation-action="regenerate" data-allocation-key="' + escapeAttr(row.key) + '">Generer la repartition par defaut</button>' +
+                '    </div>' +
+                '  </div>' +
+                '</details>';
+        }).join('');
+
+        Object.keys(allocationState).forEach(function (key) {
+            if (!activeKeys[key]) delete allocationState[key];
+        });
+    }
+
+    function renderSummary(viewRows) {
+        summaryEl.innerHTML = viewRows.map(function (row) {
+            return '' +
+                '<div class="col-xl-3 col-md-6">' +
+                '  <div class="ve-departure-summary ' + coverageStateClass(row.travelDate.seats, row.covered) + '">' +
+                '    <div class="ve-departure-summary__date">' + escapeHtml(row.travelDate.label) + '</div>' +
+                '    <div class="ve-departure-summary__stats">' +
+                '      <span>Cible <strong>' + row.travelDate.seats + '</strong></span>' +
+                '      <span>Couvert <strong>' + row.covered + '</strong></span>' +
+                '    </div>' +
+                '    <div class="ve-departure-summary__meta">' + (row.diff === 0 ? 'Ecart 0' : 'Ecart ' + (row.diff > 0 ? '+' : '') + row.diff) + '</div>' +
+                '    <div class="mt-2">' + coverageBadge(row.travelDate.seats, row.covered) + '</div>' +
+                '  </div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function renderRooms(cardIndex, rooms) {
+        if (!rooms.length) {
+            return '<tr><td colspan="6" class="text-muted small">Aucune chambre configuree pour ce depart.</td></tr>';
+        }
+
+        return rooms.map(function (room, roomIndex) {
+            var quantity = parseInt(String(room.quantity || '0'), 10) || 0;
+            var capacityPerRoom = parseInt(String(room.capacity_per_room || '1'), 10) || 1;
+            var hotelId = room.hotel_id == null ? '' : String(room.hotel_id);
+            var hotelIndex = room.hotel_index == null ? '' : String(room.hotel_index);
+            var hotelOptions = hotelSelectOptions(hotelIndex, hotelId);
+            return '' +
+                '<tr data-room-index="' + roomIndex + '">' +
+                '  <td>' +
+                '    <input class="form-control form-control-sm" list="departure-room-type-options" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][room_type]" value="' + escapeAttr(room.room_type || '') + '" placeholder="Double">' +
+                '  </td>' +
+                '  <td><input type="number" class="form-control form-control-sm" min="0" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][quantity]" value="' + quantity + '"></td>' +
+                '  <td><input type="number" class="form-control form-control-sm" min="1" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][capacity_per_room]" value="' + capacityPerRoom + '"></td>' +
+                '  <td>' +
+                '    <input type="hidden" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_id]" value="' + escapeAttr(hotelId) + '">' +
+                '    <select class="form-select form-select-sm" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_index]">' + hotelOptions.html + '</select>' +
+                (hotelOptions.hasSelection ? '' : '<div class="small text-warning mt-1">Associer un hotel.</div>') +
+                '  </td>' +
+                '  <td><span class="small fw-semibold">' + (quantity * capacityPerRoom) + '</span></td>' +
+                '  <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-allocation-action="remove-room" data-room-index="' + roomIndex + '">×</button></td>' +
+                '</tr>';
+        }).join('');
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(value) {
+        return escapeHtml(value);
+    }
+
+    function markManual(key) {
+        if (allocationState[key]) allocationState[key].manual = true;
+    }
+
+    manager.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-allocation-action]');
+        if (!btn) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        var key = btn.getAttribute('data-allocation-key') || btn.closest('[data-allocation-key]') && btn.closest('[data-allocation-key]').getAttribute('data-allocation-key');
+        if (!key || !allocationState[key]) return;
+
+        if (btn.getAttribute('data-allocation-action') === 'add-room') {
+            allocationState[key].rooms.push({ room_type: '', quantity: 0, capacity_per_room: 1, hotel_id: '', hotel_index: '' });
+            allocationState[key].manual = true;
+            openState[key] = true;
+            render();
+            return;
+        }
+
+        if (btn.getAttribute('data-allocation-action') === 'regenerate') {
+            var travelDate = collectTravelDates().find(function (item) {
+                return (item.travelDateId && ('td:' + String(item.travelDateId)) === key) || ('date:' + item.date) === key;
+            });
+            allocationState[key].rooms = defaultRooms(travelDate ? travelDate.seats : 0);
+            allocationState[key].manual = false;
+            openState[key] = true;
+            render();
+            return;
+        }
+
+        if (btn.getAttribute('data-allocation-action') === 'remove-room') {
+            var roomIndex = parseInt(String(btn.getAttribute('data-room-index') || '-1'), 10);
+            if (roomIndex >= 0) {
+                allocationState[key].rooms.splice(roomIndex, 1);
+                allocationState[key].manual = true;
+                openState[key] = true;
+                render();
+            }
+        }
+    });
+
+    manager.addEventListener('change', function (event) {
+        var field = event.target;
+        var card = field.closest('[data-allocation-key]');
+        if (!field.name || !card) return;
+        var key = card.getAttribute('data-allocation-key');
+        if (!key || !allocationState[key]) return;
+
+        var roomMatch = field.name.match(/\[rooms\]\[(\d+)\]\[(room_type|quantity|capacity_per_room|hotel_index)\]$/);
+        if (!roomMatch) return;
+
+        var roomIndex = parseInt(roomMatch[1], 10);
+        var prop = roomMatch[2];
+        if (!allocationState[key].rooms[roomIndex]) return;
+
+        allocationState[key].rooms[roomIndex][prop] = field.value;
+        if (prop === 'hotel_index') {
+            var selectedOption = field.options[field.selectedIndex];
+            allocationState[key].rooms[roomIndex].hotel_id = selectedOption ? (selectedOption.getAttribute('data-hotel-id') || '') : '';
+        }
+        markManual(key);
+        openState[key] = true;
+        render();
+    });
+
+    manager.addEventListener('input', function (event) {
+        var field = event.target;
+        var card = field.closest('[data-allocation-key]');
+        if (!field.name || !card) return;
+        if (!/\[rooms\]\[\d+\]\[(room_type|quantity|capacity_per_room)\]$/.test(field.name)) return;
+        var key = card.getAttribute('data-allocation-key');
+        if (key) openState[key] = true;
+        event.stopPropagation();
+    });
+
+    var pendingRender = null;
+    function scheduleRender() {
+        if (pendingRender) window.clearTimeout(pendingRender);
+        pendingRender = window.setTimeout(function () {
+            pendingRender = null;
+            render();
+        }, 0);
+    }
+
+    document.addEventListener('input', function (event) {
+        if (event.target && event.target.name && event.target.name.indexOf('travel_dates[') === 0) {
+            scheduleRender();
+        }
+    });
+
+    document.addEventListener('change', function (event) {
+        if (event.target && event.target.name && event.target.name.indexOf('travel_dates[') === 0) {
+            scheduleRender();
+        }
+        if (event.target && event.target.name && event.target.name.indexOf('tour_hotels[') === 0) {
+            scheduleRender();
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        var target = event.target;
+        if (!target) return;
+        if (target.id === 'add-travel-date' || target.classList.contains('remove-travel-date')) {
+            scheduleRender();
+        }
+        if (target.id === 'tour-add-hotel' || target.classList.contains('tour-remove-row')) {
+            scheduleRender();
+        }
+    });
+
+    document.addEventListener('input', function (event) {
+        if (event.target && event.target.name && event.target.name.indexOf('tour_hotels[') === 0) {
+            scheduleRender();
+        }
+    });
+
+    document.addEventListener('voyage-hotels-changed', scheduleRender);
+
+    var datalist = document.createElement('datalist');
+    datalist.id = 'departure-room-type-options';
+    datalist.innerHTML = roomOptionsMarkup('');
+    manager.appendChild(datalist);
+
+render();
+})();
 
 (function() {
                 var boot = window.VOYAGE_EDIT_BOOTSTRAP || {};
@@ -678,120 +1138,22 @@
                 if (!form || !wrap) {
                     return;
                 }
-                function pInt(v) {
-                    var n = parseInt(String(v == null ? '' : v).trim(), 10);
-                    return (isNaN(n) || n < 0) ? 0 : n;
-                }
-                function effectiveCapacity(ct, ad, ch) {
-                    if (ct > 0) {
-                        return ct;
-                    }
-                    var s = ad + ch;
-                    return s > 0 ? s : 0;
-                }
-                /** Toutes les cartes chambre (Ã©vite les ambiguÃ¯tÃ©s de parcours ; dÃ©doublonne par nÅ“ud). */
-                function collectTourRoomRows(wrapEl) {
-                    var out = [];
-                    var seen = new Set();
-                    var containers = wrapEl.querySelectorAll('.tour-hotel-rooms-container');
-                    var addRow = function (row) {
-                        if (row && !seen.has(row)) {
-                            seen.add(row);
-                            out.push(row);
-                        }
-                    };
-                    if (containers.length) {
-                        containers.forEach(function (cont) {
-                            cont.querySelectorAll('.tour-room-row').forEach(addRow);
-                        });
-                    } else {
-                        wrapEl.querySelectorAll('.tour-room-row').forEach(addRow);
-                    }
-                    return out;
-                }
                 function handler(ev) {
-                    if (!ev.target || !ev.target.closest || !ev.target.closest('.tour-room-row')) {
+                    if (!ev.target || !ev.target.name || ev.target.name.indexOf('travel_dates[') !== 0) {
                         return;
                     }
                     window.recalculateVoyageTourPlacesPreview();
                 }
                 window.recalculateVoyageTourPlacesPreview = function () {
-                    var w = document.getElementById('tour-hotels-wrapper');
                     var mp = document.getElementById('max_people');
                     var pl = document.getElementById('places_display');
-                    if (!w || !mp) {
+                    if (!mp) {
                         return;
                     }
-                    var total = 0;
-                    var lines = [];
-                    var ignored = [];
-                    var roomRows = collectTourRoomRows(w);
-                    roomRows.forEach(function (row, idx) {
-                        var typeSel = row.querySelector('select[name^="tour_hotels["][name$="[room_type]"]');
-                        var type = typeSel ? String(typeSel.value || '').trim() : '';
-                        if (!type) {
-                            ignored.push({ rowIndex: idx, reason: 'empty_room_type' });
-                            return;
-                        }
-                        var actCb = row.querySelector('input.tour-room-is-active');
-                        if (!actCb) {
-                            actCb = row.querySelector('input[type="checkbox"][name^="tour_hotels["][name$="[is_active]"]');
-                        }
-                        var activeYes = true;
-                        if (actCb) {
-                            activeYes = !!actCb.checked;
-                        }
-                        if (!activeYes) {
-                            ignored.push({ rowIndex: idx, room_type: type, reason: 'is_active_off' });
-                            return;
-                        }
-                        var rcInp = row.querySelector('input[name^="tour_hotels["][name$="[room_count]"]');
-                        var nb = pInt(rcInp && rcInp.value);
-                        if (nb <= 0) {
-                            ignored.push({ rowIndex: idx, room_type: type, reason: 'room_count_zero' });
-                            return;
-                        }
-                        var ctInp = row.querySelector('input[name^="tour_hotels["][name$="[capacity_total]"]');
-                        var adInp = row.querySelector('input[name^="tour_hotels["][name$="[capacity_adults]"]');
-                        var chInp = row.querySelector('input[name^="tour_hotels["][name$="[capacity_children]"]');
-                        var cap = effectiveCapacity(
-                            pInt(ctInp && ctInp.value),
-                            pInt(adInp && adInp.value),
-                            pInt(chInp && chInp.value)
-                        );
-                        if (cap <= 0) {
-                            ignored.push({ rowIndex: idx, room_type: type, reason: 'capacity_zero' });
-                            return;
-                        }
-                        var product = nb * cap;
-                        total += product;
-                        lines.push({
-                            room_type: type,
-                            room_count: nb,
-                            capacity_used: cap,
-                            product: product
-                        });
-                    });
-                    window.__lastTourPlacesPreview = {
-                        total: total,
-                        lines: lines,
-                        ignored: ignored,
-                        roomRowsDetected: roomRows.length
-                    };
                     window._tourPlacesRecalcPending = false;
-                    mp.value = String(total);
+                    window.__lastTourPlacesPreview = { total: mp.value || '0', lines: [], ignored: [], roomRowsDetected: 0 };
                     if (pl) {
-                        pl.value = String(total);
-                    }
-                    if (window.TOUR_PLACES_CALC_DEBUG && typeof console !== 'undefined') {
-                        console.info('[TourPlaces] Nombre de lignes chambres dÃ©tectÃ©es:', roomRows.length);
-                        lines.forEach(function (ln, i) {
-                            console.info('[TourPlaces] Ligne ' + (i + 1) + ' â†’ ' + ln.room_count + ' Ã— ' + ln.capacity_used + ' = ' + ln.product + ' (type: ' + ln.room_type + ')');
-                        });
-                        ignored.forEach(function (ig) {
-                            console.warn('[TourPlaces] Ligne ignorÃ©e', ig);
-                        });
-                        console.info('[TourPlaces] Total final =', total);
+                        pl.value = String(mp.value || '0');
                     }
                 };
                 form.addEventListener('input', handler, true);
@@ -2266,13 +2628,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (isInRange) {
                         var nameInp = row.querySelector('input[name^="tour_hotels["][name$="[hotel_name]"]');
                         var starsInp = row.querySelector('input[name^="tour_hotels["][name$="[stars]"]');
-                        var roomInp = row.querySelector('input[name^="tour_hotels["][name$="[room_type]"]');
                         var optionalInp = row.querySelector('input[name^="tour_hotels["][name$="[is_optional]"]');
                         if (nameInp && nameInp.value.trim()) {
                             hotelData = {
                                 hotel_name: nameInp.value.trim(),
                                 stars: starsInp ? starsInp.value : null,
-                                room_type: roomInp ? roomInp.value.trim() : '',
                                 is_optional: optionalInp ? optionalInp.checked : false
                             };
                         }
@@ -2413,7 +2773,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     for (var i = 0; i < parseInt(sections.hotels.stars, 10); i++) stars += 'Ã¢Ëœâ€¦';
                     html += ' <span class="badge bg-warning text-dark">' + stars + '</span>';
                 }
-                if (sections.hotels.room_type) html += ' "Â¢ ' + sections.hotels.room_type;
                 if (sections.hotels.is_optional) html += ' <span class="badge bg-warning text-dark">Option client</span>';
                 html += '</div>';
                 html += '</div>';
@@ -4097,5 +4456,3 @@ document.addEventListener('DOMContentLoaded', function () {
                 removeDisabledFromFlightOptions();
             }, 2000);
         })();
-
-

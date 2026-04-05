@@ -1276,6 +1276,87 @@ body.voyage-layout-page .modal-body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.06);
 }
 
+.voyage-edit-page #departure-room-allocation-summary .card,
+.voyage-edit-page .ve-departure-card,
+.voyage-edit-page .tour-hotel-row {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+.voyage-edit-page #departure-room-allocation-summary .card {
+    border-radius: 14px;
+}
+.voyage-edit-page .ve-departure-card {
+    border-radius: 16px;
+    overflow: hidden;
+}
+.voyage-edit-page .ve-departure-card[open] {
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+.voyage-edit-page .ve-departure-card__summary {
+    list-style: none;
+    cursor: pointer;
+}
+.voyage-edit-page .ve-departure-card__summary::-webkit-details-marker {
+    display: none;
+}
+.voyage-edit-page .tour-hotel-row {
+    border-radius: 16px;
+    overflow: hidden;
+}
+.voyage-edit-page .tour-hotel-row .card-header {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border-bottom: 1px solid #e2e8f0;
+}
+.voyage-edit-page .tour-hotel-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+}
+.voyage-edit-page .tour-hotel-card-meta {
+    margin-top: 4px;
+    line-height: 1.45;
+}
+.voyage-edit-page .tour-hotel-card-body {
+    background: #fff;
+}
+.voyage-edit-page .tour-hotel-section-heading {
+    margin: 2px 0 2px;
+    padding-top: 6px;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #475569;
+}
+.voyage-edit-page .tour-room-row {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+}
+.voyage-edit-page .tour-room-row .card-body {
+    background: #fcfdff;
+}
+.voyage-edit-page .tour-room-date-availability-panel {
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 12px;
+}
+.voyage-edit-page .tour-room-date-availability-panel > summary {
+    cursor: pointer;
+    list-style: none;
+}
+.voyage-edit-page .tour-room-date-availability-panel > summary::-webkit-details-marker {
+    display: none;
+}
+.voyage-edit-page .tour-room-date-availability-table th {
+    font-size: .74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #475569;
+    background: #f8fafc;
+}
 /* ---------- Responsive ---------- */
 @media (max-width: 991.98px) {
     .voyage-edit-page .ve-page-header {
@@ -1293,6 +1374,9 @@ body.voyage-layout-page .modal-body {
     }
     .voyage-edit-page .ve-save-bar .btn-lg {
         width: 100%;
+    }
+    .voyage-edit-page .tour-hotel-card-title {
+        font-size: 1rem;
     }
 }
 

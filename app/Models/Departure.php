@@ -71,6 +71,11 @@ class Departure extends Model
         return $this->hasMany(DepartureHotel::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function roomAllocations()
+    {
+        return $this->hasMany(DepartureRoomAllocation::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     /**
      * Recompute available_capacity from departure_hotel_rooms.available_places (excluding full/closed).
      * Does not automatically persist unless $save=true.

@@ -21,6 +21,55 @@ class UpdateWpTourRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         // No strict rules: outbound/inbound are optional; cabin defaults to economy in service.
+        $validator->after(function (Validator $validator): void {
+            $travelDates = $this->input('travel_dates', []);
+            if (is_array($travelDates)) {
+                foreach (array_values($travelDates) as $index => $row) {
+                    if (! is_array($row)) {
+                        continue;
+                    }
+
+                    $date = trim((string) ($row['date'] ?? ''));
+                    $seats = $row['seats'] ?? null;
+                    if ($date !== '' && ($seats === null || $seats === '')) {
+                        $validator->errors()->add("travel_dates.$index.seats", 'Le nombre de places est obligatoire pour chaque date de départ.');
+                    }
+                }
+            }
+
+            $departureAllocations = $this->input('departure_allocations', []);
+            if (! is_array($departureAllocations)) {
+                return;
+            }
+
+            foreach ($departureAllocations as $departureIndex => $departureRow) {
+                if (! is_array($departureRow)) {
+                    continue;
+                }
+
+                $rooms = $departureRow['rooms'] ?? [];
+                if (! is_array($rooms)) {
+                    continue;
+                }
+
+                foreach ($rooms as $roomIndex => $roomRow) {
+                    if (! is_array($roomRow)) {
+                        continue;
+                    }
+
+                    $roomType = trim((string) ($roomRow['room_type'] ?? ''));
+                    $quantity = $roomRow['quantity'] ?? null;
+                    $capacity = $roomRow['capacity_per_room'] ?? null;
+                    $hasPayload = $roomType !== ''
+                        || ! ($quantity === null || $quantity === '')
+                        || ! ($capacity === null || $capacity === '');
+
+                    if ($hasPayload && $roomType === '') {
+                        $validator->errors()->add("departure_allocations.$departureIndex.rooms.$roomIndex.room_type", 'Le type de chambre est obligatoire.');
+                    }
+                }
+            }
+        });
     }
 
     protected function prepareForValidation(): void
@@ -336,6 +385,19 @@ class UpdateWpTourRequest extends FormRequest
             'travel_dates.*.is_active' => 'nullable|boolean',
             'travel_dates.*.seats' => 'nullable|integer|min:0',
             'travel_dates.*.price_override' => 'nullable|numeric|min:0',
+
+            // Répartition des chambres par départ (Laravel)
+            'departure_allocations' => 'nullable|array',
+            'departure_allocations.*.departure_id' => 'nullable|integer',
+            'departure_allocations.*.travel_date_id' => 'nullable|integer',
+            'departure_allocations.*.date' => 'nullable|date',
+            'departure_allocations.*.rooms' => 'nullable|array',
+            'departure_allocations.*.rooms.*.id' => 'nullable|integer',
+            'departure_allocations.*.rooms.*.hotel_id' => 'nullable|integer',
+            'departure_allocations.*.rooms.*.hotel_index' => 'nullable|integer|min:0',
+            'departure_allocations.*.rooms.*.room_type' => 'nullable|string|max:100',
+            'departure_allocations.*.rooms.*.quantity' => 'nullable|integer|min:0',
+            'departure_allocations.*.rooms.*.capacity_per_room' => 'nullable|integer|min:1',
 
             // Extras réservation (Laravel voyage_extras)
             'voyage_extras' => 'nullable|array',

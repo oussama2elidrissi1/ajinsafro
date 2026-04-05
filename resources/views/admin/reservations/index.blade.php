@@ -9,6 +9,7 @@
     $filterSearch = $filterSearch ?? null;
     $filterStatus = $filterStatus ?? null;
     $highlightReservationId = $highlightReservationId ?? 0;
+    $voyage = $voyage ?? null;
     $voyageOptions = $voyageOptions ?? collect();
     $reservationCreated = isset($reservationCreated) && is_array($reservationCreated)
         ? $reservationCreated
@@ -18,6 +19,7 @@
         'travel_date_id' => $filterTravelDateId,
         'search' => $filterSearch,
     ], fn ($v) => $v !== null && $v !== '');
+    $allReservationsUrl = route('admin.reservations.index');
 @endphp
 
 @section('content')
@@ -102,7 +104,7 @@
                     <select name="voyage_id" class="form-select form-select-sm">
                         <option value="">— Tous —</option>
                         @foreach($voyageOptions as $v)
-                            <option value="{{ $v->id }}" @selected((string)$filterTourId === (string)$v->id)>{{ $v->name }}</option>
+                            <option value="{{ $v->id }}" @selected((string)$filterTourId === (string)$v->id)>{{ $v->resolved_name ?? $v->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -279,8 +281,123 @@
     var root = document.getElementById('res-hub-root');
     if (!root) return;
     var base = root.getAttribute('data-res-base') || '';
+    var voyageName = @json($voyage->resolved_name ?? $voyage->name ?? '');
+    var allReservationsUrl = @json($allReservationsUrl);
     var hubDebugUrl = root.getAttribute('data-hub-debug-url') || '';
     var hubRefreshUrl = root.getAttribute('data-hub-refresh-url') || '';
+
+    function applyVoyageHeader() {
+        var titleBox = document.querySelector('.page-title-box');
+        if (!titleBox) return;
+
+        var leftCol = titleBox.firstElementChild;
+        var actions = titleBox.lastElementChild;
+        if (!leftCol || !actions) return;
+
+        var title = leftCol.querySelector('.page-title');
+        if (title) {
+            title.textContent = 'RÉSERVATIONS';
+        }
+
+        var badge = leftCol.querySelector('[data-res-voyage-badge]');
+        if (!badge && title && title.parentElement) {
+            badge = document.createElement('span');
+            badge.className = 'badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle fw-semibold';
+            badge.setAttribute('data-res-voyage-badge', '1');
+            title.parentElement.appendChild(badge);
+        }
+
+        var subtitle = leftCol.querySelector('[data-res-voyage-subtitle]');
+        if (!subtitle) {
+            subtitle = document.createElement('p');
+            subtitle.className = 'text-muted small mb-1';
+            subtitle.setAttribute('data-res-voyage-subtitle', '1');
+            leftCol.insertBefore(subtitle, leftCol.querySelector('p'));
+        }
+
+        var backBtn = actions.querySelector('[data-res-all-link]');
+        if (!backBtn && allReservationsUrl) {
+            backBtn = document.createElement('a');
+            backBtn.className = 'btn btn-outline-secondary btn-sm';
+            backBtn.href = allReservationsUrl;
+            backBtn.setAttribute('data-res-all-link', '1');
+            backBtn.innerHTML = '<i class="bx bx-arrow-back me-1"></i> Toutes les réservations';
+            actions.insertBefore(backBtn, actions.firstChild);
+        }
+
+        if (voyageName) {
+            if (badge) {
+                badge.textContent = voyageName;
+                badge.classList.remove('d-none');
+            }
+            if (subtitle) {
+                subtitle.textContent = 'Réservations du voyage : ' + voyageName;
+            }
+            if (backBtn) {
+                backBtn.classList.remove('d-none');
+            }
+        } else {
+            if (badge) {
+                badge.classList.add('d-none');
+            }
+            if (subtitle) {
+                subtitle.textContent = 'Toutes les réservations.';
+            }
+            if (backBtn) {
+                backBtn.classList.add('d-none');
+            }
+        }
+    }
+
+    applyVoyageHeader();
+
+    (function refineVoyageHeader() {
+        var titleBox = document.querySelector('.page-title-box');
+        if (!titleBox) return;
+
+        var leftCol = titleBox.firstElementChild;
+        var actions = titleBox.lastElementChild;
+        if (!leftCol || !actions) return;
+
+        var title = leftCol.querySelector('.page-title');
+        if (title) title.textContent = 'RÉSERVATIONS';
+
+        var badge = leftCol.querySelector('[data-res-voyage-badge]');
+        if (badge) badge.remove();
+
+        var subtitle = leftCol.querySelector('[data-res-voyage-subtitle]');
+        if (!subtitle) {
+            subtitle = document.createElement('p');
+            subtitle.className = 'text-muted mb-1';
+            subtitle.setAttribute('data-res-voyage-subtitle', '1');
+            leftCol.insertBefore(subtitle, leftCol.querySelector('p'));
+        } else {
+            subtitle.className = 'text-muted mb-1';
+        }
+
+        var context = leftCol.querySelector('[data-res-voyage-context]');
+        if (!context) {
+            context = document.createElement('p');
+            context.className = 'text-muted small mb-0';
+            context.setAttribute('data-res-voyage-context', '1');
+            leftCol.appendChild(context);
+        }
+
+        Array.prototype.slice.call(leftCol.querySelectorAll('p')).forEach(function (el) {
+            if (el !== subtitle && el !== context) el.remove();
+        });
+
+        var backBtn = actions.querySelector('[data-res-all-link]');
+        if (voyageName) {
+            subtitle.innerHTML = 'Gestion des réservations pour : <span class="fw-semibold text-dark">' + esc(voyageName) + '</span>';
+            context.textContent = 'Filtres, statistiques et liste sont synchronisés sur le voyage sélectionné.';
+            if (backBtn) backBtn.classList.remove('d-none');
+        } else {
+            subtitle.textContent = 'Toutes les réservations.';
+            context.textContent = 'Filtres, statistiques et liste sont synchronisés.';
+            if (backBtn) backBtn.classList.add('d-none');
+        }
+    })();
 
     function applyHubRefreshPayload(payload) {
         if (!payload || !payload.hub_stats) return;

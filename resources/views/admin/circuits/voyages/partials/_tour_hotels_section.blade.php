@@ -1,874 +1,394 @@
 @php
-    $lastDayNumber = isset($lastDayNumber) ? $lastDayNumber : (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1)));
+    $lastDayNumber = isset($lastDayNumber) ? $lastDayNumber : (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int) ($meta['duration_day'] ?? 1)));
     $hotelsList = $tourHotels->isEmpty() ? [null] : $tourHotels->all();
     $otherHotels = $otherTourHotelsForCopy ?? collect();
     $otherTitles = $otherTourTitles ?? [];
 @endphp
+
 <div id="tour-hotels-wrapper">
     @if($otherHotels->isNotEmpty())
-    <div class="mb-3 p-3 bg-light rounded">
-        <label class="form-label small mb-1">Choisir un hôtel existant</label>
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-            <select class="form-select form-select-sm" id="copy-from-hotel-select" style="max-width: 380px;">
-                <option value="">— Créer un nouvel hôtel / modifier ci-dessous —</option>
-                @foreach($otherHotels as $oh)
-                    <option value="{{ $oh->tour_id }}">{{ \Str::limit($oh->hotel_name ?: 'Hôtel #'.$oh->tour_id, 40) }} — {{ \Str::limit($otherTitles[$oh->tour_id] ?? 'Voyage '.$oh->tour_id, 35) }}</option>
-                @endforeach
-            </select>
-            <button type="button" class="btn btn-sm btn-outline-primary" id="copy-from-hotel-btn">Charger</button>
+        <div class="mb-3 p-3 bg-light rounded">
+            <label class="form-label small mb-1">Choisir un hotel existant</label>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <select class="form-select form-select-sm" id="copy-from-hotel-select" style="max-width: 380px;">
+                    <option value="">Selectionner</option>
+                    @foreach($otherHotels as $oh)
+                        <option value="{{ $oh->tour_id }}">{{ \Str::limit($oh->hotel_name ?: 'Hotel #'.$oh->tour_id, 40) }} - {{ \Str::limit($otherTitles[$oh->tour_id] ?? 'Voyage '.$oh->tour_id, 35) }}</option>
+                    @endforeach
+                </select>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="copy-from-hotel-btn">Charger</button>
+            </div>
         </div>
-        <small class="text-muted">Charger les données d’un hôtel existant pour les réutiliser sur ce voyage (sans quitter la page).</small>
-    </div>
     @endif
+
     <div id="tour-hotels-container">
         @foreach($hotelsList as $hi => $h)
-        @php $hid = 'tour_hotel_image_id_' . $hi; $himg = optional($h)->image_id; $himgUrl = $himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$himg) : ''; @endphp
-        <div class="card mb-3 tour-hotel-row" data-index="{{ $hi }}" data-hotel-id="{{ optional($h)->id ?? '' }}">
-            @if(optional($h)->id)
-            <input type="hidden" name="tour_hotels[{{ $hi }}][id]" value="{{ $h->id }}">
-            @endif
-            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
-                <strong>Hôtel {{ $hi + 1 }}</strong>
-                @if($hi > 0)<button type="button" class="btn btn-sm btn-outline-danger tour-remove-row" data-target=".tour-hotel-row" aria-label="Supprimer">×</button>@endif
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    @php
-                        // Compatibilité avec anciennes données : si day_number existe et check_in/out vides, utiliser day_number pour les deux
-                        $oldDayNumber = old("tour_hotels.{$hi}.day_number", optional($h)->day_number);
-                        $checkInDay = old("tour_hotels.{$hi}.check_in_day", optional($h)->check_in_day);
-                        $checkOutDay = old("tour_hotels.{$hi}.check_out_day", optional($h)->check_out_day);
-                        if (!$checkInDay && $oldDayNumber) {
-                            $checkInDay = $oldDayNumber;
-                        }
-                        if (!$checkOutDay && $oldDayNumber) {
-                            $checkOutDay = $oldDayNumber;
-                        }
-                        if (!$checkInDay) $checkInDay = 1;
-                        if (!$checkOutDay) $checkOutDay = 1;
-                    @endphp
-                    <div class="col-md-3">
-                        <label class="form-label">Jour check-in</label>
-                        <select class="form-select tour-hotel-check-in" name="tour_hotels[{{ $hi }}][check_in_day]" data-index="{{ $hi }}">
-                            @for($d = 1; $d <= $lastDayNumber; $d++)
-                                <option value="{{ $d }}" {{ $checkInDay == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
-                            @endfor
-                        </select>
-                        <small class="text-danger d-none tour-hotel-check-in-error" data-index="{{ $hi }}">Le check-out doit être >= check-in</small>
+            @php
+                $hid = 'tour_hotel_image_id_' . $hi;
+                $himg = optional($h)->image_id;
+                $himgUrl = $himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $himg) : '';
+                $oldDayNumber = old("tour_hotels.{$hi}.day_number", optional($h)->day_number);
+                $checkInDay = old("tour_hotels.{$hi}.check_in_day", optional($h)->check_in_day);
+                $checkOutDay = old("tour_hotels.{$hi}.check_out_day", optional($h)->check_out_day);
+                if (! $checkInDay && $oldDayNumber) {
+                    $checkInDay = $oldDayNumber;
+                }
+                if (! $checkOutDay && $oldDayNumber) {
+                    $checkOutDay = $oldDayNumber;
+                }
+                $checkInDay = $checkInDay ?: 1;
+                $checkOutDay = $checkOutDay ?: 1;
+            @endphp
+            <div class="card mb-3 tour-hotel-row" data-index="{{ $hi }}" data-hotel-id="{{ optional($h)->id ?? '' }}">
+                @if(optional($h)->id)
+                    <input type="hidden" name="tour_hotels[{{ $hi }}][id]" value="{{ $h->id }}">
+                @endif
+
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-start gap-3">
+                    <div class="tour-hotel-card-heading">
+                        <div class="tour-hotel-card-title">Hotel {{ $hi + 1 }}</div>
+                        <div class="tour-hotel-card-meta text-muted small"></div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Jour check-out</label>
-                        <select class="form-select tour-hotel-check-out" name="tour_hotels[{{ $hi }}][check_out_day]" data-index="{{ $hi }}">
-                            @for($d = 1; $d <= $lastDayNumber; $d++)
-                                <option value="{{ $d }}" {{ $checkOutDay == $d ? 'selected' : '' }}>Jour {{ $d }}</option>
-                            @endfor
-                        </select>
-                        <small class="text-danger d-none tour-hotel-check-out-error" data-index="{{ $hi }}">Le check-out doit être >= check-in</small>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end pb-2">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][is_optional]" value="1" {{ old("tour_hotels.{$hi}.is_optional", optional($h)->is_optional ?? false) ? 'checked' : '' }}>
-                            <label class="form-check-label">Option client</label>
+                    @if($hi > 0)
+                        <button type="button" class="btn btn-sm btn-outline-danger tour-remove-row" aria-label="Supprimer">×</button>
+                    @endif
+                </div>
+
+                <div class="card-body tour-hotel-card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="tour-hotel-section-heading">Affectation au circuit</div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Nom de l'hôtel</label>
-                        <input type="text" class="form-control" name="tour_hotels[{{ $hi }}][hotel_name]" value="{{ old("tour_hotels.{$hi}.hotel_name", optional($h)->hotel_name ?? '') }}" placeholder="Ex. Hôtel Les Almoravides">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Étoiles (0–5)</label>
-                        <input type="number" class="form-control" name="tour_hotels[{{ $hi }}][stars]" value="{{ old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') }}" min="0" max="5" placeholder="3">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Type de chambre</label>
-                        <input type="text" class="form-control" name="tour_hotels[{{ $hi }}][room_type]" value="{{ old("tour_hotels.{$hi}.room_type", optional($h)->room_type ?? '') }}" placeholder="Ex. Chambre double">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Adresse</label>
-                        <input type="text" class="form-control" name="tour_hotels[{{ $hi }}][address]" value="{{ old("tour_hotels.{$hi}.address", optional($h)->address ?? '') }}" placeholder="Ville, pays">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Repas (formule)</label>
-                        <input type="text" class="form-control" name="tour_hotels[{{ $hi }}][meal_plan]" value="{{ old("tour_hotels.{$hi}.meal_plan", optional($h)->meal_plan ?? '') }}" placeholder="Ex. Petit-déjeuner inclus">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Notes</label>
-                        <textarea class="form-control" name="tour_hotels[{{ $hi }}][notes]" rows="2">{{ old("tour_hotels.{$hi}.notes", optional($h)->notes ?? '') }}</textarea>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Image</label>
-                        <input type="hidden" name="tour_hotels[{{ $hi }}][image_id]" id="{{ $hid }}" value="{{ old("tour_hotels.{$hi}.image_id", optional($h)->image_id ?? '') }}">
-                        <div class="d-flex flex-wrap align-items-center gap-3">
-                            <div id="{{ $hid }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width: 120px; height: 80px; display: {{ $himgUrl ? 'flex' : 'none' }};">
-                                <img id="{{ $hid }}_preview" src="{{ $himgUrl }}" alt="" class="img-fluid" style="max-width:100%; max-height:100%; object-fit: cover;">
-                            </div>
-                            <div>
-                                <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="tour_hotel" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap"><i class="bx bx-images"></i> Choisir</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">×</button>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Jour check-in</label>
+                            <select class="form-select tour-hotel-check-in" name="tour_hotels[{{ $hi }}][check_in_day]" data-index="{{ $hi }}">
+                                @for($d = 1; $d <= $lastDayNumber; $d++)
+                                    <option value="{{ $d }}" {{ (int) $checkInDay === $d ? 'selected' : '' }}>Jour {{ $d }}</option>
+                                @endfor
+                            </select>
+                            <small class="text-danger d-none tour-hotel-check-in-error" data-index="{{ $hi }}">Le check-out doit etre superieur ou egal au check-in.</small>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Jour check-out</label>
+                            <select class="form-select tour-hotel-check-out" name="tour_hotels[{{ $hi }}][check_out_day]" data-index="{{ $hi }}">
+                                @for($d = 1; $d <= $lastDayNumber; $d++)
+                                    <option value="{{ $d }}" {{ (int) $checkOutDay === $d ? 'selected' : '' }}>Jour {{ $d }}</option>
+                                @endfor
+                            </select>
+                            <small class="text-danger d-none tour-hotel-check-out-error" data-index="{{ $hi }}">Le check-out doit etre superieur ou egal au check-in.</small>
+                        </div>
+
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][is_optional]" value="1" {{ old("tour_hotels.{$hi}.is_optional", optional($h)->is_optional ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label">Option client</label>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Chambres de l'hôtel --}}
-                    <div class="col-12 mt-3 border-top pt-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label mb-0 fw-semibold">Chambres de l'hôtel</label>
-                            <button type="button" class="btn btn-sm btn-soft-primary tour-add-room" data-hotel-index="{{ $hi }}"><i class="bx bx-plus"></i> Ajouter une chambre</button>
+                        <div class="col-12">
+                            <div class="tour-hotel-section-heading">Informations generales</div>
                         </div>
-                        <div class="tour-hotel-rooms-container" data-hotel-index="{{ $hi }}">
-                            @php $roomTypes = ['Single' => 'Single', 'Double' => 'Double', 'Twin' => 'Twin', 'Triple' => 'Triple', 'Quadruple' => 'Quadruple', 'Suite' => 'Suite', 'Family Room' => 'Family Room', 'Chambre communicante' => 'Chambre communicante', 'Autre' => 'Autre']; $roomsList = old("tour_hotels.{$hi}.rooms", $h && $h->rooms ? $h->rooms->all() : []); if (empty($roomsList)) $roomsList = [null]; @endphp
-                            @foreach($roomsList as $ri => $room)
-                            @php
-                                $room = is_object($room) ? $room : (is_array($room) ? (object)$room : null);
-                                $roomId = optional($room)->id ?? '';
-                                $roomTypeVal = old("tour_hotels.{$hi}.rooms.{$ri}.room_type", optional($room)->room_type ?? '');
-                                $roomLabelVal = old("tour_hotels.{$hi}.rooms.{$ri}.room_label", optional($room)->room_label ?? '');
-                                $roomCodeVal = old("tour_hotels.{$hi}.rooms.{$ri}.room_code", optional($room)->room_code ?? '');
-                                $roomCountVal = old("tour_hotels.{$hi}.rooms.{$ri}.room_count", optional($room)->room_count ?? 1);
-                                $capAdultsVal = old("tour_hotels.{$hi}.rooms.{$ri}.capacity_adults", optional($room)->capacity_adults ?? 0);
-                                $capChildrenVal = old("tour_hotels.{$hi}.rooms.{$ri}.capacity_children", optional($room)->capacity_children ?? 0);
-                                $capTotalVal = old("tour_hotels.{$hi}.rooms.{$ri}.capacity_total", optional($room)->capacity_total ?? 1);
-                                $supplementVal = old("tour_hotels.{$hi}.rooms.{$ri}.supplement", optional($room)->supplement ?? 0);
-                                $descVal = old("tour_hotels.{$hi}.rooms.{$ri}.description", optional($room)->description ?? '');
-                                $notesVal = old("tour_hotels.{$hi}.rooms.{$ri}.notes", optional($room)->notes ?? '');
-                                $isActiveVal = old("tour_hotels.{$hi}.rooms.{$ri}.is_active", optional($room)->is_active ?? true);
-                                $isDefaultVal = old("tour_hotels.{$hi}.rooms.{$ri}.is_default", optional($room)->is_default ?? false);
-                            @endphp
-                            <div class="card mb-2 tour-room-row" data-hotel-index="{{ $hi }}" data-room-index="{{ $ri }}">
-                                <div class="card-body py-2">
-                                    @if($roomId)<input type="hidden" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][id]" value="{{ $roomId }}">@endif
-                                    <div class="row g-2 align-items-end">
-                                        <div class="col-md-2">
-                                            <label class="form-label small">Type</label>
-                                            <select class="form-select form-select-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_type]">
-                                                @foreach($roomTypes as $k => $v)
-                                                <option value="{{ $k }}" {{ $roomTypeVal == $k ? 'selected' : '' }}>{{ $v }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <label class="form-label small">Nb ch.</label>
-                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_count]" value="{{ $roomCountVal }}" min="0">
-                                        </div>
-                                        <div class="col-md-1">
-                                            <label class="form-label small">Cap. ad.</label>
-                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][capacity_adults]" value="{{ $capAdultsVal }}" min="0">
-                                        </div>
-                                        <div class="col-md-1">
-                                            <label class="form-label small">Cap. enf.</label>
-                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][capacity_children]" value="{{ $capChildrenVal }}" min="0">
-                                        </div>
-                                        <div class="col-md-1">
-                                            <label class="form-label small">Cap. tot.</label>
-                                            <input type="number" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][capacity_total]" value="{{ $capTotalVal }}" min="0">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small">Supplément (DH)</label>
-                                            <input type="number" class="form-control form-control-sm tour-room-supplement" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][supplement]" value="{{ $supplementVal }}" min="0" step="0.01" data-room-index="{{ $ri }}">
-                                            @if((float)$supplementVal == 0)<span class="badge bg-success ms-1">Standard</span>@endif
-                                        </div>
-                                        <div class="col-md-1">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][is_default]" value="1" {{ $isDefaultVal ? 'checked' : '' }}>
-                                                <label class="form-check-label small">Défaut</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <button type="button" class="btn btn-sm btn-outline-danger tour-remove-room" data-hotel-index="{{ $hi }}" data-room-index="{{ $ri }}" aria-label="Supprimer la chambre">×</button>
-                                        </div>
-                                    </div>
-                                    <div class="row g-2 mt-1">
-                                        <div class="col-md-2">
-                                            <label class="form-label small">Code / Réf.</label>
-                                            <input type="text" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_code]" value="{{ $roomCodeVal }}" placeholder="Ex. DBL-STD">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label small">Libellé</label>
-                                            <input type="text" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][room_label]" value="{{ $roomLabelVal }}" placeholder="Optionnel">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small">Description</label>
-                                            <input type="text" class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][description]" value="{{ $descVal }}" placeholder="Courte description">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="form-check mt-2">
-                                                <input type="hidden" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][is_active]" value="0">
-                                                <input type="checkbox" class="form-check-input tour-room-is-active" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][is_active]" value="1" {{ $isActiveVal ? 'checked' : '' }}>
-                                                <label class="form-check-label small">Actif</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-12">
-                                            <label class="form-label small">Notes internes</label>
-                                            <textarea class="form-control form-control-sm" name="tour_hotels[{{ $hi }}][rooms][{{ $ri }}][notes]" rows="1" placeholder="Optionnel">{{ $notesVal }}</textarea>
-                                        </div>
-                                    </div>
 
-                                    @include('admin.circuits.voyages.partials._tour_hotel_room_date_availability', [
-                                        'hi' => $hi,
-                                        'ri' => $ri,
-                                        'room' => $room,
-                                        'travelDates' => $travelDates ?? collect(),
-                                        'roomCountVal' => $roomCountVal,
-                                        'capAdultsVal' => $capAdultsVal,
-                                        'capChildrenVal' => $capChildrenVal,
-                                        'capTotalVal' => $capTotalVal,
-                                        'supplementVal' => $supplementVal,
-                                    ])
+                        <div class="col-md-6">
+                            <label class="form-label">Nom de l'hotel</label>
+                            <input type="text" class="form-control tour-hotel-name-input" name="tour_hotels[{{ $hi }}][hotel_name]" value="{{ old("tour_hotels.{$hi}.hotel_name", optional($h)->hotel_name ?? '') }}">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Etoiles (0-5)</label>
+                            <input type="number" class="form-control tour-hotel-stars-input" name="tour_hotels[{{ $hi }}][stars]" value="{{ old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') }}" min="0" max="5">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Ville / adresse</label>
+                            <input type="text" class="form-control tour-hotel-address-input" name="tour_hotels[{{ $hi }}][address]" value="{{ old("tour_hotels.{$hi}.address", optional($h)->address ?? '') }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Formule / infos</label>
+                            <input type="text" class="form-control tour-hotel-meal-input" name="tour_hotels[{{ $hi }}][meal_plan]" value="{{ old("tour_hotels.{$hi}.meal_plan", optional($h)->meal_plan ?? '') }}">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="tour_hotels[{{ $hi }}][notes]" rows="2">{{ old("tour_hotels.{$hi}.notes", optional($h)->notes ?? '') }}</textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Image</label>
+                            <input type="hidden" name="tour_hotels[{{ $hi }}][image_id]" id="{{ $hid }}" value="{{ old("tour_hotels.{$hi}.image_id", optional($h)->image_id ?? '') }}">
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <div id="{{ $hid }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width: 120px; height: 80px; display: {{ $himgUrl ? 'flex' : 'none' }};">
+                                    <img id="{{ $hid }}_preview" src="{{ $himgUrl }}" alt="" class="img-fluid" style="max-width:100%; max-height:100%; object-fit: cover;">
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="tour_hotel" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap"><i class="bx bx-images"></i> Choisir</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">×</button>
                                 </div>
                             </div>
-                            @endforeach
                         </div>
+
                     </div>
                 </div>
             </div>
-        </div>
         @endforeach
     </div>
-    <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="tour-add-hotel"><i class="bx bx-plus"></i> Ajouter un hôtel</button>
+
+    <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="tour-add-hotel"><i class="bx bx-plus"></i> Ajouter un hotel</button>
 </div>
+
 <script>
-(function(){
+(function () {
+    var wrapper = document.getElementById('tour-hotels-wrapper');
     var container = document.getElementById('tour-hotels-container');
     var addBtn = document.getElementById('tour-add-hotel');
-    if (!container || !addBtn) return;
-
+    if (!wrapper || !container || !addBtn) return;
     if (container.dataset.initialized === 'true') return;
     container.dataset.initialized = 'true';
 
-    addBtn.addEventListener('click', function(){
-        var rows = container.querySelectorAll('.tour-hotel-row');
-        var last = rows[rows.length - 1];
-        if (!last) return;
-        var prevIndex = parseInt(last.getAttribute('data-index'), 10);
-        var nextIndex = prevIndex + 1;
-        var clone = last.cloneNode(true);
-        clone.setAttribute('data-index', nextIndex);
-        clone.removeAttribute('data-hotel-id'); // nouveau row, pas d'id
-        clone.querySelector('.card-header strong').textContent = 'Hôtel ' + (nextIndex + 1);
-        // Supprimer l'id hôtel caché (nouvel hôtel)
-        clone.querySelectorAll('input[name^="tour_hotels["][name*="[id]"]').forEach(function(inp){ if (inp.name.indexOf('[rooms]') === -1) inp.remove(); });
-        clone.querySelectorAll('[name]').forEach(function(inp){
-            if (inp.name && inp.name.indexOf('tour_hotels[') === 0)
-                inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + nextIndex + ']');
-            if (inp.name && inp.name.indexOf('[check_in_day]') !== -1) { 
-                inp.value = '1'; 
-                inp.setAttribute('data-index', nextIndex);
-                return; 
-            }
-            if (inp.name && inp.name.indexOf('[check_out_day]') !== -1) { 
-                inp.value = '1'; 
-                inp.setAttribute('data-index', nextIndex);
-                return; 
-            }
-            if (inp.name && inp.name.indexOf('[day_number]') !== -1) { inp.value = '1'; return; } // Compatibilité ancien format
-            if (inp.name && inp.name.indexOf('[is_optional]') !== -1) { inp.checked = false; return; }
-            if (inp.name && inp.name.indexOf('[rooms]') !== -1) {
-                // Chambres : garder le même index room pour le nouveau hi, mais supprimer les id chambres
-                if (inp.name.indexOf('[id]') !== -1 && inp.name.indexOf('[rooms]') !== -1) { inp.remove(); return; }
-                if (inp.type === 'hidden' && inp.name.indexOf('[is_active]') !== -1) { inp.value = '0'; return; }
-                if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
-                if (inp.tagName === 'TEXTAREA') inp.value = '';
-                if (inp.type === 'checkbox') { inp.checked = (inp.name.indexOf('is_default') !== -1 ? false : true); }
-                return;
-            }
-            if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
-            if (inp.tagName === 'TEXTAREA') inp.value = '';
-        });
-        // Mettre à jour data-hotel-index dans la section chambres du clone
-        var roomsContainer = clone.querySelector('.tour-hotel-rooms-container');
-        if (roomsContainer) {
-            roomsContainer.setAttribute('data-hotel-index', nextIndex);
-            clone.querySelector('.tour-add-room').setAttribute('data-hotel-index', nextIndex);
-            roomsContainer.querySelectorAll('.tour-room-row').forEach(function(rr){
-                rr.setAttribute('data-hotel-index', nextIndex);
-                rr.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-hotel-index', nextIndex); });
-            });
-        }
-        clone.querySelectorAll('[id]').forEach(function(el){
-            if (el.id && el.id.indexOf('tour_hotel_image_id_') === 0)
-                el.id = el.id.replace(/tour_hotel_image_id_\d+/, 'tour_hotel_image_id_' + nextIndex);
-        });
-        clone.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
-            if (btn.getAttribute('data-input')) btn.setAttribute('data-input', 'tour_hotel_image_id_' + nextIndex);
-            if (btn.getAttribute('data-preview')) btn.setAttribute('data-preview', 'tour_hotel_image_id_' + nextIndex + '_preview');
-            if (btn.getAttribute('data-preview-wrap')) btn.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + nextIndex + '_preview_wrap');
-        });
-        var wrap = clone.querySelector('[id$="_preview_wrap"]');
-        if (wrap) wrap.style.display = 'none';
-        if (!clone.querySelector('.tour-remove-row')) {
-            var header = clone.querySelector('.card-header');
-            var rm = document.createElement('button');
-            rm.type = 'button';
-            rm.className = 'btn btn-sm btn-outline-danger tour-remove-row';
-            rm.setAttribute('aria-label', 'Supprimer');
-            rm.textContent = '×';
-            header.appendChild(rm);
-        }
-        container.appendChild(clone);
-        // Initialiser la validation pour la nouvelle ligne
-        initHotelCheckInOutValidation(clone);
-        // Mettre à jour le titre
-        updateHotelsTitle();
-        if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
-    });
+    function notifyHotelsChanged() {
+        document.dispatchEvent(new CustomEvent('voyage-hotels-changed'));
+    }
 
-    // Validation check-in / check-out
-    function initHotelCheckInOutValidation(row) {
+    function hotelStayLabel(row) {
+        var checkInSel = row.querySelector('.tour-hotel-check-in');
+        var checkOutSel = row.querySelector('.tour-hotel-check-out');
+        if (!checkInSel || !checkOutSel) return '';
+        var checkIn = parseInt(checkInSel.value || '1', 10);
+        var checkOut = parseInt(checkOutSel.value || '1', 10);
+        return checkIn === checkOut ? 'Sejour Jour ' + checkIn : 'Sejour J' + checkIn + ' a J' + checkOut;
+    }
+
+    function refreshHotelCard(row) {
         if (!row) return;
+        var index = parseInt(row.getAttribute('data-index') || '0', 10) + 1;
+        var titleEl = row.querySelector('.tour-hotel-card-title');
+        var metaEl = row.querySelector('.tour-hotel-card-meta');
+        var nameInp = row.querySelector('.tour-hotel-name-input');
+        var starsInp = row.querySelector('.tour-hotel-stars-input');
+        var addressInp = row.querySelector('.tour-hotel-address-input');
+        var mealInp = row.querySelector('.tour-hotel-meal-input');
+        var optionalInp = row.querySelector('input[name^="tour_hotels["][name$="[is_optional]"]');
+        var hotelName = nameInp && nameInp.value.trim() ? nameInp.value.trim() : 'Hotel ' + index;
+        var meta = [];
+
+        if (titleEl) titleEl.textContent = hotelName;
+        meta.push(hotelStayLabel(row));
+
+        var stars = parseInt(starsInp && starsInp.value ? starsInp.value : '0', 10);
+        if (!isNaN(stars) && stars > 0) meta.push(stars + ' etoile' + (stars > 1 ? 's' : ''));
+        if (mealInp && mealInp.value.trim()) meta.push(mealInp.value.trim());
+        if (addressInp && addressInp.value.trim()) meta.push(addressInp.value.trim());
+        if (optionalInp && optionalInp.checked) meta.push('Option client');
+
+        if (metaEl) metaEl.textContent = meta.filter(Boolean).join(' • ');
+    }
+
+    function updateHotelsTitle() {
+        var titleEl = document.getElementById('tour-hotels-period');
+        var rows = container.querySelectorAll('.tour-hotel-row');
+        if (!titleEl) return;
+        if (!rows.length) {
+            titleEl.textContent = '(aucun hotel configure)';
+            return;
+        }
+
+        var minCheckIn = null;
+        var maxCheckOut = null;
+        rows.forEach(function (row) {
+            refreshHotelCard(row);
+            var checkInSel = row.querySelector('.tour-hotel-check-in');
+            var checkOutSel = row.querySelector('.tour-hotel-check-out');
+            if (!checkInSel || !checkOutSel) return;
+            var checkIn = parseInt(checkInSel.value || '1', 10);
+            var checkOut = parseInt(checkOutSel.value || '1', 10);
+            if (minCheckIn === null || checkIn < minCheckIn) minCheckIn = checkIn;
+            if (maxCheckOut === null || checkOut > maxCheckOut) maxCheckOut = checkOut;
+        });
+
+        if (minCheckIn !== null && maxCheckOut !== null) {
+            titleEl.textContent = minCheckIn === maxCheckOut
+                ? '(sejour • Jour ' + minCheckIn + ')'
+                : '(sejour • check-in J' + minCheckIn + ', check-out J' + maxCheckOut + ')';
+        }
+    }
+
+    function validateCheckInOut(row) {
         var checkInSel = row.querySelector('.tour-hotel-check-in');
         var checkOutSel = row.querySelector('.tour-hotel-check-out');
         var index = row.getAttribute('data-index');
         if (!checkInSel || !checkOutSel) return;
-        
-        function validateCheckInOut() {
-            var checkIn = parseInt(checkInSel.value || '1', 10);
-            var checkOut = parseInt(checkOutSel.value || '1', 10);
-            var checkInError = row.querySelector('.tour-hotel-check-in-error[data-index="' + index + '"]');
-            var checkOutError = row.querySelector('.tour-hotel-check-out-error[data-index="' + index + '"]');
-            
-            if (checkOut < checkIn) {
-                // Ajuster automatiquement check-out si check-in est supérieur
-                checkOutSel.value = checkIn;
-                if (checkInError) checkInError.classList.remove('d-none');
-                if (checkOutError) checkOutError.classList.remove('d-none');
-                setTimeout(function() {
-                    if (checkInError) checkInError.classList.add('d-none');
-                    if (checkOutError) checkOutError.classList.add('d-none');
-                }, 3000);
-            } else {
+        var checkInError = row.querySelector('.tour-hotel-check-in-error[data-index="' + index + '"]');
+        var checkOutError = row.querySelector('.tour-hotel-check-out-error[data-index="' + index + '"]');
+        var checkIn = parseInt(checkInSel.value || '1', 10);
+        var checkOut = parseInt(checkOutSel.value || '1', 10);
+        if (checkOut < checkIn) {
+            checkOutSel.value = String(checkIn);
+            if (checkInError) checkInError.classList.remove('d-none');
+            if (checkOutError) checkOutError.classList.remove('d-none');
+            window.setTimeout(function () {
                 if (checkInError) checkInError.classList.add('d-none');
                 if (checkOutError) checkOutError.classList.add('d-none');
-            }
-            // Mettre à jour le titre quand les valeurs changent
-            updateHotelsTitle();
+            }, 2500);
+        } else {
+            if (checkInError) checkInError.classList.add('d-none');
+            if (checkOutError) checkOutError.classList.add('d-none');
         }
-        
-        checkInSel.addEventListener('change', function() {
-            var checkIn = parseInt(checkInSel.value || '1', 10);
-            var checkOut = parseInt(checkOutSel.value || '1', 10);
-            if (checkOut < checkIn) {
-                checkOutSel.value = checkIn;
-            }
-            validateCheckInOut();
-        });
-        
-        checkOutSel.addEventListener('change', validateCheckInOut);
     }
 
-    // Fonction pour mettre à jour le titre de la section Hôtels
-    function updateHotelsTitle() {
-        var titleEl = document.getElementById('tour-hotels-period');
-        if (!titleEl) return;
+    function reindexRows() {
+        container.querySelectorAll('.tour-hotel-row').forEach(function (row, i) {
+            row.setAttribute('data-index', i);
+            row.querySelectorAll('[name^="tour_hotels["]').forEach(function (input) {
+                input.name = input.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + i + ']');
+            });
+            row.querySelectorAll('.tour-hotel-check-in, .tour-hotel-check-out, .tour-hotel-check-in-error, .tour-hotel-check-out-error').forEach(function (el) {
+                el.setAttribute('data-index', i);
+            });
+            row.querySelectorAll('[id^="tour_hotel_image_id_"]').forEach(function (el) {
+                el.id = el.id.replace(/tour_hotel_image_id_\d+/, 'tour_hotel_image_id_' + i);
+            });
+            row.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function (btn) {
+                if (btn.getAttribute('data-input')) btn.setAttribute('data-input', 'tour_hotel_image_id_' + i);
+                if (btn.getAttribute('data-preview')) btn.setAttribute('data-preview', 'tour_hotel_image_id_' + i + '_preview');
+                if (btn.getAttribute('data-preview-wrap')) btn.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + i + '_preview_wrap');
+            });
+            refreshHotelCard(row);
+        });
+    }
+
+    addBtn.addEventListener('click', function () {
         var rows = container.querySelectorAll('.tour-hotel-row');
-        if (rows.length === 0) {
-            titleEl.textContent = '(aucun hôtel configuré)';
-            return;
-        }
-        var minCheckIn = null;
-        var maxCheckOut = null;
-        rows.forEach(function(row) {
-            var checkInSel = row.querySelector('select[name^="tour_hotels["][name$="[check_in_day]"]');
-            var checkOutSel = row.querySelector('select[name^="tour_hotels["][name$="[check_out_day]"]');
-            if (checkInSel && checkOutSel) {
-                var checkIn = parseInt(checkInSel.value || '1', 10);
-                var checkOut = parseInt(checkOutSel.value || '1', 10);
-                if (minCheckIn === null || checkIn < minCheckIn) minCheckIn = checkIn;
-                if (maxCheckOut === null || checkOut > maxCheckOut) maxCheckOut = checkOut;
-            } else {
-                // Compatibilité ancien format
-                var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
-                if (daySel) {
-                    var day = parseInt(daySel.value || '1', 10);
-                    if (minCheckIn === null || day < minCheckIn) minCheckIn = day;
-                    if (maxCheckOut === null || day > maxCheckOut) maxCheckOut = day;
-                }
+        var last = rows[rows.length - 1];
+        if (!last) return;
+        var nextIndex = rows.length;
+        var clone = last.cloneNode(true);
+        clone.setAttribute('data-index', nextIndex);
+        clone.setAttribute('data-hotel-id', '');
+        clone.querySelectorAll('input[name^="tour_hotels["][name*="[id]"]').forEach(function (input) {
+            input.remove();
+        });
+        clone.querySelectorAll('[name]').forEach(function (input) {
+            if (input.name.indexOf('tour_hotels[') === 0) {
+                input.name = input.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + nextIndex + ']');
+            }
+            if (input.type === 'checkbox') {
+                input.checked = false;
+                return;
+            }
+            if (input.tagName === 'TEXTAREA') {
+                input.value = '';
+                return;
+            }
+            if (input.name.indexOf('[check_in_day]') !== -1 || input.name.indexOf('[check_out_day]') !== -1) {
+                input.value = '1';
+                input.setAttribute('data-index', nextIndex);
+                return;
+            }
+            if (input.type !== 'hidden') {
+                input.value = '';
             }
         });
-        if (minCheckIn !== null && maxCheckOut !== null) {
-            if (minCheckIn === maxCheckOut) {
-                titleEl.textContent = '(séjour — Jour ' + minCheckIn + ')';
-            } else {
-                titleEl.textContent = '(séjour — check-in J' + minCheckIn + ', check-out J' + maxCheckOut + ')';
+        clone.querySelectorAll('[id]').forEach(function (el) {
+            if (el.id.indexOf('tour_hotel_image_id_') === 0) {
+                el.id = el.id.replace(/tour_hotel_image_id_\d+/, 'tour_hotel_image_id_' + nextIndex);
             }
+        });
+        clone.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function (btn) {
+            if (btn.getAttribute('data-input')) btn.setAttribute('data-input', 'tour_hotel_image_id_' + nextIndex);
+            if (btn.getAttribute('data-preview')) btn.setAttribute('data-preview', 'tour_hotel_image_id_' + nextIndex + '_preview');
+            if (btn.getAttribute('data-preview-wrap')) btn.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + nextIndex + '_preview_wrap');
+        });
+        var previewWrap = clone.querySelector('[id$="_preview_wrap"]');
+        if (previewWrap) previewWrap.style.display = 'none';
+        if (!clone.querySelector('.tour-remove-row')) {
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-sm btn-outline-danger tour-remove-row';
+            removeBtn.setAttribute('aria-label', 'Supprimer');
+            removeBtn.textContent = '×';
+            clone.querySelector('.card-header').appendChild(removeBtn);
         }
-    }
-
-    // Initialiser la validation pour les lignes existantes
-    container.querySelectorAll('.tour-hotel-row').forEach(function(row) {
-        initHotelCheckInOutValidation(row);
-    });
-    
-    // Mettre à jour le titre au chargement
-    updateHotelsTitle();
-
-    // Recalcul Places / Max personnes : logique dans edit.blade.php (section scripts en fin de page), champs #max_people / #places_display, écouteurs sur #edit-voyage-form.
-    if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
-    
-    // Mettre à jour le titre quand les champs check-in/check-out changent
-    container.addEventListener('change', function(e) {
-        if (e.target && (e.target.classList.contains('tour-hotel-check-in') || e.target.classList.contains('tour-hotel-check-out'))) {
-            updateHotelsTitle();
-        }
-    });
-
-    container.addEventListener('click', function(e){
-        if (e.target.classList.contains('tour-remove-row')) {
-            var row = e.target.closest('.tour-hotel-row');
-            if (row && container.querySelectorAll('.tour-hotel-row').length > 1) {
-                row.remove();
-                container.querySelectorAll('.tour-hotel-row').forEach(function(r, i){
-                    r.setAttribute('data-index', i);
-                    r.querySelector('.card-header strong').textContent = 'Hôtel ' + (i + 1);
-                    r.querySelectorAll('[name^="tour_hotels["]').forEach(function(inp){ 
-                        inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + i + ']');
-                        if (inp.name.indexOf('[check_in_day]') !== -1 || inp.name.indexOf('[check_out_day]') !== -1) {
-                            inp.setAttribute('data-index', i);
-                        }
-                    });
-                    r.querySelectorAll('[id^="tour_hotel_image_id_"]').forEach(function(el){ el.id = el.id.replace(/tour_hotel_image_id_\d+/, 'tour_hotel_image_id_' + i); });
-                    r.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
-                        if (btn.getAttribute('data-input')) btn.setAttribute('data-input', 'tour_hotel_image_id_' + i);
-                        if (btn.getAttribute('data-preview')) btn.setAttribute('data-preview', 'tour_hotel_image_id_' + i + '_preview');
-                        if (btn.getAttribute('data-preview-wrap')) btn.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + i + '_preview_wrap');
-                    });
-                    var roomsCont = r.querySelector('.tour-hotel-rooms-container');
-                    if (roomsCont) {
-                        roomsCont.setAttribute('data-hotel-index', i);
-                        r.querySelector('.tour-add-room').setAttribute('data-hotel-index', i);
-                        roomsCont.querySelectorAll('.tour-room-row').forEach(function(rr, ri){
-                            rr.setAttribute('data-hotel-index', i);
-                            rr.setAttribute('data-room-index', ri);
-                            rr.querySelectorAll('[name]').forEach(function(inp){
-                                if (inp.name && inp.name.indexOf('tour_hotels[') === 0 && inp.name.indexOf('[rooms]') !== -1)
-                                    inp.name = inp.name.replace(/tour_hotels\[\d+\]/, 'tour_hotels[' + i + ']').replace(/\[rooms\]\[\d+\]/, '[rooms][' + ri + ']');
-                            });
-                            rr.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-hotel-index', i); btn.setAttribute('data-room-index', ri); });
-                            rr.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', ri); });
-                        });
-                    }
-                    initHotelCheckInOutValidation(r);
-                });
-                updateHotelsTitle();
-                if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
-            }
-        }
-        // Ajouter une chambre
-        if (e.target.classList.contains('tour-add-room')) {
-            var hotelRow = e.target.closest('.tour-hotel-row');
-            var roomsCont = hotelRow ? hotelRow.querySelector('.tour-hotel-rooms-container') : null;
-            if (!roomsCont) return;
-            var hi = roomsCont.getAttribute('data-hotel-index');
-            var rows = roomsCont.querySelectorAll('.tour-room-row');
-            var last = rows[rows.length - 1];
-            if (!last) return;
-            var nextRi = rows.length;
-            var clone = last.cloneNode(true);
-            clone.setAttribute('data-room-index', nextRi);
-            clone.querySelectorAll('[name]').forEach(function(inp){
-                if (inp.name && inp.name.indexOf('[rooms]') !== -1) {
-                    inp.name = inp.name.replace(/\[rooms\]\[\d+\]/, '[rooms][' + nextRi + ']');
-                    if (inp.name.indexOf('[id]') !== -1) { inp.remove(); return; }
-                    if (inp.type === 'hidden' && inp.name.indexOf('[is_active]') !== -1) { inp.value = '0'; return; }
-                    if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
-                    if (inp.tagName === 'TEXTAREA') inp.value = '';
-                    if (inp.type === 'checkbox') inp.checked = (inp.name.indexOf('is_default') !== -1 ? false : true);
-                }
-            });
-            clone.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-room-index', nextRi); });
-            clone.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', nextRi); });
-            clone.querySelectorAll('.badge.bg-success').forEach(function(b){ b.remove(); });
-            roomsCont.appendChild(clone);
-            if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
-        }
-        // Supprimer une chambre
-        if (e.target.classList.contains('tour-remove-room')) {
-            var roomRow = e.target.closest('.tour-room-row');
-            if (!roomRow) return;
-            var roomsCont = roomRow.closest('.tour-hotel-rooms-container');
-            if (!roomsCont || roomsCont.querySelectorAll('.tour-room-row').length <= 1) return;
-            roomRow.remove();
-            var hi = roomsCont.getAttribute('data-hotel-index');
-            roomsCont.querySelectorAll('.tour-room-row').forEach(function(rr, ri){
-                rr.setAttribute('data-room-index', ri);
-                rr.querySelectorAll('[name]').forEach(function(inp){
-                    if (inp.name && inp.name.indexOf('[rooms]') !== -1)
-                        inp.name = inp.name.replace(/\[rooms\]\[\d+\]/, '[rooms][' + ri + ']');
-                });
-                rr.querySelectorAll('.tour-remove-room').forEach(function(btn){ btn.setAttribute('data-room-index', ri); });
-                rr.querySelectorAll('.tour-room-supplement').forEach(function(s){ s.setAttribute('data-room-index', ri); });
-            });
-            if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
-        }
+        container.appendChild(clone);
+        refreshHotelCard(clone);
+        updateHotelsTitle();
+        notifyHotelsChanged();
     });
 
-    // Choisir un hôtel existant : charger les données dans la première ligne
+    container.addEventListener('click', function (event) {
+        if (!event.target.classList.contains('tour-remove-row')) return;
+        var row = event.target.closest('.tour-hotel-row');
+        if (!row || container.querySelectorAll('.tour-hotel-row').length <= 1) return;
+        row.remove();
+        reindexRows();
+        updateHotelsTitle();
+        notifyHotelsChanged();
+    });
+
+    container.addEventListener('input', function (event) {
+        if (!event.target || !event.target.name || event.target.name.indexOf('tour_hotels[') !== 0) return;
+        refreshHotelCard(event.target.closest('.tour-hotel-row'));
+        updateHotelsTitle();
+        notifyHotelsChanged();
+    });
+
+    container.addEventListener('change', function (event) {
+        if (!event.target || !event.target.name || event.target.name.indexOf('tour_hotels[') !== 0) return;
+        validateCheckInOut(event.target.closest('.tour-hotel-row'));
+        refreshHotelCard(event.target.closest('.tour-hotel-row'));
+        updateHotelsTitle();
+        notifyHotelsChanged();
+    });
+
     var copySelect = document.getElementById('copy-from-hotel-select');
     var copyBtn = document.getElementById('copy-from-hotel-btn');
     if (copySelect && copyBtn) {
         var dataUrlBase = '{{ url("admin/circuits/tour-hotels") }}';
-        copyBtn.addEventListener('click', function(){
+        copyBtn.addEventListener('click', function () {
             var tourId = copySelect.value;
             if (!tourId) return;
             fetch(dataUrlBase + '/' + tourId + '/data', { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(function(r){ return r.json(); })
-                .then(function(data){
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
                     var firstRow = container.querySelector('.tour-hotel-row[data-index="0"]');
                     if (!firstRow) return;
-                    var setVal = function(nameSuffix, val) {
-                        var inp = firstRow.querySelector('[name="tour_hotels[0][' + nameSuffix + ']"]');
-                        if (inp && val !== undefined && val !== null) {
-                            if (inp.type === 'checkbox') inp.checked = !!val;
-                            else inp.value = val;
+                    var hotel = data.hotel || {};
+                    function setValue(nameSuffix, value) {
+                        var field = firstRow.querySelector('[name="tour_hotels[0][' + nameSuffix + ']"]');
+                        if (!field || value === undefined || value === null) return;
+                        if (field.type === 'checkbox') {
+                            field.checked = !!value;
+                        } else {
+                            field.value = value;
                         }
-                    };
-                    var h = data.hotel || {};
-                    setVal('hotel_name', h.hotel_name);
-                    setVal('stars', h.stars);
-                    setVal('address', h.address);
-                    setVal('room_type', h.room_type);
-                    setVal('meal_plan', h.meal_plan);
-                    setVal('notes', h.notes);
-                    setVal('image_id', h.image_id);
-                    setVal('check_in_day', h.check_in_day);
-                    setVal('check_out_day', h.check_out_day);
-                    setVal('is_optional', h.is_optional ? '1' : '');
-                    var roomsCont = firstRow.querySelector('.tour-hotel-rooms-container');
-                    if (roomsCont && Array.isArray(data.rooms)) {
-                        var roomRows = roomsCont.querySelectorAll('.tour-room-row');
-                        var need = data.rooms.length;
-                        if (need < 1) need = 1;
-                        while (roomRows.length > need) {
-                            if (roomRows.length <= 1) break;
-                            roomRows[roomRows.length - 1].remove();
-                            roomRows = roomsCont.querySelectorAll('.tour-room-row');
-                        }
-                        var addRoomBtn = firstRow.querySelector('.tour-add-room');
-                        while (roomRows.length < need && addRoomBtn) {
-                            addRoomBtn.click();
-                            roomRows = roomsCont.querySelectorAll('.tour-room-row');
-                        }
-                        roomRows = roomsCont.querySelectorAll('.tour-room-row');
-                        data.rooms.forEach(function(room, ri){
-                            var row = roomRows[ri];
-                            if (!row) return;
-                            var idx = row.getAttribute('data-room-index');
-                            if (idx === null) idx = String(ri);
-                            var setRoom = function(suffix, val) {
-                                var inps = row.querySelectorAll('[name]');
-                                for (var n = 0; n < inps.length; n++) {
-                                    var name = inps[n].name || '';
-                                    if (name.indexOf('[rooms][' + idx + '][' + suffix + ']') !== -1) {
-                                        if (inps[n].tagName === 'SELECT') inps[n].value = val || '';
-                                        else if (inps[n].type === 'checkbox') inps[n].checked = !!val;
-                                        else inps[n].value = val !== undefined && val !== null ? val : '';
-                                        return;
-                                    }
-                                }
-                            };
-                            setRoom('room_type', room.room_type);
-                            setRoom('room_label', room.room_label);
-                            setRoom('room_code', room.room_code);
-                            setRoom('room_count', room.room_count);
-                            setRoom('capacity_adults', room.capacity_adults);
-                            setRoom('capacity_children', room.capacity_children);
-                            setRoom('capacity_total', room.capacity_total);
-                            setRoom('supplement', room.supplement);
-                            setRoom('description', room.description);
-                            setRoom('notes', room.notes);
-                            var defInp = row.querySelector('[name*="[is_default]"]');
-                            if (defInp) defInp.checked = !!room.is_default;
-                            var activeOn = room.is_active !== false && room.is_active !== 0 && room.is_active !== '0';
-                            var actCb = row.querySelector('input.tour-room-is-active');
-                            if (actCb) actCb.checked = !!activeOn;
-                            else {
-                                var legAct = row.querySelector('input[type="checkbox"][name*="[is_active]"]');
-                                if (legAct) legAct.checked = !!activeOn;
-                            }
-                        });
                     }
-                    if (typeof window.notifyVoyageTourPlacesChanged === 'function') window.notifyVoyageTourPlacesChanged();
+                    setValue('hotel_name', hotel.hotel_name);
+                    setValue('stars', hotel.stars);
+                    setValue('address', hotel.address);
+                    setValue('meal_plan', hotel.meal_plan);
+                    setValue('notes', hotel.notes);
+                    setValue('image_id', hotel.image_id);
+                    setValue('check_in_day', hotel.check_in_day);
+                    setValue('check_out_day', hotel.check_out_day);
+                    setValue('is_optional', hotel.is_optional ? '1' : '');
+                    refreshHotelCard(firstRow);
+                    updateHotelsTitle();
+                    notifyHotelsChanged();
                     copySelect.value = '';
                 })
-                .catch(function(){ alert('Impossible de charger l\'hôtel.'); });
-        });
-    }
-})();
-</script>
-<script>
-(function () {
-    if (window.tourHotelDateAvailabilitySyncBound) return;
-    window.tourHotelDateAvailabilitySyncBound = true;
-
-    function toInt(value) {
-        var parsed = parseInt(String(value == null ? '' : value).trim(), 10);
-        return isNaN(parsed) || parsed < 0 ? 0 : parsed;
-    }
-
-    function toMoney(value) {
-        var parsed = parseFloat(String(value == null ? '' : value).trim().replace(',', '.'));
-        return isNaN(parsed) || parsed < 0 ? 0 : parsed;
-    }
-
-    function roomCapacity(roomRow) {
-        if (!roomRow) return 0;
-        var total = toInt((roomRow.querySelector('input[name$="[capacity_total]"]') || {}).value);
-        if (total > 0) return total;
-        return toInt((roomRow.querySelector('input[name$="[capacity_adults]"]') || {}).value)
-            + toInt((roomRow.querySelector('input[name$="[capacity_children]"]') || {}).value);
-    }
-
-    function roomDefaults(roomRow) {
-        var availableRooms = toInt((roomRow.querySelector('input[name$="[room_count]"]') || {}).value);
-        var capacityPerRoom = roomCapacity(roomRow);
-        return {
-            availableRooms: availableRooms,
-            availablePlaces: availableRooms * capacityPerRoom,
-            supplement: toMoney((roomRow.querySelector('input[name$="[supplement]"]') || {}).value),
-            status: availableRooms > 0 ? 'available' : 'full'
-        };
-    }
-
-    function getTravelDates() {
-        return Array.from(document.querySelectorAll('#travel-dates-container .travel-date-row')).map(function (row, index) {
-            var dateInput = row.querySelector('input[name$="[date]"]');
-            var idInput = row.querySelector('input[name$="[id]"]');
-            var seatsInput = row.querySelector('input[name$="[seats]"]');
-            var dateValue = dateInput ? String(dateInput.value || '') : '';
-            var label = dateValue ? dateValue.split('-').reverse().join('/') : 'Date';
-
-            return {
-                index: index,
-                id: idInput ? String(idInput.value || '') : '',
-                date: dateValue,
-                label: label,
-                seatsInput: seatsInput || null
-            };
-        }).filter(function (item) {
-            return item.date !== '';
+                .catch(function () {
+                    alert('Impossible de charger l hotel.');
+                });
         });
     }
 
-    function availabilityKey(item) {
-        if (!item) return '';
-        if (item.id) return 'id:' + item.id;
-        return 'date:' + item.date;
-    }
-
-    function collectExistingAvailability(roomRow) {
-        var map = {};
-        roomRow.querySelectorAll('.tour-room-date-availability-row').forEach(function (row) {
-            var key = availabilityKey({
-                id: row.getAttribute('data-travel-date-id') || '',
-                date: row.getAttribute('data-date') || ''
-            });
-            if (!key) return;
-
-            var idInput = row.querySelector('input[name$="[id]"]');
-            var roomsInput = row.querySelector('.tour-room-date-available-rooms');
-            var placesInput = row.querySelector('.tour-room-date-available-places');
-            var statusInput = row.querySelector('.tour-room-date-status');
-            var supplementInput = row.querySelector('.tour-room-date-supplement');
-
-            map[key] = {
-                id: idInput ? String(idInput.value || '') : '',
-                availableRooms: roomsInput ? String(roomsInput.value || '') : '',
-                availablePlaces: placesInput ? String(placesInput.value || '') : '',
-                status: statusInput ? String(statusInput.value || '') : '',
-                supplement: supplementInput ? String(supplementInput.value || '') : ''
-            };
-        });
-        return map;
-    }
-
-    function ensureAvailabilityPanel(roomRow) {
-        var body = roomRow ? roomRow.querySelector('.card-body') : null;
-        if (!body) return null;
-
-        var panel = roomRow.querySelector('.tour-room-date-availability-panel');
-        if (panel) return panel;
-
-        var wrapper = document.createElement('details');
-        wrapper.className = 'tour-room-date-availability-panel mt-3';
-        wrapper.innerHTML = '' +
-            '<summary class="small fw-semibold text-primary">Disponibilité par date <span class="text-muted fw-normal">(0 départ)</span></summary>' +
-            '<div class="tour-room-date-availability-empty alert alert-warning py-2 px-3 small mt-2 mb-0">Ajoutez d\'abord des dates dans l\'onglet Disponibilité.</div>' +
-            '<div class="table-responsive mt-2 d-none">' +
-            '  <table class="table table-sm align-middle mb-0 tour-room-date-availability-table">' +
-            '    <thead><tr><th>Date</th><th>Chambres</th><th>Places</th><th>Statut</th><th>Supplément</th></tr></thead>' +
-            '    <tbody></tbody>' +
-            '  </table>' +
-            '</div>';
-        body.appendChild(wrapper);
-
-        return wrapper;
-    }
-
-    function buildAvailabilityRow(roomRow, travelDate, existing) {
-        var hotelIndex = roomRow.getAttribute('data-hotel-index') || '0';
-        var roomIndex = roomRow.getAttribute('data-room-index') || '0';
-        var defaults = roomDefaults(roomRow);
-        var keyBase = 'tour_hotels[' + hotelIndex + '][rooms][' + roomIndex + '][date_availabilities][' + travelDate.index + ']';
-        var status = (existing && existing.status) ? existing.status : defaults.status;
-        var availableRooms = existing && existing.availableRooms !== '' ? existing.availableRooms : String(defaults.availableRooms);
-        var availablePlaces = existing && existing.availablePlaces !== '' ? existing.availablePlaces : String(defaults.availablePlaces);
-        var supplement = existing && existing.supplement !== '' ? existing.supplement : String(defaults.supplement);
-        var idHtml = existing && existing.id
-            ? '<input type="hidden" name="' + keyBase + '[id]" value="' + existing.id + '">'
-            : '';
-
-        return '' +
-            '<tr class="tour-room-date-availability-row" data-date-index="' + travelDate.index + '" data-travel-date-id="' + travelDate.id + '" data-date="' + travelDate.date + '">' +
-            '  <td>' +
-            '    <div class="fw-semibold small">' + travelDate.label + '</div>' +
-            '    <div class="text-muted x-small">' + travelDate.date + '</div>' +
-                 idHtml +
-            '    <input type="hidden" name="' + keyBase + '[travel_date_id]" value="' + travelDate.id + '">' +
-            '    <input type="hidden" name="' + keyBase + '[date]" value="' + travelDate.date + '">' +
-            '  </td>' +
-            '  <td><input type="number" class="form-control form-control-sm tour-room-date-available-rooms" name="' + keyBase + '[available_rooms]" value="' + availableRooms + '" min="0"></td>' +
-            '  <td><input type="number" class="form-control form-control-sm tour-room-date-available-places" name="' + keyBase + '[available_places]" value="' + availablePlaces + '" min="0"></td>' +
-            '  <td><select class="form-select form-select-sm tour-room-date-status" name="' + keyBase + '[status]">' +
-            '      <option value="available"' + (status === 'available' ? ' selected' : '') + '>Disponible</option>' +
-            '      <option value="limited"' + (status === 'limited' ? ' selected' : '') + '>Limité</option>' +
-            '      <option value="full"' + (status === 'full' ? ' selected' : '') + '>Complet</option>' +
-            '      <option value="closed"' + (status === 'closed' ? ' selected' : '') + '>Fermé</option>' +
-            '  </select></td>' +
-            '  <td><input type="number" class="form-control form-control-sm tour-room-date-supplement" name="' + keyBase + '[supplement]" value="' + supplement + '" min="0" step="0.01"></td>' +
-            '</tr>';
-    }
-
-    function syncTravelDateSeatPreview() {
-        var travelDates = getTravelDates();
-        if (!travelDates.length) return;
-
-        travelDates.forEach(function (travelDate) {
-            var total = 0;
-            document.querySelectorAll('.tour-room-row').forEach(function (roomRow) {
-                var activeCheckbox = roomRow.querySelector('.tour-room-is-active');
-                if (activeCheckbox && !activeCheckbox.checked) return;
-
-                var row = roomRow.querySelector('.tour-room-date-availability-row[data-travel-date-id="' + travelDate.id + '"]')
-                    || roomRow.querySelector('.tour-room-date-availability-row[data-date="' + travelDate.date + '"]');
-                if (!row) return;
-
-                var statusInput = row.querySelector('.tour-room-date-status');
-                var status = statusInput ? String(statusInput.value || 'available') : 'available';
-                if (status === 'full' || status === 'closed') return;
-
-                var placesInput = row.querySelector('.tour-room-date-available-places');
-                total += toInt(placesInput ? placesInput.value : 0);
-            });
-
-            if (travelDate.seatsInput) {
-                travelDate.seatsInput.value = total;
-            }
-        });
-    }
-
-    function syncRoomAvailability(roomRow) {
-        if (!roomRow) return;
-
-        var panel = ensureAvailabilityPanel(roomRow);
-        if (!panel) return;
-
-        var summaryCount = panel.querySelector('summary .text-muted');
-        var emptyState = panel.querySelector('.tour-room-date-availability-empty');
-        var tableWrap = panel.querySelector('.table-responsive');
-        var tbody = panel.querySelector('tbody');
-        var travelDates = getTravelDates();
-        var existingRows = collectExistingAvailability(roomRow);
-
-        if (summaryCount) {
-            summaryCount.textContent = '(' + travelDates.length + ' départ' + (travelDates.length > 1 ? 's' : '') + ')';
-        }
-
-        if (!travelDates.length) {
-            if (emptyState) emptyState.classList.remove('d-none');
-            if (tableWrap) tableWrap.classList.add('d-none');
-            if (tbody) tbody.innerHTML = '';
-            return;
-        }
-
-        if (emptyState) emptyState.classList.add('d-none');
-        if (tableWrap) tableWrap.classList.remove('d-none');
-        if (tbody) {
-            tbody.innerHTML = travelDates.map(function (travelDate) {
-                var key = availabilityKey(travelDate);
-                return buildAvailabilityRow(roomRow, travelDate, existingRows[key]);
-            }).join('');
-        }
-    }
-
-    function syncAllRoomAvailabilities() {
-        document.querySelectorAll('.tour-room-row').forEach(syncRoomAvailability);
-        syncTravelDateSeatPreview();
-    }
-
-    window.syncTourHotelRoomAvailabilityTables = syncAllRoomAvailabilities;
-    window.syncTravelDateSeatPreview = syncTravelDateSeatPreview;
-
-    document.addEventListener('voyage:travel-dates-changed', function () {
-        syncAllRoomAvailabilities();
+    container.querySelectorAll('.tour-hotel-row').forEach(function (row) {
+        validateCheckInOut(row);
+        refreshHotelCard(row);
     });
-
-    document.addEventListener('change', function (event) {
-        var target = event.target;
-        if (!target) return;
-
-        if (target.name && target.name.indexOf('travel_dates[') === 0) {
-            syncAllRoomAvailabilities();
-            return;
-        }
-
-        if (target.closest('.tour-room-row') && (
-            (target.name && target.name.indexOf('[room_count]') !== -1) ||
-            (target.name && target.name.indexOf('[capacity_adults]') !== -1) ||
-            (target.name && target.name.indexOf('[capacity_children]') !== -1) ||
-            (target.name && target.name.indexOf('[capacity_total]') !== -1) ||
-            (target.name && target.name.indexOf('[supplement]') !== -1 && target.name.indexOf('[date_availabilities]') === -1)
-        )) {
-            syncRoomAvailability(target.closest('.tour-room-row'));
-            syncTravelDateSeatPreview();
-            return;
-        }
-
-        if (target.classList.contains('tour-room-date-status')) {
-            var row = target.closest('.tour-room-date-availability-row');
-            if (row && (target.value === 'full' || target.value === 'closed')) {
-                var roomsInput = row.querySelector('.tour-room-date-available-rooms');
-                var placesInput = row.querySelector('.tour-room-date-available-places');
-                if (roomsInput) roomsInput.value = '0';
-                if (placesInput) placesInput.value = '0';
-            }
-            syncTravelDateSeatPreview();
-            return;
-        }
-
-        if (target.classList.contains('tour-room-date-available-rooms') || target.classList.contains('tour-room-date-available-places')) {
-            syncTravelDateSeatPreview();
-        }
-    });
-
-    document.addEventListener('click', function (event) {
-        var target = event.target;
-        if (!target) return;
-
-        if (target.classList.contains('tour-add-room')
-            || target.classList.contains('tour-remove-room')
-            || target.classList.contains('tour-remove-row')
-            || target.id === 'tour-add-hotel'
-            || target.classList.contains('remove-travel-date')
-            || target.id === 'add-travel-date') {
-            setTimeout(syncAllRoomAvailabilities, 0);
-        }
-    });
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', syncAllRoomAvailabilities);
-    } else {
-        syncAllRoomAvailabilities();
-    }
+    updateHotelsTitle();
+    notifyHotelsChanged();
 })();
 </script>

@@ -1,5 +1,5 @@
 .ajha-ref-section {
-    padding: 14px 0 28px;
+    padding: 10px 0 22px;
     background: transparent;
 }
 
@@ -18,8 +18,8 @@
 }
 
 .ajha-ref-accordion {
-    --ajha-tab-width: 2.15rem;
-    --ajha-height: clamp(250px, 62vw, 330px);
+    --ajha-tab-width: 1.9rem;
+    --ajha-height: clamp(180px, 48vw, 200px);
     display: flex;
     width: 100%;
     min-width: 0;
@@ -83,10 +83,10 @@
     white-space: nowrap;
     transform: rotate(90deg);
     color: #ffffff;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
     line-height: 1;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     pointer-events: none;
     user-select: none;
@@ -142,13 +142,13 @@
 }
 
 .ajha-ref-accordion__cta-wrap--default {
-    right: 5%;
-    bottom: 10%;
+    right: 4.5%;
+    bottom: 8%;
 }
 
 .ajha-ref-accordion__cta-wrap--arabic {
-    right: 12%;
-    bottom: 10%;
+    right: 9%;
+    bottom: 8%;
 }
 
 body .ajha-ref-accordion__cta {
@@ -164,10 +164,10 @@ body .ajha-ref-accordion__cta {
 }
 
 body .ajha-ref-accordion__cta--orange {
-    padding: 0.4rem 1rem;
+    padding: 0.36rem 0.9rem;
     background: #ff7200 !important;
     color: #ffffff !important;
-    font-size: 9px !important;
+    font-size: 8px !important;
     font-weight: 700;
     font-family: 'Poppins', Arial, sans-serif !important;
     letter-spacing: 0.05em !important;
@@ -180,10 +180,10 @@ body .ajha-ref-accordion__cta--orange:hover {
 }
 
 body .ajha-ref-accordion__cta--arabic {
-    padding: 0.4rem 1.55rem;
+    padding: 0.34rem 1.25rem;
     background: #ffffff !important;
     color: #0081bc !important;
-    font-size: 0.9rem !important;
+    font-size: 0.82rem !important;
     font-weight: 700;
     font-family: 'Cairo', 'Noto Sans Arabic', sans-serif !important;
     letter-spacing: 0 !important;
@@ -207,63 +207,63 @@ body .ajha-ref-accordion__cta--arabic:hover {
 
 @media (min-width: 640px) {
     .ajha-ref-accordion {
-        --ajha-tab-width: 2.55rem;
-        --ajha-height: clamp(265px, 44vw, 350px);
+        --ajha-tab-width: 2.2rem;
+        --ajha-height: clamp(220px, 34vw, 240px);
     }
 
     .ajha-ref-accordion__tabtext {
-        font-size: 12px;
+        font-size: 10px;
     }
 
     .ajha-ref-accordion__cta-wrap--default {
-        right: 7%;
-        bottom: 13%;
+        right: 6%;
+        bottom: 10%;
     }
 
     .ajha-ref-accordion__cta-wrap--arabic {
-        right: 15%;
-        bottom: 13%;
+        right: 11%;
+        bottom: 10%;
     }
 
     body .ajha-ref-accordion__cta--orange {
-        padding: 0.42rem 1.45rem;
-        font-size: 10px !important;
+        padding: 0.4rem 1.15rem;
+        font-size: 9px !important;
     }
 
     body .ajha-ref-accordion__cta--arabic {
-        padding: 0.42rem 2rem;
-        font-size: 1.1rem !important;
+        padding: 0.38rem 1.55rem;
+        font-size: 0.92rem !important;
     }
 }
 
 @media (min-width: 992px) {
     .ajha-ref-accordion {
-        --ajha-tab-width: 3.5rem;
-        --ajha-height: clamp(300px, 30vw, 360px);
+        --ajha-tab-width: 2.85rem;
+        --ajha-height: clamp(260px, 24vw, 300px);
     }
 
     .ajha-ref-accordion__tabtext {
-        font-size: 18px;
+        font-size: 14px;
     }
 
     .ajha-ref-accordion__cta-wrap--default {
-        right: 10%;
-        bottom: 15%;
+        right: 8%;
+        bottom: 11%;
     }
 
     .ajha-ref-accordion__cta-wrap--arabic {
-        right: 18%;
-        bottom: 16%;
+        right: 13%;
+        bottom: 11%;
     }
 
     body .ajha-ref-accordion__cta--orange {
-        padding: 0.5rem 2rem;
-        font-size: 0.875rem !important;
+        padding: 0.46rem 1.55rem;
+        font-size: 0.76rem !important;
     }
 
     body .ajha-ref-accordion__cta--arabic {
-        padding: 0.5rem 2.5rem;
-        font-size: 1.25rem !important;
+        padding: 0.44rem 1.95rem;
+        font-size: 1rem !important;
     }
 }
 

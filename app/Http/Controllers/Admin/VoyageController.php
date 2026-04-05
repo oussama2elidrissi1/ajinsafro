@@ -23,6 +23,7 @@ use App\Models\TravelDepartureFlight;
 use App\Models\VoyageDeparturePlace;
 use App\Models\TravelDate;
 use App\Models\Departure;
+use App\Models\DepartureRoomAllocation;
 use App\Services\AdminWpTourCatalogQuery;
 use App\Services\VoyageAvailabilityService;
 use App\Services\VoyageFlightService;
@@ -871,19 +872,12 @@ class VoyageController extends Controller
             $address = trim((string) ($raw['address'] ?? ''));
             $mealPlan = trim((string) ($raw['meal_plan'] ?? ''));
             $notes = trim((string) ($raw['notes'] ?? ''));
-            $roomType = trim((string) ($raw['room_type'] ?? ''));
-            $rooms = isset($raw['rooms']) && is_array($raw['rooms']) ? $raw['rooms'] : [];
-            $hasRoomPayload = collect($rooms)->contains(function ($room) {
-                return is_array($room) && trim((string) ($room['room_type'] ?? '')) !== '';
-            });
             $hasHotelPayload = $hotelName !== ''
                 || $address !== ''
                 || $mealPlan !== ''
                 || $notes !== ''
-                || $roomType !== ''
                 || ! empty($raw['image_id'])
-                || ! empty($raw['is_optional'])
-                || $hasRoomPayload;
+                || ! empty($raw['is_optional']);
             if (! $hasHotelPayload) {
                 continue;
             }
@@ -896,7 +890,6 @@ class VoyageController extends Controller
                 'hotel_name' => $hotelName !== '' ? $hotelName : null,
                 'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
                 'address' => $address !== '' ? $address : null,
-                'room_type' => $roomType !== '' ? $roomType : null,
                 'meal_plan' => $mealPlan !== '' ? $mealPlan : null,
                 'notes' => $notes !== '' ? $notes : null,
                 'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
@@ -1350,13 +1343,13 @@ class VoyageController extends Controller
                 'travel_id' => $tourId,
                 'date' => $date,
                 'is_active' => isset($dateData['is_active']) ? (bool) $dateData['is_active'] : true,
+                'seats' => isset($dateData['seats']) && $dateData['seats'] !== '' ? max(0, (int) $dateData['seats']) : 0,
                 'price_override' => isset($dateData['price_override']) && $dateData['price_override'] !== '' ? $dateData['price_override'] : null,
             ];
             if ($travelDate) {
                 $travelDate->fill($payload);
                 $travelDate->save();
             } else {
-                $payload['seats'] = isset($dateData['seats']) && $dateData['seats'] !== '' ? (int) $dateData['seats'] : 0;
                 $travelDate = TravelDate::create($payload);
             }
             $resolvedByDate[$date] = $travelDate->fresh();
@@ -1468,33 +1461,19 @@ class VoyageController extends Controller
             }
         }
     }
-    private function syncTravelDateSeatsFromRoomAvailabilities(int $tourId, Collection $travelDates, int $fallbackSeats): int
+    private function computeMaxPeopleFromTravelDates(Collection $travelDates, int $fallbackSeats): int
     {
         if ($travelDates->isEmpty()) {
             return $fallbackSeats;
         }
-        $availabilityTotals = TourHotelRoomAvailability::where('tour_id', $tourId)
-            ->whereIn('travel_date_id', $travelDates->pluck('id')->all())
-            ->get()
-            ->groupBy('travel_date_id')
-            ->map(function (Collection $items) {
-                return $items->sum(function (TourHotelRoomAvailability $item) {
-                    if (in_array($item->status, [TourHotelRoomAvailability::STATUS_FULL, TourHotelRoomAvailability::STATUS_CLOSED], true)) {
-                        return 0;
-                    }
-                    return max(0, (int) $item->available_places);
-                });
-            });
+
         $maxSeats = 0;
         foreach ($travelDates as $travelDate) {
-            $seats = $availabilityTotals->has($travelDate->id)
-                ? (int) $availabilityTotals->get($travelDate->id)
-                : $fallbackSeats;
-            $travelDate->seats = $seats;
-            $travelDate->save();
+            $seats = max(0, (int) ($travelDate->seats ?? 0));
             $maxSeats = max($maxSeats, $seats);
         }
-        return $maxSeats;
+
+        return $maxSeats > 0 ? $maxSeats : $fallbackSeats;
     }
     private function buildDefaultRoomDateAvailabilityPayload(TourHotelRoom $room): array
     {
@@ -1524,6 +1503,173 @@ class VoyageController extends Controller
      * Compatibilité : 1 date WP (aj_travel_dates) = 1 départ Laravel (departures).
      * Stocke wp_travel_date_id pour faire le lien avec les réservations existantes (travel_date_id).
      */
+    private function syncDepartureRoomAllocations(Voyage $voyage, Request $request, Collection $travelDates, array $hotelIdsOrdered = []): void
+    {
+        $activeTravelDates = $travelDates
+            ->filter(fn (TravelDate $travelDate) => (bool) ($travelDate->is_active ?? false) && $travelDate->date)
+            ->values();
+
+        if ($activeTravelDates->isEmpty()) {
+            return;
+        }
+
+        $postedAllocations = $request->input('departure_allocations', []);
+        $postedAllocations = is_array($postedAllocations) ? array_values($postedAllocations) : [];
+
+        foreach ($activeTravelDates as $travelDate) {
+            $departure = $this->resolveDepartureForTravelDate($voyage, $travelDate);
+            if (! $departure) {
+                continue;
+            }
+
+            $postedRow = $this->findPostedDepartureAllocationRow($postedAllocations, $departure, $travelDate);
+            if (is_array($postedRow)) {
+                $rows = $this->normalizePostedDepartureAllocationRooms($postedRow['rooms'] ?? [], $hotelIdsOrdered);
+                $this->replaceDepartureRoomAllocations($departure, $rows !== [] ? $rows : $this->buildDefaultDepartureRoomAllocations((int) $departure->total_capacity));
+                continue;
+            }
+
+            if (! $departure->roomAllocations()->exists()) {
+                $this->replaceDepartureRoomAllocations($departure, $this->buildDefaultDepartureRoomAllocations((int) $departure->total_capacity));
+            }
+        }
+    }
+
+    private function resolveDepartureForTravelDate(Voyage $voyage, TravelDate $travelDate): ?Departure
+    {
+        $wpTravelDateId = (int) ($travelDate->id ?? 0);
+        $date = optional($travelDate->date)?->format('Y-m-d');
+
+        return Departure::query()
+            ->where('voyage_id', (int) $voyage->id)
+            ->where(function ($query) use ($wpTravelDateId, $date) {
+                if ($wpTravelDateId > 0) {
+                    $query->where('wp_travel_date_id', $wpTravelDateId);
+                }
+
+                if ($date !== null) {
+                    $method = $wpTravelDateId > 0 ? 'orWhereDate' : 'whereDate';
+                    $query->{$method}('start_date', $date);
+                }
+            })
+            ->orderBy('id')
+            ->first();
+    }
+
+    private function findPostedDepartureAllocationRow(array $postedAllocations, Departure $departure, TravelDate $travelDate): ?array
+    {
+        $departureId = (int) $departure->id;
+        $travelDateId = (int) ($travelDate->id ?? 0);
+        $date = optional($travelDate->date)?->format('Y-m-d');
+
+        foreach ($postedAllocations as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $rowDepartureId = isset($row['departure_id']) && $row['departure_id'] !== '' ? (int) $row['departure_id'] : 0;
+            $rowTravelDateId = isset($row['travel_date_id']) && $row['travel_date_id'] !== '' ? (int) $row['travel_date_id'] : 0;
+            $rowDate = trim((string) ($row['date'] ?? ''));
+
+            if ($rowDepartureId > 0 && $rowDepartureId === $departureId) {
+                return $row;
+            }
+
+            if ($rowTravelDateId > 0 && $travelDateId > 0 && $rowTravelDateId === $travelDateId) {
+                return $row;
+            }
+
+            if ($date !== null && $rowDate !== '' && $rowDate === $date) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizePostedDepartureAllocationRooms(array $rows, array $hotelIdsOrdered = []): array
+    {
+        $normalized = [];
+        $sortOrder = 0;
+
+        foreach (array_values($rows) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $roomType = trim((string) ($row['room_type'] ?? ''));
+            if ($roomType === '') {
+                continue;
+            }
+
+            $hotelIndex = isset($row['hotel_index']) && $row['hotel_index'] !== '' ? max(0, (int) $row['hotel_index']) : null;
+            $hotelId = isset($row['hotel_id']) && $row['hotel_id'] !== '' ? (int) $row['hotel_id'] : null;
+            if ($hotelIndex !== null && array_key_exists($hotelIndex, $hotelIdsOrdered)) {
+                $hotelId = (int) $hotelIdsOrdered[$hotelIndex];
+            } elseif ($hotelId !== null && ! in_array($hotelId, $hotelIdsOrdered, true)) {
+                $hotelId = null;
+            }
+
+            $normalized[] = [
+                'hotel_id' => $hotelId,
+                'room_type' => $roomType,
+                'quantity' => max(0, (int) ($row['quantity'] ?? 0)),
+                'capacity_per_room' => max(1, (int) ($row['capacity_per_room'] ?? 1)),
+                'sort_order' => $sortOrder++,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function replaceDepartureRoomAllocations(Departure $departure, array $rows): void
+    {
+        DepartureRoomAllocation::query()->where('departure_id', (int) $departure->id)->delete();
+
+        foreach ($rows as $row) {
+            DepartureRoomAllocation::query()->create([
+                'departure_id' => (int) $departure->id,
+                'hotel_id' => $row['hotel_id'] ?? null,
+                'room_type' => (string) $row['room_type'],
+                'quantity' => max(0, (int) ($row['quantity'] ?? 0)),
+                'capacity_per_room' => max(1, (int) ($row['capacity_per_room'] ?? 1)),
+                'sort_order' => max(0, (int) ($row['sort_order'] ?? 0)),
+            ]);
+        }
+    }
+
+    private function buildDefaultDepartureRoomAllocations(int $capacity): array
+    {
+        $capacity = max(0, $capacity);
+        if ($capacity === 0) {
+            return [];
+        }
+
+        $rows = [];
+        $doubleQty = intdiv($capacity, 2);
+        if ($doubleQty > 0) {
+            $rows[] = [
+                'hotel_id' => null,
+                'room_type' => 'Double',
+                'quantity' => $doubleQty,
+                'capacity_per_room' => 2,
+                'sort_order' => 0,
+            ];
+        }
+
+        if ($capacity % 2 !== 0) {
+            $rows[] = [
+                'hotel_id' => null,
+                'room_type' => 'Single',
+                'quantity' => 1,
+                'capacity_per_room' => 1,
+                'sort_order' => count($rows),
+            ];
+        }
+
+        return $rows;
+    }
+
     private function syncLaravelDeparturesFromWpTravelDates(Voyage $laravelVoyage, Collection $travelDates, int $lastDayNumber, Request $request): void
     {
         if (! $laravelVoyage) {
@@ -1790,28 +1936,6 @@ class VoyageController extends Controller
 
             // HÃ´tels puis chambres (IDs nouveaux aprÃ¨s delete/create) â€” un seul sync hÃ´tels
             $hotelIdsOrdered = $this->syncTourHotels($id, $request);
-            $roomIdsByHotelIndex = $this->syncTourHotelRooms($id, $request, $hotelIdsOrdered);
-
-            // Calcul automatique des places (TourPlacesCalculator = mÃªme rÃ¨gles que le JS formulaire)
-            $totalPlaces = $this->computeTourTotalPlacesFromRooms($id);
-            if (config('app.debug')) {
-                $hotelsForLog = TourHotel::getAllForTour($id)->load('rooms');
-                $dbExplain = TourPlacesCalculator::explainFromDatabase($hotelsForLog);
-                $reqHotelsRaw = $request->input('tour_hotels', []);
-                $reqExplain = TourPlacesCalculator::explainFromRequestArray(is_array($reqHotelsRaw) ? $reqHotelsRaw : []);
-                \Log::info('TourPlacesCalculator debug @ VoyageController::update', [
-                    'tour_id' => $id,
-                    'persisted_total' => $totalPlaces,
-                    'posted_max_people' => $request->input('max_people'),
-                    'request_total' => $reqExplain['total'],
-                    'request_lines' => $reqExplain['lines'],
-                    'request_ignored' => $reqExplain['ignored'],
-                    'db_total_after_sync' => $dbExplain['total'],
-                    'db_lines' => $dbExplain['lines'],
-                    'db_ignored' => $dbExplain['ignored'],
-                    'request_vs_db_total_diff' => $reqExplain['total'] - $dbExplain['total'],
-                ]);
-            }
             $this->syncTourTransfers($id, $request, $lastDayNumber);
 
             // Synchroniser les lieux de d?part et les dates disponibles
@@ -1833,10 +1957,10 @@ class VoyageController extends Controller
                 'laravel_departures_count_before_sync' => Departure::query()->where('voyage_id', $laravelVoyage->id)->count(),
             ]);
 
-            $this->syncTourHotelRoomDateAvailabilities($id, $request, $hotelIdsOrdered, $roomIdsByHotelIndex, $travelDates);
-            $maxPeople = $this->syncTravelDateSeatsFromRoomAvailabilities($id, $travelDates, $totalPlaces);
+            $maxPeople = $this->computeMaxPeopleFromTravelDates($travelDates, (int) $request->input('max_people', 0));
             $this->repository->updateTour($id, ['max_people' => $maxPeople, 'places' => $maxPeople]);
             $this->syncLaravelDeparturesFromWpTravelDates($laravelVoyage, $travelDates, $lastDayNumber, $request);
+            $this->syncDepartureRoomAllocations($laravelVoyage, $request, $travelDates, $hotelIdsOrdered);
 
             \Log::info('AVAILABILITY_SYNC_CHECK', [
                 'laravel_voyage_id' => $laravelVoyage->id,
