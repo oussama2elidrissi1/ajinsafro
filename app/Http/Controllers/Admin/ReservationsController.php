@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Departure;
+use App\Models\DepartureHotelRoom;
+use App\Models\Hotel;
 use App\Models\Reservation;
+use App\Models\ReservationExtra;
 use App\Models\TourHotel;
 use App\Models\TravelDate;
 use App\Models\User;
@@ -25,6 +28,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -224,20 +228,27 @@ class ReservationsController extends Controller
 
     /**
      * Formulaire de création de réservation.
-     * Préremplissage depuis le calendrier : tour_id, travel_date_id (optionnel).
-     * Le voyage affiché vient du tour_id (Voyage Laravel). Les libellés viennent de WordPress quand disponible.
+     * Préremplissage depuis le calendrier / workspace : voyage_id ou tour_id, travel_date_id (optionnel).
+     * Le voyage affiché vient du Voyage Laravel. Les libellés viennent de WordPress quand disponible.
      */
     public function create(Request $request): View
     {
-        $requestedTourId = (int) $request->query('tour_id', 0);
+        $requestedTourId = (int) $request->query('voyage_id', $request->query('tour_id', 0));
         $travelDateId = (int) $request->query('travel_date_id', 0);
+        $requestedDepartureId = (int) $request->query('departure_id', 0);
 
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
         $this->branchScope->scopeClients($clientsQuery, $request->user());
         $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone']);
-        $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug', 'wp_post_id']);
+        $voyages = Voyage::query()
+            ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+            ->orderByDesc('id')
+            ->limit(200)
+            ->get(['id', 'name', 'slug', 'wp_post_id']);
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
-            $requestedVoyage = Voyage::find($requestedTourId);
+            $requestedVoyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->find($requestedTourId);
             if ($requestedVoyage) {
                 $voyages = $voyages->prepend($requestedVoyage)->unique('id')->values();
             }
@@ -269,6 +280,69 @@ class ReservationsController extends Controller
             }
         }
 
+        $selectedDeparture = null;
+        if ($requestedDepartureId > 0) {
+            $selectedDeparture = Departure::query()->find($requestedDepartureId);
+            if ($selectedDeparture && $requestedTourId > 0 && (int) $selectedDeparture->voyage_id !== $requestedTourId) {
+                $selectedDeparture = null;
+            }
+        }
+        if (! $selectedDeparture && $requestedTourId > 0 && $travelDateId > 0) {
+            $selectedDeparture = Departure::query()
+                ->where('voyage_id', $requestedTourId)
+                ->where('wp_travel_date_id', $travelDateId)
+                ->first();
+        }
+
+        if (config('app.debug')) {
+            Log::debug('reservations.create.prefill', [
+                'query_voyage_id' => $requestedTourId,
+                'query_departure_id' => $requestedDepartureId,
+                'query_travel_date_id' => $travelDateId,
+                'selected_departure' => $selectedDeparture ? [
+                    'id' => (int) $selectedDeparture->id,
+                    'voyage_id' => (int) $selectedDeparture->voyage_id,
+                    'wp_travel_date_id' => (int) ($selectedDeparture->wp_travel_date_id ?? 0),
+                    'start_date' => optional($selectedDeparture->start_date)->format('Y-m-d'),
+                    'status' => $selectedDeparture->status,
+                    'rooms_count' => $selectedDeparture->rooms()->count(),
+                    'allocations_count' => $selectedDeparture->roomAllocations()->count(),
+                ] : null,
+                'selected_travel_date' => $selectedTravelDate ? [
+                    'id' => (int) $selectedTravelDate->id,
+                    'travel_id' => (int) $selectedTravelDate->travel_id,
+                    'date' => optional($selectedTravelDate->date)->format('Y-m-d'),
+                    'is_active' => (bool) $selectedTravelDate->is_active,
+                ] : null,
+                'selected_voyage_extras' => $requestedTourId > 0
+                    ? optional($voyages->firstWhere('id', $requestedTourId))->extras?->map(fn ($e) => [
+                        'id' => (int) $e->id,
+                        'name' => $e->name,
+                        'price_adult' => (float) $e->price_adult,
+                        'price_child' => (float) $e->price_child,
+                        'extra_type' => $e->extra_type,
+                    ])->values()->all()
+                    : [],
+            ]);
+        }
+
+        $extrasByVoyage = $voyages
+            ->mapWithKeys(fn (Voyage $voyage) => [
+                (string) $voyage->id => $voyage->extras
+                    ->where('is_active', true)
+                    ->values()
+                    ->map(fn ($extra) => [
+                        'id' => (int) $extra->id,
+                        'name' => (string) $extra->name,
+                        'description' => (string) ($extra->description ?? ''),
+                        'price_adult' => (float) ($extra->price_adult ?? 0),
+                        'price_child' => (float) ($extra->price_child ?? 0),
+                        'extra_type' => (string) ($extra->extra_type ?? ''),
+                        'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
+                    ])->all(),
+            ])
+            ->all();
+
         $preselectedTourId = null;
         if ($requestedTourId > 0 && $voyages->contains('id', $requestedTourId)) {
             $preselectedTourId = $requestedTourId;
@@ -279,9 +353,11 @@ class ReservationsController extends Controller
             'wpTitles' => $wpTitles,
             'clients' => $clients,
             'selectedTravelDate' => $selectedTravelDate,
+            'selectedDepartureId' => $selectedDeparture?->id,
             'travelDateId' => $travelDateId > 0 ? $travelDateId : null,
             'preselectedTourId' => $preselectedTourId,
             'travelDateIncoherent' => $travelDateIncoherent,
+            'extrasByVoyage' => $extrasByVoyage,
         ]);
     }
 
@@ -368,7 +444,11 @@ class ReservationsController extends Controller
             return response()->json(['hotels' => [], 'currency' => 'DH', 'departure_id' => null]);
         }
         $departure = Departure::query()
-            ->with(['departureHotels' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'), 'departureHotels.rooms'])
+            ->with([
+                'departureHotels' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'),
+                'departureHotels.rooms' => fn ($q) => $q->orderBy('id'),
+                'roomAllocations',
+            ])
             ->find($departureId);
         if (! $departure) {
             return response()->json(['hotels' => [], 'currency' => 'DH', 'departure_id' => null]);
@@ -391,6 +471,57 @@ class ReservationsController extends Controller
                 ])->values()->all(),
             ];
         })->all();
+
+        if (empty($hotels) && $departure->roomAllocations->isNotEmpty()) {
+            $hotelNames = Hotel::query()
+                ->whereIn('id', $departure->roomAllocations->pluck('hotel_id')->filter(fn ($id) => (int) $id > 0)->unique()->values())
+                ->get(['id', 'name'])
+                ->keyBy('id');
+
+            $hotels = $departure->roomAllocations
+                ->groupBy(fn ($allocation) => (int) ($allocation->hotel_id ?? 0))
+                ->map(function ($allocations, $hotelId) use ($hotelNames) {
+                    $hotelId = (int) $hotelId;
+                    $hotelName = $hotelId > 0
+                        ? (optional($hotelNames->get($hotelId))->name ?: 'Hôtel')
+                        : 'Répartition du départ';
+
+                    return [
+                        'departure_hotel_id' => null,
+                        'hotel_name' => $hotelName,
+                        'rooms' => $allocations->map(function ($allocation) {
+                            $qty = max(0, (int) ($allocation->quantity ?? 0));
+                            $cap = max(1, (int) ($allocation->capacity_per_room ?? 1));
+
+                            return [
+                                'departure_hotel_room_id' => null,
+                                'room_type' => $allocation->room_type,
+                                'capacity_total' => $cap,
+                                'available_rooms' => $qty,
+                                'available_places' => $qty * $cap,
+                                'supplement' => 0,
+                                'status' => DepartureHotelRoom::STATUS_AVAILABLE,
+                            ];
+                        })->values()->all(),
+                        'source' => 'allocations',
+                    ];
+                })
+                ->values()
+                ->all();
+        }
+
+        if (config('app.debug')) {
+            Log::debug('reservations.departure_hotels_rooms', [
+                'departure_id' => $departure->id,
+                'voyage_id' => (int) $departure->voyage_id,
+                'wp_travel_date_id' => (int) ($departure->wp_travel_date_id ?? 0),
+                'departure_hotels_count' => $departure->departureHotels->count(),
+                'departure_rooms_count' => $departure->rooms()->count(),
+                'room_allocations_count' => $departure->roomAllocations->count(),
+                'response_hotels_count' => count($hotels),
+                'response_hotels' => $hotels,
+            ]);
+        }
 
         return response()->json([
             'departure_id' => $departure->id,
@@ -421,6 +552,7 @@ class ReservationsController extends Controller
             'payment_type' => 'nullable|in:CASHPLUS,VIREMENT,ESPECE',
             'payment_receipt' => 'nullable|file|max:5120',
             'base_price' => 'nullable|numeric|min:0',
+            'extras_json' => 'nullable|string',
             'hotel_rooms' => 'nullable|array',
             'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',
             'hotel_rooms.*.tour_hotel_id' => 'nullable|integer',
@@ -474,6 +606,27 @@ class ReservationsController extends Controller
             $request->file('payment_receipt'),
             $request->file('visa_document')
         );
+
+        $extrasPayload = [];
+        if ($request->filled('extras_json')) {
+            $decoded = json_decode($request->string('extras_json')->toString(), true);
+            $extrasPayload = is_array($decoded) ? $decoded : [];
+        }
+        foreach ($extrasPayload as $extra) {
+            if (! is_array($extra)) {
+                continue;
+            }
+            $name = trim((string) ($extra['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            ReservationExtra::query()->create([
+                'reservation_id' => $reservation->id,
+                'name' => $name,
+                'price' => isset($extra['price']) ? (float) $extra['price'] : 0,
+                'passenger_key' => isset($extra['voyage_extra_id']) ? 'voyage_extra:'.(int) $extra['voyage_extra_id'] : null,
+            ]);
+        }
 
         $tourId = (int) $reservation->tour_id;
         $tdId = isset($data['travel_date_id']) && $data['travel_date_id'] !== null && $data['travel_date_id'] !== ''

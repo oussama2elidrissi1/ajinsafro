@@ -18,7 +18,8 @@
         'travel_date_id',
         $reservation?->travel_date_id ?? ($selectedTravelDate?->id ?? '')
     );
-    $initialDepartureId = old('departure_id', $reservation?->departure_id ?? '');
+    $selectedDepartureId = $selectedDepartureId ?? null;
+    $initialDepartureId = old('departure_id', $reservation?->departure_id ?? $selectedDepartureId ?? '');
 
     $legacyEdit = $reservation && ! $reservation->departure_id && $tourHotelsWithRooms->isNotEmpty();
     $reservationRoomsByKey = $reservation
@@ -202,13 +203,21 @@
         if (supEl) supEl.textContent = '—';
 
         var basePrice = parseFloat(document.querySelector('input[name="base_price"]')?.value || '0') || 0;
-        if (gtEl) gtEl.textContent = basePrice > 0 ? basePrice.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' DH' : '—';
+        var extrasTotal = 0;
+        if (typeof window.reservationCreateGetExtrasTotal === 'function') {
+            extrasTotal = Number(window.reservationCreateGetExtrasTotal() || 0);
+        }
+        if (gtEl) {
+            var total = basePrice + extrasTotal;
+            gtEl.textContent = total > 0 ? total.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' DH' : '—';
+        }
 
         var errEl = document.getElementById('reservation-capacity-error');
         if (errEl) errEl.classList.add('d-none');
 
         if (summaryBlock && document.querySelector('.reservation-hotel-block')) summaryBlock.classList.remove('d-none');
     }
+    window.reservationCreateRecomputeTotals = updateSummary;
 
     document.querySelector('input[name="base_price"]')?.addEventListener('input', updateSummary);
 
@@ -227,7 +236,7 @@
         hotels.forEach(function(h) {
             html += '<div class="card mb-2 reservation-hotel-block" data-departure-hotel-id="' + h.departure_hotel_id + '"><div class="card-header bg-light py-2"><strong>' + (h.hotel_name || 'Hôtel') + '</strong></div><div class="card-body py-2"><div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead><tr><th>Type</th><th class="text-center">Places dispo</th><th class="text-center">Chambres dispo</th><th class="text-center">Cap.</th><th class="text-center">Suppl. unit.</th><th class="text-center">Nb chambres</th><th class="text-end">Suppl. total</th></tr></thead><tbody>';
             (h.rooms || []).forEach(function(room) {
-                var dhrId = String(room.departure_hotel_room_id);
+                var dhrId = room.departure_hotel_room_id == null ? '' : String(room.departure_hotel_room_id);
                 var cnt = initialDepartureRooms[dhrId] != null ? parseInt(initialDepartureRooms[dhrId], 10) : 0;
                 if (isNaN(cnt)) cnt = 0;
                 var supUnit = parseFloat(room.supplement) || 0;

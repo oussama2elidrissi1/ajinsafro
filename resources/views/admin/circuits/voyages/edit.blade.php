@@ -61,37 +61,41 @@
         <div class="ve-shell">
             <div class="ve-page-layout">
                 <div class="ve-main-col">
-                    @include('admin.circuits.voyages.partials._voyage_actions_bar')
-                    @include('admin.circuits.voyages.partials._voyage_tabs_nav')
+                    <div class="ve-editor-frame">
+                        @include('admin.circuits.voyages.partials._voyage_actions_bar')
+                        @include('admin.circuits.voyages.partials._voyage_tabs_nav')
 
-                    <div class="tab-content ve-tab-content pt-4">
-                        @include('admin.circuits.voyages.partials.tabs._basic')
-                        @include('admin.circuits.voyages.partials.tabs._location')
-                        @include('admin.circuits.voyages.partials.tabs._pricing')
-                        @include('admin.circuits.voyages.partials.tabs._information')
-                        @include('admin.circuits.voyages.partials.tabs._extras')
-                        @include('admin.circuits.voyages.partials.tabs._availability')
-                        @include('admin.circuits.voyages.partials.tabs._media')
-                        @include('admin.circuits.voyages.partials.tabs._taxonomies')
-                        @include('admin.circuits.voyages.partials.tabs._flights')
-                        @include('admin.circuits.voyages.partials.tabs._hotels')
-                        @include('admin.circuits.voyages.partials.tabs._transfers')
-                        @include('admin.circuits.voyages.partials.tabs._activities')
-                        @include('admin.circuits.voyages.partials.tabs._programme')
-                    </div>
-
-                    @if (!$isCreate)
-                        <div class="card ve-pane-card ve-danger-zone-card mt-4">
-                            <div class="card-body">
-                                <p class="ve-danger-zone-title"><i class="bx bx-error-circle"></i> Zone dangereuse</p>
-                                <p class="ve-danger-zone-text">Supprimer definitivement ce tour et toutes ses donnees. Action irreversible.</p>
-                                <button type="submit" form="delete-voyage-form" class="btn btn-outline-danger btn-sm"
-                                    onclick="return confirm('Supprimer definitivement ce tour WordPress ? Cette action est irreversible.')">
-                                    <i class="bx bx-trash"></i> Supprimer ce voyage
-                                </button>
+                        <div class="ve-editor-body">
+                            <div class="tab-content ve-tab-content pt-4">
+                                @include('admin.circuits.voyages.partials.tabs._basic')
+                                @include('admin.circuits.voyages.partials.tabs._location')
+                                @include('admin.circuits.voyages.partials.tabs._pricing')
+                                @include('admin.circuits.voyages.partials.tabs._information')
+                                @include('admin.circuits.voyages.partials.tabs._extras')
+                                @include('admin.circuits.voyages.partials.tabs._availability')
+                                @include('admin.circuits.voyages.partials.tabs._media')
+                                @include('admin.circuits.voyages.partials.tabs._taxonomies')
+                                @include('admin.circuits.voyages.partials.tabs._flights')
+                                @include('admin.circuits.voyages.partials.tabs._hotels')
+                                @include('admin.circuits.voyages.partials.tabs._transfers')
+                                @include('admin.circuits.voyages.partials.tabs._activities')
+                                @include('admin.circuits.voyages.partials.tabs._programme')
                             </div>
+
+                            @if (!$isCreate)
+                                <div class="card ve-pane-card ve-danger-zone-card mt-4">
+                                    <div class="card-body">
+                                        <p class="ve-danger-zone-title"><i class="bx bx-error-circle"></i> Suppression definitive</p>
+                                        <p class="ve-danger-zone-text">Supprimez le voyage et ses donnees uniquement si ce dossier ne doit plus etre utilise.</p>
+                                        <button type="submit" form="delete-voyage-form" class="btn btn-outline-danger btn-sm"
+                                            onclick="return confirm('Supprimer definitivement ce tour WordPress ? Cette action est irreversible.')">
+                                            <i class="bx bx-trash"></i> Supprimer ce voyage
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
-                    @endif
+                    </div>
                 </div>
             </div>
 

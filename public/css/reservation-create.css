@@ -1,0 +1,725 @@
+.reservation-create {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 1.5rem 0 3rem;
+}
+
+.reservation-create__header {
+    margin-bottom: 1.5rem;
+}
+
+.reservation-create__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.reservation-create__breadcrumb a {
+    color: #0e3a5a;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.reservation-create__header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.reservation-create__title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.03em;
+}
+
+.reservation-create__subtitle {
+    margin: 0.35rem 0 0;
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    max-width: 52rem;
+}
+
+.reservation-create__back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.9rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.95rem;
+    border: 1px solid #dbe4ee;
+    background: #fff;
+    color: #334155;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.reservation-create__alert {
+    padding: 1rem 1.1rem;
+    border-radius: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.reservation-create__alert--error {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #9f1239;
+}
+
+.reservation-create__alert ul {
+    margin: 0.6rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.reservation-create__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.reservation-create__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.reservation-create__steps-card,
+.reservation-create__summary-card,
+.reservation-create__card,
+#reservation-hotel-card {
+    border: 1px solid #e6edf5;
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: 0 14px 38px rgba(14, 58, 90, 0.05);
+}
+
+.reservation-create__steps-card,
+.reservation-create__summary-card,
+.reservation-create__card {
+    padding: 1.25rem;
+}
+
+.reservation-create__eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+}
+
+.reservation-create__sidebar-title,
+.reservation-create__section-title {
+    margin: 0;
+    color: #0f172a;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.reservation-create__sidebar-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.reservation-create__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.reservation-create__step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.78rem 0.95rem;
+    border-radius: 0.95rem;
+    border: 1px solid #e6edf5;
+    background: #f8fafc;
+    color: #475569;
+    text-align: left;
+    font-weight: 700;
+}
+
+.reservation-create__step.is-active {
+    border-color: rgba(0, 131, 196, 0.3);
+    background: linear-gradient(135deg, #eff8fc 0%, #fff 100%);
+    color: #0e3a5a;
+}
+
+.reservation-create__step-index {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e2e8f0;
+    color: #334155;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.reservation-create__step.is-active .reservation-create__step-index {
+    background: #0e3a5a;
+    color: #fff;
+}
+
+.reservation-create__summary-item + .reservation-create__summary-item {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid #eef2f7;
+}
+
+.reservation-create__summary-item span {
+    display: block;
+    font-size: 0.76rem;
+    color: #64748b;
+    margin-bottom: 0.2rem;
+}
+
+.reservation-create__summary-item strong {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.4;
+}
+
+.reservation-create__panel {
+    display: none;
+}
+
+.reservation-create__panel.is-active {
+    display: block;
+}
+
+.reservation-create__main {
+    min-width: 0;
+}
+
+.reservation-create__section-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
+}
+
+.reservation-create__section-title {
+    font-size: 1.35rem;
+}
+
+.reservation-create__section-subtitle {
+    margin: 0.35rem 0 0;
+    color: #64748b;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    max-width: 46rem;
+}
+
+.reservation-create__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.reservation-create__notice {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 1rem;
+}
+
+.reservation-create__notice--warn {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+}
+
+.reservation-create__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+}
+
+.reservation-create__field {
+    min-width: 0;
+}
+
+.reservation-create__field--full {
+    grid-column: 1 / -1;
+}
+
+.reservation-create__label {
+    display: inline-flex;
+    gap: 0.25rem;
+    margin-bottom: 0.45rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.reservation-create__label span {
+    color: #dc2626;
+}
+
+.reservation-create__input {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.8rem 0.9rem;
+    border-radius: 0.95rem;
+    border: 1px solid #dbe4ee;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 0.93rem;
+}
+
+.reservation-create__input:focus {
+    outline: none;
+    border-color: #0083c4;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(0, 131, 196, 0.12);
+}
+
+.reservation-create__input--textarea {
+    min-height: auto;
+    resize: vertical;
+}
+
+.reservation-create__selection-card,
+.reservation-create__toolbar,
+.reservation-create__placeholder,
+.reservation-create__visa-card,
+.reservation-create__payment-card,
+.reservation-create__final-summary,
+.reservation-create__metric {
+    border: 1px solid #e8eef4;
+    border-radius: 1rem;
+    background: #f8fafc;
+}
+
+.reservation-create__selection-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 1rem 1.1rem;
+}
+
+.reservation-create__selection-item span,
+.reservation-create__final-line span {
+    display: block;
+    font-size: 0.76rem;
+    color: #64748b;
+    margin-bottom: 0.2rem;
+}
+
+.reservation-create__selection-item strong,
+.reservation-create__final-line strong {
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.reservation-create__choice-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.reservation-create__choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid #dbe4ee;
+    border-radius: 0.95rem;
+    background: #f8fafc;
+    font-weight: 700;
+    color: #334155;
+}
+
+.reservation-create__metric {
+    min-width: 7rem;
+    padding: 0.9rem 1rem;
+    text-align: right;
+}
+
+.reservation-create__metric span {
+    display: block;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+.reservation-create__metric strong {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 1.5rem;
+    color: #0e3a5a;
+    font-weight: 800;
+}
+
+.reservation-create__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem 1.1rem;
+}
+
+.reservation-create__toolbar p,
+.reservation-create__placeholder p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.55;
+}
+
+.reservation-create__companions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.reservation-create__extras-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+}
+
+.reservation-create__extra-card {
+    border: 1px solid #e6edf5;
+    border-radius: 1rem;
+    background: #fff;
+    padding: 1rem 1.1rem;
+}
+
+.reservation-create__extra-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.reservation-create__extra-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.reservation-create__extra-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: #64748b;
+}
+
+.reservation-create__extra-price {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.reservation-create__extra-price strong {
+    display: block;
+    color: #0e3a5a;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.reservation-create__extra-price span {
+    display: block;
+    margin-top: 0.15rem;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.reservation-create__extra-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.reservation-create__extra-travelers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #eef2f7;
+}
+
+.reservation-create__extra-traveler {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 0.8rem;
+    background: #f8fafc;
+}
+
+.reservation-create__extra-traveler label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0;
+    font-weight: 700;
+    color: #334155;
+}
+
+.reservation-create__extra-traveler small {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.reservation-create__extra-traveler-price {
+    white-space: nowrap;
+    color: #0e3a5a;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.reservation-create__empty-state,
+.reservation-create__placeholder {
+    padding: 1.1rem 1.15rem;
+}
+
+.reservation-create__empty-state {
+    margin: 0;
+    text-align: center;
+    color: #64748b;
+    border: 1px dashed #d7e3ee;
+    border-radius: 1rem;
+    background: #f8fafc;
+}
+
+.reservation-create__placeholder strong,
+.reservation-create__mini-title {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.reservation-create__companion {
+    position: relative;
+    padding: 1.1rem;
+    border: 1px solid #e6edf5;
+    border-radius: 1rem;
+    background: #fff;
+}
+
+.reservation-create__companion-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.reservation-create__companion-title {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.reservation-create__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid #fecaca;
+    background: #fff1f2;
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.reservation-create__final-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+}
+
+.reservation-create__payment-card,
+.reservation-create__final-summary {
+    padding: 1rem 1.1rem;
+}
+
+.reservation-create__final-line + .reservation-create__final-line {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.reservation-create__final-line--total strong {
+    font-size: 1.25rem;
+    color: #0e3a5a;
+}
+
+.reservation-create__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.reservation-create__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
+.reservation-create__submit-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.reservation-create__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+    padding: 0.78rem 1.1rem;
+    border-radius: 0.95rem;
+    border: 1px solid transparent;
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 800;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.reservation-create__button--primary {
+    background: #0e3a5a;
+    border-color: #0e3a5a;
+    color: #fff;
+}
+
+.reservation-create__button--primary:hover {
+    background: #095985;
+    border-color: #095985;
+    color: #fff;
+}
+
+.reservation-create__button--secondary,
+.reservation-create__button--ghost {
+    background: #fff;
+    color: #334155;
+}
+
+.reservation-create__button--secondary {
+    border-color: #dbe4ee;
+}
+
+.reservation-create__button--ghost {
+    border-color: #e2e8f0;
+}
+
+.d-none {
+    display: none !important;
+}
+
+#reservation-hotel-card .card-body,
+#reservation-hotel-card .card-header {
+    background: transparent;
+    border: 0;
+}
+
+#reservation-hotel-card .card-body {
+    padding: 1.25rem;
+}
+
+#reservation-hotel-card .card-title {
+    color: #0f172a !important;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+#reservation-hotel-card .form-control,
+#reservation-hotel-card .form-select {
+    min-height: 3rem;
+    border-radius: 0.95rem;
+    border-color: #dbe4ee;
+    background: #f8fafc;
+}
+
+#reservation-hotel-card .table-responsive,
+#reservation-hotel-card .reservation-hotel-block {
+    border-radius: 1rem;
+}
+
+@media (min-width: 992px) {
+    .reservation-create__layout {
+        grid-template-columns: 300px minmax(0, 1fr);
+    }
+
+    .reservation-create__sidebar {
+        position: sticky;
+        top: 1.5rem;
+    }
+
+    .reservation-create__grid--two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .reservation-create__selection-card,
+    .reservation-create__final-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .reservation-create__extras-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 991.98px) {
+    .reservation-create__header-main,
+    .reservation-create__toolbar,
+    .reservation-create__actions,
+    .reservation-create__submit-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .reservation-create__metric {
+        text-align: left;
+    }
+
+    .reservation-create__back-link,
+    .reservation-create__button {
+        width: 100%;
+    }
+}

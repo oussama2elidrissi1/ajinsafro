@@ -53,7 +53,9 @@
         </div>
     </main>
 
-    @include('partner_v2.partials.footer')
+    @if(trim($__env->yieldContent('hidePageFooter')) !== '1' && !request()->routeIs('admin.reservations.workspace'))
+        @include('partner_v2.partials.footer')
+    @endif
 
     @include('layouts.vendor-scripts')
     @stack('scripts')
@@ -95,7 +97,9 @@
                 <div class="page-content">
                     @yield('content')
                 </div>
-                @include('layouts.footer')
+                @if(trim($__env->yieldContent('hidePageFooter')) !== '1' && !request()->routeIs('admin.reservations.workspace'))
+                    @include('layouts.footer')
+                @endif
             </div>
 
         </div>

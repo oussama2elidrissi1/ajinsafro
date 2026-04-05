@@ -20,6 +20,12 @@
             'travel_date_id' => $r['travel_date_id'] ?? '',
             'prestation_type' => $r['type'] ?? 'package',
             'label' => ($r['name'] ?? '').' ('.($r['code'] ?? '').')',
+            'create_url' => !empty($r['voyage_id'])
+                ? route('admin.reservations.create', array_filter([
+                    'voyage_id' => (int) $r['voyage_id'],
+                    'travel_date_id' => $r['travel_date_id'] ?? null,
+                ], fn ($value) => $value !== null && $value !== ''))
+                : route('admin.reservations.create'),
         ];
     })->filter()->values()->all();
 @endphp
@@ -504,21 +510,7 @@
     <header class="ws-hero">
         <div class="ws-hero__main">
             <h1 class="ws-hero__title">Espace réservation</h1>
-            <p class="ws-hero__sub">Catalogue des prestations — réserver et suivre les dossiers.</p>
-            <div class="ws-kpi-row">
-                <div class="ws-kpi">
-                    <span class="ws-kpi__val">{{ $wsKpiPackages }}</span>
-                    <span class="ws-kpi__lbl">Voyages</span>
-                </div>
-                <div class="ws-kpi">
-                    <span class="ws-kpi__val">{{ $wsKpiTotal }}</span>
-                    <span class="ws-kpi__lbl">Prestations</span>
-                </div>
-                <div class="ws-kpi ws-kpi--accent">
-                    <span class="ws-kpi__val">{{ $wsKpiUpcoming }}</span>
-                    <span class="ws-kpi__lbl">Départs à venir</span>
-                </div>
-            </div>
+            <p class="ws-hero__sub">Consultez une prestation, ouvrez son détail et lancez une réservation depuis la page dédiée.</p>
         </div>
         <div class="ws-hero__actions">
             <a href="{{ route('admin.circuits.voyages.index') }}" class="ws-hero__btn ws-hero__btn--outline">
@@ -554,7 +546,7 @@
 
     <div id="reservations-main-content" class="space-y-6">
         {{-- Filtres --}}
-        <div class="ws-toolbar">
+        <div id="catalogue-workspace" class="ws-toolbar">
             <div class="ws-toolbar__row ws-toolbar__row--search">
                 <div class="ws-field ws-field--grow">
                     <label class="ws-field__label" for="ws-filter-search">Recherche</label>
@@ -637,7 +629,8 @@
         {{-- Tableau --}}
         <div id="reservations-list-view" class="ws-table-card">
             <div class="ws-table-card__head">
-                <h2 class="ws-table-card__title">Prestations</h2>
+                <h2 class="ws-table-card__title">Dossiers à traiter</h2>
+                <p class="ws-table-card__sub">Consultez une prestation ou démarrez une réservation en un clic.</p>
             </div>
             <div class="ws-table-scroll">
                 <table class="ws-catalog-table" id="ws-catalog-table">
@@ -676,33 +669,14 @@
 
         {{-- Calendrier --}}
         <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 hidden">
-            <p class="text-sm text-gray-600 mb-4">Clic sur un événement : ouverture du formulaire de réservation (retour liste automatique).</p>
+            <p class="text-sm text-gray-600 mb-4">Clic sur un événement : ouverture de la page dédiée de création de réservation.</p>
             <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace"></div>
-        </div>
-    </div>
-
-    {{-- Formulaire réservation --}}
-    <div id="add-reservation-view" class="w-full space-y-6 hidden mt-10">
-        <div class="flex items-center gap-4 bg-white p-5 sm:p-6 rounded-2xl shadow-custom border border-gray-100">
-            <button type="button" id="btn-back-from-add-reservation" class="w-11 h-11 rounded-full bg-gray-50 hover:bg-brand-light text-gray-500 hover:text-brand-blue flex items-center justify-center transition-colors border border-gray-200 shadow-sm shrink-0" title="Retour au catalogue">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            <div>
-                <h2 class="text-xl font-bold text-brand-dark flex items-center gap-2">
-                    <i class="fas fa-user-plus text-brand-blue"></i> Nouvelle réservation
-                </h2>
-                <p class="text-sm text-slate-600 mt-1"><span id="add-res-prestation-name" class="text-brand-dark font-bold">—</span></p>
-            </div>
-        </div>
-        <div class="bg-white p-5 sm:p-8 rounded-2xl shadow-custom border border-gray-100">
-            @include('admin.reservations.workspace.partials.form', ['clients' => $clients])
         </div>
     </div>
 </div>
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 <script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-<script type="application/json" id="ws-form-prefill-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['form_prefill'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
 @push('body-end')
@@ -733,7 +707,6 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-<script src="{{ asset('js/reservation-workspace.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     /* Modal détail : enregistré en premier (avant FullCalendar) pour éviter qu’une erreur JS bloque le clic. */
@@ -890,18 +863,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (wsMdFooter) {
             wsMdFooter.innerHTML = renderWsModalFooter(d);
             var nb = document.getElementById('ws-md-btn-new-res');
-            if (nb && d.form && d.form.tour_id) {
+            if (nb && (d.route_reserver || (d.form && d.form.tour_id))) {
                 nb.addEventListener('click', function onNewRes() {
                     nb.removeEventListener('click', onNewRes);
                     closeWsDetailModal();
-                    if (typeof window.wsOpenReservationForm === 'function') {
-                        window.wsOpenReservationForm({
-                            code: code,
-                            tourId: d.form.tour_id,
-                            travelDateId: d.form.travel_date_id || '',
-                            type: d.form.prestation_type || 'package',
-                            name: d.form.label || d.title || ''
-                        });
+                    if (d.route_reserver) {
+                        window.location.href = d.route_reserver;
                     }
                 });
             }
@@ -970,7 +937,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         voyage_id: e.voyage_id,
                         travel_date_id: e.travel_date_id,
                         prestation_type: e.prestation_type,
-                        label: e.label
+                        label: e.label,
+                        create_url: e.create_url
                     }
                 };
             });
@@ -985,6 +953,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     info.jsEvent.preventDefault();
                     var p = info.event.extendedProps || {};
                     var code = String(p.code || '');
+                    var createUrl = String(p.create_url || '');
+                    if (createUrl) {
+                        window.location.href = createUrl;
+                        return;
+                    }
                     if (btnList) btnList.click();
                     var safe = code.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
                     var row = code ? document.querySelector('tr.ws-catalog-row[data-row-code="' + safe + '"]') : null;
@@ -993,8 +966,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         row.classList.add('ws-ring-pulse');
                         setTimeout(function () { row.classList.remove('ws-ring-pulse'); }, 1800);
                     }
-                    var btn = code ? document.querySelector('.btn-show-add-reservation[data-row-code="' + safe + '"]') : null;
-                    if (btn) btn.click();
                 }
             });
         }

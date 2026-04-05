@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\DB;
 
 class Departure extends Model
@@ -66,12 +68,22 @@ class Departure extends Model
         return $this->belongsTo(Voyage::class);
     }
 
-    public function departureHotels()
+    public function departureHotels(): HasMany
     {
         return $this->hasMany(DepartureHotel::class)->orderBy('sort_order')->orderBy('id');
     }
 
-    public function roomAllocations()
+    public function rooms(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            DepartureHotelRoom::class,
+            DepartureHotel::class,
+            'departure_id',
+            'departure_hotel_id'
+        )->orderBy('departure_hotel_rooms.id');
+    }
+
+    public function roomAllocations(): HasMany
     {
         return $this->hasMany(DepartureRoomAllocation::class)->orderBy('sort_order')->orderBy('id');
     }

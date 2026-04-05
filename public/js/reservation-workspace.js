@@ -39,6 +39,58 @@
     /** Annulation fetch GET reservation-data (changement date rapide) */
     var workspacePlacesFetchController = null;
 
+    var workspaceCurrentStep = 1;
+
+    function getWsFlowSteps() {
+        return Array.prototype.slice.call(document.querySelectorAll('.ws-flow-step[data-ws-step]'));
+    }
+
+    function getSelectedDepartureLabel() {
+        var depSel = document.getElementById('ws-departure-select');
+        if (!depSel || !depSel.selectedOptions || !depSel.selectedOptions.length) return '—';
+        return depSel.selectedOptions[0].textContent || '—';
+    }
+
+    function updateStickySummary(partial) {
+        partial = partial || {};
+        var titleEl = document.getElementById('ws-sticky-title');
+        var dateEl = document.getElementById('ws-sticky-date');
+        var paxEl = document.getElementById('ws-sticky-pax');
+        var totalEl = document.getElementById('ws-sticky-total');
+
+        if (titleEl && partial.title !== undefined) titleEl.textContent = partial.title || 'Aucune sélection';
+        if (dateEl && partial.date !== undefined) dateEl.textContent = partial.date || '—';
+        if (paxEl && partial.pax !== undefined) paxEl.textContent = String(partial.pax || 0);
+        if (totalEl && partial.total !== undefined) totalEl.textContent = partial.total || '0 MAD';
+    }
+
+    function setWorkspaceStep(step) {
+        var steps = getWsFlowSteps();
+        if (!steps.length) return;
+        var stepNum = Number(step) || 1;
+        var max = steps.length;
+        if (stepNum < 1) stepNum = 1;
+        if (stepNum > max) stepNum = max;
+        workspaceCurrentStep = stepNum;
+
+        steps.forEach(function (section) {
+            var isActive = Number(section.getAttribute('data-ws-step')) === stepNum;
+            section.classList.toggle('is-active', isActive);
+            section.hidden = !isActive;
+        });
+
+        document.querySelectorAll('[data-ws-step-nav]').forEach(function (btn) {
+            var isActive = Number(btn.getAttribute('data-ws-step-nav')) === stepNum;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            btn.tabIndex = isActive ? 0 : -1;
+        });
+    }
+
+    function resetWorkspaceFlow() {
+        setWorkspaceStep(1);
+    }
+
     function buildReservationDataUrl(tourId, prestationType, travelDateId) {
         var tpl = document.getElementById('ws-reservation-data-url-template');
         if (!tpl || !tpl.value) return null;
@@ -276,6 +328,9 @@
             }
         }
         setWorkspacePrestationType(type || pf.kind || 'package');
+        updateStickySummary({
+            title: pf.title || nameDisplay || 'Aucune sélection',
+        });
         sec.innerHTML = renderPrefillSections(pf);
 
         var pr = pf.prices || {};
@@ -347,16 +402,19 @@
                 }
                 hidTravel.value = depSel.value || preferredTravelDateId || '';
                 var onDepChange = function () {
-                    hidTravel.value = depSel.value || '';
-                    syncPlacesFromServer(depSel.value || '');
-                    calculateTotal();
-                };
+                hidTravel.value = depSel.value || '';
+                syncPlacesFromServer(depSel.value || '');
+                updateStickySummary({ date: getSelectedDepartureLabel() });
+                calculateTotal();
+            };
                 depSel.onchange = onDepChange;
                 syncPlacesFromServer(depSel.value || '');
+                updateStickySummary({ date: getSelectedDepartureLabel() });
                 if (depHint) depHint.textContent = 'Choisissez la date de départ.';
             } else {
                 depWrap.classList.add('hidden');
                 hidTravel.value = preferredTravelDateId || ((pf.form && pf.form.travel_date_id != null) ? String(pf.form.travel_date_id) : '');
+                updateStickySummary({ date: '—' });
                 if (depHint) depHint.textContent = '';
             }
         }
@@ -453,6 +511,10 @@
                 ' <span class="text-sm text-gray-500 font-medium">' + escapeWsHtml(cur) + '</span>';
         }
         if (inputMontant) inputMontant.value = String(Math.round(grandTotal));
+        updateStickySummary({
+            pax: paxCount,
+            total: Math.round(grandTotal).toLocaleString('fr-FR') + ' ' + cur,
+        });
 
         var elReste = document.getElementById('summary-montant-reste');
         var mpayeEl = document.getElementById('ws-montant-paye');
@@ -706,6 +768,7 @@
         if (!main || !add) return;
         main.classList.add('hidden');
         add.classList.remove('hidden');
+        resetWorkspaceFlow();
 
         var type = btn.getAttribute('data-type') || 'package';
         var name = btn.getAttribute('data-name') || '';
@@ -723,6 +786,10 @@
         }
 
         document.getElementById('add-res-prestation-name').textContent = pf && pf.title ? pf.title : name;
+        updateStickySummary({
+            title: (pf && pf.title) ? pf.title : (name || 'Aucune sélection'),
+            date: '—',
+        });
 
         if (pf) {
             applyWorkspacePrefill(pf, type, name, preferredTd);
@@ -735,6 +802,7 @@
             if (panelOff) panelOff.classList.add('hidden');
             var depOff = document.getElementById('ws-departure-wrap');
             if (depOff) depOff.classList.add('hidden');
+            updateStickySummary({ date: '—' });
         }
 
         setWorkspacePrestationType(type);
@@ -754,6 +822,7 @@
     }
 
     function hideAddReservation() {
+        resetWorkspaceFlow();
         workspaceLivePricing = null;
         workspaceExtrasLive = null;
         workspaceLivePlaces = null;
@@ -776,6 +845,12 @@
             submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             submitBtn.title = '';
         }
+        updateStickySummary({
+            title: 'Aucune sélection',
+            date: '—',
+            pax: 1,
+            total: '0 MAD',
+        });
         var panel = document.getElementById('ws-prefill-panel');
         if (panel) panel.classList.add('hidden');
         var main = document.getElementById('reservations-main-content');
@@ -803,10 +878,32 @@
     };
 
     document.addEventListener('DOMContentLoaded', function () {
+        var heroSub = document.querySelector('.ws-hero__sub');
+        if (heroSub) {
+            heroSub.textContent = 'Consultez une prestation ou démarrez une réservation en un clic.';
+        }
+        resetWorkspaceFlow();
+
         document.querySelectorAll('.btn-show-add-reservation').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 showAddReservation(btn);
+            });
+        });
+
+        document.querySelectorAll('[data-ws-step-nav]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setWorkspaceStep(Number(btn.getAttribute('data-ws-step-nav')) || 1);
+            });
+        });
+        document.querySelectorAll('[data-ws-step-next]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setWorkspaceStep(workspaceCurrentStep + 1);
+            });
+        });
+        document.querySelectorAll('[data-ws-step-prev]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setWorkspaceStep(workspaceCurrentStep - 1);
             });
         });
 
@@ -832,17 +929,21 @@
                 companionCount++;
                 if (emptyMsg) emptyMsg.style.display = 'none';
                 var row = document.createElement('div');
-                row.className = 'companion-row bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm relative mt-2 flex flex-col gap-3';
+                row.className = 'companion-row ws-traveler-card';
                 row.innerHTML =
-                    '<button type="button" class="btn-remove-companion absolute right-2 top-2 w-7 h-7 flex items-center justify-center rounded-md bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border border-red-100" title="Supprimer"><i class="fas fa-trash text-xs"></i></button>' +
-                    '<h5 class="text-xs font-bold text-gray-600 uppercase border-b border-gray-50 pb-1">Accompagnant #' + companionCount + '</h5>' +
-                    '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pr-8">' +
-                    '<select class="companion-type-select w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-[11px]">' +
+                    '<button type="button" class="btn-remove-companion ws-traveler-card__remove" title="Supprimer"><i class="fas fa-trash"></i></button>' +
+                    '<div class="ws-traveler-card__head">' +
+                    '<h5 class="ws-traveler-card__title">Accompagnant #' + companionCount + '</h5>' +
+                    '<span class="ws-traveler-card__badge">Voyageur</span>' +
+                    '</div>' +
+                    '<div class="ws-form-grid ws-form-grid--traveler">' +
+                    '<div class="ws-form-field"><label class="ws-form-label">Type</label><select class="companion-type-select ws-input-shell">' +
                     '<option value="adulte">Adulte</option><option value="enfant">Enfant</option><option value="bebe">Bébé</option></select>' +
-                    '<input type="text" class="companion-first-name w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-[11px] uppercase" placeholder="Prénom">' +
-                    '<input type="text" class="companion-last-name w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-[11px] uppercase" placeholder="Nom">' +
-                    '<input type="date" class="companion-dob-input w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-[11px]">' +
-                    '<input type="text" class="companion-doc-input w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-[11px] uppercase col-span-2" placeholder="N° document">' +
+                    '</div>' +
+                    '<div class="ws-form-field"><label class="ws-form-label">Prénom</label><input type="text" class="companion-first-name ws-input-shell" placeholder="Prénom"></div>' +
+                    '<div class="ws-form-field"><label class="ws-form-label">Nom</label><input type="text" class="companion-last-name ws-input-shell" placeholder="Nom"></div>' +
+                    '<div class="ws-form-field"><label class="ws-form-label">Naissance</label><input type="date" class="companion-dob-input ws-input-shell"></div>' +
+                    '<div class="ws-form-field ws-form-field--full"><label class="ws-form-label">CIN / Passeport</label><input type="text" class="companion-doc-input ws-input-shell" placeholder="N° document"></div>' +
                     '</div>';
                 row.querySelector('.btn-remove-companion').addEventListener('click', function () {
                     row.remove();

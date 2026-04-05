@@ -1,9 +1,12 @@
 @php
     $hasLaravel = ! empty($row['voyage_id']);
     $wpPostId = $row['wp_post_id'] ?? null;
-    $q = $hasLaravel ? ['voyage_id' => $row['voyage_id']] : [];
+    $q = $hasLaravel ? array_filter([
+        'voyage_id' => $row['voyage_id'],
+        'travel_date_id' => $row['travel_date_id'] ?? null,
+    ], fn ($value) => $value !== null && $value !== '') : [];
     $participantsUrl = $hasLaravel ? route('admin.reservations.index', $q) : '#';
-    $pdfUrl = $hasLaravel ? route('admin.reservations.workspace.prestation.pdf', $q) : '#';
+    $reserveUrl = $hasLaravel ? route('admin.reservations.create', $q) : '#';
     $editTourUrl = $wpPostId ? route('admin.circuits.voyages.edit', $wpPostId) : null;
     $hasDepDate = ! empty($row['departure_date']);
     $depLabel = $hasDepDate
@@ -36,12 +39,10 @@
     $placesTotal = $row['places_total'] ?? null;
     $placesLines = $row['places_lines'] ?? [];
     $placesSearchBits = '';
-    if ($typeKey === 'package' && $hasLaravel) {
-        if (($placesState ?? '') === 'ok' && $placesTotal !== null) {
-            $placesSearchBits = ' places '.$placesTotal;
-            foreach ($placesLines as $pl) {
-                $placesSearchBits .= ' '.($pl['room_type'] ?? '').' '.($pl['product'] ?? '');
-            }
+    if ($typeKey === 'package' && $hasLaravel && ($placesState ?? '') === 'ok' && $placesTotal !== null) {
+        $placesSearchBits = ' places '.$placesTotal;
+        foreach ($placesLines as $pl) {
+            $placesSearchBits .= ' '.($pl['room_type'] ?? '').' '.($pl['product'] ?? '');
         }
     }
     $wsSearchBlob = \Illuminate\Support\Str::lower(trim(
@@ -77,6 +78,7 @@
 
     $rowTitle = trim(($row['name'] ?? '').($hasLaravel && $typeKey === 'package' ? ' · #'.$row['voyage_id'] : ''));
 @endphp
+
 <tr class="ws-catalog-row {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}"
     data-type="{{ $typeKey }}"
     data-row-code="{{ $row['code'] }}"
@@ -94,16 +96,14 @@
     data-sort-price="{{ $priceSort }}"
     data-sort-places="{{ $placesSort }}"
     title="{{ e($rowTitle) }}">
-    {{-- Réf. & type --}}
-    <td class="ws-td ws-td--ref">
+    <td class="ws-td ws-td--ref" data-label="Réf.">
         <span class="ws-ref-code">{{ $row['code'] }}</span>
         <span class="{{ $badgeClass }}">{{ $typeShort }}</span>
         @if($typeKey === 'package' && ! $hasLaravel)
             <span class="ws-ref-hint">Non lié</span>
         @endif
     </td>
-    {{-- Prestation --}}
-    <td class="ws-td ws-td--prestation">
+    <td class="ws-td ws-td--prestation" data-label="Prestation">
         <div class="ws-prest">
             <p class="ws-prest__title">{{ $row['name'] }}</p>
             @if(!empty($row['subtitle']) && $typeKey !== 'package')
@@ -170,7 +170,6 @@
                     <a href="{{ $editTourUrl }}" class="ws-prest__link">Ouvrir dans Circuits</a>
                 @endif
             @else
-                {{-- vol / hébergement : ligne compacte --}}
                 <div class="ws-prest__meta ws-prest__meta--single">
                     <span class="ws-prest__meta-item">
                         <span class="ws-prest__ico" aria-hidden="true">📅</span>
@@ -184,8 +183,7 @@
             @endif
         </div>
     </td>
-    {{-- Départ --}}
-    <td class="ws-td ws-td--dep">
+    <td class="ws-td ws-td--dep" data-label="Départ">
         <span class="ws-dep-date">{{ $depLabel }}</span>
         <div class="ws-dep-badges">
             @if($pkgDepCanceled)
@@ -199,49 +197,27 @@
             @endif
         </div>
     </td>
-    {{-- Stats --}}
-    <td class="ws-td ws-td--stats">
+    <td class="ws-td ws-td--stats" data-label="Statut">
         <div class="ws-stats-pills">
             <span class="ws-stat-pill ws-stat-pill--ok" title="Confirmées">{{ $statVal }}</span>
             <span class="ws-stat-pill ws-stat-pill--wait" title="En attente">{{ $statPending }}</span>
             <span class="ws-stat-pill ws-stat-pill--off" title="Annulées">{{ $statCancel }}</span>
         </div>
     </td>
-    {{-- Actions --}}
-    <td class="ws-td ws-td--actions">
+    <td class="ws-td ws-td--actions" data-label="Action">
         <div class="ws-actions">
             @if(!empty($modalDetail))
                 <button type="button"
                     class="ws-btn ws-btn--secondary btn-ws-open-detail"
                     data-row-code="{{ e($row['code']) }}"
-                    title="Détails de la prestation">
-                    <i class="fas fa-info-circle" aria-hidden="true"></i><span>Détails</span>
+                    title="Voir la prestation">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i><span>Voir</span>
                 </button>
-            @endif
-            @if($hasLaravel)
-                <a href="{{ $participantsUrl }}"
-                   class="ws-btn ws-btn--ghost ws-action-link"
-                   title="Liste des réservations et participants">
-                    <i class="fas fa-list-ul" aria-hidden="true"></i><span>Réservations</span>
-                </a>
-                <a href="{{ $pdfUrl }}"
-                   class="ws-btn ws-btn--pdf ws-action-link"
-                   title="Exporter PDF">
-                    <i class="fas fa-file-pdf" aria-hidden="true"></i><span>PDF</span>
-                </a>
-            @else
-                <span class="ws-btn ws-btn--disabled" title="Liez d’abord la fiche voyage"><i class="fas fa-list-ul"></i><span>Réservations</span></span>
-                <span class="ws-btn ws-btn--disabled" title="Liez d’abord la fiche voyage"><i class="fas fa-file-pdf"></i><span>PDF</span></span>
             @endif
             @can('reservations.view')
                 @if($hasLaravel)
-                    <button type="button"
-                        class="ws-btn ws-btn--primary btn-show-add-reservation"
-                        data-row-code="{{ $row['code'] }}"
-                        data-type="{{ $typeKey }}"
-                        data-name="{{ $row['name'] }} ({{ $row['code'] }})"
-                        data-tour-id="{{ $row['voyage_id'] }}"
-                        data-travel-date-id="{{ $row['travel_date_id'] ?? '' }}"
+                    <a href="{{ $reserveUrl }}"
+                        class="ws-btn ws-btn--primary"
                         title="{{ $reserveLabel }}">
                         @if($typeKey === 'vol')
                             <i class="fas fa-plane-departure" aria-hidden="true"></i>
@@ -249,11 +225,14 @@
                             <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
                         @endif
                         <span>{{ $reserveLabel }}</span>
-                    </button>
+                    </a>
                 @else
-                    <button type="button" disabled class="ws-btn ws-btn--disabled" title="Associez la fiche Laravel pour réserver">
+                    <a href="{{ $editTourUrl ?: '#' }}"
+                        class="ws-btn {{ $editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled' }}"
+                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
+                        title="Associer la fiche Laravel pour réserver">
                         <i class="fas fa-link" aria-hidden="true"></i><span>Lier</span>
-                    </button>
+                    </a>
                 @endif
             @endcan
         </div>
