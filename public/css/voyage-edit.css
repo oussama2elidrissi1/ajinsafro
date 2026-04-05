@@ -1955,3 +1955,510 @@ body.voyage-layout-page .offcanvas {
     font-weight: 600;
     color: #212529;
 }
+
+/* ============================================================================
+   Business UX Refresh
+   ============================================================================ */
+.voyage-edit-page {
+    --ve-primary: #2563eb;
+    --ve-primary-light: #60a5fa;
+    --ve-primary-dark: #1d4ed8;
+    --ve-primary-bg: rgba(37, 99, 235, 0.08);
+    --ve-accent: #0ea5e9;
+    --ve-page-bg: #eef4f8;
+    --ve-card-bg: #ffffff;
+    --ve-card-radius: 20px;
+    --ve-card-shadow: 0 8px 26px rgba(15, 23, 42, 0.05);
+    --ve-card-shadow-hover: 0 12px 30px rgba(15, 23, 42, 0.08);
+    --ve-input-border: #dbe5f0;
+    --ve-input-focus-ring: rgba(37, 99, 235, 0.18);
+    --ve-gap-section: 24px;
+}
+
+.voyage-edit-page .ve-shell {
+    padding-inline: clamp(10px, 2vw, 20px);
+}
+
+.voyage-edit-page .ve-page-header {
+    background:
+        radial-gradient(circle at top right, rgba(96, 165, 250, 0.22), transparent 34%),
+        linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+    padding: clamp(20px, 2.4vw, 30px);
+}
+
+.voyage-edit-page .ve-page-header::before,
+.voyage-edit-page .ve-page-header::after {
+    display: none;
+}
+
+.voyage-edit-page .ve-header-topbar {
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.voyage-edit-page .ve-header-topbar__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.voyage-edit-page .ve-breadcrumb {
+    gap: 8px;
+    color: #64748b;
+    margin: 0;
+}
+
+.voyage-edit-page .ve-breadcrumb li + li::before {
+    color: #cbd5e1;
+}
+
+.voyage-edit-page .ve-breadcrumb a,
+.voyage-edit-page .ve-breadcrumb .active {
+    color: #64748b;
+}
+
+.voyage-edit-page .ve-breadcrumb a:hover {
+    color: #0f172a;
+}
+
+.voyage-edit-page .ve-page-title {
+    font-size: clamp(1.5rem, 2.2vw, 2rem);
+    color: #0f172a;
+}
+
+.voyage-edit-page .ve-page-subtitle {
+    font-size: 0.96rem;
+    line-height: 1.7;
+    color: #475569;
+    max-width: 760px;
+    opacity: 1;
+}
+
+.voyage-edit-page .ve-status-badge {
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.82rem;
+}
+
+.voyage-edit-page .ve-status-badge.status-publish {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.voyage-edit-page .ve-status-badge.status-draft {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+}
+
+.voyage-edit-page .ve-status-badge.status-pending {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.voyage-edit-page .ve-meta-pill {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    padding: 7px 12px;
+}
+
+.voyage-edit-page .ve-meta-pill--accent {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.voyage-edit-page .ve-meta-pill--muted {
+    color: #64748b;
+    opacity: 1;
+}
+
+.voyage-edit-page .ve-meta-pill--soft {
+    background: #e0f2fe;
+    border-color: #bae6fd;
+    color: #0369a1;
+}
+
+.voyage-edit-page .ve-header-grid {
+    gap: 20px;
+}
+
+.voyage-edit-page .ve-header-panel {
+    background: #f8fbff;
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    padding: 16px;
+}
+
+.voyage-edit-page .ve-header-panel__eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.voyage-edit-page .ve-header-panel__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.voyage-edit-page .ve-header-panel__item {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.voyage-edit-page .ve-header-panel__item span {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+}
+
+.voyage-edit-page .ve-header-panel__item strong {
+    display: block;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.voyage-edit-page .ve-editor-body {
+    padding-top: 18px;
+}
+
+.voyage-edit-page .ve-form-toolbar {
+    position: sticky;
+    top: 12px;
+    z-index: 120;
+    margin-bottom: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+}
+
+.voyage-edit-page .ve-form-toolbar__eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.voyage-edit-page .ve-form-toolbar__copy h5 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.voyage-edit-page .ve-form-actions-body {
+    padding: 18px 22px;
+    align-items: center;
+}
+
+.voyage-edit-page .ve-form-actions-buttons .btn {
+    min-height: 44px;
+    padding-inline: 16px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.voyage-edit-page .ve-form-actions-buttons .btn-primary {
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.16);
+}
+
+.voyage-edit-page .ve-tabs-wrapper {
+    top: 96px;
+    padding: 16px 16px 0;
+    border-radius: 22px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow: var(--ve-card-shadow);
+}
+
+.voyage-edit-page .ve-tabs-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.voyage-edit-page .ve-tabs-kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.voyage-edit-page .ve-tabs-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.voyage-edit-page .ve-tab-zone-hint {
+    max-width: 560px;
+    color: #64748b !important;
+}
+
+.voyage-edit-page .ve-tab-scroll {
+    padding: 0;
+}
+
+.voyage-edit-page .nav-tabs.ve-nav-tabs {
+    border-bottom: 1px solid #e2e8f0;
+    gap: 8px;
+}
+
+.voyage-edit-page .ve-nav-tabs .nav-link {
+    border-radius: 999px;
+    padding: 11px 16px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    background: transparent;
+    border: 1px solid transparent;
+    color: #475569;
+}
+
+.voyage-edit-page .ve-nav-tabs .nav-link:hover {
+    color: #0f172a;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.voyage-edit-page .ve-nav-tabs .nav-link.active {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    border-bottom-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.voyage-edit-page .ve-nav-tabs .nav-link i {
+    font-size: 1rem;
+}
+
+.voyage-edit-page .card {
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 20px;
+}
+
+.voyage-edit-page .card-body {
+    padding: clamp(20px, 2vw, 28px);
+}
+
+.voyage-edit-page .card-title {
+    font-size: 1.15rem;
+    color: #0f172a;
+}
+
+.voyage-edit-page .card-title::before {
+    background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+}
+
+.voyage-edit-page .ve-section-kicker {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+}
+
+.voyage-edit-page .ve-subsection-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 16px;
+}
+
+.voyage-edit-page .ve-inline-note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: #f8fbff;
+    border: 1px solid #dbeafe;
+}
+
+.voyage-edit-page .ve-inline-note a {
+    color: #1d4ed8;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.voyage-edit-page .ve-inline-note__sep {
+    margin-inline: 8px;
+    color: #cbd5e1;
+}
+
+.voyage-edit-page .ve-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.voyage-edit-page .ve-settings-block {
+    border: 1px solid #e2e8f0;
+    background: #fcfdff;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.voyage-edit-page .ve-dates-section {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 20px;
+}
+
+.voyage-edit-page .ve-basic-side-card {
+    border: 1px solid #e2e8f0;
+    background: #fbfdff;
+}
+
+.voyage-edit-page .ve-basic-side-card .card-body {
+    padding: 20px;
+}
+
+.voyage-edit-page .ve-summary-list li {
+    gap: 14px;
+}
+
+.voyage-edit-page .ve-rich-field textarea.rich-editor {
+    min-height: 180px;
+}
+
+.voyage-edit-page .travel-date-row {
+    border-radius: 18px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc !important;
+}
+
+.voyage-edit-page .travel-date-row .card-body {
+    padding: 16px !important;
+}
+
+.voyage-edit-page .ve-count-badge {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    font-weight: 700;
+    padding: 8px 12px;
+}
+
+.voyage-edit-page .ve-danger-zone-card {
+    background: linear-gradient(180deg, #fff7f7 0%, #ffffff 100%);
+    border-style: solid !important;
+    border-color: rgba(248, 113, 113, 0.32) !important;
+}
+
+.voyage-edit-page .ve-danger-zone-card .btn-outline-danger {
+    width: auto;
+    min-width: 180px;
+}
+
+.voyage-edit-page .form-label {
+    font-weight: 600;
+    color: #334155;
+}
+
+.voyage-edit-page .form-control,
+.voyage-edit-page .form-select {
+    min-height: 46px;
+    border-radius: 12px;
+    border-color: var(--ve-input-border);
+    box-shadow: none;
+}
+
+.voyage-edit-page .form-control:focus,
+.voyage-edit-page .form-select:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 4px var(--ve-input-focus-ring);
+}
+
+.voyage-edit-page .btn {
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.voyage-edit-page .btn-primary {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    border-color: #2563eb;
+}
+
+.voyage-edit-page .btn-primary:hover,
+.voyage-edit-page .btn-primary:focus {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+@media (max-width: 991px) {
+    .voyage-edit-page .ve-form-toolbar {
+        top: 8px;
+    }
+
+    .voyage-edit-page .ve-tabs-wrapper {
+        top: 92px;
+    }
+
+    .voyage-edit-page .ve-settings-grid,
+    .voyage-edit-page .ve-header-panel__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .voyage-edit-page .ve-shell {
+        padding-inline: 8px;
+    }
+
+    .voyage-edit-page .ve-page-header {
+        padding: 18px;
+    }
+
+    .voyage-edit-page .ve-header-topbar,
+    .voyage-edit-page .ve-tabs-header,
+    .voyage-edit-page .ve-form-actions-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .voyage-edit-page .ve-form-actions-buttons {
+        width: 100%;
+        flex-direction: column-reverse;
+    }
+
+    .voyage-edit-page .ve-form-actions-buttons .btn,
+    .voyage-edit-page .ve-danger-zone-card .btn-outline-danger {
+        width: 100%;
+    }
+
+    .voyage-edit-page .ve-tabs-wrapper {
+        padding: 14px 12px 0;
+        border-radius: 18px;
+    }
+
+    .voyage-edit-page .ve-nav-tabs .nav-link {
+        padding: 10px 14px;
+    }
+}

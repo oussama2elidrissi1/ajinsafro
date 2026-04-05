@@ -200,6 +200,12 @@ class ReservationWorkspaceCatalogService
             $startDate = $pickedTd?->date;
             $travelDateId = $pickedTd?->id;
             $tourId = $voyage ? (int) $voyage->id : null;
+            if ($tourId && $travelDateId) {
+                $departureId = Departure::query()
+                    ->where('voyage_id', $tourId)
+                    ->where('wp_travel_date_id', $travelDateId)
+                    ->value('id');
+            }
 
             $wpDisplayTitle = $wpPostTitleById->get($wpId) ?? (trim((string) $wp->post_title) ?: 'Tour #'.$wpId);
 

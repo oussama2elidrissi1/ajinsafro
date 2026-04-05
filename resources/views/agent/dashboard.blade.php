@@ -8,72 +8,158 @@
 
 @section('content')
 @php
+    use App\Models\Reservation;
     use Illuminate\Support\Facades\Route;
 
     $user = auth()->user();
-    $displayName = $user?->name;
+    $displayName = $user?->name ?: 'Agent';
+    $agencyLabel = $user?->branch?->name ?: 'Ajinsafro Tanger';
 
-    $reservationsListUrl = null;
-    if (Route::has('admin.reservations.index') && $user->can('reservations.all.view')) {
-        $reservationsListUrl = route('admin.reservations.index');
-    } elseif (Route::has('admin.reservations.index') && $user->can('reservations.pending.view')) {
-        $reservationsListUrl = route('admin.reservations.index', ['status' => 'EN_COURS']);
-    } elseif (Route::has('admin.reservations.index') && $user->can('reservations.confirmed.view')) {
-        $reservationsListUrl = route('admin.reservations.index', ['status' => 'VALIDEE']);
-    }
-
-    $canOpenReservation = Route::has('admin.reservations.show') && $user->can('reservations.view');
+    $newReservationUrl = Route::has('admin.reservations.create') ? route('admin.reservations.create') : '#';
+    $offersUrl = Route::has('admin.circuits.voyages.index')
+        ? route('admin.circuits.voyages.index')
+        : (Route::has('front.voyages.index') ? route('front.voyages.index') : '#');
 @endphp
 
-@include('agent.partials.dashboard-header', [
-    'user' => $user,
-    'isManager' => $isManager ?? false,
-    'stats' => $stats ?? [],
-    'quickRange' => $quickRange ?? null,
-])
+<div class="agent-dashboard-page">
+    <section class="agent-dashboard-shell agent-dashboard-hero">
+        <div class="agent-dashboard-hero__content">
+            <div>
+                <span class="agent-dashboard-badge">{{ $agencyLabel }}</span>
+                <h1 class="agent-dashboard-title">Welcome back, {{ $displayName }}</h1>
+                <p class="agent-dashboard-subtitle">Votre activité du jour, vos réservations et les actions prioritaires au même endroit.</p>
+            </div>
+            <div class="agent-dashboard-actions">
+                <a href="{{ $newReservationUrl }}" class="btn agent-btn agent-btn-primary">Nouvelle réservation</a>
+                <a href="{{ $offersUrl }}" class="btn agent-btn agent-btn-secondary">Voir les offres</a>
+            </div>
+        </div>
+    </section>
 
-@if($isManager ?? false)
-    <div class="mb-4 rounded-xl border border-[#0083c4]/20 bg-[#e6f3fa]/40 px-4 py-3 text-sm text-[#0e3a5a]">
-        <i class="fas fa-info-circle text-[#0083c4] mr-1"></i>
-        Les listes et le calendrier incluent <strong>vos dossiers</strong> et ceux des commerciaux dont vous êtes le manager (filtre agence appliqué).
-    </div>
-@endif
+    <section class="agent-dashboard-grid agent-dashboard-grid--kpis">
+        <article class="agent-kpi-card">
+            <div class="agent-kpi-icon"><i class="bx bx-briefcase-alt-2"></i></div>
+            <div class="agent-kpi-label">Réservations</div>
+            <div class="agent-kpi-value">{{ number_format((int) ($stats['reservations_total'] ?? 0), 0, ',', ' ') }}</div>
+        </article>
 
-@include('agent.partials.dashboard-kpis', ['stats' => $stats, 'subtitle' => ($isManager ?? false) ? 'Vue consolidée (vous + équipe)' : null])
+        <article class="agent-kpi-card">
+            <div class="agent-kpi-icon"><i class="bx bx-check-shield"></i></div>
+            <div class="agent-kpi-label">Confirmées</div>
+            <div class="agent-kpi-value">{{ number_format((int) ($stats['reservations_validees'] ?? 0), 0, ',', ' ') }}</div>
+        </article>
 
-@include('agent.partials.dashboard-filters', [
-    'filterAgentOptions' => $filterAgentOptions ?? collect(),
-    'filterAgentId' => $filterAgentId ?? null,
-    'filterReservationStatus' => $filterReservationStatus ?? null,
-    'filterClientAgentId' => $filterClientAgentId ?? null,
-])
+        <article class="agent-kpi-card">
+            <div class="agent-kpi-icon"><i class="bx bx-time-five"></i></div>
+            <div class="agent-kpi-label">En attente</div>
+            <div class="agent-kpi-value">{{ number_format((int) ($stats['reservations_en_cours'] ?? 0), 0, ',', ' ') }}</div>
+        </article>
 
-@if($isManager ?? false)
-    @include('agent.partials.dashboard-manager-panels', [
-        'statsPersonal' => $statsPersonal,
-        'statsTeamOnly' => $statsTeamOnly,
-        'teamAgentStats' => $teamAgentStats,
-        'directReports' => $directReports,
-    ])
-@endif
+        <article class="agent-kpi-card">
+            <div class="agent-kpi-icon"><i class="bx bx-wallet"></i></div>
+            <div class="agent-kpi-label">Revenus</div>
+            <div class="agent-kpi-value">{{ number_format((float) ($stats['revenue_generated'] ?? 0), 0, ',', ' ') }} DH</div>
+        </article>
+    </section>
 
-@include('agent.partials.dashboard-tables', [
-    'recentReservations' => $recentReservations,
-    'recentClients' => $recentClients,
-    'reservationsListUrl' => $reservationsListUrl,
-    'canOpenReservation' => $canOpenReservation,
-    'isManager' => $isManager ?? false,
-    'quickRange' => $quickRange ?? null,
-])
+    <section class="agent-dashboard-grid agent-dashboard-grid--content">
+        <div class="agent-panel agent-panel--wide">
+            <div class="agent-panel-header">
+                <div>
+                    <h2>Mes dernières réservations</h2>
+                    <p>Une vue rapide sur les dossiers les plus récents.</p>
+                </div>
 
-@include('agent.partials.dashboard-performance', ['topOffers' => $topOffers ?? ['labels' => [], 'bookings' => [], 'revenue' => []]])
+                <form method="GET" action="{{ route('agent.dashboard') }}" class="agent-filter-form">
+                    <label for="scope" class="visually-hidden">Filtrer les réservations</label>
+                    <select name="scope" id="scope" class="form-select agent-select" {{ $isManager ? '' : 'disabled' }}>
+                        <option value="mine" {{ ($scope ?? 'mine') === 'mine' ? 'selected' : '' }}>Mes réservations</option>
+                        @if($isManager)
+                            <option value="team" {{ ($scope ?? 'mine') === 'team' ? 'selected' : '' }}>Mon équipe</option>
+                        @endif
+                    </select>
+                    @unless($isManager)
+                        <input type="hidden" name="scope" value="mine">
+                    @endunless
+                    <button type="submit" class="btn agent-btn agent-btn-secondary">Filtrer</button>
+                </form>
+            </div>
 
-@include('agent.partials.dashboard-calendar', ['calendarEvents' => $calendarEvents])
+            <div class="table-responsive">
+                <table class="table agent-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Voyage</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentReservations as $reservation)
+                            @php
+                                $clientName = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
+                                $status = $reservation->status;
+                                $statusLabel = match ($status) {
+                                    Reservation::STATUS_VALIDEE => 'Confirmée',
+                                    Reservation::STATUS_EN_COURS => 'En attente',
+                                    Reservation::STATUS_ANNULEE => 'Annulée',
+                                    default => (string) $status,
+                                };
+                                $statusClass = match ($status) {
+                                    Reservation::STATUS_VALIDEE => 'is-confirmed',
+                                    Reservation::STATUS_EN_COURS => 'is-pending',
+                                    Reservation::STATUS_ANNULEE => 'is-cancelled',
+                                    default => 'is-neutral',
+                                };
+                                $detailUrl = Route::has('admin.reservations.show') ? route('admin.reservations.show', $reservation) : '#';
+                                $displayDate = optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y');
+                            @endphp
+                            <tr>
+                                <td data-label="Client">{{ $clientName !== '' ? $clientName : 'Client non renseigné' }}</td>
+                                <td data-label="Voyage">{{ $reservation->tour?->name ?: 'Voyage non renseigné' }}</td>
+                                <td data-label="Date">{{ $displayDate }}</td>
+                                <td data-label="Statut"><span class="agent-status-badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
+                                <td data-label="Action" class="text-end">
+                                    <a href="{{ $detailUrl }}" class="agent-table-link">Voir</a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-5">Aucune réservation récente à afficher.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-@include('agent.partials.dashboard-activity', ['recentActivityReservations' => $recentActivityReservations])
+        <aside class="agent-panel agent-panel--side">
+            <div class="agent-panel-header agent-panel-header--stacked">
+                <div>
+                    <h2>Aujourd'hui</h2>
+                    <p>Les chiffres à surveiller en priorité.</p>
+                </div>
+            </div>
+
+            <div class="agent-today-metrics">
+                <div class="agent-today-metric">
+                    <span>Réservations du jour</span>
+                    <strong>{{ number_format((int) ($todayStats['reservations_today'] ?? 0), 0, ',', ' ') }}</strong>
+                </div>
+                <div class="agent-today-metric">
+                    <span>En attente aujourd'hui</span>
+                    <strong>{{ number_format((int) ($todayStats['pending_today'] ?? 0), 0, ',', ' ') }}</strong>
+                </div>
+            </div>
+
+            <div class="agent-notifications">
+                @foreach(($todayStats['notifications'] ?? []) as $notification)
+                    <div class="agent-notification-item">{{ $notification }}</div>
+                @endforeach
+            </div>
+        </aside>
+    </section>
+</div>
 @endsection
-
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
-    <script src="{{ URL::asset('js/agent-dashboard.js') }}"></script>
-@endpush

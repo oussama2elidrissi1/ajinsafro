@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Client;
 use App\Models\Reservation;
 use App\Models\ReservationExtra;
 use App\Models\TravelDate;
@@ -41,16 +40,11 @@ class ReservationWorkspaceController extends Controller
         $rows = $catalog['rows'];
         $catalogMeta = $catalog['meta'];
 
-        $clientsQuery = Client::query()->orderByDesc('id')->limit(300);
-        $this->branchScope->scopeClients($clientsQuery, $request->user());
-        $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone']);
-
         return view('admin.reservations.workspace.index', [
             'catalogRows' => $rows,
             'catalogMeta' => $catalogMeta,
             'catalogPackageCount' => (int) ($catalogMeta['wp_tour_count'] ?? $rows->where('type', 'package')->count()),
             'catalogTotalCount' => $rows->count(),
-            'clients' => $clients,
         ]);
     }
 
