@@ -252,6 +252,8 @@
         if (joinedErrors.indexOf('programme_days') !== -1) return 'program-days';
         if (joinedErrors.indexOf('tour_activities') !== -1) return 'activities';
         if (joinedErrors.indexOf('flights') !== -1) return 'flights';
+        if (joinedErrors.indexOf('travel_dates') !== -1) return 'availability';
+        if (joinedErrors.indexOf('departure_allocations') !== -1) return 'hotels';
         if (joinedErrors.indexOf('tour_hotels') !== -1) return 'hotels';
         if (joinedErrors.indexOf('tour_transfer') !== -1) return 'transfers';
 

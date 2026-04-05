@@ -16,6 +16,7 @@ class DepartureController extends Controller
         $validated = $request->validate([
             'start_date' => 'required|date',
             'status' => ['required', 'string', Rule::in(Departure::STATUSES)],
+            'total_capacity' => 'required|integer|min:0',
             'base_price' => 'nullable|numeric|min:0',
         ]);
 
@@ -31,6 +32,8 @@ class DepartureController extends Controller
             ],
             [
                 'status' => $validated['status'],
+                'total_capacity' => (int) $validated['total_capacity'],
+                'available_capacity' => max(0, (int) $validated['total_capacity']),
                 'base_price' => $validated['base_price'] ?? null,
             ]
         );
@@ -47,6 +50,7 @@ class DepartureController extends Controller
         $validated = $request->validate([
             'start_date' => 'required|date',
             'status' => ['required', 'string', Rule::in(Departure::STATUSES)],
+            'total_capacity' => 'required|integer|min:0',
             'base_price' => 'nullable|numeric|min:0',
         ]);
 
@@ -64,6 +68,8 @@ class DepartureController extends Controller
         $departure->update([
             'start_date' => $validated['start_date'],
             'status' => $validated['status'],
+            'total_capacity' => (int) $validated['total_capacity'],
+            'available_capacity' => max(0, (int) $validated['total_capacity'] - (int) ($departure->reserved_capacity ?? 0)),
             'base_price' => $validated['base_price'] ?? null,
         ]);
         return redirect()->route('admin.circuits.voyages.edit', $voyage->wp_post_id ?? $voyage->id)

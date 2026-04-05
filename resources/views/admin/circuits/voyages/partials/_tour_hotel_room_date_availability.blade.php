@@ -10,7 +10,7 @@
     $dateAvailabilitiesInput = is_array($dateAvailabilitiesInput) ? $dateAvailabilitiesInput : [];
     $dateAvailabilityObjects = collect(optional($room)->dateAvailabilities ?? [])->keyBy('travel_date_id');
     $roomCapacityPerUnit = \App\Support\TourPlacesCalculator::effectiveCapacity((int) $capTotalVal, (int) $capAdultsVal, (int) $capChildrenVal);
-    $roomAvailabilityOpen = $travelDatesList->count() <= 3;
+    $roomAvailabilityOpen = false;
 @endphp
 
 <details class="tour-room-date-availability-panel mt-3" {{ $roomAvailabilityOpen ? 'open' : '' }}>

@@ -10,7 +10,7 @@
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.settings.index') }}">ParamÃ¨tres</a></li>
-                        <li class="breadcrumb-item active">Home page</li>
+                        <li class="breadcrumb-item active">Home page ilyass</li>
                     </ol>
                 </div>
             </div>

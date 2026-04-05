@@ -23,6 +23,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -888,6 +890,13 @@ class ReservationsController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $this->normalizeVoyageLabels(
+            $reservations->getCollection()
+                ->pluck('offer')
+                ->filter()
+                ->values()
+        );
+
         return [
             'hubStats' => $hubStats,
             'reservations' => $reservations,
@@ -905,6 +914,7 @@ class ReservationsController extends Controller
     {
         $data = $this->hubListData($request);
         $highlightReservationId = (int) $request->query('highlight', 0);
+        $selectedVoyage = $this->resolveSelectedVoyageForHeader($data['filterTourId'] ?? null);
 
         $reservationCreated = $request->session()->pull('reservation_created');
         if (! is_array($reservationCreated)) {
@@ -926,13 +936,86 @@ class ReservationsController extends Controller
         $voyageOptions = Voyage::query()
             ->orderBy('name')
             ->limit(500)
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'wp_post_id']);
+
+        $voyageOptions = $this->normalizeVoyageLabels($voyageOptions)
+            ->sortBy(fn (Voyage $voyage) => Str::lower((string) ($voyage->resolved_name ?? $voyage->name)))
+            ->values();
 
         return view('admin.reservations.index', array_merge($data, [
             'voyageOptions' => $voyageOptions,
+            'voyage' => $selectedVoyage,
             'highlightReservationId' => $highlightReservationId,
             'reservationCreated' => $reservationCreated,
         ]));
+    }
+
+    protected function resolveSelectedVoyageForHeader(?int $voyageId): ?Voyage
+    {
+        if ($voyageId === null || $voyageId <= 0) {
+            return null;
+        }
+
+        $voyage = Voyage::query()->find($voyageId, ['id', 'name', 'slug', 'wp_post_id']);
+        if (! $voyage) {
+            return null;
+        }
+
+        return $this->normalizeVoyageLabels(collect([$voyage]))->first();
+    }
+
+    /**
+     * @param  Collection<int, Voyage>  $voyages
+     * @return Collection<int, Voyage>
+     */
+    protected function normalizeVoyageLabels(Collection $voyages): Collection
+    {
+        $voyages = $voyages
+            ->filter(fn ($voyage) => $voyage instanceof Voyage)
+            ->values();
+
+        if ($voyages->isEmpty()) {
+            return $voyages;
+        }
+
+        $wpTitles = WpPost::query()
+            ->whereIn('ID', $voyages->pluck('wp_post_id')->filter(fn ($id) => (int) $id > 0)->map(fn ($id) => (int) $id)->unique()->values()->all())
+            ->pluck('post_title', 'ID');
+
+        $updates = [];
+        foreach ($voyages as $voyage) {
+            $currentName = trim((string) $voyage->name);
+            $wpTitle = trim((string) $wpTitles->get((int) ($voyage->wp_post_id ?? 0), ''));
+
+            $resolvedName = $this->isRealVoyageTitle($currentName)
+                ? $currentName
+                : ($wpTitle !== '' ? $wpTitle : '');
+
+            if ($resolvedName !== '' && $resolvedName !== $voyage->name) {
+                $voyage->name = $resolvedName;
+                $updates[(int) $voyage->id] = $resolvedName;
+            }
+
+            $voyage->resolved_name = $resolvedName !== '' ? $resolvedName : $currentName;
+        }
+
+        foreach ($updates as $voyageId => $resolvedName) {
+            Voyage::query()->whereKey($voyageId)->update(['name' => $resolvedName]);
+        }
+
+        return $voyages;
+    }
+
+    protected function isRealVoyageTitle(?string $value): bool
+    {
+        $title = trim((string) $value);
+        if ($title === '') {
+            return false;
+        }
+
+        $normalized = Str::of($title)->lower()->squish()->value();
+
+        return ! in_array($normalized, ['brouillon auto', 'tour', 'untitled tour'], true);
     }
 
     /**
