@@ -29,82 +29,144 @@
     $hasHighlights = isset($highlights) && count($highlights) > 0;
 @endphp
 
-{{-- ============ HERO ============ --}}
-<section class="ksk-hero {{ $hasMultiHero ? 'ksk-hero--gallery' : '' }}" id="ksk-hero">
-    {{-- Slider images --}}
-    <div class="ksk-hero__slider" id="ksk-hero-slider">
-        @forelse($heroThumbs as $idx => $img)
-            @php
-                $src = $img['url'] ?? null;
-                $srcset = $img['srcset'] ?? null;
-                $sizes = $img['sizes'] ?? '100vw';
-            @endphp
-            <img
-                src="{{ $src }}"
-                @if($srcset) srcset="{{ $srcset }}" sizes="{{ $sizes }}" @endif
-                alt="{{ $voyageName }}"
-                class="ksk-hero__slide {{ $idx === 0 ? 'is-active' : '' }}"
-                loading="{{ $idx === 0 ? 'eager' : 'lazy' }}"
-                decoding="async"
-                fetchpriority="{{ $idx === 0 ? 'high' : 'auto' }}"
-            >
-        @empty
-            <div class="ksk-hero__fallback"></div>
-        @endforelse
-    </div>
-    <div class="ksk-hero__overlay"></div>
+{{-- ============ HERO (Booking-style gallery) ============ --}}
+<section class="ksk-hero2" id="ksk-hero">
+    <div class="ksk-container">
+        @php
+            $galleryAll = $heroSlides; // full list for counts
+            $main = $heroSlides[0] ?? null;
+            $sideA = $heroSlides[1] ?? null;
+            $sideB = $heroSlides[2] ?? null;
+            $sideC = $heroSlides[3] ?? null;
+            $totalPhotos = count($heroUrls);
+            $extraPhotos = max(0, $totalPhotos - 4);
+        @endphp
 
-    {{-- Content --}}
-    <div class="ksk-hero__content">
-        <div class="ksk-hero__badges">
-            @if($voyage->destination)
-                <span class="ksk-chip"><i class="fas fa-map-marker-alt"></i> {{ e($voyage->destination) }}</span>
-            @endif
-            @if($voyage->duration_text)
-                <span class="ksk-chip"><i class="far fa-clock"></i> {{ e($voyage->duration_text) }}</span>
-            @endif
-            @if($hasPromo)
-                <span class="ksk-chip ksk-chip--promo"><i class="fas fa-tag"></i> -{{ $voyage->discount_percent }}%</span>
-            @endif
-        </div>
-        <h1 class="ksk-hero__title">{{ $voyageName }}</h1>
-        @if($voyage->accroche)
-            <p class="ksk-hero__sub">{{ e($voyage->accroche) }}</p>
-        @endif
-        <div class="ksk-hero__price-line">
-            @if($hasPriceFrom)
-                <span class="ksk-hero__price">{{ number_format($priceFrom, 0, ',', ' ') }} {{ $cur }}</span>
-                @if($hasPromo)
-                    <s class="ksk-hero__old">{{ number_format($voyage->old_price, 0, ',', ' ') }} {{ $cur }}</s>
+        <div class="ksk-hero2__shell">
+            {{-- LEFT: conversion content --}}
+            <div class="ksk-hero2__left">
+                <div class="ksk-hero2__badges">
+                    @if($voyage->destination)
+                        <span class="ksk-chip"><i class="fas fa-map-marker-alt"></i> {{ e($voyage->destination) }}</span>
+                    @endif
+                    @if($voyage->duration_text)
+                        <span class="ksk-chip"><i class="far fa-clock"></i> {{ e($voyage->duration_text) }}</span>
+                    @endif
+                    @if($hasPromo)
+                        <span class="ksk-chip ksk-chip--promo"><i class="fas fa-tag"></i> -{{ $voyage->discount_percent }}%</span>
+                    @endif
+                </div>
+
+                <h1 class="ksk-hero2__title">{{ $voyageName }}</h1>
+                @if($voyage->accroche)
+                    <p class="ksk-hero2__sub">{{ e($voyage->accroche) }}</p>
                 @endif
-                <span class="ksk-hero__per">/ personne</span>
-            @endif
+
+                <div class="ksk-hero2__cta">
+                    @if($hasPriceFrom)
+                        <div class="ksk-hero2__priceCard">
+                            <div class="ksk-hero2__priceTop">
+                                <span class="ksk-hero2__priceLabel">À partir de</span>
+                                <span class="ksk-hero2__priceMain">{{ number_format($priceFrom, 0, ',', ' ') }} {{ $cur }}</span>
+                            </div>
+                            <div class="ksk-hero2__priceBottom">
+                                @if($hasPromo)
+                                    <s class="ksk-hero2__priceOld">{{ number_format($voyage->old_price, 0, ',', ' ') }} {{ $cur }}</s>
+                                @endif
+                                <span class="ksk-hero2__per">/ personne</span>
+                            </div>
+                        </div>
+                    @endif
+                    <button type="button" class="ksk-btn ksk-btn--hero" onclick="ksk.scrollToBuilder()">
+                        <i class="fas fa-bolt"></i> Commencer la réservation
+                    </button>
+
+                    @if($hasGallery)
+                        <button type="button" class="ksk-btn ksk-btn--ghost" data-ksk-lb-open data-index="0">
+                            <i class="fas fa-images"></i> Voir les photos
+                            <span class="ksk-hero2__ghostCount">{{ $totalPhotos }}</span>
+                        </button>
+                    @endif
+                </div>
+            </div>
+
+            {{-- RIGHT: premium gallery --}}
+            <div class="ksk-hero2__right" data-ksk-gallery>
+                <div class="ksk-hero2__galleryCard">
+                    <div class="ksk-hero2__galleryGrid">
+                        <button type="button" class="ksk-hero2__gMain" data-ksk-lb-open data-index="0" aria-label="Ouvrir la photo 1">
+                            @if($main)
+                                @php
+                                    $mSrc = $main['url'] ?? null;
+                                    $mSrcset = $main['srcset'] ?? null;
+                                @endphp
+                                <img src="{{ $mSrc }}" @if($mSrcset) srcset="{{ $mSrcset }}" sizes="(min-width: 1280px) 720px, (min-width: 1024px) 54vw, 100vw" @endif alt="{{ $voyageName }}" class="hero-image" loading="eager" decoding="async" fetchpriority="high">
+                            @else
+                                <div class="ksk-hero2__ph"></div>
+                            @endif
+                        </button>
+
+                        <button type="button" class="ksk-hero2__gSmall ksk-hero2__gSmall--a" data-ksk-lb-open data-index="1" aria-label="Ouvrir la photo 2">
+                            @if($sideA)
+                                @php
+                                    $sUrl = $sideA['url'] ?? '';
+                                    $sSrcset = $sideA['srcset'] ?? null;
+                                @endphp
+                                <img src="{{ $sUrl }}" @if(!empty($sSrcset)) srcset="{{ $sSrcset }}" sizes="(min-width: 1280px) 340px, (min-width: 1024px) 22vw, 50vw" @endif alt="" class="hero-image" loading="lazy" decoding="async">
+                            @endif
+                        </button>
+
+                        <button type="button" class="ksk-hero2__gSmall ksk-hero2__gSmall--b" data-ksk-lb-open data-index="2" aria-label="Ouvrir la photo 3">
+                            @if($sideB)
+                                @php
+                                    $sUrl = $sideB['url'] ?? '';
+                                    $sSrcset = $sideB['srcset'] ?? null;
+                                @endphp
+                                <img src="{{ $sUrl }}" @if(!empty($sSrcset)) srcset="{{ $sSrcset }}" sizes="(min-width: 1280px) 340px, (min-width: 1024px) 22vw, 50vw" @endif alt="" class="hero-image" loading="lazy" decoding="async">
+                            @endif
+                        </button>
+
+                        <button type="button" class="ksk-hero2__gSmall ksk-hero2__gSmall--c" data-ksk-lb-open data-index="3" aria-label="Ouvrir la photo 4">
+                            @if($sideC)
+                                @php
+                                    $sUrl = $sideC['url'] ?? '';
+                                    $sSrcset = $sideC['srcset'] ?? null;
+                                @endphp
+                                <img src="{{ $sUrl }}" @if(!empty($sSrcset)) srcset="{{ $sSrcset }}" sizes="(min-width: 1280px) 340px, (min-width: 1024px) 22vw, 50vw" @endif alt="" class="hero-image" loading="lazy" decoding="async">
+                            @endif
+                            @if($extraPhotos > 0)
+                                <span class="ksk-hero2__more">+{{ $extraPhotos }} photos</span>
+                            @endif
+                        </button>
+                    </div>
+
+                    <button type="button" class="ksk-hero2__viewAll" data-ksk-lb-open data-index="0">
+                        <i class="fas fa-images"></i> Voir toutes les photos
+                        <span class="ksk-hero2__viewAllCount">{{ $totalPhotos }}</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Mobile slider --}}
+            <div class="ksk-hero2__mobile" id="ksk-hero2-mobile">
+                <div class="ksk-hero2__mobile-track" id="ksk-hero-slider">
+                    @foreach($heroThumbs as $idx => $img)
+                        @php
+                            $src = $img['url'] ?? null;
+                            $srcset = $img['srcset'] ?? null;
+                        @endphp
+                        <button type="button" class="ksk-hero2__mobile-slide" data-ksk-lb-open data-index="{{ $idx }}">
+                            <img src="{{ $src }}" @if($srcset) srcset="{{ $srcset }}" sizes="100vw" @endif alt="{{ $voyageName }}" class="hero-image" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}" decoding="async">
+                        </button>
+                    @endforeach
+                </div>
+                @if($hasMultiHero)
+                    <button class="ksk-hero2__nav ksk-hero2__nav--prev" id="ksk-hero-prev" aria-label="Précédent"><i class="fas fa-chevron-left"></i></button>
+                    <button class="ksk-hero2__nav ksk-hero2__nav--next" id="ksk-hero-next" aria-label="Suivant"><i class="fas fa-chevron-right"></i></button>
+                @endif
+            </div>
         </div>
-        <button type="button" class="ksk-btn ksk-btn--hero" onclick="ksk.scrollToBuilder()">
-            <i class="fas fa-bolt"></i> Commencer la réservation
-        </button>
     </div>
-
-    {{-- Thumbnail strip --}}
-    @if($hasMultiHero)
-    <div class="ksk-hero__thumbs" id="ksk-hero-thumbs">
-        @foreach($heroThumbs as $idx => $img)
-            @php
-                $thumb = $img['thumb_url'] ?? $img['url'] ?? null;
-            @endphp
-            <button class="ksk-hero__thumb {{ $idx === 0 ? 'is-active' : '' }}" data-slide="{{ $idx }}">
-                <img src="{{ $thumb }}" alt="" loading="lazy" decoding="async">
-            </button>
-        @endforeach
-        <span class="ksk-hero__count"><i class="fas fa-images"></i> {{ count($heroThumbs) }} photos</span>
-    </div>
-    @endif
-
-    {{-- Slider nav arrows --}}
-    @if($hasMultiHero)
-    <button class="ksk-hero__arrow ksk-hero__arrow--prev" id="ksk-hero-prev" aria-label="Précédent"><i class="fas fa-chevron-left"></i></button>
-    <button class="ksk-hero__arrow ksk-hero__arrow--next" id="ksk-hero-next" aria-label="Suivant"><i class="fas fa-chevron-right"></i></button>
-    @endif
 </section>
 
 {{-- ============ MAIN LAYOUT ============ --}}
@@ -696,6 +758,8 @@
         var lbImg = lb.querySelector('.ksk-lightbox__img');
         var lbCnt = lb.querySelector('.ksk-lightbox__counter');
         function showLb(i){ cur_lb=((i%imgs.length)+imgs.length)%imgs.length; lbImg.src=imgs[cur_lb]; lbCnt.textContent=(cur_lb+1)+'/'+imgs.length; }
+        window.__kskShowLb = showLb;
+        window.__kskLb = lb;
         document.querySelectorAll('[data-ksk-lb]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); showLb(parseInt(a.dataset.index||'0')); lb.hidden=false; document.body.style.overflow='hidden'; }); });
         lb.querySelector('.ksk-lightbox__close').addEventListener('click',function(){ lb.hidden=true; document.body.style.overflow=''; });
         lb.querySelector('.ksk-lightbox__prev').addEventListener('click',function(){ showLb(cur_lb-1); });
@@ -710,33 +774,39 @@
         scrollToBuilder: function(){ document.getElementById('ksk-builder').scrollIntoView({behavior:'smooth',block:'start'}); }
     };
 
-    /* ═══ HERO SLIDER ═══ */
+    /* ═══ HERO (Booking-style) ═══ */
     (function(){
-        var slides = document.querySelectorAll('.ksk-hero__slide');
-        var thumbs = document.querySelectorAll('.ksk-hero__thumb');
-        if(slides.length <= 1) return;
-        var cur = 0;
-        var total = slides.length;
-        var timer;
+        // Mobile slider (simple, no auto)
+        var slides = document.querySelectorAll('.ksk-hero2__mobile-slide');
+        if(slides.length > 1) {
+            var cur = 0;
+            var total = slides.length;
+            function show(n) {
+                cur = ((n % total) + total) % total;
+                slides.forEach(function(s, i){ s.classList.toggle('is-active', i === cur); });
+            }
+            function next(){ show(cur + 1); }
+            function prev(){ show(cur - 1); }
+            show(0);
 
-        function show(n) {
-            cur = ((n % total) + total) % total;
-            slides.forEach(function(s, i){ s.classList.toggle('is-active', i === cur); });
-            thumbs.forEach(function(t, i){ t.classList.toggle('is-active', i === cur); });
+            var prevBtn = document.getElementById('ksk-hero-prev');
+            var nextBtn = document.getElementById('ksk-hero-next');
+            if(prevBtn) prevBtn.addEventListener('click', function(e){ e.preventDefault(); prev(); });
+            if(nextBtn) nextBtn.addEventListener('click', function(e){ e.preventDefault(); next(); });
         }
-        function next(){ show(cur + 1); }
-        function prev(){ show(cur - 1); }
-        function startAuto(){ timer = setInterval(next, 5000); }
-        function stopAuto(){ clearInterval(timer); }
 
-        var prevBtn = document.getElementById('ksk-hero-prev');
-        var nextBtn = document.getElementById('ksk-hero-next');
-        if(prevBtn) prevBtn.addEventListener('click', function(){ stopAuto(); prev(); startAuto(); });
-        if(nextBtn) nextBtn.addEventListener('click', function(){ stopAuto(); next(); startAuto(); });
-        thumbs.forEach(function(t){
-            t.addEventListener('click', function(){ stopAuto(); show(parseInt(t.dataset.slide)); startAuto(); });
+        // Hook hero tiles to existing lightbox
+        document.querySelectorAll('[data-ksk-lb-open]').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var _lb = window.__kskLb || lb;
+                var _show = window.__kskShowLb || (typeof showLb === 'function' ? showLb : null);
+                if(!_lb || typeof _show !== 'function') return;
+                var i = parseInt(btn.dataset.index || '0');
+                _show(i);
+                _lb.hidden = false;
+                document.body.style.overflow = 'hidden';
+            });
         });
-        startAuto();
     })();
 
     /* ═══ INIT ═══ */
