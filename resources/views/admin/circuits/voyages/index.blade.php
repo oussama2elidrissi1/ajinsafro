@@ -103,6 +103,11 @@
                                             <a href="https://ajinsafro.net/tours/{{ $tour->post_name }}" target="_blank" class="btn btn-sm btn-soft-info waves-effect waves-light me-1" title="Voir sur WordPress">
                                                 <i class="bx bx-show"></i>
                                             </a>
+                                            @if(!empty($tour->laravel_slug))
+                                                <a href="{{ url('/voyages/'.$tour->laravel_slug) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-soft-success waves-effect waves-light me-1" title="Voir la page client">
+                                                    <i class="bx bx-link-external"></i>
+                                                </a>
+                                            @endif
                                             <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="btn btn-sm btn-soft-primary waves-effect waves-light me-1">Modifier</a>
                                             <form action="{{ route('admin.circuits.voyages.destroy', $tour->ID) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce tour de WordPress ?');">
                                                 @csrf
