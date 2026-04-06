@@ -38,6 +38,7 @@ class HomePageSettingsController extends Controller
 			'tab' => $tab,
 		]);
 	}
+	
 
 	public function updateHeader(Request $request): RedirectResponse
 	{
