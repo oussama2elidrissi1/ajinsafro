@@ -8,6 +8,7 @@ use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Models\Voyage;
 use App\Models\VoyageFlightOption;
+use App\Models\Wp\WpPost;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -34,20 +35,61 @@ class VoyageController extends Controller
 
     public function show(string $slug): View
     {
+        $with = [
+            'images',
+            'programDays' => fn ($q) => $q->orderBy('day_number'),
+            'programDays.hotel',
+            'flights.airline',
+            'flightOptions' => fn ($q) => $q->orderBy('type')->orderBy('sort_order'),
+            'flightOptions.airline',
+            'extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
+            'departures' => fn ($q) => $q->orderBy('start_date'),
+        ];
+
+        // PROD SAFE: certains environnements n’ont pas le `slug/status` Laravel synchronisé.
+        // - 1) tente la route standard par slug (si status OK)
+        // - 2) tente par slug sans contrainte status (si status NULL / différent)
+        // - 3) supporte le format `/voyages/tour-{wpId}` via `wp_post_id`
         $voyage = Voyage::query()
             ->whereIn('status', self::VISIBLE_STATUSES)
             ->where('slug', $slug)
-            ->with([
-                'images',
-                'programDays' => fn ($q) => $q->orderBy('day_number'),
-                'programDays.hotel',
-                'flights.airline',
-                'flightOptions' => fn ($q) => $q->orderBy('type')->orderBy('sort_order'),
-                'flightOptions.airline',
-                'extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
-                'departures' => fn ($q) => $q->orderBy('start_date'),
-            ])
-            ->firstOrFail();
+            ->with($with)
+            ->first();
+
+        if (! $voyage) {
+            $voyage = Voyage::query()
+                ->where('slug', $slug)
+                ->with($with)
+                ->first();
+        }
+
+        if (! $voyage && preg_match('/^tour-(\\d+)$/', $slug, $m)) {
+            $wpId = (int) $m[1];
+            $voyage = Voyage::query()
+                ->where('wp_post_id', $wpId)
+                ->with($with)
+                ->first();
+
+            // Fallback ultime: si la ligne Laravel n’existe pas, on la crée (slug = tour-{wpId}).
+            if (! $voyage) {
+                $wp = WpPost::tours()->where('ID', $wpId)->first();
+                if ($wp) {
+                    $voyage = Voyage::firstOrCreate(
+                        ['wp_post_id' => $wpId],
+                        [
+                            'name' => (string) ($wp->post_title ?? ('Tour #'.$wpId)),
+                            'slug' => 'tour-'.$wpId,
+                            'status' => ($wp->post_status === 'publish') ? 'published' : 'active',
+                        ]
+                    );
+                    $voyage->load($with);
+                }
+            }
+        }
+
+        if (! $voyage) {
+            abort(404);
+        }
 
         $today = Carbon::today();
 
