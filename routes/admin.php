@@ -39,6 +39,7 @@ use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Auth\LockScreenController;
+use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Auth::routes();
+
+// Front pages also served on booking domain (to avoid 404 on /voyages/{slug}).
+// Intentionally no route names here to avoid collisions with routes/public.php.
+if (is_string(config('app.admin_domain')) && config('app.admin_domain') !== '') {
+    Route::get('/voyages', [FrontVoyageController::class, 'index']);
+    Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show']);
+}
 
 // Public entrypoint from WordPress UI (ajinsafro.net/login form)
 Route::post('auth/public-login', [\App\Http\Controllers\Auth\PublicLoginController::class, 'store'])
