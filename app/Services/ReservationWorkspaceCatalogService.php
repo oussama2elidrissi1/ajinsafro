@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Departure;
+use App\Models\DepartureHotelRoom;
 use App\Models\Reservation;
 use App\Models\TourHotel;
 use App\Models\TravelDayItem;
@@ -19,6 +20,7 @@ use App\Support\TourPlacesCalculator;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -294,6 +296,7 @@ class ReservationWorkspaceCatalogService
                 'ws_avail' => $wsAvail,
                 'ws_has_future' => $hasFutureTravelDate,
                 'modal_detail' => ($packageModalDetail = $this->buildPackageModalDetail(
+                    $user,
                     $wp,
                     $voyage,
                     $wpId,
@@ -318,7 +321,7 @@ class ReservationWorkspaceCatalogService
             ]);
         }
 
-        $this->pushLaravelNativePackageRows($rows, $today, $statsByTour, $passengersByTour);
+        $this->pushLaravelNativePackageRows($rows, $user, $today, $statsByTour, $passengersByTour);
 
         if (config('app.debug')) {
             $meta['package_price_debug'] = $packagePriceDebug;
@@ -1361,6 +1364,7 @@ class ReservationWorkspaceCatalogService
      * @return array<string, mixed>
      */
     private function buildPackageModalDetail(
+        User $user,
         WpPost $wp,
         ?Voyage $voyage,
         int $wpId,
@@ -1399,6 +1403,15 @@ class ReservationWorkspaceCatalogService
 
         $band = $this->computeWorkspaceAvailabilityBand($placesPayload, $passengersReserved);
 
+        $departures = $this->buildPerDepartureAvailability($user, $voyage, $tdColl, $today, $placesPayload, $laravelId);
+
+        $createRoute = $laravelId ? route('admin.reservations.create', array_filter([
+            'tour_id' => $laravelId,
+            'travel_date_id' => $preferredTravelDateId,
+        ], fn ($v) => $v !== null && $v !== '')) : null;
+
+        $publicShowUrl = ($voyage && ! empty($voyage->slug)) ? url('/voyages/'.$voyage->slug) : null;
+
         return [
             'kind' => 'package',
             'title' => $title,
@@ -1409,12 +1422,14 @@ class ReservationWorkspaceCatalogService
             'destination' => $destination,
             'duration' => $this->resolveDurationLabel($voyage, $durationMetaRaw),
             'travel_dates' => $travelDates,
+            'departures' => $departures,
             'places' => [
                 'state' => $placesPayload['state'],
                 'total' => $placesTotal,
                 'reserved' => $passengersReserved,
                 'remaining' => $remaining,
                 'fill_pct' => $pct,
+                'scope' => 'all_dates',
             ],
             'rooms' => $placesPayload['lines'] ?? [],
             'prices' => [
@@ -1433,17 +1448,232 @@ class ReservationWorkspaceCatalogService
                 'prestation_type' => 'package',
                 'label' => $title.' (#'.$wpId.')',
             ],
+            'route_reserver' => $createRoute,
             'routes' => [
                 'reservations' => $laravelId ? route('admin.reservations.index', array_filter([
                     'voyage_id' => $laravelId,
                 ], fn ($v) => $v !== null && $v !== '')) : null,
-                'create' => $laravelId ? route('admin.reservations.create', array_filter([
-                    'tour_id' => $laravelId,
-                    'travel_date_id' => $preferredTravelDateId,
-                ], fn ($v) => $v !== null && $v !== '')) : null,
+                'create' => $createRoute,
                 'edit_voyage' => route('admin.circuits.voyages.edit', $wpId),
+                'public_show' => $publicShowUrl,
             ],
         ];
+    }
+
+    /**
+     * Statistiques et places par date de départ (réservations filtrées par {@see TravelDate} id).
+     *
+     * @param  Collection<int, TravelDate>  $tdColl
+     * @return list<array<string, mixed>>
+     */
+    private function buildPerDepartureAvailability(
+        User $user,
+        ?Voyage $voyage,
+        Collection $tdColl,
+        Carbon $today,
+        array $placesPayload,
+        ?int $laravelId,
+    ): array {
+        $sorted = $tdColl->filter(fn ($d) => $d instanceof TravelDate && $d->date)
+            ->sortBy(fn (TravelDate $d) => $d->date->timestamp);
+
+        $ids = $sorted->map(fn (TravelDate $d) => (int) $d->id)->values()->all();
+        if ($ids === []) {
+            return [];
+        }
+
+        $metrics = $this->batchReservationMetricsByTravelDateIds($user, $voyage, $ids);
+
+        // Source de vérité capacité : départ (répartition chambres) → departure_hotel_rooms.total_places.
+        // Mapping : TravelDate(id) ↔ Departure.wp_travel_date_id (pour les voyages WP liés).
+        $departuresByTravelDateId = collect();
+        if ($voyage !== null && (int) ($voyage->id ?? 0) > 0) {
+            $depQuery = Departure::query()
+                ->where('voyage_id', (int) $voyage->id)
+                ->whereIn('wp_travel_date_id', $ids)
+                ->get();
+            $departuresByTravelDateId = $depQuery->keyBy(fn (Departure $d) => (int) ($d->wp_travel_date_id ?? 0));
+        }
+
+        $out = [];
+        foreach ($sorted as $td) {
+            $tid = (int) $td->id;
+            $m = $metrics[$tid] ?? [
+                'validee' => 0,
+                'en_cours' => 0,
+                'annulee' => 0,
+                'pax_validee' => 0,
+                'pax_en_cours' => 0,
+                'pax_annulee' => 0,
+            ];
+            $dossierTotal = $m['validee'] + $m['en_cours'] + $m['annulee'];
+            $confirmedPax = (int) ($m['pax_validee'] ?? 0);
+
+            $departure = $departuresByTravelDateId->get($tid);
+            $departureId = $departure instanceof Departure ? (int) $departure->id : null;
+
+            $cap = 0;
+            $capNote = null;
+            $roomsDebug = null;
+            if ($departureId) {
+                $roomRow = DB::connection($departure->getConnectionName() ?: config('database.default'))
+                    ->table('departure_hotel_rooms as dhr')
+                    ->join('departure_hotels as dh', 'dh.id', '=', 'dhr.departure_hotel_id')
+                    ->where('dh.departure_id', $departureId)
+                    ->where('dh.is_active', true)
+                    ->whereNotIn('dhr.status', [DepartureHotelRoom::STATUS_CLOSED, DepartureHotelRoom::STATUS_INACTIVE])
+                    ->selectRaw('COALESCE(SUM(dhr.total_places), 0) as tp, COUNT(*) as rooms_count')
+                    ->first();
+
+                $cap = max(0, (int) ($roomRow->tp ?? 0));
+                $roomsCount = (int) ($roomRow->rooms_count ?? 0);
+
+                // Fallback prudent : si des bases ont total_capacity renseigné mais total_places non rempli.
+                if ($cap === 0 && (int) ($departure->total_capacity ?? 0) > 0) {
+                    $cap = (int) $departure->total_capacity;
+                }
+
+                if ($roomsCount <= 0) {
+                    $capNote = 'Aucune chambre configurée';
+                }
+
+                if (config('app.debug')) {
+                    $roomsDebug = [
+                        'departure_id' => $departureId,
+                        'wp_travel_date_id' => (int) ($departure->wp_travel_date_id ?? 0),
+                        'sum_total_places' => (int) ($roomRow->tp ?? 0),
+                        'rooms_count' => $roomsCount,
+                        'departure_total_capacity_field' => (int) ($departure->total_capacity ?? 0),
+                        'capacity_final' => $cap,
+                    ];
+                }
+            } else {
+                $capNote = 'Départ non synchronisé';
+            }
+
+            // IMPORTANT: places occupées = confirmées uniquement (pending n’occupe pas).
+            $remaining = max(0, $cap - $confirmedPax);
+            $fillPct = $cap > 0 ? min(100, (int) round(($confirmedPax / $cap) * 100)) : null;
+
+            $almostThreshold = 10; // seuil métier (modifiable)
+
+            if ($cap <= 0) {
+                $statusKey = 'unknown';
+                $statusLabel = $capNote ?: 'Aucune capacité';
+            } elseif ($remaining <= 0) {
+                $statusKey = 'full';
+                $statusLabel = 'Complet';
+            } elseif ($remaining < $almostThreshold) {
+                $statusKey = 'almost_full';
+                $statusLabel = 'Presque complet';
+            } else {
+                $statusKey = 'available';
+                $statusLabel = 'Disponible';
+            }
+
+            $reserveUrl = $laravelId ? route('admin.reservations.create', array_filter([
+                'tour_id' => $laravelId,
+                'travel_date_id' => $tid,
+            ], fn ($v) => $v !== null && $v !== '')) : null;
+
+            $listUrl = $laravelId ? route('admin.reservations.index', array_filter([
+                'voyage_id' => $laravelId,
+                'travel_date_id' => $tid,
+            ], fn ($v) => $v !== null && $v !== '')) : null;
+
+            $out[] = [
+                'travel_date_id' => $tid,
+                'date_iso' => $td->date->format('Y-m-d'),
+                'date_label' => $this->formatFrenchLongDate($td->date),
+                'is_past' => $td->date->lt($today),
+                'departure_id' => $departureId,
+                'capacity' => $cap,
+                'capacity_known' => true,
+                'capacity_note' => $capNote,
+                'reservations' => [
+                    'validee' => $m['validee'],
+                    'en_cours' => $m['en_cours'],
+                    'annulee' => $m['annulee'],
+                    'total' => $dossierTotal,
+                ],
+                'pax' => [
+                    'validee' => $m['pax_validee'],
+                    'en_cours' => $m['pax_en_cours'],
+                    'annulee' => $m['pax_annulee'],
+                ],
+                'remaining' => $remaining,
+                'fill_pct' => $fillPct,
+                'booked_pax' => $confirmedPax,
+                'status_key' => $statusKey,
+                'status_label' => $statusLabel,
+                'debug' => $roomsDebug,
+                'routes' => [
+                    'reserve' => $reserveUrl,
+                    'reservations' => $listUrl,
+                ],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  array<int, int>  $travelDateIds
+     * @return array<int, array{validee: int, en_cours: int, annulee: int, pax_validee: int, pax_en_cours: int, pax_annulee: int}>
+     */
+    private function batchReservationMetricsByTravelDateIds(User $user, ?Voyage $voyage, array $travelDateIds): array
+    {
+        if ($voyage === null || $travelDateIds === []) {
+            return [];
+        }
+
+        $travelDateIds = array_values(array_unique(array_map('intval', $travelDateIds)));
+        $physicalIds = array_values(array_unique(array_map('intval', Voyage::allIdsSharingWpTour((int) $voyage->id))));
+
+        $base = [];
+        foreach ($travelDateIds as $tid) {
+            $base[$tid] = [
+                'validee' => 0,
+                'en_cours' => 0,
+                'annulee' => 0,
+                'pax_validee' => 0,
+                'pax_en_cours' => 0,
+                'pax_annulee' => 0,
+            ];
+        }
+
+        $q = Reservation::query()
+            ->whereIn('tour_id', $physicalIds)
+            ->whereIn('travel_date_id', $travelDateIds);
+        $this->branchScope->scopeReservations($q, $user);
+
+        $aggregates = (clone $q)
+            ->selectRaw('travel_date_id, status, COUNT(*) as aggregate, COALESCE(SUM(passengers_count), 0) as pax_sum')
+            ->groupBy('travel_date_id', 'status')
+            ->get();
+
+        foreach ($aggregates as $row) {
+            $tdId = (int) $row->travel_date_id;
+            if (! isset($base[$tdId])) {
+                continue;
+            }
+            $n = (int) $row->aggregate;
+            $pax = (int) $row->pax_sum;
+            match ($row->status) {
+                Reservation::STATUS_VALIDEE => $base[$tdId]['validee'] += $n,
+                Reservation::STATUS_EN_COURS => $base[$tdId]['en_cours'] += $n,
+                Reservation::STATUS_ANNULEE => $base[$tdId]['annulee'] += $n,
+                default => null,
+            };
+            match ($row->status) {
+                Reservation::STATUS_VALIDEE => $base[$tdId]['pax_validee'] += $pax,
+                Reservation::STATUS_EN_COURS => $base[$tdId]['pax_en_cours'] += $pax,
+                Reservation::STATUS_ANNULEE => $base[$tdId]['pax_annulee'] += $pax,
+                default => null,
+            };
+        }
+
+        return $base;
     }
 
     /**
@@ -1528,7 +1758,7 @@ class ReservationWorkspaceCatalogService
         $statsByTour = $this->batchReservationStatsByTour($user, $universe);
         $passengersByTour = $this->batchPassengersBookedByTour($user, $universe);
 
-        return $this->composeLaravelNativePackageRow($voyage, $statsByTour, $passengersByTour, $today);
+        return $this->composeLaravelNativePackageRow($voyage, $statsByTour, $passengersByTour, $today, $user);
     }
 
     /**
@@ -1541,6 +1771,7 @@ class ReservationWorkspaceCatalogService
         array $statsByTour,
         array $passengersByTour,
         Carbon $today,
+        User $user,
     ): ?array {
         $tid = (int) $voyage->id;
         if ((int) ($voyage->wp_post_id ?? 0) !== 0) {
@@ -1552,7 +1783,7 @@ class ReservationWorkspaceCatalogService
 
         $rowStats = $statsByTour[$tid] ?? $this->emptyStats();
         $paxBooked = (int) ($passengersByTour[$tid] ?? 0);
-        $packageModalDetail = $this->buildLaravelNativePackageModalPayload($voyage, $rowStats, $paxBooked, $today);
+        $packageModalDetail = $this->buildLaravelNativePackageModalPayload($voyage, $rowStats, $paxBooked, $today, $user);
         $travelDateId = $packageModalDetail['form']['travel_date_id'] ?? null;
         $travelDatesList = $packageModalDetail['travel_dates'] ?? [];
         $hasFuture = $travelDatesList !== [] && collect($travelDatesList)->contains(fn ($d) => empty($d['is_past']));
@@ -1595,6 +1826,7 @@ class ReservationWorkspaceCatalogService
 
     private function pushLaravelNativePackageRows(
         Collection $rows,
+        User $user,
         Carbon $today,
         array $statsByTour,
         array $passengersByTour,
@@ -1610,7 +1842,7 @@ class ReservationWorkspaceCatalogService
             if ($rows->contains(fn ($r) => ($r['type'] ?? '') === 'package' && (int) ($r['voyage_id'] ?? 0) === $tid)) {
                 continue;
             }
-            $rec = $this->composeLaravelNativePackageRow($voyage, $statsByTour, $passengersByTour, $today);
+            $rec = $this->composeLaravelNativePackageRow($voyage, $statsByTour, $passengersByTour, $today, $user);
             if ($rec !== null) {
                 $rows->push($rec);
             }
@@ -1621,7 +1853,7 @@ class ReservationWorkspaceCatalogService
      * @param  array{validee: int, en_cours: int, annulee: int}  $stats
      * @return array<string, mixed>
      */
-    private function buildLaravelNativePackageModalPayload(Voyage $voyage, array $stats, int $paxBooked, Carbon $today): array
+    private function buildLaravelNativePackageModalPayload(Voyage $voyage, array $stats, int $paxBooked, Carbon $today, User $user): array
     {
         $tid = (int) $voyage->id;
         $tdColl = TravelDate::query()
@@ -1650,6 +1882,14 @@ class ReservationWorkspaceCatalogService
         $priceLabel = $this->formatVoyagePriceLabel($voyage);
         $band = $this->computeWorkspaceAvailabilityBand(['state' => 'na', 'total' => null], $paxBooked);
 
+        $placesPayload = ['state' => 'na', 'total' => null, 'lines' => [], 'ignored' => []];
+        $departures = $this->buildPerDepartureAvailability($user, $voyage, $tdColl, $today, $placesPayload, $tid);
+
+        $createRoute = route('admin.reservations.create', array_filter([
+            'tour_id' => $tid,
+            'travel_date_id' => $preferredTravelDateId,
+        ], fn ($v) => $v !== null && $v !== ''));
+
         return [
             'kind' => 'package',
             'title' => $voyage->name ?: 'Voyage #'.$tid,
@@ -1662,12 +1902,14 @@ class ReservationWorkspaceCatalogService
                 : null,
             'duration' => $this->resolveDurationLabel($voyage, null),
             'travel_dates' => $travelDates,
+            'departures' => $departures,
             'places' => [
                 'state' => 'na',
                 'total' => null,
                 'reserved' => $paxBooked,
                 'remaining' => null,
                 'fill_pct' => null,
+                'scope' => 'all_dates',
             ],
             'rooms' => [],
             'prices' => [
@@ -1686,14 +1928,12 @@ class ReservationWorkspaceCatalogService
                 'prestation_type' => 'package',
                 'label' => ($voyage->name ?: 'Voyage').' · Laravel',
             ],
+            'route_reserver' => $createRoute,
             'routes' => [
                 'reservations' => route('admin.reservations.index', array_filter([
                     'voyage_id' => $tid,
                 ], fn ($v) => $v !== null && $v !== '')),
-                'create' => route('admin.reservations.create', array_filter([
-                    'tour_id' => $tid,
-                    'travel_date_id' => $preferredTravelDateId,
-                ], fn ($v) => $v !== null && $v !== '')),
+                'create' => $createRoute,
                 'edit_voyage' => null,
             ],
         ];

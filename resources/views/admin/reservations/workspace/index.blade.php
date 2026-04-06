@@ -413,6 +413,145 @@
         color: #b91c1c;
         border-color: #fecaca;
     }
+    .ws-md-dep-hint {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin: 0 0 0.85rem;
+        line-height: 1.45;
+    }
+    .ws-md-departure-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .ws-md-departure-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+        box-shadow: 0 1px 2px rgba(14, 58, 90, 0.04);
+    }
+    .ws-md-departure-card--past {
+        opacity: 0.9;
+    }
+    .ws-md-departure-card-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem 0.75rem;
+        margin-bottom: 0.6rem;
+    }
+    .ws-md-departure-date {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #0e3a5a;
+        letter-spacing: -0.02em;
+    }
+    .ws-md-departure-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        justify-content: flex-end;
+    }
+    .ws-md-departure-actions a {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.35rem 0.55rem;
+        border-radius: 8px;
+        text-decoration: none;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .ws-md-departure-actions a:hover {
+        border-color: #0083c4;
+        color: #0083c4;
+        background: #f0f9ff;
+    }
+    .ws-md-departure-actions a.ws-md-dep-primary {
+        border-color: rgba(5, 150, 105, 0.45);
+        background: #ecfdf5;
+        color: #047857;
+    }
+    .ws-md-departure-actions a.ws-md-dep-primary:hover {
+        background: #d1fae5;
+        border-color: #059669;
+        color: #065f46;
+    }
+    .ws-md-avail-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid transparent;
+    }
+    .ws-md-avail-badge--ok {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+    .ws-md-avail-badge--warn {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fde68a;
+    }
+    .ws-md-avail-badge--full {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+    .ws-md-avail-badge--unknown {
+        background: #f1f5f9;
+        color: #475569;
+        border-color: #e2e8f0;
+    }
+    .ws-md-departure-kpis {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+        font-size: 0.8125rem;
+    }
+    @media (min-width: 520px) {
+        .ws-md-departure-kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    .ws-md-dep-kpi {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5rem;
+        padding: 0.28rem 0;
+        border-bottom: 1px dashed #f1f5f9;
+    }
+    .ws-md-dep-kpi:last-child {
+        border-bottom: none;
+    }
+    .ws-md-dep-kpi span {
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 0.72rem;
+    }
+    .ws-md-dep-kpi strong {
+        font-weight: 800;
+        color: #0f172a;
+        font-variant-numeric: tabular-nums;
+    }
+    .ws-md-progress--dep {
+        margin-top: 0.55rem;
+    }
+    .ws-md-progress-bar--dep-warn {
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+    .ws-md-progress-bar--dep-full {
+        background: linear-gradient(90deg, #ef4444, #b91c1c);
+    }
     .ws-md-footer {
         flex-shrink: 0;
         padding: 1rem 1.5rem;
@@ -740,6 +879,64 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.style.overflow = 'auto';
         }, 280);
     }
+    function renderWsDeparturesHtml(d) {
+        var deps = d.departures;
+        if (!deps || !deps.length) return '';
+        var capNote = '<p class="ws-md-dep-hint">Capacité calculée depuis la répartition des chambres du départ. Les dossiers sans date de départ ne sont pas inclus ici.</p>';
+        var h = '<section class="ws-md-card" aria-labelledby="ws-sec-dep-avail">';
+        h += '<div class="ws-md-section-head" id="ws-sec-dep-avail"><i class="fas fa-route" aria-hidden="true"></i> Disponibilités par départ</div>';
+        h += capNote;
+        h += '<div class="ws-md-departure-list">';
+        deps.forEach(function (dep) {
+            var rs = dep.reservations || {};
+            var sk = dep.status_key || 'unknown';
+            var badgeClass = 'ws-md-avail-badge ws-md-avail-badge--unknown';
+            if (sk === 'available') badgeClass = 'ws-md-avail-badge ws-md-avail-badge--ok';
+            else if (sk === 'almost_full') badgeClass = 'ws-md-avail-badge ws-md-avail-badge--warn';
+            else if (sk === 'full') badgeClass = 'ws-md-avail-badge ws-md-avail-badge--full';
+            var pastClass = dep.is_past ? ' ws-md-departure-card--past' : '';
+            h += '<article class="ws-md-departure-card' + pastClass + '">';
+            h += '<div class="ws-md-departure-card-head">';
+            h += '<div>';
+            h += '<div class="ws-md-departure-date">' + escapeWsHtml(dep.date_label || '—');
+            if (dep.is_past) h += ' <span class="ws-md-tag ws-md-tag-past">Passé</span>';
+            h += '</div>';
+            h += '</div>';
+            h += '<span class="' + badgeClass + '" title="État de remplissage">' + escapeWsHtml(dep.status_label || '—') + '</span>';
+            h += '</div>';
+            h += '<div class="ws-md-departure-kpis">';
+            h += '<div class="ws-md-dep-kpi"><span>Capacité</span><strong>' + escapeWsHtml(String(dep.capacity != null ? dep.capacity : 0)) + '</strong></div>';
+            h += '<div class="ws-md-dep-kpi"><span>Confirmées</span><strong>' + (rs.validee != null ? rs.validee : 0) + '</strong></div>';
+            h += '<div class="ws-md-dep-kpi"><span>En attente</span><strong>' + (rs.en_cours != null ? rs.en_cours : 0) + '</strong></div>';
+            h += '<div class="ws-md-dep-kpi"><span>Annulées</span><strong>' + (rs.annulee != null ? rs.annulee : 0) + '</strong></div>';
+            h += '<div class="ws-md-dep-kpi"><span>Total dossiers</span><strong>' + (rs.total != null ? rs.total : 0) + '</strong></div>';
+            h += '<div class="ws-md-dep-kpi"><span>Places restantes</span><strong>' + (dep.remaining != null ? escapeWsHtml(String(dep.remaining)) : '—') + '</strong></div>';
+            if (dep.fill_pct != null) {
+                h += '<div class="ws-md-dep-kpi"><span>Taux remplissage</span><strong>' + dep.fill_pct + '%</strong></div>';
+            }
+            h += '</div>';
+            if (dep.capacity_note) {
+                h += '<p style="margin:0.5rem 0 0;font-size:0.75rem;color:#64748b">' + escapeWsHtml(dep.capacity_note) + '</p>';
+            }
+            if (dep.capacity_known && dep.fill_pct != null) {
+                var barClass = 'ws-md-progress-bar';
+                if (sk === 'full') barClass += ' ws-md-progress-bar--dep-full';
+                else if (sk === 'almost_full') barClass += ' ws-md-progress-bar--dep-warn';
+                h += '<div class="ws-md-progress ws-md-progress--dep" role="progressbar" aria-valuenow="' + dep.fill_pct + '" aria-valuemin="0" aria-valuemax="100"><div class="' + barClass + '" style="width:' + dep.fill_pct + '%"></div></div>';
+                h += '<p style="margin:0.35rem 0 0;font-size:0.65rem;color:#94a3b8;font-weight:600">Basé sur les passagers des réservations confirmées / capacité</p>';
+            }
+            var rts = dep.routes || {};
+            if (rts.reserve || rts.reservations) {
+                h += '<div class="ws-md-departure-actions">';
+                if (rts.reserve) h += '<a href="' + escapeWsHtml(rts.reserve) + '" class="ws-md-dep-primary">Réserver ce départ</a>';
+                if (rts.reservations) h += '<a href="' + escapeWsHtml(rts.reservations) + '">Voir les réservations</a>';
+                h += '</div>';
+            }
+            h += '</article>';
+        });
+        h += '</div></section>';
+        return h;
+    }
     function renderWsModalBody(d) {
         if (!d) return '';
         if (d.kind === 'package') {
@@ -761,17 +958,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 html += '</div></section>';
             }
-            if (d.places && d.places.state === 'ok' && d.places.total != null) {
+            if (d.departures && d.departures.length) {
+                html += renderWsDeparturesHtml(d);
+            } else if (d.places && d.places.state === 'ok' && d.places.total != null) {
                 var pct = d.places.fill_pct != null ? d.places.fill_pct : 0;
                 html += '<section class="ws-md-card" aria-labelledby="ws-sec-places">';
-                html += '<div class="ws-md-section-head" id="ws-sec-places"><i class="fas fa-users" aria-hidden="true"></i> Places</div>';
+                html += '<div class="ws-md-section-head" id="ws-sec-places"><i class="fas fa-users" aria-hidden="true"></i> Places (vue globale)</div>';
+                html += '<p class="ws-md-dep-hint">Aucune date de départ listée : vue agrégée toutes dates.</p>';
                 html += '<div class="ws-md-places-row">';
                 html += '<div class="ws-md-stat-box"><span>Total</span><strong>' + d.places.total + '</strong></div>';
                 html += '<div class="ws-md-stat-box"><span>Réservées</span><strong>' + d.places.reserved + '</strong></div>';
                 html += '<div class="ws-md-stat-box"><span>Disponibles</span><strong>' + (d.places.remaining != null ? d.places.remaining : '—') + '</strong></div>';
                 html += '</div>';
                 html += '<div class="ws-md-progress" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + pct + '%"></div></div>';
-                html += '<p style="margin:0.5rem 0 0;font-size:0.7rem;color:#94a3b8;font-weight:600">' + pct + '% des places réservées</p>';
+                html += '<p style="margin:0.5rem 0 0;font-size:0.7rem;color:#94a3b8;font-weight:600">' + pct + '% des places réservées (toutes dates confondues)</p>';
                 html += '</section>';
             } else if (d.places) {
                 html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-users"></i> Places</div>';
@@ -800,6 +1000,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (d.stats) {
                 html += '<section class="ws-md-card" aria-labelledby="ws-sec-stats">';
                 html += '<div class="ws-md-section-head" id="ws-sec-stats"><i class="fas fa-chart-bar" aria-hidden="true"></i> Réservations (toutes dates)</div>';
+                if (d.departures && d.departures.length) {
+                    html += '<p class="ws-md-dep-hint" style="margin-top:-0.2rem">Synthèse globale du voyage (toutes dates). Le détail opérationnel est ci-dessus par départ.</p>';
+                }
                 html += '<div class="ws-md-stats-row">';
                 html += '<span class="ws-md-stat-pill ok"><i class="fas fa-check-circle"></i> ' + (d.stats.validee || 0) + ' confirmées</span>';
                 html += '<span class="ws-md-stat-pill wait"><i class="fas fa-hourglass-half"></i> ' + (d.stats.en_cours || 0) + ' en attente</span>';
@@ -831,6 +1034,9 @@ document.addEventListener('DOMContentLoaded', function () {
         h += '<div class="ws-md-footer-actions">';
         if (r.reservations) {
             h += '<a href="' + r.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        }
+        if (r.public_show) {
+            h += '<a href="' + escapeWsHtml(r.public_show) + '" target="_blank" rel="noopener noreferrer" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-external-link-alt"></i> Voir la page client</a>';
         }
         if (f.tour_id) {
             h += '<button type="button" class="ws-md-btn ws-md-btn-success" id="ws-md-btn-new-res"><i class="fas fa-suitcase-rolling"></i> Nouvelle réservation</button>';

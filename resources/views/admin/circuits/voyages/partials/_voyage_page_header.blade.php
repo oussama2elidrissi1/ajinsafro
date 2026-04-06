@@ -11,6 +11,10 @@
     $lastUpdated = !$isCreate && $voyage->post_modified
         ? \Carbon\Carbon::parse($voyage->post_modified)->locale('fr')->translatedFormat('d M Y H:i')
         : null;
+
+    $publicShowUrl = (!$isCreate && $laravelV && !empty($laravelV->slug))
+        ? url('/voyages/' . $laravelV->slug)
+        : null;
 @endphp
 
 <div class="ve-page-header">
@@ -38,10 +42,18 @@
                     <p class="ve-page-subtitle mb-0">{{ $pageSubtitle }}</p>
                 </div>
 
-                <span class="ve-status-badge status-{{ $currentStatus }} align-self-center">
-                    <span class="status-dot"></span>
-                    {{ $statusLabel }}
-                </span>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    @if($publicShowUrl)
+                        <a href="{{ $publicShowUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
+                            <i class="bx bx-link-external"></i> Voir la page client
+                        </a>
+                    @endif
+
+                    <span class="ve-status-badge status-{{ $currentStatus }} align-self-center">
+                        <span class="status-dot"></span>
+                        {{ $statusLabel }}
+                    </span>
+                </div>
             </div>
 
             <div class="ve-header-meta-line">

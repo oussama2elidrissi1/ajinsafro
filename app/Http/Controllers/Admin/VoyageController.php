@@ -96,6 +96,17 @@ class VoyageController extends Controller
                 $tour->child_price = $tour->getMeta('child_price');
                 return $tour;
             });
+
+            // Enrichir la liste avec le slug Laravel (pour le bouton "Voir la page client").
+            $wpIds = $tours->getCollection()->map(fn ($t) => (int) ($t->ID ?? 0))->filter()->values()->all();
+            $lvByWp = $wpIds !== []
+                ? Voyage::query()->whereIn('wp_post_id', $wpIds)->get(['wp_post_id', 'slug'])->keyBy('wp_post_id')
+                : collect();
+            $tours->getCollection()->transform(function ($tour) use ($lvByWp) {
+                $wpId = (int) ($tour->ID ?? 0);
+                $tour->laravel_slug = $wpId ? (string) ($lvByWp->get($wpId)->slug ?? '') : '';
+                return $tour;
+            });
         } catch (\Throwable $e) {
             \Log::warning('VoyageController@index: WP connection failed', ['error' => $e->getMessage()]);
             $wpConnectionFailed = true;
