@@ -6,7 +6,7 @@
     $initialGalleryIds = old('existing_gallery_image_ids');
     if ($initialGalleryIds === null) {
         $initialGalleryIds = [];
-        
+
 
         if ($activity) {
             $stored = $activity->gallery_image_ids;
@@ -22,6 +22,7 @@
             }
         }
     }
+    
 
     $initialGallery = collect($initialGalleryIds)
         ->map(fn ($id) => (int) $id)
