@@ -15,10 +15,9 @@
     $displayName = $user?->name ?: 'Agent';
     $agencyLabel = $user?->branch?->name ?: 'Ajinsafro Tanger';
 
-    $newReservationUrl = Route::has('admin.reservations.create') ? route('admin.reservations.create') : '#';
-    $offersUrl = Route::has('admin.circuits.voyages.index')
-        ? route('admin.circuits.voyages.index')
-        : (Route::has('front.voyages.index') ? route('front.voyages.index') : '#');
+    $catalogueVoyageUrl = Route::has('admin.reservations.workspace')
+        ? route('admin.reservations.workspace')
+        : url('/admin/reservations/workspace');
 @endphp
 
 <div class="agent-dashboard-page">
@@ -30,8 +29,10 @@
                 <p class="agent-dashboard-subtitle">Votre activité du jour, vos réservations et les actions prioritaires au même endroit.</p>
             </div>
             <div class="agent-dashboard-actions">
-                <a href="{{ $newReservationUrl }}" class="btn agent-btn agent-btn-primary">Nouvelle réservation</a>
-                <a href="{{ $offersUrl }}" class="btn agent-btn agent-btn-secondary">Voir les offres</a>
+                <a href="{{ $catalogueVoyageUrl }}" class="btn agent-btn agent-btn-primary agent-dashboard-actions__cta">
+                    <i class="bx bx-map-alt align-middle" aria-hidden="true"></i>
+                    <span>Catalogue de voyage</span>
+                </a>
             </div>
         </div>
     </section>

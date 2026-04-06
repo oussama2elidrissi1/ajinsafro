@@ -18,9 +18,9 @@
     $pending = (int) ($stats['reservations_en_cours'] ?? 0);
     $confirmed = (int) ($stats['reservations_validees'] ?? 0);
 
-    $ctaCreateReservation = Route::has('admin.reservations.create') && $user?->can('reservations.create');
-    $ctaOffers = Route::has('admin.circuits.voyages.index');
-    $ctaClients = Route::has('admin.customers.clients.index') && $user?->can('customers.clients.view');
+    $catalogueVoyageUrl = Route::has('admin.reservations.workspace')
+        ? route('admin.reservations.workspace')
+        : url('/admin/reservations/workspace');
 @endphp
 
 <div class="agent-dashboard-hero rounded-2xl border border-gray-100 bg-white shadow-custom p-5 sm:p-6 mb-6">
@@ -56,28 +56,12 @@
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            @if($ctaCreateReservation)
-                <a href="{{ route('admin.reservations.create') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0083c4] text-white text-sm font-bold shadow-sm hover:opacity-95 transition-opacity">
-                    <i class="fas fa-plus-circle"></i>
-                    Créer une réservation
-                </a>
-            @endif
-            @if($ctaOffers)
-                <a href="{{ route('admin.circuits.voyages.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-bold bg-white hover:bg-gray-50 transition-colors">
-                    <i class="fas fa-compass"></i>
-                    Voir les offres
-                </a>
-            @endif
-            @if($ctaClients)
-                <a href="{{ route('admin.customers.clients.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-bold bg-white hover:bg-gray-50 transition-colors">
-                    <i class="fas fa-users"></i>
-                    Gérer les clients
-                </a>
-            @endif
+        <div class="flex flex-wrap items-stretch sm:items-center justify-stretch sm:justify-end gap-2 w-full lg:w-auto">
+            <a href="{{ $catalogueVoyageUrl }}"
+               class="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-xl bg-[#0083c4] text-white text-sm font-bold shadow-sm hover:opacity-95 transition-opacity w-full sm:w-auto min-h-[48px]">
+                <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
+                Catalogue de voyage
+            </a>
         </div>
     </div>
 </div>
