@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Departure;
+use App\Models\DepartureHotelRoom;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Models\Voyage;
+use App\Models\VoyageDeparturePlace;
 use App\Models\VoyageFlightOption;
 use App\Models\Wp\WpPost;
+use App\Models\Wp\WpPostMeta;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -44,49 +47,14 @@ class VoyageController extends Controller
             'flightOptions.airline',
             'extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
             'departures' => fn ($q) => $q->orderBy('start_date'),
+            'departures.departureHotels' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
+            'departures.departureHotels.rooms' => fn ($q) => $q->whereNotIn('status', [
+                DepartureHotelRoom::STATUS_CLOSED,
+                DepartureHotelRoom::STATUS_INACTIVE,
+            ])->orderBy('room_type'),
         ];
 
-        // PROD SAFE: certains environnements n’ont pas le `slug/status` Laravel synchronisé.
-        // - 1) tente la route standard par slug (si status OK)
-        // - 2) tente par slug sans contrainte status (si status NULL / différent)
-        // - 3) supporte le format `/voyages/tour-{wpId}` via `wp_post_id`
-        $voyage = Voyage::query()
-            ->whereIn('status', self::VISIBLE_STATUSES)
-            ->where('slug', $slug)
-            ->with($with)
-            ->first();
-
-        if (! $voyage) {
-            $voyage = Voyage::query()
-                ->where('slug', $slug)
-                ->with($with)
-                ->first();
-        }
-
-        if (! $voyage && preg_match('/^tour-(\\d+)$/', $slug, $m)) {
-            $wpId = (int) $m[1];
-            $voyage = Voyage::query()
-                ->where('wp_post_id', $wpId)
-                ->with($with)
-                ->first();
-
-            // Fallback ultime: si la ligne Laravel n’existe pas, on la crée (slug = tour-{wpId}).
-            if (! $voyage) {
-                $wp = WpPost::tours()->where('ID', $wpId)->first();
-                if ($wp) {
-                    $voyage = Voyage::firstOrCreate(
-                        ['wp_post_id' => $wpId],
-                        [
-                            'name' => (string) ($wp->post_title ?? ('Tour #'.$wpId)),
-                            'slug' => 'tour-'.$wpId,
-                            'status' => ($wp->post_status === 'publish') ? 'published' : 'active',
-                        ]
-                    );
-                    $voyage->load($with);
-                }
-            }
-        }
-
+        $voyage = $this->resolveVoyage($slug, $with);
         if (! $voyage) {
             abort(404);
         }
@@ -103,9 +71,82 @@ class VoyageController extends Controller
         $tourHotels = $wpTourId ? TourHotel::getAllForTour($wpTourId) : collect();
         $transfers = $wpTourId ? TourTransfer::getForTour($wpTourId) : ['arrival' => collect(), 'departure' => collect()];
 
+        $priceFrom = $voyage->price_from;
+        if (! $priceFrom && $wpTourId) {
+            $wpAdult = WpPostMeta::where('post_id', $wpTourId)->where('meta_key', 'adult_price')->value('meta_value');
+            $priceFrom = $wpAdult ? (int) $wpAdult : 0;
+        }
+
+        $heroImages = $this->resolveHeroImages($voyage, $wpTourId);
+        $heroImageUrls = array_values(array_filter(array_map(
+            fn ($i) => is_array($i) ? ($i['url'] ?? null) : null,
+            $heroImages
+        )));
+
         $highlights = $this->resolveHighlights($voyage);
         $includes = $this->resolveListField($voyage->tours_include);
         $excludes = $this->resolveListField($voyage->tours_exclude);
+
+        $departurePlaces = VoyageDeparturePlace::where('voyage_id', $voyage->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        $departuresJson = $departures->map(fn (Departure $d) => [
+            'id' => (int) $d->id,
+            'wp_travel_date_id' => (int) ($d->wp_travel_date_id ?? 0),
+            'start_date' => $d->start_date->format('Y-m-d'),
+            'end_date' => $d->end_date?->format('Y-m-d'),
+            'start_label' => $d->start_date->locale('fr')->translatedFormat('d M Y'),
+            'end_label' => $d->end_date?->locale('fr')->translatedFormat('d M Y'),
+            'status' => $d->status ?? 'open',
+            'available_capacity' => (int) ($d->available_capacity ?? 0),
+            'base_price' => (float) ($d->base_price ?? 0),
+            'sale_price' => (float) ($d->sale_price ?? 0),
+            'rooms' => $d->departureHotels->flatMap(fn ($dh) => $dh->rooms->map(fn ($r) => [
+                'id' => (int) $r->id,
+                'hotel_name' => $dh->hotel_name ?? 'Hôtel',
+                'room_type' => $r->room_type ?? 'Standard',
+                'available_rooms' => (int) ($r->available_rooms ?? 0),
+                'available_places' => (int) ($r->available_places ?? 0),
+                'supplement' => (float) ($r->supplement ?? 0),
+                'status' => $r->status ?? 'available',
+                'capacity_per_room' => (int) ($r->capacity_total ?? 2),
+            ]))->values()->all(),
+        ])->values()->all();
+
+        $placesJson = $departurePlaces->map(fn ($p) => [
+            'id' => (int) $p->id,
+            'name' => (string) $p->name,
+            'code' => (string) ($p->code ?? ''),
+            'price' => (float) ($p->price ?? 0),
+        ])->values()->all();
+
+        $extrasJson = $voyage->extras->map(fn ($e) => [
+            'id' => (int) $e->id,
+            'name' => (string) $e->name,
+            'description' => (string) ($e->description ?? ''),
+            'price_adult' => (float) $e->price_adult,
+            'price_child' => (float) $e->price_child,
+            'icon' => (string) ($e->icon ?? 'fa-plus-circle'),
+            'extra_type' => (string) ($e->extra_type ?? ''),
+        ])->values()->all();
+
+        $flightsByPlace = $voyage->flightOptions
+            ->groupBy('departure_place_id')
+            ->map(fn ($opts) => $opts->map(fn ($o) => [
+                'type' => $o->type,
+                'from_city' => $o->from_city,
+                'to_city' => $o->to_city,
+                'airline' => $o->airline->name ?? null,
+                'flight_number' => $o->flight_number,
+                'depart_at' => $o->depart_at?->format('H:i'),
+                'arrive_at' => $o->arrive_at?->format('H:i'),
+                'duration_minutes' => $o->duration_minutes,
+                'baggage_checkin_kg' => $o->baggage_checkin_kg,
+                'is_tentative' => (bool) $o->is_tentative,
+            ])->values()->all())
+            ->all();
 
         $similarVoyages = Voyage::query()
             ->whereIn('status', self::VISIBLE_STATUSES)
@@ -117,6 +158,9 @@ class VoyageController extends Controller
 
         return view('front.voyages.show', [
             'voyage' => $voyage,
+            'priceFrom' => $priceFrom,
+            'heroImages' => $heroImages,
+            'heroImageUrls' => $heroImageUrls,
             'nextDeparture' => $nextDeparture,
             'departures' => $departures,
             'tourHotels' => $tourHotels,
@@ -124,8 +168,214 @@ class VoyageController extends Controller
             'highlights' => $highlights,
             'includes' => $includes,
             'excludes' => $excludes,
+            'departurePlaces' => $departurePlaces,
             'similarVoyages' => $similarVoyages,
+            'departuresJson' => $departuresJson,
+            'placesJson' => $placesJson,
+            'extrasJson' => $extrasJson,
+            'flightsByPlace' => $flightsByPlace,
         ]);
+    }
+
+    private function resolveVoyage(string $slug, array $with): ?Voyage
+    {
+        $voyage = Voyage::query()
+            ->whereIn('status', self::VISIBLE_STATUSES)
+            ->where('slug', $slug)
+            ->with($with)
+            ->first();
+
+        if (! $voyage) {
+            $voyage = Voyage::query()->where('slug', $slug)->with($with)->first();
+        }
+
+        if (! $voyage && preg_match('/^tour-(\\d+)$/', $slug, $m)) {
+            $wpId = (int) $m[1];
+            $voyage = Voyage::query()->where('wp_post_id', $wpId)->with($with)->first();
+
+            if (! $voyage) {
+                $wp = WpPost::tours()->where('ID', $wpId)->first();
+                if ($wp) {
+                    $voyage = Voyage::firstOrCreate(
+                        ['wp_post_id' => $wpId],
+                        [
+                            'name' => (string) ($wp->post_title ?? ('Tour #'.$wpId)),
+                            'slug' => 'tour-'.$wpId,
+                            'status' => ($wp->post_status === 'publish') ? 'published' : 'active',
+                        ]
+                    );
+                    $voyage->load($with);
+                }
+            }
+        }
+
+        return $voyage;
+    }
+
+    /**
+     * Collect hero + gallery images from multiple sources:
+     * 1. WP hero meta (_tour_hero_image_id, _tour_hero_gallery_ids, _thumbnail_id)
+     * 2. Laravel VoyageImage rows
+     * 3. Voyage->featured_image field
+     *
+     * @return list<array{url:string, srcset?:string, sizes?:string, thumb_url?:string, width?:int, height?:int}> Ordered images (hero first)
+     */
+    private function resolveHeroImages(Voyage $voyage, ?int $wpTourId): array
+    {
+        $images = [];
+        $wpUploadBase = rtrim(config('app.wp_upload_url', 'https://ajinsafro.net/wp-content/uploads'), '/');
+
+        if ($wpTourId) {
+            $metas = WpPostMeta::where('post_id', $wpTourId)
+                ->whereIn('meta_key', ['_tour_hero_image_id', '_tour_hero_gallery_ids', '_thumbnail_id'])
+                ->pluck('meta_value', 'meta_key');
+
+            $wpIds = [];
+            if (! empty($metas['_tour_hero_image_id'])) {
+                $wpIds[] = (int) $metas['_tour_hero_image_id'];
+            }
+            if (! empty($metas['_tour_hero_gallery_ids'])) {
+                foreach (explode(',', $metas['_tour_hero_gallery_ids']) as $id) {
+                    $id = (int) trim($id);
+                    if ($id > 0) {
+                        $wpIds[] = $id;
+                    }
+                }
+            }
+            if (! empty($metas['_thumbnail_id'])) {
+                $wpIds[] = (int) $metas['_thumbnail_id'];
+            }
+
+            $wpIds = array_values(array_unique(array_filter($wpIds)));
+
+            if ($wpIds !== []) {
+                $rows = WpPostMeta::whereIn('post_id', $wpIds)
+                    ->whereIn('meta_key', ['_wp_attached_file', '_wp_attachment_metadata'])
+                    ->get(['post_id', 'meta_key', 'meta_value'])
+                    ->groupBy('post_id')
+                    ->map(fn ($g) => $g->pluck('meta_value', 'meta_key'));
+
+                foreach ($wpIds as $mid) {
+                    $attached = $rows[$mid]['_wp_attached_file'] ?? null;
+                    if (! $attached) {
+                        continue;
+                    }
+
+                    $fullUrl = $wpUploadBase . '/' . ltrim((string) $attached, '/');
+                    $metaRaw = $rows[$mid]['_wp_attachment_metadata'] ?? null;
+                    $images[] = $this->buildWpResponsiveImageSet(
+                        fullUrl: $fullUrl,
+                        attachedFile: (string) $attached,
+                        metaSerialized: is_string($metaRaw) ? $metaRaw : null,
+                        wpUploadBase: $wpUploadBase
+                    );
+                }
+            }
+        }
+
+        if ($images === []) {
+            $featuredUrl = $voyage->featured_image_url;
+            if ($featuredUrl) {
+                $images[] = ['url' => $featuredUrl];
+            }
+        }
+
+        if ($images === [] && $voyage->images->isNotEmpty()) {
+            foreach ($voyage->images as $img) {
+                $u = $img->url ?? null;
+                if ($u) {
+                    $images[] = ['url' => $u];
+                }
+            }
+        }
+
+        $seen = [];
+        $out = [];
+        foreach ($images as $it) {
+            $url = $it['url'] ?? null;
+            if (! $url || isset($seen[$url])) {
+                continue;
+            }
+            $seen[$url] = true;
+            $out[] = $it;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array{url:string, srcset?:string, sizes?:string, thumb_url?:string, width?:int, height?:int}
+     */
+    private function buildWpResponsiveImageSet(string $fullUrl, string $attachedFile, ?string $metaSerialized, string $wpUploadBase): array
+    {
+        $result = ['url' => $fullUrl];
+
+        if (! $metaSerialized) {
+            return $result;
+        }
+
+        $meta = @unserialize($metaSerialized);
+        if (! is_array($meta)) {
+            return $result;
+        }
+
+        $baseDir = str_replace('\\', '/', dirname($attachedFile));
+        $baseDir = $baseDir === '.' ? '' : trim($baseDir, '/');
+
+        $candidates = [];
+        $fullW = isset($meta['width']) ? (int) $meta['width'] : null;
+        $fullH = isset($meta['height']) ? (int) $meta['height'] : null;
+        if ($fullW) {
+            $result['width'] = $fullW;
+            $candidates[$fullW] = $fullUrl;
+        }
+        if ($fullH) {
+            $result['height'] = $fullH;
+        }
+
+        $sizes = $meta['sizes'] ?? null;
+        if (is_array($sizes)) {
+            foreach ($sizes as $info) {
+                if (! is_array($info)) {
+                    continue;
+                }
+                $w = isset($info['width']) ? (int) $info['width'] : null;
+                $file = $info['file'] ?? null;
+                if (! $w || ! $file) {
+                    continue;
+                }
+                $u = rtrim($wpUploadBase, '/') . '/' . ltrim(($baseDir ? $baseDir.'/' : '') . $file, '/');
+                $candidates[$w] = $u;
+            }
+        }
+
+        if ($candidates !== []) {
+            ksort($candidates);
+            $srcset = [];
+            foreach ($candidates as $w => $u) {
+                $srcset[] = $u.' '.$w.'w';
+            }
+            $result['srcset'] = implode(', ', $srcset);
+            $result['sizes'] = '100vw';
+        }
+
+        $thumbUrl = null;
+        if (is_array($sizes) && isset($sizes['thumbnail']['file'])) {
+            $thumbUrl = rtrim($wpUploadBase, '/') . '/' . ltrim(($baseDir ? $baseDir.'/' : '') . $sizes['thumbnail']['file'], '/');
+        } elseif ($candidates !== []) {
+            foreach ($candidates as $w => $u) {
+                if ($w >= 300 && $w <= 600) {
+                    $thumbUrl = $u;
+                    break;
+                }
+            }
+        }
+
+        if ($thumbUrl) {
+            $result['thumb_url'] = $thumbUrl;
+        }
+
+        return $result;
     }
 
     private function resolveHighlights(Voyage $voyage): array
