@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Front;
 use App\Http\Controllers\Controller;
 use App\Models\Departure;
 use App\Models\DepartureHotelRoom;
+use App\Models\Hotel;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Models\Voyage;
 use App\Models\VoyageDeparturePlace;
-use App\Models\VoyageFlightOption;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
 use Carbon\Carbon;
@@ -52,6 +52,7 @@ class VoyageController extends Controller
                 DepartureHotelRoom::STATUS_CLOSED,
                 DepartureHotelRoom::STATUS_INACTIVE,
             ])->orderBy('room_type'),
+            'departures.roomAllocations' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'),
         ];
 
         $voyage = $this->resolveVoyage($slug, $with);
@@ -92,28 +93,82 @@ class VoyageController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $departuresJson = $departures->map(fn (Departure $d) => [
-            'id' => (int) $d->id,
-            'wp_travel_date_id' => (int) ($d->wp_travel_date_id ?? 0),
-            'start_date' => $d->start_date->format('Y-m-d'),
-            'end_date' => $d->end_date?->format('Y-m-d'),
-            'start_label' => $d->start_date->locale('fr')->translatedFormat('d M Y'),
-            'end_label' => $d->end_date?->locale('fr')->translatedFormat('d M Y'),
-            'status' => $d->status ?? 'open',
-            'available_capacity' => (int) ($d->available_capacity ?? 0),
-            'base_price' => (float) ($d->base_price ?? 0),
-            'sale_price' => (float) ($d->sale_price ?? 0),
-            'rooms' => $d->departureHotels->flatMap(fn ($dh) => $dh->rooms->map(fn ($r) => [
-                'id' => (int) $r->id,
-                'hotel_name' => $dh->hotel_name ?? 'Hôtel',
-                'room_type' => $r->room_type ?? 'Standard',
-                'available_rooms' => (int) ($r->available_rooms ?? 0),
-                'available_places' => (int) ($r->available_places ?? 0),
-                'supplement' => (float) ($r->supplement ?? 0),
-                'status' => $r->status ?? 'available',
-                'capacity_per_room' => (int) ($r->capacity_total ?? 2),
-            ]))->values()->all(),
-        ])->values()->all();
+        $departuresJson = $departures->map(function (Departure $d) {
+            $roomsFromDepartureHotels = $d->departureHotels
+                ->flatMap(fn ($dh) => $dh->rooms->map(fn ($r) => [
+                    'id' => (int) $r->id,
+                    'departure_hotel_id' => (int) ($dh->id ?? 0),
+                    'hotel_name' => $dh->hotel_name ?: null,
+                    'room_type' => $r->room_type,
+                    'status' => $r->status,
+                    'supplement' => (float) ($r->supplement ?? 0),
+                    'capacity_per_room' => (int) ($r->capacity_total ?? 0),
+                    'total_rooms' => (int) ($r->total_rooms ?? 0),
+                    'reserved_rooms' => (int) ($r->reserved_rooms ?? 0),
+                    'available_rooms' => (int) ($r->available_rooms ?? 0),
+                    'total_places' => (int) ($r->total_places ?? 0),
+                    'reserved_places' => (int) ($r->reserved_places ?? 0),
+                    'available_places' => (int) ($r->available_places ?? 0),
+                    'effective_capacity' => max(0, (int) ($r->available_rooms ?? 0)) * max(1, (int) ($r->capacity_total ?? 1)),
+                ]))
+                ->filter(fn ($row) => is_string($row['room_type'] ?? null) && trim((string) $row['room_type']) !== '')
+                ->values();
+
+            $rooms = $roomsFromDepartureHotels;
+
+            // Fallback to allocations when #hotels uses "Répartition des chambres par depart"
+            // (and no per-departure hotel/room stock rows exist).
+            if ($rooms->isEmpty() && $d->roomAllocations->isNotEmpty()) {
+                $hotelNames = Hotel::query()
+                    ->whereIn('id', $d->roomAllocations->pluck('hotel_id')->filter(fn ($id) => (int) $id > 0)->unique()->values())
+                    ->get(['id', 'name'])
+                    ->keyBy('id');
+
+                $rooms = $d->roomAllocations
+                    ->map(function ($allocation) use ($hotelNames) {
+                        $qty = max(0, (int) ($allocation->quantity ?? 0));
+                        $cap = max(1, (int) ($allocation->capacity_per_room ?? 1));
+                        $hotelId = (int) ($allocation->hotel_id ?? 0);
+
+                        return [
+                            'id' => null,
+                            'departure_hotel_id' => null,
+                            'hotel_name' => $hotelId > 0
+                                ? (optional($hotelNames->get($hotelId))->name ?: null)
+                                : null,
+                            'room_type' => (string) ($allocation->room_type ?? ''),
+                            'status' => DepartureHotelRoom::STATUS_AVAILABLE,
+                            'supplement' => 0.0,
+                            'capacity_per_room' => $cap,
+                            'total_rooms' => $qty,
+                            'reserved_rooms' => 0,
+                            'available_rooms' => $qty,
+                            'total_places' => $qty * $cap,
+                            'reserved_places' => 0,
+                            'available_places' => $qty * $cap,
+                            'effective_capacity' => $qty * $cap,
+                            'source' => 'allocations',
+                            'allocation_id' => (int) ($allocation->id ?? 0),
+                        ];
+                    })
+                    ->filter(fn ($row) => is_string($row['room_type'] ?? null) && trim((string) $row['room_type']) !== '')
+                    ->values();
+            }
+
+            return [
+                'id' => (int) $d->id,
+                'wp_travel_date_id' => (int) ($d->wp_travel_date_id ?? 0),
+                'start_date' => $d->start_date->format('Y-m-d'),
+                'end_date' => $d->end_date?->format('Y-m-d'),
+                'start_label' => $d->start_date->locale('fr')->translatedFormat('d M Y'),
+                'end_label' => $d->end_date?->locale('fr')->translatedFormat('d M Y'),
+                'status' => $d->status ?? 'open',
+                'available_capacity' => (int) ($d->available_capacity ?? 0),
+                'base_price' => (float) ($d->base_price ?? 0),
+                'sale_price' => (float) ($d->sale_price ?? 0),
+                'rooms' => $rooms->all(),
+            ];
+        })->values()->all();
 
         $placesJson = $departurePlaces->map(fn ($p) => [
             'id' => (int) $p->id,
@@ -223,7 +278,7 @@ class VoyageController extends Controller
     private function resolveHeroImages(Voyage $voyage, ?int $wpTourId): array
     {
         $images = [];
-        $wpUploadBase = rtrim(config('app.wp_upload_url', 'https://ajinsafro.net/wp-content/uploads'), '/');
+        $wpUploadBase = rtrim((string) config('app.wp_upload_url'), '/');
 
         if ($wpTourId) {
             $metas = WpPostMeta::where('post_id', $wpTourId)
@@ -261,7 +316,7 @@ class VoyageController extends Controller
                         continue;
                     }
 
-                    $fullUrl = $wpUploadBase . '/' . ltrim((string) $attached, '/');
+                    $fullUrl = $wpUploadBase.'/'.ltrim((string) $attached, '/');
                     $metaRaw = $rows[$mid]['_wp_attachment_metadata'] ?? null;
                     $images[] = $this->buildWpResponsiveImageSet(
                         fullUrl: $fullUrl,
@@ -344,7 +399,7 @@ class VoyageController extends Controller
                 if (! $w || ! $file) {
                     continue;
                 }
-                $u = rtrim($wpUploadBase, '/') . '/' . ltrim(($baseDir ? $baseDir.'/' : '') . $file, '/');
+                $u = rtrim($wpUploadBase, '/').'/'.ltrim(($baseDir ? $baseDir.'/' : '').$file, '/');
                 $candidates[$w] = $u;
             }
         }
@@ -361,7 +416,7 @@ class VoyageController extends Controller
 
         $thumbUrl = null;
         if (is_array($sizes) && isset($sizes['thumbnail']['file'])) {
-            $thumbUrl = rtrim($wpUploadBase, '/') . '/' . ltrim(($baseDir ? $baseDir.'/' : '') . $sizes['thumbnail']['file'], '/');
+            $thumbUrl = rtrim($wpUploadBase, '/').'/'.ltrim(($baseDir ? $baseDir.'/' : '').$sizes['thumbnail']['file'], '/');
         } elseif ($candidates !== []) {
             foreach ($candidates as $w => $u) {
                 if ($w >= 300 && $w <= 600) {

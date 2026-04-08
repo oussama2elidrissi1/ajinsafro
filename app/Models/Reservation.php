@@ -21,6 +21,13 @@ class Reservation extends Model
 
     public const STATUS_OPTION = 'option';
 
+    /**
+     * Shared-room workflow (half-double).
+     */
+    public const STATUS_SHARED_ROOM_PENDING = 'shared_room_pending';
+
+    public const STATUS_SHARED_ROOM_PAIRED = 'shared_room_paired';
+
     public const STATUS_CONFIRMED = 'confirmed';
 
     public const STATUS_PARTIALLY_PAID = 'partially_paid';
@@ -253,5 +260,65 @@ class Reservation extends Model
     public function getAgencyLabelAttribute(): ?string
     {
         return $this->branch?->name ?: $this->partner?->name;
+    }
+
+    /**
+     * Libellé statut pour affichage (alias legacy EN_COURS / VALIDEE / ANNULEE inclus).
+     */
+    public function statusLabelFr(): string
+    {
+        return match ($this->status) {
+            self::STATUS_EN_COURS => 'En attente',
+            self::STATUS_VALIDEE => 'Confirmée',
+            self::STATUS_ANNULEE => 'Annulée',
+            self::STATUS_PENDING => 'En attente',
+            self::STATUS_CONFIRMED => 'Confirmée',
+            self::STATUS_CANCELLED => 'Annulée',
+            default => (string) $this->status,
+        };
+    }
+
+    /**
+     * Compte ayant saisi l’enregistrement : priorité created_by_user_id ({@see creator}), puis created_by ({@see createdBy}).
+     */
+    public function resolveAuditCreatorUser(): ?User
+    {
+        return $this->creator ?? $this->createdBy;
+    }
+
+    /**
+     * Interlocuteur métier « qui porte la réservation » : agent affecté, sinon created_by, sinon created_by_user_id.
+     */
+    public function resolveOperationalActorUser(): ?User
+    {
+        if ((int) ($this->agent_id ?? 0) > 0 && $this->agent) {
+            return $this->agent;
+        }
+        if ((int) ($this->created_by ?? 0) > 0 && $this->createdBy) {
+            return $this->createdBy;
+        }
+        if ((int) ($this->created_by_user_id ?? 0) > 0 && $this->creator) {
+            return $this->creator;
+        }
+
+        return null;
+    }
+
+    /**
+     * Source métier utilisée pour {@see resolveOperationalActorUser()} (affichage admin).
+     */
+    public function operationalActorDataSourceLabel(): string
+    {
+        if ((int) ($this->agent_id ?? 0) > 0 && $this->agent) {
+            return 'agent_id';
+        }
+        if ((int) ($this->created_by ?? 0) > 0 && $this->createdBy) {
+            return 'created_by';
+        }
+        if ((int) ($this->created_by_user_id ?? 0) > 0 && $this->creator) {
+            return 'created_by_user_id';
+        }
+
+        return '';
     }
 }

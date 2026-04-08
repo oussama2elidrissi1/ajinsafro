@@ -3,6 +3,10 @@
 @section('title', 'Réservations')
 
 @php
+    use App\Services\ReservationHubTableProfile;
+    $hubTableMode = $hubTableMode ?? ReservationHubTableProfile::MODE_OPERATIONS;
+    $hubVoyageFiltered = $hubVoyageFiltered ?? false;
+    $showCrossAgencyBranchCol = $hubVoyageFiltered && ($hubTableMode === ReservationHubTableProfile::MODE_AGENCY || $hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS);
     $hubStats = $hubStats ?? ['total' => 0, 'en_cours' => 0, 'validee' => 0, 'annulee' => 0];
     $filterTourId = $filterTourId ?? null;
     $filterTravelDateId = $filterTravelDateId ?? null;
@@ -40,7 +44,7 @@
             <div class="page-title-box d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <div>
                     <h4 class="page-title mb-0 font-size-18">Réservations</h4>
-                    <p class="text-muted small mb-0">Une seule vue : filtres, statistiques et liste sont synchronisés.</p>
+                    <p class="text-muted small mb-0">Une seule vue : filtres, statistiques et liste sont synchronisés.@if($showCrossAgencyBranchCol) <span class="d-block mt-1 text-primary">Filtre voyage ou date de départ actif : vision opérationnelle partagée (toutes les agences sur ce périmètre).</span>@endif</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     @can('reservations.view')
@@ -178,19 +182,34 @@
                     <tr>
                         <th class="ps-3">#</th>
                         <th>Client</th>
-                        <th>Offre</th>
-                        <th>Créée par</th>
-                        <th>Agence</th>
-                        <th>Départ</th>
+                        <th>Offre / voyage</th>
+                        @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
+                            <th>Agence</th>
+                        @elseif($showCrossAgencyBranchCol)
+                            <th>Agence</th>
+                        @endif
+                        <th>Date départ</th>
                         <th>Passagers</th>
-                        <th>Paiement</th>
-                        <th>Statut</th>
-                        <th>Créée le</th>
+                        @if($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
+                            <th>Statut</th>
+                            <th>Paiement</th>
+                        @else
+                            <th>Paiement</th>
+                            <th>Statut</th>
+                        @endif
+                        @if($hubTableMode !== ReservationHubTableProfile::MODE_OPERATIONS)
+                            <th>Créée le</th>
+                        @endif
+                        @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
+                            <th>Créée par</th>
+                            <th>Réservation effectuée par</th>
+                            <th>Chef commercial</th>
+                        @endif
                         <th class="text-end pe-3" style="min-width:200px;">Actions</th>
                     </tr>
                     </thead>
                     <tbody id="res-hub-tbody">
-                    @include('admin.reservations.partials.hub-table-rows', ['reservations' => $reservations, 'highlightReservationId' => $highlightReservationId])
+                    @include('admin.reservations.partials.hub-table-rows', ['reservations' => $reservations, 'highlightReservationId' => $highlightReservationId, 'hubTableMode' => $hubTableMode, 'hubVoyageFiltered' => $hubVoyageFiltered])
                     </tbody>
                 </table>
             </div>

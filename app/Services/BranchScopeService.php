@@ -121,10 +121,68 @@ class BranchScopeService
     }
 
     /**
-     * Scope les réservations selon le rôle / agence de l'utilisateur.
+     * Rôles métier : vision opérationnelle partagée par voyage / départ (hors détail sensible réservation).
      */
-    public function scopeReservations(Builder $query, User $user): Builder
+    public function isSharedOperationalReservationRole(User $user): bool
     {
+        return $user->isBranchAdmin()
+            || $user->isChefCommercial()
+            || $user->isCommercial()
+            || $user->isAgent()
+            || $user->isManager()
+            || $user->isPartner();
+    }
+
+    /**
+     * Ne pas restreindre par agence : stats catalogue, ou liste filtrée par voyage / date / départ.
+     *
+     * @param  array{tour_id?: int|null, travel_date_id?: int|null, departure_id?: int|null, shared_operational_aggregate?: bool}  $context
+     */
+    public function shouldBypassBranchScopeForSharedOperationalView(User $user, array $context): bool
+    {
+        if ($this->canSeeAllBranches($user)) {
+            return false;
+        }
+        if (! $this->isSharedOperationalReservationRole($user)) {
+            return false;
+        }
+        if (! empty($context['shared_operational_aggregate'])) {
+            return true;
+        }
+
+        $tourId = (int) ($context['tour_id'] ?? 0);
+        $travelDateId = (int) ($context['travel_date_id'] ?? 0);
+        $departureId = (int) ($context['departure_id'] ?? 0);
+
+        return $tourId > 0 || $travelDateId > 0 || $departureId > 0;
+    }
+
+    /**
+     * Lecture « état du départ / voyage » : dossier d’une autre agence visible sans droits d’édition complets.
+     */
+    public function userCanViewReservationSharedOperational(User $user, Reservation $reservation): bool
+    {
+        if ($this->canSeeAllBranches($user)) {
+            return true;
+        }
+        if (! $this->isSharedOperationalReservationRole($user)) {
+            return false;
+        }
+
+        return (int) ($reservation->tour_id ?? 0) > 0;
+    }
+
+    /**
+     * Scope les réservations selon le rôle / agence de l'utilisateur.
+     *
+     * @param  array{tour_id?: int|null, travel_date_id?: int|null, departure_id?: int|null, shared_operational_aggregate?: bool}  $context
+     */
+    public function scopeReservations(Builder $query, User $user, array $context = []): Builder
+    {
+        if ($this->shouldBypassBranchScopeForSharedOperationalView($user, $context)) {
+            return $query;
+        }
+
         $branchIds = $this->visibleBranchIds($user);
         if ($branchIds === null) {
             return $query;
@@ -153,7 +211,7 @@ class BranchScopeService
         }
 
         $query = Reservation::query()->whereKey($reservation->getKey());
-        $this->scopeReservations($query, $user);
+        $this->scopeReservations($query, $user, []);
         $this->constrainReservationQueryForPortalUser($query, $user);
 
         return $query->exists();
@@ -254,6 +312,12 @@ class BranchScopeService
             return;
         }
 
+        // Agent / commercial / chef commercial rattachés à une agence : toutes les réservations du périmètre
+        // {@see scopeReservations}. Les managers gardent le filtre équipe + co-visibilité prestations.
+        if ($this->shouldSkipPortalOwnershipReservationScope($user)) {
+            return;
+        }
+
         $ids = $this->normalizePortalIds($this->portalOwnershipUserIds($user));
         if ($ids === []) {
             $query->whereRaw('1 = 0');
@@ -280,7 +344,8 @@ class BranchScopeService
     {
         $query->whereIn('agent_id', $ids)
             ->orWhereIn('sales_manager_id', $ids)
-            ->orWhereIn('created_by', $ids);
+            ->orWhereIn('created_by', $ids)
+            ->orWhereIn('created_by_user_id', $ids);
     }
 
     /**
@@ -341,7 +406,7 @@ class BranchScopeService
             ])
             ->with(['reservationRooms:id,reservation_id,tour_hotel_id']);
 
-        $this->scopeReservations($seed, $user);
+        $this->scopeReservations($seed, $user, []);
         $seed->where(function (Builder $query) use ($ownershipIds) {
             $this->applyPortalOwnershipReservationScope($query, $ownershipIds);
         });
@@ -452,6 +517,32 @@ class BranchScopeService
             || (int) ($context['voyage_flight_id'] ?? 0) > 0
             || (int) ($context['tour_hotel_id'] ?? 0) > 0
             || trim((string) ($context['catalog_source_code'] ?? '')) !== '';
+    }
+
+    /**
+     * Ne pas restreindre par agent_id / created_by / sales_manager_id pour les rôles opérationnels
+     * d'agence (hors manager) : ils voient tout le portefeuille de leur (leurs) agence(s).
+     */
+    private function shouldSkipPortalOwnershipReservationScope(User $user): bool
+    {
+        if ($user->isManager()) {
+            return false;
+        }
+
+        // Responsable d’agence : tout le portefeuille de l’agence (même si le shell portail évolue).
+        if ($user->isBranchAdmin()) {
+            $branchIds = $this->visibleBranchIds($user);
+
+            return $branchIds !== null && $branchIds !== [];
+        }
+
+        if (! ($user->isAgent() || $user->isCommercial() || $user->isChefCommercial())) {
+            return false;
+        }
+
+        $branchIds = $this->visibleBranchIds($user);
+
+        return $branchIds !== null && $branchIds !== [];
     }
 
     /**

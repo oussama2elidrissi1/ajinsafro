@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
-use App\Models\User;
 use App\Services\BranchScopeService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -22,15 +21,17 @@ class DashboardController extends Controller
         $user = $request->user();
         $isManager = $user->isManager();
 
-        $personalIds = [$user->id];
-        $teamIds = $this->branchScope->portalOwnershipUserIds($user);
-
         $scope = $this->normalizeScope($request->query('scope'), $isManager);
-        $activeUserIds = $scope === 'team' ? $teamIds : $personalIds;
 
         $reservationsQuery = Reservation::query();
         $this->branchScope->scopeReservations($reservationsQuery, $user);
-        $this->applyPortalReservationOwnership($reservationsQuery, $activeUserIds);
+        // Aligné sur {@see ReservationListQueryService::baseQuery} : agent / commercial / chef avec agence
+        // voient le portefeuille agence (pas seulement les lignes où ils sont agent_id / created_by).
+        if ($isManager && $scope === 'mine') {
+            $this->applyPortalReservationOwnership($reservationsQuery, [$user->id]);
+        } else {
+            $this->branchScope->constrainReservationQueryForPortalUser($reservationsQuery, $user);
+        }
 
         $stats = $this->buildDashboardStats(clone $reservationsQuery);
 
@@ -94,7 +95,7 @@ class DashboardController extends Controller
         $notifications = [];
 
         if ($pendingToday > 0) {
-            $notifications[] = $pendingToday . ' réservation(s) du jour à suivre.';
+            $notifications[] = $pendingToday.' réservation(s) du jour à suivre.';
         }
 
         $latestPending = (clone $reservationsQuery)
@@ -103,8 +104,8 @@ class DashboardController extends Controller
             ->first(['client_first_name', 'client_last_name']);
 
         if ($latestPending !== null) {
-            $clientName = trim(($latestPending->client_first_name ?? '') . ' ' . ($latestPending->client_last_name ?? ''));
-            $notifications[] = 'Dernier dossier en attente : ' . ($clientName !== '' ? $clientName : 'client non renseigné') . '.';
+            $clientName = trim(($latestPending->client_first_name ?? '').' '.($latestPending->client_last_name ?? ''));
+            $notifications[] = 'Dernier dossier en attente : '.($clientName !== '' ? $clientName : 'client non renseigné').'.';
         }
 
         if ($notifications === []) {
@@ -132,7 +133,8 @@ class DashboardController extends Controller
         $query->where(function (Builder $q) use ($userIds) {
             $q->whereIn('agent_id', $userIds)
                 ->orWhereIn('sales_manager_id', $userIds)
-                ->orWhereIn('created_by', $userIds);
+                ->orWhereIn('created_by', $userIds)
+                ->orWhereIn('created_by_user_id', $userIds);
         });
     }
 

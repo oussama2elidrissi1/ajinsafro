@@ -750,6 +750,7 @@ class ReservationService
         $remainingSeats = $passengersCount;
         $allocByRoomId = [];
         $totalSupplement = 0.0;
+        $sharedRoomPendingTypeIds = [];
 
         foreach ($rooms as $room) {
             if ($remainingSeats <= 0) {
@@ -774,8 +775,20 @@ class ReservationService
             $seatsBefore = $occupied;
             $seatsAfter = $occupied + (int) $take;
 
-            $roomsConsumedBefore = $seatsBefore > 0 ? intdiv($seatsBefore + $cap - 1, $cap) : 0;
-            $roomsConsumedAfter = $seatsAfter > 0 ? intdiv($seatsAfter + $cap - 1, $cap) : 0;
+            $isHalfDouble = ($cap === 2)
+                && is_string($room->room_type ?? null)
+                && mb_strtolower((string) $room->room_type) === 'double'
+                && (int) $take === 1
+                && $passengersCount === 1;
+
+            // Default logic: any occupied seat opens the room (ceil).
+            // Half-double logic (Double, 1 adult): do NOT consume a full room until the second seat is paired (floor).
+            $roomsConsumedBefore = $seatsBefore > 0
+                ? ($isHalfDouble ? intdiv($seatsBefore, $cap) : intdiv($seatsBefore + $cap - 1, $cap))
+                : 0;
+            $roomsConsumedAfter = $seatsAfter > 0
+                ? ($isHalfDouble ? intdiv($seatsAfter, $cap) : intdiv($seatsAfter + $cap - 1, $cap))
+                : 0;
             $roomsNewCount = max(0, $roomsConsumedAfter - $roomsConsumedBefore);
 
             // Persist occupation.
@@ -792,10 +805,16 @@ class ReservationService
                 'rooms_new_count' => (int) $roomsNewCount,
                 'rooms_total_count_after' => (int) $roomsConsumedAfter,
                 'supplement_unit' => (float) ($room->supplement ?? 0),
+                'capacity_total' => (int) $cap,
+                'room_type' => (string) ($room->room_type ?? ''),
             ];
 
-            if ($roomsNewCount > 0) {
-                $totalSupplement += $roomsNewCount * (float) ($room->supplement ?? 0);
+            // Pricing rule (explicit): supplement is per physical room, split per seat.
+            // For Double (cap=2), a half-double pays half the supplement.
+            $totalSupplement += ((float) ($room->supplement ?? 0) / max(1, $cap)) * (int) $take;
+
+            if ($isHalfDouble) {
+                $sharedRoomPendingTypeIds[] = $roomId;
             }
 
             $remainingSeats -= (int) $take;
@@ -824,21 +843,30 @@ class ReservationService
                 'updated_at' => now(),
             ]);
 
-            if ((int) $alloc['rooms_new_count'] > 0) {
-                $reservation->reservationRooms()->create([
-                    'tour_hotel_id' => (int) $alloc['tour_hotel_id'],
-                    'tour_hotel_room_id' => (int) $alloc['tour_hotel_room_id'],
-                    'room_count' => (int) $alloc['rooms_new_count'],
-                    'supplement_unit' => (float) $alloc['supplement_unit'],
-                    'supplement_total' => (float) $alloc['rooms_new_count'] * (float) $alloc['supplement_unit'],
-                ]);
-            }
+            $reservation->reservationRooms()->create([
+                'tour_hotel_id' => (int) $alloc['tour_hotel_id'],
+                'tour_hotel_room_id' => (int) $alloc['tour_hotel_room_id'],
+                'room_type_snapshot' => (string) ($alloc['room_type'] ?? ''),
+                'passenger_count' => (int) ($alloc['seats_allocated'] ?? 0),
+                'room_count' => (int) $alloc['rooms_new_count'], // 0 for half-double seat
+                'supplement_unit' => (float) $alloc['supplement_unit'],
+                'supplement_total' => ((float) ($alloc['supplement_unit'] ?? 0) / max(1, (int) ($alloc['capacity_total'] ?? 1))) * (int) ($alloc['seats_allocated'] ?? 0),
+            ]);
         }
 
         if ($this->reservationsHasRoomSupplementTotalColumn()) {
             $reservation->room_supplement_total = $totalSupplement;
         }
+
+        // Shared-room status + pairing (Double, 1 adult).
+        if ($sharedRoomPendingTypeIds !== []) {
+            $reservation->status = Reservation::STATUS_SHARED_ROOM_PENDING;
+        }
         $reservation->save();
+
+        if ($sharedRoomPendingTypeIds !== []) {
+            $this->tryPairSharedDoubleReservations($reservation, $travelDateId, $sharedRoomPendingTypeIds);
+        }
 
         // 4) Recalculer le stock restant côté WP (seats = capacity - occupied).
         try {
@@ -857,6 +885,42 @@ class ReservationService
                 'travel_date_id' => $travelDateId,
                 'error' => $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Pair two compatible half-double reservations (same date + same room type).
+     *
+     * Source of truth: reservations.status + reservation_room_allocations (seat allocation).
+     *
+     * @param  list<int>  $tourHotelRoomIds
+     */
+    private function tryPairSharedDoubleReservations(Reservation $reservation, int $travelDateId, array $tourHotelRoomIds): void
+    {
+        foreach ($tourHotelRoomIds as $tourHotelRoomId) {
+            $candidateId = (int) Reservation::query()
+                ->where('id', '!=', $reservation->id)
+                ->where('travel_date_id', $travelDateId)
+                ->where('tour_id', $reservation->tour_id)
+                ->where('status', Reservation::STATUS_SHARED_ROOM_PENDING)
+                ->whereExists(function ($q) use ($tourHotelRoomId) {
+                    $q->select(DB::raw(1))
+                        ->from('reservation_room_allocations as rra')
+                        ->whereColumn('rra.reservation_id', 'reservations.id')
+                        ->where('rra.tour_hotel_room_id', $tourHotelRoomId)
+                        ->where('rra.seats_allocated', 1);
+                })
+                ->orderBy('created_at')
+                ->value('id');
+
+            if ($candidateId <= 0) {
+                continue;
+            }
+
+            // Pair: purely workflow/status (inventory already reserved as seats).
+            Reservation::query()
+                ->whereIn('id', [$reservation->id, $candidateId])
+                ->update(['status' => Reservation::STATUS_SHARED_ROOM_PAIRED]);
         }
     }
 

@@ -20,9 +20,16 @@ final class ReservationListQueryService
 
     public function baseQuery(User $user, array $context = []): Builder
     {
+        $ctx = [
+            'tour_id' => (int) ($context['tour_id'] ?? 0),
+            'travel_date_id' => (int) ($context['travel_date_id'] ?? 0),
+            'departure_id' => (int) ($context['departure_id'] ?? 0),
+            'shared_operational_aggregate' => ! empty($context['shared_operational_aggregate']),
+        ];
+
         $q = Reservation::query();
-        $this->branchScope->scopeReservations($q, $user);
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $user, $context);
+        $this->branchScope->scopeReservations($q, $user, $ctx);
+        $this->branchScope->constrainReservationQueryForPortalUser($q, $user, $ctx);
 
         return $q;
     }

@@ -71,6 +71,8 @@ Route::get('/maintenance', fn () => view('front.maintenance'))->name('front.main
 Route::get('/search', [FrontSearchController::class, 'index'])->name('front.search');
 Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voyages.index');
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
+Route::post('/voyages/{slug}/reserve', [\App\Http\Controllers\Front\VoyageReservationController::class, 'store'])
+    ->name('front.voyages.reserve');
 
 Route::get('/booking/start', StartBookingController::class)->name('booking.start');
 Route::get('/booking/checkout/{token}', [CheckoutController::class, 'show'])->name('booking.checkout');
@@ -161,6 +163,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::delete('customers/clients/{id}/force', [ClientController::class, 'forceDelete'])->name('customers.clients.force')->whereNumber('id');
     Route::get('customers/clients', [ClientController::class, 'index'])->name('customers.clients.index');
     Route::get('customers/clients/create', [ClientController::class, 'create'])->name('customers.clients.create');
+    Route::get('customers/clients/search', [ClientController::class, 'search'])->name('customers.clients.search');
     Route::post('customers/clients', [ClientController::class, 'store'])->name('customers.clients.store');
     Route::get('customers/clients/{client}', [ClientController::class, 'show'])->name('customers.clients.show');
     Route::get('customers/clients/{client}/edit', [ClientController::class, 'edit'])->name('customers.clients.edit');

@@ -17,8 +17,10 @@ class DatabaseSeeder extends Seeder
             AdminPermissionsSeeder::class,
             AjinsafroRolesSeeder::class,
             BranchAccountsSeeder::class,
+            NormalizeAjinsafroTestUsersSeeder::class,
             DubaiTravelSeeder::class,
             ClientSeeder::class,
+            ReservationDemoSeeder::class,
         ]);
     }
 }

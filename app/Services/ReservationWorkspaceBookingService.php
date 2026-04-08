@@ -195,7 +195,10 @@ final class ReservationWorkspaceBookingService
         if ($travelDateId !== null && $travelDateId > 0) {
             $q->where('travel_date_id', $travelDateId);
         }
-        $this->branchScope->scopeReservations($q, $user);
+        $this->branchScope->scopeReservations($q, $user, [
+            'tour_id' => (int) $voyage->id,
+            'travel_date_id' => (int) ($travelDateId ?? 0),
+        ]);
         $booked = (int) (clone $q)->sum('passengers_count');
 
         return max(0, $totalCapacity - $booked);
@@ -299,6 +302,7 @@ final class ReservationWorkspaceBookingService
                     ? (float) $def['unit_price']
                     : (float) ($def['price_adult'] ?? 0);
                 $sum += $unit * $quantity;
+
                 continue;
             }
             $paxKey = (string) ($ex['pax'] ?? '');

@@ -6,8 +6,8 @@ use App\Models\Departure;
 use App\Models\DepartureHotelRoom;
 use App\Models\Reservation;
 use App\Models\TourHotel;
-use App\Models\TravelDayItem;
 use App\Models\TravelDate;
+use App\Models\TravelDayItem;
 use App\Models\User;
 use App\Models\Voyage;
 use App\Models\VoyageExtra;
@@ -16,12 +16,14 @@ use App\Models\Wp\Activity;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
+use App\Services\Wp\WpHeroImageService;
 use App\Support\TourPlacesCalculator;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Catalogue workspace : packages WordPress, packages Laravel sans wp_post_id (code LVL-*), vols, hébergements.
@@ -89,6 +91,9 @@ class ReservationWorkspaceCatalogService
                 ->with([
                     'departures' => function ($q) {
                         $q->orderBy('start_date');
+                    },
+                    'images' => function ($q) {
+                        $q->orderBy('sort_order')->orderBy('id');
                     },
                 ])
                 ->orderBy('id')
@@ -288,6 +293,10 @@ class ReservationWorkspaceCatalogService
                 'departure_is_canceled' => false,
                 'price_label' => $priceLabel,
                 'voyage_destination' => $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
+                'image_url' => $this->resolveCatalogRowImageUrl($voyage, $wp),
+                'summary' => $this->resolveCatalogRowSummary($voyage, $wp),
+                'is_featured' => $voyage && $voyage->is_featured,
+                'has_promo' => $this->voyageHasPromoPrice($voyage),
                 'stats' => $rowStats,
                 'places_state' => $placesPayload['state'],
                 'places_total' => $placesPayload['total'],
@@ -343,7 +352,15 @@ class ReservationWorkspaceCatalogService
         $meta['package_rows'] = $rows->count();
 
         $flightQuery = VoyageFlight::query()
-            ->with('voyage')
+            ->with([
+                'voyage' => function ($q) {
+                    $q->with([
+                        'images' => function ($q2) {
+                            $q2->orderBy('sort_order')->orderBy('id');
+                        },
+                    ]);
+                },
+            ])
             ->orderBy('departure_date');
 
         foreach ($flightQuery->get() as $flight) {
@@ -365,11 +382,18 @@ class ReservationWorkspaceCatalogService
                 $flight->departure_date,
                 $travelDateIdVol,
             );
+            $volSummary = collect([trim((string) ($flight->from_label ?? '')), trim((string) ($flight->to_label ?? ''))])
+                ->filter()
+                ->implode(' → ');
             $rows->push([
                 'type' => 'vol',
                 'code' => 'VOL-'.$flight->id,
                 'name' => $label,
                 'subtitle' => $wpPid ? ($wpPostTitleById->get($wpPid) ?: $voyage->name) : $voyage->name,
+                'image_url' => $this->resolveCatalogRowImageUrl($voyage, null),
+                'summary' => $volSummary,
+                'is_featured' => false,
+                'has_promo' => $this->voyageHasPromoPrice($voyage),
                 'voyage_id' => $tourId,
                 'wp_post_id' => $voyage->wp_post_id ? (int) $voyage->wp_post_id : null,
                 'laravel_synced' => true,
@@ -416,11 +440,25 @@ class ReservationWorkspaceCatalogService
                     $startDate,
                     $travelDateIdHot,
                 );
+                $hotelImg = (int) ($hotel->image_id ?? 0) > 0
+                    ? $this->resolveWpAttachmentUrlWithCatalogFallback((int) $hotel->image_id)
+                    : null;
+                $hotelSummary = trim((string) ($hotel->address ?? ''));
+                if ($hotelSummary === '') {
+                    $hotelSummary = trim(implode(' · ', array_filter([
+                        (string) ($hotel->meal_plan ?? ''),
+                        (string) ($hotel->room_type ?? ''),
+                    ])));
+                }
                 $rows->push([
                     'type' => 'hebergement',
                     'code' => 'HOT-'.$hotel->id,
                     'name' => $hotel->hotel_name ?: 'Hébergement',
                     'subtitle' => $tourWpTitle,
+                    'image_url' => $hotelImg ?: $this->resolveCatalogRowImageUrl($voyage, null),
+                    'summary' => Str::limit($hotelSummary, 200),
+                    'is_featured' => false,
+                    'has_promo' => $this->voyageHasPromoPrice($voyage),
                     'voyage_id' => $tourId,
                     'wp_post_id' => (int) $voyage->wp_post_id,
                     'laravel_synced' => true,
@@ -479,7 +517,13 @@ class ReservationWorkspaceCatalogService
 
         // Package « LVL-* » : ligne construite sans dépendre du catalogue WordPress ni de buildRows() complet.
         if ($type === 'package') {
-            $fresh = Voyage::query()->find($tid);
+            $fresh = Voyage::query()
+                ->with([
+                    'images' => function ($q) {
+                        $q->orderBy('sort_order')->orderBy('id');
+                    },
+                ])
+                ->find($tid);
             if ($fresh) {
                 $nativeRow = $this->buildLaravelNativePackageRowForVoyage($fresh, $user);
                 if ($nativeRow !== null) {
@@ -563,7 +607,10 @@ class ReservationWorkspaceCatalogService
             ->whereIn('tour_id', Voyage::allIdsSharingWpTour((int) $voyage->id))
             ->whereIn('status', [Reservation::STATUS_EN_COURS, Reservation::STATUS_VALIDEE])
             ->where('travel_date_id', $travelDateId);
-        $this->branchScope->scopeReservations($q, $user);
+        $this->branchScope->scopeReservations($q, $user, [
+            'tour_id' => (int) $voyage->id,
+            'travel_date_id' => $travelDateId,
+        ]);
         $booked = (int) (clone $q)->sum('passengers_count');
 
         $remaining = max(0, $total - $booked);
@@ -794,7 +841,7 @@ class ReservationWorkspaceCatalogService
         $allPhysicalIds = array_keys($allPhysical);
 
         $q = Reservation::query()->whereIn('tour_id', $allPhysicalIds);
-        $this->branchScope->scopeReservations($q, $user);
+        $this->branchScope->scopeReservations($q, $user, ['shared_operational_aggregate' => true]);
 
         $aggregates = (clone $q)
             ->selectRaw('tour_id, status, COUNT(*) as aggregate')
@@ -817,6 +864,190 @@ class ReservationWorkspaceCatalogService
         }
 
         return $base;
+    }
+
+    /**
+     * Image catalogue : aligné sur {@see \App\Http\Controllers\Front\VoyageController::resolveHeroImages}
+     * (méta WP _tour_hero_image_id, _tour_hero_gallery_ids, _thumbnail_id + base uploads comme le front),
+     * puis Laravel (featured / galerie), puis IDs galerie WP stockés sur {@see Voyage::$gallery_wp_ids}.
+     */
+    private function resolveCatalogRowImageUrl(?Voyage $voyage, ?WpPost $wp = null): ?string
+    {
+        $wpTourId = 0;
+        if ($wp !== null) {
+            $wpTourId = (int) $wp->ID;
+        } elseif ($voyage !== null && (int) ($voyage->wp_post_id ?? 0) > 0) {
+            $wpTourId = (int) $voyage->wp_post_id;
+        }
+
+        if ($wpTourId > 0) {
+            $fromWp = $this->resolveWpTourFirstImageUrl($wpTourId);
+            if ($fromWp !== null && $fromWp !== '') {
+                return $fromWp;
+            }
+        }
+
+        if ($voyage !== null) {
+            $laravel = $voyage->featured_image_url;
+            if ($laravel !== null && $laravel !== '') {
+                return $laravel;
+            }
+
+            $fromGalleryIds = $this->resolveFirstUrlFromVoyageGalleryWpIds($voyage);
+            if ($fromGalleryIds !== null && $fromGalleryIds !== '') {
+                return $fromGalleryIds;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Première image utile pour un tour WordPress (même ordre que la fiche voyage front).
+     */
+    private function resolveWpTourFirstImageUrl(int $wpTourId): ?string
+    {
+        $metas = WpPostMeta::query()
+            ->where('post_id', $wpTourId)
+            ->whereIn('meta_key', ['_tour_hero_image_id', '_tour_hero_gallery_ids', '_thumbnail_id'])
+            ->pluck('meta_value', 'meta_key');
+
+        $wpIds = [];
+        if (! empty($metas['_tour_hero_image_id'])) {
+            $wpIds[] = (int) $metas['_tour_hero_image_id'];
+        }
+        if (! empty($metas['_tour_hero_gallery_ids'])) {
+            foreach (explode(',', (string) $metas['_tour_hero_gallery_ids']) as $id) {
+                $id = (int) trim($id);
+                if ($id > 0) {
+                    $wpIds[] = $id;
+                }
+            }
+        }
+        if (! empty($metas['_thumbnail_id'])) {
+            $wpIds[] = (int) $metas['_thumbnail_id'];
+        }
+
+        $wpIds = array_values(array_unique(array_filter($wpIds)));
+
+        return $this->resolveFirstUrlFromWpAttachmentIds($wpIds);
+    }
+
+    /**
+     * @param  list<int>  $attachmentIds
+     */
+    private function resolveFirstUrlFromWpAttachmentIds(array $attachmentIds): ?string
+    {
+        if ($attachmentIds === []) {
+            return null;
+        }
+
+        $rows = WpPostMeta::query()
+            ->whereIn('post_id', $attachmentIds)
+            ->where('meta_key', '_wp_attached_file')
+            ->get(['post_id', 'meta_value'])
+            ->keyBy('post_id');
+
+        $wpUploadBase = rtrim((string) config('app.wp_upload_url'), '/');
+
+        foreach ($attachmentIds as $mid) {
+            $attached = $rows->get($mid)?->meta_value;
+            if (! $attached || ! is_string($attached)) {
+                continue;
+            }
+            $attached = trim($attached);
+            if ($attached === '') {
+                continue;
+            }
+            if (str_starts_with($attached, 'http://') || str_starts_with($attached, 'https://')) {
+                return $attached;
+            }
+            if (str_starts_with($attached, '/wp-content/uploads')) {
+                $siteUrl = rtrim((string) config('wordpress.site_url', ''), '/');
+                if ($siteUrl !== '') {
+                    return $siteUrl.$attached;
+                }
+                $suffix = preg_replace('#^/wp-content/uploads/?#', '', $attached) ?? '';
+
+                return $wpUploadBase.'/'.ltrim($suffix, '/');
+            }
+
+            return $wpUploadBase.'/'.ltrim($attached, '/');
+        }
+
+        return null;
+    }
+
+    /**
+     * URL publique pour un attachment WP : préfère {@see WpHeroImageService::getAttachmentUrl},
+     * puis construction avec la même base que la fiche voyage si la config wordpress.* est incomplète.
+     */
+    private function resolveWpAttachmentUrlWithCatalogFallback(int $attachmentId): ?string
+    {
+        if ($attachmentId <= 0) {
+            return null;
+        }
+        $u = WpHeroImageService::getAttachmentUrl($attachmentId);
+        if ($u !== null && $u !== '') {
+            return $u;
+        }
+
+        return $this->resolveFirstUrlFromWpAttachmentIds([$attachmentId]);
+    }
+
+    private function resolveFirstUrlFromVoyageGalleryWpIds(Voyage $voyage): ?string
+    {
+        $raw = trim((string) ($voyage->gallery_wp_ids ?? ''));
+        if ($raw === '') {
+            return null;
+        }
+        $ids = [];
+        foreach (explode(',', $raw) as $id) {
+            $id = (int) trim($id);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        return $this->resolveFirstUrlFromWpAttachmentIds($ids);
+    }
+
+    /**
+     * Texte court pour cartes workspace : accroche / description Laravel, sinon extrait WP.
+     */
+    private function resolveCatalogRowSummary(?Voyage $voyage, ?WpPost $wp = null): string
+    {
+        if ($voyage !== null) {
+            $acc = trim((string) ($voyage->accroche ?? ''));
+            if ($acc !== '') {
+                return Str::limit(strip_tags($acc), 220);
+            }
+            $desc = trim((string) ($voyage->description ?? ''));
+            if ($desc !== '') {
+                $plain = preg_replace('/\s+/u', ' ', strip_tags($desc)) ?? '';
+
+                return Str::limit(trim($plain), 220);
+            }
+        }
+        if ($wp !== null) {
+            $ex = trim((string) ($wp->post_excerpt ?? ''));
+            if ($ex !== '') {
+                return Str::limit(strip_tags($ex), 220);
+            }
+        }
+
+        return '';
+    }
+
+    private function voyageHasPromoPrice(?Voyage $voyage): bool
+    {
+        if ($voyage === null) {
+            return false;
+        }
+        $from = (int) ($voyage->price_from ?? 0);
+        $old = (int) ($voyage->old_price ?? 0);
+
+        return $old > 0 && $from > 0 && $old > $from;
     }
 
     /**
@@ -854,7 +1085,7 @@ class ReservationWorkspaceCatalogService
         $q = Reservation::query()
             ->whereIn('tour_id', $allPhysicalIds)
             ->whereIn('status', [Reservation::STATUS_VALIDEE, Reservation::STATUS_EN_COURS]);
-        $this->branchScope->scopeReservations($q, $user);
+        $this->branchScope->scopeReservations($q, $user, ['shared_operational_aggregate' => true]);
 
         $out = array_fill_keys(array_map('intval', $tourIds), 0);
         foreach ((clone $q)
@@ -1645,7 +1876,9 @@ class ReservationWorkspaceCatalogService
         $q = Reservation::query()
             ->whereIn('tour_id', $physicalIds)
             ->whereIn('travel_date_id', $travelDateIds);
-        $this->branchScope->scopeReservations($q, $user);
+        $this->branchScope->scopeReservations($q, $user, [
+            'tour_id' => (int) $voyage->id,
+        ]);
 
         $aggregates = (clone $q)
             ->selectRaw('travel_date_id, status, COUNT(*) as aggregate, COALESCE(SUM(passengers_count), 0) as pax_sum')
@@ -1807,6 +2040,10 @@ class ReservationWorkspaceCatalogService
             'voyage_destination' => $voyage->destination && trim((string) $voyage->destination) !== ''
                 ? trim((string) $voyage->destination)
                 : null,
+            'image_url' => $this->resolveCatalogRowImageUrl($voyage, null),
+            'summary' => $this->resolveCatalogRowSummary($voyage, null),
+            'is_featured' => (bool) $voyage->is_featured,
+            'has_promo' => $this->voyageHasPromoPrice($voyage),
             'stats' => $rowStats,
             'places_state' => 'na',
             'places_total' => null,
@@ -1834,6 +2071,11 @@ class ReservationWorkspaceCatalogService
         foreach (
             Voyage::query()
                 ->whereNull('wp_post_id')
+                ->with([
+                    'images' => function ($q) {
+                        $q->orderBy('sort_order')->orderBy('id');
+                    },
+                ])
                 ->orderBy('name')
                 ->limit(200)
                 ->get() as $voyage

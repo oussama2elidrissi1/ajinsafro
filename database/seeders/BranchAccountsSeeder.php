@@ -20,12 +20,18 @@ class BranchAccountsSeeder extends Seeder
         $branches = Branch::where('is_active', true)->orderByRaw("CASE WHEN type = 'head_office' THEN 0 ELSE 1 END")->orderBy('code')->get()->keyBy('code');
         if ($branches->isEmpty()) {
             $this->command->warn('Aucune agence trouvée. Exécutez d\'abord BranchesSeeder.');
+
             return;
         }
 
         $tanger = $branches->get('TNG');
         $codes = ['TNG', 'FES', 'CAS', 'MAR', 'BRU'];
 
+        // Comptes de référence (voir aussi NormalizeAjinsafroTestUsersSeeder) :
+        // - siege@ajinsafro.com → siege_admin, toutes les agences
+        // - agence.{CODE}@ajinsafro.com → branch_admin, une agence
+        // - chef.{CODE}@ajinsafro.com → chef_commercial, une agence
+        //
         // 1. Compte global siège Tanger (siege_admin) – accès à toutes les agences
         $siege = $this->firstOrCreateUser([
             'name' => 'Admin Siège Tanger',
@@ -116,8 +122,10 @@ class BranchAccountsSeeder extends Seeder
         if ($user) {
             $exceptPassword = array_filter($attributes, fn ($v, $k) => $k !== 'password', ARRAY_FILTER_USE_BOTH);
             $user->update($exceptPassword);
+
             return $user;
         }
+
         return User::create($attributes);
     }
 
@@ -137,6 +145,7 @@ class BranchAccountsSeeder extends Seeder
             ]);
             $user->syncRoles([BranchScopeService::ROLE_BRANCH_ADMIN]);
             $branch->update(['manager_user_id' => $user->id]);
+
             return $user;
         }
         $user = User::create([
@@ -152,6 +161,7 @@ class BranchAccountsSeeder extends Seeder
         ]);
         $user->syncRoles([BranchScopeService::ROLE_BRANCH_ADMIN]);
         $branch->update(['manager_user_id' => $user->id]);
+
         return $user;
     }
 }

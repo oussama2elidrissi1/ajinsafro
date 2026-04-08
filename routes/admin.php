@@ -39,8 +39,8 @@ use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Auth\LockScreenController;
-use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
 use App\Http\Controllers\DemoController;
+use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
 use Illuminate\Support\Facades\Route;
 
@@ -160,6 +160,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::delete('customers/clients/{id}/force', [ClientController::class, 'forceDelete'])->name('customers.clients.force')->whereNumber('id');
         Route::get('customers/clients', [ClientController::class, 'index'])->name('customers.clients.index');
         Route::get('customers/clients/create', [ClientController::class, 'create'])->name('customers.clients.create');
+        Route::get('customers/clients/search', [ClientController::class, 'search'])->name('customers.clients.search');
         Route::post('customers/clients', [ClientController::class, 'store'])->name('customers.clients.store');
         Route::get('customers/clients/{client}', [ClientController::class, 'show'])->name('customers.clients.show');
         Route::get('customers/clients/{client}/edit', [ClientController::class, 'edit'])->name('customers.clients.edit');

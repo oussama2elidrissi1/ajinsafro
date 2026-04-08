@@ -72,7 +72,7 @@
         0% { box-shadow: 0 0 0 0 rgba(0, 131, 196, 0.45); }
         100% { box-shadow: 0 0 0 12px rgba(0, 131, 196, 0); }
     }
-    .ws-catalog-table thead th { position: sticky; top: 0; z-index: 2; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); box-shadow: 0 1px 0 #e2e8f0; }
+    .ws-catalog-section { position: relative; }
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -93,7 +93,7 @@
             overflow: hidden;
         }
     }
-    .ws-catalog-table .ws-room-badge { max-width: 100%; }
+    .ws-catalog-grid .ws-room-badge { max-width: 100%; }
 
     /* —— Modal détail voyage (workspace) — racine en fin de <body>, hors layout — */
     #ws-modal-root {
@@ -768,41 +768,28 @@
         {{-- Tableau --}}
         <div id="reservations-list-view" class="ws-table-card">
             <div class="ws-table-card__head">
-                <h2 class="ws-table-card__title">Dossiers à traiter</h2>
-                <p class="ws-table-card__sub">Consultez une prestation ou démarrez une réservation en un clic.</p>
+                <h2 class="ws-table-card__title">Catalogue des offres</h2>
+                <p class="ws-table-card__sub">Visuels, tarifs et disponibilités : ouvrez le détail ou lancez une réservation.</p>
             </div>
-            <div class="ws-table-scroll">
-                <table class="ws-catalog-table" id="ws-catalog-table">
-                    <thead>
-                        <tr>
-                            <th class="ws-th ws-th--ref">Réf. &amp; type</th>
-                            <th class="ws-th ws-th--prestation">Prestation</th>
-                            <th class="ws-th ws-th--dep">Départ</th>
-                            <th class="ws-th ws-th--stats">Stats</th>
-                            <th class="ws-th ws-th--actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($catalogRows as $row)
-                            @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row])
-                        @empty
-                            <tr>
-                                <td colspan="5" class="py-16 px-6">
-                                    <div class="max-w-md mx-auto text-center">
-                                        <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-4 text-2xl">
-                                            <i class="fas fa-inbox"></i>
-                                        </div>
-                                        <p class="text-brand-dark font-bold text-lg mb-2">Aucun voyage dans le catalogue</p>
-                                        <p class="text-gray-500 text-sm mb-6">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
-                                        <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
-                                            <i class="fas fa-plus-circle"></i> Gérer les voyages
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="ws-catalog-section">
+                <div id="ws-catalog-list" class="ws-catalog-grid">
+                    @forelse($catalogRows as $row)
+                        @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row])
+                    @empty
+                        <div class="ws-catalog-empty">
+                            <div class="max-w-md mx-auto text-center py-12 px-6">
+                                <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-4 text-2xl">
+                                    <i class="fas fa-inbox"></i>
+                                </div>
+                                <p class="text-brand-dark font-bold text-lg mb-2">Aucun voyage dans le catalogue</p>
+                                <p class="text-gray-500 text-sm mb-6">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
+                                <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
+                                    <i class="fas fa-plus-circle"></i> Gérer les voyages
+                                </a>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
             </div>
         </div>
 
@@ -1166,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     if (btnList) btnList.click();
                     var safe = code.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-                    var row = code ? document.querySelector('tr.ws-catalog-row[data-row-code="' + safe + '"]') : null;
+                    var row = code ? document.querySelector('.ws-catalog-row[data-row-code="' + safe + '"]') : null;
                     if (row) {
                         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         row.classList.add('ws-ring-pulse');
@@ -1225,12 +1212,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function wsApplySort() {
-        var tbody = document.querySelector('#ws-catalog-table tbody');
-        if (!tbody || !sortEl) return;
+        var list = document.getElementById('ws-catalog-list');
+        if (!list || !sortEl) return;
         var sort = sortEl.value || 'default';
-        var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr.ws-catalog-row'));
+        var rows = Array.prototype.slice.call(list.querySelectorAll('.ws-catalog-row'));
         rows.sort(function (a, b) { return wsRowCompare(a, b, sort); });
-        rows.forEach(function (tr) { tbody.appendChild(tr); });
+        rows.forEach(function (el) { list.appendChild(el); });
     }
 
     window.applyWsFilters = function applyWsFilters() {
@@ -1239,7 +1226,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var ds = dateStatusEl ? dateStatusEl.value : 'all';
         var av = availEl ? availEl.value : 'all';
         var rs = resEl ? resEl.value : 'all';
-        var rows = document.querySelectorAll('#ws-catalog-table tbody tr.ws-catalog-row');
+        var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row');
         var visible = 0;
         var range = null;
         if (rangeInput && rangeInput._flatpickr && rangeInput._flatpickr.selectedDates.length === 2) {

@@ -78,6 +78,9 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', 'https://ajinsafro.net'),
 
+    /** Base URL absolue du dossier wp-content/uploads (même source que la fiche voyage front). */
+    'wp_upload_url' => env('WP_UPLOAD_URL', 'https://ajinsafro.net/wp-content/uploads'),
+
     'public_domain' => env('PUBLIC_DOMAIN', 'ajinsafro.net'),
 
     'asset_url' => env('ASSET_URL'),

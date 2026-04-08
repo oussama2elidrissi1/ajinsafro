@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Models\User;
 use App\Services\BranchScopeService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -30,16 +31,16 @@ class ClientController extends Controller
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('client_code', 'like', '%' . $search . '%')
-                    ->orWhere('full_name', 'like', '%' . $search . '%')
-                    ->orWhere('first_name', 'like', '%' . $search . '%')
-                    ->orWhere('last_name', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%')
-                    ->orWhere('phone', 'like', '%' . $search . '%')
-                    ->orWhere('whatsapp_number', 'like', '%' . $search . '%')
-                    ->orWhere('nationality', 'like', '%' . $search . '%')
-                    ->orWhere('city', 'like', '%' . $search . '%')
-                    ->orWhere('company_name', 'like', '%' . $search . '%');
+                $q->where('client_code', 'like', '%'.$search.'%')
+                    ->orWhere('full_name', 'like', '%'.$search.'%')
+                    ->orWhere('first_name', 'like', '%'.$search.'%')
+                    ->orWhere('last_name', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%')
+                    ->orWhere('phone', 'like', '%'.$search.'%')
+                    ->orWhere('whatsapp_number', 'like', '%'.$search.'%')
+                    ->orWhere('nationality', 'like', '%'.$search.'%')
+                    ->orWhere('city', 'like', '%'.$search.'%')
+                    ->orWhere('company_name', 'like', '%'.$search.'%');
             });
         }
 
@@ -53,10 +54,10 @@ class ClientController extends Controller
             $query->where('source', $request->query('source'));
         }
         if ($request->filled('nationality')) {
-            $query->where('nationality', 'like', '%' . $request->query('nationality') . '%');
+            $query->where('nationality', 'like', '%'.$request->query('nationality').'%');
         }
         if ($request->filled('city')) {
-            $query->where('city', 'like', '%' . $request->query('city') . '%');
+            $query->where('city', 'like', '%'.$request->query('city').'%');
         }
         if ($request->filled('traveler_category')) {
             $query->where('traveler_category', $request->query('traveler_category'));
@@ -87,10 +88,11 @@ class ClientController extends Controller
 
     public function create(Request $request): View
     {
-        $client = new Client();
+        $client = new Client;
         $usersQuery = User::query()->where('is_active', true)->orderBy('name');
         $this->branchScope->scopeUsers($usersQuery, $request->user());
         $users = $usersQuery->get(['id', 'name']);
+
         return view('admin.customers.clients.create', compact('client', 'users'));
     }
 
@@ -116,6 +118,7 @@ class ClientController extends Controller
             abort(403, 'Accès non autorisé à ce client.');
         }
         $client->load(['assignedTo', 'createdBy', 'updatedBy']);
+
         return view('admin.customers.clients.show', compact('client'));
     }
 
@@ -128,6 +131,7 @@ class ClientController extends Controller
         $usersQuery = User::query()->where('is_active', true)->orderBy('name');
         $this->branchScope->scopeUsers($usersQuery, $request->user());
         $users = $usersQuery->get(['id', 'name']);
+
         return view('admin.customers.clients.edit', compact('client', 'users'));
     }
 
@@ -156,6 +160,7 @@ class ClientController extends Controller
             abort(403, 'Accès non autorisé à ce client.');
         }
         $client->delete();
+
         return redirect()
             ->route('admin.customers.clients.index')
             ->with('success', 'Client supprimé (corbeille).');
@@ -168,13 +173,14 @@ class ClientController extends Controller
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('client_code', 'like', '%' . $search . '%')
-                    ->orWhere('full_name', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%');
+                $q->where('client_code', 'like', '%'.$search.'%')
+                    ->orWhere('full_name', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%');
             });
         }
         $clients = $query->orderByDesc('deleted_at')->paginate(15)->withQueryString();
         $users = User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+
         return view('admin.customers.clients.index', compact('clients', 'users'))->with('trashed', true);
     }
 
@@ -184,6 +190,7 @@ class ClientController extends Controller
         $this->branchScope->scopeClients($query, $request->user());
         $client = $query->firstOrFail();
         $client->restore();
+
         return redirect()
             ->route('admin.customers.clients.index')
             ->with('success', 'Client restauré.');
@@ -195,6 +202,7 @@ class ClientController extends Controller
         $this->branchScope->scopeClients($query, $request->user());
         $client = $query->firstOrFail();
         $client->forceDelete();
+
         return redirect()
             ->route('admin.customers.clients.index')
             ->with('success', 'Client supprimé définitivement.');
@@ -222,16 +230,19 @@ class ClientController extends Controller
 
         if ($action === 'restore') {
             Client::onlyTrashed()->whereIn('id', $ids)->restore();
+
             return redirect()->route('admin.customers.clients.index')->with('success', 'Clients restaurés.');
         }
 
         if ($action === 'force_delete') {
             Client::onlyTrashed()->whereIn('id', $ids)->forceDelete();
+
             return redirect()->route('admin.customers.clients.index')->with('success', 'Clients supprimés définitivement.');
         }
 
         if ($action === 'delete') {
             Client::whereIn('id', $ids)->delete();
+
             return redirect()->route('admin.customers.clients.index')->with('success', 'Clients supprimés (corbeille).');
         }
 
@@ -251,6 +262,71 @@ class ClientController extends Controller
             'vip' => 'Statut mis à jour (VIP).',
             default => 'Action effectuée.',
         };
+
         return redirect()->route('admin.customers.clients.index')->with('success', $message);
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', $request->query('search', '')));
+        if (mb_strlen($q) < 2) {
+            return response()->json([
+                'q' => $q,
+                'count' => 0,
+                'items' => [],
+            ]);
+        }
+
+        $query = Client::query();
+        $this->branchScope->scopeClients($query, $request->user());
+
+        $query->where(function ($qq) use ($q) {
+            $qq->where('client_code', 'like', '%'.$q.'%')
+                ->orWhere('full_name', 'like', '%'.$q.'%')
+                ->orWhere('first_name', 'like', '%'.$q.'%')
+                ->orWhere('last_name', 'like', '%'.$q.'%')
+                ->orWhere('email', 'like', '%'.$q.'%')
+                ->orWhere('phone', 'like', '%'.$q.'%')
+                ->orWhere('national_id_number', 'like', '%'.$q.'%')
+                ->orWhere('passport_number', 'like', '%'.$q.'%');
+        });
+
+        $items = $query
+            ->orderByDesc('id')
+            ->limit(15)
+            ->get([
+                'id',
+                'client_code',
+                'full_name',
+                'first_name',
+                'last_name',
+                'email',
+                'phone',
+                'city',
+                'national_id_number',
+                'passport_number',
+                'status',
+            ])
+            ->map(function (Client $c) {
+                $doc = $c->national_id_number ?: ($c->passport_number ?: null);
+
+                return [
+                    'id' => $c->id,
+                    'client_code' => $c->client_code,
+                    'full_name' => $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')),
+                    'email' => $c->email,
+                    'phone' => $c->phone,
+                    'city' => $c->city,
+                    'document' => $doc,
+                    'status' => $c->status,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'q' => $q,
+            'count' => $items->count(),
+            'items' => $items,
+        ]);
     }
 }

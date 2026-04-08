@@ -209,6 +209,7 @@ class ReservationWorkspaceController extends Controller
                 'sales_manager_id' => $ownership['sales_manager_id'],
                 'agent_id' => $user->id,
                 'created_by' => $user->id,
+                'created_by_user_id' => $user->id,
                 'hotel_rooms' => [],
                 'wp_tour_post_id' => $voyageForMeta->wp_post_id ? (int) $voyageForMeta->wp_post_id : null,
                 'catalog_source_code' => $catalogRow['code'] ?? null,

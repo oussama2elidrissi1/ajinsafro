@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
+use App\Services\ReservationHubTableProfile;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
 use App\Services\Wp\WpHeroImageService;
@@ -27,9 +28,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -41,6 +42,7 @@ class ReservationsController extends Controller
         protected WpTourRepository $wpTourRepository,
         protected BranchScopeService $branchScope,
         protected ReservationListQueryService $reservationListQuery,
+        protected ReservationHubTableProfile $reservationHubTableProfile,
     ) {}
 
     /**
@@ -127,6 +129,8 @@ class ReservationsController extends Controller
             'tbody_html' => view('admin.reservations.partials.hub-table-rows', [
                 'reservations' => $data['reservations'],
                 'highlightReservationId' => $highlightReservationId,
+                'hubTableMode' => $data['hubTableMode'],
+                'hubVoyageFiltered' => $data['hubVoyageFiltered'],
             ])->render(),
             'pagination_html' => $data['reservations']->links()->render(),
         ]);
@@ -156,11 +160,16 @@ class ReservationsController extends Controller
     }
 
     /**
-     * JSON pour modals (détails + participants) — même périmètre d’accès que {@see edit}.
+     * JSON pour modals (détails + participants).
+     * Accès complet (édition) : périmètre agence + portail.
+     * Accès opérationnel partagé : lecture seule sans champs sensibles (autres agences, même voyage).
      */
     public function panel(Request $request, Reservation $reservation): JsonResponse
     {
-        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        $user = $request->user();
+        $fullAccess = $this->branchScope->userCanAccessReservation($user, $reservation);
+        $operationalRead = ! $fullAccess && $this->branchScope->userCanViewReservationSharedOperational($user, $reservation);
+        abort_unless($fullAccess || $operationalRead, 403, 'Accès non autorisé à cette réservation.');
 
         $reservation->load([
             'passengers',
@@ -179,7 +188,23 @@ class ReservationsController extends Controller
             ? $reservation->client->full_name
             : trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''));
 
-        return response()->json([
+        $passengersFull = $reservation->passengers->map(fn ($p) => [
+            'first_name' => $p->first_name,
+            'last_name' => $p->last_name,
+            'type' => $p->type,
+            'birth_date' => $p->birth_date?->format('Y-m-d'),
+            'document_type' => $p->document_type,
+            'document_number' => $p->document_number,
+        ])->values()->all();
+
+        $passengersOperational = $reservation->passengers->map(fn ($p) => [
+            'first_name' => $p->first_name,
+            'last_name' => $p->last_name,
+            'type' => $p->type,
+        ])->values()->all();
+
+        $payload = [
+            'view_mode' => $fullAccess ? 'full' : 'operational_read_only',
             'id' => $reservation->id,
             'status' => $reservation->status,
             'created_at' => $reservation->created_at?->format('d/m/Y H:i'),
@@ -215,15 +240,23 @@ class ReservationsController extends Controller
             'agency' => $reservation->agency_label,
             'creator_name' => ($reservation->creator ?? $reservation->createdBy)?->name,
             'creator_email' => ($reservation->creator ?? $reservation->createdBy)?->email,
-            'passengers' => $reservation->passengers->map(fn ($p) => [
-                'first_name' => $p->first_name,
-                'last_name' => $p->last_name,
-                'type' => $p->type,
-                'birth_date' => $p->birth_date?->format('Y-m-d'),
-                'document_type' => $p->document_type,
-                'document_number' => $p->document_number,
-            ])->values()->all(),
-        ]);
+            'passengers' => $passengersFull,
+        ];
+
+        if (! $fullAccess) {
+            $payload['client_code'] = null;
+            $payload['hotel_room_lines'] = [];
+            $payload['prestation_type'] = $reservation->prestation_type;
+            $payload['base_price'] = null;
+            $payload['paid_amount'] = null;
+            $payload['payment_type'] = null;
+            $payload['creator_name'] = null;
+            $payload['creator_email'] = null;
+            $payload['created_at'] = null;
+            $payload['passengers'] = $passengersOperational;
+        }
+
+        return response()->json($payload);
     }
 
     /**
@@ -987,8 +1020,8 @@ class ReservationsController extends Controller
 
         $travelDateFilter = (int) $request->query('travel_date_id', 0);
         $base = $this->reservationListQuery->baseQuery($user, [
-            'tour_id' => $tourFilter > 0 ? $tourFilter : null,
-            'travel_date_id' => $travelDateFilter > 0 ? $travelDateFilter : null,
+            'tour_id' => $tourFilter > 0 ? $tourFilter : 0,
+            'travel_date_id' => $travelDateFilter > 0 ? $travelDateFilter : 0,
         ]);
 
         $this->reservationListQuery->applyTourFilter($base, $tourFilter);
@@ -1014,7 +1047,7 @@ class ReservationsController extends Controller
     /**
      * Données hub (stats + page courante) : même logique pour la vue HTML et {@see hubRefresh()}.
      *
-     * @return array{hubStats: array, reservations: \Illuminate\Contracts\Pagination\LengthAwarePaginator, filterTourId: int|null, filterTravelDateId: int|null, filterSearch: string|null, filterStatus: string|null}
+     * @return array{hubStats: array, reservations: \Illuminate\Contracts\Pagination\LengthAwarePaginator, filterTourId: int|null, filterTravelDateId: int|null, filterSearch: string|null, filterStatus: string|null, hubTableMode: string, hubVoyageFiltered: bool}
      */
     protected function hubListData(Request $request): array
     {
@@ -1025,6 +1058,7 @@ class ReservationsController extends Controller
             $tourFilter = (int) $request->query('tour_id', 0);
         }
         $travelDateFilter = (int) $request->query('travel_date_id', 0);
+        $hubVoyageFiltered = $tourFilter > 0 || $travelDateFilter > 0;
         $search = (string) $request->query('search', '');
         $statusParam = (string) $request->query('status', '');
         if (! in_array($statusParam, [
@@ -1038,7 +1072,7 @@ class ReservationsController extends Controller
         $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
 
         $reservations = (clone $base)
-            ->with(['passengers', 'client', 'offer', 'branch', 'partner', 'travelDate', 'creator'])
+            ->with(['passengers', 'client', 'offer', 'branch', 'partner', 'travelDate', 'creator', 'createdBy', 'agent', 'salesManager'])
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString();
@@ -1057,6 +1091,8 @@ class ReservationsController extends Controller
             'filterTravelDateId' => $travelDateFilter > 0 ? $travelDateFilter : null,
             'filterSearch' => $search !== '' ? $search : null,
             'filterStatus' => $statusParam !== '' ? $statusParam : null,
+            'hubTableMode' => $this->reservationHubTableProfile->mode($request->user()),
+            'hubVoyageFiltered' => $hubVoyageFiltered,
         ];
     }
 
@@ -1081,7 +1117,8 @@ class ReservationsController extends Controller
             if ($res
                 && $res->created_at
                 && $res->created_at->gt(now()->subMinutes(5))
-                && $this->branchScope->userCanAccessReservation($request->user(), $res)) {
+                && ($this->branchScope->userCanAccessReservation($request->user(), $res)
+                    || $this->branchScope->userCanViewReservationSharedOperational($request->user(), $res))) {
                 $reservationCreated = AdminReservationFlash::createdPayload($res);
             }
         }
@@ -1355,7 +1392,15 @@ class ReservationsController extends Controller
                 $applyTravelDateWindow($q);
             });
 
-        $this->scopeReservationAccessForCalendar($reservationQuery, $request->user());
+        $calendarScopeContext = [];
+        if ($voyageFilter > 0) {
+            $laravelTourId = (int) (Voyage::query()->where('wp_post_id', $voyageFilter)->orderBy('id')->value('id') ?? 0);
+            if ($laravelTourId > 0) {
+                $calendarScopeContext['tour_id'] = $laravelTourId;
+            }
+        }
+
+        $this->scopeReservationAccessForCalendar($reservationQuery, $request->user(), $calendarScopeContext);
 
         if ($search !== '') {
             $reservationQuery->where(function (Builder $q) use ($search) {
@@ -1409,14 +1454,19 @@ class ReservationsController extends Controller
             return response()->json(['error' => 'Paramètre id manquant'], 422);
         }
 
-        $query = Reservation::query()
+        $user = $request->user();
+        $reservation = Reservation::query()
             ->with(['offer:id,name,wp_post_id', 'travelDate', 'client:id,full_name,email,phone', 'branch:id,name', 'partner:id,name', 'creator:id,name,email'])
-            ->whereKey($id);
+            ->whereKey($id)
+            ->first();
 
-        $this->scopeReservationAccessForCalendar($query, $request->user());
-
-        $reservation = $query->first();
         if (! $reservation) {
+            return response()->json(['error' => 'Réservation introuvable ou accès refusé'], 404);
+        }
+
+        $fullAccess = $this->branchScope->userCanAccessReservation($user, $reservation);
+        $operationalRead = ! $fullAccess && $this->branchScope->userCanViewReservationSharedOperational($user, $reservation);
+        if (! $fullAccess && ! $operationalRead) {
             return response()->json(['error' => 'Réservation introuvable ou accès refusé'], 404);
         }
 
@@ -1424,12 +1474,15 @@ class ReservationsController extends Controller
         $departure = $td?->date?->format('Y-m-d');
         $departureFormatted = $td?->date?->translatedFormat('l j F Y');
 
-        return response()->json([
+        $clientName = trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''))
+            ?: ($reservation->client?->full_name ?? '—');
+
+        $payload = [
+            'view_mode' => $fullAccess ? 'full' : 'operational_read_only',
             'kind' => 'reservation',
             'id' => $reservation->id,
             'status' => $reservation->status,
-            'client' => trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''))
-                ?: ($reservation->client?->full_name ?? '—'),
+            'client' => $clientName,
             'email' => $reservation->client_email ?: $reservation->client?->email,
             'phone' => $reservation->client_phone ?: $reservation->client?->phone,
             'tour_name' => $reservation->offer?->name ?? '—',
@@ -1441,16 +1494,36 @@ class ReservationsController extends Controller
             'payment_type' => $reservation->payment_type,
             'total_price' => $reservation->total_price,
             'route_edit' => route('admin.reservations.edit', $reservation),
-        ]);
+        ];
+
+        if (! $fullAccess) {
+            $payload['email'] = null;
+            $payload['phone'] = null;
+            $payload['creator_name'] = null;
+            $payload['payment_type'] = null;
+            $payload['total_price'] = null;
+            $payload['route_edit'] = null;
+        }
+
+        return response()->json($payload);
     }
 
     /**
-     * Réservations : même périmètre agence + pour commercial / chef / agent : dossiers liés au compte.
+     * Réservations calendrier : périmètre agence par défaut ; vue partagée si un voyage WP est filtré
+     * (même logique que le hub filtré par voyage).
+     *
+     * @param  array{tour_id?: int}  $context
      */
-    private function scopeReservationAccessForCalendar(Builder $query, User $user): void
+    private function scopeReservationAccessForCalendar(Builder $query, User $user, array $context = []): void
     {
-        $this->branchScope->scopeReservations($query, $user);
-        $this->branchScope->constrainReservationQueryForPortalUser($query, $user);
+        $ctx = [
+            'tour_id' => (int) ($context['tour_id'] ?? 0),
+            'travel_date_id' => (int) ($context['travel_date_id'] ?? 0),
+            'departure_id' => (int) ($context['departure_id'] ?? 0),
+            'shared_operational_aggregate' => ! empty($context['shared_operational_aggregate']),
+        ];
+        $this->branchScope->scopeReservations($query, $user, $ctx);
+        $this->branchScope->constrainReservationQueryForPortalUser($query, $user, $ctx);
     }
 
     /**
