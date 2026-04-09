@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\HomePageSettingsController;
+use App\Http\Controllers\Admin\LaravelVoyageThemeController;
 use App\Http\Controllers\Admin\OperationsController;
 use App\Http\Controllers\Admin\PartnerAccountController;
 use App\Http\Controllers\Admin\PartnerCommissionRuleController;
@@ -271,6 +272,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('circuits/taxonomy-terms', [TaxonomyTermController::class, 'store'])->name('circuits.taxonomy-terms.store');
         Route::match(['put', 'patch'], 'circuits/taxonomy-terms/{termId}', [TaxonomyTermController::class, 'update'])->name('circuits.taxonomy-terms.update')->whereNumber('termId');
         Route::delete('circuits/taxonomy-terms/{termId}', [TaxonomyTermController::class, 'destroy'])->name('circuits.taxonomy-terms.destroy')->whereNumber('termId');
+
+        Route::get('circuits/voyage-themes', [LaravelVoyageThemeController::class, 'index'])->name('circuits.voyage-themes.index');
+        Route::post('circuits/voyage-themes', [LaravelVoyageThemeController::class, 'store'])->name('circuits.voyage-themes.store');
+        Route::match(['put', 'patch'], 'circuits/voyage-themes/{voyageTheme}', [LaravelVoyageThemeController::class, 'update'])->name('circuits.voyage-themes.update');
+        Route::delete('circuits/voyage-themes/{voyageTheme}', [LaravelVoyageThemeController::class, 'destroy'])->name('circuits.voyage-themes.destroy');
 
         Route::get('accommodations', [AccommodationsController::class, 'index'])->name('accommodations.index');
         Route::get('accommodations/hotels', [AccommodationsController::class, 'page'])->name('accommodations.hotels')->defaults('submenu', 'hotels');

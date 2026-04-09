@@ -4,7 +4,7 @@
  * Plugin Name: Ajinsafro Traveler Home
  * Plugin URI:  https://ajinsafro.com
  * Description: Surcharge la page d'accueil (front page) du thème Traveler avec une mise en page personnalisée : Hero, barre de recherche, offres dernière minute, destinations par région et bons coins.
- * Version:     1.0.7
+ * Version:     1.0.8
  * Author:      Ajinsafro
  * Author URI:  https://ajinsafro.com
  * Text Domain: ajinsafro-traveler-home
@@ -19,7 +19,7 @@ if (! defined('ABSPATH')) {
 /* ──────────────────────────────────────────────
  * Constants
  * ────────────────────────────────────────────── */
-define('AJTH_VERSION', '1.0.7');
+define('AJTH_VERSION', '1.0.8');
 define('AJTH_FILE', __FILE__);
 define('AJTH_DIR', plugin_dir_path(__FILE__));
 define('AJTH_URL', plugin_dir_url(__FILE__));
@@ -37,6 +37,7 @@ if (! defined('AJINSAFRO_HOME_URL')) {
 require_once AJTH_DIR.'includes/class-template-router.php';
 require_once AJTH_DIR.'includes/class-admin-settings.php';
 require_once AJTH_DIR.'includes/tour-category-defaults.php';
+require_once AJTH_DIR.'includes/voyages-routing.php';
 
 register_activation_hook(AJTH_FILE, 'ajth_activate_default_tour_categories');
 
@@ -891,7 +892,33 @@ function ajth_get_vols_page_url()
  * ────────────────────────────────────────────── */
 function ajth_ensure_voyages_page()
 {
-    if (get_page_by_path('voyages')) {
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+
+    $pages = get_posts([
+        'post_type' => 'page',
+        'name' => 'voyages',
+        'post_status' => 'any',
+        'posts_per_page' => 1,
+        'suppress_filters' => true,
+    ]);
+
+    if (! empty($pages)) {
+        $p = $pages[0];
+        if ($p->post_status === 'trash') {
+            wp_untrash_post((int) $p->ID);
+            $p = get_post((int) $p->ID);
+        }
+        if ($p instanceof WP_Post && $p->post_status !== 'publish') {
+            wp_update_post([
+                'ID' => (int) $p->ID,
+                'post_status' => 'publish',
+            ]);
+        }
+
         return;
     }
 
@@ -900,9 +927,23 @@ function ajth_ensure_voyages_page()
         'post_status' => 'publish',
         'post_title' => 'Voyages',
         'post_name' => 'voyages',
-        'post_content' => '',
+        'post_content' => '<!-- Ajinsafro Traveler Home : template catalogue voyages (plugin). -->',
     ]);
 }
+
+/**
+ * Première exécution après mise à jour : rafraîchir les permaliens pour que /voyages/ soit résolu.
+ */
+function ajth_maybe_flush_rewrite_rules_once(): void
+{
+    if (get_option('ajth_voyages_routing_flush_v1')) {
+        return;
+    }
+    flush_rewrite_rules(false);
+    update_option('ajth_voyages_routing_flush_v1', '1', true);
+}
+add_action('init', 'ajth_ensure_voyages_page', 10);
+add_action('init', 'ajth_maybe_flush_rewrite_rules_once', 99);
 
 /* ──────────────────────────────────────────────
  * Ensure "Vols" page exists (slug: vols)
