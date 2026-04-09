@@ -9,6 +9,7 @@ use App\Models\Hotel;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Models\Voyage;
+use App\Models\VoyageTheme;
 use App\Models\VoyageDeparturePlace;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
@@ -23,17 +24,85 @@ class VoyageController extends Controller
 
     public function index(Request $request): View
     {
-        $voyages = Voyage::query()
+        $q = trim((string) $request->input('q', $request->input('s', '')));
+        $themeSlug = trim((string) $request->input('theme', $request->input('cat', '')));
+        $destination = trim((string) $request->input('destination', ''));
+        $departDate = trim((string) $request->input('depart_date', ''));
+        $sort = (string) $request->input('catalog_orderby', 'date');
+        if (! in_array($sort, ['date', 'title', 'title_desc'], true)) {
+            $sort = 'date';
+        }
+
+        $voyagesQuery = Voyage::query()
             ->whereIn('status', self::VISIBLE_STATUSES)
+            ->with(['themes' => fn ($t) => $t->orderBy('sort_order')->orderBy('name')]);
+
+        if ($q !== '') {
+            $like = '%'.$q.'%';
+            $voyagesQuery->where(function ($w) use ($like) {
+                $w->where('name', 'like', $like)
+                    ->orWhere('destination', 'like', $like)
+                    ->orWhere('description', 'like', $like);
+            });
+        }
+
+        if ($themeSlug !== '') {
+            $voyagesQuery->whereHas('themes', function ($w) use ($themeSlug) {
+                $w->where('voyage_themes.slug', $themeSlug);
+            });
+        }
+
+        if ($destination !== '') {
+            $voyagesQuery->where('destination', $destination);
+        }
+
+        if ($departDate !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $departDate)) {
+            $voyagesQuery->whereHas('departures', function ($w) use ($departDate) {
+                $w->whereDate('start_date', $departDate);
+            });
+        }
+
+        if ($sort === 'title') {
+            $voyagesQuery->orderBy('name');
+        } elseif ($sort === 'title_desc') {
+            $voyagesQuery->orderByDesc('name');
+        } else {
+            $voyagesQuery->orderByDesc('updated_at');
+        }
+
+        $voyages = $voyagesQuery
             ->select([
                 'id', 'name', 'slug', 'destination', 'duration_text',
-                'price_from', 'old_price', 'currency', 'featured_image',
+                'price_from', 'old_price', 'currency', 'featured_image', 'updated_at',
             ])
-            ->orderBy('name')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
+
+        $themeOptions = VoyageTheme::query()->active()->ordered()->get();
+
+        $destinationOptions = Voyage::query()
+            ->whereIn('status', self::VISIBLE_STATUSES)
+            ->whereNotNull('destination')
+            ->where('destination', '!=', '')
+            ->distinct()
+            ->orderBy('destination')
+            ->pluck('destination')
+            ->values();
+
+        $hasFilters = $q !== '' || $themeSlug !== '' || $destination !== '' || ($departDate !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $departDate));
 
         return view('front.voyages.index', [
             'voyages' => $voyages,
+            'themeOptions' => $themeOptions,
+            'destinationOptions' => $destinationOptions,
+            'filters' => [
+                'q' => $q,
+                'theme' => $themeSlug,
+                'destination' => $destination,
+                'depart_date' => $departDate,
+                'catalog_orderby' => $sort,
+            ],
+            'hasFilters' => $hasFilters,
         ]);
     }
 

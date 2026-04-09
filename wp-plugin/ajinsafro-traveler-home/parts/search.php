@@ -17,7 +17,7 @@ if ( preg_match( '/\[([a-zA-Z0-9_\-:]+)/', $search_shortcode, $m ) ) {
 
 $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
     ? ajth_get_voyages_page_url()
-    : home_url( '/?post_type=st_tours' );
+    : home_url( '/voyages/' );
 ?>
 
 <?php if ( shortcode_exists( $shortcode_tag ) && ! empty( $search_shortcode ) ) : ?>

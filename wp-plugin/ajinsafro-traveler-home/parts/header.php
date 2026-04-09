@@ -30,7 +30,7 @@ $social_icons = array(
 
 $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
     ? ajth_get_voyages_page_url()
-    : home_url( '/?post_type=st_tours' );
+    : home_url( '/voyages/' );
 $public_login_url = home_url( '/login/' );
 $public_signup_url = home_url( '/register/' );
 $maintenance_url = function_exists( 'ajth_get_maintenance_url' ) ? ajth_get_maintenance_url() : home_url( '/maintenance/' );

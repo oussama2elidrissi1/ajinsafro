@@ -867,7 +867,7 @@ function ajth_get_voyages_page_url()
         return $archive;
     }
 
-    return home_url('/?post_type=st_tours');
+    return home_url('/voyages/');
 }
 
 /* ──────────────────────────────────────────────

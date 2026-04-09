@@ -26,6 +26,7 @@ $keyword = $location_name !== '' ? $location_name : $search_text;
 $category_slug = isset($_GET['cat']) ? sanitize_text_field(wp_unslash($_GET['cat'])) : '';
 $tag_slug = isset($_GET['tag']) ? sanitize_text_field(wp_unslash($_GET['tag'])) : '';
 $location_id = isset($_GET['location_id']) ? absint($_GET['location_id']) : 0;
+$dest = isset($_GET['dest']) ? sanitize_text_field(wp_unslash($_GET['dest'])) : '';
 $featured_only = isset($_GET['featured']) && (string) $_GET['featured'] === '1';
 $depart_date = isset($_GET['depart_date']) ? sanitize_text_field(wp_unslash($_GET['depart_date'])) : ''; // YYYY-MM-DD
 $duration_min = isset($_GET['duration_min']) ? absint($_GET['duration_min']) : 0;
@@ -85,6 +86,14 @@ if ($location_id > 0) {
         // multi_location format: "_12_,_15_" or CSV
         ['key' => 'multi_location', 'value' => '_'.$location_id.'_', 'compare' => 'LIKE'],
         ['key' => 'multi_location', 'value' => (string) $location_id, 'compare' => 'LIKE'],
+    ];
+}
+
+if ($dest !== '') {
+    $meta_query[] = [
+        'relation' => 'OR',
+        ['key' => 'address', 'value' => $dest, 'compare' => '='],
+        ['key' => 'aj_catalog_destination', 'value' => $dest, 'compare' => '='],
     ];
 }
 if ($duration_min > 0 || $duration_max > 0) {
@@ -172,6 +181,7 @@ $has_any_filter = $is_search
     || $category_slug !== ''
     || $tag_slug !== ''
     || $location_id > 0
+    || $dest !== ''
     || $featured_only
     || ($depart_date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $depart_date))
     || $duration_min > 0
@@ -181,12 +191,12 @@ $has_any_filter = $is_search
 
 // Preserve all filter params in pagination links.
 $voyages_pagination_args = [
-    'post_type' => 'st_tours',
     's' => $search_text,
     'location_name' => $location_name,
     'cat' => $category_slug,
     'tag' => $tag_slug,
     'location_id' => $location_id ? (string) $location_id : '',
+    'dest' => $dest,
     'featured' => $featured_only ? '1' : '',
     'depart_date' => $depart_date,
     'duration_min' => $duration_min ? (string) $duration_min : '',
@@ -204,7 +214,7 @@ $voyages_pagination_args = array_filter(
 
 $voyages_page_url = function_exists('ajth_get_voyages_page_url')
     ? ajth_get_voyages_page_url()
-    : home_url('/?post_type=st_tours');
+    : home_url('/voyages/');
 ?>
 
 <div class="aj-home-wrap">

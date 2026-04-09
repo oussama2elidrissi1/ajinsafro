@@ -8,7 +8,7 @@ if (! defined('ABSPATH')) {
 
 $voyages_page_url = function_exists('ajth_get_voyages_page_url')
     ? ajth_get_voyages_page_url()
-    : home_url('/?post_type=st_tours');
+    : home_url('/voyages/');
 
 $search_text = isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
 $location_name = isset($_GET['location_name']) ? sanitize_text_field(wp_unslash($_GET['location_name'])) : '';
@@ -21,8 +21,9 @@ if (! in_array($catalog_orderby, ['date', 'title', 'title_desc'], true)) {
 
 $category_slug = isset($_GET['cat']) ? sanitize_text_field(wp_unslash($_GET['cat'])) : '';
 $tag_slug = isset($_GET['tag']) ? sanitize_text_field(wp_unslash($_GET['tag'])) : '';
-$location_id = isset($_GET['location_id']) ? absint($_GET['location_id']) : 0;
 $featured = isset($_GET['featured']) && (string) $_GET['featured'] === '1';
+
+$dest = isset($_GET['dest']) ? sanitize_text_field(wp_unslash($_GET['dest'])) : '';
 
 $depart_date = isset($_GET['depart_date']) ? sanitize_text_field(wp_unslash($_GET['depart_date'])) : '';
 $duration_min = isset($_GET['duration_min']) ? absint($_GET['duration_min']) : 0;
@@ -47,53 +48,27 @@ try {
     $posts = $wpdb->posts;
     $rows = $wpdb->get_col(
         "
-        SELECT DISTINCT CAST(pm.meta_value AS UNSIGNED) AS loc_id
+        SELECT DISTINCT TRIM(pm.meta_value) AS dest_label
         FROM {$postmeta} pm
         INNER JOIN {$posts} p ON p.ID = pm.post_id
         WHERE p.post_type = 'st_tours'
           AND p.post_status = 'publish'
-          AND pm.meta_key IN ('st_location_id','location_id','id_location')
-          AND pm.meta_value REGEXP '^[0-9]+$'
-          AND CAST(pm.meta_value AS UNSIGNED) > 0
-        ORDER BY loc_id ASC
-        LIMIT 200
+          AND pm.meta_key IN ('address', 'aj_catalog_destination')
+          AND pm.meta_value IS NOT NULL
+          AND TRIM(pm.meta_value) <> ''
+        ORDER BY dest_label ASC
+        LIMIT 300
     "
     );
-    $ids = array_values(array_filter(array_map('absint', (array) $rows)));
-    if (! empty($ids)) {
-        $loc_posts = get_posts(
-            [
-                'post_type' => 'location',
-                'post__in' => $ids,
-                'orderby' => 'post__in',
-                'posts_per_page' => count($ids),
-                'post_status' => ['publish', 'private', 'draft', 'pending', 'future'],
-            ]
-        );
-        $by_id = [];
-        foreach ($loc_posts as $lp) {
-            $by_id[(int) $lp->ID] = $lp;
+    foreach ((array) $rows as $label) {
+        $label = is_string($label) ? trim($label) : '';
+        if ($label === '') {
+            continue;
         }
-        foreach ($ids as $id) {
-            if (empty($by_id[$id])) {
-                continue;
-            }
-            $p = $by_id[$id];
-            $parts = [];
-            $cur = $p;
-            $depth = 0;
-            while ($cur && $depth < 10) {
-                $parts[] = (string) $cur->post_title;
-                $pid = (int) $cur->post_parent;
-                $cur = $pid > 0 ? get_post($pid) : null;
-                $depth++;
-            }
-            $parts = array_reverse(array_filter(array_map('trim', $parts)));
-            $destinations[] = [
-                'id' => $id,
-                'label' => implode(' > ', $parts),
-            ];
-        }
+        $destinations[] = [
+            'value' => $label,
+            'label' => $label,
+        ];
     }
 } catch (\Throwable $e) {
     $destinations = [];
@@ -101,7 +76,6 @@ try {
 ?>
 
 <form method="get" action="<?php echo esc_url($voyages_page_url); ?>" class="aj-voyages-filters-form">
-	<input type="hidden" name="post_type" value="st_tours">
 	<input type="hidden" name="catalog_orderby" value="<?php echo esc_attr($catalog_orderby); ?>">
 
 	<div class="aj-voyages-filters__intro">
@@ -144,10 +118,10 @@ try {
 		<label class="aj-voyages-filters__field">
 			<span class="aj-voyages-filters__label"><?php esc_html_e('Destination', 'ajinsafro-traveler-home'); ?></span>
 			<span class="aj-voyages-filters__control">
-				<select name="location_id" class="aj-voyages-filters__select">
+				<select name="dest" class="aj-voyages-filters__select">
 					<option value=""><?php esc_html_e('Toutes les destinations', 'ajinsafro-traveler-home'); ?></option>
 					<?php foreach ((array) $destinations as $d) { ?>
-						<option value="<?php echo (int) $d['id']; ?>" <?php selected($location_id, (int) $d['id']); ?>>
+						<option value="<?php echo esc_attr($d['value']); ?>" <?php selected($dest, $d['value']); ?>>
 							<?php echo esc_html($d['label']); ?>
 						</option>
 					<?php } ?>
@@ -155,7 +129,7 @@ try {
 			</span>
 		</label>
 		<?php if (empty($destinations)) { ?>
-			<p class="aj-voyages-filters__muted"><?php esc_html_e('Aucune destination liée pour le moment.', 'ajinsafro-traveler-home'); ?></p>
+			<p class="aj-voyages-filters__muted"><?php esc_html_e('Aucune destination renseignée pour le moment.', 'ajinsafro-traveler-home'); ?></p>
 		<?php } ?>
 		<label class="aj-voyages-filters__field">
 			<span class="aj-voyages-filters__label"><?php esc_html_e('Date de départ', 'ajinsafro-traveler-home'); ?></span>

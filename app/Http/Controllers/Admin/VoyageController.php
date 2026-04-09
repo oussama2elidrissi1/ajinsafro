@@ -21,11 +21,13 @@ use App\Models\TourTransfer;
 use App\Models\TravelDeparturePlace;
 use App\Models\TravelDepartureFlight;
 use App\Models\VoyageDeparturePlace;
+use App\Models\VoyageTheme;
 use App\Models\TravelDate;
 use App\Models\Departure;
 use App\Models\DepartureRoomAllocation;
 use App\Services\AdminWpTourCatalogQuery;
 use App\Services\VoyageAvailabilityService;
+use App\Services\VoyageThemeWpSyncService;
 use App\Services\VoyageFlightService;
 use App\Services\VoyageFlightOptionService;
 use App\Services\Wp\ProgramJsonService;
@@ -256,6 +258,7 @@ class VoyageController extends Controller
         $tourActivities = collect();
         $totalPlacesVoyage = 0;
         $voyageExtras = collect();
+        $allVoyageThemes = VoyageTheme::query()->active()->ordered()->get();
 
         return view('admin.circuits.voyages.edit', compact(
             'voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds',
@@ -265,7 +268,7 @@ class VoyageController extends Controller
             'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo',
             'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl',
             'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers',
-            'totalPlacesVoyage', 'voyageExtras'
+            'totalPlacesVoyage', 'voyageExtras', 'allVoyageThemes'
         ));
     }
 
@@ -292,7 +295,8 @@ class VoyageController extends Controller
                 ['wp_post_id' => $tour->ID],
                 ['name' => $tour->post_title ?? 'Tour', 'slug' => 'tour-' . $tour->ID]
             );
-            
+            $this->syncVoyageThemesFromRequest($request, $laravelVoyage);
+
             // Save tour program if provided (PHP serialized)
             if ($request->has('tours_program')) {
                 $programStyle = $request->input('tours_program_style', 'style1');
@@ -667,7 +671,10 @@ class VoyageController extends Controller
             'day_numbers' => $programDays->pluck('day.day_number')->filter()->values()->toArray(),
         ]);
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras'));
+        $laravelVoyage->load('themes');
+        $allVoyageThemes = VoyageTheme::query()->active()->ordered()->get();
+
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras', 'allVoyageThemes'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -2009,6 +2016,9 @@ class VoyageController extends Controller
                 }
             }
 
+            $laravelVoyage->refresh();
+            $this->syncVoyageThemesFromRequest($request, $laravelVoyage);
+
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
                 ->with('success', 'Tour mis à jour avec succès dans WordPress ! Modifications visibles immédiatement.');
@@ -2556,6 +2566,24 @@ class VoyageController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Impossible de supprimer le jour : ' . $e->getMessage()]);
         }
+    }
+
+    private function syncVoyageThemesFromRequest(Request $request, Voyage $laravelVoyage): void
+    {
+        $d = $request->input('destination');
+        if (is_string($d) && trim($d) !== '') {
+            $laravelVoyage->destination = trim($d);
+            $laravelVoyage->saveQuietly();
+        }
+
+        $ids = $request->input('voyage_theme_ids', []);
+        if (! is_array($ids)) {
+            $ids = [];
+        }
+        $ids = array_values(array_unique(array_filter(array_map(static fn ($v) => (int) $v, $ids), static fn ($id) => $id > 0)));
+        $laravelVoyage->themes()->sync($ids);
+        $laravelVoyage->refresh();
+        app(VoyageThemeWpSyncService::class)->syncFromLaravelVoyage($laravelVoyage);
     }
 
     /**

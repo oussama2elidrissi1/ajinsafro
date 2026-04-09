@@ -94,6 +94,12 @@ class Voyage extends Model
         return $this->belongsToMany(Partner::class, 'partner_voyage_access', 'voyage_id', 'partner_id')->withTimestamps();
     }
 
+    /** Thèmes catalogue (Laravel) — synchronisés vers WP `tours_cat` pour le site public. */
+    public function themes(): BelongsToMany
+    {
+        return $this->belongsToMany(VoyageTheme::class, 'voyage_voyage_theme')->withTimestamps();
+    }
+
     public function flights()
     {
         return $this->hasMany(VoyageFlight::class)->orderBy('direction');

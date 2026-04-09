@@ -24,16 +24,14 @@ function ajth_get_default_tour_theme_definitions()
         'omra' => __('Omra', 'ajinsafro-traveler-home'),
         'hajj' => __('Hajj', 'ajinsafro-traveler-home'),
         'voyage-organise' => __('Voyage organisé', 'ajinsafro-traveler-home'),
-        'voyage-en-groupe' => __('Voyage en groupe', 'ajinsafro-traveler-home'),
-        'voyage-en-famille' => __('Voyage en famille', 'ajinsafro-traveler-home'),
-        'honeymoon' => __('Honeymoon', 'ajinsafro-traveler-home'),
+        'famille' => __('Famille', 'ajinsafro-traveler-home'),
+        'groupe' => __('Groupe', 'ajinsafro-traveler-home'),
         'city-break' => __('City break', 'ajinsafro-traveler-home'),
-        'croisiere' => __('Croisière', 'ajinsafro-traveler-home'),
         'plage-detente' => __('Plage & détente', 'ajinsafro-traveler-home'),
-        'aventure' => __('Aventure', 'ajinsafro-traveler-home'),
         'culture-decouverte' => __('Culture & découverte', 'ajinsafro-traveler-home'),
+        'aventure' => __('Aventure', 'ajinsafro-traveler-home'),
         'luxe' => __('Luxe', 'ajinsafro-traveler-home'),
-        'promo-bon-plan' => __('Promo / Bon plan', 'ajinsafro-traveler-home'),
+        'promo' => __('Promo', 'ajinsafro-traveler-home'),
     ];
 }
 

@@ -128,7 +128,9 @@ class UpdateWpTourRequest extends FormRequest
             'duration_day' => 'nullable|integer|min:1',
             'destination' => 'nullable|string|max:255',
             'duration_text' => 'nullable|string|max:100',
-            
+            'voyage_theme_ids' => 'nullable|array',
+            'voyage_theme_ids.*' => 'integer|exists:voyage_themes,id',
+
             // Contact
             'contact_email' => 'nullable|email',
             'phone' => 'nullable|string',

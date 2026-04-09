@@ -1,4 +1,5 @@
-﻿<div class="tab-pane" id="taxonomies" role="tabpanel">
+<div class="tab-pane" id="taxonomies" role="tabpanel">
+                @include('admin.circuits.voyages.partials._voyage_laravel_themes')
                 <div class="card ve-pane-card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">CatÃ©gories & Taxonomies</h4>
