@@ -152,16 +152,53 @@ class WpHeroImageService
         }
 
         if (str_starts_with($attachedFile, '/wp-content/uploads')) {
-            $siteUrl = rtrim(config('wordpress.site_url', ''), '/');
-            return $siteUrl . (str_starts_with($attachedFile, '/') ? $attachedFile : '/' . $attachedFile);
+            $siteUrl = rtrim((string) config('wordpress.site_url', ''), '/');
+            if ($siteUrl !== '') {
+                return $siteUrl.$attachedFile;
+            }
+            $base = self::getUploadsBaseUrl();
+            if ($base === '') {
+                return null;
+            }
+            $suffix = preg_replace('#^/wp-content/uploads/?#', '', $attachedFile) ?? '';
+
+            return rtrim($base, '/').'/'.ltrim((string) $suffix, '/');
         }
 
         $base = self::getUploadsBaseUrl();
-        if (empty($base)) {
+        if ($base === '') {
             return null;
         }
 
-        return rtrim($base, '/') . '/' . ltrim($attachedFile, '/');
+        return rtrim($base, '/').'/'.ltrim($attachedFile, '/');
+    }
+
+    /**
+     * URL publique fiable pour un attachment : {@see WpPost::$guid} (URL enregistrée à l’upload),
+     * puis construction depuis {@see getAttachmentUrl()} avec une base unifiée.
+     *
+     * À utiliser partout (fiche voyage, workspace) pour éviter les 404 dus à un mélange
+     * config('app.wp_upload_url') vs {@see getUploadsBaseUrl()} (héros hero-* uploadés via Laravel).
+     */
+    public static function publicUrlForAttachmentId(int $attachmentId): ?string
+    {
+        if ($attachmentId <= 0) {
+            return null;
+        }
+
+        $guid = WpPost::query()
+            ->where('ID', $attachmentId)
+            ->where('post_type', 'attachment')
+            ->value('guid');
+
+        if (is_string($guid)) {
+            $guid = trim($guid);
+            if (str_starts_with($guid, 'http://') || str_starts_with($guid, 'https://')) {
+                return $guid;
+            }
+        }
+
+        return self::getAttachmentUrl($attachmentId);
     }
 
     /**
@@ -178,15 +215,27 @@ class WpHeroImageService
     }
 
     /**
-     * Base URL des uploads (WP_UPLOADS_URL ou WP_SITE_URL + /wp-content/uploads).
+     * Base URL publique du dossier uploads.
+     *
+     * Ordre (aligné partout : upload guid, getAttachmentUrl, fiche voyage) :
+     * 1. WP_UPLOADS_URL
+     * 2. APP wp_upload_url (évite les 404 quand WP_SITE_URL ≠ domaine réel des fichiers)
+     * 3. WP_SITE_URL + /wp-content/uploads
      */
     public static function getUploadsBaseUrl(): string
     {
-        $url = config('wordpress.uploads_url');
-        if (!empty($url)) {
-            return rtrim($url, '/');
+        $uploads = config('wordpress.uploads_url');
+        if (is_string($uploads) && $uploads !== '') {
+            return rtrim($uploads, '/');
         }
-        $siteUrl = rtrim(config('wordpress.site_url', ''), '/');
-        return $siteUrl . '/wp-content/uploads';
+
+        $appUpload = config('app.wp_upload_url');
+        if (is_string($appUpload) && $appUpload !== '') {
+            return rtrim($appUpload, '/');
+        }
+
+        $siteUrl = rtrim((string) config('wordpress.site_url', ''), '/');
+
+        return $siteUrl !== '' ? $siteUrl.'/wp-content/uploads' : '';
     }
 }

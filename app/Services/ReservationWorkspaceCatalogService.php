@@ -441,7 +441,7 @@ class ReservationWorkspaceCatalogService
                     $travelDateIdHot,
                 );
                 $hotelImg = (int) ($hotel->image_id ?? 0) > 0
-                    ? $this->resolveWpAttachmentUrlWithCatalogFallback((int) $hotel->image_id)
+                    ? WpHeroImageService::publicUrlForAttachmentId((int) $hotel->image_id)
                     : null;
                 $hotelSummary = trim((string) ($hotel->address ?? ''));
                 if ($hotelSummary === '') {
@@ -930,69 +930,14 @@ class ReservationWorkspaceCatalogService
 
         $wpIds = array_values(array_unique(array_filter($wpIds)));
 
-        return $this->resolveFirstUrlFromWpAttachmentIds($wpIds);
-    }
-
-    /**
-     * @param  list<int>  $attachmentIds
-     */
-    private function resolveFirstUrlFromWpAttachmentIds(array $attachmentIds): ?string
-    {
-        if ($attachmentIds === []) {
-            return null;
-        }
-
-        $rows = WpPostMeta::query()
-            ->whereIn('post_id', $attachmentIds)
-            ->where('meta_key', '_wp_attached_file')
-            ->get(['post_id', 'meta_value'])
-            ->keyBy('post_id');
-
-        $wpUploadBase = rtrim((string) config('app.wp_upload_url'), '/');
-
-        foreach ($attachmentIds as $mid) {
-            $attached = $rows->get($mid)?->meta_value;
-            if (! $attached || ! is_string($attached)) {
-                continue;
+        foreach ($wpIds as $aid) {
+            $url = WpHeroImageService::publicUrlForAttachmentId((int) $aid);
+            if ($url !== null && $url !== '') {
+                return $url;
             }
-            $attached = trim($attached);
-            if ($attached === '') {
-                continue;
-            }
-            if (str_starts_with($attached, 'http://') || str_starts_with($attached, 'https://')) {
-                return $attached;
-            }
-            if (str_starts_with($attached, '/wp-content/uploads')) {
-                $siteUrl = rtrim((string) config('wordpress.site_url', ''), '/');
-                if ($siteUrl !== '') {
-                    return $siteUrl.$attached;
-                }
-                $suffix = preg_replace('#^/wp-content/uploads/?#', '', $attached) ?? '';
-
-                return $wpUploadBase.'/'.ltrim($suffix, '/');
-            }
-
-            return $wpUploadBase.'/'.ltrim($attached, '/');
         }
 
         return null;
-    }
-
-    /**
-     * URL publique pour un attachment WP : préfère {@see WpHeroImageService::getAttachmentUrl},
-     * puis construction avec la même base que la fiche voyage si la config wordpress.* est incomplète.
-     */
-    private function resolveWpAttachmentUrlWithCatalogFallback(int $attachmentId): ?string
-    {
-        if ($attachmentId <= 0) {
-            return null;
-        }
-        $u = WpHeroImageService::getAttachmentUrl($attachmentId);
-        if ($u !== null && $u !== '') {
-            return $u;
-        }
-
-        return $this->resolveFirstUrlFromWpAttachmentIds([$attachmentId]);
     }
 
     private function resolveFirstUrlFromVoyageGalleryWpIds(Voyage $voyage): ?string
@@ -1001,15 +946,18 @@ class ReservationWorkspaceCatalogService
         if ($raw === '') {
             return null;
         }
-        $ids = [];
         foreach (explode(',', $raw) as $id) {
-            $id = (int) trim($id);
-            if ($id > 0) {
-                $ids[] = $id;
+            $aid = (int) trim($id);
+            if ($aid <= 0) {
+                continue;
+            }
+            $url = WpHeroImageService::publicUrlForAttachmentId($aid);
+            if ($url !== null && $url !== '') {
+                return $url;
             }
         }
 
-        return $this->resolveFirstUrlFromWpAttachmentIds($ids);
+        return null;
     }
 
     /**

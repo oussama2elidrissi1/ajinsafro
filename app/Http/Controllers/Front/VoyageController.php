@@ -12,6 +12,7 @@ use App\Models\Voyage;
 use App\Models\VoyageDeparturePlace;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
+use App\Services\Wp\WpHeroImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -278,7 +279,10 @@ class VoyageController extends Controller
     private function resolveHeroImages(Voyage $voyage, ?int $wpTourId): array
     {
         $images = [];
-        $wpUploadBase = rtrim((string) config('app.wp_upload_url'), '/');
+        $wpUploadBase = WpHeroImageService::getUploadsBaseUrl();
+        if ($wpUploadBase === '') {
+            $wpUploadBase = rtrim((string) config('app.wp_upload_url'), '/');
+        }
 
         if ($wpTourId) {
             $metas = WpPostMeta::where('post_id', $wpTourId)
@@ -316,7 +320,8 @@ class VoyageController extends Controller
                         continue;
                     }
 
-                    $fullUrl = $wpUploadBase.'/'.ltrim((string) $attached, '/');
+                    $fullUrl = WpHeroImageService::publicUrlForAttachmentId((int) $mid)
+                        ?? ($wpUploadBase.'/'.ltrim((string) $attached, '/'));
                     $metaRaw = $rows[$mid]['_wp_attachment_metadata'] ?? null;
                     $images[] = $this->buildWpResponsiveImageSet(
                         fullUrl: $fullUrl,
