@@ -112,18 +112,6 @@
                     @endif
                 @endforeach
 
-                @if(Route::has('admin.messagerie.index'))
-                    <li>
-                        <a href="{{ route('admin.messagerie.index') }}" class="waves-effect {{ str_starts_with((string) $currentRoute, 'admin.messagerie.') ? 'mm-active active' : '' }}">
-                            <i class="bx bx-envelope"></i>
-                            <span>Messagerie</span>
-                            @if(($unreadCount ?? 0) > 0)
-                                <span class="badge rounded-pill bg-primary float-end">{{ $unreadCount }}</span>
-                            @endif
-                        </a>
-                    </li>
-                @endif
-
                 <li class="menu-title mt-3">Compte</li>
                 @can('dashboard.view')
                     <li>
@@ -137,7 +125,7 @@
                 <li>
                     <a href="{{ route('logout.get') }}" class="waves-effect text-danger">
                         <i class="bx bx-power-off"></i>
-                        <span>DÃ©connexion</span>
+                        <span>Déconnexion</span>
                     </a>
                 </li>
 

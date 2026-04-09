@@ -8,7 +8,7 @@ return [
             'icon' => 'bx bx-home-circle',
             'permission' => 'dashboard.view',
             'children' => [
-                ['label' => 'Vue globale', 'route' => 'admin.dashboard.vue-globale', 'permission' => 'dashboard.overview.view'],
+                ['label' => 'Vue d\'ensemble', 'route' => 'admin.dashboard.vue-globale', 'permission' => 'dashboard.overview.view'],
                 ['label' => 'Statistiques', 'route' => 'admin.dashboard.statistiques', 'permission' => 'dashboard.stats.view'],
                 ['label' => 'Alertes', 'route' => 'admin.dashboard.alertes', 'permission' => 'dashboard.alerts.view'],
             ],
@@ -19,6 +19,13 @@ return [
             'icon' => 'bx bx-calendar-check',
             'permission' => 'reservations.view',
             'route' => 'admin.reservations.workspace',
+        ],
+        [
+            'key' => 'messagerie',
+            'label' => 'Messagerie',
+            'icon' => 'bx bx-envelope',
+            'permission' => 'dashboard.view',
+            'route' => 'admin.messagerie.index',
         ],
         [
             'key' => 'customers',
@@ -35,7 +42,7 @@ return [
         ],
         [
             'key' => 'products',
-            'label' => 'Produits',
+            'label' => 'Grille commerciale',
             'icon' => 'bx bx-store',
             'permission' => 'products.view',
             'children' => [
@@ -46,14 +53,16 @@ return [
             ],
         ],
         [
-            'key' => 'circuits',
-            'label' => 'Circuits',
-            'icon' => 'bx bx-map',
+            'key' => 'products_services',
+            'label' => 'Produits et services',
+            'icon' => 'bx bx-layer',
             'permission' => 'circuits.view',
             'children' => [
-                ['label' => 'Voyages', 'route' => 'admin.circuits.voyages.index', 'permission' => 'circuits.voyages.view'],
-                ['label' => 'Compagnies aériennes', 'route' => 'admin.circuits.airlines.index', 'permission' => 'circuits.airlines.view'],
-                ['label' => 'Activités', 'route' => 'admin.circuits.activities.index', 'permission' => 'circuits.activities.view'],
+                ['label' => 'Voyage', 'route' => 'admin.circuits.voyages.index', 'permission' => 'circuits.voyages.view'],
+                ['label' => 'Billetterie', 'route' => 'admin.circuits.airlines.index', 'permission' => 'circuits.airlines.view'],
+                ['label' => 'Activité', 'route' => 'admin.circuits.activities.index', 'permission' => 'circuits.activities.view'],
+                ['label' => 'Transfert', 'route' => 'admin.circuits.tour-transfers.index', 'permission' => 'circuits.tour-transfers.view'],
+                ['label' => 'Voiture', 'route' => 'admin.products-services.voiture', 'permission' => 'circuits.view'],
             ],
         ],
         [
@@ -90,13 +99,6 @@ return [
                 ['label' => 'Statuts', 'route' => 'admin.visa.statuts', 'permission' => 'visa.statuses.view'],
                 ['label' => 'Documents', 'route' => 'admin.visa.documents', 'permission' => 'visa.documents.view'],
             ],
-        ],
-        [
-            'key' => 'messagerie',
-            'label' => 'Messagerie',
-            'icon' => 'bx bx-envelope',
-            'permission' => 'dashboard.view',
-            'route' => 'admin.messagerie.index',
         ],
         [
             'key' => 'finance',
@@ -189,6 +191,7 @@ return [
         'admin.reservations.' => 'reservations.view',
         'admin.customers.' => 'customers.view',
         'admin.products.' => 'products.view',
+        'admin.products-services.' => 'circuits.view',
         'admin.circuits.' => 'circuits.view',
         'admin.accommodations.' => 'accommodations.view',
         'admin.operations.' => 'operations.view',

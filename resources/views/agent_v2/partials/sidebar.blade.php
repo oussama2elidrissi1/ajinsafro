@@ -6,7 +6,7 @@
     $roleLabel = $user?->getRoleNames()->first() ?? ($user?->is_admin ? 'admin' : 'utilisateur');
     $roleLabel = \Illuminate\Support\Str::title(\Illuminate\Support\Str::replace('_', ' ', (string) $roleLabel));
     $branchLabel = $user?->branch?->name;
-    $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
+    $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');/8/*
     $brandLogo = \App\Models\Setting::brandLogoUrl('dark');
 
     $navActive = function (string $routeName) use ($current): bool {
@@ -22,7 +22,7 @@
         return $current === $prefix || str_starts_with($current, $prefix . '.');
     };
 
-    $allowedSections = ['reservations', 'customers', 'circuits', 'operations', 'visa', 'messagerie'];
+    $allowedSections = ['reservations', 'customers', 'products_services', 'operations', 'visa', 'messagerie'];
     $menuSections = collect(config('admin_menu.items', []))
         ->filter(fn ($section) => in_array($section['key'] ?? '', $allowedSections, true))
         ->values();
@@ -47,7 +47,7 @@
                 return true;
             });
 
-        if (($section['key'] ?? '') === 'circuits'
+        if (($section['key'] ?? '') === 'products_services'
             && Route::has('admin.circuits.departs-dates')
             && (empty($section['permission']) || $user->can($section['permission']))
         ) {

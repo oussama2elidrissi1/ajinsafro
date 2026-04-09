@@ -9,14 +9,15 @@ use App\Models\Hotel;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Models\Voyage;
-use App\Models\VoyageTheme;
 use App\Models\VoyageDeparturePlace;
+use App\Models\VoyageTheme;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
 use App\Services\Wp\WpHeroImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
@@ -50,7 +51,11 @@ class VoyageController extends Controller
 
         if ($themeSlug !== '') {
             $voyagesQuery->whereHas('themes', function ($w) use ($themeSlug) {
-                $w->where('voyage_themes.slug', $themeSlug);
+                if (ctype_digit($themeSlug)) {
+                    $w->where('voyage_themes.id', (int) $themeSlug);
+                } else {
+                    $w->where('voyage_themes.slug', $themeSlug);
+                }
             });
         }
 
@@ -111,8 +116,8 @@ class VoyageController extends Controller
     }
 
     /**
-     * Thèmes pour le select : toujours peuplé dès que possible (table + données).
-     * Ordre : actifs catalogue → thèmes liés à un voyage visible → tout le catalogue (dernier recours).
+     * Thèmes pour le select : union des thèmes actifs et des thèmes réellement attachés
+     * à au moins un voyage visible, puis repli sur toute la table si besoin.
      *
      * @return Collection<int, VoyageTheme>
      */
@@ -122,32 +127,36 @@ class VoyageController extends Controller
             return collect();
         }
 
-        $active = VoyageTheme::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
-
-        if ($active->isNotEmpty()) {
-            return $active;
+        $usedIds = collect();
+        if (Schema::hasTable('voyage_voyage_theme')) {
+            $usedIds = DB::table('voyage_voyage_theme')
+                ->join('voyages', 'voyages.id', '=', 'voyage_voyage_theme.voyage_id')
+                ->whereIn('voyages.status', self::VISIBLE_STATUSES)
+                ->distinct()
+                ->pluck('voyage_theme_id');
         }
 
-        $linkedToVisible = VoyageTheme::query()
-            ->whereHas('voyages', function ($q) {
-                $q->whereIn('status', self::VISIBLE_STATUSES);
+        $merged = VoyageTheme::query()
+            ->where(function ($q) use ($usedIds) {
+                $q->where('is_active', true);
+                if ($usedIds->isNotEmpty()) {
+                    $q->orWhereIn('id', $usedIds);
+                }
             })
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->unique('id')
+            ->values();
 
-        if ($linkedToVisible->isNotEmpty()) {
-            return $linkedToVisible;
+        if ($merged->isEmpty()) {
+            $merged = VoyageTheme::query()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
         }
 
-        return VoyageTheme::query()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        return $merged->values();
     }
 
     public function show(string $slug): View

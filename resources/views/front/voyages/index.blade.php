@@ -4,6 +4,9 @@
     $pageTitle = $pageTitle ?? (($hasFilters ?? false) ? 'Offres correspondantes' : 'Tous les voyages');
     $pageSubtitle = $pageSubtitle ?? 'Parcourez nos circuits et séjours. Affinez par thème, destination ou date de départ.';
     $themes = $themeOptions ?? collect();
+    $heroImagePath = \App\Models\Setting::getValue('hero_image');
+    $heroImageUrl = $heroImagePath ? \App\Models\Setting::storageUrl($heroImagePath) : asset('front/images/hero.jpg');
+    $heroOverlay = max(0.45, (float) (\App\Models\Setting::getValue('hero_overlay_opacity', '0.5')));
 @endphp
 @extends('layouts.front')
 
@@ -12,20 +15,27 @@
 @section('content')
     <x-front.navbar />
 
-    <main class="min-h-screen bg-gray-50">
-        {{-- Intro : même largeur max que le catalogue, espacement sous header fixe déjà géré par le spacer du navbar --}}
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-6 md:pt-4 md:pb-8">
-            <header class="rounded-2xl border border-gray-200/90 bg-white px-5 py-6 md:px-8 md:py-7 shadow-sm">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight text-balance">
-                    {{ $pageTitle }}
-                </h1>
-                <p class="mt-3 text-gray-600 text-base md:text-[1.05rem] leading-relaxed max-w-3xl">
-                    {{ $pageSubtitle }}
-                </p>
-            </header>
+    {{-- Bandeau page : même univers que le hero d’accueil (image admin + overlay), transition nette après la navbar fixe --}}
+    <header class="relative overflow-hidden border-b border-gray-200/80">
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('{{ $heroImageUrl }}');" aria-hidden="true"></div>
+        <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,{{ number_format(min(0.85, $heroOverlay + 0.08), 2, '.', '') }}) 45%, rgba(0,0,0,0.82) 100%);" aria-hidden="true"></div>
+        <div class="relative z-10 container mx-auto px-4 max-w-7xl pt-8 pb-10 md:pt-11 md:pb-12">
+            <nav class="text-sm text-white/80 mb-5" aria-label="Fil d'Ariane">
+                <a href="{{ route('front.home') }}" class="hover:text-white transition-colors">Accueil</a>
+                <span class="mx-2 text-white/50" aria-hidden="true">/</span>
+                <span class="text-white font-medium">Voyages</span>
+            </nav>
+            <h1 class="text-3xl md:text-4xl lg:text-[2.65rem] font-bold text-white tracking-tight text-balance leading-tight max-w-4xl">
+                {{ $pageTitle }}
+            </h1>
+            <p class="mt-4 text-base md:text-lg text-white/90 leading-relaxed max-w-2xl">
+                {{ $pageSubtitle }}
+            </p>
         </div>
+    </header>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <main class="min-h-screen bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
             <div class="flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-10">
                 {{-- Filtres : largeur fixe, sticky sous le header --}}
                 <aside class="w-full lg:w-80 xl:w-[20rem] shrink-0 lg:sticky lg:top-24 lg:z-10">
@@ -42,13 +52,16 @@
                         </div>
 
                         <div>
-                            <label for="filter-theme" class="block text-sm font-medium text-gray-700 mb-1.5">Thème du voyage</label>
+                            <label for="filter-theme" class="block text-sm font-medium text-gray-700 mb-1.5">Type de voyage / thème</label>
                             <select name="theme" id="filter-theme" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-brand focus:border-brand">
                                 <option value="">Tous les thèmes</option>
                                 @forelse ($themes as $th)
-                                    <option value="{{ $th->slug }}" @selected(($f['theme'] ?? '') === $th->slug)>{{ $th->name }}</option>
+                                    @php
+                                        $optVal = ($th->slug !== null && $th->slug !== '') ? $th->slug : (string) $th->id;
+                                    @endphp
+                                    <option value="{{ $optVal }}" @selected((string) ($f['theme'] ?? '') === (string) $optVal)>{{ $th->name }}</option>
                                 @empty
-                                    <option value="" disabled>Aucun thème disponible (migrations / seeders requis)</option>
+                                    <option value="" disabled>Aucun thème en base — créez des thèmes dans l’admin ou exécutez les migrations</option>
                                 @endforelse
                             </select>
                         </div>

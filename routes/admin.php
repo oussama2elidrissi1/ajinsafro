@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\PartnerAccountController;
 use App\Http\Controllers\Admin\PartnerCommissionRuleController;
 use App\Http\Controllers\Admin\PartnersController;
 use App\Http\Controllers\Admin\ProductsController;
+use App\Http\Controllers\Admin\ProductsServicesPlaceholderController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\ReportingController;
@@ -177,6 +178,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('products/options', [ProductsController::class, 'page'])->name('products.options')->defaults('submenu', 'options');
         Route::get('products/tarifs', [ProductsController::class, 'page'])->name('products.tarifs')->defaults('submenu', 'tarifs');
         Route::get('products/conditions', [ProductsController::class, 'page'])->name('products.conditions')->defaults('submenu', 'conditions');
+
+        Route::get('products-services/voiture', [ProductsServicesPlaceholderController::class, 'voiture'])->name('products-services.voiture');
 
         Route::get('circuits', [CircuitsController::class, 'index'])->name('circuits.index');
         Route::get('circuits/circuits', [CircuitsController::class, 'page'])->name('circuits.circuits')->defaults('submenu', 'circuits');
