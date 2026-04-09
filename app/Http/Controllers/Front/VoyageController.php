@@ -16,6 +16,8 @@ use App\Models\Wp\WpPostMeta;
 use App\Services\Wp\WpHeroImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class VoyageController extends Controller
@@ -78,7 +80,7 @@ class VoyageController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $themeOptions = VoyageTheme::query()->active()->ordered()->get();
+        $themeOptions = $this->themeOptionsForCatalog();
 
         $destinationOptions = Voyage::query()
             ->whereIn('status', self::VISIBLE_STATUSES)
@@ -103,7 +105,49 @@ class VoyageController extends Controller
                 'catalog_orderby' => $sort,
             ],
             'hasFilters' => $hasFilters,
+            'pageTitle' => $hasFilters ? 'Offres correspondantes' : 'Tous les voyages',
+            'pageSubtitle' => 'Parcourez nos circuits et séjours. Affinez par thème, destination ou date de départ.',
         ]);
+    }
+
+    /**
+     * Thèmes pour le select : toujours peuplé dès que possible (table + données).
+     * Ordre : actifs catalogue → thèmes liés à un voyage visible → tout le catalogue (dernier recours).
+     *
+     * @return Collection<int, VoyageTheme>
+     */
+    private function themeOptionsForCatalog(): Collection
+    {
+        if (! Schema::hasTable('voyage_themes')) {
+            return collect();
+        }
+
+        $active = VoyageTheme::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        if ($active->isNotEmpty()) {
+            return $active;
+        }
+
+        $linkedToVisible = VoyageTheme::query()
+            ->whereHas('voyages', function ($q) {
+                $q->whereIn('status', self::VISIBLE_STATUSES);
+            })
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        if ($linkedToVisible->isNotEmpty()) {
+            return $linkedToVisible;
+        }
+
+        return VoyageTheme::query()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
     }
 
     public function show(string $slug): View
