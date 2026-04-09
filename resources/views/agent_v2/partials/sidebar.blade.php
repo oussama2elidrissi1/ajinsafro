@@ -6,7 +6,7 @@
     $roleLabel = $user?->getRoleNames()->first() ?? ($user?->is_admin ? 'admin' : 'utilisateur');
     $roleLabel = \Illuminate\Support\Str::title(\Illuminate\Support\Str::replace('_', ' ', (string) $roleLabel));
     $branchLabel = $user?->branch?->name;
-    $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');/8/*
+    $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $brandLogo = \App\Models\Setting::brandLogoUrl('dark');
 
     $navActive = function (string $routeName) use ($current): bool {
