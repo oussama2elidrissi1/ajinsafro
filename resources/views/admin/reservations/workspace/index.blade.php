@@ -696,9 +696,10 @@
                 </div>
                 <div class="ws-toolbar__views">
                     <span class="ws-toolbar__count"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogRows->count() }}</span>
-                    <div class="ws-seg">
-                        <button type="button" id="btn-view-list" class="ws-seg__btn is-active"><i class="fas fa-list" aria-hidden="true"></i><span>Liste</span></button>
-                        <button type="button" id="btn-view-calendar" class="ws-seg__btn"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Cal.</span></button>
+                    <div class="ws-seg ws-seg--triple" role="group" aria-label="Mode d'affichage">
+                        <button type="button" id="btn-view-list" class="ws-seg__btn is-active" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
+                        <button type="button" id="btn-view-calendar" class="ws-seg__btn" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Cal.</span></button>
+                        <button type="button" id="btn-view-catalog" class="ws-seg__btn" title="Présentation catalogue (cartes)"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Présentation catalogue</span></button>
                     </div>
                 </div>
             </div>
@@ -765,16 +766,61 @@
             </div>
         </div>
 
-        {{-- Tableau --}}
-        <div id="reservations-list-view" class="ws-table-card">
+        {{-- Vue liste (tableau) — défaut --}}
+        <div id="ws-view-table" class="ws-table-card">
             <div class="ws-table-card__head">
-                <h2 class="ws-table-card__title">Catalogue des offres</h2>
+                <h2 class="ws-table-card__title">Vue liste</h2>
+                <p class="ws-table-card__sub">Tableau compact pour le suivi commercial : références, départs, tarifs, capacités et actions.</p>
+            </div>
+            <div class="ws-table-scroll">
+                <table class="ws-data-table" aria-label="Catalogue des offres en liste">
+                    <thead>
+                        <tr>
+                            <th scope="col">Réf</th>
+                            <th scope="col">Offre / voyage</th>
+                            <th scope="col">Départ</th>
+                            <th scope="col">Prix</th>
+                            <th scope="col">Capacité / places</th>
+                            <th scope="col">Statut</th>
+                            <th scope="col" class="ws-data-table__th-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ws-catalog-table-body">
+                        @forelse($catalogRows as $row)
+                            @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+                        @empty
+                            <tr>
+                                <td colspan="7" class="ws-table-empty-cell">
+                                    <div class="ws-catalog-empty ws-catalog-empty--inline">
+                                        <div class="max-w-md mx-auto text-center py-10 px-6">
+                                            <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3 text-xl">
+                                                <i class="fas fa-inbox"></i>
+                                            </div>
+                                            <p class="text-brand-dark font-bold text-base mb-2">Aucun voyage dans le catalogue</p>
+                                            <p class="text-gray-500 text-sm mb-5">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
+                                            <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-2.5 hover:bg-brand-dark transition-colors">
+                                                <i class="fas fa-plus-circle"></i> Gérer les voyages
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Présentation catalogue (cartes) --}}
+        <div id="ws-view-catalog" class="ws-table-card hidden">
+            <div class="ws-table-card__head">
+                <h2 class="ws-table-card__title">Présentation catalogue</h2>
                 <p class="ws-table-card__sub">Visuels, tarifs et disponibilités : ouvrez le détail ou lancez une réservation.</p>
             </div>
             <div class="ws-catalog-section">
                 <div id="ws-catalog-list" class="ws-catalog-grid">
                     @forelse($catalogRows as $row)
-                        @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row])
+                        @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
                     @empty
                         <div class="ws-catalog-empty">
                             <div class="max-w-md mx-auto text-center py-12 px-6">
@@ -1110,7 +1156,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendar = null;
     var btnList = document.getElementById('btn-view-list');
     var btnCal = document.getElementById('btn-view-calendar');
-    var listView = document.getElementById('reservations-list-view');
+    var btnCatalog = document.getElementById('btn-view-catalog');
+    var tableView = document.getElementById('ws-view-table');
+    var catalogView = document.getElementById('ws-view-catalog');
     var calView = document.getElementById('reservations-calendar-view');
 
     try {
@@ -1153,7 +1201,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     if (btnList) btnList.click();
                     var safe = code.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-                    var row = code ? document.querySelector('.ws-catalog-row[data-row-code="' + safe + '"]') : null;
+                    var row = code
+                        ? (document.querySelector('#ws-catalog-list .ws-catalog-row[data-row-code="' + safe + '"]')
+                            || document.querySelector('#ws-catalog-table-body .ws-catalog-row[data-row-code="' + safe + '"]'))
+                        : null;
                     if (row) {
                         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         row.classList.add('ws-ring-pulse');
@@ -1168,21 +1219,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    if (btnList && btnCal && listView && calView) {
-        btnList.addEventListener('click', function () {
-            btnList.classList.add('is-active');
-            btnCal.classList.remove('is-active');
-            listView.classList.remove('hidden');
-            calView.classList.add('hidden');
-        });
-        btnCal.addEventListener('click', function () {
-            btnCal.classList.add('is-active');
-            btnList.classList.remove('is-active');
-            listView.classList.add('hidden');
-            calView.classList.remove('hidden');
-            if (calendar) setTimeout(function () { calendar.render(); }, 80);
-        });
+    function wsActivateView(mode) {
+        if (btnList) btnList.classList.toggle('is-active', mode === 'list');
+        if (btnCal) btnCal.classList.toggle('is-active', mode === 'cal');
+        if (btnCatalog) btnCatalog.classList.toggle('is-active', mode === 'catalog');
+        if (tableView) tableView.classList.toggle('hidden', mode !== 'list');
+        if (catalogView) catalogView.classList.toggle('hidden', mode !== 'catalog');
+        if (calView) calView.classList.toggle('hidden', mode !== 'cal');
+        if (mode === 'cal' && calendar) setTimeout(function () { calendar.render(); }, 80);
     }
+
+    if (btnList) btnList.addEventListener('click', function () { wsActivateView('list'); });
+    if (btnCal) btnCal.addEventListener('click', function () { wsActivateView('cal'); });
+    if (btnCatalog) btnCatalog.addEventListener('click', function () { wsActivateView('catalog'); });
 
     var searchEl = document.getElementById('ws-filter-search');
     var typeEl = document.getElementById('ws-filter-type');
@@ -1211,13 +1260,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function wsApplySort() {
-        var list = document.getElementById('ws-catalog-list');
+    function wsSortContainer(containerId) {
+        var list = document.getElementById(containerId);
         if (!list || !sortEl) return;
         var sort = sortEl.value || 'default';
         var rows = Array.prototype.slice.call(list.querySelectorAll('.ws-catalog-row'));
         rows.sort(function (a, b) { return wsRowCompare(a, b, sort); });
         rows.forEach(function (el) { list.appendChild(el); });
+    }
+
+    function wsApplySort() {
+        wsSortContainer('ws-catalog-list');
+        wsSortContainer('ws-catalog-table-body');
     }
 
     window.applyWsFilters = function applyWsFilters() {
@@ -1226,8 +1280,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var ds = dateStatusEl ? dateStatusEl.value : 'all';
         var av = availEl ? availEl.value : 'all';
         var rs = resEl ? resEl.value : 'all';
-        var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row');
+        var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row, #ws-catalog-table-body .ws-catalog-row');
         var visible = 0;
+        var seenCodes = {};
         var range = null;
         if (rangeInput && rangeInput._flatpickr && rangeInput._flatpickr.selectedDates.length === 2) {
             var a = rangeInput._flatpickr.selectedDates[0];
@@ -1273,7 +1328,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             tr.classList.toggle('hidden', !ok);
-            if (ok) visible++;
+            if (ok) {
+                var rc = tr.getAttribute('data-row-code') || '_';
+                if (!seenCodes[rc]) {
+                    seenCodes[rc] = true;
+                    visible++;
+                }
+            }
         });
         var c = document.getElementById('ws-row-visible-count');
         if (c) c.textContent = String(visible);
