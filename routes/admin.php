@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
+use App\Http\Controllers\Admin\BusinessReferenceController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CircuitsController;
 use App\Http\Controllers\Admin\ClientController;
@@ -180,6 +181,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('products/conditions', [ProductsController::class, 'page'])->name('products.conditions')->defaults('submenu', 'conditions');
 
         Route::get('products-services/voiture', [ProductsServicesPlaceholderController::class, 'voiture'])->name('products-services.voiture');
+        Route::get('products-services/billetterie', [ProductsServicesPlaceholderController::class, 'billetterie'])->name('products-services.billetterie');
 
         Route::get('circuits', [CircuitsController::class, 'index'])->name('circuits.index');
         Route::get('circuits/circuits', [CircuitsController::class, 'page'])->name('circuits.circuits')->defaults('submenu', 'circuits');
@@ -278,6 +280,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
 
         Route::get('circuits/voyage-themes', [LaravelVoyageThemeController::class, 'index'])->name('circuits.voyage-themes.index');
         Route::post('circuits/voyage-themes', [LaravelVoyageThemeController::class, 'store'])->name('circuits.voyage-themes.store');
+        Route::get('circuits/voyage-themes/{voyageTheme}/impact', [LaravelVoyageThemeController::class, 'impact'])->name('circuits.voyage-themes.impact');
         Route::match(['put', 'patch'], 'circuits/voyage-themes/{voyageTheme}', [LaravelVoyageThemeController::class, 'update'])->name('circuits.voyage-themes.update');
         Route::delete('circuits/voyage-themes/{voyageTheme}', [LaravelVoyageThemeController::class, 'destroy'])->name('circuits.voyage-themes.destroy');
 
@@ -346,6 +349,20 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
 
         Route::get('settings/parametres-generaux', [SettingsController::class, 'page'])->name('settings.parametres-generaux')->defaults('submenu', 'parametres-generaux');
         Route::post('settings/parametres-generaux', [SettingsController::class, 'updateParametresGeneraux'])->name('settings.parametres-generaux.update');
+        Route::get('settings/referentiels-metier', [BusinessReferenceController::class, 'index'])->name('settings.referentiels-metier')->defaults('submenu', 'referentiels-metier');
+        Route::post('settings/referentiels-metier/import-legacy', [BusinessReferenceController::class, 'importLegacy'])->name('settings.referentiels-metier.import-legacy');
+        Route::get('settings/referentiels-metier/group/{groupKey}', [BusinessReferenceController::class, 'showGroup'])
+            ->name('settings.referentiels-metier.group')
+            ->where('groupKey', '[a-z0-9_]+');
+        Route::post('settings/referentiels-metier/group/{groupKey}', [BusinessReferenceController::class, 'store'])
+            ->name('settings.referentiels-metier.store')
+            ->where('groupKey', '[a-z0-9_]+');
+        Route::put('settings/referentiels-metier/group/{groupKey}/{item}', [BusinessReferenceController::class, 'update'])
+            ->name('settings.referentiels-metier.update')
+            ->where('groupKey', '[a-z0-9_]+');
+        Route::delete('settings/referentiels-metier/group/{groupKey}/{item}', [BusinessReferenceController::class, 'destroy'])
+            ->name('settings.referentiels-metier.destroy')
+            ->where('groupKey', '[a-z0-9_]+');
         Route::get('settings/securite', [SettingsController::class, 'page'])->name('settings.securite')->defaults('submenu', 'securite');
         Route::get('settings/home-page', [HomePageSettingsController::class, 'edit'])->name('settings.home-page.edit');
         Route::post('settings/home-page', [HomePageSettingsController::class, 'update'])->name('settings.home-page.update');

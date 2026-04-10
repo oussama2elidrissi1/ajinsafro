@@ -52,6 +52,22 @@
 
                         return $currentRoute === $prefix || str_starts_with($currentRoute, $prefix . '.');
                     };
+                    /** Une seule entrée active : sous-route du même « menu » (3e segment) sans mélanger Billetterie / Voyage / Activité. */
+                    $childMenuActive = function (?string $childRoute) use ($currentRoute): bool {
+                        if (! $childRoute || ! $currentRoute) {
+                            return false;
+                        }
+                        if ($currentRoute === $childRoute) {
+                            return true;
+                        }
+                        $cr = explode('.', $childRoute);
+                        if (count($cr) < 3) {
+                            return false;
+                        }
+                        $prefix = $cr[0].'.'.$cr[1].'.'.$cr[2];
+
+                        return str_starts_with($currentRoute, $prefix.'.');
+                    };
                 @endphp
 
                 @foreach($menuItems as $section)
@@ -75,8 +91,8 @@
                         $hasSectionPermission = empty($section['permission']) || $user->can($section['permission']);
                         $showSection = $hasSectionPermission && ($children->isNotEmpty() || $sectionRoute !== null);
 
-                        $sectionActive = $children->contains(function ($child) use ($currentRoute) {
-                            return ($child['route'] ?? null) === $currentRoute;
+                        $sectionActive = $children->contains(function ($child) use ($childMenuActive) {
+                            return $childMenuActive($child['route'] ?? null);
                         }) || $navActive($sectionRoute);
                     @endphp
 
@@ -92,7 +108,7 @@
                                             @php
                                                 $childHref = !empty($child['query']) ? route($child['route'], $child['query']) : route($child['route']);
                                             @endphp
-                                            <a href="{{ $childHref }}" class="{{ ($child['route'] ?? null) === $currentRoute ? 'active' : '' }}">{{ $child['label'] }}</a>
+                                            <a href="{{ $childHref }}" class="{{ $childMenuActive($child['route'] ?? null) ? 'active' : '' }}">{{ $child['label'] }}</a>
                                         </li>
                                     @endforeach
                                 </ul>

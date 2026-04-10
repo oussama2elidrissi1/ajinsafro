@@ -87,6 +87,29 @@ class LaravelVoyageThemeController extends Controller
         ]);
     }
 
+    /**
+     * Voyages Laravel liés au thème (pour confirmation avant suppression).
+     */
+    public function impact(VoyageTheme $voyageTheme): JsonResponse
+    {
+        $voyages = $voyageTheme->voyages()
+            ->get(['voyages.id', 'voyages.name', 'voyages.wp_post_id', 'voyages.slug'])
+            ->map(fn ($v) => [
+                'id' => $v->id,
+                'name' => $v->name,
+                'wp_post_id' => $v->wp_post_id,
+                'slug' => $v->slug,
+            ])
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'theme' => $voyageTheme->only(['id', 'name', 'slug']),
+            'voyages' => $voyages,
+            'count' => $voyages->count(),
+        ]);
+    }
+
     private function uniqueSlug(string $baseSlug, ?int $exceptId = null): string
     {
         $slug = $baseSlug !== '' ? $baseSlug : 'theme';

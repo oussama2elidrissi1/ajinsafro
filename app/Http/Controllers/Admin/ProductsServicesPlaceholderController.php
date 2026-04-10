@@ -14,4 +14,12 @@ class ProductsServicesPlaceholderController extends Controller
             'intro' => 'Cette section est en cours de construction.',
         ]);
     }
+
+    public function billetterie(): View
+    {
+        return view('admin.products-services.wip', [
+            'title' => 'Billetterie',
+            'intro' => 'Espace billetterie en cours de construction.',
+        ]);
+    }
 }

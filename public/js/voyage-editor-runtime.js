@@ -770,9 +770,6 @@
                 node.setAttribute('data-day-index', index);
             });
 
-            card.querySelectorAll('.btn-add-element-to-day').forEach(function (node) {
-                node.setAttribute('data-day-number', index + 1);
-            });
 
             card.querySelectorAll('.programme-activity-row').forEach(function (row, activityIndex) {
                 row.querySelectorAll('[name*="[activities]"]').forEach(function (field) {
@@ -1034,7 +1031,7 @@
     }
 
     function disableDrawerFlightOptionsForSubmit() {
-        var drawer = document.getElementById('day-builder-drawer');
+        var drawer = document.getElementById('day-builder-root');
         if (!drawer) {
             return;
         }
@@ -1057,7 +1054,7 @@
     }
 
     function isFlightOptionDrawerField(field) {
-        var drawer = document.getElementById('day-builder-drawer');
+        var drawer = document.getElementById('day-builder-root');
         return !!(drawer && drawer.contains(field));
     }
 

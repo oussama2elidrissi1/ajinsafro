@@ -158,7 +158,7 @@
     };
 
     function getDrawerDay() {
-        var drawer = document.getElementById('day-builder-drawer');
+        var drawer = document.getElementById('day-builder-root');
         if (!drawer) return { index: '', number: 1 };
         return {
             index: drawer.getAttribute('data-day-index') || '',

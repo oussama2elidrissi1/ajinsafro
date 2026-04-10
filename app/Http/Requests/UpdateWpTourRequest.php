@@ -105,7 +105,7 @@ class UpdateWpTourRequest extends FormRequest
             'slug' => 'nullable|string|max:255',
             'content' => 'nullable|string',
             'excerpt' => 'nullable|string',
-            'post_status' => 'nullable|in:publish,draft,pending',
+            'post_status' => 'nullable|in:publish,draft,pending,private',
             
             // Location
             'locations' => 'nullable|array',
@@ -214,7 +214,7 @@ class UpdateWpTourRequest extends FormRequest
             'programme_days.*.mode' => 'nullable|string|in:free,program',
             'programme_days.*.day_title' => 'nullable|string|max:255',
             'programme_days.*.city' => 'nullable|string|max:255',
-            'programme_days.*.day_type' => 'nullable|string|in:arrivee,visite,transfert,libre',
+            'programme_days.*.day_type' => 'nullable|string|max:64',
             'programme_days.*.content_html' => 'nullable|string',
             'programme_days.*.notes' => 'nullable|string',
             'programme_days.*.title' => 'nullable|string|max:255',
@@ -236,9 +236,10 @@ class UpdateWpTourRequest extends FormRequest
             'tour_activities.*.id' => 'nullable|integer',
             'tour_activities.*.activity_id' => 'required|integer|exists:wp.aj_activities,id',
             'tour_activities.*.title' => 'nullable|string|max:255',
-            'tour_activities.*.pricing_type' => 'nullable|in:per_person,fixed',
+            'tour_activities.*.description' => 'nullable|string|max:5000',
+            'tour_activities.*.pricing_type' => 'nullable|string|max:64',
             'tour_activities.*.unit_price' => 'nullable|numeric|min:0',
-            'tour_activities.*.quantity' => 'nullable|integer|min:1|max:999',
+            'tour_activities.*.child_price' => 'nullable|numeric|min:0',
 
             // Vols (voyage_flight_options) — multi-options Aller/Retour/Segment
             'flight_options' => 'nullable|array',

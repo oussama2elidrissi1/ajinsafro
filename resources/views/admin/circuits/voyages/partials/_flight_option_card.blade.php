@@ -56,10 +56,17 @@
         @if($showDeparturePlace)
             <div class="row g-2 mb-2">
                 <div class="col-12"><label class="form-label small">Lieu de départ</label>
-                    <select name="flight_options[{{ $index }}][departure_place_id]" class="form-select form-select-sm" {{ $index === -1 ? 'disabled' : '' }}>
+                    @php
+                        $dpSorted = $departurePlaces->values();
+                        $selDp = (string) old('flight_options.'.$index.'.departure_place_id', $opt ? (string) ($opt->departure_place_id ?? '') : '');
+                    @endphp
+                    <select name="flight_options[{{ $index }}][departure_place_id]" class="form-select form-select-sm ve-flight-departure-place-select" {{ $index === -1 ? 'disabled' : '' }}>
                         <option value="">— Aucun —</option>
-                        @foreach($departurePlaces as $place)
-                            <option value="{{ $place->id ?? '' }}" {{ ($opt && (string)($opt->departure_place_id ?? '') === (string)($place->id ?? '')) ? 'selected' : '' }}>{{ $place->name ?? '' }}{{ isset($place->code) && $place->code !== '' ? ' (' . $place->code . ')' : '' }}</option>
+                        @foreach($dpSorted as $dpPos => $place)
+                            @php
+                                $optVal = $place->id ? (string) $place->id : 'NEW_'.$dpPos;
+                            @endphp
+                            <option value="{{ $optVal }}" @selected($selDp !== '' && $selDp === (string) $optVal)>{{ $place->name ?? '' }}{{ isset($place->code) && $place->code !== '' ? ' (' . $place->code . ')' : '' }}</option>
                         @endforeach
                     </select></div>
             </div>

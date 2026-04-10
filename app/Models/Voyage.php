@@ -21,7 +21,7 @@ class Voyage extends Model
         'discount_by_people_type', 'discount_type', 'calculator_discount_by_people_type',
         'hide_adult_in_booking_form', 'st_tour_external_booking',
         'tours_include', 'tours_exclude', 'tours_highlight', 'tours_program_style',
-        'payment_gateway_metas', 'gallery_wp_ids',
+        'payment_gateway_metas', 'gallery_wp_ids', 'logistics_meta',
     ];
 
     protected $casts = [
@@ -38,6 +38,7 @@ class Voyage extends Model
         'tours_exclude' => 'array',
         'tours_highlight' => 'array',
         'payment_gateway_metas' => 'array',
+        'logistics_meta' => 'array',
     ];
 
     protected static function boot()
@@ -98,6 +99,16 @@ class Voyage extends Model
     public function themes(): BelongsToMany
     {
         return $this->belongsToMany(VoyageTheme::class, 'voyage_voyage_theme')->withTimestamps();
+    }
+
+    public function discountRules()
+    {
+        return $this->hasMany(VoyageDiscountRule::class)->orderBy('sort_order')->orderBy('priority');
+    }
+
+    public function cancellationTerms()
+    {
+        return $this->hasMany(VoyageCancellationTerm::class)->orderBy('sort_order');
     }
 
     public function flights()

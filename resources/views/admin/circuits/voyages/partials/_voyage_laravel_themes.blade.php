@@ -6,7 +6,7 @@
 <div class="card ve-pane-card mb-4">
     <div class="card-body">
         <h4 class="card-title mb-2"><i class="bx bx-purchase-tag text-primary"></i> Thèmes du voyage</h4>
-        <p class="text-muted small mb-3">Cochez les thèmes applicables à ce circuit. Ils alimentent le filtre « Thème du voyage » (catalogue Laravel / WordPress). Utilisez <strong>Ajouter</strong> pour créer un thème, ou les icônes pour le modifier ou le supprimer.</p>
+        <p class="text-muted small mb-3">Thèmes du circuit (catalogue). <strong>Ajouter</strong> ou icônes pour modifier / supprimer.</p>
 
         <div class="row">
             <div class="col-lg-4 mb-3" data-voyage-themes-block>
@@ -159,22 +159,53 @@
             btn.addEventListener('click', function() {
                 const themeId = this.dataset.themeId;
                 const name = this.getAttribute('data-name') || themeId;
-                if (!confirm('Supprimer le thème « ' + name + ' » ? Les liaisons avec les voyages seront retirées.')) return;
-                fetch(baseUrl + '/' + encodeURIComponent(themeId), {
-                    method: 'DELETE',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrf,
-                        'Content-Type': 'application/json'
+                const self = this;
+
+                function runDelete() {
+                    self.disabled = true;
+                    fetch(baseUrl + '/' + encodeURIComponent(themeId), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(function(r) { return r.json(); }).then(function(data) {
+                        self.disabled = false;
+                        if (data.success) {
+                            refreshVoyageThemes();
+                        } else {
+                            alert(data.message || 'Erreur');
+                        }
+                    }).catch(function() {
+                        self.disabled = false;
+                        alert('Erreur réseau');
+                    });
+                }
+
+                self.disabled = true;
+                fetch(baseUrl + '/' + encodeURIComponent(themeId) + '/impact', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                }).then(function(r) { return r.json(); }).then(function(impact) {
+                    self.disabled = false;
+                    let msg = 'Supprimer le thème « ' + name + ' » ? Les liaisons avec les voyages seront retirées.';
+                    if (impact && impact.success && Array.isArray(impact.voyages) && impact.voyages.length) {
+                        const lines = impact.voyages.map(function(v) {
+                            const id = v.id != null ? '#' + v.id : '';
+                            const vn = (v.name || '').toString();
+                            const slug = v.slug ? ' — ' + v.slug : '';
+                            return '• ' + id + ' ' + vn + slug;
+                        });
+                        msg = 'Voyages concernés (' + impact.voyages.length + ') :\n\n' + lines.join('\n') + '\n\nConfirmer la suppression du thème « ' + name + ' » ?';
                     }
-                }).then(function(r) { return r.json(); }).then(function(data) {
-                    if (data.success) {
-                        refreshVoyageThemes();
-                    } else {
-                        alert(data.message || 'Erreur');
-                    }
-                }).catch(function() { alert('Erreur réseau'); });
+                    if (!confirm(msg)) return;
+                    runDelete();
+                }).catch(function() {
+                    self.disabled = false;
+                    if (!confirm('Impossible de charger l’impact. Supprimer quand même le thème « ' + name + ' » ?')) return;
+                    runDelete();
+                });
             });
         });
     }

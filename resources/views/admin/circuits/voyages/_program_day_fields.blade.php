@@ -36,9 +36,13 @@
 </div>
 <div class="mb-3">
     <label for="day_type" class="form-label">Type de journée</label>
+    @php
+        $dayTypeRef = \App\Services\BusinessReferentialService::programDayTypes();
+        $selDayType = \App\Models\TravelProgramDay::normalizeDayType(old('day_type', $day?->day_type ?? 'visite'));
+    @endphp
     <select class="form-select" name="day_type" id="day_type">
-        @foreach(\App\Models\TravelProgramDay::DAY_TYPES as $value => $label)
-            <option value="{{ $value }}" {{ old('day_type', $day?->day_type ?? 'visite') == $value ? 'selected' : '' }}>{{ $label }}</option>
+        @foreach($dayTypeRef as $opt)
+            <option value="{{ $opt['value'] }}" @selected($selDayType === $opt['value'])>{{ $opt['label'] }}</option>
         @endforeach
     </select>
 </div>

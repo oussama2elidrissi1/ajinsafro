@@ -21,6 +21,22 @@
 
         return $current === $prefix || str_starts_with($current, $prefix . '.');
     };
+    /** Sous-menus : actif uniquement pour la même entrée (préfixe sur 3 segments), pas tout admin.circuits.* */
+    $childMenuActive = function (?string $childRoute) use ($current): bool {
+        if (! $childRoute || ! $current) {
+            return false;
+        }
+        if ($current === $childRoute) {
+            return true;
+        }
+        $cr = explode('.', $childRoute);
+        if (count($cr) < 3) {
+            return false;
+        }
+        $prefix = $cr[0].'.'.$cr[1].'.'.$cr[2];
+
+        return str_starts_with($current, $prefix.'.');
+    };
 
     $allowedSections = ['reservations', 'customers', 'products_services', 'operations', 'visa', 'messagerie'];
     $menuSections = collect(config('admin_menu.items', []))
@@ -90,7 +106,7 @@
             continue;
         }
 
-        $open = collect($items)->contains(fn ($item) => $navActive($item['route']));
+        $open = collect($items)->contains(fn ($item) => $childMenuActive($item['route']));
         $groups[] = [
             'label' => (string) ($section['label'] ?? ''),
             'items' => $items,
@@ -145,13 +161,13 @@
 
             @foreach($groups as $group)
                 <details class="agent-nav-group rounded-xl border border-transparent hover:border-gray-100 {{ $group['open'] ? 'bg-gray-50/80' : '' }}" {{ $group['open'] ? 'open' : '' }}>
-                    <summary class="flex items-center justify-between gap-2 px-4 py-2.5 cursor-pointer list-none select-none text-[11px] font-bold uppercase tracking-wider text-[#0e3a5a] [&::-webkit-details-marker]:hidden">
-                        <span>{{ $group['label'] }}</span>
+                    <summary class="flex items-center justify-between gap-2 px-4 py-2.5 cursor-pointer list-none select-none text-[12px] font-bold text-[#0e3a5a] [&::-webkit-details-marker]:hidden">
+                        <span class="normal-case tracking-tight">{{ $group['label'] }}</span>
                         <i class="fas fa-chevron-right text-[10px] text-gray-400 transition-transform agent-nav-chevron"></i>
                     </summary>
                     <div class="pb-2 pt-0 flex flex-col gap-0.5 px-1">
                         @foreach($group['items'] as $item)
-                            @php $isActive = $navActive($item['route']); @endphp
+                            @php $isActive = $childMenuActive($item['route']); @endphp
                             @php $itemHref = !empty($item['query']) ? route($item['route'], $item['query']) : route($item['route']); @endphp
                             <a href="{{ $itemHref }}"
                                data-partner-nav

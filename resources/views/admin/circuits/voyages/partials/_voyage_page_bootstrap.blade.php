@@ -92,6 +92,8 @@
     })->values()->all();
 
     $bootstrap = [
+        'programDayTypes' => \App\Services\BusinessReferentialService::programDayTypes(),
+        'voyageActivityPricingTypes' => \App\Services\BusinessReferentialService::voyageActivityPricingTypes(),
         'tourPlacesCalcDebug' => (bool) config('app.debug'),
         'wpTourId' => $voyageId,
         'csrfToken' => csrf_token(),
@@ -134,5 +136,7 @@
         window.TOUR_ACTIVITIES_CATALOG = boot.tourActivitiesCatalog || [];
         window.PROGRAM_API_URL = boot.programApiUrl || '';
         window.PROGRAM_VOYAGE_ID = boot.programVoyageId || boot.wpTourId || 0;
+        window.VOYAGE_ACTIVITY_PRICING_TYPES = boot.voyageActivityPricingTypes || [];
+        window.PROGRAM_DAY_TYPES = boot.programDayTypes || [];
     })();
 </script>

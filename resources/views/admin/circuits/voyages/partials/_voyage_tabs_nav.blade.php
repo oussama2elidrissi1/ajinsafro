@@ -5,9 +5,7 @@
             <h6 class="ve-tabs-title mb-0">Sections du voyage</h6>
         </div>
 
-        <p class="ve-tab-zone-hint text-muted small mb-0">
-            Passez rapidement de la fiche commerciale aux departs, aux services et au programme.
-        </p>
+        <p class="ve-tab-zone-hint text-muted small mb-0">Navigation par section.</p>
     </div>
 
     <div class="ve-tab-scroll">
@@ -29,7 +27,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#information" role="tab">
-                    <i class="bx bx-info-circle"></i> <span class="ve-tab-label">Details</span>
+                    <i class="bx bx-info-circle"></i> <span class="ve-tab-label">Détails</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -39,12 +37,12 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#availability" role="tab">
-                    <i class="bx bx-calendar"></i> <span class="ve-tab-label">Departs</span>
+                    <i class="bx bx-calendar"></i> <span class="ve-tab-label">Départs</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#media" role="tab">
-                    <i class="bx bx-image"></i> <span class="ve-tab-label">Medias</span>
+                    <i class="bx bx-image"></i> <span class="ve-tab-label">Médias</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -53,23 +51,18 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#flights" role="tab">
-                    <i class="bx bx-trip"></i> <span class="ve-tab-label">Vols</span>
+                <a class="nav-link" data-bs-toggle="tab" href="#logistics" role="tab">
+                    <i class="bx bx-git-merge"></i> <span class="ve-tab-label">Logistique</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#hotels" role="tab">
-                    <i class="bx bx-hotel"></i> <span class="ve-tab-label">Hotels</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#transfers" role="tab">
-                    <i class="bx bx-car"></i> <span class="ve-tab-label">Transferts</span>
+                    <i class="bx bx-hotel"></i> <span class="ve-tab-label">Hôtels</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#activities" role="tab">
-                    <i class="bx bx-list-check"></i> <span class="ve-tab-label">Activites</span>
+                    <i class="bx bx-list-check"></i> <span class="ve-tab-label">Activités</span>
                 </a>
             </li>
             <li class="nav-item">

@@ -6,20 +6,32 @@
 @endphp
 
 <div id="tour-hotels-wrapper">
-    @if($otherHotels->isNotEmpty())
-        <div class="mb-3 p-3 bg-light rounded">
-            <label class="form-label small mb-1">Choisir un hotel existant</label>
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-                <select class="form-select form-select-sm" id="copy-from-hotel-select" style="max-width: 380px;">
-                    <option value="">Selectionner</option>
-                    @foreach($otherHotels as $oh)
-                        <option value="{{ $oh->tour_id }}">{{ \Str::limit($oh->hotel_name ?: 'Hotel #'.$oh->tour_id, 40) }} - {{ \Str::limit($otherTitles[$oh->tour_id] ?? 'Voyage '.$oh->tour_id, 35) }}</option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn btn-sm btn-outline-primary" id="copy-from-hotel-btn">Charger</button>
+    <div class="card mb-4 border-0 shadow-sm tour-hotels-mode-card">
+        <div class="card-body">
+            <h6 class="text-uppercase text-muted small fw-bold mb-3">Mode d’ajout</h6>
+            <div class="btn-group flex-wrap" role="group" aria-label="Mode hôtel">
+                <input type="radio" class="btn-check" name="tour_hotels_mode" id="thm_new" value="new" autocomplete="off" checked>
+                <label class="btn btn-outline-primary" for="thm_new">Ajouter un nouvel hôtel</label>
+                <input type="radio" class="btn-check" name="tour_hotels_mode" id="thm_existing" value="existing" autocomplete="off" @if($otherHotels->isEmpty()) disabled @endif>
+                <label class="btn btn-outline-primary @if($otherHotels->isEmpty()) disabled opacity-50 @endif" for="thm_existing">Choisir un hôtel existant</label>
             </div>
+            @if($otherHotels->isNotEmpty())
+                <div id="tour-hotels-pick-existing" class="mt-3 d-none">
+                    <label class="form-label small">Hôtel du catalogue (autre voyage)</label>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <select class="form-select form-select-sm" id="copy-from-hotel-select" style="max-width: 420px;">
+                            <option value="">Sélectionner…</option>
+                            @foreach($otherHotels as $oh)
+                                <option value="{{ $oh->tour_id }}">{{ \Str::limit($oh->hotel_name ?: 'Hôtel #'.$oh->tour_id, 40) }} — {{ \Str::limit($otherTitles[$oh->tour_id] ?? 'Voyage '.$oh->tour_id, 35) }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" class="btn btn-sm btn-primary" id="copy-from-hotel-btn">Appliquer au premier hôtel</button>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2">Les informations générales seront copiées et verrouillées ; les jours d’affectation restent modifiables.</p>
+                </div>
+            @endif
         </div>
-    @endif
+    </div>
 
     <div id="tour-hotels-container">
         @foreach($hotelsList as $hi => $h)
@@ -46,7 +58,7 @@
 
                 <div class="card-header bg-light py-3 d-flex justify-content-between align-items-start gap-3">
                     <div class="tour-hotel-card-heading">
-                        <div class="tour-hotel-card-title">Hotel {{ $hi + 1 }}</div>
+                        <div class="tour-hotel-card-title">Hôtel {{ $hi + 1 }}</div>
                         <div class="tour-hotel-card-meta text-muted small"></div>
                     </div>
                     @if($hi > 0)
@@ -56,6 +68,49 @@
 
                 <div class="card-body tour-hotel-card-body">
                     <div class="row g-3">
+                        <div class="col-12">
+                            <div class="tour-hotel-section-heading">Informations générales</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Nom de l’hôtel</label>
+                            <input type="text" class="form-control tour-hotel-name-input tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][hotel_name]" value="{{ old("tour_hotels.{$hi}.hotel_name", optional($h)->hotel_name ?? '') }}">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Étoiles (0–5)</label>
+                            <input type="number" class="form-control tour-hotel-stars-input tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][stars]" value="{{ old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') }}" min="0" max="5">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Ville / adresse</label>
+                            <input type="text" class="form-control tour-hotel-address-input tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][address]" value="{{ old("tour_hotels.{$hi}.address", optional($h)->address ?? '') }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Formule / infos</label>
+                            <input type="text" class="form-control tour-hotel-meal-input tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][meal_plan]" value="{{ old("tour_hotels.{$hi}.meal_plan", optional($h)->meal_plan ?? '') }}">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][notes]" rows="2">{{ old("tour_hotels.{$hi}.notes", optional($h)->notes ?? '') }}</textarea>
+                        </div>
+
+                        <div class="col-12 tour-hotel-media-block">
+                            <label class="form-label">Image</label>
+                            <input type="hidden" class="tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][image_id]" id="{{ $hid }}" value="{{ old("tour_hotels.{$hi}.image_id", optional($h)->image_id ?? '') }}">
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <div id="{{ $hid }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width: 120px; height: 80px; display: {{ $himgUrl ? 'flex' : 'none' }};">
+                                    <img id="{{ $hid }}_preview" src="{{ $himgUrl }}" alt="" class="img-fluid" style="max-width:100%; max-height:100%; object-fit: cover;">
+                                </div>
+                                <div class="tour-hotel-media-actions">
+                                    <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="tour_hotel" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap"><i class="bx bx-images"></i> Choisir</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">×</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="col-12">
                             <div class="tour-hotel-section-heading">Affectation au circuit</div>
                         </div>
@@ -67,7 +122,7 @@
                                     <option value="{{ $d }}" {{ (int) $checkInDay === $d ? 'selected' : '' }}>Jour {{ $d }}</option>
                                 @endfor
                             </select>
-                            <small class="text-danger d-none tour-hotel-check-in-error" data-index="{{ $hi }}">Le check-out doit etre superieur ou egal au check-in.</small>
+                            <small class="text-danger d-none tour-hotel-check-in-error" data-index="{{ $hi }}">Le check-out doit être supérieur ou égal au check-in.</small>
                         </div>
 
                         <div class="col-md-3">
@@ -77,56 +132,13 @@
                                     <option value="{{ $d }}" {{ (int) $checkOutDay === $d ? 'selected' : '' }}>Jour {{ $d }}</option>
                                 @endfor
                             </select>
-                            <small class="text-danger d-none tour-hotel-check-out-error" data-index="{{ $hi }}">Le check-out doit etre superieur ou egal au check-in.</small>
+                            <small class="text-danger d-none tour-hotel-check-out-error" data-index="{{ $hi }}">Le check-out doit être supérieur ou égal au check-in.</small>
                         </div>
 
                         <div class="col-md-3 d-flex align-items-end">
                             <div class="form-check mb-2">
                                 <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][is_optional]" value="1" {{ old("tour_hotels.{$hi}.is_optional", optional($h)->is_optional ?? false) ? 'checked' : '' }}>
                                 <label class="form-check-label">Option client</label>
-                            </div>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="tour-hotel-section-heading">Informations generales</div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Nom de l'hotel</label>
-                            <input type="text" class="form-control tour-hotel-name-input" name="tour_hotels[{{ $hi }}][hotel_name]" value="{{ old("tour_hotels.{$hi}.hotel_name", optional($h)->hotel_name ?? '') }}">
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="form-label">Etoiles (0-5)</label>
-                            <input type="number" class="form-control tour-hotel-stars-input" name="tour_hotels[{{ $hi }}][stars]" value="{{ old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') }}" min="0" max="5">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Ville / adresse</label>
-                            <input type="text" class="form-control tour-hotel-address-input" name="tour_hotels[{{ $hi }}][address]" value="{{ old("tour_hotels.{$hi}.address", optional($h)->address ?? '') }}">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Formule / infos</label>
-                            <input type="text" class="form-control tour-hotel-meal-input" name="tour_hotels[{{ $hi }}][meal_plan]" value="{{ old("tour_hotels.{$hi}.meal_plan", optional($h)->meal_plan ?? '') }}">
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label">Notes</label>
-                            <textarea class="form-control" name="tour_hotels[{{ $hi }}][notes]" rows="2">{{ old("tour_hotels.{$hi}.notes", optional($h)->notes ?? '') }}</textarea>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label">Image</label>
-                            <input type="hidden" name="tour_hotels[{{ $hi }}][image_id]" id="{{ $hid }}" value="{{ old("tour_hotels.{$hi}.image_id", optional($h)->image_id ?? '') }}">
-                            <div class="d-flex flex-wrap align-items-center gap-3">
-                                <div id="{{ $hid }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width: 120px; height: 80px; display: {{ $himgUrl ? 'flex' : 'none' }};">
-                                    <img id="{{ $hid }}_preview" src="{{ $himgUrl }}" alt="" class="img-fluid" style="max-width:100%; max-height:100%; object-fit: cover;">
-                                </div>
-                                <div>
-                                    <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="tour_hotel" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap"><i class="bx bx-images"></i> Choisir</button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">×</button>
-                                </div>
                             </div>
                         </div>
 
@@ -147,6 +159,35 @@
     if (!wrapper || !container || !addBtn) return;
     if (container.dataset.initialized === 'true') return;
     container.dataset.initialized = 'true';
+
+    function setHotelIdentityLocked(row, locked) {
+        if (!row) return;
+        row.setAttribute('data-identity-locked', locked ? '1' : '0');
+        row.querySelectorAll('.tour-hotel-identity-field').forEach(function (el) {
+            if (el.type === 'hidden') return;
+            el.readOnly = !!locked;
+            el.classList.toggle('bg-light', !!locked);
+        });
+        row.querySelectorAll('.tour-hotel-media-actions button').forEach(function (btn) {
+            btn.disabled = !!locked;
+            btn.classList.toggle('opacity-50', !!locked);
+        });
+    }
+
+    var modeNew = document.getElementById('thm_new');
+    var modeExisting = document.getElementById('thm_existing');
+    var pickPanel = document.getElementById('tour-hotels-pick-existing');
+    function syncHotelModeUi() {
+        var existing = modeExisting && modeExisting.checked;
+        if (pickPanel) pickPanel.classList.toggle('d-none', !existing);
+        if (!existing) {
+            var first = container.querySelector('.tour-hotel-row[data-index="0"]');
+            setHotelIdentityLocked(first, false);
+        }
+    }
+    if (modeNew) modeNew.addEventListener('change', syncHotelModeUi);
+    if (modeExisting) modeExisting.addEventListener('change', syncHotelModeUi);
+    syncHotelModeUi();
 
     function notifyHotelsChanged() {
         document.dispatchEvent(new CustomEvent('voyage-hotels-changed'));
@@ -377,9 +418,12 @@
                     updateHotelsTitle();
                     notifyHotelsChanged();
                     copySelect.value = '';
+                    setHotelIdentityLocked(firstRow, true);
+                    if (modeExisting) modeExisting.checked = true;
+                    syncHotelModeUi();
                 })
                 .catch(function () {
-                    alert('Impossible de charger l hotel.');
+                    alert('Impossible de charger l’hôtel.');
                 });
         });
     }

@@ -222,7 +222,7 @@ class StoreWpTourRequest extends FormRequest
             'programme_days.*.mode' => 'nullable|string|in:free,program',
             'programme_days.*.day_title' => 'nullable|string|max:255',
             'programme_days.*.city' => 'nullable|string|max:255',
-            'programme_days.*.day_type' => 'nullable|string|in:arrivee,visite,transfert,libre',
+            'programme_days.*.day_type' => 'nullable|string|max:64',
             'programme_days.*.content_html' => 'nullable|string',
             'programme_days.*.notes' => 'nullable|string',
             'programme_days.*.title' => 'nullable|string|max:255',

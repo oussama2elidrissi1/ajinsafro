@@ -34,6 +34,10 @@
                     </div>
                 @endforelse
             </div>
+
+            @include('admin.circuits.voyages.components.DayBuilderPanel', [
+                'activitiesCatalog' => $activitiesCatalog ?? collect(),
+            ])
         </div>
     </div>
 </div>

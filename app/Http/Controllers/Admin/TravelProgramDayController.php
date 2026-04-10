@@ -20,11 +20,12 @@ class TravelProgramDayController extends Controller
             'content_html' => 'nullable|string',
             'description' => 'nullable|string',
             'nights' => 'nullable|integer|min:0|max:1',
-            'day_type' => 'nullable|in:arrivee,visite,transfert,libre',
+            'day_type' => 'nullable|in:aboard,visite,libre,arrivee,transfert',
             'meal_breakfast' => 'boolean',
             'meal_lunch' => 'boolean',
             'meal_dinner' => 'boolean',
         ]);
+        $validated['day_type'] = TravelProgramDay::normalizeDayType($validated['day_type'] ?? 'visite');
         $validated['voyage_id'] = $voyage->id;
         $validated['day_number'] = $nextDay;
         $validated['meal_breakfast'] = $request->boolean('meal_breakfast');
@@ -53,7 +54,7 @@ class TravelProgramDayController extends Controller
             'content_html' => 'nullable|string',
             'description' => 'nullable|string',
             'nights' => 'nullable|integer|min:0|max:1',
-            'day_type' => 'nullable|in:arrivee,visite,transfert,libre',
+            'day_type' => 'nullable|in:aboard,visite,libre,arrivee,transfert',
             'meal_breakfast' => 'boolean',
             'meal_lunch' => 'boolean',
             'meal_dinner' => 'boolean',
@@ -69,6 +70,7 @@ class TravelProgramDayController extends Controller
         if (empty($validated['content_html']) && !empty($validated['description'])) {
             $validated['content_html'] = '<p>' . nl2br(e($validated['description'])) . '</p>';
         }
+        $validated['day_type'] = TravelProgramDay::normalizeDayType($validated['day_type'] ?? 'visite');
         $programDay->update($validated);
         return redirect()->route('admin.circuits.voyages.edit', $voyage)
             ->with('success', 'Jour mis à jour.');

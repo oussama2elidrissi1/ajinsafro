@@ -1136,11 +1136,11 @@ body.voyage-layout-page .modal-body {
 .voyage-edit-page .flight-manager .quick-access-flights {
     font-size: 11px;
 }
-.voyage-edit-page #day-builder-drawer .nav-pills .nav-link {
+.voyage-edit-page #day-builder-root .nav-pills .nav-link {
     font-size: 13px;
     padding: 8px 12px;
 }
-.voyage-edit-page #day-builder-drawer .nav-pills .nav-link.active {
+.voyage-edit-page #day-builder-root .nav-pills .nav-link.active {
     background: #e7f1ff;
     border-color: #b6d7ff;
     color: #0d6efd;

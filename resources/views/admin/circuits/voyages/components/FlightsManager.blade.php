@@ -35,7 +35,7 @@ document.addEventListener('day-builder:context-changed', function(e) {
 // Mettre en oeuvre une fonction pour synchoniser les vols depuis la UI du flight-manager
 document.addEventListener('change', function(e) {
     // Si un input de vol change dans le drawer, synchroniser avec dayItemsManager
-    var drawer = document.getElementById('day-builder-drawer');
+    var drawer = document.getElementById('day-builder-root');
     if (!drawer) return;
     var dayIndex = drawer.getAttribute('data-day-index');
     if (!dayIndex) return;

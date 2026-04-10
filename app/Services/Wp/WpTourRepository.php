@@ -209,6 +209,9 @@ class WpTourRepository
             'adult_price' => 'adult_price',
             'child_price' => 'child_price',
             'infant_price' => 'infant_price',
+            'room_price_double' => 'room_price_double',
+            'room_price_twin' => 'room_price_twin',
+            'room_price_single' => 'room_price_single',
             'commission_adulte' => 'commission_adulte',
             'commission_enfant' => 'commission_enfant',
             'discount' => 'discount',
@@ -960,5 +963,53 @@ class WpTourRepository
         // Save metas
         $post->setMeta('tours_program_style', $style);
         $post->setMeta('tours_program', $serialized);
+    }
+
+    /**
+     * Libellé « zone » (région ou pays) pour la destination principale : évite d’afficher la ville seule.
+     * Chaîne parent → enfant : pays → région → ville ; on préfère région si 3 niveaux, sinon pays.
+     */
+    public function getPrimaryDestinationAreaLabel(WpPost $post): ?string
+    {
+        $ids = $this->parseMultiLocation($post->getMeta('multi_location'));
+        $primaryId = $ids[0] ?? null;
+        if (! $primaryId) {
+            return null;
+        }
+
+        return $this->getLocationAreaLabelById((int) $primaryId);
+    }
+
+    public function getLocationAreaLabelById(int $locationId): ?string
+    {
+        $chain = [];
+        $currentId = $locationId;
+        $guard = 0;
+        while ($currentId > 0 && $guard++ < 25) {
+            $row = \DB::connection('wp')->table('posts')
+                ->where('post_type', 'location')
+                ->where('ID', $currentId)
+                ->first(['ID', 'post_title', 'post_parent']);
+            if (! $row) {
+                break;
+            }
+            $chain[] = [
+                'id' => (int) $row->ID,
+                'title' => (string) $row->post_title,
+                'parent' => (int) $row->post_parent,
+            ];
+            $currentId = (int) $row->post_parent;
+        }
+        if (count($chain) >= 3) {
+            return $chain[1]['title'];
+        }
+        if (count($chain) === 2) {
+            return $chain[1]['title'];
+        }
+        if (count($chain) === 1) {
+            return $chain[0]['title'];
+        }
+
+        return null;
     }
 }

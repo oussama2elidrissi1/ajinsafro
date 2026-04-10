@@ -55,6 +55,82 @@
                     <span class="vi-count-chip"><i class="bx bx-collection me-1"></i>{{ $tours->total() }} résultat(s)</span>
                 </div>
 
+                <form method="get" action="{{ route('admin.circuits.voyages.index') }}" class="vi-filters card border mb-4">
+                    <div class="card-body py-3">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-6 col-md-2">
+                                <label class="form-label small mb-1">Statut</label>
+                                <select name="status" class="form-select form-select-sm">
+                                    <option value="">Tous</option>
+                                    <option value="publish" @selected(request('status') === 'publish')>Publié</option>
+                                    <option value="draft" @selected(request('status') === 'draft')>Brouillon</option>
+                                    <option value="private" @selected(request('status') === 'private')>Archivé</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label class="form-label small mb-1">Type / thème</label>
+                                <select name="tour_type" class="form-select form-select-sm">
+                                    <option value="">Tous</option>
+                                    @foreach($filterTourTypes ?? [] as $tt)
+                                        <option value="{{ $tt->term_id }}" @selected((string) request('tour_type') === (string) $tt->term_id)>{{ $tt->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">Destination</label>
+                                <input type="text" name="destination" class="form-control form-control-sm" value="{{ request('destination') }}" placeholder="Ville, pays…">
+                            </div>
+                            <div class="col-6 col-md-1">
+                                <label class="form-label small mb-1">Prix min</label>
+                                <input type="number" step="0.01" name="price_min" class="form-control form-control-sm" value="{{ request('price_min') }}">
+                            </div>
+                            <div class="col-6 col-md-1">
+                                <label class="form-label small mb-1">Prix max</label>
+                                <input type="number" step="0.01" name="price_max" class="form-control form-control-sm" value="{{ request('price_max') }}">
+                            </div>
+                            <div class="col-6 col-md-1">
+                                <label class="form-label small mb-1">Durée min</label>
+                                <input type="number" min="1" name="duration_min" class="form-control form-control-sm" value="{{ request('duration_min') }}">
+                            </div>
+                            <div class="col-6 col-md-1">
+                                <label class="form-label small mb-1">Durée max</label>
+                                <input type="number" min="1" name="duration_max" class="form-control form-control-sm" value="{{ request('duration_max') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">Modifié du</label>
+                                <input type="date" name="modified_from" class="form-control form-control-sm" value="{{ request('modified_from') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">au</label>
+                                <input type="date" name="modified_to" class="form-control form-control-sm" value="{{ request('modified_to') }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small mb-1">Recherche</label>
+                                <input type="search" name="q" class="form-control form-control-sm" value="{{ request('q') }}" placeholder="Titre, slug…">
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label class="form-label small mb-1">Départs actifs</label>
+                                <select name="has_departures" class="form-select form-select-sm">
+                                    <option value="">Indifférent</option>
+                                    <option value="1" @selected(request('has_departures') === '1')>Oui</option>
+                                    <option value="0" @selected(request('has_departures') === '0')>Non</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label class="form-label small mb-1">Page Laravel publique</label>
+                                <select name="has_laravel_public" class="form-select form-select-sm">
+                                    <option value="">Indifférent</option>
+                                    <option value="1" @selected(request('has_laravel_public') === '1')>Oui</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-auto d-flex gap-2 flex-wrap">
+                                <button type="submit" class="btn btn-sm btn-primary">Filtrer</button>
+                                <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
                 @if($tours->isEmpty())
                     <p class="text-muted mb-0">Aucun tour trouvé. <a href="{{ route('admin.circuits.voyages.create') }}">Créer un tour</a> pour commencer.</p>
                 @else
@@ -94,6 +170,8 @@
                                                 <span class="badge vi-status vi-status-publish">Publié</span>
                                             @elseif($tour->post_status === 'draft')
                                                 <span class="badge vi-status vi-status-draft">Brouillon</span>
+                                            @elseif($tour->post_status === 'private')
+                                                <span class="badge bg-secondary">Archivé</span>
                                             @else
                                                 <span class="badge vi-status vi-status-pending">{{ $tour->post_status }}</span>
                                             @endif

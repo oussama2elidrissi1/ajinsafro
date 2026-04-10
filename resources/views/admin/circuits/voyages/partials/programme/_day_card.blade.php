@@ -9,9 +9,9 @@
 
 <div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}" data-day-index="{{ $dayIndex }}">
     <h2 class="accordion-header programme-day-header">
-        <span class="drag-handle me-2 text-muted cursor-grab" title="Deplacer" aria-hidden="true"><i class="bx bx-dots-vertical-rounded"></i></span>
+        <span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer" aria-hidden="true"><i class="bx bx-dots-vertical-rounded"></i></span>
         <button class="accordion-button flex-grow-1 {{ $isFirst ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
-            <span class="programme-day-label">JOUR {{ $day->day_number }} - {{ $dayTitleDisplay }}</span>
+            <span class="programme-day-label">JOUR {{ $day->day_number }} — {{ $dayTitleDisplay }}</span>
         </button>
         <button type="button" class="btn btn-sm btn-outline-danger me-2 btn-remove-program-day" title="Supprimer ce jour" data-day-id="{{ $day->id }}">
             <i class="bx bx-trash"></i>
@@ -24,39 +24,44 @@
 
             <div class="program-day-form" data-day-index="{{ $dayIndex }}">
                 <div class="field-mode">
-                    <label class="form-label">Type / Mode</label>
+                    <label class="form-label">Type / mode</label>
                     <select name="programme_days[{{ $dayIndex }}][mode]" class="form-select programme-day-mode">
-                        <option value="program" {{ ($day->mode ?? 'program') === 'program' ? 'selected' : '' }}>Visite / Programme</option>
+                        <option value="program" {{ ($day->mode ?? 'program') === 'program' ? 'selected' : '' }}>Visite / programme</option>
                         <option value="free" {{ ($day->mode ?? '') === 'free' ? 'selected' : '' }}>Libre</option>
                     </select>
                 </div>
                 <div class="field-type">
                     <label class="form-label">Type de jour</label>
+                    @php
+                        $dayTypeRef = \App\Services\BusinessReferentialService::programDayTypes();
+                        $rawDayType = old('programme_days.'.$dayIndex.'.day_type', $day->day_type ?? 'visite');
+                        $selDayType = \App\Models\TravelProgramDay::normalizeDayType($rawDayType);
+                    @endphp
                     <select name="programme_days[{{ $dayIndex }}][day_type]" class="form-select">
-                        @foreach(\App\Models\TravelProgramDay::DAY_TYPES as $value => $label)
-                            <option value="{{ $value }}" {{ old('programme_days.'.$dayIndex.'.day_type', $day->day_type ?? 'visite') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @foreach($dayTypeRef as $opt)
+                            <option value="{{ $opt['value'] }}" @selected($selDayType === $opt['value'])>{{ $opt['label'] }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="field-title">
                     <label class="form-label">Titre du jour</label>
-                    <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex: Jour 1 - Arrivee">
+                    <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex. : Jour 1 — Arrivée">
                 </div>
                 <div class="field-ville">
                     <label class="form-label">Ville</label>
-                    <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][city]" value="{{ old('programme_days.'.$dayIndex.'.city', $day->city ?? '') }}" placeholder="Ex: Marrakech">
+                    <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][city]" value="{{ old('programme_days.'.$dayIndex.'.city', $day->city ?? '') }}" placeholder="Ex. : Marrakech">
                 </div>
                 <div class="field-resume">
-                    <label class="form-label">Resume</label>
-                    <textarea class="form-control" name="programme_days[{{ $dayIndex }}][description]" rows="2" placeholder="Resume du jour">{{ old('programme_days.'.$dayIndex.'.description', $day->description ?? '') }}</textarea>
+                    <label class="form-label">Résumé</label>
+                    <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][description]" rows="3" placeholder="Résumé du jour">{{ old('programme_days.'.$dayIndex.'.description', $day->description ?? '') }}</textarea>
                 </div>
                 <div class="field-description programme-day-detail">
-                    <label class="form-label">Description detaillee</label>
-                    <textarea class="form-control" name="programme_days[{{ $dayIndex }}][content_html]" rows="4" placeholder="Programme detaille du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
+                    <label class="form-label">Description détaillée</label>
+                    <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="5" placeholder="Programme détaillé du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
                 </div>
                 <div class="field-notes programme-day-notes">
                     <label class="form-label">Notes</label>
-                    <textarea class="form-control" name="programme_days[{{ $dayIndex }}][notes]" rows="3" placeholder="Contenu du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                    <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="4" placeholder="Notes du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
                 </div>
             </div>
 
@@ -65,22 +70,17 @@
             <input type="hidden" name="programme_days[{{ $dayIndex }}][hotel_id]" value="{{ old('programme_days.'.$dayIndex.'.hotel_id', $dayHotelsTransfers['hotel_id'] ?? '') }}">
             <input type="hidden" name="programme_days[{{ $dayIndex }}][transfer_ids]" value="{{ old('programme_days.'.$dayIndex.'.transfer_ids', implode(',', $dayHotelsTransfers['transfer_ids'] ?? [])) }}">
 
-            <div class="programme-day-extras mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"></div>
-            <p class="small text-muted mb-2 programme-day-inclus" data-day-index="{{ $dayIndex }}">
-                INCLUS : {{ $activities->count() }} {{ $activities->count() > 1 ? 'Activites' : 'Activite' }}
-            </p>
-
-            <h6 class="mt-3 mb-2">Activites</h6>
+            <h6 class="mt-4 mb-2">Activités du jour</h6>
             <div class="programme-activities-list mb-3" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
                 @foreach($activities as $actIndex => $da)
                     <div class="programme-activity-row card mb-2" data-day-activity-id="{{ $da->id }}" draggable="true">
                         <div class="card-body py-2">
                             <div class="d-flex flex-wrap align-items-start gap-2">
-                                <span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Reordonner"><i class="bx bx-dots-vertical-rounded"></i></span>
+                                <span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>
                                 <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][day_activity_id]" value="{{ $da->id }}">
                                 <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][activity_id]" value="{{ $da->activity_id }}">
                                 <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][sort_order]" value="{{ $actIndex }}">
-                                <span class="fw-medium">{{ $da->activity->title ?? 'Activite #'.$da->activity_id }}</span>
+                                <span class="fw-medium">{{ $da->activity->title ?? 'Activité #'.$da->activity_id }}</span>
                                 <span class="form-check form-check-inline mb-0">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="0">
                                     <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
@@ -92,8 +92,8 @@
                                     <label class="form-check-label small">Obligatoire</label>
                                 </span>
                                 @if($da->is_editable)
-                                    <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:220px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalise">
-                                    <textarea class="form-control form-control-sm" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="1" placeholder="Description personnalisee">{{ $da->custom_description }}</textarea>
+                                    <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:220px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
+                                    <textarea class="form-control form-control-sm rich-editor" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="2" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
                                 @else
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" value="{{ $da->custom_description }}">
@@ -107,19 +107,6 @@
                 @endforeach
             </div>
 
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}" data-day-number="{{ $day->day_number }}">
-                    <i class="bx bx-plus"></i> Ajouter un element
-                </button>
-                <span class="small text-muted">ou</span>
-                <select class="form-select form-select-sm add-activity-select" style="max-width:260px" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}">
-                    <option value="">-- Activite rapide --</option>
-                    @foreach($activitiesCatalog as $act)
-                        <option value="{{ $act->id }}">{{ $act->title }}</option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="{{ $dayIndex }}" data-day-id="{{ $day->id }}"><i class="bx bx-plus"></i> Ajouter</button>
-            </div>
         </div>
     </div>
 </div>

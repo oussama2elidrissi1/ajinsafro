@@ -7,6 +7,7 @@ use App\Http\Controllers\Front\HomeController as FrontHomeController;
 use App\Http\Controllers\Front\SearchController as FrontSearchController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
 use App\Http\Controllers\Internal\SyncInboundController;
+use App\Http\Controllers\RatehawkHotelController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,6 +24,14 @@ Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
 Route::get('/search', [FrontSearchController::class, 'index'])->name('front.search');
 Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voyages.index');
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
+
+Route::get('/ratehawk/hotels', [RatehawkHotelController::class, 'index'])->name('ratehawk.hotels.index');
+Route::get('/ratehawk/hotels/autocomplete', [RatehawkHotelController::class, 'autocomplete'])->name('ratehawk.hotels.autocomplete');
+
+/** @deprecated Ancienne URL catalogue hôtels — redirige vers RateHawk (ETG). */
+Route::get('/hotels-api', function () {
+    return redirect()->route('ratehawk.hotels.index', [], 301);
+})->name('hotels.api.index');
 
 Route::get('/booking/start', StartBookingController::class)->name('booking.start');
 Route::get('/booking/checkout/{token}', [CheckoutController::class, 'show'])->name('booking.checkout');

@@ -1,136 +1,184 @@
-﻿<div class="tab-pane" id="price" role="tabpanel">
-                <div class="card ve-pane-card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">ParamÃ¨tres de prix</h4>
-                        
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="mb-3">
-                                    <label for="min_price" class="form-label">Prix minimum (MAD)</label>
-                                    <input type="number" class="form-control" id="min_price" name="min_price" value="{{ old('min_price', $meta['min_price'] ?? '') }}" step="0.01" min="0">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="base_price" class="form-label">Prix de base (MAD)</label>
-                                    <input type="number" class="form-control" id="base_price" name="base_price" value="{{ old('base_price', $meta['base_price'] ?? '') }}" step="0.01" min="0">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="sale_price" class="form-label">Prix soldÃ© (MAD)</label>
-                                    <input type="number" class="form-control" id="sale_price" name="sale_price" value="{{ old('sale_price', $meta['sale_price'] ?? '') }}" step="0.01" min="0">
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4">
-                                <div class="mb-3">
-                                    <label for="adult_price" class="form-label">Prix Adulte (MAD)</label>
-                                    <input type="number" class="form-control" id="adult_price" name="adult_price" value="{{ old('adult_price', $meta['adult_price'] ?? '') }}" step="0.01" min="0">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="child_price" class="form-label">Prix Enfant (MAD)</label>
-                                    <input type="number" class="form-control" id="child_price" name="child_price" value="{{ old('child_price', $meta['child_price'] ?? '') }}" step="0.01" min="0">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="infant_price" class="form-label">Prix BÃ©bÃ© (MAD)</label>
-                                    <input type="number" class="form-control" id="infant_price" name="infant_price" value="{{ old('infant_price', $meta['infant_price'] ?? '') }}" step="0.01" min="0">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="commission_adulte" class="form-label">Commission Adulte (MAD)</label>
-                                    <input type="number" class="form-control" id="commission_adulte" name="commission_adulte" value="{{ old('commission_adulte', $meta['commission_adulte'] ?? '') }}" step="0.01" min="0" placeholder="0">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="commission_enfant" class="form-label">Commission Enfant (MAD)</label>
-                                    <input type="number" class="form-control" id="commission_enfant" name="commission_enfant" value="{{ old('commission_enfant', $meta['commission_enfant'] ?? '') }}" step="0.01" min="0" placeholder="0">
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4">
-                                <div class="mb-3">
-                                    <label for="discount" class="form-label">RÃ©duction</label>
-                                    <input type="text" class="form-control" id="discount" name="discount" value="{{ old('discount', $meta['discount'] ?? '') }}">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="discount_type" class="form-label">Type de rÃ©duction</label>
-                                    <select class="form-select" id="discount_type" name="discount_type">
-                                        <option value="">Aucune</option>
-                                        <option value="percent" {{ old('discount_type', $meta['discount_type'] ?? '') === 'percent' ? 'selected' : '' }}>Pourcentage</option>
-                                        <option value="fixed" {{ old('discount_type', $meta['discount_type'] ?? '') === 'fixed' ? 'selected' : '' }}>Montant fixe</option>
+@php
+    $paymentMethodOptions = $paymentMethodOptions ?? \App\Services\BusinessReferentialService::paymentMethods();
+    $ref = $businessReferentials ?? \App\Services\BusinessReferentialService::allMerged();
+    $discountScopes = $ref['discount_scopes'] ?? [];
+    $discountConditions = $ref['discount_conditions'] ?? [];
+    $discountTypes = $ref['discount_types'] ?? [];
+    $discountRules = $discountRules ?? collect();
+@endphp
+<div class="tab-pane" id="price" role="tabpanel">
+    <div class="card ve-pane-card mb-3">
+        <div class="card-body">
+            <p class="text-uppercase text-muted small fw-bold mb-2">Prix de base</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="min_price">Prix minimum (MAD)</label>
+                    <input type="number" class="form-control" id="min_price" name="min_price" value="{{ old('min_price', $meta['min_price'] ?? '') }}" step="0.01" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="base_price">Prix de base (MAD)</label>
+                    <input type="number" class="form-control" id="base_price" name="base_price" value="{{ old('base_price', $meta['base_price'] ?? '') }}" step="0.01" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="sale_price">Prix soldé (MAD)</label>
+                    <input type="number" class="form-control" id="sale_price" name="sale_price" value="{{ old('sale_price', $meta['sale_price'] ?? '') }}" step="0.01" min="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card ve-pane-card mb-3">
+        <div class="card-body">
+            <p class="text-uppercase text-muted small fw-bold mb-2">Tarifs par profil</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="adult_price">Prix adulte (MAD)</label>
+                    <input type="number" class="form-control" id="adult_price" name="adult_price" value="{{ old('adult_price', $meta['adult_price'] ?? '') }}" step="0.01" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="child_price">Prix enfant (MAD)</label>
+                    <input type="number" class="form-control" id="child_price" name="child_price" value="{{ old('child_price', $meta['child_price'] ?? '') }}" step="0.01" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="infant_price">Prix bébé (MAD)</label>
+                    <input type="number" class="form-control" id="infant_price" name="infant_price" value="{{ old('infant_price', $meta['infant_price'] ?? '') }}" step="0.01" min="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card ve-pane-card mb-3" id="ve-discount-rules-block">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <p class="text-uppercase text-muted small fw-bold mb-0">Réductions</p>
+                    <p class="text-muted small mb-0">Règles métier (priorité croissante : la plus forte priorité peut être appliquée en premier selon votre moteur de calcul).</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="ve-add-discount-rule">Ajouter une règle</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0" id="ve-discount-rules-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Portée</th>
+                            <th>Condition</th>
+                            <th class="text-end">Valeur</th>
+                            <th class="text-center">Priorité</th>
+                            <th class="text-center">Actif</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($discountRules as $i => $rule)
+                            <tr class="ve-discount-rule-row">
+                                <td>
+                                    <select class="form-select form-select-sm" name="discount_rules[{{ $i }}][reduction_type]">
+                                        @foreach($discountTypes as $dt)
+                                            <option value="{{ $dt['value'] }}" @selected(($rule->reduction_type ?? '') === $dt['value'])>{{ $dt['label'] }}</option>
+                                        @endforeach
                                     </select>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="discount_by_people_type" class="form-label">RÃ©duction selon type personne</label>
-                                    <input type="text" class="form-control" id="discount_by_people_type" name="discount_by_people_type" value="{{ old('discount_by_people_type', $meta['discount_by_people_type'] ?? '') }}" placeholder="adult,child,infant">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="calculator_discount_by_people_type" class="form-label">Calculateur rÃ©duction</label>
-                                    <input type="text" class="form-control" id="calculator_discount_by_people_type" name="calculator_discount_by_people_type" value="{{ old('calculator_discount_by_people_type', $meta['calculator_discount_by_people_type'] ?? '') }}">
-                            </div>
-                        </div>
-                    </div>
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm" name="discount_rules[{{ $i }}][scope]">
+                                        @foreach($discountScopes as $sc)
+                                            <option value="{{ $sc['value'] }}" @selected(($rule->scope ?? '') === $sc['value'])>{{ $sc['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm" name="discount_rules[{{ $i }}][condition_type]">
+                                        @foreach($discountConditions as $c)
+                                            <option value="{{ $c['value'] }}" @selected(($rule->condition_type ?? '') === $c['value'])>{{ $c['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td style="max-width:110px">
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end" name="discount_rules[{{ $i }}][value]" value="{{ old('discount_rules.'.$i.'.value', $rule->value) }}">
+                                </td>
+                                <td style="max-width:90px">
+                                    <input type="number" class="form-control form-control-sm text-center" name="discount_rules[{{ $i }}][priority]" value="{{ old('discount_rules.'.$i.'.priority', $rule->priority ?? 100) }}">
+                                </td>
+                                <td class="text-center">
+                                    <input type="hidden" name="discount_rules[{{ $i }}][is_active]" value="0">
+                                    <input type="checkbox" class="form-check-input" name="discount_rules[{{ $i }}][is_active]" value="1" @checked(old('discount_rules.'.$i.'.is_active', $rule->is_active ?? true))>
+                                </td>
+                                <td><button type="button" class="btn btn-sm btn-outline-danger ve-remove-discount-rule">×</button></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card ve-pane-card mb-3">
+        <div class="card-body">
+            <p class="text-uppercase text-muted small fw-bold mb-2">Commissions</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="commission_adulte">Commission adulte (MAD)</label>
+                    <input type="number" class="form-control" id="commission_adulte" name="commission_adulte" value="{{ old('commission_adulte', $meta['commission_adulte'] ?? '') }}" step="0.01" min="0" placeholder="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="commission_enfant">Commission enfant (MAD)</label>
+                    <input type="number" class="form-control" id="commission_enfant" name="commission_enfant" value="{{ old('commission_enfant', $meta['commission_enfant'] ?? '') }}" step="0.01" min="0" placeholder="0">
                 </div>
             </div>
+        </div>
+    </div>
 
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Moyens de paiement</h4>
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_paypal" name="is_meta_payment_gateway_st_paypal" value="1" {{ old('is_meta_payment_gateway_st_paypal', $meta['is_meta_payment_gateway_st_paypal'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_paypal">
-                                        <i class="bx bxl-paypal"></i> PayPal
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay" name="is_meta_payment_gateway_st_onepay" value="1" {{ old('is_meta_payment_gateway_st_onepay', $meta['is_meta_payment_gateway_st_onepay'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay">
-                                        OnePay
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_onepay_atm" name="is_meta_payment_gateway_st_onepay_atm" value="1" {{ old('is_meta_payment_gateway_st_onepay_atm', $meta['is_meta_payment_gateway_st_onepay_atm'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_onepay_atm">
-                                        OnePay ATM
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payu" name="is_meta_payment_gateway_st_payu" value="1" {{ old('is_meta_payment_gateway_st_payu', $meta['is_meta_payment_gateway_st_payu'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payu">
-                                        PayU
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payulatam" name="is_meta_payment_gateway_st_payulatam" value="1" {{ old('is_meta_payment_gateway_st_payulatam', $meta['is_meta_payment_gateway_st_payulatam'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payulatam">
-                                        PayU Latam
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_payumoney" name="is_meta_payment_gateway_st_payumoney" value="1" {{ old('is_meta_payment_gateway_st_payumoney', $meta['is_meta_payment_gateway_st_payumoney'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_payumoney">
-                                        PayUmoney
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_meta_payment_gateway_st_razor" name="is_meta_payment_gateway_st_razor" value="1" {{ old('is_meta_payment_gateway_st_razor', $meta['is_meta_payment_gateway_st_razor'] ?? '') === 'on' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_meta_payment_gateway_st_razor">
-                                        <i class="bx bx-credit-card"></i> Razorpay
-                                    </label>
-                                </div>
-                            </div>
+    <div class="card ve-pane-card mb-3">
+        <div class="card-body">
+            <p class="text-uppercase text-muted small fw-bold mb-2">Moyens de paiement</p>
+            <p class="text-muted small mb-3">Liste pilotée depuis <a href="{{ route('admin.settings.referentiels-metier.group', ['groupKey' => 'payment_methods']) }}">Référence métier → Moyens de paiement</a>.</p>
+            <div class="row g-2">
+                @foreach($paymentMethodOptions as $pm)
+                    @php $mk = $pm['meta_key']; @endphp
+                    <div class="col-md-4">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="{{ $mk }}" name="{{ $mk }}" value="1" {{ old($mk, $meta[$mk] ?? '') === 'on' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="{{ $mk }}">{{ $pm['label'] }}</label>
                         </div>
                     </div>
-                </div>
+                @endforeach
             </div>
+        </div>
+    </div>
+</div>
 
-            {{-- TAB 4: INFORMATION --}}
-
+<script>
+(function() {
+    const tbody = document.querySelector('#ve-discount-rules-table tbody');
+    const addBtn = document.getElementById('ve-add-discount-rule');
+    if (!tbody || !addBtn) return;
+    const scopes = @json($discountScopes);
+    const conds = @json($discountConditions);
+    const types = @json($discountTypes);
+    let idx = tbody.querySelectorAll('tr').length;
+    function addRow() {
+        const tr = document.createElement('tr');
+        tr.className = 've-discount-rule-row';
+        tr.innerHTML = '<td><select class="form-select form-select-sm" name="discount_rules['+idx+'][reduction_type]">' +
+            types.map(o => '<option value="'+o.value+'">'+o.label+'</option>').join('') + '</select></td>' +
+            '<td><select class="form-select form-select-sm" name="discount_rules['+idx+'][scope]">' +
+            scopes.map(o => '<option value="'+o.value+'">'+o.label+'</option>').join('') + '</select></td>' +
+            '<td><select class="form-select form-select-sm" name="discount_rules['+idx+'][condition_type]">' +
+            conds.map(o => '<option value="'+o.value+'">'+o.label+'</option>').join('') + '</select></td>' +
+            '<td><input type="number" step="0.01" class="form-control form-control-sm text-end" name="discount_rules['+idx+'][value]" value="0"></td>' +
+            '<td><input type="number" class="form-control form-control-sm text-center" name="discount_rules['+idx+'][priority]" value="100"></td>' +
+            '<td class="text-center"><input type="hidden" name="discount_rules['+idx+'][is_active]" value="0">' +
+            '<input type="checkbox" class="form-check-input" name="discount_rules['+idx+'][is_active]" value="1" checked></td>' +
+            '<td><button type="button" class="btn btn-sm btn-outline-danger ve-remove-discount-rule">×</button></td>';
+        tbody.appendChild(tr);
+        idx++;
+    }
+    addBtn.addEventListener('click', addRow);
+    tbody.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('ve-remove-discount-rule')) {
+            const row = e.target.closest('tr');
+            if (row) row.remove();
+        }
+    });
+})();
+</script>

@@ -1,4 +1,4 @@
-﻿(function(){
+(function(){
                             var container = document.getElementById('travel-dates-container');
                             var addBtn = document.getElementById('add-travel-date');
                             if (!container || !addBtn) return;
@@ -8,8 +8,8 @@
                                 var rows = container.querySelectorAll('.travel-date-row');
                                 var nextIndex = rows.length;
                                 var html = `
-                                <div class="card mb-2 bg-light travel-date-row" data-index="${nextIndex}">
-                                    <div class="card-body py-2">
+                                <div class="card mb-2 travel-date-row border shadow-sm" data-index="${nextIndex}">
+                                    <div class="card-body py-3">
                                         <div class="row g-2 align-items-end">
                                             <div class="col-6 col-md-3">
                                                 <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
@@ -20,8 +20,8 @@
                                                 <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" value="0" min="0" required>
                                             </div>
                                             <div class="col-6 col-md-2">
-                                                <label class="form-label small mb-1">Prix spÃ©cifique</label>
-                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="â€”">
+                                                <label class="form-label small mb-1">Supplément date</label>
+                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="—">
                                             </div>
                                             <div class="col-6 col-md-2">
                                                 <div class="form-check mb-0 pb-1">
@@ -30,7 +30,7 @@
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-1 text-md-end">
-                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">Ã—</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">×</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1259,7 +1259,6 @@ document.addEventListener('DOMContentLoaded', function () {
             function initOne(el) {
                 if (!el || el.tagName !== 'TEXTAREA') return;
                 if (!el.classList.contains('rich-editor')) return;
-                if (el.closest('#program-days')) return;
                 if (el.dataset.richEditorInitialized === 'true') return;
 
                 var id = ensureId(el);
@@ -2233,6 +2232,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     durationInput.value = n > 0 ? n : (durationInput.value || 1);
                 }
             }
+            function escapeDayTypeHtml(s) {
+                var d = document.createElement('div');
+                d.textContent = s != null ? String(s) : '';
+                return d.innerHTML;
+            }
+            function buildProgramDayTypeOptionsHtml(selectedValue) {
+                var list = (window.PROGRAM_DAY_TYPES && window.PROGRAM_DAY_TYPES.length)
+                    ? window.PROGRAM_DAY_TYPES
+                    : [
+                        { value: 'arrivee', label: 'Arrivée' },
+                        { value: 'visite', label: 'Visite' },
+                        { value: 'transfert', label: 'Transfert' },
+                        { value: 'libre', label: 'Libre' }
+                    ];
+                var sel = selectedValue || 'visite';
+                var html = '';
+                list.forEach(function (opt) {
+                    var v = opt.value || '';
+                    var l = opt.label || v;
+                    html += '<option value="' + escapeDayTypeHtml(v) + '"' + (sel === v ? ' selected' : '') + '>' + escapeDayTypeHtml(l) + '</option>';
+                });
+                return html;
+            }
             function renumber() {
                 if (!accordion) return;
                 var cards = accordion.querySelectorAll('.programme-day-card');
@@ -2245,27 +2267,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     card.querySelectorAll('[data-day-index]').forEach(function(el) { el.setAttribute('data-day-index', i); });
                     card.querySelectorAll('.add-activity-select, .add-activity-to-day').forEach(function(el) { el.setAttribute('data-day-index', i); });
-                    card.querySelectorAll('.btn-add-element-to-day').forEach(function(el) { el.setAttribute('data-day-number', i + 1); });
                     var label = card.querySelector('.programme-day-label');
                     var titleInput = card.querySelector('input[name$="[day_title]"]');
                     var dayNum = i + 1;
                     var title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : ('Jour ' + dayNum);
-                    if (label) label.textContent = 'JOUR ' + dayNum + ' "â€œ ' + title;
+                    if (label) label.textContent = 'JOUR ' + dayNum + ' — ' + title;
                 });
                 updateBadge();
                 updateDuration();
+                if (window.syncProgrammeDayTargetOptions) window.syncProgrammeDayTargetOptions();
                 if (window.autosaveProgram) window.autosaveProgram();
             }
             function newDayHtml(index) {
                 var collapseId = 'collapse-day-new-' + index + '-' + Date.now();
-                var actOpts = (window.PROGRAMME_ACTIVITIES_CATALOG || []).map(function(a) {
-                    return '<option value="' + a.id + '">' + (a.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</option>';
-                }).join('');
                 return '<div class="accordion-item programme-day-card" data-day-id="" data-day-index="' + index + '">' +
                     '<h2 class="accordion-header programme-day-header">' +
-                    '<span class="drag-handle me-2 text-muted cursor-grab" title="DÃ©placer"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                    '<span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer"><i class="bx bx-dots-vertical-rounded"></i></span>' +
                     '<button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#' + collapseId + '" aria-expanded="false" aria-controls="' + collapseId + '">' +
-                    '<span class="programme-day-label">JOUR ' + (index + 1) + ' "â€œ Jour ' + (index + 1) + '</span></button>' +
+                    '<span class="programme-day-label">JOUR ' + (index + 1) + ' — Jour ' + (index + 1) + '</span></button>' +
                     '<button type="button" class="btn btn-sm btn-outline-danger me-2 btn-remove-program-day" title="Supprimer ce jour"><i class="bx bx-trash"></i></button></h2>' +
                     '<div id="' + collapseId + '" class="accordion-collapse collapse" data-bs-parent="#accordionProgrammeDays">' +
                     '<div class="accordion-body" data-day-index="' + index + '" data-day-id="">' +
@@ -2276,31 +2295,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<option value="program" selected>Programme</option><option value="free">Libre</option></select></div>' +
                     '<div class="col-md-4"><label class="form-label">Type de jour</label>' +
                     '<select name="programme_days[' + index + '][day_type]" class="form-select">' +
-                    '<option value="arrivee">ArrivÃƒÂ©e</option><option value="visite" selected>Visite</option><option value="transfert">Transfert</option><option value="libre">Libre</option></select></div>' +
+                    buildProgramDayTypeOptionsHtml('visite') + '</select></div>' +
                     '<div class="col-md-4"><label class="form-label">Titre du jour</label>' +
-                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex: Jour ' + (index + 1) + ' - ArrivÃ©e"></div></div>' +
+                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex. : Jour ' + (index + 1) + ' — Arrivée"></div></div>' +
                     '<div class="row mb-3 programme-day-split"><div class="col-md-6"><label class="form-label">Ville</label>' +
-                    '<input type="text" class="form-control" name="programme_days[' + index + '][city]" placeholder="Ex: Marrakech"></div>' +
-                    '<div class="col-md-6"><label class="form-label">Description courte</label>' +
-                    '<textarea class="form-control" name="programme_days[' + index + '][description]" rows="2" placeholder="RÃƒÂ©sumÃƒÂ© du jour"></textarea></div></div>' +
-                    '<div class="mb-3 programme-day-detail"><label class="form-label">Description dÃƒÂ©taillÃƒÂ©e</label>' +
-                    '<textarea class="form-control" name="programme_days[' + index + '][content_html]" rows="4" placeholder="Programme dÃƒÂ©taillÃƒÂ© du jour"></textarea></div>' +
+                    '<input type="text" class="form-control" name="programme_days[' + index + '][city]" placeholder="Ex. : Marrakech"></div>' +
+                    '<div class="col-md-6"><label class="form-label">Résumé</label>' +
+                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="Résumé du jour"></textarea></div></div>' +
+                    '<div class="mb-3 programme-day-detail"><label class="form-label">Description détaillée</label>' +
+                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][content_html]" rows="5" placeholder="Programme détaillé du jour"></textarea></div>' +
                     '<div class="mb-3 programme-day-notes"><label class="form-label">Notes</label>' +
-                    '<textarea class="form-control" name="programme_days[' + index + '][notes]" rows="2" placeholder="Notes du jour"></textarea></div>' +
+                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][notes]" rows="4" placeholder="Notes du jour"></textarea></div>' +
                     '<input type="hidden" name="programme_days[' + index + '][title]" value="Jour ' + (index + 1) + '">' +
                     '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][hotel_id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][transfer_ids]" value="">' +
-                    '<div class="programme-day-extras small text-muted mb-2" data-day-index="' + index + '" data-day-id=""></div>' +
-                    '<p class="small text-muted mb-2 programme-day-inclus" data-day-index="' + index + '">INCLUS : 0 ActivitÃ©</p>' +
-                    '<h6 class="mt-3 mb-2">Ã‰lÃ©ments du jour</h6>' +
+                    '<h6 class="mt-4 mb-2">Activités du jour</h6>' +
                     '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
-                    '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-                    '<button type="button" class="btn btn-outline-primary btn-add-element-to-day" data-day-index="' + index + '" data-day-id="" data-day-number="' + (index + 1) + '"><i class="bx bx-plus"></i> Ajouter un Ã©lÃ©ment</button>' +
-                    '<span class="small text-muted">ou</span>' +
-                    '<select class="form-select form-select-sm add-activity-select" style="max-width:240px" data-day-index="' + index + '" data-day-id="">' +
-                    '<option value="">-- ActivitÃ© rapide --</option>' + actOpts + '</select>' +
-                    '<button type="button" class="btn btn-sm btn-success add-activity-to-day" data-day-index="' + index + '" data-day-id=""><i class="bx bx-plus"></i> Ajouter</button></div>' +
                     '</div></div></div>';
             }
             function addDay() {
@@ -2326,7 +2337,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('Il doit rester au moins un jour.');
                     return;
                 }
-                if (!confirm('Supprimer ce jour ? Les activitÃ©s du jour seront supprimÃ©es. La sauvegarde sera effective au clic sur Ã‚Â« Enregistrer Ã‚Â».')) return;
+                if (!confirm('Supprimer ce jour ? Les activités du jour seront supprimées. La sauvegarde sera effective au clic sur « Enregistrer ».')) return;
                 card.remove();
                 if (count() === 0 && noDaysAlert) noDaysAlert.style.display = '';
                 renumber();
@@ -2357,7 +2368,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var hiddenTitle = card.querySelector('input[name$="[title]"]');
                         var currentTitle = e.target.value.trim() || ('Jour ' + (i + 1));
                         if (hiddenTitle) hiddenTitle.value = currentTitle;
-                        if (label) label.textContent = 'JOUR ' + (i + 1) + ' "â€œ ' + (e.target.value.trim() || ('Jour ' + (i + 1)));
+                        if (label) label.textContent = 'JOUR ' + (i + 1) + ' — ' + (e.target.value.trim() || ('Jour ' + (i + 1)));
                     }
                 });
                 document.getElementById('edit-voyage-form') && document.getElementById('edit-voyage-form').addEventListener('submit', function() {
@@ -2557,11 +2568,7 @@ document.addEventListener('DOMContentLoaded', function () {
         function updateProgrammeDayInclus(card) {
             if (!card) return;
             var list = card.querySelector('.programme-activities-list');
-            var inclusEl = card.querySelector('.programme-day-inclus');
-            if (!list || !inclusEl) return;
-            var count = list.querySelectorAll('.programme-activity-row').length;
-            inclusEl.textContent = 'INCLUS : ' + count + (count > 1 ? ' ActivitÃ©s' : ' ActivitÃ©');
-            // Mettre ÃƒÂ  jour aussi le rÃ©sumÃ© du jour
+            if (!list) return;
             var dayIndex = card.getAttribute('data-day-index');
             if (dayIndex != null && window.updateProgrammeDayExtras) {
                 window.updateProgrammeDayExtras(dayIndex);
@@ -2868,36 +2875,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (configBtn) {
                 e.preventDefault();
                 var dayIndex = configBtn.getAttribute('data-day-index');
-                var tab = configBtn.getAttribute('data-tab');
+                var tab = configBtn.getAttribute('data-tab') || 'activities';
                 var card = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
                 if (!card) return;
                 var dayNumber = parseInt(dayIndex || '0', 10) + 1;
                 var dayId = card.getAttribute('data-day-id') || '';
-                // Trouver le bouton "Ajouter un Ã©lÃ©ment" pour ce jour et l'utiliser pour ouvrir le drawer
-                var addBtn = card.querySelector('.btn-add-element-to-day');
-                if (addBtn) {
-                    // DÃ©clencher l'Ã©vÃ©nement pour ouvrir le drawer avec le bon contexte
-                    document.dispatchEvent(new CustomEvent('day-builder:set-day', {
-                        detail: {
-                            dayIndex: String(dayIndex),
-                            dayId: dayId,
-                            dayNumber: dayNumber
-                        }
-                    }));
-                    // Ouvrir le drawer via la fonction existante
-                    var drawer = document.getElementById('day-builder-drawer');
-                    if (drawer && window.bootstrap && bootstrap.Offcanvas) {
-                        var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawer);
-                        offcanvas.show();
-                        // Activer l'onglet demandÃ© aprÃ¨s un court dÃ©lai
-                        setTimeout(function() {
-                            var tabButton = drawer.querySelector('[data-bs-target="#day-builder-tab-' + tab + '"]');
-                            if (tabButton && bootstrap.Tab) {
-                                bootstrap.Tab.getOrCreateInstance(tabButton).show();
-                            }
-                        }, 150);
+                document.dispatchEvent(new CustomEvent('day-builder:set-day', {
+                    detail: {
+                        dayIndex: String(dayIndex),
+                        dayId: dayId,
+                        dayNumber: dayNumber,
+                        tab: tab
                     }
-                }
+                }));
                 return;
             }
             
@@ -3052,15 +3042,15 @@ document.addEventListener('DOMContentLoaded', function () {
             row.setAttribute('data-day-activity-id', '0');
             row.setAttribute('draggable', 'true');
             row.innerHTML = '<div class="card-body py-2"><div class="d-flex flex-wrap align-items-start gap-2">' +
-                '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="RÃ©ordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="Réordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
                 '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
                 '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
                 '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
-                '<span class="fw-medium">' + (activityTitle || 'ActivitÃ©').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
+                '<span class="fw-medium">' + (activityTitle || 'Activité').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
                 '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
-                '<textarea class="form-control form-control-sm" name="' + prefix + '[custom_description]" rows="1" placeholder="Description"></textarea>' +
+                '<textarea class="form-control form-control-sm rich-editor" name="' + prefix + '[custom_description]" rows="2" placeholder="Description"></textarea>' +
                 '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button></div></div>';
             list.appendChild(row);
             updateProgrammeDayInclus(card);
@@ -3085,14 +3075,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         (function dayBuilderDrawerManager() {
-            var drawer = document.getElementById('day-builder-drawer');
-            if (!drawer || !window.bootstrap || !bootstrap.Offcanvas) return;
+            var drawer = document.getElementById('day-builder-root');
+            if (!drawer) return;
 
             var titleEl = document.getElementById('day-builder-drawer-label');
             var summaryEl = document.getElementById('day-builder-day-summary');
             var contextEl = document.getElementById('day-builder-drawer-context');
             var flightsManager = document.getElementById('day-builder-flights-manager');
-            var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawer);
+            var dayTargetSelect = document.getElementById('programme-day-target-select');
 
             // ===== GESTIONNAIRE D'Ã‰TAT UNIFIÃ‰ POUR VOLS/HÃƒâ€TELS/TRANSFERTS PAR JOUR =====
             window.dayItemsManager = {
@@ -3236,20 +3226,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            drawer.addEventListener('shown.bs.offcanvas', function() {
-                document.body.classList.add('day-builder-open');
-                if (!document.querySelector('.modal.show')) {
-                    document.body.style.overflow = 'hidden';
-                }
-            });
-
-            drawer.addEventListener('hidden.bs.offcanvas', function() {
-                document.body.classList.remove('day-builder-open');
-                if (!document.querySelector('.modal.show')) {
-                    document.body.style.overflow = '';
-                }
-            });
-
             document.addEventListener('day-builder:item-count-changed', function(e) {
                 var detail = (e && e.detail) ? e.detail : {};
                 var activeDayIndex = drawer.getAttribute('data-day-index');
@@ -3265,7 +3241,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function updateDrawerSummary(dayNum, dayIndex) {
                 if (!summaryEl) return;
                 var count = getDayItemsCount(dayIndex);
-                summaryEl.textContent = 'Jour ' + dayNum + ' "â€ Ajouter (' + count + (count > 1 ? ' Ã©lÃ©ments)' : ' Ã©lÃ©ment)');
+                summaryEl.textContent = 'Jour ' + dayNum + ' — ' + count + ' élément' + (count > 1 ? 's' : '');
             }
 
             function setDrawerContext(dayIndex, dayId, dayNumber) {
@@ -3279,9 +3255,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 drawer.setAttribute('data-day-id', dayId || '');
                 drawer.setAttribute('data-day-number', String(dayNum));
 
-                if (titleEl) titleEl.textContent = 'Jour ' + dayNum + ' "â€ Ajouter';
+                if (titleEl) titleEl.textContent = 'Jour ' + dayNum + ' — configuration';
                 updateDrawerSummary(dayNum, dayIndex || String(dayNum - 1));
-                if (contextEl) contextEl.textContent = 'Ajout direct dans les Ã©lÃ©ments du Jour ' + dayNum + '.';
+                if (contextEl) contextEl.textContent = 'Gérez les activités, l’hôtel et les transferts pour le jour ' + dayNum + '.';
 
                 if (flightsManager) {
                     var manager = flightsManager.querySelector('.flight-manager');
@@ -3305,45 +3281,91 @@ document.addEventListener('DOMContentLoaded', function () {
                     btn.getAttribute('data-day-number') || ''
                 );
 
-                offcanvas.show();
+                drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-                if (forcedTab) {
-                    var tabButton = drawer.querySelector('[data-bs-target="#day-builder-tab-' + forcedTab + '"]');
-                    if (tabButton && bootstrap.Tab) {
-                        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+                var tab = forcedTab || 'activities';
+                var tabButton = drawer.querySelector('[data-bs-target="#day-builder-tab-' + tab + '"]');
+                if (tabButton && window.bootstrap && bootstrap.Tab) {
+                    bootstrap.Tab.getOrCreateInstance(tabButton).show();
+                }
+            }
+
+            function syncProgrammeDayTargetOptions() {
+                if (!dayTargetSelect) return;
+                var cards = document.querySelectorAll('.programme-day-card');
+                var prev = dayTargetSelect.value;
+                dayTargetSelect.innerHTML = '';
+                cards.forEach(function(card, idx) {
+                    var opt = document.createElement('option');
+                    opt.value = String(idx);
+                    var titleInp = card.querySelector('input[name$="[day_title]"]');
+                    var t = titleInp && titleInp.value.trim() ? titleInp.value.trim() : ('Jour ' + (idx + 1));
+                    opt.textContent = 'Jour ' + (idx + 1) + ' — ' + t;
+                    dayTargetSelect.appendChild(opt);
+                });
+                if (prev && dayTargetSelect.querySelector('option[value="' + prev + '"]')) {
+                    dayTargetSelect.value = prev;
+                } else if (dayTargetSelect.options.length) {
+                    dayTargetSelect.selectedIndex = 0;
+                }
+                var sel = dayTargetSelect.value;
+                if (sel !== '') {
+                    var c = document.querySelector('.programme-day-card[data-day-index="' + sel + '"]');
+                    if (c) {
+                        setDrawerContext(sel, c.getAttribute('data-day-id') || '', String(parseInt(sel, 10) + 1));
                     }
                 }
             }
 
-            document.addEventListener('click', function(e) {
-                var openBtn = e.target.closest('.btn-add-element-to-day');
-                if (openBtn) {
-                    e.preventDefault();
-                    openForButton(openBtn);
-                    return;
-                }
+            if (dayTargetSelect) {
+                dayTargetSelect.addEventListener('change', function() {
+                    var idx = dayTargetSelect.value;
+                    var c = document.querySelector('.programme-day-card[data-day-index="' + idx + '"]');
+                    if (!c) return;
+                    setDrawerContext(idx, c.getAttribute('data-day-id') || '', String(parseInt(idx, 10) + 1));
+                });
+            }
 
+            window.syncProgrammeDayTargetOptions = syncProgrammeDayTargetOptions;
+
+            document.addEventListener('click', function(e) {
                 var addBtn = e.target.closest('.day-builder-add-activity');
                 if (!addBtn) return;
 
                 e.preventDefault();
                 var dayIndex = drawer.getAttribute('data-day-index');
                 var activityId = addBtn.getAttribute('data-activity-id');
-                var activityTitle = addBtn.getAttribute('data-activity-title') || 'ActivitÃ©';
+                var activityTitle = addBtn.getAttribute('data-activity-title') || 'Activité';
                 if (!appendActivityToDay(dayIndex, activityId, activityTitle)) return;
                 if (window.autosaveProgram) window.autosaveProgram();
             });
 
             document.addEventListener('day-builder:set-day', function(e) {
                 var detail = (e && e.detail) ? e.detail : {};
-                var dayNumber = parseInt(detail.dayNumber || '0', 10);
-                if (!dayNumber || dayNumber < 1) return;
-                var targetCard = document.querySelector('.programme-day-card[data-day-index="' + (dayNumber - 1) + '"]');
+                var dayIndex = detail.dayIndex != null ? String(detail.dayIndex) : '';
+                if (dayIndex === '') {
+                    var dayNumber = parseInt(detail.dayNumber || '0', 10);
+                    if (dayNumber >= 1) dayIndex = String(dayNumber - 1);
+                }
+                var targetCard = document.querySelector('.programme-day-card[data-day-index="' + dayIndex + '"]');
                 if (!targetCard) return;
-                var helperBtn = targetCard.querySelector('.btn-add-element-to-day');
-                if (!helperBtn) return;
-                openForButton(helperBtn, detail.tab || 'flights');
+                if (dayTargetSelect) dayTargetSelect.value = dayIndex;
+                setDrawerContext(
+                    dayIndex,
+                    detail.dayId || targetCard.getAttribute('data-day-id') || '',
+                    detail.dayNumber || String(parseInt(dayIndex, 10) + 1)
+                );
+                drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                var tab = detail.tab || 'activities';
+                var tabButton = drawer.querySelector('[data-bs-target="#day-builder-tab-' + tab + '"]');
+                if (tabButton && window.bootstrap && bootstrap.Tab) {
+                    setTimeout(function() {
+                        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+                    }, 100);
+                }
             });
+
+            syncProgrammeDayTargetOptions();
         })();
 
         (function programmeActivityDragDrop() {
@@ -3653,23 +3675,25 @@ document.addEventListener('DOMContentLoaded', function () {
             function computeLineTotal(row) {
                 var pricing = row.querySelector('.voyage-activity-pricing');
                 var priceInput = row.querySelector('.voyage-activity-price');
-                var qtyInput = row.querySelector('.voyage-activity-qty');
+                var childInput = row.querySelector('.voyage-activity-child-price');
                 var lineTotal = row.querySelector('.voyage-activity-line-total');
-                if (!pricing || !priceInput || !qtyInput || !lineTotal) return;
+                if (!pricing || !priceInput || !lineTotal) return;
 
                 var unitPrice = Math.max(0, toNumber(priceInput.value, 0));
-                var quantity = Math.max(1, toInt(qtyInput.value, 1));
+                var childPrice = childInput ? Math.max(0, toNumber(childInput.value, 0)) : 0;
                 var pricingType = pricing.value === 'fixed' ? 'fixed' : 'per_person';
 
-                if (pricingType === 'fixed') {
-                    qtyInput.value = 1;
-                    qtyInput.setAttribute('disabled', 'disabled');
-                } else {
-                    qtyInput.removeAttribute('disabled');
-                    qtyInput.value = quantity;
+                if (childInput) {
+                    if (pricingType === 'fixed') {
+                        childInput.setAttribute('disabled', 'disabled');
+                        childInput.classList.add('bg-light');
+                    } else {
+                        childInput.removeAttribute('disabled');
+                        childInput.classList.remove('bg-light');
+                    }
                 }
 
-                var total = pricingType === 'fixed' ? unitPrice : (unitPrice * quantity);
+                var total = pricingType === 'fixed' ? unitPrice : (unitPrice + childPrice);
                 lineTotal.textContent = total.toFixed(2);
             }
 
@@ -3703,8 +3727,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             function buildRow(activity) {
-                var title = esc(activity.title || ('ActivitÃ© #' + activity.id));
+                var title = esc(activity.title || ('Activité #' + activity.id));
                 var defaultPrice = toNumber(activity.adult_price || activity.base_price, 0).toFixed(2);
+                var defaultChild = toNumber(activity.child_price, 0).toFixed(2);
+                var pricingOpts = Array.isArray(window.VOYAGE_ACTIVITY_PRICING_TYPES) ? window.VOYAGE_ACTIVITY_PRICING_TYPES : [];
+                var pricingSelect = '';
+                if (pricingOpts.length) {
+                    pricingOpts.forEach(function (pt, i) {
+                        pricingSelect += '<option value="' + esc(pt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(pt.label) + '</option>';
+                    });
+                } else {
+                    pricingSelect = '<option value="per_person" selected>Par personne</option><option value="fixed">Fixe</option>';
+                }
 
                 var tr = document.createElement('tr');
                 tr.className = 'voyage-activity-row';
@@ -3717,13 +3751,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<input type="hidden" data-field="title" value="' + title + '">' +
                     '</td>' +
                     '<td>' +
+                        '<textarea class="form-control form-control-sm voyage-activity-description" data-field="description" rows="2" placeholder="—"></textarea>' +
+                    '</td>' +
+                    '<td>' +
                         '<select class="form-select form-select-sm voyage-activity-pricing" data-field="pricing_type">' +
-                            '<option value="per_person" selected>Par personne</option>' +
-                            '<option value="fixed">Fixe</option>' +
+                            pricingSelect +
                         '</select>' +
                     '</td>' +
                     '<td><input type="number" class="form-control form-control-sm voyage-activity-price" data-field="unit_price" min="0" step="0.01" value="' + defaultPrice + '"></td>' +
-                    '<td><input type="number" class="form-control form-control-sm voyage-activity-qty" data-field="quantity" min="1" step="1" value="1"></td>' +
+                    '<td><input type="number" class="form-control form-control-sm voyage-activity-child-price" data-field="child_price" min="0" step="0.01" value="' + defaultChild + '"></td>' +
                     '<td><span class="voyage-activity-line-total fw-semibold">0.00</span></td>' +
                     '<td>' +
                         '<div class="d-flex gap-1">' +
@@ -3783,63 +3819,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 var current = filteredCatalog.slice(start, start + pageSize);
 
                 if (countLabel) {
-                    countLabel.textContent = total + ' rÃ©sultat' + (total > 1 ? 's' : '') + ' â€¢ Page ' + page + '/' + totalPages;
+                    countLabel.textContent = total + ' résultat' + (total > 1 ? 's' : '') + ' · Page ' + page + '/' + totalPages;
                 }
 
                 if (prevBtn) prevBtn.disabled = page <= 1;
                 if (nextBtn) nextBtn.disabled = page >= totalPages;
 
                 if (!current.length) {
-                    catalogBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">Aucune activitÃ© trouvÃ©e.</td></tr>';
-                    return;
-                }
-
-                catalogBody.innerHTML = current.map(function(item) {
-                    var disabled = hasActivity(item.id) ? 'disabled' : '';
-                    return '<tr>' +
-                        '<td>' + item.id + '</td>' +
-                        '<td>' + esc(item.title) + '</td>' +
-                        '<td><button type="button" class="btn btn-sm btn-success add-catalog-activity" data-activity-id="' + item.id + '" ' + disabled + '>Ajouter</button></td>' +
-                    '</tr>';
-                }).join('');
-            }
-
-            function refreshCatalog() {
-                if (!catalogBody) return;
-
-                var term = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase().trim();
-                filteredCatalog = getCatalog().filter(function(item) {
-                    if (!term) {
-                        return true;
-                    }
-
-                    return [
-                        item.title,
-                        item.activity_type,
-                        item.region_name,
-                        item.location_text,
-                    ].some(function(value) {
-                        return String(value || '').toLowerCase().indexOf(term) !== -1;
-                    });
-                });
-
-                var total = filteredCatalog.length;
-                var totalPages = Math.max(1, Math.ceil(total / pageSize));
-                if (page > totalPages) page = totalPages;
-                if (page < 1) page = 1;
-
-                var start = (page - 1) * pageSize;
-                var current = filteredCatalog.slice(start, start + pageSize);
-
-                if (countLabel) {
-                    countLabel.textContent = total + ' resultat' + (total > 1 ? 's' : '') + ' - Page ' + page + '/' + totalPages;
-                }
-
-                if (prevBtn) prevBtn.disabled = page <= 1;
-                if (nextBtn) nextBtn.disabled = page >= totalPages;
-
-                if (!current.length) {
-                    catalogBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">Aucune activite trouvee.</td></tr>';
+                    catalogBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">Aucune activité trouvée.</td></tr>';
                     return;
                 }
 
@@ -3849,8 +3836,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     return '<tr' + highlightClass + '>' +
                         '<td>' + item.id + '</td>' +
                         '<td>' + esc(item.title) + '</td>' +
-                        '<td><div class="fw-medium">' + esc(item.activity_type || 'Non renseigne') + '</div><div class="small text-muted">' + esc(item.region_name || item.location_text || 'Non renseignee') + '</div></td>' +
-                        '<td><button type="button" class="btn btn-sm ' + (isSelected ? 'btn-outline-secondary' : 'btn-success') + ' add-catalog-activity" data-activity-id="' + item.id + '" ' + (isSelected ? 'disabled' : '') + '>' + (isSelected ? 'Ajoutee' : 'Ajouter') + '</button></td>' +
+                        '<td><div class="fw-medium">' + esc(item.activity_type || 'Non renseigné') + '</div><div class="small text-muted">' + esc(item.region_name || item.location_text || 'Non renseignée') + '</div></td>' +
+                        '<td><button type="button" class="btn btn-sm ' + (isSelected ? 'btn-outline-secondary' : 'btn-success') + ' add-catalog-activity" data-activity-id="' + item.id + '" ' + (isSelected ? 'disabled' : '') + '>' + (isSelected ? 'Ajoutée' : 'Ajouter') + '</button></td>' +
                     '</tr>';
                 }).join('');
             }
@@ -3859,7 +3846,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var removeBtn = e.target.closest('.voyage-activity-remove');
                 if (removeBtn) {
                     var row = removeBtn.closest('.voyage-activity-row');
-                    if (row && confirm('Supprimer cette activitÃ© du voyage ?')) {
+                    if (row && confirm('Supprimer cette activité du voyage ?')) {
                         row.remove();
                         reindexRows();
                         refreshCatalog();
@@ -4329,7 +4316,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function removeDisabledFromFlightOptions() {
                 var count = 0;
                 var templatesContainer = document.getElementById('flight-opt-templates');
-                var drawerContainer = document.getElementById('day-builder-drawer');
+                var drawerContainer = document.getElementById('day-builder-root');
                 
                 document.querySelectorAll('[name^="flight_options"]').forEach(function(el) {
                     // SKIP les inputs dans le container de templates
@@ -4337,9 +4324,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         return; // Ne PAS retirer disabled des templates
                     }
                     
-                    // SKIP les inputs dans le DayBuilderDrawer (duplicate data!)
+                    // SKIP les inputs dans le panneau programme (day-builder-root) — doublons hors flux principal
                     if (drawerContainer && drawerContainer.contains(el)) {
-                        return; // Le drawer ne doit PAS soumettre ses donnÃ©es
+                        return;
                     }
                     
                     // SKIP les inputs avec index -1 (templates clonÃ©s)
@@ -4369,7 +4356,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.log('Ã°Å¸Å¡â‚¬ FORMULAIRE SOUMIS (interceptÃ©)');
                     
                     // DÃ‰SACTIVER le drawer pour Ã©viter qu'il soumette ses duplications
-                    var drawer = document.getElementById('day-builder-drawer');
+                    var drawer = document.getElementById('day-builder-root');
                     var drawerInputsDisabled = [];
                     if (drawer) {
                         drawer.querySelectorAll('[name^="flight_options"]').forEach(function(el) {

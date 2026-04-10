@@ -4,10 +4,15 @@
     $cancelUrl = $cancelUrl ?? route('admin.circuits.voyages.index');
     $deleteFormId = $deleteFormId ?? 'delete-voyage-form';
     $pageTitle = $isCreate ? 'Creer un voyage' : ($voyage->post_title ?? $voyage->name);
-    $statusLabel = $currentStatus === 'publish' ? 'Publie' : ($currentStatus === 'draft' ? 'Brouillon' : 'En attente');
+    $statusLabel = match ($currentStatus) {
+        'publish' => 'Publié',
+        'draft' => 'Brouillon',
+        'private' => 'Archivé',
+        default => 'En attente',
+    };
     $pageSubtitle = $isCreate
-        ? 'Renseignez la fiche, puis completez les departs, le programme et les options de vente.'
-        : 'Mettez a jour les informations commerciales, les departs, le programme et les services depuis une seule page.';
+        ? 'Complétez la fiche, les départs, le programme et les services.'
+        : 'Fiche voyage — départs, programme et options.';
     $lastUpdated = !$isCreate && $voyage->post_modified
         ? \Carbon\Carbon::parse($voyage->post_modified)->locale('fr')->translatedFormat('d M Y H:i')
         : null;
@@ -65,7 +70,7 @@
                     <span class="ve-meta-pill ve-meta-pill--accent"><i class="bx bx-purchase-tag"></i> Prix de base {{ $vePriceLabel }}</span>
                 @endif
 
-                <span class="ve-meta-pill"><i class="bx bx-calendar"></i> {{ $veDatesCount }} depart(s)</span>
+                <span class="ve-meta-pill"><i class="bx bx-calendar"></i> {{ $veDatesCount }} départ(s)</span>
 
                 @if($lastUpdated)
                     <span class="ve-meta-pill ve-meta-pill--muted"><i class="bx bx-time"></i> Maj {{ $lastUpdated }}</span>
@@ -84,18 +89,18 @@
                     </div>
 
                     <div class="ve-header-panel__item">
-                        <span>Depart(s)</span>
+                        <span>Départ(s)</span>
                         <strong>{{ $veDatesCount }}</strong>
                     </div>
 
                     <div class="ve-header-panel__item">
                         <span>Destination</span>
-                        <strong>{{ $veDestination ? Str::limit($veDestination, 28) : 'A definir' }}</strong>
+                        <strong>{{ $veDestination ? Str::limit($veDestination, 28) : 'À définir' }}</strong>
                     </div>
 
                     <div class="ve-header-panel__item">
                         <span>Prix</span>
-                        <strong>{{ $vePriceLabel ?: 'A definir' }}</strong>
+                        <strong>{{ $vePriceLabel ?: 'À définir' }}</strong>
                     </div>
                 </div>
             </div>

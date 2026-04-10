@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\BusinessReferentialService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,11 +18,11 @@ class TravelProgramDay extends Model
      */
     protected $connection = 'mysql';
 
+    /** Types affichés (pilotables via Paramètres > Référentiels). Valeurs stables : aboard, visite, libre. */
     public const DAY_TYPES = [
-        'arrivee'  => 'Arrivée',
-        'visite'   => 'Visite',
-        'transfert' => 'Transfert',
-        'libre'    => 'Libre',
+        'aboard' => 'À bord',
+        'visite' => 'Visite',
+        'libre' => 'Libre',
     ];
 
     public const DAY_LABELS = [
@@ -80,7 +81,31 @@ class TravelProgramDay extends Model
 
     public function getDayTypeLabelAttribute(): string
     {
+        foreach (BusinessReferentialService::programDayTypes() as $row) {
+            if (($row['value'] ?? '') === $this->day_type) {
+                return (string) ($row['label'] ?? $this->day_type);
+            }
+        }
+
         return self::DAY_TYPES[$this->day_type] ?? $this->day_type;
+    }
+
+    /** Anciennes valeurs (arrivee, transfert) → types actuels. */
+    public static function normalizeDayType(?string $value): string
+    {
+        $v = (string) ($value ?? 'visite');
+        $map = [
+            'arrivee' => 'aboard',
+            'transfert' => 'visite',
+        ];
+        $v = $map[$v] ?? $v;
+
+        $allowed = array_column(BusinessReferentialService::programDayTypes(), 'value');
+        if ($allowed === []) {
+            $allowed = array_keys(self::DAY_TYPES);
+        }
+
+        return in_array($v, $allowed, true) ? $v : 'visite';
     }
 
     public function getDayLabelBadgeAttribute(): string
