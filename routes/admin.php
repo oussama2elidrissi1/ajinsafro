@@ -45,6 +45,8 @@ use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
+use App\Http\Controllers\RapidapiHotelController;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,9 +57,53 @@ use Illuminate\Support\Facades\Route;
 | Domain: booking.ajinsafro.net (or ADMIN_DOMAIN when set).
 | Contains Auth + all /admin pages only.
 |
+| RapidAPI (tests hôtels) : routes enregistrées ici pour être servies par le
+| même vhost Laravel que le back-office (ADMIN_DOMAIN), pas le site public / WordPress.
+|
 */
 
 Auth::routes();
+
+/*
+| RapidAPI Booking COM — liste / détail / test (domaine admin Laravel)
+*/
+Route::get('/rapidapi/hotels', [RapidapiHotelController::class, 'index'])->name('rapidapi.hotels.index');
+Route::get('/rapidapi/hotels/{hotelId}', [RapidapiHotelController::class, 'show'])
+    ->where('hotelId', '[0-9]+')
+    ->name('rapidapi.hotels.show');
+
+/** Test rapide RapidAPI searchDestination — à retirer en production. */
+Route::get('/test-rapidapi', function () {
+    $key = config('services.rapidapi.key');
+    $host = (string) config('services.rapidapi.host', 'booking-com15.p.rapidapi.com');
+    $baseUrl = rtrim((string) config('services.rapidapi.base_url', 'https://booking-com15.p.rapidapi.com'), '/');
+    $url = $baseUrl.'/api/v1/hotels/searchDestination';
+    $verify = filter_var(config('services.rapidapi.verify_ssl', true), FILTER_VALIDATE_BOOL);
+
+    if (! is_string($key) || trim($key) === '') {
+        return response()->json([
+            'error' => 'RAPIDAPI_KEY manquant dans .env',
+        ], 503);
+    }
+
+    $response = Http::withHeaders([
+        'x-rapidapi-key' => trim($key),
+        'x-rapidapi-host' => $host,
+        'Content-Type' => 'application/json',
+        'Accept' => 'application/json',
+    ])
+        ->withOptions(['verify' => $verify])
+        ->timeout(30)
+        ->get($url, ['query' => 'paris']);
+
+    $raw = $response->body();
+
+    return response()->json([
+        'http_status' => $response->status(),
+        'body_decoded' => $response->json(),
+        'body_raw' => $raw,
+    ]);
+})->name('test.rapidapi');
 
 // Front pages also served on booking domain (to avoid 404 on /voyages/{slug}).
 // Intentionally no route names here to avoid collisions with routes/public.php.
