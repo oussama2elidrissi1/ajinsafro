@@ -1,0 +1,529 @@
+/**
+ * RapidAPI Booking — page recherche hôtels
+ */
+.rap-page {
+    min-height: 100%;
+    background: #f0f4f8;
+}
+
+.rap-hero {
+    background: linear-gradient(135deg, #003580 0%, #00224f 50%, #001a3d 100%);
+    color: #fff;
+    padding: 2rem 1rem 2.25rem;
+    border-radius: 0 0 1rem 1rem;
+    box-shadow: 0 8px 32px rgba(0, 37, 92, 0.35);
+}
+
+.rap-inner {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.rap-kicker {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #89b4f8;
+    margin: 0 0 0.35rem;
+}
+
+.rap-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.rap-lead {
+    margin: 0.65rem 0 0;
+    font-size: 0.92rem;
+    opacity: 0.92;
+    max-width: 36rem;
+    line-height: 1.5;
+}
+
+.rap-form {
+    margin-top: 1.5rem;
+}
+
+.rap-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.75rem 1rem;
+    align-items: end;
+    background: #fff;
+    padding: 1rem 1rem 1.1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.rap-field label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #495057;
+    margin-bottom: 0.35rem;
+}
+
+.rap-input {
+    width: 100%;
+    border: 1px solid #ced4da;
+    border-radius: 0.35rem;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.95rem;
+    color: #212529;
+}
+
+.rap-input:focus {
+    outline: none;
+    border-color: #003580;
+    box-shadow: 0 0 0 2px rgba(0, 53, 128, 0.2);
+}
+
+.rap-field--city {
+    grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+    .rap-field--city {
+        grid-column: span 2;
+    }
+}
+
+.rap-field--narrow {
+    max-width: 110px;
+}
+
+.rap-btn {
+    width: 100%;
+    border: 0;
+    border-radius: 0.35rem;
+    padding: 0.55rem 1rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    background: #0071c2;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.rap-btn:hover {
+    background: #005999;
+}
+
+.rap-main {
+    padding: 2rem 0 3rem;
+}
+
+.rap-meta {
+    font-size: 0.9rem;
+    color: #495057;
+    margin: 0 0 1.25rem;
+}
+
+.rap-meta-id {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.rap-alert {
+    border-radius: 0.5rem;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.rap-alert--error {
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    color: #9b2c2c;
+}
+
+.rap-neutral {
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 1rem 0;
+}
+
+.rap-debug-wrap {
+    margin-bottom: 1rem;
+    border-radius: 0.45rem;
+    border: 1px solid #dee2e6;
+    background: #f8f9fa;
+}
+
+.rap-debug-summary {
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+    padding: 0.45rem 0.65rem;
+    list-style-position: inside;
+    user-select: none;
+}
+
+.rap-debug-summary:hover {
+    color: #003580;
+}
+
+.rap-debug {
+    font-size: 0.65rem;
+    line-height: 1.35;
+    background: #1a1a2e;
+    color: #e2e8f0;
+    padding: 0.65rem 0.75rem;
+    margin: 0;
+    border-radius: 0 0 0.4rem 0.4rem;
+    overflow: auto;
+    max-height: 10rem;
+}
+
+.rap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+
+.rap-card {
+    background: #fff;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.rap-card:hover {
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+    transform: translateY(-2px);
+}
+
+.rap-card__media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: #e9ecef;
+}
+
+.rap-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Bloc note façon Booking (score + libellé) */
+.rap-score-pill {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    max-width: 7.5rem;
+    text-align: right;
+}
+
+.rap-score-pill__value {
+    display: inline-block;
+    background: #003580;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    padding: 0.25rem 0.45rem;
+    border-radius: 0.35rem 0.35rem 0.35rem 0.15rem;
+    line-height: 1.1;
+}
+
+.rap-score-pill__word {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #003580;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 0.15rem 0.35rem;
+    border-radius: 0.2rem;
+    line-height: 1.2;
+}
+
+.rap-stars {
+    display: flex;
+    gap: 0.05rem;
+    margin: 0 0 0.4rem;
+    line-height: 1;
+}
+
+.rap-stars__icon {
+    color: #febb02;
+    font-size: 0.95rem;
+    text-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.15);
+}
+
+.rap-card__body {
+    padding: 1rem 1.05rem 1.1rem;
+}
+
+.rap-card__title {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: #003580;
+    margin: 0 0 0.35rem;
+    line-height: 1.35;
+}
+
+.rap-card__sub {
+    font-size: 0.82rem;
+    color: #6c757d;
+    margin: 0 0 0.35rem;
+}
+
+.rap-card__city {
+    font-weight: 600;
+    color: #495057;
+}
+
+.rap-card__rating-label {
+    font-size: 0.75rem;
+    color: #28a745;
+    font-weight: 600;
+    margin: 0 0 0.65rem;
+}
+
+.rap-card__foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.rap-card__price-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+}
+
+.rap-price-from {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6c757d;
+    letter-spacing: 0.01em;
+}
+
+.rap-price {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #212529;
+}
+
+.rap-price small {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.rap-price--muted {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.rap-soon {
+    font-size: 0.78rem;
+    color: #adb5bd;
+}
+
+/* Carte cliquable (liste) */
+a.rap-card--link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.rap-card--link:hover .rap-card__title {
+    color: #0071c2;
+}
+
+a.rap-card--link:hover .rap-soon {
+    color: #0071c2;
+}
+
+a.rap-card--link:focus-visible {
+    outline: 2px solid #0071c2;
+    outline-offset: 2px;
+}
+
+/* Page détail */
+.rap-page--detail {
+    background: #f0f4f8;
+}
+
+.rap-detail-hero {
+    background: linear-gradient(135deg, #003580 0%, #00224f 100%);
+    color: #fff;
+    padding: 1.5rem 1rem 2rem;
+    border-radius: 0 0 1rem 1rem;
+    box-shadow: 0 8px 32px rgba(0, 37, 92, 0.25);
+}
+
+.rap-back-link {
+    color: #b8d4ff;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.rap-back-link:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.rap-detail-meta {
+    margin: 0.5rem 0 0;
+    font-size: 0.92rem;
+    opacity: 0.95;
+}
+
+.rap-detail-meta__sep {
+    margin: 0 0.35rem;
+    opacity: 0.7;
+}
+
+.rap-score-pill--inline {
+    position: static;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+}
+
+.rap-stars--large .rap-stars__icon {
+    font-size: 1.15rem;
+}
+
+.rap-main--detail {
+    padding-top: 1.5rem;
+}
+
+.rap-detail-cover {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    background: #e9ecef;
+    aspect-ratio: 21 / 9;
+    max-height: 320px;
+}
+
+.rap-detail-cover__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rap-detail-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.rap-detail-thumb {
+    border: 0;
+    padding: 0;
+    border-radius: 0.35rem;
+    overflow: hidden;
+    cursor: default;
+    aspect-ratio: 1;
+    background: #e9ecef;
+}
+
+.rap-detail-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rap-detail-section {
+    margin-bottom: 1.75rem;
+}
+
+.rap-detail-h2 {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #003580;
+    margin: 0 0 0.65rem;
+}
+
+.rap-detail-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #343a40;
+}
+
+.rap-detail-section--price {
+    margin-top: 0.25rem;
+}
+
+.rap-detail-price {
+    margin: 0;
+}
+
+.rap-detail-price .rap-detail-price-from {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 0.2rem;
+}
+
+.rap-detail-price-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #003580;
+}
+
+.rap-detail-price-value small {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.rap-facilities {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.35rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.88rem;
+    color: #495057;
+}
+
+.rap-facilities li::before {
+    content: "✓ ";
+    color: #28a745;
+    font-weight: 700;
+}
+
+.rap-detail-cta {
+    margin: 1.5rem 0 0;
+}
+
+.rap-btn--outline {
+    display: inline-block;
+    background: transparent;
+    border: 2px solid #0071c2;
+    color: #0071c2;
+}
+
+.rap-btn--outline:hover {
+    background: #0071c2;
+    color: #fff;
+}

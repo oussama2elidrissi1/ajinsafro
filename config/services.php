@@ -60,4 +60,29 @@ return [
         'hotels_limit' => (int) env('RATEHAWK_HOTELS_LIMIT', 30),
     ],
 
+    /*
+    | RapidAPI — Booking COM (DataCrawler) — x-rapidapi-key / x-rapidapi-host
+    */
+    'rapidapi' => [
+        'key' => env('RAPIDAPI_KEY'),
+        'host' => env('RAPIDAPI_HOST', 'booking-com15.p.rapidapi.com'),
+        'base_url' => rtrim(env('RAPIDAPI_BASE_URL', 'https://booking-com15.p.rapidapi.com'), '/'),
+        'timeout' => (int) env('RAPIDAPI_TIMEOUT', 45),
+        'locale' => env('RAPIDAPI_LOCALE', 'fr'),
+        'currency' => env('RAPIDAPI_CURRENCY', 'EUR'),
+        'verify_ssl' => env('RAPIDAPI_VERIFY_SSL', true),
+        'endpoint_locations' => env('RAPIDAPI_ENDPOINT_LOCATIONS', '/api/v1/hotels/searchDestination'),
+        'endpoint_hotels_search' => env('RAPIDAPI_ENDPOINT_HOTELS_SEARCH', '/api/v1/hotels/searchHotels'),
+        'endpoint_hotel_details' => env('RAPIDAPI_ENDPOINT_HOTEL_DETAILS', '/api/v1/hotels/getHotelDetails'),
+        /** Nom du query param pour l’ID hôtel (booking-com15 getHotelDetails : hotel_id) */
+        'hotel_detail_id_param' => env('RAPIDAPI_HOTEL_DETAIL_ID_PARAM', 'hotel_id'),
+        /** Ex. description,photos,hotel_facilities — vide = non envoyé */
+        'hotel_detail_extras' => env('RAPIDAPI_HOTEL_DETAIL_EXTRAS', ''),
+        /** Paramètres GET searchHotels (booking-com15) — surcharges via .env si l’API évolue */
+        'hotels_room_qty' => (int) env('RAPIDAPI_HOTELS_ROOM_QTY', 1),
+        /** RapidAPI booking-com15 : page_number ≥ 1 (0 invalide) */
+        'hotels_page_number' => (int) env('RAPIDAPI_HOTELS_PAGE_NUMBER', 1),
+        'hotels_language_code' => env('RAPIDAPI_HOTELS_LANGUAGE_CODE', 'fr'),
+    ],
+
 ];
