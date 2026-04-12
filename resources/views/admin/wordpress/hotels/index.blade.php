@@ -35,6 +35,35 @@
                             <i class="bx bx-plus me-1"></i> Créer un hôtel
                         </a>
                     </div>
+                    <form method="GET" class="row g-3 mb-4">
+                        <div class="col-md-5">
+                            <input type="text" name="search" class="form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Nom, slug, resume, adresse">
+                        </div>
+                        <div class="col-md-2">
+                            <select name="status" class="form-select">
+                                <option value="">Tous les statuts</option>
+                                <option value="publish" @selected(($filters['status'] ?? '') === 'publish')>Publie</option>
+                                <option value="draft" @selected(($filters['status'] ?? '') === 'draft')>Brouillon</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="hotel_star" class="form-select">
+                                <option value="">Toutes les etoiles</option>
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <option value="{{ $i }}" @selected((string) ($filters['star'] ?? '') === (string) $i)>{{ $i }} etoile(s)</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="featured" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="1" @selected(($filters['featured'] ?? '') === '1')>A la une</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-light w-100">Filtrer</button>
+                        </div>
+                    </form>
                     @if($hotels->isEmpty())
                         <p class="text-muted mb-0">Aucun hôtel. <a href="{{ route('admin.wordpress.hotels.create') }}">Créer un hôtel</a> pour commencer.</p>
                     @else
@@ -45,6 +74,7 @@
                                         <th>Image</th>
                                         <th>ID</th>
                                         <th>Titre</th>
+                                        <th>Adresse</th>
                                         <th>Statut</th>
                                         <th>Étoiles</th>
                                         <th>Prix min</th>
@@ -69,10 +99,14 @@
                                             <td>{{ $hotel->ID }}</td>
                                             <td>
                                                 <a href="{{ route('admin.wordpress.hotels.edit', $hotel) }}" class="text-body fw-medium">{{ $hotel->post_title }}</a>
+                                                @if($hotel->post_excerpt)
+                                                    <div class="text-muted small">{{ \Illuminate\Support\Str::limit($hotel->post_excerpt, 70) }}</div>
+                                                @endif
                                                 @if($hotel->stHotel && $hotel->stHotel->is_featured === 'on')
                                                     <span class="badge bg-info ms-1">À la une</span>
                                                 @endif
                                             </td>
+                                            <td>{{ $hotel->stHotel->address ?? '-' }}</td>
                                             <td>
                                                 @if($hotel->post_status === 'publish')
                                                     <span class="badge bg-success">Publié</span>

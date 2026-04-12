@@ -1,117 +1,20 @@
 <?php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | WordPress Auto-Sync Configuration
-    |--------------------------------------------------------------------------
-    */
-
-    'auto_sync_enabled' => env('WP_AUTO_SYNC_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------
-    | WordPress Webhook Security
-    |--------------------------------------------------------------------------
-    */
-
-    'webhook_secret' => env('WP_WEBHOOK_SECRET', ''),
-    'manual_sync_token' => env('WP_MANUAL_SYNC_TOKEN', ''),
-
-    /*
-    |--------------------------------------------------------------------------
-    | WordPress Database Connection
+    | Invalidation HTTP endpoint (WordPress REST)
     |--------------------------------------------------------------------------
     |
-    | Connection name defined in database.php (usually 'wp')
-    */
-
-    'database_connection' => env('WP_DB_CONNECTION', 'wp'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | WordPress Table Prefix
-    |--------------------------------------------------------------------------
-    */
-
-    'table_prefix' => env('WP_TABLE_PREFIX', 'cFdgeZ_'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | WordPress Site URL
-    |--------------------------------------------------------------------------
-    */
-
-    'site_url' => env('WP_SITE_URL', 'https://ajinsafro.com'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | WordPress Uploads (for hero image upload from Laravel)
-    |--------------------------------------------------------------------------
-    | Path: filesystem path to wp-content/uploads (e.g. /var/www/html/wp-content/uploads)
-    | URL base for attachments: site_url + /wp-content/uploads/ or custom WP_UPLOADS_URL
-    */
-    'uploads_path' => env('WP_UPLOADS_PATH', ''),
-    'uploads_url' => env('WP_UPLOADS_URL', null), // null = site_url . '/wp-content/uploads'
-
-    /*
-    |--------------------------------------------------------------------------
-    | Sync Conflict Resolution
-    |--------------------------------------------------------------------------
-    | 
-    | How to handle conflicts when both WP and Laravel have been modified
-    | Options: 'wp_wins', 'laravel_wins', 'newest_wins'
-    | Default: 'wp_wins' (as per your spec)
-    */
-
-    'conflict_resolution' => env('WP_SYNC_CONFLICT_RESOLUTION', 'wp_wins'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Sync Options
-    |--------------------------------------------------------------------------
-    */
-
-    'sync_featured_images' => env('WP_SYNC_IMAGES', true),
-    'sync_gallery' => env('WP_SYNC_GALLERY', true),
-    'sync_taxonomies' => env('WP_SYNC_TAXONOMIES', true),
-    'sync_program' => env('WP_SYNC_PROGRAM', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Post Type
-    |--------------------------------------------------------------------------
-    */
-
-    'tour_post_type' => 'st_tours',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Taxonomies to Sync
-    |--------------------------------------------------------------------------
-    */
-
-    'taxonomies' => [
-        'st_tour_type',
-        'durations',
-        'language',
-        'languages', // Sync both language and languages identically
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Meta Keys to Ignore
-    |--------------------------------------------------------------------------
+    | After Laravel writes directly to wp_posts / postmeta / custom tables,
+    | WordPress object caches (Redis/Memcached) may still serve stale posts.
+    | Set WP_CATALOG_INVALIDATE_URL to the full REST URL registered by
+    | ajinsafro-traveler-home (see includes/class-catalog-cache-invalidate.php).
     |
-    | These meta keys will not be synchronized
     */
+    'invalidate_url' => env('WP_CATALOG_INVALIDATE_URL'),
 
-    'ignored_meta_keys' => [
-        'rank_math_internal_links_processed',
-        'rank_math_seo_score',
-        'rank_math_focus_keyword',
-        '_edit_lock',
-        '_edit_last',
-        '_transient_*',
-    ],
+    'invalidate_secret' => env('WP_CATALOG_INVALIDATE_SECRET'),
+
 ];

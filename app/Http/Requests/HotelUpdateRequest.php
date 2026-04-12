@@ -17,6 +17,7 @@ class HotelUpdateRequest extends FormRequest
 
         return [
             'post_title' => ['required', 'string', 'max:255'],
+            'post_excerpt' => ['nullable', 'string', 'max:500'],
             'post_content' => ['nullable', 'string'],
             'post_status' => ['required', 'in:publish,draft'],
             'post_name' => ['nullable', 'string', 'max:200'],
@@ -49,6 +50,7 @@ class HotelUpdateRequest extends FormRequest
     {
         return [
             'post_title' => 'titre',
+            'post_excerpt' => 'resume court',
             'post_content' => 'contenu',
             'post_status' => 'statut',
             'post_name' => 'slug',

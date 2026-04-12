@@ -9,28 +9,57 @@ use App\Models\StHotel;
 use App\Models\WpPost;
 use App\Models\WpPostmeta;
 use App\Services\WordPressMediaService;
+use App\Services\WordPressPublicCacheInvalidator;
+use App\Services\WordPressTravelerMetaMirror;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class HotelController extends Controller
 {
     public function __construct(
-        protected WordPressMediaService $media
+        protected WordPressMediaService $media,
+        protected WordPressTravelerMetaMirror $travelerMeta,
+        protected WordPressPublicCacheInvalidator $wpCache,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $hotels = WpPost::typeHotel()
+        $postsTable = (new WpPost())->getTable();
+        $hotelsTable = (new StHotel())->getTable();
+
+        $search = trim((string) $request->query('search', ''));
+        $status = trim((string) $request->query('status', ''));
+        $featured = trim((string) $request->query('featured', ''));
+        $star = trim((string) $request->query('hotel_star', ''));
+
+        $hotels = WpPost::query()
+            ->leftJoin($hotelsTable, $postsTable.'.ID', '=', $hotelsTable.'.post_id')
+            ->select($postsTable.'.*')
+            ->typeHotel()
             ->publishedOrDraft()
             ->with('stHotel')
-            ->orderBy('post_modified', 'desc')
-            ->paginate(15);
+            ->when($search !== '', function ($query) use ($search, $postsTable, $hotelsTable) {
+                $query->where(function ($inner) use ($search, $postsTable, $hotelsTable) {
+                    $inner->where($postsTable.'.post_title', 'like', '%'.$search.'%')
+                        ->orWhere($postsTable.'.post_name', 'like', '%'.$search.'%')
+                        ->orWhere($postsTable.'.post_excerpt', 'like', '%'.$search.'%')
+                        ->orWhere($hotelsTable.'.address', 'like', '%'.$search.'%');
+                });
+            })
+            ->when(in_array($status, ['publish', 'draft'], true), fn ($query) => $query->where($postsTable.'.post_status', $status))
+            ->when($featured === '1', fn ($query) => $query->where($hotelsTable.'.is_featured', 'on'))
+            ->when($star !== '' && ctype_digit($star), fn ($query) => $query->where($hotelsTable.'.hotel_star', $star))
+            ->orderByDesc($postsTable.'.post_modified')
+            ->paginate(15)
+            ->withQueryString();
 
         return view('admin.wordpress.hotels.index', [
             'hotels' => $hotels,
             'media' => $this->media,
+            'filters' => compact('search', 'status', 'featured', 'star'),
         ]);
     }
 
@@ -57,7 +86,7 @@ class HotelController extends Controller
             $post->post_date_gmt = $nowGmt->format('Y-m-d H:i:s');
             $post->post_content = $validated['post_content'] ?? '';
             $post->post_title = $validated['post_title'];
-            $post->post_excerpt = '';
+            $post->post_excerpt = $validated['post_excerpt'] ?? '';
             $post->post_status = $validated['post_status'];
             $post->comment_status = 'open';
             $post->ping_status = 'open';
@@ -106,7 +135,10 @@ class HotelController extends Controller
                 }
             }
 
+            $this->travelerMeta->mirrorHotelMetas((int) $post->ID, $stHotel);
+
             DB::commit();
+            $this->wpCache->invalidatePostIds([(int) $post->ID]);
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
@@ -185,6 +217,7 @@ class HotelController extends Controller
         try {
             $hotel->post_content = $validated['post_content'] ?? '';
             $hotel->post_title = $validated['post_title'];
+            $hotel->post_excerpt = $validated['post_excerpt'] ?? '';
             $hotel->post_status = $validated['post_status'];
             $hotel->post_name = $postName;
             $hotel->post_modified = $now->format('Y-m-d H:i:s');
@@ -226,7 +259,10 @@ class HotelController extends Controller
 
             $this->saveHotelDetailMeta($hotel->ID, $request, $validated);
 
+            $this->travelerMeta->mirrorHotelMetas((int) $hotel->ID, $stHotel);
+
             DB::commit();
+            $this->wpCache->invalidatePostIds([(int) $hotel->ID]);
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;

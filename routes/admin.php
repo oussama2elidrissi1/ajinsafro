@@ -38,6 +38,8 @@ use App\Http\Controllers\Admin\VoyageController;
 use App\Http\Controllers\Admin\VoyageDepartureManageController;
 use App\Http\Controllers\Admin\VoyageReservationDataController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
+use App\Http\Controllers\Admin\WordPress\ActivityController as WordPressActivityController;
+use App\Http\Controllers\Admin\WordPress\TransferController as WordPressTransferController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
@@ -443,6 +445,20 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
             Route::get('hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hotels.edit')->whereNumber('hotel');
             Route::match(['put', 'patch'], 'hotels/{hotel}', [HotelController::class, 'update'])->name('hotels.update')->whereNumber('hotel');
             Route::delete('hotels/{hotel}', [HotelController::class, 'destroy'])->name('hotels.destroy')->whereNumber('hotel');
+
+            Route::get('activities', [WordPressActivityController::class, 'index'])->name('activities.index');
+            Route::get('activities/create', [WordPressActivityController::class, 'create'])->name('activities.create');
+            Route::post('activities', [WordPressActivityController::class, 'store'])->name('activities.store');
+            Route::get('activities/{activity}/edit', [WordPressActivityController::class, 'edit'])->name('activities.edit')->whereNumber('activity');
+            Route::match(['put', 'patch'], 'activities/{activity}', [WordPressActivityController::class, 'update'])->name('activities.update')->whereNumber('activity');
+            Route::delete('activities/{activity}', [WordPressActivityController::class, 'destroy'])->name('activities.destroy')->whereNumber('activity');
+
+            Route::get('transfers', [WordPressTransferController::class, 'index'])->name('transfers.index');
+            Route::get('transfers/create', [WordPressTransferController::class, 'create'])->name('transfers.create');
+            Route::post('transfers', [WordPressTransferController::class, 'store'])->name('transfers.store');
+            Route::get('transfers/{transfer}/edit', [WordPressTransferController::class, 'edit'])->name('transfers.edit')->whereNumber('transfer');
+            Route::match(['put', 'patch'], 'transfers/{transfer}', [WordPressTransferController::class, 'update'])->name('transfers.update')->whereNumber('transfer');
+            Route::delete('transfers/{transfer}', [WordPressTransferController::class, 'destroy'])->name('transfers.destroy')->whereNumber('transfer');
 
             Route::get('tours', [WpTourController::class, 'index'])->name('tours.index');
             Route::get('tours/create', [WpTourController::class, 'create'])->name('tours.create');

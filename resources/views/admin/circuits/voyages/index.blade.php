@@ -33,7 +33,16 @@
 
         @if (!empty($wpConnectionFailed))
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <strong>Connexion WordPress indisponible.</strong> Vérifiez dans <code>.env</code> que <code>WP_DB_DATABASE</code> (et éventuellement <code>WP_DB_HOST</code>, <code>WP_DB_USERNAME</code>, <code>WP_DB_PASSWORD</code>) pointent vers une base existante. Erreur typique : <code>Unknown database 'ajinsafronet_wp_tkrpc'</code>.
+                <strong>Connexion WordPress indisponible.</strong>
+                Vérifiez <code>WP_DB_*</code> dans <code>.env</code> (nom de base exact, hôte, identifiants), puis sur le serveur :
+                <code>php artisan config:clear</code> et <code>php artisan cache:clear</code> — une config en cache peut conserver d’anciennes valeurs.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (!empty($wpCatalogErrorMessage))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Chargement de la liste impossible.</strong> {{ $wpCatalogErrorMessage }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif

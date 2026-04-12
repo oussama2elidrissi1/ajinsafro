@@ -77,6 +77,16 @@ class WpPost extends Model
         return $this->hasMany(WpPostMeta::class, 'post_id', 'ID');
     }
 
+    public function stActivity()
+    {
+        return $this->hasOne(StActivity::class, 'post_id', 'ID');
+    }
+
+    public function stCar()
+    {
+        return $this->hasOne(StCar::class, 'post_id', 'ID');
+    }
+
     /**
      * Scope for tours (st_tours post type).
      */

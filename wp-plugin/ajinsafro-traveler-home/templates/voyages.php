@@ -219,6 +219,9 @@ $voyages_page_url = function_exists('ajth_get_voyages_page_url')
 
 <div class="aj-home-wrap">
     <div id="aj-home" class="aj-home aj-voyages-page">
+        <?php ajth_render_site_header($settings); ?>
+
+        <?php /*
         <section class="aj-voyages-hero aj-voyages-hero--compact">
             <div class="aj-container">
                 <div class="aj-voyages-hero__header">
@@ -240,6 +243,7 @@ $voyages_page_url = function_exists('ajth_get_voyages_page_url')
                 </div>
             </div>
         </section>
+        */ ?>
 
         <section class="aj-voyages-catalog">
             <div class="aj-container aj-voyages-catalog__container">

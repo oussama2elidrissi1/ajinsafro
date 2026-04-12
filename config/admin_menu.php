@@ -60,6 +60,9 @@ return [
             'children' => [
                 ['label' => 'Voyage', 'route' => 'admin.circuits.voyages.index', 'permission' => 'circuits.voyages.view'],
                 ['label' => 'Billetterie', 'route' => 'admin.products-services.billetterie', 'permission' => 'circuits.view'],
+                ['label' => 'Hébergement', 'route' => 'admin.wordpress.hotels.index', 'permission' => 'wordpress.view'],
+                ['label' => 'Activités (catalogue)', 'route' => 'admin.wordpress.activities.index', 'permission' => 'wordpress.view'],
+                ['label' => 'Transfert (catalogue)', 'route' => 'admin.wordpress.transfers.index', 'permission' => 'wordpress.view'],
                 ['label' => 'Activité', 'route' => 'admin.circuits.activities.index', 'permission' => 'circuits.activities.view'],
                 ['label' => 'Transfert', 'route' => 'admin.circuits.tour-transfers.index', 'permission' => 'circuits.tour-transfers.view'],
                 ['label' => 'Voiture', 'route' => 'admin.products-services.voiture', 'permission' => 'circuits.view'],
@@ -143,6 +146,8 @@ return [
             'permission' => 'wordpress.view',
             'children' => [
                 ['label' => 'Hotels', 'route' => 'admin.wordpress.hotels.index', 'permission' => 'wordpress.hotels.view'],
+                ['label' => 'Activities', 'route' => 'admin.wordpress.activities.index', 'permission' => 'wordpress.view'],
+                ['label' => 'Transfers', 'route' => 'admin.wordpress.transfers.index', 'permission' => 'wordpress.view'],
             ],
         ],
         [

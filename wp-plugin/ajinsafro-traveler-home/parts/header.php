@@ -31,11 +31,25 @@ $social_icons = array(
 $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
     ? ajth_get_voyages_page_url()
     : home_url( '/voyages/' );
+$hebergement_page_url = function_exists( 'ajth_get_hebergement_page_url' )
+    ? ajth_get_hebergement_page_url()
+    : home_url( '/hebergement/' );
+$activites_page_url = function_exists( 'ajth_get_activites_page_url' )
+    ? ajth_get_activites_page_url()
+    : home_url( '/activites/' );
+$transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
+    ? ajth_get_transfert_page_url()
+    : home_url( '/transfert/' );
 $public_login_url = home_url( '/login/' );
 $public_signup_url = home_url( '/register/' );
 $maintenance_url = function_exists( 'ajth_get_maintenance_url' ) ? ajth_get_maintenance_url() : home_url( '/maintenance/' );
-$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url ) {
+$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $voyages_page_url, $hebergement_page_url, $activites_page_url, $transfert_page_url ) {
     $url_value = trim( (string) $url );
+    $label_value = is_string( $label ) ? trim( wp_strip_all_tags( $label ) ) : '';
+    if ( $label_value !== '' && function_exists( 'remove_accents' ) ) {
+        $label_value = remove_accents( $label_value );
+    }
+    $label_value = $label_value !== '' ? mb_strtolower( $label_value, 'UTF-8' ) : '';
     $is_placeholder = (
         $url_value === '' ||
         $url_value === '#' ||
@@ -43,13 +57,30 @@ $resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url ) {
         $url_value === 'javascript:void(0)' ||
         $url_value === 'javascript:void(0);'
     );
+    if ( $is_placeholder ) {
+        if ( in_array( $label_value, array( 'voyages', 'voyage' ), true ) ) {
+            return $voyages_page_url;
+        }
+        if ( in_array( $label_value, array( 'hébergement', 'hebergement', 'hôtel', 'hotel' ), true ) ) {
+            return $hebergement_page_url;
+        }
+        if ( in_array( $label_value, array( 'activités', 'activites', 'activité', 'activite' ), true ) ) {
+            return $activites_page_url;
+        }
+        if ( in_array( $label_value, array( 'transfert', 'transferts' ), true ) ) {
+            return $transfert_page_url;
+        }
+    }
     if ( $is_placeholder && function_exists( 'ajth_is_under_construction_label' ) && ajth_is_under_construction_label( $label ) ) {
         return $maintenance_url;
     }
     return $url_value !== '' ? $url_value : '#';
 };
 
-$is_voyages_page = is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
+$is_voyages_page = function_exists( 'ajth_is_voyages_context' ) ? ajth_is_voyages_context() : ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) );
+$is_hebergement_page = function_exists( 'ajth_is_hebergement_context' ) ? ajth_is_hebergement_context() : false;
+$is_activites_page = function_exists( 'ajth_is_activites_context' ) ? ajth_is_activites_context() : false;
+$is_transfert_page = function_exists( 'ajth_is_transfert_context' ) ? ajth_is_transfert_context() : false;
 
 
 $title_icon_map = array(
@@ -86,23 +117,23 @@ $default_menu_items = array(
     ),
     array(
         'label'    => 'Hébergement',
-        'url'      => $maintenance_url,
+        'url'      => $hebergement_page_url,
         'icon'     => 'fas fa-hotel',
-        'active'   => false,
+        'active'   => $is_hebergement_page,
         'children' => array(),
     ),
     array(
         'label'    => 'Activités',
-        'url'      => $maintenance_url,
+        'url'      => $activites_page_url,
         'icon'     => 'fas fa-camera',
-        'active'   => false,
+        'active'   => $is_activites_page,
         'children' => array(),
     ),
     array(
         'label'    => 'Transfert',
-        'url'      => $maintenance_url,
+        'url'      => $transfert_page_url,
         'icon'     => 'fas fa-car-side',
-        'active'   => false,
+        'active'   => $is_transfert_page,
         'children' => array(),
     ),
     array(
@@ -283,7 +314,11 @@ $default_menu_items = array(
 
                             // Auto-resolve icon from title map
                             if ( empty( $icon ) && $label ) {
-                                $label_lower = mb_strtolower( trim( $label ), 'UTF-8' );
+                                $label_lower = trim( wp_strip_all_tags( $label ) );
+                                if ( $label_lower !== '' && function_exists( 'remove_accents' ) ) {
+                                    $label_lower = remove_accents( $label_lower );
+                                }
+                                $label_lower = $label_lower !== '' ? mb_strtolower( $label_lower, 'UTF-8' ) : '';
                                 if ( isset( $title_icon_map[ $label_lower ] ) ) {
                                     $icon = $title_icon_map[ $label_lower ];
                                 }

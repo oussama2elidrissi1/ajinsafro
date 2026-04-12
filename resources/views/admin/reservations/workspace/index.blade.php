@@ -639,17 +639,14 @@
 
 @section('content')
 @php
-    $wsKpiPackages = $catalogRows->where('type', 'package')->count();
-    $wsKpiTotal = $catalogRows->count();
-    $wsKpiUpcoming = $catalogRows->filter(function ($r) {
-        return ! empty($r['departure_date']) && empty($r['departure_is_past']);
-    })->count();
+    $catalogScope = $catalogScope ?? 'all';
+    $catalogFullCount = $catalogFullCount ?? $catalogRows->count();
 @endphp
-<div class="fade-in ws-page max-w-[1680px] mx-auto pb-10">
+<div class="fade-in ws-page max-w-[1680px] mx-auto pb-10 overflow-x-hidden">
     <header class="ws-hero">
         <div class="ws-hero__main">
             <h1 class="ws-hero__title">Espace réservation</h1>
-            <p class="ws-hero__sub">Consultez une prestation, ouvrez son détail et lancez une réservation depuis la page dédiée.</p>
+            <p class="ws-hero__sub">Catalogue complet : les départs les plus proches en tête. Filtrez la période si besoin.</p>
         </div>
         <div class="ws-hero__actions">
             <a href="{{ route('admin.circuits.voyages.index') }}" class="ws-hero__btn ws-hero__btn--outline">
@@ -685,7 +682,7 @@
 
     <div id="reservations-main-content" class="space-y-6">
         {{-- Filtres --}}
-        <div id="catalogue-workspace" class="ws-toolbar">
+        <div id="catalogue-workspace" class="ws-toolbar" data-workspace-url="{{ route('admin.reservations.workspace') }}">
             <div class="ws-toolbar__row ws-toolbar__row--search">
                 <div class="ws-field ws-field--grow">
                     <label class="ws-field__label" for="ws-filter-search">Recherche</label>
@@ -695,7 +692,7 @@
                     </div>
                 </div>
                 <div class="ws-toolbar__views">
-                    <span class="ws-toolbar__count"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogRows->count() }}</span>
+                    <span class="ws-toolbar__count"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogFullCount }}</span>
                     <div class="ws-seg ws-seg--triple" role="group" aria-label="Mode d'affichage">
                         <button type="button" id="btn-view-list" class="ws-seg__btn is-active" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
                         <button type="button" id="btn-view-calendar" class="ws-seg__btn" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Cal.</span></button>
@@ -714,12 +711,12 @@
                     </select>
                 </div>
                 <div class="ws-field">
-                    <label class="ws-field__label" for="ws-filter-date-status">Départ</label>
-                    <select id="ws-filter-date-status" class="ws-select">
-                        <option value="all">Tous</option>
-                        <option value="upcoming">À venir</option>
-                        <option value="past">Passé</option>
-                        <option value="none">Sans date</option>
+                    <label class="ws-field__label" for="ws-filter-date-status">Période</label>
+                    <select id="ws-filter-date-status" class="ws-select" data-ws-catalog-scope="{{ e($catalogScope) }}" title="Période (recharge la liste)">
+                        <option value="all" @selected($catalogScope === 'all')>Tous</option>
+                        <option value="upcoming" @selected($catalogScope === 'upcoming')>Départs à venir</option>
+                        <option value="past" @selected($catalogScope === 'past')>Passés</option>
+                        <option value="none" @selected($catalogScope === 'none')>Sans date</option>
                     </select>
                 </div>
                 <div class="ws-field">
@@ -751,8 +748,9 @@
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-sort">Tri</label>
                     <select id="ws-sort" class="ws-select">
-                        <option value="default">Défaut (réf.)</option>
+                        <option value="preserve" selected>Ordre serveur (priorité vente)</option>
                         <option value="dep-asc">Date départ ↑</option>
+                        <option value="default">Référence</option>
                         <option value="dep-desc">Date départ ↓</option>
                         <option value="price-asc">Prix ↑</option>
                         <option value="price-desc">Prix ↓</option>
@@ -770,18 +768,17 @@
         <div id="ws-view-table" class="ws-table-card">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
-                <p class="ws-table-card__sub">Tableau compact pour le suivi commercial : références, départs, tarifs, capacités et actions.</p>
+                <p class="ws-table-card__sub">Référence, voyage, départ, prix, capacité et actions. Tri serveur : futurs → sans date → passés.</p>
             </div>
             <div class="ws-table-scroll">
-                <table class="ws-data-table" aria-label="Catalogue des offres en liste">
+                <table class="ws-data-table ws-data-table--responsive" aria-label="Catalogue des offres en liste">
                     <thead>
                         <tr>
                             <th scope="col">Réf</th>
-                            <th scope="col">Offre / voyage</th>
+                            <th scope="col">Voyage</th>
                             <th scope="col">Départ</th>
                             <th scope="col">Prix</th>
-                            <th scope="col">Capacité / places</th>
-                            <th scope="col">Statut</th>
+                            <th scope="col">Capacité</th>
                             <th scope="col" class="ws-data-table__th-actions">Actions</th>
                         </tr>
                     </thead>
@@ -790,7 +787,7 @@
                             @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
                         @empty
                             <tr>
-                                <td colspan="7" class="ws-table-empty-cell">
+                                <td colspan="6" class="ws-table-empty-cell">
                                     <div class="ws-catalog-empty ws-catalog-empty--inline">
                                         <div class="max-w-md mx-auto text-center py-10 px-6">
                                             <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3 text-xl">
@@ -815,10 +812,10 @@
         <div id="ws-view-catalog" class="ws-table-card hidden">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Présentation catalogue</h2>
-                <p class="ws-table-card__sub">Visuels, tarifs et disponibilités : ouvrez le détail ou lancez une réservation.</p>
+                <p class="ws-table-card__sub">Même jeu de données et même ordre que la liste (tri serveur, filtre période optionnel).</p>
             </div>
             <div class="ws-catalog-section">
-                <div id="ws-catalog-list" class="ws-catalog-grid">
+                <div id="ws-catalog-list" class="ws-catalog-grid ws-catalog-grid--compact">
                     @forelse($catalogRows as $row)
                         @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
                     @empty
@@ -1241,6 +1238,25 @@ document.addEventListener('DOMContentLoaded', function () {
     var sortEl = document.getElementById('ws-sort');
     var rangeInput = document.getElementById('ws-date-range-picker');
     var resetBtn = document.getElementById('ws-filters-reset');
+    var catalogToolbar = document.getElementById('catalogue-workspace');
+    var wsWorkspaceBase = catalogToolbar && catalogToolbar.getAttribute('data-workspace-url')
+        ? catalogToolbar.getAttribute('data-workspace-url')
+        : (window.location.pathname || '/admin/reservations/workspace');
+
+    function wsNavigateCatalogScope(scope) {
+        var u;
+        try {
+            u = new URL(wsWorkspaceBase, window.location.origin);
+        } catch (e) {
+            u = new URL(window.location.href);
+        }
+        if (scope === 'all') {
+            u.searchParams.delete('catalog');
+        } else {
+            u.searchParams.set('catalog', scope);
+        }
+        window.location.href = u.toString();
+    }
 
     function wsRowCompare(a, b, sort) {
         var ca = (a.getAttribute('data-code') || '');
@@ -1250,6 +1266,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return isNaN(v) ? 0 : v;
         }
         switch (sort) {
+            case 'preserve': return 0;
             case 'dep-asc': return n(a, 'data-sort-dep') - n(b, 'data-sort-dep');
             case 'dep-desc': return n(b, 'data-sort-dep') - n(a, 'data-sort-dep');
             case 'price-asc': return n(a, 'data-sort-price') - n(b, 'data-sort-price');
@@ -1263,7 +1280,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function wsSortContainer(containerId) {
         var list = document.getElementById(containerId);
         if (!list || !sortEl) return;
-        var sort = sortEl.value || 'default';
+        var sort = sortEl.value || 'preserve';
+        if (sort === 'preserve') return;
         var rows = Array.prototype.slice.call(list.querySelectorAll('.ws-catalog-row'));
         rows.sort(function (a, b) { return wsRowCompare(a, b, sort); });
         rows.forEach(function (el) { list.appendChild(el); });
@@ -1277,7 +1295,6 @@ document.addEventListener('DOMContentLoaded', function () {
     window.applyWsFilters = function applyWsFilters() {
         var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
         var t = typeEl ? typeEl.value : 'all';
-        var ds = dateStatusEl ? dateStatusEl.value : 'all';
         var av = availEl ? availEl.value : 'all';
         var rs = resEl ? resEl.value : 'all';
         var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row, #ws-catalog-table-body .ws-catalog-row');
@@ -1292,9 +1309,6 @@ document.addEventListener('DOMContentLoaded', function () {
         rows.forEach(function (tr) {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
-            if (ok && ds !== 'all') {
-                if (tr.getAttribute('data-date-status') !== ds) ok = false;
-            }
             if (ok && av !== 'all') {
                 var w = tr.getAttribute('data-ws-avail') || 'na';
                 if (av === 'places') {
@@ -1347,7 +1361,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (searchEl) searchEl.addEventListener('input', applyWsFilters);
     if (typeEl) typeEl.addEventListener('change', applyWsFilters);
-    if (dateStatusEl) dateStatusEl.addEventListener('change', applyWsFilters);
+    if (dateStatusEl) {
+        dateStatusEl.addEventListener('change', function () {
+            var v = dateStatusEl.value || 'all';
+            var cur = dateStatusEl.getAttribute('data-ws-catalog-scope') || 'all';
+            if (v === cur) return;
+            wsNavigateCatalogScope(v);
+        });
+    }
     if (availEl) availEl.addEventListener('change', applyWsFilters);
     if (resEl) resEl.addEventListener('change', applyWsFilters);
     if (sortEl) sortEl.addEventListener('change', applyWsFiltersAndSort);
@@ -1355,11 +1376,14 @@ document.addEventListener('DOMContentLoaded', function () {
         resetBtn.addEventListener('click', function () {
             if (searchEl) searchEl.value = '';
             if (typeEl) typeEl.value = 'all';
-            if (dateStatusEl) dateStatusEl.value = 'all';
             if (availEl) availEl.value = 'all';
             if (resEl) resEl.value = 'all';
-            if (sortEl) sortEl.value = 'default';
             if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();
+            if (dateStatusEl && dateStatusEl.value !== 'all') {
+                wsNavigateCatalogScope('all');
+                return;
+            }
+            if (sortEl) sortEl.value = 'preserve';
             applyWsFiltersAndSort();
         });
     }

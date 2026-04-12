@@ -42,6 +42,22 @@ if ( ! $q->have_posts() ) return;
                 $avg_rating = get_post_meta( get_the_ID(), 'avg_rating', true );
                 $location   = get_post_meta( get_the_ID(), 'address', true );
                 $stars      = get_post_meta( get_the_ID(), 'hotel_star', true );
+                // Fallback: Laravel / Traveler often store canonical data in st_hotel while this slider reads metas.
+                if ( ( $location === '' || $location === false ) && get_post_type() === 'st_hotel' ) {
+                    global $wpdb;
+                    $row = $wpdb->get_row( $wpdb->prepare( "SELECT address, min_price, hotel_star FROM {$wpdb->prefix}st_hotel WHERE post_id = %d", get_the_ID() ), ARRAY_A );
+                    if ( is_array( $row ) ) {
+                        if ( ( $location === '' || $location === false ) && ! empty( $row['address'] ) ) {
+                            $location = $row['address'];
+                        }
+                        if ( ( $price === '' || $price === false ) && ! empty( $row['min_price'] ) ) {
+                            $price = $row['min_price'];
+                        }
+                        if ( ( $stars === '' || $stars === false ) && isset( $row['hotel_star'] ) && $row['hotel_star'] !== '' ) {
+                            $stars = $row['hotel_star'];
+                        }
+                    }
+                }
                 $category   = '';
                 $terms = get_the_terms( get_the_ID(), 'hotel_type' );
                 if ( $terms && ! is_wp_error( $terms ) ) {

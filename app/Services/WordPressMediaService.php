@@ -2,8 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\WpPost;
-use App\Models\WpPostmeta;
+use App\Models\Wp\WpPost;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
@@ -146,8 +145,8 @@ class WordPressMediaService
         $post->comment_count = 0;
         $post->save();
 
-        WpPostmeta::setMeta($post->ID, '_wp_attached_file', $relativePath);
-        WpPostmeta::setMeta($post->ID, '_wp_attachment_metadata', serialize([
+        $post->setMeta('_wp_attached_file', $relativePath);
+        $post->setMeta('_wp_attachment_metadata', serialize([
             'file' => $relativePath,
             'width' => null,
             'height' => null,
@@ -219,14 +218,20 @@ class WordPressMediaService
 
     public function setHotelThumbnail(int $hotelPostId, int $attachmentId): void
     {
-        WpPostmeta::setMeta($hotelPostId, '_thumbnail_id', (string) $attachmentId);
+        $post = WpPost::query()->find($hotelPostId);
+        if ($post) {
+            $post->setMeta('_thumbnail_id', (string) $attachmentId);
+        }
     }
 
     public function setHotelGallery(int $hotelPostId, array $attachmentIds): void
     {
         $value = implode(',', array_map('intval', array_filter($attachmentIds)));
-        WpPostmeta::setMeta($hotelPostId, 'st_gallery', $value);
-        WpPostmeta::setMeta($hotelPostId, 'gallery', $value);
+        $post = WpPost::query()->find($hotelPostId);
+        if ($post) {
+            $post->setMeta('st_gallery', $value);
+            $post->setMeta('gallery', $value);
+        }
     }
 
     /**
@@ -234,7 +239,7 @@ class WordPressMediaService
      */
     public function getFeaturedImageUrl(int $postId): ?string
     {
-        $thumbId = WpPostmeta::getMeta($postId, '_thumbnail_id');
+        $thumbId = WpPost::query()->find($postId)?->getMeta('_thumbnail_id');
         if (! $thumbId || ! is_numeric($thumbId)) {
             return null;
         }
@@ -247,9 +252,10 @@ class WordPressMediaService
      */
     public function getGalleryUrls(int $postId): array
     {
-        $ids = WpPostmeta::getMeta($postId, '_gallery')
-            ?: WpPostmeta::getMeta($postId, 'st_gallery')
-            ?: WpPostmeta::getMeta($postId, 'gallery');
+        $post = WpPost::query()->find($postId);
+        $ids = $post?->getMeta('_gallery')
+            ?: $post?->getMeta('st_gallery')
+            ?: $post?->getMeta('gallery');
         if (! $ids || trim($ids) === '') {
             return [];
         }
@@ -268,7 +274,10 @@ class WordPressMediaService
     public function setGalleryMeta(int $hotelPostId, array $attachmentIds): void
     {
         $value = implode(',', array_map('intval', array_filter($attachmentIds)));
-        WpPostmeta::setMeta($hotelPostId, '_gallery', $value);
+        $post = WpPost::query()->find($hotelPostId);
+        if ($post) {
+            $post->setMeta('_gallery', $value);
+        }
     }
 
     /**
@@ -276,7 +285,7 @@ class WordPressMediaService
      */
     public function getAttachmentUrl(int $attachmentId): ?string
     {
-        $relativePath = WpPostmeta::getMeta($attachmentId, '_wp_attached_file');
+        $relativePath = WpPost::query()->find($attachmentId)?->getMeta('_wp_attached_file');
         if (! $relativePath || trim($relativePath) === '') {
             return null;
         }
@@ -289,7 +298,7 @@ class WordPressMediaService
      */
     public function getAttachmentUrlVerified(int $attachmentId): ?string
     {
-        $relativePath = WpPostmeta::getMeta($attachmentId, '_wp_attached_file');
+        $relativePath = WpPost::query()->find($attachmentId)?->getMeta('_wp_attached_file');
         if (! $relativePath || trim($relativePath) === '') {
             return null;
         }
@@ -306,7 +315,7 @@ class WordPressMediaService
      */
     public function getFeaturedImageUrlVerified(int $postId): ?string
     {
-        $thumbId = WpPostmeta::getMeta($postId, '_thumbnail_id');
+        $thumbId = WpPost::query()->find($postId)?->getMeta('_thumbnail_id');
         if (! $thumbId || ! is_numeric($thumbId)) {
             return null;
         }
@@ -319,9 +328,10 @@ class WordPressMediaService
      */
     public function getGalleryUrlsVerified(int $postId): array
     {
-        $ids = WpPostmeta::getMeta($postId, '_gallery')
-            ?: WpPostmeta::getMeta($postId, 'st_gallery')
-            ?: WpPostmeta::getMeta($postId, 'gallery');
+        $post = WpPost::query()->find($postId);
+        $ids = $post?->getMeta('_gallery')
+            ?: $post?->getMeta('st_gallery')
+            ?: $post?->getMeta('gallery');
         if (! $ids || trim($ids) === '') {
             return [];
         }

@@ -1419,7 +1419,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.8125rem;
-    min-width: 1080px;
+    min-width: min(100%, 860px);
 }
 
 .ws-data-table thead th {
@@ -1444,8 +1444,8 @@
 }
 
 .ws-catalog-table-row td {
-    vertical-align: top;
-    padding: 0.65rem 0.75rem;
+    vertical-align: middle;
+    padding: 0.45rem 0.65rem;
     border-bottom: 1px solid #f1f5f9;
     color: #1e293b;
 }
@@ -1464,6 +1464,18 @@
 
 .ws-catalog-table-row.ws-catalog-row--hotel td:first-child {
     box-shadow: inset 3px 0 0 0 #d97706;
+}
+
+/* Mise en avant légère : départ dans les 30 prochains jours */
+.ws-catalog-table-row.ws-catalog-row--near td {
+    background: linear-gradient(90deg, rgba(0, 131, 196, 0.07) 0%, rgba(255, 255, 255, 0) 72%);
+}
+
+.ws-offer-card.ws-catalog-row--near {
+    border-color: rgba(0, 131, 196, 0.32);
+    box-shadow:
+        0 1px 3px rgba(14, 58, 90, 0.06),
+        0 0 0 1px rgba(0, 131, 196, 0.1);
 }
 
 .ws-td__code {
@@ -1575,13 +1587,118 @@
 .ws-td__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 0.3rem;
     justify-content: flex-end;
+    align-items: center;
+}
+
+.ws-btn--iconish {
+    gap: 0.3rem;
 }
 
 .ws-btn--sm {
-    padding: 0.35rem 0.5rem;
+    padding: 0.3rem 0.45rem;
     font-size: 0.6875rem;
+}
+
+.ws-td__offer-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.ws-td__type-txt {
+    font-size: 0.5625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+}
+
+.ws-td__title--clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    color: #0f172a;
+}
+
+.ws-td__dep-note {
+    display: block;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    color: #b91c1c;
+    margin-top: 0.15rem;
+}
+
+.ws-td__cap-cell {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: #334155;
+}
+
+/* Tableau : cartes empilées sur mobile (pas de scroll horizontal) */
+@media (max-width: 767.98px) {
+    .ws-data-table--responsive {
+        min-width: 0 !important;
+    }
+
+    .ws-data-table--responsive thead {
+        display: none;
+    }
+
+    .ws-data-table--responsive .ws-catalog-table-row {
+        display: block;
+        border: 1px solid #e8ecf1;
+        border-radius: 0.65rem;
+        margin-bottom: 0.5rem;
+        padding: 0;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(14, 58, 90, 0.04);
+    }
+
+    .ws-data-table--responsive .ws-catalog-table-row td {
+        display: grid;
+        grid-template-columns: minmax(6rem, 38%) 1fr;
+        gap: 0.35rem 0.75rem;
+        padding: 0.4rem 0.75rem;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .ws-data-table--responsive .ws-catalog-table-row td:last-child {
+        border-bottom: none;
+        padding-bottom: 0.65rem;
+    }
+
+    .ws-data-table--responsive .ws-catalog-table-row td::before {
+        content: attr(data-label);
+        font-size: 0.5625rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+        padding-top: 0.15rem;
+    }
+
+    .ws-data-table--responsive .ws-catalog-table-row td.ws-td--actions::before {
+        content: '';
+        display: none;
+    }
+
+    .ws-data-table--responsive .ws-catalog-table-row td.ws-td--actions {
+        grid-template-columns: 1fr;
+    }
+
+    .ws-data-table--responsive .ws-td__actions {
+        justify-content: flex-start;
+    }
 }
 
 .ws-table-empty-cell {
@@ -2821,5 +2938,170 @@
 
 .ws-offer-card .ws-btn--primary:hover {
     box-shadow: 0 4px 16px rgba(0, 131, 196, 0.3);
+}
+
+/* —— Cartes catalogue compactes (workspace) —— */
+.ws-offer-card--compact {
+    flex-direction: row;
+    align-items: stretch;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(14, 58, 90, 0.06);
+}
+
+.ws-offer-card--compact:hover {
+    transform: translateY(-1px);
+}
+
+.ws-offer-card__media--compact {
+    width: 112px;
+    min-width: 112px;
+    height: auto;
+    min-height: 5.5rem;
+    max-height: 6.5rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 479.98px) {
+    .ws-offer-card--compact {
+        flex-direction: column;
+    }
+
+    .ws-offer-card__media--compact {
+        width: 100%;
+        min-width: 0;
+        max-height: 140px;
+        min-height: 120px;
+    }
+}
+
+.ws-offer-card__body--compact {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0.65rem 0.85rem 0.7rem;
+    gap: 0.45rem;
+    justify-content: flex-start;
+}
+
+.ws-offer-card__compact-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+}
+
+.ws-offer-card__type--compact {
+    font-size: 0.5625rem !important;
+    padding: 0.12rem 0.4rem !important;
+}
+
+.ws-offer-card__code--compact {
+    font-size: 0.625rem;
+}
+
+.ws-offer-card__unlink--inline {
+    font-size: 0.5625rem;
+    padding: 0.08rem 0.35rem;
+}
+
+.ws-offer-card__title--compact {
+    font-size: 0.875rem;
+    line-height: 1.25;
+    margin: 0;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    overflow: hidden;
+    font-weight: 800;
+    color: #0e3a5a;
+}
+
+.ws-offer-card__facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    color: #475569;
+}
+
+.ws-offer-card__fact--price strong {
+    color: #0e3a5a;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.ws-offer-card__fact-note {
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.ws-offer-card__actions--compact {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid #eef2f7;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: stretch;
+    gap: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ws-offer-card__actions--compact .ws-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 2.35rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    box-sizing: border-box;
+}
+
+.ws-offer-card__actions--compact .ws-btn span {
+    display: inline;
+}
+
+/* Un seul bouton (ex. pas de modal) : occupe la ligne proprement */
+.ws-offer-card__actions--compact .ws-btn:only-child {
+    flex: 1 1 auto;
+}
+
+.ws-offer-card--compact .ws-btn--sm {
+    min-height: 2.35rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.ws-catalog-grid.ws-catalog-grid--compact {
+    gap: 0.75rem 1rem;
+}
+
+@media (min-width: 700px) {
+    .ws-catalog-grid.ws-catalog-grid--compact {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1100px) {
+    .ws-catalog-grid.ws-catalog-grid--compact {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1600px) {
+    .ws-catalog-grid.ws-catalog-grid--compact {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
 }
 

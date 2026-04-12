@@ -3,6 +3,7 @@
 @php
     $isEdit = $hotel !== null;
     $postTitle = old('post_title', $hotel->post_title ?? '');
+    $postExcerpt = old('post_excerpt', $hotel->post_excerpt ?? '');
     $postContent = old('post_content', $hotel->post_content ?? '');
     $postStatus = old('post_status', $hotel->post_status ?? 'publish');
     $postName = old('post_name', $hotel->post_name ?? '');
@@ -22,6 +23,14 @@
     <label for="post_title" class="form-label">Titre <span class="text-danger">*</span></label>
     <input type="text" class="form-control @error('post_title') is-invalid @enderror" id="post_title" name="post_title" value="{{ $postTitle }}" required maxlength="255">
     @error('post_title')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
+
+<div class="mb-3">
+    <label for="post_excerpt" class="form-label">Resume court</label>
+    <textarea class="form-control @error('post_excerpt') is-invalid @enderror" id="post_excerpt" name="post_excerpt" rows="3" maxlength="500">{{ $postExcerpt }}</textarea>
+    @error('post_excerpt')
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>

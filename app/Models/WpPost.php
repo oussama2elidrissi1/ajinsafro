@@ -51,6 +51,23 @@ class WpPost extends Model
         return $this->hasOne(StHotel::class, 'post_id', 'ID');
     }
 
+    public function stActivity()
+    {
+        return $this->hasOne(StActivity::class, 'post_id', 'ID');
+    }
+
+    public function stCar()
+    {
+        return $this->hasOne(StCar::class, 'post_id', 'ID');
+    }
+
+    public function getMeta(string $key, $default = null)
+    {
+        $value = WpPostmeta::getMeta((int) $this->ID, $key);
+
+        return $value !== null ? $value : $default;
+    }
+
     /**
      * Scope: only st_hotel post type.
      */
@@ -71,16 +88,20 @@ class WpPost extends Model
      * Generate a unique post_name (slug) for the given title.
      * Optionally exclude a post ID (for updates).
      */
-    public static function uniqueSlug(string $title, ?int $excludeId = null): string
+    public static function uniqueSlug(string $title, ?int $excludeId = null, string $postType = 'st_hotel'): string
     {
         $base = Str::slug($title);
         if (empty($base)) {
-            $base = 'hotel';
+            $base = match ($postType) {
+                'st_activity' => 'activite',
+                'st_cars' => 'transfert',
+                default => 'hotel',
+            };
         }
         $slug = $base;
         $n = 1;
         while (true) {
-            $query = static::where('post_name', $slug)->where('post_type', 'st_hotel');
+            $query = static::where('post_name', $slug)->where('post_type', $postType);
             if ($excludeId !== null) {
                 $query->where('ID', '!=', $excludeId);
             }

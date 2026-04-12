@@ -18,6 +18,18 @@ if ( preg_match( '/\[([a-zA-Z0-9_\-:]+)/', $search_shortcode, $m ) ) {
 $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
     ? ajth_get_voyages_page_url()
     : home_url( '/voyages/' );
+$vols_page_url = function_exists( 'ajth_get_vols_page_url' )
+    ? ajth_get_vols_page_url()
+    : home_url( '/vols/' );
+$hebergement_page_url = function_exists( 'ajth_get_hebergement_page_url' )
+    ? ajth_get_hebergement_page_url()
+    : home_url( '/hebergement/' );
+$activites_page_url = function_exists( 'ajth_get_activites_page_url' )
+    ? ajth_get_activites_page_url()
+    : home_url( '/activites/' );
+$transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
+    ? ajth_get_transfert_page_url()
+    : home_url( '/transfert/' );
 ?>
 
 <?php if ( shortcode_exists( $shortcode_tag ) && ! empty( $search_shortcode ) ) : ?>
@@ -72,7 +84,7 @@ $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
 
         <!-- FORM: BILLET D'AVION -->
         <div id="aj-form-vol" class="aj-search-form">
-            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+            <form method="get" action="<?php echo esc_url( $vols_page_url ); ?>">
                 <input type="hidden" name="s" value="">
                 <input type="hidden" name="post_type" value="st_tours">
                 <div class="aj-search-form__row">
@@ -113,9 +125,7 @@ $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
 
         <!-- FORM: HÉBERGEMENT -->
         <div id="aj-form-hotel" class="aj-search-form">
-            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
-                <input type="hidden" name="s" value="">
-                <input type="hidden" name="post_type" value="st_hotel">
+            <form method="get" action="<?php echo esc_url( $hebergement_page_url ); ?>">
                 <div class="aj-search-form__row">
                     <div class="aj-search-field">
                         <div class="aj-search-field__icon" style="background:#f0fdfa;color:#0d9488;"><i class="fas fa-bed"></i></div>
@@ -147,7 +157,7 @@ $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
 
         <!-- FORM: TRANSFERT -->
         <div id="aj-form-transfert" class="aj-search-form">
-            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+            <form method="get" action="<?php echo esc_url( $transfert_page_url ); ?>">
                 <input type="hidden" name="s" value="">
                 <input type="hidden" name="post_type" value="st_cars">
                 <div class="aj-search-form__row">
@@ -181,7 +191,7 @@ $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
 
         <!-- FORM: ACTIVITÉ -->
         <div id="aj-form-activite" class="aj-search-form">
-            <form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+            <form method="get" action="<?php echo esc_url( $activites_page_url ); ?>">
                 <input type="hidden" name="s" value="">
                 <input type="hidden" name="post_type" value="st_activity">
                 <div class="aj-search-form__row">

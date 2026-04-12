@@ -37,13 +37,29 @@ class ReservationWorkspaceController extends Controller
         $this->authorizeWorkspace($request);
 
         $catalog = $this->catalog->buildRows($request->user());
-        $rows = $catalog['rows'];
+        $allRows = $catalog['rows'];
         $catalogMeta = $catalog['meta'];
+
+        $catalogParam = $request->query('catalog');
+        if (is_string($catalogParam) && $catalogParam !== '' && in_array($catalogParam, ['upcoming', 'past', 'none'], true)) {
+            $catalogScope = $catalogParam;
+            $scoped = $this->catalog->scopeCatalogRows($allRows, $catalogScope);
+        } elseif ($catalogParam === 'all') {
+            $catalogScope = 'all';
+            $scoped = $allRows;
+        } else {
+            $catalogScope = 'all';
+            $scoped = $allRows;
+        }
+
+        $rows = $this->catalog->sortCatalogRowsForWorkspaceDisplay($scoped);
 
         return view('admin.reservations.workspace.index', [
             'catalogRows' => $rows,
             'catalogMeta' => $catalogMeta,
-            'catalogPackageCount' => (int) ($catalogMeta['wp_tour_count'] ?? $rows->where('type', 'package')->count()),
+            'catalogScope' => $catalogScope,
+            'catalogFullCount' => $allRows->count(),
+            'catalogPackageCount' => (int) ($catalogMeta['wp_tour_count'] ?? $allRows->where('type', 'package')->count()),
             'catalogTotalCount' => $rows->count(),
         ]);
     }

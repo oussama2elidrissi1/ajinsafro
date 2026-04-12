@@ -502,6 +502,121 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
+     * Filtre optionnel des lignes (paramètre URL `catalog`).
+     *
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function scopeCatalogRows(Collection $rows, string $scope): Collection
+    {
+        $scope = in_array($scope, ['upcoming', 'all', 'past', 'none'], true) ? $scope : 'upcoming';
+
+        return match ($scope) {
+            'all' => $rows->values(),
+            'past' => $rows->filter(function (array $r) {
+                return ! empty($r['departure_date']) && ! empty($r['departure_is_past']);
+            })->values(),
+            'none' => $rows->filter(function (array $r) {
+                return empty($r['departure_date']);
+            })->values(),
+            default => $rows->filter(function (array $r) {
+                if (empty($r['departure_date'])) {
+                    return false;
+                }
+                if (! empty($r['departure_is_past'])) {
+                    return false;
+                }
+                if (! empty($r['departure_is_canceled'])) {
+                    return false;
+                }
+
+                return true;
+            })->values(),
+        };
+    }
+
+    /**
+     * Tri workspace (PHP, catalogue agrégé hors d’une seule requête SQL).
+     *
+     * Ordre :
+     * 1) type : package (circuit) → hébergement → vol → autre
+     * 2) départ : futur / aujourd’hui → sans date → passé
+     * 3) departure_date ASC, puis code
+     *
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function sortCatalogRowsForWorkspaceDisplay(Collection $rows): Collection
+    {
+        $today = Carbon::today()->startOfDay();
+
+        return $rows->sort(function (array $a, array $b) use ($today) {
+            $typeA = $this->workspaceCatalogTypeTier($a);
+            $typeB = $this->workspaceCatalogTypeTier($b);
+            if ($typeA !== $typeB) {
+                return $typeA <=> $typeB;
+            }
+
+            $tierA = $this->workspaceCatalogSortTier($a, $today);
+            $tierB = $this->workspaceCatalogSortTier($b, $today);
+            if ($tierA !== $tierB) {
+                return $tierA <=> $tierB;
+            }
+
+            if ($tierA === 1) {
+                return strcmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
+            }
+
+            $dateA = $this->normalizeCatalogRowDepartureDate($a);
+            $dateB = $this->normalizeCatalogRowDepartureDate($b);
+            if ($dateA === null || $dateB === null) {
+                return strcmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
+            }
+            $cmp = $dateA->timestamp <=> $dateB->timestamp;
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            return strcmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
+        })->values();
+    }
+
+    /**
+     * @return int 0 package (voyage/circuit), 1 hébergement, 2 vol, 3 autre
+     */
+    private function workspaceCatalogTypeTier(array $r): int
+    {
+        return match ((string) ($r['type'] ?? '')) {
+            'package' => 0,
+            'hebergement' => 1,
+            'vol' => 2,
+            default => 3,
+        };
+    }
+
+    /**
+     * @return int 0 futur / aujourd’hui, 1 sans date, 2 passé
+     */
+    private function workspaceCatalogSortTier(array $r, Carbon $today): int
+    {
+        $d = $this->normalizeCatalogRowDepartureDate($r);
+        if ($d === null) {
+            return 1;
+        }
+
+        return $d->gte($today) ? 0 : 2;
+    }
+
+    private function normalizeCatalogRowDepartureDate(array $r): ?Carbon
+    {
+        if (empty($r['departure_date'])) {
+            return null;
+        }
+
+        return Carbon::parse($r['departure_date'])->startOfDay();
+    }
+
+    /**
      * Retrouve la ligne catalogue pour un voyage Laravel + type de prestation (même agrégat que la page workspace).
      *
      * @return array<string, mixed>|null
