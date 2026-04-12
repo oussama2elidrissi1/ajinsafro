@@ -4,7 +4,7 @@
  * Plugin Name: Ajinsafro Traveler Home
  * Plugin URI:  https://ajinsafro.com
  * Description: Surcharge la page d'accueil (front page) du thème Traveler avec une mise en page personnalisée : Hero, barre de recherche, offres dernière minute, destinations par région et bons coins.
- * Version:     1.0.9
+ * Version:     1.1.0
  * Author:      Ajinsafro
  * Author URI:  https://ajinsafro.com
  * Text Domain: ajinsafro-traveler-home
@@ -19,7 +19,7 @@ if (! defined('ABSPATH')) {
 /* ──────────────────────────────────────────────
  * Constants
  * ────────────────────────────────────────────── */
-define('AJTH_VERSION', '1.0.9');
+define('AJTH_VERSION', '1.1.0');
 define('AJTH_FILE', __FILE__);
 define('AJTH_DIR', plugin_dir_path(__FILE__));
 define('AJTH_URL', plugin_dir_url(__FILE__));
@@ -36,6 +36,7 @@ if (! defined('AJINSAFRO_HOME_URL')) {
  * ────────────────────────────────────────────── */
 require_once AJTH_DIR.'includes/class-template-router.php';
 require_once AJTH_DIR.'includes/class-catalog-cache-invalidate.php';
+require_once AJTH_DIR.'includes/class-display-debug.php';
 require_once AJTH_DIR.'includes/class-admin-settings.php';
 require_once AJTH_DIR.'includes/tour-category-defaults.php';
 require_once AJTH_DIR.'includes/voyages-routing.php';
