@@ -292,10 +292,6 @@ function ajth_hebergement_catalog_card_image_url( $post_id ) {
 
 	$sizes = array( 'large', 'medium_large', 'full', 'medium' );
 
-	$upload_dir = wp_upload_dir();
-	$base_url   = untrailingslashit( isset( $upload_dir['baseurl'] ) ? (string) $upload_dir['baseurl'] : '' );
-	$base_dir   = untrailingslashit( isset( $upload_dir['basedir'] ) ? (string) $upload_dir['basedir'] : '' );
-
 	foreach ( $attachment_ids as $att_id ) {
 		$att = get_post( $att_id );
 		if ( ! $att || $att->post_type !== 'attachment' ) {
@@ -305,6 +301,8 @@ function ajth_hebergement_catalog_card_image_url( $post_id ) {
 			continue;
 		}
 
+		$path     = get_attached_file( $att_id );
+		$local_ok = $path && ajth_hebergement_local_path_is_valid_image( $path );
 		$last_url = '';
 
 		foreach ( $sizes as $size ) {
@@ -318,15 +316,7 @@ function ajth_hebergement_catalog_card_image_url( $post_id ) {
 				continue;
 			}
 
-			// Dériver le chemin local de ce variant précis (pas seulement l'original).
-			$local_valid = false;
-			if ( $base_url !== '' && $base_dir !== '' && strpos( $url, $base_url ) === 0 ) {
-				$rel       = strtok( substr( $url, strlen( $base_url ) ), '?' );
-				$file_path = $base_dir . $rel;
-				$local_valid = ajth_hebergement_local_path_is_valid_image( $file_path );
-			}
-
-			if ( $local_valid ) {
+			if ( $local_ok ) {
 				return $url;
 			}
 
