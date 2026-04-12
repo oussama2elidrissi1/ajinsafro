@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Wp\WpPost;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -30,24 +31,58 @@ class WordPressMediaService
      */
     public function getUploadsBasePath(): string
     {
-        $path = config('wordpress.uploads_path', public_path('wp-content/uploads'));
+        $path = config('wordpress.uploads_path');
+        if (! is_string($path) || $path === '') {
+            $path = public_path('wp-content/uploads');
+        }
 
         return rtrim($path, DIRECTORY_SEPARATOR);
     }
 
     /**
-     * Base URL publique pour les uploads (ex: https://domain.com/booking/wp-content/uploads).
-     * Ne dépend pas du guid WordPress. Configurable via WP_UPLOADS_URL,
-     * défaut url('/wp-content/uploads') pour respecter la base /booking.
+     * Base URL publique pour les uploads (ex: https://domain.com/wp-content/uploads).
+     * Ordre : WP_UPLOADS_URL → WP_PUBLIC_SITE_URL/wp-content/uploads → option WordPress siteurl → url().
      */
     public function getUploadsBaseUrl(): string
     {
-        $baseUrl = config('wordpress.uploads_url');
-        if ($baseUrl !== null && $baseUrl !== '') {
-            return rtrim($baseUrl, '/');
+        $explicit = config('wordpress.uploads_url');
+        if (is_string($explicit) && $explicit !== '') {
+            return rtrim($explicit, '/');
+        }
+
+        $publicSite = config('wordpress.public_site_url');
+        if (is_string($publicSite) && $publicSite !== '') {
+            return rtrim($publicSite, '/').'/wp-content/uploads';
+        }
+
+        $fromWp = $this->getWordPressSiteUrlFromDatabase();
+        if ($fromWp !== null && $fromWp !== '') {
+            return rtrim($fromWp, '/').'/wp-content/uploads';
         }
 
         return rtrim(url('/wp-content/uploads'), '/');
+    }
+
+    /**
+     * URL du site WordPress (option siteurl), pour aligner les URLs médias sur le front.
+     */
+    protected function getWordPressSiteUrlFromDatabase(): ?string
+    {
+        try {
+            $v = DB::connection('wp')->table('options')->where('option_name', 'siteurl')->value('option_value');
+
+            return $v ? (string) $v : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * URL publique complète d’un fichier sous uploads (guid / prévisualisation admin).
+     */
+    public function buildAttachmentPublicUrl(string $relativePath): string
+    {
+        return $this->url($relativePath);
     }
 
     /**
@@ -68,7 +103,7 @@ class WordPressMediaService
     {
         $safe = ltrim(str_replace(['..', "\0"], '', $relativePath), '/');
 
-        return $this->uploadsUrl . '/' . $safe;
+        return rtrim($this->uploadsUrl, '/').'/'.str_replace('\\', '/', $safe);
     }
 
     /**

@@ -168,11 +168,22 @@ $pagination_args = array_filter([
                                     $excerpt = get_the_excerpt() ? wp_trim_words(get_the_excerpt(), 18, '...') : wp_trim_words(get_the_content(), 18, '...');
                                     $terms = get_the_terms(get_the_ID(), 'hotel_type');
                                     $type_label = (! empty($terms) && ! is_wp_error($terms)) ? $terms[0]->name : __('Hotel', 'ajinsafro-traveler-home');
+
+                                    // Image : get_post_thumbnail_id() → _thumbnail_id ; tailles large / medium_large ; secours galerie ; défaut plugin.
+                                    $img = function_exists('ajth_hebergement_catalog_card_image_url')
+                                        ? ajth_hebergement_catalog_card_image_url(get_the_ID())
+                                        : '';
+                                    if ($img === '' && function_exists('ajth_hebergement_default_card_image_url')) {
+                                        $img = ajth_hebergement_default_card_image_url();
+                                    }
+                                    if ($img === '' || ( function_exists('wp_http_validate_url') && ! wp_http_validate_url($img) )) {
+                                        $img = function_exists('ajth_hebergement_default_card_image_url') ? ajth_hebergement_default_card_image_url() : '';
+                                    }
                                     ?>
                                     <article class="aj-voyages-grid__item">
                                         <a href="<?php the_permalink(); ?>" class="aj-card2 aj-hover-glass">
                                             <div class="aj-card2__image">
-                                                <?php ajth_render_catalog_card_image( get_the_ID() ); ?>
+                                                <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" class="aj-catalog-card__img" loading="lazy" decoding="async" />
                                             </div>
                                             <div class="aj-card2__body">
                                                 <h3 class="aj-card2__title"><?php the_title(); ?></h3>

@@ -5,46 +5,42 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWpTourRequest;
 use App\Http\Requests\UpdateWpTourRequest;
+use App\Models\Wp\WpPost;
+use App\Models\Wp\Activity;
+use App\Models\Wp\TourDay;
+use App\Models\Wp\TourDayActivity;
+use App\Models\Voyage;
+use App\Models\VoyageExtra;
+use App\Models\TravelProgramDay;
+use App\Models\TravelDayItem;
 use App\Models\Airline;
-use App\Models\Departure;
-use App\Models\DepartureRoomAllocation;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Models\TourHotelRoomAvailability;
 use App\Models\TourTransfer;
-use App\Models\TravelDate;
-use App\Models\TravelDayItem;
-use App\Models\TravelProgramDay;
-use App\Models\Voyage;
-use App\Models\VoyageCancellationTerm;
+use App\Models\TravelDeparturePlace;
+use App\Models\TravelDepartureFlight;
 use App\Models\VoyageDeparturePlace;
-use App\Models\VoyageDiscountRule;
-use App\Models\VoyageExtra;
-use App\Models\VoyageTheme;
-use App\Models\Wp\Activity;
-use App\Models\Wp\TourDay;
-use App\Models\Wp\TourDayActivity;
-use App\Models\Wp\WpPost;
+use App\Models\TravelDate;
+use App\Models\Departure;
+use App\Models\DepartureRoomAllocation;
 use App\Services\AdminWpTourCatalogQuery;
-use App\Services\BusinessReferentialService;
 use App\Services\VoyageAvailabilityService;
-use App\Services\VoyageFlightOptionService;
 use App\Services\VoyageFlightService;
-use App\Services\VoyageThemeWpSyncService;
+use App\Services\VoyageFlightOptionService;
 use App\Services\Wp\ProgramJsonService;
 use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
 use App\Support\TourPlacesCalculator;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class VoyageController extends Controller
@@ -74,34 +70,11 @@ class VoyageController extends Controller
     /**
      * Display listing of WordPress tours.
      */
-    public function index(Request $request): View
+    public function index(): View
     {
         $wpConnectionFailed = false;
-        $wpCatalogErrorMessage = null;
-        $filterTourTypes = [];
         try {
-            $filterTourTypes = DB::connection('wp')->table('terms as t')
-                ->join('term_taxonomy as tt', 'tt.term_id', '=', 't.term_id')
-                ->where('tt.taxonomy', 'st_tour_type')
-                ->orderBy('t.name')
-                ->get(['t.term_id', 't.name'])
-                ->all();
-        } catch (\Throwable $e) {
-            $filterTourTypes = [];
-        }
-
-        try {
-            $query = AdminWpTourCatalogQuery::baseQuery();
-            $this->applyVoyageIndexFilters($query, $request);
-
-            if (config('app.debug') && $request->filled('destination')) {
-                Log::debug('VoyageController@index destination filter (SQL)', [
-                    'sql' => $query->toSql(),
-                    'bindings' => $query->getBindings(),
-                ]);
-            }
-
-            $tours = $query->paginate(20)->withQueryString();
+            $tours = AdminWpTourCatalogQuery::baseQuery()->paginate(20);
 
             if (config('app.debug')) {
                 Log::debug('VoyageController@index WP catalog', [
@@ -121,10 +94,10 @@ class VoyageController extends Controller
                     $tour->address = '-';
                 }
                 $tour->child_price = $tour->getMeta('child_price');
-
                 return $tour;
             });
 
+            // Enrichir la liste avec le slug Laravel (pour le bouton "Voir la page client").
             $wpIds = $tours->getCollection()->map(fn ($t) => (int) ($t->ID ?? 0))->filter()->values()->all();
             $lvByWp = $wpIds !== []
                 ? Voyage::query()->whereIn('wp_post_id', $wpIds)->get(['wp_post_id', 'slug'])->keyBy('wp_post_id')
@@ -132,34 +105,11 @@ class VoyageController extends Controller
             $tours->getCollection()->transform(function ($tour) use ($lvByWp) {
                 $wpId = (int) ($tour->ID ?? 0);
                 $tour->laravel_slug = $wpId ? (string) ($lvByWp->get($wpId)->slug ?? '') : '';
-
                 return $tour;
             });
         } catch (\Throwable $e) {
-            $ctx = [
-                'exception' => $e::class,
-                'message' => $e->getMessage(),
-                'wp_connection' => 'wp',
-                'wp_database' => (string) config('database.connections.wp.database'),
-                'wp_host' => (string) config('database.connections.wp.host'),
-            ];
-            if ($e instanceof QueryException) {
-                $ctx['sql'] = $e->getSql();
-                $ctx['bindings'] = $e->getBindings();
-                $ctx['mysql_code'] = $e->errorInfo[1] ?? null;
-            }
-            Log::warning('VoyageController@index: catalogue voyages / filtres — échec requête', $ctx);
-
-            if (! $this->isWpDatabaseConnectionFailure($e)) {
-                if (config('app.debug')) {
-                    throw $e;
-                }
-                $wpCatalogErrorMessage = 'Le chargement de la liste a échoué (requête ou filtre). Consultez les logs serveur.';
-                report($e);
-            } else {
-                $wpConnectionFailed = true;
-            }
-
+            \Log::warning('VoyageController@index: WP connection failed', ['error' => $e->getMessage()]);
+            $wpConnectionFailed = true;
             $tours = new \Illuminate\Pagination\LengthAwarePaginator(
                 [],
                 0,
@@ -169,198 +119,7 @@ class VoyageController extends Controller
             );
         }
 
-        return view('admin.circuits.voyages.index', compact('tours', 'wpConnectionFailed', 'filterTourTypes', 'wpCatalogErrorMessage'));
-    }
-
-    /**
-     * Erreurs typiques de connexion / choix de base MySQL (à ne pas confondre avec une erreur SQL de filtre).
-     */
-    private function isWpDatabaseConnectionFailure(\Throwable $e): bool
-    {
-        $msg = strtolower($e->getMessage());
-        if (str_contains($msg, 'unknown database')
-            || str_contains($msg, 'access denied for user')
-            || str_contains($msg, 'could not find driver')
-            || str_contains($msg, 'connection refused')
-            || str_contains($msg, 'no such file or directory')) {
-            return true;
-        }
-        if ($e instanceof QueryException) {
-            $code = isset($e->errorInfo[1]) ? (int) $e->errorInfo[1] : 0;
-
-            return in_array($code, [1045, 1049, 2002, 2003, 2006], true);
-        }
-
-        return false;
-    }
-
-    /**
-     * Filtres métier sur la liste des tours (WordPress st_tours + métas + taxonomies + dates).
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Wp\WpPost>  $query
-     */
-    private function applyVoyageIndexFilters($query, Request $request): void
-    {
-        $pref = DB::connection('wp')->getTablePrefix();
-
-        if ($request->filled('status')) {
-            $query->where('post_status', $request->string('status'));
-        }
-
-        if ($request->filled('q')) {
-            $term = '%'.addcslashes($request->string('q')->toString(), '%_\\').'%';
-            $query->where(function ($w) use ($term) {
-                $w->where('post_title', 'like', $term)->orWhere('post_name', 'like', $term);
-            });
-        }
-
-        if ($request->filled('modified_from')) {
-            $query->whereDate('post_modified', '>=', $request->string('modified_from'));
-        }
-        if ($request->filled('modified_to')) {
-            $query->whereDate('post_modified', '<=', $request->string('modified_to'));
-        }
-
-        if ($request->filled('duration_min')) {
-            $min = (int) $request->input('duration_min');
-            $query->whereExists(function ($q) use ($min, $pref) {
-                $q->select(DB::raw(1))
-                    ->from(DB::raw('`'.$pref.'postmeta` as pm'))
-                    ->whereRaw('`pm`.`post_id` = `'.$pref.'posts`.`ID`')
-                    ->whereRaw('`pm`.`meta_key` = ?', ['duration_day'])
-                    ->whereRaw('CAST(`pm`.`meta_value` AS UNSIGNED) >= ?', [$min]);
-            });
-        }
-        if ($request->filled('duration_max')) {
-            $max = (int) $request->input('duration_max');
-            $query->whereExists(function ($q) use ($max, $pref) {
-                $q->select(DB::raw(1))
-                    ->from(DB::raw('`'.$pref.'postmeta` as pm'))
-                    ->whereRaw('`pm`.`post_id` = `'.$pref.'posts`.`ID`')
-                    ->whereRaw('`pm`.`meta_key` = ?', ['duration_day'])
-                    ->whereRaw('CAST(`pm`.`meta_value` AS UNSIGNED) <= ?', [$max]);
-            });
-        }
-
-        if ($request->filled('price_min')) {
-            $min = (float) $request->input('price_min');
-            $query->whereExists(function ($q) use ($min, $pref) {
-                $q->select(DB::raw(1))
-                    ->from(DB::raw('`'.$pref.'postmeta` as pm'))
-                    ->whereRaw('`pm`.`post_id` = `'.$pref.'posts`.`ID`')
-                    ->whereRaw('`pm`.`meta_key` = ?', ['adult_price'])
-                    ->whereRaw('CAST(`pm`.`meta_value` AS DECIMAL(12,2)) >= ?', [$min]);
-            });
-        }
-        if ($request->filled('price_max')) {
-            $max = (float) $request->input('price_max');
-            $query->whereExists(function ($q) use ($max, $pref) {
-                $q->select(DB::raw(1))
-                    ->from(DB::raw('`'.$pref.'postmeta` as pm'))
-                    ->whereRaw('`pm`.`post_id` = `'.$pref.'posts`.`ID`')
-                    ->whereRaw('`pm`.`meta_key` = ?', ['adult_price'])
-                    ->whereRaw('CAST(`pm`.`meta_value` AS DECIMAL(12,2)) <= ?', [$max]);
-            });
-        }
-
-        if ($request->filled('destination')) {
-            $this->applyDestinationFilterForVoyageIndex($query, $request->string('destination')->toString(), $pref);
-        }
-
-        if ($request->filled('tour_type') && (int) $request->input('tour_type') > 0) {
-            $termId = (int) $request->input('tour_type');
-            $query->whereExists(function ($q) use ($termId, $pref) {
-                $q->select(DB::raw(1))
-                    ->from(DB::raw('`'.$pref.'term_relationships` as tr'))
-                    ->join(DB::raw('`'.$pref.'term_taxonomy` as tt'), DB::raw('`tt`.`term_taxonomy_id`'), '=', DB::raw('`tr`.`term_taxonomy_id`'))
-                    ->whereRaw('`tr`.`object_id` = `'.$pref.'posts`.`ID`')
-                    ->whereRaw('`tt`.`term_id` = ?', [$termId])
-                    ->whereRaw('`tt`.`taxonomy` = ?', ['st_tour_type']);
-            });
-        }
-
-        if ($request->filled('has_departures')) {
-            $v = (string) $request->input('has_departures');
-            if ($v === '1') {
-                $query->whereExists(function ($q) use ($pref) {
-                    $q->select(DB::raw(1))
-                        ->from(DB::raw('`'.$pref.'aj_travel_dates` as td'))
-                        ->whereRaw('`td`.`travel_id` = `'.$pref.'posts`.`ID`')
-                        ->whereRaw('`td`.`is_active` = ?', [1]);
-                });
-            } elseif ($v === '0') {
-                $query->whereNotExists(function ($q) use ($pref) {
-                    $q->select(DB::raw(1))
-                        ->from(DB::raw('`'.$pref.'aj_travel_dates` as td'))
-                        ->whereRaw('`td`.`travel_id` = `'.$pref.'posts`.`ID`')
-                        ->whereRaw('`td`.`is_active` = ?', [1]);
-                });
-            }
-        }
-
-        if ($request->filled('has_laravel_public') && $request->input('has_laravel_public') === '1') {
-            $ids = Voyage::query()->whereNotNull('slug')->where('slug', '!=', '')->pluck('wp_post_id')->filter()->values()->all();
-            if ($ids !== []) {
-                $query->whereIn('ID', $ids);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
-    }
-
-    /**
-     * Filtre « Destination » : mêmes sources que la colonne du tableau (voir transform dans index()).
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Wp\WpPost>  $query
-     */
-    private function applyDestinationFilterForVoyageIndex($query, string $term, string $pref): void
-    {
-        $term = trim($term);
-        if ($term === '') {
-            return;
-        }
-
-        $d = '%'.addcslashes($term, '%_\\').'%';
-        $postsTable = '`'.$pref.'posts`';
-
-        $query->where(function ($w) use ($d, $pref, $postsTable) {
-            $w->where('post_title', 'like', $d)
-                ->orWhere('post_name', 'like', $d)
-                ->orWhereExists(function ($q) use ($d, $pref) {
-                    $q->select(DB::raw(1))
-                        ->from(DB::raw('`'.$pref.'postmeta` as pm'))
-                        ->whereRaw('`pm`.`post_id` = `'.$pref.'posts`.`ID`')
-                        ->whereRaw('`pm`.`meta_key` = ?', ['address'])
-                        ->whereRaw('`pm`.`meta_value` LIKE ?', [$d]);
-                })
-                ->orWhereExists(function ($q) use ($d, $pref) {
-                    $q->select(DB::raw(1))
-                        ->from(DB::raw('`'.$pref.'postmeta` as pm'))
-                        ->whereRaw('`pm`.`post_id` = `'.$pref.'posts`.`ID`')
-                        ->whereRaw('`pm`.`meta_key` = ?', ['aj_catalog_destination'])
-                        ->whereRaw('`pm`.`meta_value` LIKE ?', [$d]);
-                })
-                ->orWhereExists(function ($q) use ($d, $pref) {
-                    $q->select(DB::raw(1))
-                        ->from(DB::raw('`'.$pref.'postmeta` as pm'))
-                        ->whereRaw('`pm`.`post_id` = `'.$pref.'posts`.`ID`')
-                        ->whereRaw('`pm`.`meta_key` = ?', ['multi_location'])
-                        ->whereRaw('`pm`.`meta_value` LIKE ?', [$d]);
-                })
-                ->orWhereRaw(
-                    'EXISTS (
-                        SELECT 1
-                        FROM `'.$pref.'posts` AS `loc`
-                        INNER JOIN `'.$pref.'postmeta` AS `pm_ml`
-                            ON `pm_ml`.`post_id` = '.$postsTable.'.`ID`
-                            AND `pm_ml`.`meta_key` = ?
-                            AND INSTR(`pm_ml`.`meta_value`, CONCAT(\'_\', `loc`.`ID`, \'_\')) > 0
-                        WHERE `loc`.`post_type` = ?
-                            AND (`loc`.`post_title` LIKE ? OR `loc`.`post_name` LIKE ?)
-                    )',
-                    ['multi_location', 'location', $d, $d]
-                );
-        });
+        return view('admin.circuits.voyages.index', compact('tours', 'wpConnectionFailed'));
     }
 
     /**
@@ -369,7 +128,7 @@ class VoyageController extends Controller
     public function show(int $id): View
     {
         $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
-
+        
         // CrÃ©er un objet compatible avec les vues existantes
         $voyage = $wpPost;
         $voyage->name = $wpPost->post_title; // Alias pour compatibilitÃ©
@@ -377,7 +136,7 @@ class VoyageController extends Controller
         $voyage->description = $wpPost->post_content;
         $voyage->updated_at = $wpPost->post_modified;
         $voyage->created_at = $wpPost->post_date;
-
+        
         // Charger les metas (max_people et places sont calculÃ©s Ã  partir des chambres et enregistrÃ©s Ã  la sauvegarde)
         $meta = [
             'adult_price' => $wpPost->getMeta('adult_price'),
@@ -401,7 +160,7 @@ class VoyageController extends Controller
         } catch (\Throwable $e) {
             \Log::warning('VoyageController@show loadProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
-
+        
         return view('admin.circuits.voyages.show', compact('voyage', 'meta', 'programDays'));
     }
 
@@ -497,12 +256,6 @@ class VoyageController extends Controller
         $tourActivities = collect();
         $totalPlacesVoyage = 0;
         $voyageExtras = collect();
-        $allVoyageThemes = VoyageTheme::query()->active()->ordered()->get();
-        $veDestinationQuick = null;
-        $discountRules = collect();
-        $cancellationTerms = collect();
-        $paymentMethodOptions = BusinessReferentialService::paymentMethods();
-        $businessReferentials = BusinessReferentialService::allMerged();
 
         return view('admin.circuits.voyages.edit', compact(
             'voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds',
@@ -512,8 +265,7 @@ class VoyageController extends Controller
             'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo',
             'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl',
             'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers',
-            'totalPlacesVoyage', 'voyageExtras', 'allVoyageThemes',
-            'veDestinationQuick', 'discountRules', 'cancellationTerms', 'paymentMethodOptions', 'businessReferentials'
+            'totalPlacesVoyage', 'voyageExtras'
         ));
     }
 
@@ -530,7 +282,7 @@ class VoyageController extends Controller
         }
 
         // Convertir gallery CSV en array
-        if (! empty($validated['gallery_ids'])) {
+        if (!empty($validated['gallery_ids'])) {
             $validated['gallery_ids'] = array_filter(array_map('trim', explode(',', $validated['gallery_ids'])));
         }
 
@@ -538,10 +290,9 @@ class VoyageController extends Controller
             $tour = $this->repository->createTour($validated);
             $laravelVoyage = Voyage::firstOrCreate(
                 ['wp_post_id' => $tour->ID],
-                ['name' => $tour->post_title ?? 'Tour', 'slug' => 'tour-'.$tour->ID]
+                ['name' => $tour->post_title ?? 'Tour', 'slug' => 'tour-' . $tour->ID]
             );
-            $this->syncVoyageThemesFromRequest($request, $laravelVoyage);
-
+            
             // Save tour program if provided (PHP serialized)
             if ($request->has('tours_program')) {
                 $programStyle = $request->input('tours_program_style', 'style1');
@@ -556,7 +307,7 @@ class VoyageController extends Controller
                 ]);
             }
 
-            if (! $request->boolean('without_flight') && $request->input('without_flight') !== '1' && $request->has('flights')) {
+            if (!$request->boolean('without_flight') && $request->input('without_flight') !== '1' && $request->has('flights')) {
                 try {
                     $this->voyageFlightService->syncFlights($laravelVoyage->id, $request->input('flights', []));
                 } catch (\Throwable $e) {
@@ -570,7 +321,7 @@ class VoyageController extends Controller
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Erreur lors de la création : '.$e->getMessage()]);
+                ->withErrors(['error' => 'Erreur lors de la création : ' . $e->getMessage()]);
         }
     }
 
@@ -580,7 +331,7 @@ class VoyageController extends Controller
     public function edit(int $id): View
     {
         $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
-
+        
         // CrÃ©er un objet compatible avec les vues existantes
         $voyage = $wpPost;
         $voyage->name = $wpPost->post_title;
@@ -590,7 +341,7 @@ class VoyageController extends Controller
         $voyage->updated_at = $wpPost->post_modified;
         $voyage->created_at = $wpPost->post_date;
         $voyage->status = $wpPost->post_status;
-
+        
         // Charger TOUTES les metas Traveler (lecture complÃ¨te)
         $meta = [
             // LOCATION
@@ -602,7 +353,7 @@ class VoyageController extends Controller
             'map_lng' => $wpPost->getMeta('map_lng'),
             'map_zoom' => $wpPost->getMeta('map_zoom'),
             'map_type' => $wpPost->getMeta('map_type'),
-
+            
             // GENERAL
             'is_featured' => $wpPost->getMeta('is_featured'),
             'tour_price_by' => $wpPost->getMeta('tour_price_by'),
@@ -611,13 +362,13 @@ class VoyageController extends Controller
             'duration_day' => $wpPost->getMeta('duration_day'),
             'max_people' => $wpPost->getMeta('max_people'),
             'min_people' => $wpPost->getMeta('min_people'),
-
+            
             // CONTACT
             'contact_email' => $wpPost->getMeta('contact_email'),
             'phone' => $wpPost->getMeta('phone'),
             'fax' => $wpPost->getMeta('fax'),
             'website' => $wpPost->getMeta('website'),
-
+            
             // PRICE
             'min_price' => $wpPost->getMeta('min_price'),
             'base_price' => $wpPost->getMeta('base_price'),
@@ -625,47 +376,44 @@ class VoyageController extends Controller
             'adult_price' => $wpPost->getMeta('adult_price'),
             'child_price' => $wpPost->getMeta('child_price'),
             'infant_price' => $wpPost->getMeta('infant_price'),
-            'room_price_double' => $wpPost->getMeta('room_price_double'),
-            'room_price_twin' => $wpPost->getMeta('room_price_twin'),
-            'room_price_single' => $wpPost->getMeta('room_price_single'),
             'commission_adulte' => $wpPost->getMeta('commission_adulte'),
             'commission_enfant' => $wpPost->getMeta('commission_enfant'),
             'discount' => $wpPost->getMeta('discount'),
             'discount_type' => $wpPost->getMeta('discount_type'),
             'discount_by_people_type' => $wpPost->getMeta('discount_by_people_type'),
             'calculator_discount_by_people_type' => $wpPost->getMeta('calculator_discount_by_people_type'),
-
+            
             // INFORMATION
             'tours_include' => $wpPost->getMeta('tours_include'),
             'tours_exclude' => $wpPost->getMeta('tours_exclude'),
             'tours_highlight' => $wpPost->getMeta('tours_highlight'),
             'tours_faq' => $wpPost->getMeta('tours_faq'),
             'tours_program_style' => $wpPost->getMeta('tours_program_style'),
-
+            
             // AVAILABILITY
             'tours_booking_period' => $wpPost->getMeta('tours_booking_period'),
             'st_booking_option_type' => $wpPost->getMeta('st_booking_option_type'),
             'check_in' => $wpPost->getMeta('check_in'),
             'check_out' => $wpPost->getMeta('check_out'),
-
+            
             // CANCEL BOOKING
             'st_allow_cancel' => $wpPost->getMeta('st_allow_cancel'),
             'st_cancel_percent' => $wpPost->getMeta('st_cancel_percent'),
             'st_cancel_number_day' => $wpPost->getMeta('st_cancel_number_day'),
-
+            
             // ICAL
             'ical_url' => $wpPost->getMeta('ical_url'),
-
+            
             // MEDIA
             'thumbnail_id' => $wpPost->getMeta('_thumbnail_id'),
             'hero_image_id' => $wpPost->getMeta('_tour_hero_image_id'),
             'hero_gallery_ids' => $wpPost->getMeta('_tour_hero_gallery_ids'),
             'gallery' => $wpPost->getMeta('gallery'),
             'video' => $wpPost->getMeta('video'),
-
+            
             // MAP
             'st_google_map' => $wpPost->getMeta('st_google_map'),
-
+            
             // PAYMENT GATEWAYS
             'is_meta_payment_gateway_st_paypal' => $wpPost->getMeta('is_meta_payment_gateway_st_paypal'),
             'is_meta_payment_gateway_st_onepay' => $wpPost->getMeta('is_meta_payment_gateway_st_onepay'),
@@ -675,22 +423,22 @@ class VoyageController extends Controller
             'is_meta_payment_gateway_st_payumoney' => $wpPost->getMeta('is_meta_payment_gateway_st_payumoney'),
             'is_meta_payment_gateway_st_razor' => $wpPost->getMeta('is_meta_payment_gateway_st_razor'),
         ];
-
+        
         // Convertir gallery en CSV
         $gallery_csv = '';
-        if (! empty($meta['gallery'])) {
+        if (!empty($meta['gallery'])) {
             $gallery_csv = is_array($meta['gallery']) ? implode(',', $meta['gallery']) : $meta['gallery'];
         }
-
+        
         // Charger les taxonomies disponibles
         $availableTaxonomies = $this->getAvailableTaxonomies();
-
+        
         // Charger les taxonomies assignÃ©es Ã  ce tour
         $assignedTaxonomies = $this->getPostTaxonomies($id);
-
+        
         // Charger les locations (tree)
         $locationsTree = $this->repository->getLocationsTree();
-
+        
         // Parser multi_location actuel
         $multiLocationValue = $wpPost->getMeta('multi_location');
         $selectedLocationIds = $this->repository->parseMultiLocation($multiLocationValue);
@@ -706,7 +454,7 @@ class VoyageController extends Controller
         // has 7 rows, ensureDaysExist() only used meta and WP stayed at 4 days â€” the UI showed 4 cards.
         $laravelVoyage = Voyage::firstOrCreate(
             ['wp_post_id' => $id],
-            ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-'.$id]
+            ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
         );
 
         $programDays = collect();
@@ -763,7 +511,7 @@ class VoyageController extends Controller
             $transferIdsByProgramDayId = [];
             try {
                 $programDayIds = $travelProgramDaysWithRelations->pluck('id')->filter()->values()->toArray();
-                if (! empty($programDayIds) && \Illuminate\Support\Facades\Schema::connection('mysql')->hasTable('program_day_transfers')) {
+                if (!empty($programDayIds) && \Illuminate\Support\Facades\Schema::connection('mysql')->hasTable('program_day_transfers')) {
                     $rows = \Illuminate\Support\Facades\DB::connection('mysql')
                         ->table('program_day_transfers')
                         ->whereIn('program_day_id', $programDayIds)
@@ -798,7 +546,7 @@ class VoyageController extends Controller
         $programDays = $this->mergeProgrammeDaysWithLaravelData($programDays, $travelProgramDaysWithRelations);
 
         $oldProgrammeDays = $this->getOldProgrammeDaysInput();
-        if (! empty($oldProgrammeDays)) {
+        if (!empty($oldProgrammeDays)) {
             $programDays = $this->buildProgrammeFormDaysFromPayload($oldProgrammeDays, $activitiesCatalog);
             $programDayHotelsTransfers = $this->extractProgrammeDayRelationsFromInput($oldProgrammeDays);
         } elseif ($programDays->isEmpty()) {
@@ -834,7 +582,7 @@ class VoyageController extends Controller
             $airlines = collect();
         }
         $heroImageUrl = null;
-        $heroId = ! empty($meta['hero_image_id']) ? (int) $meta['hero_image_id'] : (! empty($meta['thumbnail_id']) ? (int) $meta['thumbnail_id'] : null);
+        $heroId = !empty($meta['hero_image_id']) ? (int) $meta['hero_image_id'] : (!empty($meta['thumbnail_id']) ? (int) $meta['thumbnail_id'] : null);
         if ($heroId) {
             $heroImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
         }
@@ -919,24 +667,7 @@ class VoyageController extends Controller
             'day_numbers' => $programDays->pluck('day.day_number')->filter()->values()->toArray(),
         ]);
 
-        $laravelVoyage->load('themes');
-        $allVoyageThemes = VoyageTheme::query()->active()->ordered()->get();
-
-        $destinationAreaLabel = $this->repository->getPrimaryDestinationAreaLabel($wpPost);
-        if (! $destinationAreaLabel && $laravelVoyage && trim((string) ($laravelVoyage->destination ?? '')) !== '') {
-            $destinationAreaLabel = trim((string) $laravelVoyage->destination);
-        }
-        $veDestinationQuick = $destinationAreaLabel;
-        $discountRules = $laravelVoyage
-            ? VoyageDiscountRule::query()->where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('priority')->orderBy('id')->get()
-            : collect();
-        $cancellationTerms = $laravelVoyage
-            ? VoyageCancellationTerm::query()->where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
-            : collect();
-        $paymentMethodOptions = BusinessReferentialService::paymentMethods();
-        $businessReferentials = BusinessReferentialService::allMerged();
-
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras', 'allVoyageThemes', 'veDestinationQuick', 'discountRules', 'cancellationTerms', 'paymentMethodOptions', 'businessReferentials'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras'));
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -974,7 +705,7 @@ class VoyageController extends Controller
                 'is_tentative' => $in->is_tentative,
             ];
         }
-        if (! empty($items)) {
+        if (!empty($items)) {
             $this->voyageFlightOptionService->syncOptions($voyageId, $items, $lastDayNumber);
         }
     }
@@ -982,16 +713,15 @@ class VoyageController extends Controller
     /**
      * Associer les pays du monde (config) aux locations WP (arbre) et produire les donnÃ©es pour le select + villes.
      *
-     * @param  array  $worldCountries  [ code => nom ]
-     * @param  array  $locationsTree  [ [ 'id', 'title', 'children' => [...] ], ... ]
+     * @param array $worldCountries [ code => nom ]
+     * @param array $locationsTree  [ [ 'id', 'title', 'children' => [...] ], ... ]
      * @return array [ code => [ 'id' => wpId, 'title' => nom, 'cities' => [ [ 'id', 'title' ], ... ] ], ... ]
      */
     private function buildCountryCitiesData(array $worldCountries, array $locationsTree): array
     {
         $normalize = function (string $s): string {
             $s = mb_strtolower($s, 'UTF-8');
-            $accents = ['à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'ae', 'ç' => 'c', 'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ñ' => 'n', 'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y', 'ÿ' => 'y', 'œ' => 'oe'];
-
+            $accents = ['à'=>'a','á'=>'a','â'=>'a','ã'=>'a','ä'=>'a','å'=>'a','æ'=>'ae','ç'=>'c','è'=>'e','é'=>'e','ê'=>'e','ë'=>'e','ì'=>'i','í'=>'i','î'=>'i','ï'=>'i','ñ'=>'n','ò'=>'o','ó'=>'o','ô'=>'o','õ'=>'o','ö'=>'o','ù'=>'u','ú'=>'u','û'=>'u','ü'=>'u','ý'=>'y','ÿ'=>'y','œ'=>'oe'];
             return strtr($s, $accents);
         };
         $nameToCode = [];
@@ -1017,7 +747,6 @@ class VoyageController extends Controller
                 ];
             }
         }
-
         return $out;
     }
 
@@ -1025,19 +754,19 @@ class VoyageController extends Controller
      * Construire la liste fusionnÃ©e Pays â†’ Villes (catalogue + WP) pour lâ€™UI.
      * Chaque ville a : id (WP ou null), title, needsCreate (true si pas encore en WP).
      *
-     * @param  array  $worldCountries  [ code => nom ]
-     * @param  array  $worldCities  [ code => [ 'Ville1', 'Ville2', ... ] ]
-     * @param  array  $countryCitiesData  [ code => [ 'id', 'title', 'cities' => [ [ 'id', 'title' ], ... ] ] ]
+     * @param array $worldCountries [ code => nom ]
+     * @param array $worldCities    [ code => [ 'Ville1', 'Ville2', ... ] ]
+     * @param array $countryCitiesData [ code => [ 'id', 'title', 'cities' => [ [ 'id', 'title' ], ... ] ] ]
      * @return array [ code => [ [ 'id' => int|null, 'title' => string, 'needsCreate' => bool ], ... ] ]
      */
     private function buildMergedCitiesByCode(array $worldCountries, array $worldCities, array $countryCitiesData): array
     {
         $normalize = function (string $s): string {
             $s = mb_strtolower($s, 'UTF-8');
-            $accents = ['à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'ae', 'ç' => 'c', 'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ñ' => 'n', 'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y', 'ÿ' => 'y', 'œ' => 'oe'];
-
+            $accents = ['à'=>'a','á'=>'a','â'=>'a','ã'=>'a','ä'=>'a','å'=>'a','æ'=>'ae','ç'=>'c','è'=>'e','é'=>'e','ê'=>'e','ë'=>'e','ì'=>'i','í'=>'i','î'=>'i','ï'=>'i','ñ'=>'n','ò'=>'o','ó'=>'o','ô'=>'o','õ'=>'o','ö'=>'o','ù'=>'u','ú'=>'u','û'=>'u','ü'=>'u','ý'=>'y','ÿ'=>'y','œ'=>'oe'];
             return strtr($s, $accents);
         };
+        
 
         $merged = [];
         $codes = array_unique(array_merge(array_keys($worldCities), array_keys($countryCitiesData)));
@@ -1065,7 +794,7 @@ class VoyageController extends Controller
             // Puis les villes WP qui ne sont pas dans le catalogue
             foreach ($wpCities as $c) {
                 $norm = $normalize($c['title']);
-                if (! isset($seenNorm[$norm])) {
+                if (!isset($seenNorm[$norm])) {
                     $list[] = ['id' => $c['id'], 'title' => $c['title'], 'needsCreate' => false];
                 }
             }
@@ -1099,12 +828,10 @@ class VoyageController extends Controller
                 $id = $this->repository->ensureCountryLocation($countryCode);
                 $countries = config('countries', []);
                 $title = $countries[$countryCode] ?? $countryCode;
-
                 return response()->json(['id' => $id, 'title' => $title]);
             }
 
             $id = $this->repository->ensureCityLocation($countryCode, trim((string) $cityName));
-
             return response()->json(['id' => $id, 'title' => trim((string) $cityName)]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
@@ -1115,7 +842,6 @@ class VoyageController extends Controller
                 'country_code' => $request->input('country_code'),
                 'city_name' => $request->input('city_name'),
             ]);
-
             return response()->json([
                 'error' => 'Impossible de créer la destination.',
                 'message' => config('app.debug') ? $e->getMessage() : null,
@@ -1129,7 +855,7 @@ class VoyageController extends Controller
      *
      * @return int[] IDs des enregistrements TourHotel crÃ©Ã©s, dans lâ€™ordre dâ€™affichage (pour sync des chambres).
      */
-    private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): array
+        private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): array
     {
         $inputHotels = $request->has('tour_hotels') && is_array($request->input('tour_hotels'))
             ? array_values($request->input('tour_hotels'))
@@ -1204,24 +930,23 @@ class VoyageController extends Controller
             TourHotelRoom::whereIn('tour_hotel_id', $hotelIdsToDelete->all())->delete();
             TourHotel::whereIn('id', $hotelIdsToDelete->all())->delete();
         }
-
         return $savedHotelIds;
     }
 
     /**
      * Sync rooms for each tour hotel. Expects hotel ids in same order as tour_hotels request array.
      */
-    private function syncTourHotelRooms(int $tourId, \Illuminate\Http\Request $request, array $hotelIdsOrdered): array
+        private function syncTourHotelRooms(int $tourId, \Illuminate\Http\Request $request, array $hotelIdsOrdered): array
     {
         $tourHotelsInput = $request->input('tour_hotels', []);
-        if (! is_array($tourHotelsInput)) {
+        if (!is_array($tourHotelsInput)) {
             return [];
         }
         $tourHotelsInput = array_values($tourHotelsInput);
         $roomsByTourHotelId = [];
         $roomsByIndex = [];
         foreach ($tourHotelsInput as $idx => $maybeTourHotel) {
-            if (! is_array($maybeTourHotel)) {
+            if (!is_array($maybeTourHotel)) {
                 continue;
             }
             $thId = isset($maybeTourHotel['id']) && $maybeTourHotel['id'] !== '' ? (int) $maybeTourHotel['id'] : 0;
@@ -1234,7 +959,7 @@ class VoyageController extends Controller
         $savedRoomIdsByHotelIndex = [];
         foreach ($hotelIdsOrdered as $index => $tourHotelId) {
             $roomsInput = $roomsByTourHotelId[$tourHotelId] ?? ($roomsByIndex[$index] ?? ($tourHotelsInput[$index]['rooms'] ?? []));
-            if (! is_array($roomsInput)) {
+            if (!is_array($roomsInput)) {
                 $roomsInput = [];
             }
             $roomsInput = array_values($roomsInput);
@@ -1268,7 +993,7 @@ class VoyageController extends Controller
             $savedRoomIdsByRoomIndex = [];
             $sortOrder = 0;
             foreach ($roomsInput as $roomIndex => $r) {
-                if (! is_array($r)) {
+                if (!is_array($r)) {
                     continue;
                 }
                 $roomId = isset($r['id']) && $r['id'] !== '' ? (int) $r['id'] : null;
@@ -1321,7 +1046,6 @@ class VoyageController extends Controller
             }
             $savedRoomIdsByHotelIndex[$index] = $savedRoomIdsByRoomIndex;
         }
-
         return $savedRoomIdsByHotelIndex;
     }
 
@@ -1346,7 +1070,7 @@ class VoyageController extends Controller
     private function syncTourTransfers(int $tourId, \Illuminate\Http\Request $request, int $lastDayNumber = 1): void
     {
         $transfers = [];
-
+        
         // Nouveau format unifiÃ© : tour_transfers[]
         if ($request->has('tour_transfers') && is_array($request->input('tour_transfers'))) {
             foreach ($request->input('tour_transfers') as $transfer) {
@@ -1355,7 +1079,7 @@ class VoyageController extends Controller
                 }
             }
         }
-
+        
         // Ancien format : tour_transfer_arrivals[] et tour_transfer_departures[] (compatibilitÃ©)
         $arrivals = [];
         if ($request->has('tour_transfer_arrivals') && is_array($request->input('tour_transfer_arrivals'))) {
@@ -1370,7 +1094,7 @@ class VoyageController extends Controller
                 $arrivals[] = $arr;
             }
         }
-
+        
         $departures = [];
         if ($request->has('tour_transfer_departures') && is_array($request->input('tour_transfer_departures'))) {
             foreach ($request->input('tour_transfer_departures') as $dep) {
@@ -1384,9 +1108,9 @@ class VoyageController extends Controller
                 $departures[] = $dep;
             }
         }
-
+        
         // Si nouveau format utilisÃ©, ignorer l'ancien format
-        if (! empty($transfers)) {
+        if (!empty($transfers)) {
             TourTransfer::where('tour_id', $tourId)->delete();
             $sortOrder = 0;
             foreach ($transfers as $transfer) {
@@ -1398,7 +1122,7 @@ class VoyageController extends Controller
                     'direction' => TourTransfer::DIRECTION_ARRIVAL, // Par dÃ©faut, peut Ãªtre adaptÃ© selon besoin
                     'day_number' => $dayNumber,
                     'sort_order' => $sortOrder++,
-                    'is_optional' => ! empty($transfer['is_optional']) ? 1 : 0,
+                    'is_optional' => !empty($transfer['is_optional']) ? 1 : 0,
                     'from_label' => $transfer['from_label'] ?? null,
                     'to_label' => $transfer['to_label'] ?? null,
                     'pickup_time' => $transfer['pickup_time'] ?? null,
@@ -1419,7 +1143,7 @@ class VoyageController extends Controller
                     'direction' => TourTransfer::DIRECTION_ARRIVAL,
                     'day_number' => $dayNumber,
                     'sort_order' => $sortOrder++,
-                    'is_optional' => ! empty($arr['is_optional']) ? 1 : 0,
+                    'is_optional' => !empty($arr['is_optional']) ? 1 : 0,
                     'from_label' => $arr['from_label'] ?? null,
                     'to_label' => $arr['to_label'] ?? null,
                     'pickup_time' => $arr['pickup_time'] ?? null,
@@ -1437,7 +1161,7 @@ class VoyageController extends Controller
                     'direction' => TourTransfer::DIRECTION_DEPARTURE,
                     'day_number' => $dayNumber,
                     'sort_order' => $sortOrder++,
-                    'is_optional' => ! empty($dep['is_optional']) ? 1 : 0,
+                    'is_optional' => !empty($dep['is_optional']) ? 1 : 0,
                     'from_label' => $dep['from_label'] ?? null,
                     'to_label' => $dep['to_label'] ?? null,
                     'pickup_time' => $dep['pickup_time'] ?? null,
@@ -1457,20 +1181,19 @@ class VoyageController extends Controller
     private function syncDeparturePlaces(int $tourId, \Illuminate\Http\Request $request): void
     {
         $voyage = Voyage::where('wp_post_id', $tourId)->first();
-        if (! $voyage) {
+        if (!$voyage) {
             return;
         }
 
         $places = $request->input('departure_places', []);
-        if (! is_array($places)) {
+        if (!is_array($places)) {
             $places = [];
         }
-        uksort($places, fn ($a, $b) => (int) $a <=> (int) $b);
 
         $keptIds = [];
         $sortOrder = 0;
         foreach ($places as $placeIndex => $placeData) {
-            if (! is_array($placeData)) {
+            if (!is_array($placeData)) {
                 continue;
             }
             $placeName = trim($placeData['name'] ?? '');
@@ -1480,7 +1203,7 @@ class VoyageController extends Controller
             $placeId = isset($placeData['id']) && $placeData['id'] !== '' ? (int) $placeData['id'] : null;
             $data = [
                 'name' => $placeName,
-                'code' => ! empty($placeData['code']) ? trim($placeData['code']) : null,
+                'code' => !empty($placeData['code']) ? trim($placeData['code']) : null,
                 'is_active' => isset($placeData['is_active']) ? (bool) $placeData['is_active'] : true,
                 'sort_order' => $sortOrder++,
                 'price' => isset($placeData['price']) && $placeData['price'] !== '' ? (float) $placeData['price'] : null,
@@ -1508,7 +1231,7 @@ class VoyageController extends Controller
         }
 
         $idsToDelete = VoyageDeparturePlace::where('voyage_id', $voyage->id)->whereNotIn('id', $keptIds)->pluck('id')->toArray();
-        if (! empty($idsToDelete)) {
+        if (!empty($idsToDelete)) {
             \App\Models\VoyageFlightOption::where('voyage_id', $voyage->id)->whereIn('departure_place_id', $idsToDelete)->update(['departure_place_id' => null]);
             VoyageDeparturePlace::where('voyage_id', $voyage->id)->whereIn('id', $idsToDelete)->delete();
         }
@@ -1582,7 +1305,7 @@ class VoyageController extends Controller
         }
 
         try {
-            $model = new VoyageExtra;
+            $model = new VoyageExtra();
             $connection = $model->getConnectionName() ?: config('database.default');
             $available = Schema::connection($connection)->hasTable($model->getTable());
         } catch (\Throwable $e) {
@@ -1595,10 +1318,10 @@ class VoyageController extends Controller
     /**
      * Sync travel dates for tour.
      */
-    private function syncTravelDates(int $tourId, \Illuminate\Http\Request $request): Collection
+        private function syncTravelDates(int $tourId, \Illuminate\Http\Request $request): Collection
     {
         $dates = $request->input('travel_dates', []);
-        if (! is_array($dates)) {
+        if (!is_array($dates)) {
             return collect();
         }
         $existingDates = TravelDate::where('travel_id', $tourId)->orderBy('date')->orderBy('id')->get();
@@ -1653,10 +1376,8 @@ class VoyageController extends Controller
             TourHotelRoomAvailability::whereIn('travel_date_id', $dateIdsToDelete->all())->delete();
             TravelDate::whereIn('id', $dateIdsToDelete->all())->delete();
         }
-
         return $persistedDates->sortBy('date')->values();
     }
-
     private function syncTourHotelRoomDateAvailabilities(int $tourId, \Illuminate\Http\Request $request, array $hotelIdsOrdered, array $roomIdsByHotelIndex, Collection $travelDates): void
     {
         $tourHotelsInput = $request->input('tour_hotels', []);
@@ -1751,7 +1472,6 @@ class VoyageController extends Controller
             }
         }
     }
-
     private function computeMaxPeopleFromTravelDates(Collection $travelDates, int $fallbackSeats): int
     {
         if ($travelDates->isEmpty()) {
@@ -1766,7 +1486,6 @@ class VoyageController extends Controller
 
         return $maxSeats > 0 ? $maxSeats : $fallbackSeats;
     }
-
     private function buildDefaultRoomDateAvailabilityPayload(TourHotelRoom $room): array
     {
         $capacityPerRoom = TourPlacesCalculator::effectiveCapacity(
@@ -1775,7 +1494,6 @@ class VoyageController extends Controller
             (int) ($room->capacity_children ?? 0),
         );
         $availableRooms = max(0, (int) ($room->room_count ?? 0));
-
         return [
             'available_rooms' => $availableRooms,
             'capacity_per_room' => $capacityPerRoom,
@@ -1784,11 +1502,9 @@ class VoyageController extends Controller
             'supplement' => max(0, (float) ($room->supplement ?? 0)),
         ];
     }
-
     private function normalizeRoomAvailabilityStatus(mixed $status): string
     {
         $status = strtolower(trim((string) $status));
-
         return in_array($status, TourHotelRoomAvailability::STATUSES, true)
             ? $status
             : TourHotelRoomAvailability::STATUS_AVAILABLE;
@@ -1821,7 +1537,6 @@ class VoyageController extends Controller
             if (is_array($postedRow)) {
                 $rows = $this->normalizePostedDepartureAllocationRooms($postedRow['rooms'] ?? [], $hotelIdsOrdered);
                 $this->replaceDepartureRoomAllocations($departure, $rows !== [] ? $rows : $this->buildDefaultDepartureRoomAllocations((int) $departure->total_capacity));
-
                 continue;
             }
 
@@ -1991,7 +1706,7 @@ class VoyageController extends Controller
     {
         $taxonomies = ['language', 'languages', 'durations', 'st_tour_type'];
         $result = [];
-
+        
         foreach ($taxonomies as $taxonomy) {
             try {
                 $terms = \DB::connection('wp')
@@ -2001,19 +1716,19 @@ class VoyageController extends Controller
                     ->select('t.term_id', 't.name', 't.slug')
                     ->orderBy('t.name')
                     ->get();
-
+                
                 $result[$taxonomy] = $terms;
             } catch (\Exception $e) {
                 \Log::warning("Taxonomy '$taxonomy' not found or error loading terms", [
-                    'error' => $e->getMessage(),
+                    'error' => $e->getMessage()
                 ]);
                 $result[$taxonomy] = collect(); // Empty collection
             }
         }
-
+        
         return $result;
     }
-
+    
     /**
      * Get taxonomies assigned to a post.
      */
@@ -2021,7 +1736,7 @@ class VoyageController extends Controller
     {
         $taxonomies = ['language', 'languages', 'durations', 'st_tour_type'];
         $result = [];
-
+        
         foreach ($taxonomies as $taxonomy) {
             try {
                 $termIds = \DB::connection('wp')
@@ -2031,16 +1746,16 @@ class VoyageController extends Controller
                     ->where('tt.taxonomy', $taxonomy)
                     ->pluck('tt.term_id')
                     ->toArray();
-
+                
                 $result[$taxonomy] = $termIds;
             } catch (\Exception $e) {
                 \Log::warning("Error loading assigned terms for taxonomy '$taxonomy' on post $postId", [
-                    'error' => $e->getMessage(),
+                    'error' => $e->getMessage()
                 ]);
                 $result[$taxonomy] = [];
             }
         }
-
+        
         return $result;
     }
 
@@ -2085,12 +1800,12 @@ class VoyageController extends Controller
         $validated = $request->validated();
 
         // Option "Utiliser l'image principale comme image Ã  la une WP"
-        if (! empty($validated['hero_use_as_thumbnail']) && ! empty($validated['hero_image_id'])) {
+        if (!empty($validated['hero_use_as_thumbnail']) && !empty($validated['hero_image_id'])) {
             $validated['thumbnail_id'] = $validated['hero_image_id'];
         }
 
         // Convertir gallery CSV en array
-        if (! empty($validated['gallery_ids'])) {
+        if (!empty($validated['gallery_ids'])) {
             $validated['gallery_ids'] = array_filter(array_map('trim', explode(',', $validated['gallery_ids'])));
         }
 
@@ -2102,7 +1817,7 @@ class VoyageController extends Controller
                 try {
                     $voyage = Voyage::firstOrCreate(
                         ['wp_post_id' => $id],
-                        ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-'.$id]
+                        ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
                     );
                     $tour = $this->repository->getPost($id);
 
@@ -2142,11 +1857,8 @@ class VoyageController extends Controller
 
             $laravelVoyage = Voyage::firstOrCreate(
                 ['wp_post_id' => $id],
-                ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-'.$id]
+                ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
             );
-
-            $this->syncDeparturePlaces($id, $request);
-            $this->resolveFlightOptionsDeparturePlaceIds($request, $laravelVoyage->id);
 
             $this->syncActivities($laravelVoyage, $request);
             $lastDayNumber = 1;
@@ -2156,7 +1868,7 @@ class VoyageController extends Controller
             } catch (\Throwable $e) {
                 // keep 1
             }
-
+            
             // Log TOUTES les clÃ©s de la requÃªte pour diagnostic
             \Log::info('VoyageController@update - Request keys received', [
                 'tour_id' => $id,
@@ -2172,9 +1884,8 @@ class VoyageController extends Controller
                 $tourHotels = is_array($tourHotels) ? $tourHotels : [];
                 $roomsCounts = [];
                 foreach ($tourHotels as $hi => $hotelRow) {
-                    if (! is_array($hotelRow)) {
+                    if (!is_array($hotelRow)) {
                         $roomsCounts[$hi] = 0;
-
                         continue;
                     }
                     $rooms = $hotelRow['rooms'] ?? [];
@@ -2191,7 +1902,7 @@ class VoyageController extends Controller
                     'message' => $e->getMessage(),
                 ]);
             }
-
+            
             $withoutFlight = $request->boolean('without_flight') || $request->input('without_flight') === '1';
             if ($withoutFlight) {
                 try {
@@ -2238,7 +1949,8 @@ class VoyageController extends Controller
             $hotelIdsOrdered = $this->syncTourHotels($id, $request);
             $this->syncTourTransfers($id, $request, $lastDayNumber);
 
-            // Lieux de départ : déjà synchronisés avant les vols (référencement des options vol).
+            // Synchroniser les lieux de d?part et les dates disponibles
+            $this->syncDeparturePlaces($id, $request);
             $this->syncTravelDates($id, $request);
             // Vérité terrain après écriture WP : la collection retournée par syncTravelDates peut être vide
             // si le POST ne repasse pas travel_dates (ex. soumission partielle), alors que aj_travel_dates contient déjà des lignes.
@@ -2297,19 +2009,13 @@ class VoyageController extends Controller
                 }
             }
 
-            $laravelVoyage->refresh();
-            $this->syncVoyageDiscountRulesFromRequest($request, $laravelVoyage);
-            $this->syncVoyageCancellationTermsFromRequest($request, $laravelVoyage);
-            $this->syncVoyageLogisticsMetaFromRequest($request, $laravelVoyage);
-            $this->syncVoyageThemesFromRequest($request, $laravelVoyage);
-
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
                 ->with('success', 'Tour mis à jour avec succès dans WordPress ! Modifications visibles immédiatement.');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Erreur lors de la mise à jour : '.$e->getMessage()]);
+                ->withErrors(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()]);
         }
     }
 
@@ -2324,7 +2030,7 @@ class VoyageController extends Controller
     protected function syncProgrammeDaysAndActivities(int $tourId, Request $request): void
     {
         $programmeDays = $request->input('programme_days', []);
-        if (! is_array($programmeDays)) {
+        if (!is_array($programmeDays)) {
             return;
         }
 
@@ -2338,7 +2044,7 @@ class VoyageController extends Controller
             $orderedDayIds[] = $dayId;
         }
 
-        if (! empty($orderedDayIds)) {
+        if (!empty($orderedDayIds)) {
             $this->programService->reorderAndRenumberDays($tourId, $orderedDayIds);
         }
 
@@ -2365,9 +2071,8 @@ class VoyageController extends Controller
             $this->syncTravelProgramDayContent($tourId, $dayNumber, is_array($dayRow) ? $dayRow : []);
 
             $activities = $dayRow['activities'] ?? [];
-            if (! is_array($activities)) {
+            if (!is_array($activities)) {
                 $this->syncDayHotelsAndTransfers($tourId, $dayId, is_array($dayRow) ? $dayRow : []);
-
                 continue;
             }
             foreach ($activities as $k => $row) {
@@ -2407,7 +2112,7 @@ class VoyageController extends Controller
         $voyage = Voyage::where('wp_post_id', $tourId)->first();
         if ($voyage) {
             TravelProgramDay::where('voyage_id', $voyage->id)
-                ->when(! empty($submittedDayNumbers), function ($query) use ($submittedDayNumbers) {
+                ->when(!empty($submittedDayNumbers), function ($query) use ($submittedDayNumbers) {
                     $query->whereNotIn('day_number', $submittedDayNumbers);
                 })
                 ->delete();
@@ -2426,13 +2131,13 @@ class VoyageController extends Controller
     }
 
     /**
-     * Sync inline "Activités" tab rows for a voyage (save-global strategy).
+     * Sync inline "ActivitÃ©s" tab rows for a voyage (save-global strategy).
      * Stores rows in travel_day_items with type=activity and source=voyage_activities_tab.
      */
     protected function syncActivities(Voyage $voyage, UpdateWpTourRequest $request): void
     {
         $payload = $request->input('tour_activities', []);
-        if (! is_array($payload)) {
+        if (!is_array($payload)) {
             return;
         }
 
@@ -2440,12 +2145,12 @@ class VoyageController extends Controller
         $sortOrder = 0;
 
         foreach ($payload as $row) {
-            if (! is_array($row)) {
+            if (!is_array($row)) {
                 continue;
             }
 
             $activityId = (int) ($row['activity_id'] ?? 0);
-            if ($activityId <= 0 || ! Activity::whereKey($activityId)->exists()) {
+            if ($activityId <= 0 || !Activity::whereKey($activityId)->exists()) {
                 continue;
             }
 
@@ -2454,9 +2159,8 @@ class VoyageController extends Controller
             $pricingType = ($row['pricing_type'] ?? 'per_person') === 'fixed' ? 'fixed' : 'per_person';
             $unitPrice = (float) ($row['unit_price'] ?? 0);
             $unitPrice = $unitPrice < 0 ? 0 : round($unitPrice, 2);
-            $childPrice = (float) ($row['child_price'] ?? 0);
-            $childPrice = $childPrice < 0 ? 0 : round($childPrice, 2);
-            $description = trim((string) ($row['description'] ?? ''));
+            $quantity = (int) ($row['quantity'] ?? 1);
+            $quantity = $quantity < 1 ? 1 : $quantity;
 
             $itemData = [
                 'voyage_id' => $voyage->id,
@@ -2466,15 +2170,14 @@ class VoyageController extends Controller
                 'nights' => 0,
                 'type' => 'activity',
                 'title' => $title !== '' ? $title : ($activity?->title ?? 'Activité'),
-                'details' => $description !== '' ? $description : null,
+                'details' => null,
                 'included' => true,
                 'price_delta_per_person' => $pricingType === 'per_person' ? (int) round($unitPrice * 100) : 0,
                 'options_json' => [
                     'activity_id' => $activityId,
                     'pricing_type' => $pricingType,
                     'unit_price' => $unitPrice,
-                    'child_price' => $childPrice,
-                    'description' => $description,
+                    'quantity' => $quantity,
                 ],
                 'meta_json' => [
                     'source' => 'voyage_activities_tab',
@@ -2505,7 +2208,7 @@ class VoyageController extends Controller
             ->where('voyage_id', $voyage->id)
             ->where('type', 'activity')
             ->where('meta_json->source', 'voyage_activities_tab')
-            ->when(! empty($keptIds), fn ($query) => $query->whereNotIn('id', $keptIds))
+            ->when(!empty($keptIds), fn ($query) => $query->whereNotIn('id', $keptIds))
             ->delete();
     }
 
@@ -2519,20 +2222,20 @@ class VoyageController extends Controller
     protected function syncDayHotelsAndTransfers(int $tourId, int $dayId, array $dayRow): void
     {
         $tourDay = TourDay::where('tour_id', $tourId)->where('id', $dayId)->first();
-        if (! $tourDay) {
+        if (!$tourDay) {
             return;
         }
         $voyage = Voyage::where('wp_post_id', $tourId)->first();
-        if (! $voyage) {
+        if (!$voyage) {
             return;
         }
         $day = TravelProgramDay::where('voyage_id', $voyage->id)->where('day_number', (int) $tourDay->day_number)->first();
-        if (! $day) {
+        if (!$day) {
             return;
         }
 
         // Syncer l'hÃ´tel (0..1). Si hotel_id vide, lier au TourHotel crÃ©Ã© pour ce jour (ex. ajout depuis le drawer).
-        $hotelId = ! empty($dayRow['hotel_id']) ? (int) $dayRow['hotel_id'] : null;
+        $hotelId = !empty($dayRow['hotel_id']) ? (int) $dayRow['hotel_id'] : null;
         if ($hotelId) {
             $hotel = TourHotel::find($hotelId);
             if ($hotel) {
@@ -2544,20 +2247,20 @@ class VoyageController extends Controller
             // Chercher un hÃ´tel oÃ¹ le jour est dans la plage check-in -> check-out
             $dayNumber = (int) $tourDay->day_number;
             $hotelForDay = TourHotel::where('tour_id', $tourId)
-                ->where(function ($query) use ($dayNumber) {
+                ->where(function($query) use ($dayNumber) {
                     // Nouveau format : check_in_day / check_out_day
-                    $query->where(function ($q) use ($dayNumber) {
+                    $query->where(function($q) use ($dayNumber) {
                         $q->whereNotNull('check_in_day')
-                            ->whereNotNull('check_out_day')
-                            ->where('check_in_day', '<=', $dayNumber)
-                            ->where('check_out_day', '>=', $dayNumber);
+                          ->whereNotNull('check_out_day')
+                          ->where('check_in_day', '<=', $dayNumber)
+                          ->where('check_out_day', '>=', $dayNumber);
                     })
                     // CompatibilitÃ© ancien format : day_number
-                        ->orWhere(function ($q) use ($dayNumber) {
-                            $q->whereNull('check_in_day')
-                                ->whereNull('check_out_day')
-                                ->where('day_number', $dayNumber);
-                        });
+                    ->orWhere(function($q) use ($dayNumber) {
+                        $q->whereNull('check_in_day')
+                          ->whereNull('check_out_day')
+                          ->where('day_number', $dayNumber);
+                    });
                 })
                 ->first();
             $day->update(['hotel_id' => $hotelForDay?->id]);
@@ -2566,37 +2269,37 @@ class VoyageController extends Controller
         // Syncer les transferts (0..n)
         $transferIds = [];
         $transferInput = $dayRow['transfer_ids'] ?? '';
-        if (is_string($transferInput) && ! empty($transferInput)) {
+        if (is_string($transferInput) && !empty($transferInput)) {
             // Format: "1,2,3" ou "1" ou ""
             $transferIds = array_filter(
                 array_map('intval', array_map('trim', explode(',', $transferInput))),
-                fn ($id) => $id > 0
+                fn($id) => $id > 0
             );
         } elseif (is_array($transferInput)) {
             $transferIds = array_filter(
                 array_map('intval', $transferInput),
-                fn ($id) => $id > 0
+                fn($id) => $id > 0
             );
         }
 
         // Valider que chaque transfert existe, puis syncer
         // Utiliser directement DB::connection('mysql') pour forcer la bonne connexion pour la table pivot
         // car la relation belongsToMany utilise la connexion du modÃ¨le liÃ© (TourTransfer sur 'wp')
-        if (! empty($transferIds)) {
+        if (!empty($transferIds)) {
             $validIds = TourTransfer::whereIn('id', $transferIds)->pluck('id')->toArray();
-
+            
             // Utiliser la connexion 'mysql' pour la table pivot
             $pivotTable = 'program_day_transfers';
-
+            
             $programDayId = $day->id; // TravelProgramDay.id pour la table pivot
             // Supprimer les anciennes associations
             DB::connection('mysql')->table($pivotTable)
                 ->where('program_day_id', $programDayId)
                 ->delete();
-
+            
             // InsÃ©rer les nouvelles associations
-            if (! empty($validIds)) {
-                $insertData = array_map(function ($transferId) use ($programDayId) {
+            if (!empty($validIds)) {
+                $insertData = array_map(function($transferId) use ($programDayId) {
                     return [
                         'program_day_id' => $programDayId,
                         'transfer_id' => $transferId,
@@ -2604,7 +2307,7 @@ class VoyageController extends Controller
                         'updated_at' => now(),
                     ];
                 }, $validIds);
-
+                
                 DB::connection('mysql')->table($pivotTable)->insert($insertData);
             }
         } else {
@@ -2619,14 +2322,17 @@ class VoyageController extends Controller
     {
         $voyage = Voyage::firstOrCreate(
             ['wp_post_id' => $tourId],
-            ['name' => optional($this->repository->getPost($tourId))->post_title ?? 'Tour', 'slug' => 'tour-'.$tourId]
+            ['name' => optional($this->repository->getPost($tourId))->post_title ?? 'Tour', 'slug' => 'tour-' . $tourId]
         );
 
         $dayTitle = trim((string) ($dayRow['day_title'] ?? $dayRow['title'] ?? ''));
         $description = trim((string) ($dayRow['description'] ?? ''));
         $notes = trim((string) ($dayRow['notes'] ?? ''));
         $contentHtml = trim((string) ($dayRow['content_html'] ?? ''));
-        $dayType = TravelProgramDay::normalizeDayType((string) ($dayRow['day_type'] ?? 'visite'));
+        $dayType = (string) ($dayRow['day_type'] ?? 'visite');
+        if (!array_key_exists($dayType, TravelProgramDay::DAY_TYPES)) {
+            $dayType = 'visite';
+        }
 
         $programDay = TravelProgramDay::firstOrNew([
             'voyage_id' => $voyage->id,
@@ -2636,7 +2342,7 @@ class VoyageController extends Controller
         $city = trim((string) ($dayRow['city'] ?? ''));
 
         $programDay->fill([
-            'title' => $dayTitle !== '' ? $dayTitle : ('Jour '.$dayNumber),
+            'title' => $dayTitle !== '' ? $dayTitle : ('Jour ' . $dayNumber),
             'city' => $city !== '' ? $city : null,
             'description' => $description !== '' ? $description : ($notes !== '' ? strip_tags($notes) : null),
             'content_html' => $contentHtml !== '' ? $contentHtml : null,
@@ -2657,7 +2363,7 @@ class VoyageController extends Controller
         $out = [];
 
         foreach ($rows as $index => $row) {
-            if (! is_array($row)) {
+            if (!is_array($row)) {
                 continue;
             }
 
@@ -2710,14 +2416,17 @@ class VoyageController extends Controller
             $description = (string) ($row['description'] ?? '');
             $notes = (string) ($row['notes'] ?? '');
             $contentHtml = (string) ($row['content_html'] ?? '');
-            $dayType = TravelProgramDay::normalizeDayType((string) ($row['day_type'] ?? 'visite'));
+            $dayType = (string) ($row['day_type'] ?? 'visite');
+            if (!array_key_exists($dayType, TravelProgramDay::DAY_TYPES)) {
+                $dayType = 'visite';
+            }
 
             $day = (object) [
                 'id' => (int) ($row['id'] ?? $row['day_id'] ?? 0),
                 'day_number' => $dayNumber,
                 'mode' => ($row['mode'] ?? 'program') === 'free' ? 'free' : 'program',
-                'day_title' => $dayTitle !== '' ? $dayTitle : ('Jour '.$dayNumber),
-                'title' => $title !== '' ? $title : ($dayTitle !== '' ? $dayTitle : ('Jour '.$dayNumber)),
+                'day_title' => $dayTitle !== '' ? $dayTitle : ('Jour ' . $dayNumber),
+                'title' => $title !== '' ? $title : ($dayTitle !== '' ? $dayTitle : ('Jour ' . $dayNumber)),
                 'city' => trim((string) ($row['city'] ?? '')),
                 'day_type' => $dayType,
                 'content_html' => $contentHtml,
@@ -2742,7 +2451,7 @@ class VoyageController extends Controller
                         'custom_title' => (string) ($activityRow['custom_title'] ?? ''),
                         'custom_description' => (string) ($activityRow['custom_description'] ?? ''),
                         'activity' => (object) [
-                            'title' => $catalogActivity->title ?? ('Activité #'.$activityId),
+                            'title' => $catalogActivity->title ?? ('Activité #' . $activityId),
                         ],
                     ];
                 });
@@ -2798,7 +2507,6 @@ class VoyageController extends Controller
             return 1;
         }
         $n = (int) $s;
-
         return $n >= 1 && $n <= 365 ? $n : 1;
     }
 
@@ -2810,7 +2518,6 @@ class VoyageController extends Controller
         if (is_array($value)) {
             $value = end($value);
         }
-
         return (int) ($value ?? $default);
     }
 
@@ -2821,13 +2528,12 @@ class VoyageController extends Controller
     {
         try {
             $this->programService->addDay($id);
-
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
                 ->with('success', 'Jour ajouté.')
                 ->withFragment('program-days');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Impossible d\'ajouter le jour : '.$e->getMessage()]);
+            return back()->withErrors(['error' => 'Impossible d\'ajouter le jour : ' . $e->getMessage()]);
         }
     }
 
@@ -2843,143 +2549,13 @@ class VoyageController extends Controller
             }
             $this->programService->deleteDay($id, $dayId);
             $this->repository->updateTour($id, ['duration_day' => $this->programService->countDays($id)]);
-
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
                 ->with('success', 'Jour supprimé.')
                 ->withFragment('program-days');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Impossible de supprimer le jour : '.$e->getMessage()]);
+            return back()->withErrors(['error' => 'Impossible de supprimer le jour : ' . $e->getMessage()]);
         }
-    }
-
-    private function resolveFlightOptionsDeparturePlaceIds(Request $request, int $laravelVoyageId): void
-    {
-        $voyage = Voyage::find($laravelVoyageId);
-        if (! $voyage) {
-            return;
-        }
-        $places = VoyageDeparturePlace::query()
-            ->where('voyage_id', $voyage->id)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-        $flightOptions = $request->input('flight_options', []);
-        if (! is_array($flightOptions)) {
-            return;
-        }
-        foreach ($flightOptions as $k => $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-            $raw = $row['departure_place_id'] ?? '';
-            if (is_string($raw) && preg_match('/^NEW_(\d+)$/', $raw, $m)) {
-                $idx = (int) $m[1];
-                $place = $places->get($idx);
-                if ($place) {
-                    $flightOptions[$k]['departure_place_id'] = (string) $place->id;
-                }
-            }
-        }
-        $request->merge(['flight_options' => $flightOptions]);
-    }
-
-    private function syncVoyageDiscountRulesFromRequest(Request $request, Voyage $voyage): void
-    {
-        if (! $request->has('discount_rules')) {
-            return;
-        }
-        $rows = $request->input('discount_rules', []);
-        if (! is_array($rows)) {
-            return;
-        }
-        VoyageDiscountRule::query()->where('voyage_id', $voyage->id)->delete();
-        $sort = 0;
-        foreach ($rows as $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-            $sort++;
-            $type = in_array($row['reduction_type'] ?? '', ['fixed', 'percent'], true) ? $row['reduction_type'] : 'percent';
-            $scope = preg_match('/^[a-z_]+$/', (string) ($row['scope'] ?? '')) ? $row['scope'] : 'global';
-            $cond = preg_match('/^[a-z_]+$/', (string) ($row['condition_type'] ?? '')) ? $row['condition_type'] : 'none';
-            VoyageDiscountRule::query()->create([
-                'voyage_id' => $voyage->id,
-                'reduction_type' => $type,
-                'scope' => $scope,
-                'condition_type' => $cond,
-                'condition_json' => isset($row['condition_json']) && is_array($row['condition_json']) ? $row['condition_json'] : null,
-                'value' => isset($row['value']) && $row['value'] !== '' ? (float) $row['value'] : 0,
-                'priority' => isset($row['priority']) && $row['priority'] !== '' ? (int) $row['priority'] : 100,
-                'is_active' => ! empty($row['is_active']) && (string) $row['is_active'] !== '0',
-                'sort_order' => $sort,
-            ]);
-        }
-    }
-
-    private function syncVoyageCancellationTermsFromRequest(Request $request, Voyage $voyage): void
-    {
-        if (! $request->has('cancellation_terms_submitted')) {
-            return;
-        }
-        $rows = $request->input('cancellation_terms', []);
-        if (! is_array($rows)) {
-            return;
-        }
-        VoyageCancellationTerm::query()->where('voyage_id', $voyage->id)->delete();
-        $sort = 0;
-        foreach ($rows as $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-            $hasDays = isset($row['days_before_departure']) && $row['days_before_departure'] !== '' && $row['days_before_departure'] !== null;
-            $hasRefund = isset($row['refund_percent']) && $row['refund_percent'] !== '' && $row['refund_percent'] !== null;
-            $note = trim((string) ($row['note'] ?? ''));
-            if (! $hasDays && ! $hasRefund && $note === '') {
-                continue;
-            }
-            $sort++;
-            $sortOrder = isset($row['sort_order']) && $row['sort_order'] !== '' ? (int) $row['sort_order'] : $sort;
-            VoyageCancellationTerm::query()->create([
-                'voyage_id' => $voyage->id,
-                'days_before_departure' => isset($row['days_before_departure']) ? (int) $row['days_before_departure'] : 0,
-                'refund_percent' => isset($row['refund_percent']) && $row['refund_percent'] !== '' ? (float) $row['refund_percent'] : 0,
-                'is_active' => ! isset($row['is_active']) || (string) $row['is_active'] !== '0',
-                'sort_order' => $sortOrder,
-                'note' => isset($row['note']) ? (string) $row['note'] : null,
-            ]);
-        }
-    }
-
-    private function syncVoyageLogisticsMetaFromRequest(Request $request, Voyage $voyage): void
-    {
-        if (! $request->has('logistics_meta')) {
-            return;
-        }
-        $meta = $request->input('logistics_meta');
-        if (! is_array($meta)) {
-            return;
-        }
-        $voyage->logistics_meta = $meta;
-        $voyage->saveQuietly();
-    }
-
-    private function syncVoyageThemesFromRequest(Request $request, Voyage $laravelVoyage): void
-    {
-        $d = $request->input('destination');
-        if (is_string($d) && trim($d) !== '') {
-            $laravelVoyage->destination = trim($d);
-            $laravelVoyage->saveQuietly();
-        }
-
-        $ids = $request->input('voyage_theme_ids', []);
-        if (! is_array($ids)) {
-            $ids = [];
-        }
-        $ids = array_values(array_unique(array_filter(array_map(static fn ($v) => (int) $v, $ids), static fn ($id) => $id > 0)));
-        $laravelVoyage->themes()->sync($ids);
-        $laravelVoyage->refresh();
-        app(VoyageThemeWpSyncService::class)->syncFromLaravelVoyage($laravelVoyage);
     }
 
     /**
@@ -2995,7 +2571,7 @@ class VoyageController extends Controller
                 ->with('success', 'Tour supprimé avec succès de WordPress !');
         } catch (\Exception $e) {
             return back()
-                ->withErrors(['error' => 'Erreur lors de la suppression : '.$e->getMessage()]);
+                ->withErrors(['error' => 'Erreur lors de la suppression : ' . $e->getMessage()]);
         }
     }
 }

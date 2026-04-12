@@ -3,7 +3,6 @@
 use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
-use App\Http\Controllers\Admin\BusinessReferenceController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CircuitsController;
 use App\Http\Controllers\Admin\ClientController;
@@ -13,13 +12,11 @@ use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\HomePageSettingsController;
-use App\Http\Controllers\Admin\LaravelVoyageThemeController;
 use App\Http\Controllers\Admin\OperationsController;
 use App\Http\Controllers\Admin\PartnerAccountController;
 use App\Http\Controllers\Admin\PartnerCommissionRuleController;
 use App\Http\Controllers\Admin\PartnersController;
 use App\Http\Controllers\Admin\ProductsController;
-use App\Http\Controllers\Admin\ProductsServicesPlaceholderController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\ReportingController;
@@ -38,17 +35,13 @@ use App\Http\Controllers\Admin\VoyageController;
 use App\Http\Controllers\Admin\VoyageDepartureManageController;
 use App\Http\Controllers\Admin\VoyageReservationDataController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
-use App\Http\Controllers\Admin\WordPress\ActivityController as WordPressActivityController;
-use App\Http\Controllers\Admin\WordPress\TransferController as WordPressTransferController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Auth\LockScreenController;
-use App\Http\Controllers\DemoController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
+use App\Http\Controllers\DemoController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
-use App\Http\Controllers\RapidapiHotelController;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -59,53 +52,9 @@ use Illuminate\Support\Facades\Route;
 | Domain: booking.ajinsafro.net (or ADMIN_DOMAIN when set).
 | Contains Auth + all /admin pages only.
 |
-| RapidAPI (tests hôtels) : routes enregistrées ici pour être servies par le
-| même vhost Laravel que le back-office (ADMIN_DOMAIN), pas le site public / WordPress.
-|
 */
 
 Auth::routes();
-
-/*
-| RapidAPI Booking COM — liste / détail / test (domaine admin Laravel)
-*/
-Route::get('/rapidapi/hotels', [RapidapiHotelController::class, 'index'])->name('rapidapi.hotels.index');
-Route::get('/rapidapi/hotels/{hotelId}', [RapidapiHotelController::class, 'show'])
-    ->where('hotelId', '[0-9]+')
-    ->name('rapidapi.hotels.show');
-
-/** Test rapide RapidAPI searchDestination — à retirer en production. */
-Route::get('/test-rapidapi', function () {
-    $key = config('services.rapidapi.key');
-    $host = (string) config('services.rapidapi.host', 'booking-com15.p.rapidapi.com');
-    $baseUrl = rtrim((string) config('services.rapidapi.base_url', 'https://booking-com15.p.rapidapi.com'), '/');
-    $url = $baseUrl.'/api/v1/hotels/searchDestination';
-    $verify = filter_var(config('services.rapidapi.verify_ssl', true), FILTER_VALIDATE_BOOL);
-
-    if (! is_string($key) || trim($key) === '') {
-        return response()->json([
-            'error' => 'RAPIDAPI_KEY manquant dans .env',
-        ], 503);
-    }
-
-    $response = Http::withHeaders([
-        'x-rapidapi-key' => trim($key),
-        'x-rapidapi-host' => $host,
-        'Content-Type' => 'application/json',
-        'Accept' => 'application/json',
-    ])
-        ->withOptions(['verify' => $verify])
-        ->timeout(30)
-        ->get($url, ['query' => 'paris']);
-
-    $raw = $response->body();
-
-    return response()->json([
-        'http_status' => $response->status(),
-        'body_decoded' => $response->json(),
-        'body_raw' => $raw,
-    ]);
-})->name('test.rapidapi');
 
 // Front pages also served on booking domain (to avoid 404 on /voyages/{slug}).
 // Intentionally no route names here to avoid collisions with routes/public.php.
@@ -211,7 +160,6 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::delete('customers/clients/{id}/force', [ClientController::class, 'forceDelete'])->name('customers.clients.force')->whereNumber('id');
         Route::get('customers/clients', [ClientController::class, 'index'])->name('customers.clients.index');
         Route::get('customers/clients/create', [ClientController::class, 'create'])->name('customers.clients.create');
-        Route::get('customers/clients/search', [ClientController::class, 'search'])->name('customers.clients.search');
         Route::post('customers/clients', [ClientController::class, 'store'])->name('customers.clients.store');
         Route::get('customers/clients/{client}', [ClientController::class, 'show'])->name('customers.clients.show');
         Route::get('customers/clients/{client}/edit', [ClientController::class, 'edit'])->name('customers.clients.edit');
@@ -227,9 +175,6 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('products/options', [ProductsController::class, 'page'])->name('products.options')->defaults('submenu', 'options');
         Route::get('products/tarifs', [ProductsController::class, 'page'])->name('products.tarifs')->defaults('submenu', 'tarifs');
         Route::get('products/conditions', [ProductsController::class, 'page'])->name('products.conditions')->defaults('submenu', 'conditions');
-
-        Route::get('products-services/voiture', [ProductsServicesPlaceholderController::class, 'voiture'])->name('products-services.voiture');
-        Route::get('products-services/billetterie', [ProductsServicesPlaceholderController::class, 'billetterie'])->name('products-services.billetterie');
 
         Route::get('circuits', [CircuitsController::class, 'index'])->name('circuits.index');
         Route::get('circuits/circuits', [CircuitsController::class, 'page'])->name('circuits.circuits')->defaults('submenu', 'circuits');
@@ -326,12 +271,6 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::match(['put', 'patch'], 'circuits/taxonomy-terms/{termId}', [TaxonomyTermController::class, 'update'])->name('circuits.taxonomy-terms.update')->whereNumber('termId');
         Route::delete('circuits/taxonomy-terms/{termId}', [TaxonomyTermController::class, 'destroy'])->name('circuits.taxonomy-terms.destroy')->whereNumber('termId');
 
-        Route::get('circuits/voyage-themes', [LaravelVoyageThemeController::class, 'index'])->name('circuits.voyage-themes.index');
-        Route::post('circuits/voyage-themes', [LaravelVoyageThemeController::class, 'store'])->name('circuits.voyage-themes.store');
-        Route::get('circuits/voyage-themes/{voyageTheme}/impact', [LaravelVoyageThemeController::class, 'impact'])->name('circuits.voyage-themes.impact');
-        Route::match(['put', 'patch'], 'circuits/voyage-themes/{voyageTheme}', [LaravelVoyageThemeController::class, 'update'])->name('circuits.voyage-themes.update');
-        Route::delete('circuits/voyage-themes/{voyageTheme}', [LaravelVoyageThemeController::class, 'destroy'])->name('circuits.voyage-themes.destroy');
-
         Route::get('accommodations', [AccommodationsController::class, 'index'])->name('accommodations.index');
         Route::get('accommodations/hotels', [AccommodationsController::class, 'page'])->name('accommodations.hotels')->defaults('submenu', 'hotels');
         Route::get('accommodations/chambres', [AccommodationsController::class, 'page'])->name('accommodations.chambres')->defaults('submenu', 'chambres');
@@ -397,20 +336,6 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
 
         Route::get('settings/parametres-generaux', [SettingsController::class, 'page'])->name('settings.parametres-generaux')->defaults('submenu', 'parametres-generaux');
         Route::post('settings/parametres-generaux', [SettingsController::class, 'updateParametresGeneraux'])->name('settings.parametres-generaux.update');
-        Route::get('settings/referentiels-metier', [BusinessReferenceController::class, 'index'])->name('settings.referentiels-metier')->defaults('submenu', 'referentiels-metier');
-        Route::post('settings/referentiels-metier/import-legacy', [BusinessReferenceController::class, 'importLegacy'])->name('settings.referentiels-metier.import-legacy');
-        Route::get('settings/referentiels-metier/group/{groupKey}', [BusinessReferenceController::class, 'showGroup'])
-            ->name('settings.referentiels-metier.group')
-            ->where('groupKey', '[a-z0-9_]+');
-        Route::post('settings/referentiels-metier/group/{groupKey}', [BusinessReferenceController::class, 'store'])
-            ->name('settings.referentiels-metier.store')
-            ->where('groupKey', '[a-z0-9_]+');
-        Route::put('settings/referentiels-metier/group/{groupKey}/{item}', [BusinessReferenceController::class, 'update'])
-            ->name('settings.referentiels-metier.update')
-            ->where('groupKey', '[a-z0-9_]+');
-        Route::delete('settings/referentiels-metier/group/{groupKey}/{item}', [BusinessReferenceController::class, 'destroy'])
-            ->name('settings.referentiels-metier.destroy')
-            ->where('groupKey', '[a-z0-9_]+');
         Route::get('settings/securite', [SettingsController::class, 'page'])->name('settings.securite')->defaults('submenu', 'securite');
         Route::get('settings/home-page', [HomePageSettingsController::class, 'edit'])->name('settings.home-page.edit');
         Route::post('settings/home-page', [HomePageSettingsController::class, 'update'])->name('settings.home-page.update');
@@ -445,20 +370,6 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
             Route::get('hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hotels.edit')->whereNumber('hotel');
             Route::match(['put', 'patch'], 'hotels/{hotel}', [HotelController::class, 'update'])->name('hotels.update')->whereNumber('hotel');
             Route::delete('hotels/{hotel}', [HotelController::class, 'destroy'])->name('hotels.destroy')->whereNumber('hotel');
-
-            Route::get('activities', [WordPressActivityController::class, 'index'])->name('activities.index');
-            Route::get('activities/create', [WordPressActivityController::class, 'create'])->name('activities.create');
-            Route::post('activities', [WordPressActivityController::class, 'store'])->name('activities.store');
-            Route::get('activities/{activity}/edit', [WordPressActivityController::class, 'edit'])->name('activities.edit')->whereNumber('activity');
-            Route::match(['put', 'patch'], 'activities/{activity}', [WordPressActivityController::class, 'update'])->name('activities.update')->whereNumber('activity');
-            Route::delete('activities/{activity}', [WordPressActivityController::class, 'destroy'])->name('activities.destroy')->whereNumber('activity');
-
-            Route::get('transfers', [WordPressTransferController::class, 'index'])->name('transfers.index');
-            Route::get('transfers/create', [WordPressTransferController::class, 'create'])->name('transfers.create');
-            Route::post('transfers', [WordPressTransferController::class, 'store'])->name('transfers.store');
-            Route::get('transfers/{transfer}/edit', [WordPressTransferController::class, 'edit'])->name('transfers.edit')->whereNumber('transfer');
-            Route::match(['put', 'patch'], 'transfers/{transfer}', [WordPressTransferController::class, 'update'])->name('transfers.update')->whereNumber('transfer');
-            Route::delete('transfers/{transfer}', [WordPressTransferController::class, 'destroy'])->name('transfers.destroy')->whereNumber('transfer');
 
             Route::get('tours', [WpTourController::class, 'index'])->name('tours.index');
             Route::get('tours/create', [WpTourController::class, 'create'])->name('tours.create');

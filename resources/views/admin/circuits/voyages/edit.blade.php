@@ -17,7 +17,7 @@
             $vePriceLabel = number_format((float) $priceFrom, 0, ',', ' ').' '.($cur !== '' ? $cur : 'MAD');
         }
     }
-    $veDestinationRaw = $veDestinationQuick ?? ($laravelV ? data_get($laravelV, 'destination') : null);
+    $veDestinationRaw = $laravelV ? data_get($laravelV, 'destination') : null;
     $veDestination = ($veDestinationRaw !== null && trim((string) $veDestinationRaw) !== '')
         ? trim((string) $veDestinationRaw)
         : null;
@@ -75,8 +75,9 @@
                                 @include('admin.circuits.voyages.partials.tabs._availability')
                                 @include('admin.circuits.voyages.partials.tabs._media')
                                 @include('admin.circuits.voyages.partials.tabs._taxonomies')
-                                @include('admin.circuits.voyages.partials.tabs._logistics')
+                                @include('admin.circuits.voyages.partials.tabs._flights')
                                 @include('admin.circuits.voyages.partials.tabs._hotels')
+                                @include('admin.circuits.voyages.partials.tabs._transfers')
                                 @include('admin.circuits.voyages.partials.tabs._activities')
                                 @include('admin.circuits.voyages.partials.tabs._programme')
                             </div>
@@ -98,6 +99,14 @@
                 </div>
             </div>
 
+            @include('admin.circuits.voyages.components.DayBuilderDrawer', [
+                'activitiesCatalog' => $activitiesCatalog,
+                'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
+                'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
+                'lastDayNumber' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1),
+                'airlines' => $airlines ?? collect(),
+                'programDays' => $programDays ?? collect()
+            ])
         </div>
     </form>
 
