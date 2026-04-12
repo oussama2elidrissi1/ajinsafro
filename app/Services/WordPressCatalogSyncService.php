@@ -200,8 +200,14 @@ class WordPressCatalogSyncService
 
     protected function pushActivityToWordPress(CatalogActivity $record, Request $request): void
     {
-        DB::beginTransaction();
-        try {
+        /** @var WpPost|null $post */
+        $post = null;
+        $galleryIds = [];
+        $slug = '';
+
+        // WpPost uses connection 'wp' → table {WP_DB_PREFIX}posts (see config/database.php wp).
+        // DB::beginTransaction() without connection targets mysql default, not WordPress — wp_posts updates were never in a DB transaction on 'wp'.
+        DB::connection('wp')->transaction(function () use ($record, $request, &$post, &$galleryIds, &$slug) {
             $post = $record->wp_post_id
                 ? $this->findWpPost((int) $record->wp_post_id, 'st_activity')
                 : new WpPost();
@@ -231,26 +237,20 @@ class WordPressCatalogSyncService
                 ]);
             }
 
-            $post->fill([
-                'post_title' => $record->title,
-                'post_excerpt' => $record->excerpt ?? '',
-                'post_content' => $record->content ?? '',
-                'post_status' => $record->status ?: 'draft',
-                'post_name' => $slug,
-                'post_modified' => $now->format('Y-m-d H:i:s'),
-                'post_modified_gmt' => $nowGmt->format('Y-m-d H:i:s'),
-            ]);
+            // Explicit wp_posts columns (CatalogActivity → wp_posts) — ensures post_title and siblings persist on UPDATE.
+            $post->post_title = (string) $record->title;
+            $post->post_content = (string) ($record->content ?? '');
+            $post->post_excerpt = (string) ($record->excerpt ?? '');
+            $post->post_status = $record->status ? (string) $record->status : 'draft';
+            $post->post_name = $slug;
+            $post->post_modified = $now->format('Y-m-d H:i:s');
+            $post->post_modified_gmt = $nowGmt->format('Y-m-d H:i:s');
             $post->save();
 
             if ($isNew) {
                 $post->guid = $this->buildGuid((int) $post->ID, 'st_activity');
                 $post->save();
             }
-
-            $record->forceFill([
-                'wp_post_id' => (int) $post->ID,
-                'slug' => $slug,
-            ])->save();
 
             $addressForTable = $this->nullableString($record->address);
             if ($addressForTable === null) {
@@ -282,40 +282,45 @@ class WordPressCatalogSyncService
             $galleryIds = $this->syncImagesForPost($post, $request, $record->gallery_image_wp_ids ?? [], true);
 
             $this->travelerMeta->mirrorActivityMetas($post, $record);
+        });
 
-            $metas = $post->getAllMetas();
-            $detail = WpStActivity::query()->find($post->ID);
-
-            $record->forceFill([
-                'featured_image_wp_id' => $this->nullableInt($metas['_thumbnail_id'] ?? null),
-                'gallery_image_wp_ids' => $galleryIds,
-                'wp_synced_at' => now(),
-                'wp_sync_hash' => $this->computeHash([
-                    'post' => $this->postSnapshot($post),
-                    'detail' => $detail?->only(['address', 'adult_price', 'child_price', 'min_price', 'type_activity', 'duration', 'max_people', 'rate_review', 'is_featured']) ?? [],
-                    'metas' => [
-                        'aj_activity_category' => $metas['aj_activity_category'] ?? null,
-                        'aj_activity_place_text' => $metas['aj_activity_place_text'] ?? null,
-                        'aj_activity_min_age' => $metas['aj_activity_min_age'] ?? null,
-                        'aj_activity_max_age' => $metas['aj_activity_max_age'] ?? null,
-                        '_thumbnail_id' => $metas['_thumbnail_id'] ?? null,
-                        '_gallery' => $metas['_gallery'] ?? null,
-                    ],
-                ]),
-            ])->save();
-
-            DB::commit();
-            $this->wpCache->invalidatePostIds([(int) $post->ID]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
+        if ($post === null) {
+            return;
         }
+
+        $metas = $post->getAllMetas();
+        $detail = WpStActivity::query()->find($post->ID);
+
+        $record->forceFill([
+            'wp_post_id' => (int) $post->ID,
+            'slug' => $slug,
+            'featured_image_wp_id' => $this->nullableInt($metas['_thumbnail_id'] ?? null),
+            'gallery_image_wp_ids' => $galleryIds,
+            'wp_synced_at' => now(),
+            'wp_sync_hash' => $this->computeHash([
+                'post' => $this->postSnapshot($post),
+                'detail' => $detail?->only(['address', 'adult_price', 'child_price', 'min_price', 'type_activity', 'duration', 'max_people', 'rate_review', 'is_featured']) ?? [],
+                'metas' => [
+                    'aj_activity_category' => $metas['aj_activity_category'] ?? null,
+                    'aj_activity_place_text' => $metas['aj_activity_place_text'] ?? null,
+                    'aj_activity_min_age' => $metas['aj_activity_min_age'] ?? null,
+                    'aj_activity_max_age' => $metas['aj_activity_max_age'] ?? null,
+                    '_thumbnail_id' => $metas['_thumbnail_id'] ?? null,
+                    '_gallery' => $metas['_gallery'] ?? null,
+                ],
+            ]),
+        ])->save();
+
+        $this->wpCache->invalidatePostIds([(int) $post->ID]);
     }
 
     protected function pushTransferToWordPress(CatalogTransfer $record, Request $request): void
     {
-        DB::beginTransaction();
-        try {
+        /** @var WpPost|null $post */
+        $post = null;
+        $slug = '';
+
+        DB::connection('wp')->transaction(function () use ($record, $request, &$post, &$slug) {
             $post = $record->wp_post_id
                 ? $this->findWpPost((int) $record->wp_post_id, 'st_cars')
                 : new WpPost();
@@ -345,26 +350,19 @@ class WordPressCatalogSyncService
                 ]);
             }
 
-            $post->fill([
-                'post_title' => $record->title,
-                'post_excerpt' => $record->excerpt ?? '',
-                'post_content' => $record->content ?? '',
-                'post_status' => $record->status ?: 'draft',
-                'post_name' => $slug,
-                'post_modified' => $now->format('Y-m-d H:i:s'),
-                'post_modified_gmt' => $nowGmt->format('Y-m-d H:i:s'),
-            ]);
+            $post->post_title = (string) $record->title;
+            $post->post_content = (string) ($record->content ?? '');
+            $post->post_excerpt = (string) ($record->excerpt ?? '');
+            $post->post_status = $record->status ? (string) $record->status : 'draft';
+            $post->post_name = $slug;
+            $post->post_modified = $now->format('Y-m-d H:i:s');
+            $post->post_modified_gmt = $nowGmt->format('Y-m-d H:i:s');
             $post->save();
 
             if ($isNew) {
                 $post->guid = $this->buildGuid((int) $post->ID, 'st_cars');
                 $post->save();
             }
-
-            $record->forceFill([
-                'wp_post_id' => (int) $post->ID,
-                'slug' => $slug,
-            ])->save();
 
             WpStCar::query()->updateOrCreate(
                 ['post_id' => $post->ID],
@@ -388,33 +386,35 @@ class WordPressCatalogSyncService
             $this->syncImagesForPost($post, $request, [], false);
 
             $this->travelerMeta->mirrorTransferMetas($post, $record);
+        });
 
-            $metas = $post->getAllMetas();
-            $detail = WpStCar::query()->find($post->ID);
-
-            $record->forceFill([
-                'featured_image_wp_id' => $this->nullableInt($metas['_thumbnail_id'] ?? null),
-                'wp_synced_at' => now(),
-                'wp_sync_hash' => $this->computeHash([
-                    'post' => $this->postSnapshot($post),
-                    'detail' => $detail?->only(['cars_address', 'cars_price', 'min_price', 'max_price', 'number_car', 'is_featured']) ?? [],
-                    'metas' => [
-                        'aj_transfer_from' => $metas['aj_transfer_from'] ?? null,
-                        'aj_transfer_to' => $metas['aj_transfer_to'] ?? null,
-                        'aj_transfer_type' => $metas['aj_transfer_type'] ?? null,
-                        'aj_transfer_capacity' => $metas['aj_transfer_capacity'] ?? null,
-                        'aj_transfer_vehicle_type' => $metas['aj_transfer_vehicle_type'] ?? null,
-                        '_thumbnail_id' => $metas['_thumbnail_id'] ?? null,
-                    ],
-                ]),
-            ])->save();
-
-            DB::commit();
-            $this->wpCache->invalidatePostIds([(int) $post->ID]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
+        if ($post === null) {
+            return;
         }
+
+        $metas = $post->getAllMetas();
+        $detail = WpStCar::query()->find($post->ID);
+
+        $record->forceFill([
+            'wp_post_id' => (int) $post->ID,
+            'slug' => $slug,
+            'featured_image_wp_id' => $this->nullableInt($metas['_thumbnail_id'] ?? null),
+            'wp_synced_at' => now(),
+            'wp_sync_hash' => $this->computeHash([
+                'post' => $this->postSnapshot($post),
+                'detail' => $detail?->only(['cars_address', 'cars_price', 'min_price', 'max_price', 'number_car', 'is_featured']) ?? [],
+                'metas' => [
+                    'aj_transfer_from' => $metas['aj_transfer_from'] ?? null,
+                    'aj_transfer_to' => $metas['aj_transfer_to'] ?? null,
+                    'aj_transfer_type' => $metas['aj_transfer_type'] ?? null,
+                    'aj_transfer_capacity' => $metas['aj_transfer_capacity'] ?? null,
+                    'aj_transfer_vehicle_type' => $metas['aj_transfer_vehicle_type'] ?? null,
+                    '_thumbnail_id' => $metas['_thumbnail_id'] ?? null,
+                ],
+            ]),
+        ])->save();
+
+        $this->wpCache->invalidatePostIds([(int) $post->ID]);
     }
 
     protected function syncImagesForPost(WpPost $post, Request $request, array $keepGalleryIds, bool $withGallery): array

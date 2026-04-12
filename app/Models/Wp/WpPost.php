@@ -7,12 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class WpPost extends Model
 {
     /**
-     * WordPress connection.
+     * WordPress DB connection (see config/database.php → wp: host/database/prefix WP_DB_*).
+     * Table resolves to {prefix}posts (e.g. cFdgeZ_posts when WP_DB_PREFIX=cFdgeZ_).
      */
     protected $connection = 'wp';
 
     /**
-     * WordPress posts table (without prefix, Laravel adds it automatically).
+     * WordPress posts table (without prefix; Laravel prepends the connection prefix).
      */
     protected $table = 'posts';
 
