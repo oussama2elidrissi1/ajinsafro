@@ -1960,12 +1960,14 @@ body.aj-has-bg-pattern::after {
     height: 176px;
     overflow: hidden;
 }
-.aj-card2__image img {
+.aj-card2__image img,
+.aj-catalog-card__img {
     width: 100%; height: 100%;
     object-fit: cover;
     transition: transform .5s;
 }
-.aj-card2:hover .aj-card2__image img { transform: scale(1.1); }
+.aj-card2:hover .aj-card2__image img,
+.aj-card2:hover .aj-catalog-card__img { transform: scale(1.1); }
 
 .aj-card2__badge {
     position: absolute;
@@ -3671,6 +3673,21 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
     height: 100%;
     min-height: 210px;
     background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+}
+.aj-voyages-image-fallback--empty {
+    min-height: 210px;
+    background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 45%, #94a3b8 100%);
+    position: relative;
+}
+.aj-voyages-image-fallback--empty::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 48px;
+    height: 48px;
+    opacity: 0.45;
+    background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Ccircle cx='8.5' cy='10.5' r='1.5'/%3E%3Cpath d='M21 15l-5-5L5 21'/%3E%3C/svg%3E");
 }
 
 .aj-voyages-pagination {

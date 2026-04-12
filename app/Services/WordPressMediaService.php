@@ -114,7 +114,7 @@ class WordPressMediaService
      * Crée l'attachment WP (post + _wp_attached_file).
      * guid est rempli pour compat WP mais ne doit jamais être utilisé pour l'affichage.
      */
-    public function createAttachment(string $relativePath, string $mimeType, string $guid): int
+    public function createAttachment(string $relativePath, string $mimeType, string $guid, ?int $parentPostId = null): int
     {
         $now = Carbon::now();
         $nowGmt = $now->utc();
@@ -137,7 +137,7 @@ class WordPressMediaService
         $post->post_modified = $now->format('Y-m-d H:i:s');
         $post->post_modified_gmt = $nowGmt->format('Y-m-d H:i:s');
         $post->post_content_filtered = '';
-        $post->post_parent = 0;
+        $post->post_parent = $parentPostId ?? 0;
         $post->guid = $guid;
         $post->menu_order = 0;
         $post->post_type = 'attachment';
@@ -146,10 +146,22 @@ class WordPressMediaService
         $post->save();
 
         $post->setMeta('_wp_attached_file', $relativePath);
+
+        $absPath = $this->path($relativePath);
+        $width = null;
+        $height = null;
+        if (is_readable($absPath) && function_exists('getimagesize')) {
+            $info = @getimagesize($absPath);
+            if ($info !== false) {
+                $width = $info[0];
+                $height = $info[1];
+            }
+        }
         $post->setMeta('_wp_attachment_metadata', serialize([
             'file' => $relativePath,
-            'width' => null,
-            'height' => null,
+            'width' => $width,
+            'height' => $height,
+            'sizes' => [],
         ]));
 
         return (int) $post->ID;
@@ -195,7 +207,7 @@ class WordPressMediaService
      * Upload + création attachment. Mime calculé AVANT move pour éviter erreur /tmp.
      * URL d'affichage: toujours construite via _wp_attached_file (pas guid).
      */
-    public function uploadAndCreateAttachment(UploadedFile $file): int
+    public function uploadAndCreateAttachment(UploadedFile $file, ?int $parentPostId = null): int
     {
         $mimeType = $this->getMimeBeforeMove($file);
 
@@ -210,10 +222,11 @@ class WordPressMediaService
                 'full_path' => $fullPath,
                 'final_url' => $finalUrl,
                 'file_exists' => file_exists($fullPath),
+                'parent_post_id' => $parentPostId,
             ]);
         }
 
-        return $this->createAttachment($relativePath, $mimeType, $finalUrl);
+        return $this->createAttachment($relativePath, $mimeType, $finalUrl, $parentPostId);
     }
 
     public function setHotelThumbnail(int $hotelPostId, int $attachmentId): void

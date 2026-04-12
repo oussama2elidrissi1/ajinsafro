@@ -72,11 +72,7 @@ if ( ! $q->have_posts() ) return;
             <div class="aj-slider-v2__item">
                 <a href="<?php the_permalink(); ?>" class="aj-card2 aj-hover-glass" style="text-decoration:none;">
                     <div class="aj-card2__image">
-                        <?php if ( has_post_thumbnail() ) : ?>
-                            <?php the_post_thumbnail( 'medium_large', array( 'loading' => 'lazy' ) ); ?>
-                        <?php else : ?>
-                            <div style="width:100%;height:100%;background:linear-gradient(135deg,#ccc,#aaa);"></div>
-                        <?php endif; ?>
+                        <?php ajth_render_catalog_card_image( get_the_ID() ); ?>
                     </div>
                     <div class="aj-card2__body">
                         <h3 class="aj-card2__title"><?php the_title(); ?></h3>

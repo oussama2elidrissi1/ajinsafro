@@ -80,7 +80,6 @@ $resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $vo
 $is_voyages_page = function_exists( 'ajth_is_voyages_context' ) ? ajth_is_voyages_context() : ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) );
 $is_hebergement_page = function_exists( 'ajth_is_hebergement_context' ) ? ajth_is_hebergement_context() : false;
 $is_activites_page = function_exists( 'ajth_is_activites_context' ) ? ajth_is_activites_context() : false;
-$is_transfert_page = function_exists( 'ajth_is_transfert_context' ) ? ajth_is_transfert_context() : false;
 
 
 $title_icon_map = array(
@@ -130,13 +129,6 @@ $default_menu_items = array(
         'children' => array(),
     ),
     array(
-        'label'    => 'Transfert',
-        'url'      => $transfert_page_url,
-        'icon'     => 'fas fa-car-side',
-        'active'   => $is_transfert_page,
-        'children' => array(),
-    ),
-    array(
         'label'    => 'Hajj & Omra',
         'url'      => $maintenance_url,
         'icon'     => 'fas fa-kaaba',
@@ -151,6 +143,42 @@ $default_menu_items = array(
         'children' => array(),
     ),
 );
+
+/**
+ * Masque uniquement l’entrée « Transfert » dans le menu du header (pas la page /transfert/).
+ * Une seule inscription du filtre par requête.
+ */
+if ( empty( $GLOBALS['ajth_header_hide_transfert_nav_filter'] ) ) {
+    $GLOBALS['ajth_header_hide_transfert_nav_filter'] = true;
+    $ajth_header_menu_location = ! empty( $hdr['wp_menu_location'] ) ? $hdr['wp_menu_location'] : 'primary';
+    add_filter(
+        'wp_nav_menu_objects',
+        static function ( $items, $args ) use ( $ajth_header_menu_location ) {
+            if ( empty( $items ) || ! is_array( $items ) ) {
+                return $items;
+            }
+            if ( empty( $args->theme_location ) || $args->theme_location !== $ajth_header_menu_location ) {
+                return $items;
+            }
+            foreach ( $items as $key => $item ) {
+                if ( empty( $item->menu_item_parent ) || (int) $item->menu_item_parent !== 0 ) {
+                    continue;
+                }
+                $title = isset( $item->title ) ? wp_strip_all_tags( $item->title ) : '';
+                if ( $title !== '' && function_exists( 'remove_accents' ) ) {
+                    $title = remove_accents( $title );
+                }
+                $title = $title !== '' ? mb_strtolower( trim( $title ), 'UTF-8' ) : '';
+                if ( in_array( $title, array( 'transfert', 'transferts' ), true ) ) {
+                    unset( $items[ $key ] );
+                }
+            }
+            return $items;
+        },
+        10,
+        2
+    );
+}
 ?>
 
 <header class="aj-header" id="aj-header">
@@ -298,6 +326,20 @@ $default_menu_items = array(
                     if ( empty( $nav_links ) ) {
                         $nav_links = $default_menu_items;
                     }
+                    // Ne pas afficher « Transfert » dans le menu (la page /transfert/ reste accessible ailleurs).
+                    $nav_links = array_values(
+                        array_filter(
+                            $nav_links,
+                            static function ( $link ) {
+                                $label = ! empty( $link['label'] ) ? wp_strip_all_tags( $link['label'] ) : '';
+                                if ( $label !== '' && function_exists( 'remove_accents' ) ) {
+                                    $label = remove_accents( $label );
+                                }
+                                $label = $label !== '' ? mb_strtolower( trim( $label ), 'UTF-8' ) : '';
+                                return ! in_array( $label, array( 'transfert', 'transferts' ), true );
+                            }
+                        )
+                    );
                     ?>
                     <ul class="aj-nav-list">
                         <?php foreach ( $nav_links as $link ) :

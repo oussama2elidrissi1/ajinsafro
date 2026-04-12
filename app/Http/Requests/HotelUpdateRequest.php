@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesNullableFileUploads;
 use Illuminate\Foundation\Http\FormRequest;
 
 class HotelUpdateRequest extends FormRequest
 {
+    use NormalizesNullableFileUploads;
+
     public function authorize(): bool
     {
         return true;
@@ -13,7 +16,7 @@ class HotelUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $imageRule = ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
+        $imageRule = ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
 
         return [
             'post_title' => ['required', 'string', 'max:255'],

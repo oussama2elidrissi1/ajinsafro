@@ -419,8 +419,11 @@ class WordPressCatalogSyncService
 
     protected function syncImagesForPost(WpPost $post, Request $request, array $keepGalleryIds, bool $withGallery): array
     {
+        $parentId = (int) $post->ID;
         if ($request->hasFile('featured_image')) {
-            $post->setMeta('_thumbnail_id', (string) $this->media->uploadAndCreateAttachment($request->file('featured_image')));
+            $post->setMeta('_thumbnail_id', (string) $this->media->uploadAndCreateAttachment($request->file('featured_image'), $parentId));
+        } elseif ($request->boolean('remove_featured_image')) {
+            $post->deleteMeta('_thumbnail_id');
         }
 
         if (! $withGallery) {
@@ -431,7 +434,7 @@ class WordPressCatalogSyncService
         if ($request->hasFile('gallery_images')) {
             foreach ((array) $request->file('gallery_images') as $file) {
                 if ($file && $file->isValid()) {
-                    $galleryIds[] = $this->media->uploadAndCreateAttachment($file);
+                    $galleryIds[] = $this->media->uploadAndCreateAttachment($file, $parentId);
                 }
             }
         }

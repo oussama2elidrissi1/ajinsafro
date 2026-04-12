@@ -118,15 +118,17 @@ class HotelController extends Controller
             $this->saveHotelMeta($post->ID, $validated);
 
             if ($request->hasFile('featured_image')) {
-                $attachmentId = $this->media->uploadAndCreateAttachment($request->file('featured_image'));
+                $attachmentId = $this->media->uploadAndCreateAttachment($request->file('featured_image'), (int) $post->ID);
                 $this->media->setHotelThumbnail($post->ID, $attachmentId);
+            } elseif ($request->boolean('remove_featured_image')) {
+                $post->deleteMeta('_thumbnail_id');
             }
 
             $galleryIds = [];
             if ($request->hasFile('gallery_images')) {
                 foreach ($request->file('gallery_images') as $file) {
                     if ($file->isValid()) {
-                        $galleryIds[] = $this->media->uploadAndCreateAttachment($file);
+                        $galleryIds[] = $this->media->uploadAndCreateAttachment($file, (int) $post->ID);
                     }
                 }
                 if (! empty($galleryIds)) {
@@ -240,8 +242,10 @@ class HotelController extends Controller
             $this->saveHotelMeta($hotel->ID, $validated);
 
             if ($request->hasFile('featured_image')) {
-                $attachmentId = $this->media->uploadAndCreateAttachment($request->file('featured_image'));
+                $attachmentId = $this->media->uploadAndCreateAttachment($request->file('featured_image'), (int) $hotel->ID);
                 $this->media->setHotelThumbnail($hotel->ID, $attachmentId);
+            } elseif ($request->boolean('remove_featured_image')) {
+                $hotel->deleteMeta('_thumbnail_id');
             }
 
             $galleryKeepIds = array_values(array_filter(array_map('intval', $validated['gallery_keep_ids'] ?? [])));
@@ -249,7 +253,7 @@ class HotelController extends Controller
             if ($request->hasFile('gallery_images')) {
                 foreach ($request->file('gallery_images') as $file) {
                     if ($file->isValid()) {
-                        $newGalleryIds[] = $this->media->uploadAndCreateAttachment($file);
+                        $newGalleryIds[] = $this->media->uploadAndCreateAttachment($file, (int) $hotel->ID);
                     }
                 }
             }
@@ -321,7 +325,7 @@ class HotelController extends Controller
             WpPostmeta::deleteMeta($postId, '_logo_id');
             WpPostmeta::deleteMeta($postId, '_logo');
         } elseif ($request->hasFile('hotel_logo') && $request->file('hotel_logo')->isValid()) {
-            $attachmentId = $this->media->uploadAndCreateAttachment($request->file('hotel_logo'));
+            $attachmentId = $this->media->uploadAndCreateAttachment($request->file('hotel_logo'), (int) $postId);
             $logoUrl = $this->media->getAttachmentUrl($attachmentId);
             WpPostmeta::updateOrInsertMeta($postId, '_logo_id', (string) $attachmentId);
             WpPostmeta::updateOrInsertMeta($postId, '_logo', $logoUrl ?? '');

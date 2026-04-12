@@ -214,7 +214,7 @@ $pagination_args = array_filter([
                                     <article class="aj-voyages-grid__item">
                                         <a href="<?php the_permalink(); ?>" class="aj-card2 aj-hover-glass">
                                             <div class="aj-card2__image">
-                                                <?php if (has_post_thumbnail()) { the_post_thumbnail('medium_large', ['loading' => 'lazy']); } else { ?><div class="aj-voyages-image-fallback"></div><?php } ?>
+                                                <?php ajth_render_catalog_card_image( get_the_ID() ); ?>
                                                 <?php if ($duration_text) { ?><span class="aj-card2__badge aj-card2__badge--info"><i class="far fa-clock"></i> <?php echo esc_html($duration_text); ?></span><?php } ?>
                                             </div>
                                             <div class="aj-card2__body">

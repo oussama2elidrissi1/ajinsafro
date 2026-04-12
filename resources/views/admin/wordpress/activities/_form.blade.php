@@ -158,6 +158,10 @@
                         <div class="mb-2">
                             <img src="{{ $featuredUrl }}" alt="" class="img-thumbnail" style="max-height:120px;">
                         </div>
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" name="remove_featured_image" id="remove_featured_image" value="1" @checked(old('remove_featured_image'))>
+                            <label class="form-check-label" for="remove_featured_image">Retirer l'image à la une</label>
+                        </div>
                     @endif
                     <input type="file" class="form-control @error('featured_image') is-invalid @enderror" id="featured_image" name="featured_image" accept="image/jpeg,image/png,image/webp">
                     @error('featured_image')<div class="invalid-feedback">{{ $message }}</div>@enderror

@@ -70,6 +70,12 @@
             <img src="{{ $featuredUrl }}" alt="Image à la une" class="img-thumbnail" style="max-height: 120px;">
             <span class="text-muted small d-block">Remplacer en choisissant un nouveau fichier.</span>
         </div>
+        @if($isEdit)
+            <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input" name="remove_featured_image" id="remove_featured_image" value="1" @checked(old('remove_featured_image'))>
+                <label class="form-check-label" for="remove_featured_image">Retirer l'image à la une</label>
+            </div>
+        @endif
     @endif
     <input type="file" class="form-control @error('featured_image') is-invalid @enderror" id="featured_image" name="featured_image" accept="image/jpeg,image/png,image/webp">
     <small class="text-muted">JPG, PNG, WebP. Max 5 Mo. Stocké dans wp-content/uploads/Y/m/</small>

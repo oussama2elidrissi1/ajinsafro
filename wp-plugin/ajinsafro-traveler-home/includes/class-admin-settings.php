@@ -20,10 +20,17 @@ class AJTH_Admin_Settings {
     /** Nonce action */
     const NONCE = 'ajth_save_home_settings';
 
+    /** Option key — shared with Laravel (WP_CATALOG_INVALIDATE_SECRET) and REST debug / invalidate */
+    const OPT_LARAVEL_SECRET = 'ajth_laravel_invalidate_secret';
+
+    /** Nonce for Laravel secret page */
+    const NONCE_LARAVEL = 'ajth_save_laravel_secret';
+
     public function __construct() {
         add_action( 'admin_menu',            array( $this, 'add_menu_page' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'admin_init',            array( $this, 'handle_save' ) );
+        add_action( 'admin_init',            array( $this, 'handle_laravel_secret_save' ) );
     }
 
     /* ──────────────────────────────────────────
@@ -39,13 +46,22 @@ class AJTH_Admin_Settings {
             'dashicons-admin-home',
             30
         );
+
+        add_submenu_page(
+            'ajth-home-settings',
+            __( 'Laravel & debug API', 'ajinsafro-traveler-home' ),
+            __( 'Laravel & debug API', 'ajinsafro-traveler-home' ),
+            'manage_options',
+            'ajth-laravel-secret',
+            array( $this, 'render_laravel_secret_page' )
+        );
     }
 
     /* ──────────────────────────────────────────
      * Admin assets
      * ────────────────────────────────────────── */
     public function enqueue_admin_assets( $hook ) {
-        if ( 'toplevel_page_ajth-home-settings' !== $hook ) {
+        if ( 'toplevel_page_ajth-home-settings' !== $hook && 'ajth-home-settings_page_ajth-laravel-secret' !== $hook ) {
             return;
         }
 
@@ -125,6 +141,41 @@ class AJTH_Admin_Settings {
         add_settings_error( 'ajth_messages', 'ajth_saved', __( 'Paramètres enregistrés.', 'ajinsafro-traveler-home' ), 'updated' );
 
         wp_safe_redirect( admin_url( 'admin.php?page=ajth-home-settings&saved=1' ) );
+        exit;
+    }
+
+    /**
+     * Save shared secret for Laravel catalog invalidate + REST debug endpoints.
+     */
+    public function handle_laravel_secret_save() {
+        if ( empty( $_POST['ajth_laravel_secret_form'] ) || ! isset( $_POST['ajth_laravel_nonce'] ) ) {
+            return;
+        }
+
+        if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ajth_laravel_nonce'] ) ), self::NONCE_LARAVEL ) ) {
+            wp_die( esc_html__( 'Nonce invalide.', 'ajinsafro-traveler-home' ) );
+        }
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Permissions insuffisantes.', 'ajinsafro-traveler-home' ) );
+        }
+
+        if ( ! empty( $_POST['ajth_clear_laravel_secret'] ) ) {
+            delete_option( self::OPT_LARAVEL_SECRET );
+            add_settings_error( 'ajth_laravel', 'ajth_cleared', __( 'Secret supprimé. Les endpoints REST exigeront wp-config ou un nouveau secret.', 'ajinsafro-traveler-home' ), 'updated' );
+            wp_safe_redirect( admin_url( 'admin.php?page=ajth-laravel-secret&saved=1' ) );
+            exit;
+        }
+
+        if ( isset( $_POST['ajth_laravel_invalidate_secret'] ) ) {
+            $raw = trim( wp_unslash( $_POST['ajth_laravel_invalidate_secret'] ) );
+            if ( $raw !== '' ) {
+                update_option( self::OPT_LARAVEL_SECRET, $raw );
+                add_settings_error( 'ajth_laravel', 'ajth_saved_secret', __( 'Secret enregistré. Même valeur que WP_CATALOG_INVALIDATE_SECRET côté Laravel.', 'ajinsafro-traveler-home' ), 'updated' );
+            }
+        }
+
+        wp_safe_redirect( admin_url( 'admin.php?page=ajth-laravel-secret&saved=1' ) );
         exit;
     }
 
@@ -266,6 +317,90 @@ class AJTH_Admin_Settings {
                 </p>
             </div>
         </script>
+        <?php
+    }
+
+    /**
+     * Page: shared secret with Laravel (invalidate + debug REST).
+     */
+    public function render_laravel_secret_page() {
+        $has_constant = defined( 'AJTH_LARAVEL_INVALIDATE_SECRET' ) && AJTH_LARAVEL_INVALIDATE_SECRET !== '';
+        $has_option   = (string) get_option( self::OPT_LARAVEL_SECRET, '' ) !== '';
+        $active       = $has_constant || $has_option;
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e( 'Laravel & debug API', 'ajinsafro-traveler-home' ); ?></h1>
+            <p class="description">
+                <?php esc_html_e( 'Même secret que dans le .env Laravel : WP_CATALOG_INVALIDATE_SECRET. Il déverrouille l’endpoint REST invalidate-posts (cache WordPress après sync). Le diagnostic se fait côté Laravel : php artisan wp:catalog-inspect.', 'ajinsafro-traveler-home' ); ?>
+            </p>
+
+            <?php settings_errors( 'ajth_laravel' ); ?>
+            <?php if ( isset( $_GET['saved'] ) ) : ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Enregistré.', 'ajinsafro-traveler-home' ); ?></p></div>
+            <?php endif; ?>
+
+            <?php if ( $has_constant ) : ?>
+                <div class="notice notice-info">
+                    <p>
+                        <?php esc_html_e( 'Le secret est défini dans wp-config.php (AJTH_LARAVEL_INVALIDATE_SECRET). Il a priorité sur l’option ci-dessous.', 'ajinsafro-traveler-home' ); ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+
+            <form method="post" action="">
+                <?php wp_nonce_field( self::NONCE_LARAVEL, 'ajth_laravel_nonce' ); ?>
+                <input type="hidden" name="ajth_laravel_secret_form" value="1" />
+
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">
+                            <label for="ajth_laravel_invalidate_secret"><?php esc_html_e( 'Secret partagé (X-Ajth-Secret)', 'ajinsafro-traveler-home' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="password" name="ajth_laravel_invalidate_secret" id="ajth_laravel_invalidate_secret" class="regular-text" autocomplete="new-password" placeholder="<?php esc_attr_e( 'Coller la même valeur que WP_CATALOG_INVALIDATE_SECRET', 'ajinsafro-traveler-home' ); ?>" />
+                            <p class="description">
+                                <?php
+                                if ( $has_option && ! $has_constant ) {
+                                    esc_html_e( 'Un secret est déjà enregistré. Saisissez une nouvelle valeur pour le remplacer.', 'ajinsafro-traveler-home' );
+                                } else {
+                                    esc_html_e( 'Laissez vide si vous ne souhaitez pas modifier (après première sauvegarde).', 'ajinsafro-traveler-home' );
+                                }
+                                ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <?php submit_button( __( 'Enregistrer le secret', 'ajinsafro-traveler-home' ) ); ?>
+
+                <p>
+                    <label>
+                        <input type="checkbox" name="ajth_clear_laravel_secret" value="1" />
+                        <?php esc_html_e( 'Supprimer le secret stocké en base (option WordPress uniquement ; ne supprime pas wp-config).', 'ajinsafro-traveler-home' ); ?>
+                    </label>
+                </p>
+            </form>
+
+            <hr />
+            <h2><?php esc_html_e( 'État', 'ajinsafro-traveler-home' ); ?></h2>
+            <ul style="list-style:disc;margin-left:1.5em;">
+                <li>
+                    <?php echo $active ? esc_html__( 'Endpoints REST : configurés (constante ou option).', 'ajinsafro-traveler-home' ) : esc_html__( 'Endpoints REST : non configurés — 403 ajth_debug_forbidden.', 'ajinsafro-traveler-home' ); ?>
+                </li>
+                <li><?php esc_html_e( 'Option WordPress :', 'ajinsafro-traveler-home' ); ?> <code>ajth_laravel_invalidate_secret</code> — <?php echo $has_option ? esc_html__( 'définie', 'ajinsafro-traveler-home' ) : esc_html__( 'vide', 'ajinsafro-traveler-home' ); ?></li>
+            </ul>
+
+            <h2><?php esc_html_e( 'Diagnostic interne (Laravel, pas d’API publique)', 'ajinsafro-traveler-home' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'Sur le serveur Laravel : lecture directe MySQL (connexion wp). Voir config/wordpress_catalog_sources.php et la commande :', 'ajinsafro-traveler-home' ); ?></p>
+            <pre style="background:#f6f7f7;padding:12px;overflow:auto;">php artisan wp:catalog-inspect activity 1483
+php artisan wp:catalog-inspect transfer 14353
+php artisan wp:catalog-inspect hotel ID_WP
+php artisan wp:catalog-inspect voyage ID_WP
+php artisan wp:catalog-inspect transfer 14353 --json</pre>
+
+            <h2><?php esc_html_e( 'Invalidation cache WordPress (après sync Laravel)', 'ajinsafro-traveler-home' ); ?></h2>
+            <pre style="background:#f6f7f7;padding:12px;overflow:auto;">curl -sS -X POST -H "X-Ajth-Secret: YOUR_SECRET" -H "Content-Type: application/json" -d "{\"post_ids\":[14353]}" "<?php echo esc_url( home_url( '/wp-json/ajth/v1/invalidate-posts' ) ); ?>"</pre>
+        </div>
         <?php
     }
 
