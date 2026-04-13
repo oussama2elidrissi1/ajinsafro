@@ -407,25 +407,63 @@ class WordPressMediaService
 
     public function setPostThumbnailIfValid(WpPost $post, int $attachmentId, array $context = []): void
     {
-        $validId = $this->validateAttachmentIdForDisplay($attachmentId);
-        if (! $validId) {
-            $this->logMediaWrite('thumbnail_rejected', $post, $attachmentId, $context + [
-                'status' => $this->getAttachmentDisplayStatus($attachmentId),
-                'previous' => $post->getMeta('_thumbnail_id'),
+        $this->setPostThumbnailIfValidWithPolicy($post, $attachmentId, $context);
+    }
+
+    /**
+     * Politique d'écriture du thumbnail, pour préserver les corrections manuelles en DB.
+     *
+     * Règles:
+     * - Si le thumbnail actuel est strictement valide => on le garde par défaut
+     * - On ne remplace que si $allowReplaceIfCurrentValid=true (action volontaire)
+     * - Si le nouveau thumbnail n'est pas strictement valide => rejet (on ne touche pas à l'existant)
+     */
+    public function setPostThumbnailIfValidWithPolicy(
+        WpPost $post,
+        int $attachmentId,
+        array $context = [],
+        bool $allowReplaceIfCurrentValid = false,
+    ): void {
+        $previousRaw = (string) $post->getMeta('_thumbnail_id', '');
+        $previousId = is_numeric($previousRaw) ? (int) $previousRaw : 0;
+        $previousStatus = $previousId > 0 ? $this->getAttachmentDisplayStatus($previousId) : ['status' => 'invalid', 'reason' => 'no_thumbnail'];
+        $previousIsStrictValid = $previousId > 0 && $this->isAttachmentStrictlyValidForWrite($previousId);
+
+        $newStatus = $this->getAttachmentDisplayStatus($attachmentId);
+        $newIsStrictValid = $this->isAttachmentStrictlyValidForWrite($attachmentId);
+
+        if ($previousIsStrictValid && ! $allowReplaceIfCurrentValid) {
+            $this->logMediaWrite('kept_existing_valid_thumbnail', $post, $previousId, $context + [
+                'previous' => $previousId,
+                'previous_status' => $previousStatus,
+                'candidate' => $attachmentId,
+                'candidate_status' => $newStatus,
             ]);
 
             return;
         }
 
-        $this->logMediaWrite('thumbnail_set', $post, $validId, $context + [
-            'previous' => $post->getMeta('_thumbnail_id'),
+        if (! $newIsStrictValid) {
+            $this->logMediaWrite('rejected_invalid_new_thumbnail', $post, $attachmentId, $context + [
+                'previous' => $previousId,
+                'previous_status' => $previousStatus,
+                'candidate_status' => $newStatus,
+            ]);
+
+            return;
+        }
+
+        $this->logMediaWrite('accepted_valid_new_thumbnail', $post, $attachmentId, $context + [
+            'previous' => $previousId,
+            'previous_status' => $previousStatus,
+            'candidate_status' => $newStatus,
         ]);
-        $post->setMeta('_thumbnail_id', (string) $validId);
+        $post->setMeta('_thumbnail_id', (string) (int) $attachmentId);
     }
 
     public function setPostGalleryMetasFiltered(WpPost $post, array $attachmentIds, array $metaKeys, array $context = []): void
     {
-        $ids = $this->filterValidAttachmentIdsForDisplay($attachmentIds);
+        $ids = $this->filterValidAttachmentIdsForWriteStrict($attachmentIds);
         $value = implode(',', $ids);
         $this->logMediaWrite('gallery_set', $post, null, $context + [
             'meta_keys' => $metaKeys,
@@ -434,6 +472,44 @@ class WordPressMediaService
         foreach ($metaKeys as $k) {
             $post->setMeta((string) $k, $value);
         }
+    }
+
+    public function isAttachmentStrictlyValidForWrite(int $attachmentId): bool
+    {
+        // Pour protéger les corrections manuelles: on exige une vérification FS réelle.
+        if (! $this->uploadsPathExplicitlyConfigured) {
+            return false;
+        }
+        if (! is_dir($this->uploadsPath)) {
+            return false;
+        }
+
+        return $this->getAttachmentDisplayStatus($attachmentId)['status'] === 'valid';
+    }
+
+    /**
+     * Filtre strict pour écriture: ne garde que les IDs strictement valides (existants + fichier présent).
+     *
+     * @param array<int, mixed> $attachmentIds
+     * @return array<int, int>
+     */
+    public function filterValidAttachmentIdsForWriteStrict(array $attachmentIds): array
+    {
+        $out = [];
+        foreach ($attachmentIds as $id) {
+            $id = (int) $id;
+            if ($id <= 0) {
+                continue;
+            }
+            if (! $this->isAttachmentStrictlyValidForWrite($id)) {
+                continue;
+            }
+            if (! in_array($id, $out, true)) {
+                $out[] = $id;
+            }
+        }
+
+        return $out;
     }
 
     protected function logMediaWrite(string $event, WpPost $post, ?int $attachmentId, array $context = []): void

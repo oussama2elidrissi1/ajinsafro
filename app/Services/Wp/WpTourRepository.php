@@ -293,7 +293,9 @@ class WpTourRepository
         if (isset($data['featured_image'])) {
             $valid = $this->media->validateAttachmentIdForDisplay((int) $data['featured_image']);
             if ($valid) {
-                $post->setMeta('_thumbnail_id', (string) $valid);
+                $this->media->setPostThumbnailIfValidWithPolicy($post, (int) $valid, [
+                    'source' => 'WpTourRepository::updateTourMetas featured_image',
+                ], true);
             }
             // Si invalide: ne rien changer (ne pas supprimer un thumbnail valide existant).
         }
@@ -304,7 +306,9 @@ class WpTourRepository
             } else {
                 $valid = $this->media->validateAttachmentIdForDisplay((int) $data['thumbnail_id']);
                 if ($valid) {
-                    $post->setMeta('_thumbnail_id', (string) $valid);
+                    $this->media->setPostThumbnailIfValidWithPolicy($post, (int) $valid, [
+                        'source' => 'WpTourRepository::updateTourMetas thumbnail_id',
+                    ], true);
                 }
                 // Si invalide: ne rien changer (ne pas supprimer un thumbnail valide existant).
             }

@@ -66,7 +66,9 @@ class HeroImageController
 
         // Lier l'attachment au tour : image principale (custom) + image à la une WP (_thumbnail_id)
         $tour->setMeta('_tour_hero_image_id', (string) $attachmentId);
-        $tour->setMeta('_thumbnail_id', (string) $attachmentId);
+        $this->media->setPostThumbnailIfValidWithPolicy($tour, (int) $attachmentId, [
+            'source' => 'HeroImageController@upload',
+        ], true);
 
         $url = WpHeroImageService::getAttachmentUrl($attachmentId);
 
@@ -121,7 +123,9 @@ class HeroImageController
         }
 
         $tour->setMeta('_tour_hero_image_id', (string) $attachmentId);
-        $tour->setMeta('_thumbnail_id', (string) $attachmentId);
+        $this->media->setPostThumbnailIfValidWithPolicy($tour, (int) $attachmentId, [
+            'source' => 'HeroImageController@select',
+        ], true);
         $url = WpHeroImageService::getAttachmentUrl($attachmentId);
         $attachedFile = WpHeroImageService::getAttachedFile($attachmentId);
 

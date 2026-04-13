@@ -73,7 +73,10 @@ class WpFeaturedImageService
         if ($attachmentId && $attachmentId > 0) {
             $valid = $this->media->validateAttachmentIdForDisplay((int) $attachmentId);
             if ($valid) {
-                $tour->setMeta('_thumbnail_id', (string) $valid);
+                $this->media->setPostThumbnailIfValidWithPolicy($tour, (int) $valid, [
+                    'source' => 'WpFeaturedImageService::syncTourThumbnailMeta',
+                ], true);
+
                 return;
             }
 

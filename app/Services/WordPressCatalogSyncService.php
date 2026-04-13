@@ -423,9 +423,9 @@ class WordPressCatalogSyncService
         if ($request->hasFile('featured_image')) {
             $attachmentId = $this->media->tryUploadAndCreateAttachment($request->file('featured_image'), $parentId);
             if ($attachmentId) {
-                $this->media->setPostThumbnailIfValid($post, $attachmentId, [
+                $this->media->setPostThumbnailIfValidWithPolicy($post, $attachmentId, [
                     'source' => 'WordPressCatalogSyncService::syncImagesForPost',
-                ]);
+                ], false);
             }
         } elseif ($request->boolean('remove_featured_image')) {
             $post->deleteMeta('_thumbnail_id');
@@ -435,6 +435,7 @@ class WordPressCatalogSyncService
             return [];
         }
 
+        $hasGalleryInput = $request->has('gallery_keep_ids') || $request->hasFile('gallery_images');
         $galleryIds = array_values(array_filter(array_map('intval', $request->input('gallery_keep_ids', $keepGalleryIds))));
         if ($request->hasFile('gallery_images')) {
             foreach ((array) $request->file('gallery_images') as $file) {
@@ -447,9 +448,12 @@ class WordPressCatalogSyncService
             }
         }
 
-        $this->media->setPostGalleryMetasFiltered($post, $galleryIds, ['_gallery', 'gallery', 'st_gallery'], [
-            'source' => 'WordPressCatalogSyncService::syncImagesForPost',
-        ]);
+        // Protection corrections manuelles: ne réécrit la galerie que si une action explicite la modifie.
+        if ($hasGalleryInput) {
+            $this->media->setPostGalleryMetasFiltered($post, $galleryIds, ['_gallery', 'gallery', 'st_gallery'], [
+                'source' => 'WordPressCatalogSyncService::syncImagesForPost',
+            ]);
+        }
 
         return $galleryIds;
     }
