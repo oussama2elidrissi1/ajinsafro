@@ -58,6 +58,10 @@ class WpHeroImageService
             \Log::error('WpHeroImageService: échec écriture fichier', ['fullPath' => $fullPath, 'tour_id' => $tourId]);
             throw new \RuntimeException('Impossible d\'enregistrer le fichier dans les uploads WordPress. Vérifiez les droits du dossier.');
         }
+        if (!is_file($fullPath) || !is_readable($fullPath)) {
+            \Log::error('WpHeroImageService: fichier manquant après move()', ['fullPath' => $fullPath, 'tour_id' => $tourId]);
+            throw new \RuntimeException('Upload WP échoué: fichier introuvable après écriture.');
+        }
         $baseUploadsUrl = self::getUploadsBaseUrl();
         $guid = rtrim($baseUploadsUrl, '/') . '/' . ltrim($relativePath, '/');
 

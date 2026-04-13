@@ -421,7 +421,12 @@ class WordPressCatalogSyncService
     {
         $parentId = (int) $post->ID;
         if ($request->hasFile('featured_image')) {
-            $post->setMeta('_thumbnail_id', (string) $this->media->uploadAndCreateAttachment($request->file('featured_image'), $parentId));
+            $attachmentId = $this->media->tryUploadAndCreateAttachment($request->file('featured_image'), $parentId);
+            if ($attachmentId) {
+                $this->media->setPostThumbnailIfValid($post, $attachmentId, [
+                    'source' => 'WordPressCatalogSyncService::syncImagesForPost',
+                ]);
+            }
         } elseif ($request->boolean('remove_featured_image')) {
             $post->deleteMeta('_thumbnail_id');
         }
@@ -434,15 +439,17 @@ class WordPressCatalogSyncService
         if ($request->hasFile('gallery_images')) {
             foreach ((array) $request->file('gallery_images') as $file) {
                 if ($file && $file->isValid()) {
-                    $galleryIds[] = $this->media->uploadAndCreateAttachment($file, $parentId);
+                    $newId = $this->media->tryUploadAndCreateAttachment($file, $parentId);
+                    if ($newId) {
+                        $galleryIds[] = $newId;
+                    }
                 }
             }
         }
 
-        $csv = implode(',', $galleryIds);
-        $post->setMeta('_gallery', $csv);
-        $post->setMeta('gallery', $csv);
-        $post->setMeta('st_gallery', $csv);
+        $this->media->setPostGalleryMetasFiltered($post, $galleryIds, ['_gallery', 'gallery', 'st_gallery'], [
+            'source' => 'WordPressCatalogSyncService::syncImagesForPost',
+        ]);
 
         return $galleryIds;
     }

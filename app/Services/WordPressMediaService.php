@@ -6,6 +6,7 @@ use App\Models\Wp\WpPost;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -19,8 +20,12 @@ class WordPressMediaService
 
     protected string $uploadsUrl;
 
+    protected bool $uploadsPathExplicitlyConfigured = false;
+
     public function __construct()
     {
+        $explicitPath = config('wordpress.uploads_path');
+        $this->uploadsPathExplicitlyConfigured = is_string($explicitPath) && $explicitPath !== '';
         $this->uploadsPath = $this->getUploadsBasePath();
         $this->uploadsUrl = $this->getUploadsBaseUrl();
     }
@@ -113,6 +118,21 @@ class WordPressMediaService
      */
     public function uploadToWpUploads(UploadedFile $file): string
     {
+        if (! $this->uploadsPathExplicitlyConfigured) {
+            Log::error('WordPressMediaService::uploadToWpUploads refused (wordpress.uploads_path not configured)', [
+                'uploads_path' => $this->uploadsPath,
+                'uploads_url' => $this->uploadsUrl,
+            ]);
+            throw new \RuntimeException('WP uploads_path non configuré: refus de créer un attachment (évite médias cassés).');
+        }
+        if (! is_dir($this->uploadsPath)) {
+            Log::error('WordPressMediaService::uploadToWpUploads refused (uploads path missing)', [
+                'uploads_path' => $this->uploadsPath,
+                'uploads_url' => $this->uploadsUrl,
+            ]);
+            throw new \RuntimeException('Dossier uploads WordPress introuvable: refus de créer un attachment.');
+        }
+
         $now = Carbon::now();
         $ym = $now->format('Y') . '/' . $now->format('m');
         $dir = $this->uploadsPath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $ym);
@@ -132,6 +152,15 @@ class WordPressMediaService
         $fullPath = $this->path($relativePath);
 
         $file->move($dir, $uniqueName);
+        if (! is_file($fullPath) || ! is_readable($fullPath)) {
+            Log::error('WordPressMediaService::uploadToWpUploads file missing after move()', [
+                'relative_path' => $relativePath,
+                'full_path' => $fullPath,
+                'uploads_path' => $this->uploadsPath,
+                'uploads_url' => $this->uploadsUrl,
+            ]);
+            throw new \RuntimeException('Upload WP échoué: fichier introuvable après écriture.');
+        }
 
         if (config('app.debug')) {
             \Log::debug('WordPressMediaService::uploadToWpUploads', [
@@ -183,6 +212,15 @@ class WordPressMediaService
         $post->setMeta('_wp_attached_file', $relativePath);
 
         $absPath = $this->path($relativePath);
+        if (is_dir($this->uploadsPath) && (! is_file($absPath) || ! is_readable($absPath))) {
+            Log::error('WordPressMediaService::createAttachment refuses to create attachment (file missing)', [
+                'relative_path' => $relativePath,
+                'abs_path' => $absPath,
+                'uploads_path' => $this->uploadsPath,
+                'parent_post_id' => $parentPostId,
+            ]);
+            throw new \RuntimeException('Attachment WP non créé: fichier physique manquant.');
+        }
         $width = null;
         $height = null;
         if (is_readable($absPath) && function_exists('getimagesize')) {
@@ -264,6 +302,23 @@ class WordPressMediaService
         return $this->createAttachment($relativePath, $mimeType, $finalUrl, $parentPostId);
     }
 
+    /**
+     * Variante "safe" pour les sync/import: ne casse pas un contenu existant si l'upload échoue.
+     */
+    public function tryUploadAndCreateAttachment(UploadedFile $file, ?int $parentPostId = null): ?int
+    {
+        try {
+            return $this->uploadAndCreateAttachment($file, $parentPostId);
+        } catch (\Throwable $e) {
+            Log::error('WordPressMediaService::tryUploadAndCreateAttachment failed', [
+                'message' => $e->getMessage(),
+                'parent_post_id' => $parentPostId,
+            ]);
+
+            return null;
+        }
+    }
+
     public function setHotelThumbnail(int $hotelPostId, int $attachmentId): void
     {
         $post = WpPost::query()->find($hotelPostId);
@@ -271,9 +326,15 @@ class WordPressMediaService
             $validId = $this->validateAttachmentIdForDisplay($attachmentId);
             if (! $validId) {
                 // Ne jamais écraser/supprimer un thumbnail existant si le nouveau est invalide ou non vérifiable.
+                $this->logMediaWrite('thumbnail_rejected', $post, $attachmentId, [
+                    'status' => $this->getAttachmentDisplayStatus($attachmentId),
+                ]);
                 return;
             }
 
+            $this->logMediaWrite('thumbnail_set', $post, $validId, [
+                'previous' => $post->getMeta('_thumbnail_id'),
+            ]);
             $post->setMeta('_thumbnail_id', (string) $validId);
         }
     }
@@ -284,6 +345,10 @@ class WordPressMediaService
         $value = implode(',', $ids);
         $post = WpPost::query()->find($hotelPostId);
         if ($post) {
+            $this->logMediaWrite('gallery_set', $post, null, [
+                'meta_keys' => ['st_gallery', 'gallery'],
+                'value' => $value,
+            ]);
             $post->setMeta('st_gallery', $value);
             $post->setMeta('gallery', $value);
         }
@@ -332,8 +397,65 @@ class WordPressMediaService
         $value = implode(',', $ids);
         $post = WpPost::query()->find($hotelPostId);
         if ($post) {
+            $this->logMediaWrite('gallery_set', $post, null, [
+                'meta_keys' => ['_gallery'],
+                'value' => $value,
+            ]);
             $post->setMeta('_gallery', $value);
         }
+    }
+
+    public function setPostThumbnailIfValid(WpPost $post, int $attachmentId, array $context = []): void
+    {
+        $validId = $this->validateAttachmentIdForDisplay($attachmentId);
+        if (! $validId) {
+            $this->logMediaWrite('thumbnail_rejected', $post, $attachmentId, $context + [
+                'status' => $this->getAttachmentDisplayStatus($attachmentId),
+                'previous' => $post->getMeta('_thumbnail_id'),
+            ]);
+
+            return;
+        }
+
+        $this->logMediaWrite('thumbnail_set', $post, $validId, $context + [
+            'previous' => $post->getMeta('_thumbnail_id'),
+        ]);
+        $post->setMeta('_thumbnail_id', (string) $validId);
+    }
+
+    public function setPostGalleryMetasFiltered(WpPost $post, array $attachmentIds, array $metaKeys, array $context = []): void
+    {
+        $ids = $this->filterValidAttachmentIdsForDisplay($attachmentIds);
+        $value = implode(',', $ids);
+        $this->logMediaWrite('gallery_set', $post, null, $context + [
+            'meta_keys' => $metaKeys,
+            'value' => $value,
+        ]);
+        foreach ($metaKeys as $k) {
+            $post->setMeta((string) $k, $value);
+        }
+    }
+
+    protected function logMediaWrite(string $event, WpPost $post, ?int $attachmentId, array $context = []): void
+    {
+        $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
+        $trace = array_map(function ($f) {
+            return [
+                'file' => $f['file'] ?? null,
+                'line' => $f['line'] ?? null,
+                'function' => $f['function'] ?? null,
+                'class' => $f['class'] ?? null,
+            ];
+        }, $bt);
+
+        Log::info('WP media write', [
+            'event' => $event,
+            'post_id' => (int) $post->ID,
+            'post_type' => (string) $post->post_type,
+            'attachment_id' => $attachmentId,
+            'context' => $context,
+            'trace' => $trace,
+        ]);
     }
 
     /**
