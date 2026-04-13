@@ -12,8 +12,11 @@ class WpFixBrokenThumbnailsCommand extends Command
     protected $signature = 'wp:fix-broken-thumbnails
                             {--dry-run : Ne fait aucun update, rapport uniquement}
                             {--post-types=st_hotel,st_tours : Post types à scanner}
+                            {--post-ids= : Restreindre à une liste de posts.ID (CSV)}
                             {--bad=14777,14778,14779,14780 : IDs d\'attachments suspects (CSV)}
                             {--map=14778:14762,14780:14762 : Remplacements bad->good (CSV "bad:good")}
+                            {--fix-invalid-only=1 : Ne corrige que si le thumbnail est réellement invalide}
+                            {--remove-if-unfixable=0 : Si invalide et aucune alternative, supprimer _thumbnail_id (désactivé par défaut)}
                             {--limit=500 : Limite de posts scannés}
                             {--json : Sortie JSON uniquement}';
 
@@ -22,6 +25,8 @@ class WpFixBrokenThumbnailsCommand extends Command
     public function handle(WordPressMediaService $media): int
     {
         $dryRun = (bool) $this->option('dry-run');
+        $fixInvalidOnly = (string) $this->option('fix-invalid-only') !== '0';
+        $removeIfUnfixable = (string) $this->option('remove-if-unfixable') !== '0';
         $limit = (int) $this->option('limit');
         $limit = $limit < 1 ? 500 : min(5000, $limit);
 
@@ -29,12 +34,15 @@ class WpFixBrokenThumbnailsCommand extends Command
         if (empty($postTypes)) {
             $postTypes = ['st_hotel', 'st_tours'];
         }
+        $onlyPostIds = array_values(array_filter(array_map('intval', array_map('trim', explode(',', (string) $this->option('post-ids'))))));
 
         $badIds = array_values(array_filter(array_map('intval', explode(',', (string) $this->option('bad')))));
         $map = $this->parseMap((string) $this->option('map'));
 
         $report = [
             'dry_run' => $dryRun,
+            'fix_invalid_only' => $fixInvalidOnly,
+            'remove_if_unfixable' => $removeIfUnfixable,
             'post_types' => $postTypes,
             'bad_ids' => $badIds,
             'map' => $map,
@@ -47,6 +55,7 @@ class WpFixBrokenThumbnailsCommand extends Command
         $posts = WpPost::query()
             ->whereIn('post_type', $postTypes)
             ->whereIn('post_status', ['publish', 'draft'])
+            ->when(! empty($onlyPostIds), fn ($q) => $q->whereIn('ID', $onlyPostIds))
             ->orderBy('ID')
             ->limit($limit)
             ->get(['ID', 'post_type', 'post_title', 'post_status']);
@@ -59,33 +68,83 @@ class WpFixBrokenThumbnailsCommand extends Command
             $didFix = false;
             $before = $thumbId;
             $after = $thumbId;
+            $reason = '';
+            $action = 'ignored';
 
-            if ($thumbId > 0 && in_array($thumbId, $badIds, true) && isset($map[$thumbId])) {
-                $candidate = (int) $map[$thumbId];
-                $valid = $media->validateAttachmentIdForDisplay($candidate);
-                if ($valid) {
-                    $after = $valid;
-                    $didFix = true;
-                    if (! $dryRun) {
-                        $post->setMeta('_thumbnail_id', (string) $valid);
+            $thumbStatus = $thumbId > 0 ? $media->getAttachmentDisplayStatus($thumbId) : ['status' => 'valid', 'reason' => 'no_thumbnail'];
+            $isInvalid = $thumbId > 0 && $thumbStatus['status'] === 'invalid';
+
+            if ($thumbId > 0 && $thumbStatus['status'] !== 'valid') {
+                $report['invalid_thumbnail'][] = [
+                    'post_id' => $postId,
+                    'post_type' => $post->post_type,
+                    'post_title' => $post->post_title,
+                    'thumbnail_id' => $thumbId,
+                    'status' => $thumbStatus['status'],
+                    'reason' => $thumbStatus['reason'],
+                ];
+            }
+
+            if ($thumbId > 0) {
+                // Règle: ne pas toucher si déjà valide (ou non vérifiable).
+                if ($thumbStatus['status'] === 'valid') {
+                    $action = 'kept_valid';
+                } elseif ($thumbStatus['status'] === 'unknown') {
+                    $action = 'kept_unknown';
+                } elseif (! $fixInvalidOnly || $isInvalid) {
+                    // Tentative 1: mapping explicite (bad -> good), mais uniquement si le thumb actuel est invalide.
+                    if ($isInvalid && isset($map[$thumbId])) {
+                        $candidate = (int) $map[$thumbId];
+                        $candidateStatus = $media->getAttachmentDisplayStatus($candidate);
+                        if ($candidateStatus['status'] === 'valid') {
+                            $after = $candidate;
+                            $didFix = true;
+                            $reason = 'invalid_thumbnail_mapped_to_valid';
+                            $action = 'replaced_thumbnail';
+                            if (! $dryRun) {
+                                $post->setMeta('_thumbnail_id', (string) $candidate);
+                            }
+                        } else {
+                            $reason = 'invalid_thumbnail_mapping_target_not_valid';
+                        }
                     }
-                } else {
-                    // bad -> good mapping exists but good isn't valid on disk, so remove thumbnail.
-                    $after = 0;
-                    $didFix = true;
-                    if (! $dryRun) {
-                        $post->deleteMeta('_thumbnail_id');
+
+                    // Tentative 2: fallback vers une image de galerie valide si thumbnail invalide et pas déjà corrigé.
+                    if ($isInvalid && ! $didFix) {
+                        $galleryCandidate = 0;
+                        foreach (['_gallery', 'gallery', 'st_gallery'] as $gkey) {
+                            $raw = (string) $post->getMeta($gkey);
+                            if (trim($raw) === '') {
+                                continue;
+                            }
+                            foreach (array_values(array_filter(array_map('intval', explode(',', $raw)))) as $gid) {
+                                if ($media->getAttachmentDisplayStatus((int) $gid)['status'] === 'valid') {
+                                    $galleryCandidate = (int) $gid;
+                                    break 2;
+                                }
+                            }
+                        }
+                        if ($galleryCandidate > 0) {
+                            $after = $galleryCandidate;
+                            $didFix = true;
+                            $reason = 'invalid_thumbnail_fallback_to_gallery';
+                            $action = 'replaced_thumbnail';
+                            if (! $dryRun) {
+                                $post->setMeta('_thumbnail_id', (string) $galleryCandidate);
+                            }
+                        }
                     }
-                }
-            } elseif ($thumbId > 0) {
-                $valid = $media->validateAttachmentIdForDisplay($thumbId);
-                if (! $valid) {
-                    $report['invalid_thumbnail'][] = [
-                        'post_id' => $postId,
-                        'post_type' => $post->post_type,
-                        'post_title' => $post->post_title,
-                        'thumbnail_id' => $thumbId,
-                    ];
+
+                    // Tentative 3: supprimer si invalide et non corrigeable.
+                    if ($isInvalid && ! $didFix && $removeIfUnfixable) {
+                        $after = 0;
+                        $didFix = true;
+                        $reason = $reason !== '' ? $reason.';removed_unfixable' : 'removed_unfixable_invalid_thumbnail';
+                        $action = 'removed_thumbnail';
+                        if (! $dryRun) {
+                            $post->deleteMeta('_thumbnail_id');
+                        }
+                    }
                 }
             }
 
@@ -96,6 +155,8 @@ class WpFixBrokenThumbnailsCommand extends Command
                     'post_title' => $post->post_title,
                     'thumbnail_before' => $before,
                     'thumbnail_after' => $after,
+                    'reason' => $reason,
+                    'action' => $action,
                 ];
             } else {
                 $report['unchanged'][] = [
@@ -103,6 +164,8 @@ class WpFixBrokenThumbnailsCommand extends Command
                     'post_type' => $post->post_type,
                     'post_title' => $post->post_title,
                     'thumbnail_id' => $thumbId,
+                    'status' => $thumbStatus['status'] ?? 'n/a',
+                    'action' => $action,
                 ];
             }
 

@@ -76,6 +76,8 @@ class WpFeaturedImageService
                 $tour->setMeta('_thumbnail_id', (string) $valid);
                 return;
             }
+
+            // Ne pas écraser une valeur existante si la nouvelle est invalide/non vérifiable.
             return;
         }
 

@@ -269,11 +269,12 @@ class WordPressMediaService
         $post = WpPost::query()->find($hotelPostId);
         if ($post) {
             $validId = $this->validateAttachmentIdForDisplay($attachmentId);
-            if ($validId) {
-                $post->setMeta('_thumbnail_id', (string) $validId);
-            } else {
-                $post->deleteMeta('_thumbnail_id');
+            if (! $validId) {
+                // Ne jamais écraser/supprimer un thumbnail existant si le nouveau est invalide ou non vérifiable.
+                return;
             }
+
+            $post->setMeta('_thumbnail_id', (string) $validId);
         }
     }
 
@@ -341,9 +342,28 @@ class WordPressMediaService
      */
     public function validateAttachmentIdForDisplay(int $attachmentId): ?int
     {
+        $status = $this->getAttachmentDisplayStatus($attachmentId);
+        if ($status['status'] !== 'valid') {
+            return null;
+        }
+
+        return (int) $attachmentId;
+    }
+
+    /**
+     * Statut d'affichage d'un attachment.
+     *
+     * - valid: attachment existe, _wp_attached_file non vide, fichier présent (si uploads_path dispo)
+     * - invalid: attachment inexistant / méta vide / fichier absent (si vérifiable)
+     * - unknown: impossible de vérifier le fichier physique (uploads_path non dispo) mais méta plausible
+     *
+     * @return array{status: 'valid'|'invalid'|'unknown', reason: string, attached_file?: string|null}
+     */
+    public function getAttachmentDisplayStatus(int $attachmentId): array
+    {
         $attachmentId = (int) $attachmentId;
         if ($attachmentId <= 0) {
-            return null;
+            return ['status' => 'invalid', 'reason' => 'attachment_id<=0'];
         }
 
         $att = WpPost::query()
@@ -352,24 +372,28 @@ class WordPressMediaService
             ->first();
 
         if (! $att) {
-            return null;
+            return ['status' => 'invalid', 'reason' => 'attachment_not_found'];
         }
 
         $relativePath = $att->getMeta('_wp_attached_file');
         if (! is_string($relativePath) || trim($relativePath) === '') {
-            return null;
+            return ['status' => 'invalid', 'reason' => '_wp_attached_file_empty', 'attached_file' => null];
         }
+
+        $relativePath = trim($relativePath);
 
         // Si le serveur Laravel n'a pas accès aux uploads WP (uploads_path non configuré / non monté),
-        // on ne peut pas vérifier le fichier physique: dans ce cas on valide uniquement via la méta.
+        // on ne peut pas vérifier le fichier physique: dans ce cas, ne surtout pas écraser des valeurs existantes.
         if (is_dir($this->uploadsPath)) {
-            $fullPath = $this->path(trim($relativePath));
+            $fullPath = $this->path($relativePath);
             if (! is_file($fullPath) || ! is_readable($fullPath)) {
-                return null;
+                return ['status' => 'invalid', 'reason' => 'file_missing', 'attached_file' => $relativePath];
             }
+
+            return ['status' => 'valid', 'reason' => 'file_exists', 'attached_file' => $relativePath];
         }
 
-        return $attachmentId;
+        return ['status' => 'unknown', 'reason' => 'uploads_path_unavailable', 'attached_file' => $relativePath];
     }
 
     /**
@@ -382,9 +406,14 @@ class WordPressMediaService
     {
         $out = [];
         foreach ($attachmentIds as $id) {
-            $valid = $this->validateAttachmentIdForDisplay((int) $id);
-            if ($valid && ! in_array($valid, $out, true)) {
-                $out[] = $valid;
+            $id = (int) $id;
+            if ($id <= 0) {
+                continue;
+            }
+            $status = $this->getAttachmentDisplayStatus($id);
+            // Règle: ne retirer que les IDs réellement invalides. Conserver "unknown" pour éviter de casser.
+            if ($status['status'] !== 'invalid' && ! in_array($id, $out, true)) {
+                $out[] = $id;
             }
         }
 
