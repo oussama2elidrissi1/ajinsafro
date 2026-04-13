@@ -18,6 +18,7 @@ class Voyage extends Model
         'featured_image', 'wp_synced_at', 'wp_sync_hash', 'wp_last_modified_gmt_cache',
         // Traveler metas
         'tour_price_by', 'is_featured', 'st_google_map', 'multi_location',
+        'is_group_deal',
         'discount_by_people_type', 'discount_type', 'calculator_discount_by_people_type',
         'hide_adult_in_booking_form', 'st_tour_external_booking',
         'tours_include', 'tours_exclude', 'tours_highlight', 'tours_program_style',
@@ -33,6 +34,7 @@ class Voyage extends Model
         'wp_synced_at' => 'datetime',
         'wp_last_modified_gmt_cache' => 'datetime',
         'is_featured' => 'boolean',
+        'is_group_deal' => 'boolean',
         'hide_adult_in_booking_form' => 'boolean',
         'tours_include' => 'array',
         'tours_exclude' => 'array',

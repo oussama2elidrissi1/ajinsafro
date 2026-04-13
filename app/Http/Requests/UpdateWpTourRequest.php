@@ -120,6 +120,7 @@ class UpdateWpTourRequest extends FormRequest
             
             // General
             'is_featured' => 'nullable',
+            'is_group_deal' => 'nullable|boolean',
             'tour_price_by' => 'nullable|string',
             'st_tour_external_booking' => 'nullable|string',
             'hide_adult_in_booking_form' => 'nullable',
@@ -431,6 +432,7 @@ class UpdateWpTourRequest extends FormRequest
             'child_price' => 'prix enfant',
             'min_price' => 'prix minimum',
             'min_people' => 'nombre minimum de personnes',
+            'is_group_deal' => 'afficher dans Group Deals',
             'thumbnail_id' => 'image à la une',
             'hero_image_id' => 'image principale (hero)',
             'hero_gallery_ids' => 'galerie hero (5 images)',

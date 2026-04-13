@@ -9,6 +9,7 @@
     $brandLogo = \App\Models\Setting::getValue('brand_logo');
     $brandLogoUrl = $brandLogo ? \App\Models\Setting::storageUrl($brandLogo) : null;
     $maintenanceUrl = rtrim(config('app.frontend_url', 'https://ajinsafro.net'), '/') . '/maintenance';
+    $homeUrl = \Illuminate\Support\Facades\Route::has('front.home') ? route('front.home') : url('/');
 @endphp
 {{-- Dark topbar + semi-transparent header (TravelerWP-like) --}}
 <div class="fixed top-0 left-0 right-0 z-50">
@@ -44,7 +45,7 @@
     <header class="bg-white/90 backdrop-blur-sm border-b border-gray-200/50">
         <div class="container mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
             {{-- Logo left (from settings) – responsive height, max width aligned with navbar --}}
-            <a href="{{ route('front.home') }}" class="flex items-center gap-2 shrink-0 min-h-[2.5rem] md:min-h-[2.75rem]">
+            <a href="{{ $homeUrl }}" class="flex items-center gap-2 shrink-0 min-h-[2.5rem] md:min-h-[2.75rem]">
                 @if($brandLogoUrl)
                     <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="h-8 w-auto max-w-[100px] sm:h-9 sm:max-w-[120px] md:h-10 md:max-w-[160px] object-contain object-left">
                 @else
@@ -61,7 +62,7 @@
 
             {{-- Nav center (mobile: toggled; desktop: always visible) --}}
             <nav id="front-nav" class="hidden lg:flex flex-col lg:flex-row items-center gap-1 w-full lg:w-auto order-last lg:order-none py-4 lg:py-0 border-t lg:border-t-0 border-gray-200" aria-label="Main">
-                <a href="{{ route('front.home') }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100">Home</a>
+                <a href="{{ $homeUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100">Home</a>
                 <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Hotel <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
                 <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Tour <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>
                 <a href="{{ $maintenanceUrl }}" class="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-100 flex items-center gap-0.5">Activity <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></a>

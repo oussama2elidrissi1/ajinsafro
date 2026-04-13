@@ -18,7 +18,8 @@ class GroupDealsController extends Controller
         $groupSize = max(2, (int) $request->input('group_size', 6));
 
         $dealsQuery = Voyage::query()
-            ->whereIn('status', self::VISIBLE_STATUSES);
+            ->whereIn('status', self::VISIBLE_STATUSES)
+            ->where('is_group_deal', true);
 
         if ($search !== '') {
             $like = '%'.$search.'%';
@@ -49,6 +50,7 @@ class GroupDealsController extends Controller
 
         $destinations = Voyage::query()
             ->whereIn('status', self::VISIBLE_STATUSES)
+            ->where('is_group_deal', true)
             ->whereNotNull('destination')
             ->where('destination', '!=', '')
             ->distinct()

@@ -288,10 +288,7 @@ class VoyageController extends Controller
 
         try {
             $tour = $this->repository->createTour($validated);
-            $laravelVoyage = Voyage::firstOrCreate(
-                ['wp_post_id' => $tour->ID],
-                ['name' => $tour->post_title ?? 'Tour', 'slug' => 'tour-' . $tour->ID]
-            );
+            $laravelVoyage = $this->syncLaravelVoyageFromRequest((int) $tour->ID, $validated);
             
             // Save tour program if provided (PHP serialized)
             if ($request->has('tours_program')) {
@@ -1855,10 +1852,7 @@ class VoyageController extends Controller
                 }
             }
 
-            $laravelVoyage = Voyage::firstOrCreate(
-                ['wp_post_id' => $id],
-                ['name' => optional($this->repository->getPost($id))->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
-            );
+            $laravelVoyage = $this->syncLaravelVoyageFromRequest($id, $validated);
 
             $this->syncActivities($laravelVoyage, $request);
             $lastDayNumber = 1;
@@ -2017,6 +2011,35 @@ class VoyageController extends Controller
                 ->withInput()
                 ->withErrors(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Keep Laravel voyage row synced with the WP tour and admin flags.
+     *
+     * @param  array<string,mixed>  $validated
+     */
+    protected function syncLaravelVoyageFromRequest(int $wpPostId, array $validated): Voyage
+    {
+        $wpPost = $this->repository->getPost($wpPostId);
+        $title = trim((string) ($validated['title'] ?? ($wpPost->post_title ?? 'Tour')));
+        $slugInput = trim((string) ($validated['slug'] ?? ''));
+        $slug = $slugInput !== '' ? $slugInput : ('tour-'.$wpPostId);
+
+        $voyage = Voyage::firstOrCreate(
+            ['wp_post_id' => $wpPostId],
+            ['name' => $title, 'slug' => $slug]
+        );
+
+        $voyage->fill([
+            'name' => $title !== '' ? $title : ('Tour '.$wpPostId),
+            'slug' => $slug,
+            'destination' => isset($validated['destination']) ? trim((string) $validated['destination']) : null,
+            'duration_text' => isset($validated['duration_text']) ? trim((string) $validated['duration_text']) : null,
+            'is_group_deal' => (bool) ($validated['is_group_deal'] ?? false),
+        ]);
+        $voyage->save();
+
+        return $voyage;
     }
 
     /**

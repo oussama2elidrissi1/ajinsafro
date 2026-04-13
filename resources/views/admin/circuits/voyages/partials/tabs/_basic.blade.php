@@ -93,9 +93,15 @@
                             </select>
                         </div>
 
-                        <div class="form-check mb-0">
+                        <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured', $meta['is_featured'] ?? '') === 'on' ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_featured">Mettre en avant le voyage</label>
+                        </div>
+
+                        <input type="hidden" name="is_group_deal" value="0">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="is_group_deal" name="is_group_deal" value="1" @checked((bool) old('is_group_deal', (int) (data_get($laravelV ?? null, 'is_group_deal', 0))) )>
+                            <label class="form-check-label" for="is_group_deal">Afficher dans Group Deals</label>
                         </div>
                     </div>
                 </div>
