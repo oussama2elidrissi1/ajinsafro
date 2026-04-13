@@ -1215,10 +1215,22 @@
             var btnClear = document.getElementById('ksk-client-clear');
             if (!input || !results) return;
 
-            var endpoint = @json(route('admin.customers.clients.search'));
+            var endpoint = @json(\Illuminate\Support\Facades\Route::has('admin.customers.clients.search') ? route('admin.customers.clients.search') : null);
             var timer = null;
             var lastQ = '';
             var inflight = 0;
+            if (!endpoint) {
+                var existingModeRadio = document.querySelector('input[name="ksk_client_mode"][value="existing"]');
+                if (existingModeRadio) {
+                    existingModeRadio.checked = false;
+                    existingModeRadio.disabled = true;
+                    var existingModeLabel = existingModeRadio.closest('label');
+                    if (existingModeLabel) existingModeLabel.style.display = 'none';
+                }
+                state.clientMode = 'new';
+                syncModeUI();
+                return;
+            }
 
             function setLoading(q) {
                 if (!results) return;
