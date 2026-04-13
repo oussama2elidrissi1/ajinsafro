@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\BusinessReferenceController;
 use App\Http\Controllers\Admin\CircuitsController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CustomersController;
@@ -342,6 +343,12 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('settings/home-page', [HomePageSettingsController::class, 'edit'])->name('settings.home-page.edit');
         Route::post('settings/home-page', [HomePageSettingsController::class, 'update'])->name('settings.home-page.update');
         Route::post('settings/home-page/header', [HomePageSettingsController::class, 'updateHeader'])->name('settings.home-page.update-header');
+        Route::get('settings/referentiels-metier', [BusinessReferenceController::class, 'index'])->name('settings.referentiels-metier');
+        Route::post('settings/referentiels-metier/import-legacy', [BusinessReferenceController::class, 'importLegacy'])->name('settings.referentiels-metier.import-legacy');
+        Route::get('settings/referentiels-metier/{groupKey}', [BusinessReferenceController::class, 'showGroup'])->name('settings.referentiels-metier.group');
+        Route::post('settings/referentiels-metier/{groupKey}', [BusinessReferenceController::class, 'store'])->name('settings.referentiels-metier.store');
+        Route::match(['put', 'patch'], 'settings/referentiels-metier/{groupKey}/{item}', [BusinessReferenceController::class, 'update'])->name('settings.referentiels-metier.update');
+        Route::delete('settings/referentiels-metier/{groupKey}/{item}', [BusinessReferenceController::class, 'destroy'])->name('settings.referentiels-metier.destroy');
 
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');
