@@ -110,6 +110,16 @@ class Departure extends Model
         return (int) $this->available_capacity;
     }
 
+    public function groupDealParticipants()
+    {
+        return $this->hasMany(GroupDealParticipant::class);
+    }
+
+    public function confirmedParticipantsCount(): int
+    {
+        return $this->groupDealParticipants()->where('status', GroupDealParticipant::STATUS_CONFIRMED)->count();
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {

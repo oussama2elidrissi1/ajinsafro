@@ -142,6 +142,24 @@ class Voyage extends Model
         return $this->hasMany(VoyageExtra::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    /** Paliers de prix pour le Group Deal. */
+    public function pricingTiers()
+    {
+        return $this->hasMany(GroupDealPricingTier::class)->orderBy('min_participants');
+    }
+
+    /**
+     * Retourne le palier actif selon le nombre de participants.
+     * Le palier ayant le min_participants le plus élevé encore <= $count.
+     */
+    public function activePricingTier(int $count): ?GroupDealPricingTier
+    {
+        return $this->pricingTiers()
+            ->where('min_participants', '<=', $count)
+            ->orderBy('min_participants', 'desc')
+            ->first();
+    }
+
     /**
      * Public URL for the featured image (public disk).
      * Falls back to first gallery image if featured_image is null.

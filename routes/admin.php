@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\GroupDeals\GroupDealController;
 use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AirlineController;
@@ -386,6 +387,25 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
             Route::get('tours/{tour}/edit', [WpTourController::class, 'edit'])->name('tours.edit')->whereNumber('tour');
             Route::match(['put', 'patch'], 'tours/{tour}', [WpTourController::class, 'update'])->name('tours.update')->whereNumber('tour');
             Route::delete('tours/{tour}', [WpTourController::class, 'destroy'])->name('tours.destroy')->whereNumber('tour');
+        });
+
+        // ─── Group Deals ─────────────────────────────────────────────────────────
+        Route::prefix('group-deals')->name('group-deals.')->group(function () {
+            // Voyages Group Deal
+            Route::get('trips', [GroupDealController::class, 'tripsIndex'])->name('trips.index');
+            Route::get('trips/{voyage}', [GroupDealController::class, 'tripsShow'])->name('trips.show')->whereNumber('voyage');
+            Route::post('trips/{voyage}/tiers', [GroupDealController::class, 'tierStore'])->name('trips.tiers.store')->whereNumber('voyage');
+            Route::put('trips/{voyage}/tiers/{tier}', [GroupDealController::class, 'tierUpdate'])->name('trips.tiers.update')->whereNumber(['voyage', 'tier']);
+            Route::delete('trips/{voyage}/tiers/{tier}', [GroupDealController::class, 'tierDestroy'])->name('trips.tiers.destroy')->whereNumber(['voyage', 'tier']);
+
+            // Départs Group Deal
+            Route::get('departures', [GroupDealController::class, 'departuresIndex'])->name('departures.index');
+            Route::get('departures/{departure}', [GroupDealController::class, 'departuresShow'])->name('departures.show')->whereNumber('departure');
+            Route::post('departures/{departure}/recalculate', [GroupDealController::class, 'departuresRecalculate'])->name('departures.recalculate')->whereNumber('departure');
+
+            // Participants (gestion admin)
+            Route::post('departures/{departure}/participants', [GroupDealController::class, 'participantStore'])->name('departures.participants.store')->whereNumber('departure');
+            Route::patch('departures/{departure}/participants/{participant}', [GroupDealController::class, 'participantUpdate'])->name('departures.participants.update')->whereNumber(['departure', 'participant']);
         });
     });
 

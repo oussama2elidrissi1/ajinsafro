@@ -70,6 +70,16 @@ return [
             ],
         ],
         [
+            'key'        => 'group_deals',
+            'label'      => 'Group Deals',
+            'icon'       => 'bx bx-group',
+            'permission' => 'circuits.view',
+            'children'   => [
+                ['label' => 'Voyages GD',  'route' => 'admin.group-deals.trips.index'],
+                ['label' => 'Départs GD',  'route' => 'admin.group-deals.departures.index'],
+            ],
+        ],
+        [
             'key' => 'accommodations',
             'label' => 'Hébergements',
             'icon' => 'bx bx-hotel',

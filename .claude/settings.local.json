@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(php -l /c/Users/oussa/Desktop/themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template/Qovex_Laravel_v3.0.0/Admin/routes/web.php)",
+      "Bash(php -r \"require '/c/Users/oussa/Desktop/themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template/Qovex_Laravel_v3.0.0/Admin/vendor/autoload.php'; echo class_exists\\('App\\\\Http\\\\Controllers\\\\Admin\\\\GroupDeals\\\\GroupDealController'\\) ? 'OK' : 'NOT FOUND';\")",
+      "Bash(awk NR>=125 && NR<=130 || NR>=393 && NR<=415:*)",
+      "Bash(node:*)",
+      "Bash(php:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/admin/dashboard)",
+      "Bash(grep -E \"\\\\.\\(css|scss\\)$\")"
+    ]
+  }
+}

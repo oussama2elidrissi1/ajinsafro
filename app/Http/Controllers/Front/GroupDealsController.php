@@ -9,7 +9,7 @@ use Illuminate\View\View;
 
 class GroupDealsController extends Controller
 {
-    private const VISIBLE_STATUSES = ['actif', 'published', 'active'];
+    private const VISIBLE_STATUSES = ['actif', 'published', 'active', 'publish'];
 
     public function index(Request $request): View
     {
@@ -44,6 +44,10 @@ class GroupDealsController extends Controller
                 'duration_text',
                 'price_from',
                 'currency',
+                'featured_image',
+                'accroche',
+                'min_people',
+                'max_people',
             ])
             ->paginate(9)
             ->withQueryString();
