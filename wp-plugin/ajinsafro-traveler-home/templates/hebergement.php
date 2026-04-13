@@ -169,21 +169,18 @@ $pagination_args = array_filter([
                                     $terms = get_the_terms(get_the_ID(), 'hotel_type');
                                     $type_label = (! empty($terms) && ! is_wp_error($terms)) ? $terms[0]->name : __('Hotel', 'ajinsafro-traveler-home');
 
-                                    // Image : get_post_thumbnail_id() → _thumbnail_id ; tailles large / medium_large ; secours galerie ; défaut plugin.
-                                    $img = function_exists('ajth_hebergement_catalog_card_image_url')
-                                        ? ajth_hebergement_catalog_card_image_url(get_the_ID())
-                                        : '';
-                                    if ($img === '' && function_exists('ajth_hebergement_default_card_image_url')) {
-                                        $img = ajth_hebergement_default_card_image_url();
-                                    }
-                                    if ($img === '' || ( function_exists('wp_http_validate_url') && ! wp_http_validate_url($img) )) {
-                                        $img = function_exists('ajth_hebergement_default_card_image_url') ? ajth_hebergement_default_card_image_url() : '';
-                                    }
+                                    $ajth_debug_images = isset($_GET['ajth_debug_image']) && (string) $_GET['ajth_debug_image'] === '1' && function_exists('current_user_can') && current_user_can('manage_options');
+                                    $thumb_id = (int) get_post_thumbnail_id(get_the_ID());
+
                                     ?>
                                     <article class="aj-voyages-grid__item">
                                         <a href="<?php the_permalink(); ?>" class="aj-card2 aj-hover-glass">
                                             <div class="aj-card2__image">
-                                                <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" class="aj-catalog-card__img" loading="lazy" decoding="async" />
+                                                <?php if (has_post_thumbnail()) { ?>
+                                                    <?php the_post_thumbnail('medium_large', ['loading' => 'lazy']); ?>
+                                                <?php } else { ?>
+                                                    <div class="aj-voyages-image-fallback"></div>
+                                                <?php } ?>
                                             </div>
                                             <div class="aj-card2__body">
                                                 <h3 class="aj-card2__title"><?php the_title(); ?></h3>
@@ -206,6 +203,55 @@ $pagination_args = array_filter([
                                                 </div>
                                             </div>
                                         </a>
+
+                                        <?php if ($ajth_debug_images) {
+                                            $full_url = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'full') : '';
+                                            $ml_url = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'medium_large') : '';
+                                            $attached_file = $thumb_id ? (string) get_post_meta($thumb_id, '_wp_attached_file', true) : '';
+                                            $thumb_meta_raw = (string) get_post_meta(get_the_ID(), '_thumbnail_id', true);
+                                            $bad_keys = ['st_gallery', 'gallery', '_gallery', 'st_featured_image', 'featured_image', '_featured_image', 'thumbnail', 'thumb', 'image', 'img', 'photo'];
+                                            $suspicious = [];
+                                            foreach ($bad_keys as $mk) {
+                                                $v = get_post_meta(get_the_ID(), $mk, true);
+                                                if ($v !== '' && $v !== null) {
+                                                    $suspicious[$mk] = is_scalar($v) ? (string) $v : wp_json_encode($v);
+                                                }
+                                            }
+
+                                            $bad_patterns = ['2026/04', '/wp-content/uploads/'];
+                                            foreach ($suspicious as $mk => $v) {
+                                                foreach ($bad_patterns as $pat) {
+                                                    if (is_string($v) && strpos($v, $pat) !== false) {
+                                                        // keep
+                                                        continue 3;
+                                                    }
+                                                }
+                                                unset($suspicious[$mk]);
+                                            }
+
+                                            $db_hits = [];
+                                            if (isset($wpdb) && $wpdb instanceof wpdb) {
+                                                $db_hits = (array) $wpdb->get_results(
+                                                    $wpdb->prepare(
+                                                        "SELECT meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_value LIKE %s LIMIT 30",
+                                                        (int) get_the_ID(),
+                                                        '%2026/04%'
+                                                    ),
+                                                    ARRAY_A
+                                                );
+                                            }
+                                            ?>
+                                            <pre class="aj-debug aj-debug--catalog-image" style="white-space:pre-wrap;max-width:100%;overflow:auto;padding:8px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#111;margin:10px 0;">
+post_id: <?php echo esc_html((string) get_the_ID()); ?>
+thumb_id: <?php echo esc_html((string) $thumb_id); ?>
+_thumbnail_id (raw): <?php echo esc_html($thumb_meta_raw); ?>
+thumb full: <?php echo esc_html((string) $full_url); ?>
+thumb medium_large: <?php echo esc_html((string) $ml_url); ?>
+_wp_attached_file: <?php echo esc_html($attached_file); ?>
+post meta hits (2026/04): <?php echo esc_html(wp_json_encode($db_hits)); ?>
+suspicious post metas: <?php echo esc_html(wp_json_encode($suspicious)); ?>
+                                            </pre>
+                                        <?php } ?>
                                     </article>
                                 <?php } ?>
                             </div>

@@ -52,14 +52,35 @@ class AJTH_Template_Router {
         }
 
         // Handle voyages page, st_tours archive, and st_tours searches
-        $is_voyages_context = is_page( 'voyages' ) 
-            || is_post_type_archive( 'st_tours' )
-            || ( is_search() && get_query_var( 'post_type' ) === 'st_tours' );
+        $is_voyages_context = function_exists( 'ajth_is_voyages_context' )
+            ? ajth_is_voyages_context()
+            : ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) || ( is_search() && get_query_var( 'post_type' ) === 'st_tours' ) );
 
         if ( $is_voyages_context ) {
             $voyages = AJTH_DIR . 'templates/voyages.php';
             if ( file_exists( $voyages ) ) {
                 return $voyages;
+            }
+        }
+
+        if ( function_exists( 'ajth_is_hebergement_context' ) && ajth_is_hebergement_context() ) {
+            $hebergement = AJTH_DIR . 'templates/hebergement.php';
+            if ( file_exists( $hebergement ) ) {
+                return $hebergement;
+            }
+        }
+
+        if ( function_exists( 'ajth_is_activites_context' ) && ajth_is_activites_context() ) {
+            $activites = AJTH_DIR . 'templates/activites.php';
+            if ( file_exists( $activites ) ) {
+                return $activites;
+            }
+        }
+
+        if ( function_exists( 'ajth_is_transfert_context' ) && ajth_is_transfert_context() ) {
+            $transfert = AJTH_DIR . 'templates/transfert.php';
+            if ( file_exists( $transfert ) ) {
+                return $transfert;
             }
         }
 

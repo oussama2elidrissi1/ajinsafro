@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\DB;
  */
 class WordPressCatalogInspectService
 {
+    public function __construct(
+        protected WordPressMediaService $media,
+    ) {}
+
     public function wpConnectionLabel(): array
     {
         $c = config('database.connections.wp');
@@ -69,6 +73,8 @@ class WordPressCatalogInspectService
     {
         $post = WpPost::query()->where('post_type', 'st_hotel')->findOrFail($wpPostId);
         $detail = DB::connection('wp')->table('st_hotel')->where('post_id', $wpPostId)->first();
+        $metas = $post->getAllMetas();
+        $thumbId = isset($metas['_thumbnail_id']) && is_numeric($metas['_thumbnail_id']) ? (int) $metas['_thumbnail_id'] : 0;
 
         return [
             'module' => 'hotel',
@@ -78,6 +84,17 @@ class WordPressCatalogInspectService
             'postmeta_subset' => $this->metaSubset($post, [
                 '_thumbnail_id', '_gallery', 'price', 'min_price', 'address', 'hotel_star',
             ]),
+            'media' => [
+                'thumbnail' => $thumbId > 0 ? $this->attachmentSnapshot($thumbId) : null,
+                'meta_hits_2026_04' => DB::connection('wp')->table('postmeta')
+                    ->select(['meta_key', 'meta_value'])
+                    ->where('post_id', $wpPostId)
+                    ->where('meta_value', 'like', '%2026/04%')
+                    ->limit(30)
+                    ->get()
+                    ->map(fn ($r) => ['meta_key' => $r->meta_key, 'meta_value' => $r->meta_value])
+                    ->all(),
+            ],
         ];
     }
 
@@ -139,5 +156,29 @@ class WordPressCatalogInspectService
         }
 
         return (string) $value;
+    }
+
+    protected function attachmentSnapshot(int $attachmentId): array
+    {
+        $att = WpPost::query()
+            ->where('post_type', 'attachment')
+            ->find($attachmentId);
+
+        $attached = $att?->getMeta('_wp_attached_file');
+        $metaRaw = $att?->getMeta('_wp_attachment_metadata');
+
+        $relative = is_string($attached) ? trim($attached) : null;
+        $absPath = $relative ? $this->media->path($relative) : null;
+
+        return [
+            'ID' => (int) $attachmentId,
+            'exists' => $att !== null,
+            'guid' => $att?->guid,
+            '_wp_attached_file' => $relative,
+            '_wp_attachment_metadata_raw' => is_string($metaRaw) ? (strlen($metaRaw) > 500 ? substr($metaRaw, 0, 500).'…' : $metaRaw) : null,
+            'public_url' => $relative ? $this->media->url($relative) : null,
+            'abs_path' => $absPath,
+            'file_exists' => $absPath ? is_file($absPath) : false,
+        ];
     }
 }

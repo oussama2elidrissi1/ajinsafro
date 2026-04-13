@@ -30,12 +30,26 @@ $social_icons = array(
 
 $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
     ? ajth_get_voyages_page_url()
-    : home_url( '/?post_type=st_tours' );
+    : home_url( '/voyages/' );
+$hebergement_page_url = function_exists( 'ajth_get_hebergement_page_url' )
+    ? ajth_get_hebergement_page_url()
+    : home_url( '/hebergement/' );
+$activites_page_url = function_exists( 'ajth_get_activites_page_url' )
+    ? ajth_get_activites_page_url()
+    : home_url( '/activites/' );
+$transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
+    ? ajth_get_transfert_page_url()
+    : home_url( '/transfert/' );
 $public_login_url = home_url( '/login/' );
 $public_signup_url = home_url( '/register/' );
 $maintenance_url = function_exists( 'ajth_get_maintenance_url' ) ? ajth_get_maintenance_url() : home_url( '/maintenance/' );
-$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url ) {
+$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $voyages_page_url, $hebergement_page_url, $activites_page_url, $transfert_page_url ) {
     $url_value = trim( (string) $url );
+    $label_value = is_string( $label ) ? trim( wp_strip_all_tags( $label ) ) : '';
+    if ( $label_value !== '' && function_exists( 'remove_accents' ) ) {
+        $label_value = remove_accents( $label_value );
+    }
+    $label_value = $label_value !== '' ? mb_strtolower( $label_value, 'UTF-8' ) : '';
     $is_placeholder = (
         $url_value === '' ||
         $url_value === '#' ||
@@ -43,13 +57,29 @@ $resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url ) {
         $url_value === 'javascript:void(0)' ||
         $url_value === 'javascript:void(0);'
     );
+    if ( $is_placeholder ) {
+        if ( in_array( $label_value, array( 'voyages', 'voyage' ), true ) ) {
+            return $voyages_page_url;
+        }
+        if ( in_array( $label_value, array( 'hébergement', 'hebergement', 'hôtel', 'hotel' ), true ) ) {
+            return $hebergement_page_url;
+        }
+        if ( in_array( $label_value, array( 'activités', 'activites', 'activité', 'activite' ), true ) ) {
+            return $activites_page_url;
+        }
+        if ( in_array( $label_value, array( 'transfert', 'transferts' ), true ) ) {
+            return $transfert_page_url;
+        }
+    }
     if ( $is_placeholder && function_exists( 'ajth_is_under_construction_label' ) && ajth_is_under_construction_label( $label ) ) {
         return $maintenance_url;
     }
     return $url_value !== '' ? $url_value : '#';
 };
 
-$is_voyages_page = is_page( 'voyages' ) || is_post_type_archive( 'st_tours' );
+$is_voyages_page = function_exists( 'ajth_is_voyages_context' ) ? ajth_is_voyages_context() : ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) );
+$is_hebergement_page = function_exists( 'ajth_is_hebergement_context' ) ? ajth_is_hebergement_context() : false;
+$is_activites_page = function_exists( 'ajth_is_activites_context' ) ? ajth_is_activites_context() : false;
 
 
 $title_icon_map = array(
@@ -86,23 +116,16 @@ $default_menu_items = array(
     ),
     array(
         'label'    => 'Hébergement',
-        'url'      => $maintenance_url,
+        'url'      => $hebergement_page_url,
         'icon'     => 'fas fa-hotel',
-        'active'   => false,
+        'active'   => $is_hebergement_page,
         'children' => array(),
     ),
     array(
         'label'    => 'Activités',
-        'url'      => $maintenance_url,
+        'url'      => $activites_page_url,
         'icon'     => 'fas fa-camera',
-        'active'   => false,
-        'children' => array(),
-    ),
-    array(
-        'label'    => 'Transfert',
-        'url'      => $maintenance_url,
-        'icon'     => 'fas fa-car-side',
-        'active'   => false,
+        'active'   => $is_activites_page,
         'children' => array(),
     ),
     array(
@@ -120,6 +143,42 @@ $default_menu_items = array(
         'children' => array(),
     ),
 );
+
+/**
+ * Masque uniquement l’entrée « Transfert » dans le menu du header (pas la page /transfert/).
+ * Une seule inscription du filtre par requête.
+ */
+if ( empty( $GLOBALS['ajth_header_hide_transfert_nav_filter'] ) ) {
+    $GLOBALS['ajth_header_hide_transfert_nav_filter'] = true;
+    $ajth_header_menu_location = ! empty( $hdr['wp_menu_location'] ) ? $hdr['wp_menu_location'] : 'primary';
+    add_filter(
+        'wp_nav_menu_objects',
+        static function ( $items, $args ) use ( $ajth_header_menu_location ) {
+            if ( empty( $items ) || ! is_array( $items ) ) {
+                return $items;
+            }
+            if ( empty( $args->theme_location ) || $args->theme_location !== $ajth_header_menu_location ) {
+                return $items;
+            }
+            foreach ( $items as $key => $item ) {
+                if ( empty( $item->menu_item_parent ) || (int) $item->menu_item_parent !== 0 ) {
+                    continue;
+                }
+                $title = isset( $item->title ) ? wp_strip_all_tags( $item->title ) : '';
+                if ( $title !== '' && function_exists( 'remove_accents' ) ) {
+                    $title = remove_accents( $title );
+                }
+                $title = $title !== '' ? mb_strtolower( trim( $title ), 'UTF-8' ) : '';
+                if ( in_array( $title, array( 'transfert', 'transferts' ), true ) ) {
+                    unset( $items[ $key ] );
+                }
+            }
+            return $items;
+        },
+        10,
+        2
+    );
+}
 ?>
 
 <header class="aj-header" id="aj-header">
@@ -267,6 +326,20 @@ $default_menu_items = array(
                     if ( empty( $nav_links ) ) {
                         $nav_links = $default_menu_items;
                     }
+                    // Ne pas afficher « Transfert » dans le menu (la page /transfert/ reste accessible ailleurs).
+                    $nav_links = array_values(
+                        array_filter(
+                            $nav_links,
+                            static function ( $link ) {
+                                $label = ! empty( $link['label'] ) ? wp_strip_all_tags( $link['label'] ) : '';
+                                if ( $label !== '' && function_exists( 'remove_accents' ) ) {
+                                    $label = remove_accents( $label );
+                                }
+                                $label = $label !== '' ? mb_strtolower( trim( $label ), 'UTF-8' ) : '';
+                                return ! in_array( $label, array( 'transfert', 'transferts' ), true );
+                            }
+                        )
+                    );
                     ?>
                     <ul class="aj-nav-list">
                         <?php foreach ( $nav_links as $link ) :
@@ -283,7 +356,11 @@ $default_menu_items = array(
 
                             // Auto-resolve icon from title map
                             if ( empty( $icon ) && $label ) {
-                                $label_lower = mb_strtolower( trim( $label ), 'UTF-8' );
+                                $label_lower = trim( wp_strip_all_tags( $label ) );
+                                if ( $label_lower !== '' && function_exists( 'remove_accents' ) ) {
+                                    $label_lower = remove_accents( $label_lower );
+                                }
+                                $label_lower = $label_lower !== '' ? mb_strtolower( $label_lower, 'UTF-8' ) : '';
                                 if ( isset( $title_icon_map[ $label_lower ] ) ) {
                                     $icon = $title_icon_map[ $label_lower ];
                                 }
