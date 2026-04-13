@@ -41,7 +41,6 @@ require_once AJTH_DIR.'includes/class-catalog-cache-invalidate.php';
 require_once AJTH_DIR.'includes/class-admin-settings.php';
 require_once AJTH_DIR.'includes/tour-category-defaults.php';
 require_once AJTH_DIR.'includes/voyages-routing.php';
-require_once AJTH_DIR.'includes/media-bridge.php';
 
 register_activation_hook(AJTH_FILE, 'ajth_activate_default_tour_categories');
 
