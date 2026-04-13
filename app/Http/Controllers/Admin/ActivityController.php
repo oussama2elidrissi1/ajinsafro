@@ -231,12 +231,18 @@ class ActivityController extends Controller
             ->all();
 
         if ($request->hasFile('image')) {
-            $galleryIds[] = $this->mediaService->uploadAndCreateAttachment($request->file('image'));
+            $newId = $this->mediaService->tryUploadAndCreateAttachment($request->file('image'));
+            if ($newId) {
+                $galleryIds[] = $newId;
+            }
         }
 
         foreach ((array) $request->file('gallery_images', []) as $file) {
             if ($file) {
-                $galleryIds[] = $this->mediaService->uploadAndCreateAttachment($file);
+                $newId = $this->mediaService->tryUploadAndCreateAttachment($file);
+                if ($newId) {
+                    $galleryIds[] = $newId;
+                }
             }
         }
 
@@ -245,6 +251,7 @@ class ActivityController extends Controller
         }
 
         $galleryIds = array_values(array_unique(array_filter(array_map('intval', $galleryIds))));
+        $galleryIds = $this->mediaService->filterValidAttachmentIdsForWriteStrict($galleryIds);
 
         $data['gallery_image_ids'] = $galleryIds === [] ? null : $galleryIds;
         $data['image_id'] = $galleryIds[0] ?? null;

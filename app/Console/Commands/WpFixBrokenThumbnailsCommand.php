@@ -96,7 +96,7 @@ class WpFixBrokenThumbnailsCommand extends Command
                     if ($isInvalid && isset($map[$thumbId])) {
                         $candidate = (int) $map[$thumbId];
                         $candidateStatus = $media->getAttachmentDisplayStatus($candidate);
-                        if ($candidateStatus['status'] === 'valid') {
+                        if ($media->isAttachmentStrictlyValidForWrite($candidate)) {
                             $after = $candidate;
                             $didFix = true;
                             $reason = 'invalid_thumbnail_mapped_to_valid';
@@ -118,7 +118,7 @@ class WpFixBrokenThumbnailsCommand extends Command
                                 continue;
                             }
                             foreach (array_values(array_filter(array_map('intval', explode(',', $raw)))) as $gid) {
-                                if ($media->getAttachmentDisplayStatus((int) $gid)['status'] === 'valid') {
+                                if ($media->isAttachmentStrictlyValidForWrite((int) $gid)) {
                                     $galleryCandidate = (int) $gid;
                                     break 2;
                                 }
@@ -185,9 +185,8 @@ class WpFixBrokenThumbnailsCommand extends Command
                     $id = (int) $id;
                     if (in_array($id, $badIds, true) && isset($map[$id])) {
                         $replacement = (int) $map[$id];
-                        $valid = $media->validateAttachmentIdForDisplay($replacement);
-                        if ($valid) {
-                            $newIds[] = $valid;
+                        if ($media->isAttachmentStrictlyValidForWrite($replacement)) {
+                            $newIds[] = $replacement;
                         }
                         $changed = true;
                         continue;
@@ -196,9 +195,8 @@ class WpFixBrokenThumbnailsCommand extends Command
                         $changed = true;
                         continue;
                     }
-                    $valid = $media->validateAttachmentIdForDisplay($id);
-                    if ($valid) {
-                        $newIds[] = $valid;
+                    if ($media->isAttachmentStrictlyValidForWrite($id)) {
+                        $newIds[] = $id;
                     } else {
                         $changed = true;
                     }

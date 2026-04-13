@@ -119,7 +119,9 @@ class HotelController extends Controller
 
             if ($request->hasFile('featured_image')) {
                 $attachmentId = $this->media->uploadAndCreateAttachment($request->file('featured_image'), (int) $post->ID);
-                $this->media->setHotelThumbnail($post->ID, $attachmentId);
+                $this->media->setPostThumbnailIfValidWithPolicy($post, $attachmentId, [
+                    'source' => 'HotelController::store featured_image',
+                ], true);
             } elseif ($request->boolean('remove_featured_image')) {
                 $post->deleteMeta('_thumbnail_id');
             }
@@ -132,8 +134,9 @@ class HotelController extends Controller
                     }
                 }
                 if (! empty($galleryIds)) {
-                    $this->media->setHotelGallery($post->ID, $galleryIds);
-                    $this->media->setGalleryMeta($post->ID, $galleryIds);
+                    $this->media->setPostGalleryMetasFiltered($post, $galleryIds, ['st_gallery', 'gallery', '_gallery'], [
+                        'source' => 'HotelController::store gallery',
+                    ]);
                 }
             }
 
@@ -329,6 +332,16 @@ class HotelController extends Controller
             WpPostmeta::deleteMeta($postId, '_logo');
         } elseif ($request->hasFile('hotel_logo') && $request->file('hotel_logo')->isValid()) {
             $attachmentId = $this->media->uploadAndCreateAttachment($request->file('hotel_logo'), (int) $postId);
+            if (! $this->media->isAttachmentStrictlyValidForWrite((int) $attachmentId)) {
+                // Ne pas écraser le logo existant si l'upload/attachment n'est pas strictement valide.
+                \Log::warning('HotelController::saveHotelDetailMeta rejected logo attachment', [
+                    'post_id' => $postId,
+                    'attachment_id' => $attachmentId,
+                    'status' => $this->media->getAttachmentDisplayStatus((int) $attachmentId),
+                ]);
+
+                return;
+            }
             $logoUrl = $this->media->getAttachmentUrl($attachmentId);
             WpPostmeta::updateOrInsertMeta($postId, '_logo_id', (string) $attachmentId);
             WpPostmeta::updateOrInsertMeta($postId, '_logo', $logoUrl ?? '');

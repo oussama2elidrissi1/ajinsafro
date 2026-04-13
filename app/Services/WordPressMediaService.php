@@ -184,6 +184,36 @@ class WordPressMediaService
         $nowGmt = $now->utc();
         $title = pathinfo($relativePath, PATHINFO_FILENAME);
 
+        // Validation avant INSERT: empêche la création d'attachments "fantômes" en base.
+        if (! $this->uploadsPathExplicitlyConfigured) {
+            Log::error('WordPressMediaService::createAttachment refused (wordpress.uploads_path not configured)', [
+                'relative_path' => $relativePath,
+                'uploads_path' => $this->uploadsPath,
+                'uploads_url' => $this->uploadsUrl,
+                'parent_post_id' => $parentPostId,
+            ]);
+            throw new \RuntimeException('Attachment WP non créé: uploads_path non configuré.');
+        }
+        if (! is_dir($this->uploadsPath)) {
+            Log::error('WordPressMediaService::createAttachment refused (uploads path missing)', [
+                'relative_path' => $relativePath,
+                'uploads_path' => $this->uploadsPath,
+                'uploads_url' => $this->uploadsUrl,
+                'parent_post_id' => $parentPostId,
+            ]);
+            throw new \RuntimeException('Attachment WP non créé: dossier uploads introuvable.');
+        }
+        $absPath = $this->path($relativePath);
+        if (! is_file($absPath) || ! is_readable($absPath)) {
+            Log::error('WordPressMediaService::createAttachment refused (file missing)', [
+                'relative_path' => $relativePath,
+                'abs_path' => $absPath,
+                'uploads_path' => $this->uploadsPath,
+                'parent_post_id' => $parentPostId,
+            ]);
+            throw new \RuntimeException('Attachment WP non créé: fichier physique manquant.');
+        }
+
         $post = new WpPost();
         $post->post_author = 1;
         $post->post_date = $now->format('Y-m-d H:i:s');
@@ -210,17 +240,6 @@ class WordPressMediaService
         $post->save();
 
         $post->setMeta('_wp_attached_file', $relativePath);
-
-        $absPath = $this->path($relativePath);
-        if (is_dir($this->uploadsPath) && (! is_file($absPath) || ! is_readable($absPath))) {
-            Log::error('WordPressMediaService::createAttachment refuses to create attachment (file missing)', [
-                'relative_path' => $relativePath,
-                'abs_path' => $absPath,
-                'uploads_path' => $this->uploadsPath,
-                'parent_post_id' => $parentPostId,
-            ]);
-            throw new \RuntimeException('Attachment WP non créé: fichier physique manquant.');
-        }
         $width = null;
         $height = null;
         if (is_readable($absPath) && function_exists('getimagesize')) {
@@ -284,9 +303,28 @@ class WordPressMediaService
     {
         $mimeType = $this->getMimeBeforeMove($file);
 
+        Log::info('WordPressMediaService::uploadAndCreateAttachment start', [
+            'parent_post_id' => $parentPostId,
+            'original_name' => $file->getClientOriginalName(),
+            'tmp_path' => $file->getPathname(),
+            'mime' => $mimeType,
+            'uploads_path' => $this->uploadsPath,
+            'uploads_url' => $this->uploadsUrl,
+            'uploads_path_configured' => $this->uploadsPathExplicitlyConfigured,
+        ]);
+
         $relativePath = $this->uploadToWpUploads($file);
         $finalUrl = $this->url($relativePath);
         $fullPath = $this->path($relativePath);
+
+        Log::info('WordPressMediaService::uploadAndCreateAttachment after upload', [
+            'parent_post_id' => $parentPostId,
+            'relative_path' => $relativePath,
+            'full_path' => $fullPath,
+            'file_exists' => is_file($fullPath),
+            'file_readable' => is_readable($fullPath),
+            'final_url' => $finalUrl,
+        ]);
 
         if (config('app.debug')) {
             \Log::debug('WordPressMediaService::uploadAndCreateAttachment', [
@@ -463,6 +501,16 @@ class WordPressMediaService
 
     public function setPostGalleryMetasFiltered(WpPost $post, array $attachmentIds, array $metaKeys, array $context = []): void
     {
+        if (! $this->uploadsPathExplicitlyConfigured || ! is_dir($this->uploadsPath)) {
+            $this->logMediaWrite('gallery_rejected_uploads_unavailable', $post, null, $context + [
+                'meta_keys' => $metaKeys,
+                'uploads_path' => $this->uploadsPath,
+                'uploads_path_configured' => $this->uploadsPathExplicitlyConfigured,
+            ]);
+
+            return;
+        }
+
         $ids = $this->filterValidAttachmentIdsForWriteStrict($attachmentIds);
         $value = implode(',', $ids);
         $this->logMediaWrite('gallery_set', $post, null, $context + [
