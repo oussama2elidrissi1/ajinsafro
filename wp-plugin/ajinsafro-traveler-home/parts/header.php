@@ -40,16 +40,22 @@ $activites_page_url = function_exists( 'ajth_get_activites_page_url' )
 $transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
     ? ajth_get_transfert_page_url()
     : home_url( '/transfert/' );
+$group_deals_page_url = function_exists( 'ajth_get_group_deals_url' )
+    ? ajth_get_group_deals_url()
+    : home_url( '/group-deals/' );
 $public_login_url = home_url( '/login/' );
 $public_signup_url = home_url( '/register/' );
 $maintenance_url = function_exists( 'ajth_get_maintenance_url' ) ? ajth_get_maintenance_url() : home_url( '/maintenance/' );
-$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $voyages_page_url, $hebergement_page_url, $activites_page_url, $transfert_page_url ) {
+$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $voyages_page_url, $hebergement_page_url, $activites_page_url, $transfert_page_url, $group_deals_page_url ) {
     $url_value = trim( (string) $url );
     $label_value = is_string( $label ) ? trim( wp_strip_all_tags( $label ) ) : '';
     if ( $label_value !== '' && function_exists( 'remove_accents' ) ) {
         $label_value = remove_accents( $label_value );
     }
     $label_value = $label_value !== '' ? mb_strtolower( $label_value, 'UTF-8' ) : '';
+    if ( in_array( $label_value, array( 'group deals', 'group deal', 'votre guide', 'guide' ), true ) ) {
+        return $group_deals_page_url;
+    }
     $is_placeholder = (
         $url_value === '' ||
         $url_value === '#' ||
@@ -99,8 +105,10 @@ $title_icon_map = array(
     'hajj & omra'  => 'fas fa-kaaba',
     'hajj'         => 'fas fa-kaaba',
     'omra'         => 'fas fa-kaaba',
-    'votre guide'  => 'fas fa-map-signs',
-    'guide'        => 'fas fa-map-signs',
+    'group deals'  => 'fas fa-users',
+    'group deal'   => 'fas fa-users',
+    'votre guide'  => 'fas fa-users',
+    'guide'        => 'fas fa-users',
     'accueil'      => 'fas fa-home',
     'contact'      => 'fas fa-envelope',
     'blog'         => 'fas fa-blog',
@@ -136,9 +144,9 @@ $default_menu_items = array(
         'children' => array(),
     ),
     array(
-        'label'    => 'Votre guide',
-        'url'      => $maintenance_url,
-        'icon'     => 'fas fa-map-signs',
+        'label'    => 'GROUP DEALS',
+        'url'      => $group_deals_page_url,
+        'icon'     => 'fas fa-users',
         'active'   => false,
         'children' => array(),
     ),
@@ -344,6 +352,10 @@ if ( empty( $GLOBALS['ajth_header_hide_transfert_nav_filter'] ) ) {
                     <ul class="aj-nav-list">
                         <?php foreach ( $nav_links as $link ) :
                             $label    = ! empty( $link['label'] ) ? $link['label'] : '';
+                            $label_key = $label !== '' ? mb_strtolower( remove_accents( wp_strip_all_tags( $label ) ), 'UTF-8' ) : '';
+                            if ( in_array( $label_key, array( 'group deals', 'group deal', 'votre guide', 'guide' ), true ) ) {
+                                $label = 'GROUP DEALS';
+                            }
                             $url      = $resolve_menu_url(
                                 ! empty( $link['label'] ) ? $link['label'] : '',
                                 ! empty( $link['url'] ) ? $link['url'] : ''

@@ -1160,6 +1160,45 @@ function ajth_get_maintenance_url(): string
     return home_url('/maintenance/');
 }
 
+function ajth_get_group_deals_url(): string
+{
+    $fallback = home_url('/group-deals/');
+    $login_endpoint = function_exists('ajth_public_login_endpoint')
+        ? trim((string) ajth_public_login_endpoint())
+        : '';
+
+    if ($login_endpoint !== '') {
+        $parts = wp_parse_url($login_endpoint);
+        if (is_array($parts) && ! empty($parts['host'])) {
+            $scheme = ! empty($parts['scheme']) ? (string) $parts['scheme'] : 'https';
+            $base = $scheme.'://'.$parts['host'];
+            if (! empty($parts['port'])) {
+                $base .= ':'.(int) $parts['port'];
+            }
+            $fallback = untrailingslashit($base).'/group-deals';
+        }
+    }
+
+    $resolved = apply_filters('ajth_group_deals_url', $fallback);
+    $resolved = is_string($resolved) ? trim($resolved) : '';
+
+    return $resolved !== '' ? $resolved : $fallback;
+}
+
+function ajth_is_group_deals_label($label): bool
+{
+    $label = is_string($label) ? trim($label) : '';
+    if ($label === '') {
+        return false;
+    }
+    if (function_exists('remove_accents')) {
+        $label = remove_accents($label);
+    }
+    $key = function_exists('mb_strtolower') ? mb_strtolower($label, 'UTF-8') : strtolower($label);
+
+    return in_array($key, ['group deals', 'group deal', 'votre guide', 'guide'], true);
+}
+
 function ajth_is_under_construction_label($label): bool
 {
     $label = is_string($label) ? trim($label) : '';
@@ -1326,8 +1365,10 @@ class AJTH_Nav_Walker extends Walker_Nav_Menu
         'hajj & omra' => 'fas fa-kaaba',
         'hajj' => 'fas fa-kaaba',
         'omra' => 'fas fa-kaaba',
-        'votre guide' => 'fas fa-map-signs',
-        'guide' => 'fas fa-map-signs',
+        'group deals' => 'fas fa-users',
+        'group deal' => 'fas fa-users',
+        'votre guide' => 'fas fa-users',
+        'guide' => 'fas fa-users',
         'accueil' => 'fas fa-home',
         'contact' => 'fas fa-envelope',
         'blog' => 'fas fa-blog',
@@ -1430,6 +1471,7 @@ class AJTH_Nav_Walker extends Walker_Nav_Menu
             $atts['rel'] = $item->xfn;
         }
         $href = ! empty($item->url) ? (string) $item->url : '';
+        $is_group_deals = function_exists('ajth_is_group_deals_label') && ajth_is_group_deals_label($title_raw);
         $is_placeholder = (
             $href === '' ||
             $href === '#' ||
@@ -1437,7 +1479,9 @@ class AJTH_Nav_Walker extends Walker_Nav_Menu
             $href === 'javascript:void(0)' ||
             $href === 'javascript:void(0);'
         );
-        if ($is_placeholder && function_exists('ajth_is_under_construction_label') && ajth_is_under_construction_label($title_raw)) {
+        if ($is_group_deals) {
+            $href = function_exists('ajth_get_group_deals_url') ? ajth_get_group_deals_url() : home_url('/group-deals/');
+        } elseif ($is_placeholder && function_exists('ajth_is_under_construction_label') && ajth_is_under_construction_label($title_raw)) {
             $href = function_exists('ajth_get_maintenance_url') ? ajth_get_maintenance_url() : home_url('/maintenance/');
         }
         $atts['href'] = $href;
@@ -1454,6 +1498,9 @@ class AJTH_Nav_Walker extends Walker_Nav_Menu
         }
 
         $title = apply_filters('nav_menu_item_title', $title_raw, $item, $args, $depth);
+        if ($is_group_deals && $depth === 0) {
+            $title = 'GROUP DEALS';
+        }
 
         $item_output = $args->before ?? '';
         $item_output .= '<a'.$attributes.'>';
