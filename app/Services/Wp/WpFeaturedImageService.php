@@ -11,7 +11,8 @@ class WpFeaturedImageService
     public const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     public function __construct(
-        protected WpHeroImageService $heroImageService
+        protected WpHeroImageService $heroImageService,
+        protected \App\Services\WordPressMediaService $media,
     ) {}
 
     public function listAttachments(string $search = '', int $page = 1, int $perPage = 24): LengthAwarePaginator
@@ -70,7 +71,11 @@ class WpFeaturedImageService
         }
 
         if ($attachmentId && $attachmentId > 0) {
-            $tour->setMeta('_thumbnail_id', (string) $attachmentId);
+            $valid = $this->media->validateAttachmentIdForDisplay((int) $attachmentId);
+            if ($valid) {
+                $tour->setMeta('_thumbnail_id', (string) $valid);
+                return;
+            }
             return;
         }
 

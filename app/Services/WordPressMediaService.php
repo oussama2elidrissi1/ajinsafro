@@ -268,13 +268,19 @@ class WordPressMediaService
     {
         $post = WpPost::query()->find($hotelPostId);
         if ($post) {
-            $post->setMeta('_thumbnail_id', (string) $attachmentId);
+            $validId = $this->validateAttachmentIdForDisplay($attachmentId);
+            if ($validId) {
+                $post->setMeta('_thumbnail_id', (string) $validId);
+            } else {
+                $post->deleteMeta('_thumbnail_id');
+            }
         }
     }
 
     public function setHotelGallery(int $hotelPostId, array $attachmentIds): void
     {
-        $value = implode(',', array_map('intval', array_filter($attachmentIds)));
+        $ids = $this->filterValidAttachmentIdsForDisplay($attachmentIds);
+        $value = implode(',', $ids);
         $post = WpPost::query()->find($hotelPostId);
         if ($post) {
             $post->setMeta('st_gallery', $value);
@@ -321,11 +327,68 @@ class WordPressMediaService
 
     public function setGalleryMeta(int $hotelPostId, array $attachmentIds): void
     {
-        $value = implode(',', array_map('intval', array_filter($attachmentIds)));
+        $ids = $this->filterValidAttachmentIdsForDisplay($attachmentIds);
+        $value = implode(',', $ids);
         $post = WpPost::query()->find($hotelPostId);
         if ($post) {
             $post->setMeta('_gallery', $value);
         }
+    }
+
+    /**
+     * Validation stricte d'un attachment: existe en WP, a un _wp_attached_file non vide,
+     * et le fichier physique est présent sous wp-content/uploads.
+     */
+    public function validateAttachmentIdForDisplay(int $attachmentId): ?int
+    {
+        $attachmentId = (int) $attachmentId;
+        if ($attachmentId <= 0) {
+            return null;
+        }
+
+        $att = WpPost::query()
+            ->where('ID', $attachmentId)
+            ->where('post_type', 'attachment')
+            ->first();
+
+        if (! $att) {
+            return null;
+        }
+
+        $relativePath = $att->getMeta('_wp_attached_file');
+        if (! is_string($relativePath) || trim($relativePath) === '') {
+            return null;
+        }
+
+        // Si le serveur Laravel n'a pas accès aux uploads WP (uploads_path non configuré / non monté),
+        // on ne peut pas vérifier le fichier physique: dans ce cas on valide uniquement via la méta.
+        if (is_dir($this->uploadsPath)) {
+            $fullPath = $this->path(trim($relativePath));
+            if (! is_file($fullPath) || ! is_readable($fullPath)) {
+                return null;
+            }
+        }
+
+        return $attachmentId;
+    }
+
+    /**
+     * Filtre une liste d'IDs d'attachments en ne gardant que ceux validés pour affichage.
+     *
+     * @param array<int, mixed> $attachmentIds
+     * @return array<int, int>
+     */
+    public function filterValidAttachmentIdsForDisplay(array $attachmentIds): array
+    {
+        $out = [];
+        foreach ($attachmentIds as $id) {
+            $valid = $this->validateAttachmentIdForDisplay((int) $id);
+            if ($valid && ! in_array($valid, $out, true)) {
+                $out[] = $valid;
+            }
+        }
+
+        return $out;
     }
 
     /**

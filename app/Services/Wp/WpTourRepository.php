@@ -3,12 +3,17 @@
 namespace App\Services\Wp;
 
 use App\Models\Wp\WpPost;
+use App\Services\WordPressMediaService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WpTourRepository
 {
+    public function __construct(
+        protected WordPressMediaService $media,
+    ) {}
+
     /**
      * List all tours with pagination.
      *
@@ -286,14 +291,24 @@ class WpTourRepository
 
         // Handle featured image separately if provided
         if (isset($data['featured_image'])) {
-            $post->setMeta('_thumbnail_id', $data['featured_image']);
+            $valid = $this->media->validateAttachmentIdForDisplay((int) $data['featured_image']);
+            if ($valid) {
+                $post->setMeta('_thumbnail_id', (string) $valid);
+            } else {
+                $post->deleteMeta('_thumbnail_id');
+            }
         }
 
         if (array_key_exists('thumbnail_id', $data)) {
             if ($data['thumbnail_id'] === '' || $data['thumbnail_id'] === null) {
                 $post->deleteMeta('_thumbnail_id');
             } else {
-                $post->setMeta('_thumbnail_id', (string) (int) $data['thumbnail_id']);
+                $valid = $this->media->validateAttachmentIdForDisplay((int) $data['thumbnail_id']);
+                if ($valid) {
+                    $post->setMeta('_thumbnail_id', (string) $valid);
+                } else {
+                    $post->deleteMeta('_thumbnail_id');
+                }
             }
         }
 

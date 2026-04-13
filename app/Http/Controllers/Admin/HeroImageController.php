@@ -12,7 +12,8 @@ class HeroImageController
 {
     public function __construct(
         protected WpHeroImageService $heroImageService,
-        protected WpTourRepository $tourRepository
+        protected WpTourRepository $tourRepository,
+        protected \App\Services\WordPressMediaService $media,
     ) {}
 
     /**
@@ -109,6 +110,13 @@ class HeroImageController
             return response()->json([
                 'success' => false,
                 'message' => 'Attachment introuvable.',
+            ], 422);
+        }
+
+        if (! $this->media->validateAttachmentIdForDisplay($attachmentId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Attachment invalide (fichier manquant sous wp-content/uploads).',
             ], 422);
         }
 
