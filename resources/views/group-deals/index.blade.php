@@ -17,7 +17,7 @@
         </section>
 
         <section class="container mx-auto px-4 -mt-8 md:-mt-10 relative z-10">
-            <form method="GET" action="{{ route('front.group-deals.index') }}" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 grid grid-cols-1 md:grid-cols-4 gap-3">
+            <form method="GET" action="{{ url('/group-deals') }}" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 grid grid-cols-1 md:grid-cols-4 gap-3">
                 <label class="block">
                     <span class="text-sm text-slate-600">Recherche</span>
                     <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Destination, circuit, mot-clé" class="mt-1 w-full rounded-lg border-slate-300 focus:border-sky-500 focus:ring-sky-500">
@@ -68,7 +68,7 @@
                                     </p>
                                 </div>
                                 @if(!empty($deal->slug))
-                                    <a href="{{ route('front.voyages.show', $deal->slug) }}" class="inline-flex items-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                                    <a href="{{ url('/voyages/'.$deal->slug) }}" class="inline-flex items-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
                                         Voir le circuit
                                     </a>
                                 @endif

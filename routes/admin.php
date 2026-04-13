@@ -39,6 +39,7 @@ use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Auth\LockScreenController;
+use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
@@ -61,6 +62,7 @@ Auth::routes();
 if (is_string(config('app.admin_domain')) && config('app.admin_domain') !== '') {
     Route::get('/voyages', [FrontVoyageController::class, 'index']);
     Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show']);
+    Route::get('/group-deals', [FrontGroupDealsController::class, 'index']);
 }
 
 // Public entrypoint from WordPress UI (ajinsafro.net/login form)

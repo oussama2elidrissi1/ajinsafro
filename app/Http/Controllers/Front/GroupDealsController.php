@@ -56,7 +56,7 @@ class GroupDealsController extends Controller
             ->pluck('destination')
             ->values();
 
-        return view('front.group-deals.index', [
+        return view('group-deals.index', [
             'deals' => $deals,
             'destinations' => $destinations,
             'filters' => [
