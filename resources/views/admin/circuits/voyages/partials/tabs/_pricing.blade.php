@@ -5,6 +5,9 @@
     $discountConditions = $ref['discount_conditions'] ?? [];
     $discountTypes = $ref['discount_types'] ?? [];
     $discountRules = $discountRules ?? collect();
+    $paymentMethodsRefUrl = \Illuminate\Support\Facades\Route::has('admin.settings.referentiels-metier.group')
+        ? route('admin.settings.referentiels-metier.group', ['groupKey' => 'payment_methods'])
+        : (\Illuminate\Support\Facades\Route::has('admin.settings.index') ? route('admin.settings.index') : '#');
 @endphp
 <div class="tab-pane" id="price" role="tabpanel">
     <div class="card ve-pane-card mb-3">
@@ -131,7 +134,7 @@
     <div class="card ve-pane-card mb-3">
         <div class="card-body">
             <p class="text-uppercase text-muted small fw-bold mb-2">Moyens de paiement</p>
-            <p class="text-muted small mb-3">Liste pilotée depuis <a href="{{ route('admin.settings.referentiels-metier.group', ['groupKey' => 'payment_methods']) }}">Référence métier → Moyens de paiement</a>.</p>
+            <p class="text-muted small mb-3">Liste pilotée depuis <a href="{{ $paymentMethodsRefUrl }}">Référence métier → Moyens de paiement</a>.</p>
             <div class="row g-2">
                 @foreach($paymentMethodOptions as $pm)
                     @php $mk = $pm['meta_key']; @endphp

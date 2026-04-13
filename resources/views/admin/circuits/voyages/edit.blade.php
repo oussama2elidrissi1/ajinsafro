@@ -99,7 +99,7 @@
                 </div>
             </div>
 
-            @include('admin.circuits.voyages.components.DayBuilderDrawer', [
+            @include('admin.circuits.voyages.components.DayBuilderPanel', [
                 'activitiesCatalog' => $activitiesCatalog,
                 'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
                 'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
