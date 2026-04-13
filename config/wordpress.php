@@ -33,4 +33,24 @@ return [
 
     'public_site_url' => env('WP_PUBLIC_SITE_URL'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | WP Media Bridge (upload via WordPress natif)
+    |--------------------------------------------------------------------------
+    |
+    | Pour éviter les attachments "fantômes" quand Laravel n'écrit pas dans le même
+    | volume que WordPress, on peut déléguer l'upload à WP via un endpoint REST privé
+    | (ajinsafro-traveler-home): wp_upload_bits + wp_insert_attachment + metadata.
+    |
+    | Exemple :
+    |   WP_MEDIA_UPLOAD_URL=https://ajinsafro.net/wp-json/ajth/v1/media-upload
+    |   WP_MEDIA_VALIDATE_URL=https://ajinsafro.net/wp-json/ajth/v1/media-validate
+    |
+    | Auth: même secret que invalidate_secret (X-Ajth-Secret).
+    |
+    */
+    'media_upload_url' => env('WP_MEDIA_UPLOAD_URL'),
+
+    'media_validate_url' => env('WP_MEDIA_VALIDATE_URL'),
+
 ];

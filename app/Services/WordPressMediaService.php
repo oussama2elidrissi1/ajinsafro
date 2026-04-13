@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 /**
@@ -21,6 +22,8 @@ class WordPressMediaService
     protected string $uploadsUrl;
 
     protected bool $uploadsPathExplicitlyConfigured = false;
+
+    protected array $remoteValidationCache = [];
 
     public function __construct()
     {
@@ -301,6 +304,11 @@ class WordPressMediaService
      */
     public function uploadAndCreateAttachment(UploadedFile $file, ?int $parentPostId = null): int
     {
+        $bridgeUrl = config('wordpress.media_upload_url');
+        if (is_string($bridgeUrl) && $bridgeUrl !== '') {
+            return $this->uploadAndCreateAttachmentViaWordPress($file, $parentPostId, $bridgeUrl);
+        }
+
         $mimeType = $this->getMimeBeforeMove($file);
 
         Log::info('WordPressMediaService::uploadAndCreateAttachment start', [
@@ -338,6 +346,68 @@ class WordPressMediaService
         }
 
         return $this->createAttachment($relativePath, $mimeType, $finalUrl, $parentPostId);
+    }
+
+    protected function uploadAndCreateAttachmentViaWordPress(UploadedFile $file, ?int $parentPostId, string $bridgeUrl): int
+    {
+        $secret = config('wordpress.invalidate_secret');
+        if (! is_string($secret) || $secret === '') {
+            throw new \RuntimeException('WP media bridge: missing secret (wordpress.invalidate_secret).');
+        }
+
+        Log::info('WordPressMediaService::uploadAndCreateAttachmentViaWordPress start', [
+            'bridge_url' => $bridgeUrl,
+            'parent_post_id' => $parentPostId,
+            'original_name' => $file->getClientOriginalName(),
+            'tmp_path' => $file->getPathname(),
+        ]);
+
+        $contents = file_get_contents($file->getPathname());
+        if ($contents === false) {
+            throw new \RuntimeException('WP media bridge: cannot read temp file.');
+        }
+
+        $resp = Http::timeout(45)
+            ->withHeaders([
+                'X-Ajth-Secret' => $secret,
+                'Accept' => 'application/json',
+            ])
+            ->attach('file', $contents, $file->getClientOriginalName())
+            ->post($bridgeUrl, [
+                'parent_post_id' => (int) ($parentPostId ?? 0),
+            ]);
+
+        if (! $resp->ok()) {
+            Log::error('WP media bridge upload failed', [
+                'status' => $resp->status(),
+                'body' => $resp->body(),
+            ]);
+            throw new \RuntimeException('WP media bridge upload failed (HTTP '.$resp->status().').');
+        }
+
+        $data = $resp->json();
+        $attachmentId = is_array($data) ? (int) ($data['attachment_id'] ?? 0) : 0;
+        if ($attachmentId <= 0) {
+            Log::error('WP media bridge upload bad response', ['data' => $data]);
+            throw new \RuntimeException('WP media bridge upload failed: missing attachment_id.');
+        }
+
+        // Remote strict validation (WP side) to guarantee file exists.
+        if (! $this->isAttachmentStrictlyValidForWrite($attachmentId)) {
+            Log::error('WP media bridge returned attachment but validation failed', [
+                'attachment_id' => $attachmentId,
+                'status' => $this->getAttachmentDisplayStatus($attachmentId),
+                'data' => $data,
+            ]);
+            throw new \RuntimeException('WP media bridge created an invalid attachment (file missing).');
+        }
+
+        Log::info('WordPressMediaService::uploadAndCreateAttachmentViaWordPress success', [
+            'attachment_id' => $attachmentId,
+            'parent_post_id' => $parentPostId,
+        ]);
+
+        return $attachmentId;
     }
 
     /**
@@ -524,15 +594,62 @@ class WordPressMediaService
 
     public function isAttachmentStrictlyValidForWrite(int $attachmentId): bool
     {
-        // Pour protéger les corrections manuelles: on exige une vérification FS réelle.
-        if (! $this->uploadsPathExplicitlyConfigured) {
+        // Pour protéger les corrections manuelles: on exige une vérification FS réelle (locale ou via WP bridge).
+        $validateUrl = config('wordpress.media_validate_url');
+        if (is_string($validateUrl) && $validateUrl !== '') {
+            return $this->remoteValidateAttachmentExistsOnWordPress($attachmentId, $validateUrl);
+        }
+
+        if ($this->uploadsPathExplicitlyConfigured && is_dir($this->uploadsPath)) {
+            return $this->getAttachmentDisplayStatus($attachmentId)['status'] === 'valid';
+        }
+
+        return false;
+    }
+
+    protected function remoteValidateAttachmentExistsOnWordPress(int $attachmentId, string $validateUrl): bool
+    {
+        $attachmentId = (int) $attachmentId;
+        if ($attachmentId <= 0) {
             return false;
         }
-        if (! is_dir($this->uploadsPath)) {
+        if (array_key_exists($attachmentId, $this->remoteValidationCache)) {
+            return (bool) $this->remoteValidationCache[$attachmentId];
+        }
+
+        $secret = config('wordpress.invalidate_secret');
+        if (! is_string($secret) || $secret === '') {
+            $this->remoteValidationCache[$attachmentId] = false;
             return false;
         }
 
-        return $this->getAttachmentDisplayStatus($attachmentId)['status'] === 'valid';
+        try {
+            $resp = Http::timeout(15)
+                ->withHeaders([
+                    'X-Ajth-Secret' => $secret,
+                    'Accept' => 'application/json',
+                ])
+                ->get($validateUrl, ['id' => $attachmentId]);
+
+            if (! $resp->ok()) {
+                $this->remoteValidationCache[$attachmentId] = false;
+                return false;
+            }
+
+            $data = $resp->json();
+            $valid = is_array($data) && ($data['valid'] ?? false) === true;
+            $this->remoteValidationCache[$attachmentId] = $valid;
+
+            return $valid;
+        } catch (\Throwable $e) {
+            Log::warning('WP media bridge validate failed', [
+                'attachment_id' => $attachmentId,
+                'message' => $e->getMessage(),
+            ]);
+            $this->remoteValidationCache[$attachmentId] = false;
+
+            return false;
+        }
     }
 
     /**
@@ -633,6 +750,12 @@ class WordPressMediaService
         if (is_dir($this->uploadsPath)) {
             $fullPath = $this->path($relativePath);
             if (! is_file($fullPath) || ! is_readable($fullPath)) {
+                // Fallback: si WordPress est accessible via media bridge, valider côté WP (volume réel).
+                $validateUrl = config('wordpress.media_validate_url');
+                if (is_string($validateUrl) && $validateUrl !== '' && $this->remoteValidateAttachmentExistsOnWordPress($attachmentId, $validateUrl)) {
+                    return ['status' => 'valid', 'reason' => 'remote_file_exists', 'attached_file' => $relativePath];
+                }
+
                 return ['status' => 'invalid', 'reason' => 'file_missing', 'attached_file' => $relativePath];
             }
 
