@@ -102,15 +102,6 @@
                     </div>
                 </div>
             </div>
-
-            @include('admin.circuits.voyages.components.DayBuilderPanel', [
-                'activitiesCatalog' => $activitiesCatalog,
-                'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
-                'nextFlightOptionIndex' => $nextFlightOptionIndex ?? 0,
-                'lastDayNumber' => $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1),
-                'airlines' => $airlines ?? collect(),
-                'programDays' => $programDays ?? collect()
-            ])
         </div>
     </form>
 
