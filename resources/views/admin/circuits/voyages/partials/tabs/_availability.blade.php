@@ -1,4 +1,4 @@
-<div class="tab-pane" id="availability" role="tabpanel">
+<div class="tab-pane" id="availability" role="tabpanel" data-ve-pane-title="Départs">
     <div class="card ve-pane-card">
         <div class="card-body">
             @php

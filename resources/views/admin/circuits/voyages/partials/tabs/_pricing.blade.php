@@ -9,7 +9,7 @@
         ? route('admin.settings.referentiels-metier.group', ['groupKey' => 'payment_methods'])
         : (\Illuminate\Support\Facades\Route::has('admin.settings.index') ? route('admin.settings.index') : '#');
 @endphp
-<div class="tab-pane" id="price" role="tabpanel">
+<div class="tab-pane" id="price" role="tabpanel" data-ve-pane-title="Tarifs">
     <div class="card ve-pane-card mb-3">
         <div class="card-body">
             <p class="text-uppercase text-muted small fw-bold mb-2">Prix de base</p>

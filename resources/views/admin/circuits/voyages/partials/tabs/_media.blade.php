@@ -1,4 +1,4 @@
-﻿<div class="tab-pane" id="media" role="tabpanel">
+﻿<div class="tab-pane" id="media" role="tabpanel" data-ve-pane-title="Médias">
                 <div class="card ve-pane-card">
                     <div class="card-body">
                         <h4 class="card-title mb-2">Images & VidÃ©os</h4>

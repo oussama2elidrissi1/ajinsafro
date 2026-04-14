@@ -667,18 +667,23 @@ class ReservationService
             ]);
         }
 
-        // La réservation est par définition sur un seul hôtel (règle métier).
-        // On prend donc le 1er hôtel (en pratique une contrainte WP tour_id_unique doit garantir l’unicité).
-        $tourHotel = $tourHotels->first();
-        $rooms = $tourHotel->rooms->where('is_active', true)->values();
+        // Allocation multi-sejours: agréger les chambres actives de tous les séjours hôtels.
+        $rooms = collect();
+        $roomHotelIds = [];
+        foreach ($tourHotels as $tourHotel) {
+            foreach ($tourHotel->rooms->where('is_active', true)->values() as $room) {
+                $rooms->push($room);
+                $roomHotelIds[(int) $room->id] = (int) $tourHotel->id;
+            }
+        }
 
         if ($rooms->isEmpty()) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'hotel_rooms' => ['Aucune chambre active configurée pour cet hôtel.'],
+                'hotel_rooms' => ['Aucune chambre active configurée pour les séjours hôtels.'],
             ]);
         }
 
-        $roomTypes = [];
+        $validRoomCount = 0;
         $roomIds = [];
         $totalCapacitySeats = 0;
         foreach ($rooms as $room) {
@@ -687,12 +692,12 @@ class ReservationService
             if ($cap <= 0 || $count <= 0) {
                 continue;
             }
-            $roomTypes[] = ['tour_hotel_room' => $room, 'tour_hotel_id' => (int) $tourHotel->id];
+            $validRoomCount++;
             $roomIds[] = (int) $room->id;
             $totalCapacitySeats += $count * $cap;
         }
 
-        if (empty($roomTypes) || $totalCapacitySeats <= 0) {
+        if ($validRoomCount === 0 || $totalCapacitySeats <= 0) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'hotel_rooms' => ['Capacité totale des chambres = 0.'],
             ]);
@@ -731,7 +736,7 @@ class ReservationService
 
             DB::table('tour_room_type_occupancies')->insert([
                 'travel_date_id' => $travelDateId,
-                'tour_hotel_id' => (int) $tourHotel->id,
+                'tour_hotel_id' => (int) ($roomHotelIds[$missingRoomId] ?? 0),
                 'tour_hotel_room_id' => (int) $missingRoomId,
                 'seats_occupied_total' => 0,
                 'created_at' => now(),
@@ -799,7 +804,7 @@ class ReservationService
 
             // Keep allocation for rollback/debug.
             $allocByRoomId[$roomId] = [
-                'tour_hotel_id' => (int) $tourHotel->id,
+                'tour_hotel_id' => (int) ($roomHotelIds[$roomId] ?? 0),
                 'tour_hotel_room_id' => $roomId,
                 'seats_allocated' => (int) $take,
                 'rooms_new_count' => (int) $roomsNewCount,

@@ -1,4 +1,4 @@
-<div class="tab-pane" id="program-days" role="tabpanel">
+<div class="tab-pane" id="program-days" role="tabpanel" data-ve-pane-title="Programme">
     <div class="card ve-programme-tab-card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">

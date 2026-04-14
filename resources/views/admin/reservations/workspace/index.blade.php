@@ -641,12 +641,34 @@
 @php
     $catalogScope = $catalogScope ?? 'all';
     $catalogFullCount = $catalogFullCount ?? $catalogRows->count();
+    $wsUpcomingCount = $catalogRows->where('ws_has_future', true)->count();
+    $wsPackageCount = $catalogRows->where('type', 'package')->count();
+    $wsWithPriceCount = $catalogRows->filter(fn ($row) => !empty($row['price_label']))->count();
 @endphp
 <div class="fade-in ws-page max-w-[1680px] mx-auto pb-10 overflow-x-hidden">
     <header class="ws-hero">
         <div class="ws-hero__main">
+            <p class="ws-hero__eyebrow">Workspace commercial</p>
             <h1 class="ws-hero__title">Espace réservation</h1>
-            <p class="ws-hero__sub">Catalogue complet : les départs les plus proches en tête. Filtrez la période si besoin.</p>
+            <p class="ws-hero__sub">Catalogue opérationnel orienté vente: repérez vite le bon voyage, la bonne date, le bon tarif, puis lancez la réservation.</p>
+            <div class="ws-kpi-row" aria-label="Indicateurs rapides catalogue">
+                <div class="ws-kpi ws-kpi--accent">
+                    <span class="ws-kpi__val" id="ws-kpi-visible">{{ $catalogRows->count() }}</span>
+                    <span class="ws-kpi__lbl">offres visibles</span>
+                </div>
+                <div class="ws-kpi">
+                    <span class="ws-kpi__val">{{ $wsUpcomingCount }}</span>
+                    <span class="ws-kpi__lbl">départs à venir</span>
+                </div>
+                <div class="ws-kpi">
+                    <span class="ws-kpi__val">{{ $wsPackageCount }}</span>
+                    <span class="ws-kpi__lbl">circuits</span>
+                </div>
+                <div class="ws-kpi">
+                    <span class="ws-kpi__val">{{ $wsWithPriceCount }}</span>
+                    <span class="ws-kpi__lbl">prix renseignés</span>
+                </div>
+            </div>
         </div>
         <div class="ws-hero__actions">
             <a href="{{ route('admin.circuits.voyages.index') }}" class="ws-hero__btn ws-hero__btn--outline">
@@ -685,18 +707,18 @@
         <div id="catalogue-workspace" class="ws-toolbar" data-workspace-url="{{ route('admin.reservations.workspace') }}">
             <div class="ws-toolbar__row ws-toolbar__row--search">
                 <div class="ws-field ws-field--grow">
-                    <label class="ws-field__label" for="ws-filter-search">Recherche</label>
+                    <label class="ws-field__label" for="ws-filter-search">Recherche rapide</label>
                     <div class="ws-field__input-wrap">
                         <i class="fas fa-search ws-field__icon" aria-hidden="true"></i>
                         <input type="text" id="ws-filter-search" placeholder="Nom, code, destination…" autocomplete="off" class="ws-input">
                     </div>
                 </div>
                 <div class="ws-toolbar__views">
-                    <span class="ws-toolbar__count"><span id="ws-row-visible-count">{{ $catalogRows->count() }}</span> / {{ $catalogFullCount }}</span>
+                    <span class="ws-toolbar__count"><strong id="ws-row-visible-count">{{ $catalogRows->count() }}</strong> / {{ $catalogFullCount }} offres</span>
                     <div class="ws-seg ws-seg--triple" role="group" aria-label="Mode d'affichage">
                         <button type="button" id="btn-view-list" class="ws-seg__btn is-active" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
-                        <button type="button" id="btn-view-calendar" class="ws-seg__btn" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Cal.</span></button>
-                        <button type="button" id="btn-view-catalog" class="ws-seg__btn" title="Présentation catalogue (cartes)"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Présentation catalogue</span></button>
+                        <button type="button" id="btn-view-calendar" class="ws-seg__btn" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Calendrier</span></button>
+                        <button type="button" id="btn-view-catalog" class="ws-seg__btn" title="Présentation catalogue (cartes)"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
                     </div>
                 </div>
             </div>
@@ -774,11 +796,11 @@
                 <table class="ws-data-table ws-data-table--responsive" aria-label="Catalogue des offres en liste">
                     <thead>
                         <tr>
-                            <th scope="col">Réf</th>
-                            <th scope="col">Voyage</th>
-                            <th scope="col">Départ</th>
-                            <th scope="col">Prix</th>
-                            <th scope="col">Capacité</th>
+                            <th scope="col" class="ws-data-table__th-ref">Réf</th>
+                            <th scope="col" class="ws-data-table__th-offer">Voyage</th>
+                            <th scope="col" class="ws-data-table__th-dep">Départ</th>
+                            <th scope="col" class="ws-data-table__th-price">Prix</th>
+                            <th scope="col" class="ws-data-table__th-cap">Capacité</th>
                             <th scope="col" class="ws-data-table__th-actions">Actions</th>
                         </tr>
                     </thead>
@@ -1352,6 +1374,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         var c = document.getElementById('ws-row-visible-count');
         if (c) c.textContent = String(visible);
+        var k = document.getElementById('ws-kpi-visible');
+        if (k) k.textContent = String(visible);
     };
 
     function applyWsFiltersAndSort() {

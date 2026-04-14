@@ -1,7 +1,7 @@
 @php
     $voyageActivityPricingTypes = \App\Services\BusinessReferentialService::voyageActivityPricingTypes();
 @endphp
-<div class="tab-pane" id="activities" role="tabpanel">
+<div class="tab-pane" id="activities" role="tabpanel" data-ve-pane-title="Activités">
     <div class="card ve-pane-card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">

@@ -1,4 +1,4 @@
-<div class="tab-pane" id="voyage-extras" role="tabpanel">
+<div class="tab-pane" id="voyage-extras" role="tabpanel" data-ve-pane-title="Extras">
     <div class="card ve-pane-card">
         <div class="card-body">
             <p class="ve-section-kicker mb-2">Services additionnels</p>

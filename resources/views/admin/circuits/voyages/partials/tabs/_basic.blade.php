@@ -1,4 +1,4 @@
-<div class="tab-pane active show" id="basic" role="tabpanel">
+<div class="tab-pane active show" id="basic" role="tabpanel" data-ve-pane-title="Fiche">
     <div class="row g-4 ve-basic-layout">
         <div class="col-lg-8">
             <div class="card ve-pane-card mb-0">

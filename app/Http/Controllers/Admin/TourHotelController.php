@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Models\Wp\WpPost;
+use App\Services\Wp\WpHeroImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TourHotelController extends Controller
@@ -80,11 +82,93 @@ class TourHotelController extends Controller
                 'meal_plan' => $hotel->meal_plan,
                 'notes' => $hotel->notes,
                 'image_id' => $hotel->image_id,
+                'image_url' => ! empty($hotel->image_id)
+                    ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $hotel->image_id)
+                    : '',
                 'check_in_day' => $hotel->check_in_day ?? 1,
                 'check_out_day' => $hotel->check_out_day ?? 1,
                 'is_optional' => (bool) $hotel->is_optional,
             ],
             'rooms' => $rooms,
+        ]);
+    }
+
+    /**
+     * DonnÃ©es JSON d'un hÃ´tel WordPress (post_type=st_hotel) pour prÃ©remplir un nouveau sÃ©jour.
+     */
+    public function wpHotelData(int $hotelId): JsonResponse
+    {
+        $post = WpPost::query()
+            ->where('post_type', 'st_hotel')
+            ->find($hotelId);
+
+        if (! $post) {
+            return response()->json(['hotel' => null, 'rooms' => []]);
+        }
+
+        $metas = $post->getAllMetas();
+        $detail = DB::connection('wp')->table('st_hotel')->where('post_id', $hotelId)->first();
+
+        $thumbnailId = $this->asInt($metas['_thumbnail_id'] ?? null);
+        $thumbnailUrl = $thumbnailId > 0 ? WpHeroImageService::getAttachmentUrl($thumbnailId) : null;
+
+        $address = $this->firstNonEmpty([
+            $detail?->address ?? null,
+            $metas['address'] ?? null,
+            $metas['location'] ?? null,
+        ]);
+        $city = $this->resolveHotelCity($detail, $metas);
+
+        $mealPlan = $this->firstNonEmpty([
+            $metas['meal_plan'] ?? null,
+            $metas['hotel_meal_plan'] ?? null,
+            $metas['pension'] ?? null,
+            $metas['hotel_pension'] ?? null,
+        ]);
+
+        $notes = $this->firstNonEmpty([
+            $metas['internal_notes'] ?? null,
+            $metas['hotel_notes'] ?? null,
+            $metas['notes'] ?? null,
+            $post->post_excerpt ?? null,
+        ]);
+
+        $stars = $this->normalizeStars(
+            $detail?->hotel_star ?? ($metas['hotel_star'] ?? null)
+        );
+
+        $galleryIds = $this->parseCsvIds(
+            $metas['_gallery'] ?? ($metas['st_gallery'] ?? ($metas['gallery'] ?? null))
+        );
+        $gallery = collect($galleryIds)
+            ->map(fn (int $id) => ['id' => $id, 'url' => WpHeroImageService::getAttachmentUrl($id)])
+            ->filter(fn (array $row) => ! empty($row['url']))
+            ->values()
+            ->all();
+        $wpSiteUrl = rtrim((string) config('wordpress.site_url', ''), '/');
+        $wpUrl = $wpSiteUrl !== '' ? ($wpSiteUrl . '/?post_type=st_hotel&p=' . (int) $post->ID) : null;
+
+        return response()->json([
+            'hotel' => [
+                'id' => (int) $post->ID,
+                'wp_post_id' => (int) $post->ID,
+                'hotel_id' => (int) $post->ID,
+                'source_hotel_id' => (int) $post->ID,
+                'hotel_name' => trim((string) ($post->post_title ?? '')),
+                'stars' => $stars,
+                'address' => $address,
+                'city' => $city,
+                'location' => $city ?: $address,
+                'meal_plan' => $mealPlan,
+                'notes' => $notes,
+                'description' => trim(strip_tags((string) ($post->post_content ?? ''))),
+                'post_excerpt' => trim((string) ($post->post_excerpt ?? '')),
+                'image_id' => $thumbnailId > 0 ? $thumbnailId : null,
+                'image_url' => $thumbnailUrl,
+                'gallery' => $gallery,
+                'wp_url' => $wpUrl,
+            ],
+            'rooms' => [],
         ]);
     }
 
@@ -195,5 +279,82 @@ class TourHotelController extends Controller
             }
         }
         TourHotelRoom::where('tour_hotel_id', $tourHotelId)->whereNotIn('id', $keptRoomIds)->delete();
+    }
+
+    private function firstNonEmpty(array $values): ?string
+    {
+        foreach ($values as $value) {
+            $text = trim((string) ($value ?? ''));
+            if ($text !== '') {
+                return $text;
+            }
+        }
+
+        return null;
+    }
+
+    private function asInt(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    private function normalizeStars(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $stars = (int) round((float) str_replace(',', '.', (string) $value));
+
+        return max(0, min(5, $stars));
+    }
+
+    private function parseCsvIds(mixed $value): array
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map('intval', explode(',', $value)))));
+    }
+
+    private function resolveHotelCity(object|null $detail, array $metas): ?string
+    {
+        $locationId = $this->asInt($detail?->id_location ?? null);
+        if ($locationId <= 0) {
+            $locationId = $this->extractFirstMultiLocationId(
+                $detail?->multi_location ?? ($metas['multi_location'] ?? null)
+            );
+        }
+
+        if ($locationId > 0) {
+            $locationTitle = DB::connection('wp')
+                ->table('posts')
+                ->where('ID', $locationId)
+                ->where('post_type', 'location')
+                ->value('post_title');
+            $locationTitle = trim((string) ($locationTitle ?? ''));
+            if ($locationTitle !== '') {
+                return $locationTitle;
+            }
+        }
+
+        return $this->firstNonEmpty([
+            $metas['city'] ?? null,
+            $metas['location'] ?? null,
+        ]);
+    }
+
+    private function extractFirstMultiLocationId(mixed $value): int
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return 0;
+        }
+
+        if (preg_match('/_(\d+)_/', $value, $matches) === 1) {
+            return (int) ($matches[1] ?? 0);
+        }
+
+        return 0;
     }
 }

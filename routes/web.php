@@ -214,6 +214,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::delete('circuits/airlines/ajax/{airline}', [AirlineController::class, 'ajaxDestroy'])->name('circuits.airlines.ajax.destroy');
 
     Route::get('circuits/tour-hotels', [TourHotelController::class, 'index'])->name('circuits.tour-hotels.index');
+    Route::get('circuits/wp-hotels/{hotelId}/data', [TourHotelController::class, 'wpHotelData'])->name('circuits.wp-hotels.data')->whereNumber('hotelId');
     Route::get('circuits/tour-hotels/{tourId}/data', [TourHotelController::class, 'data'])->name('circuits.tour-hotels.data')->whereNumber('tourId');
     Route::get('circuits/tour-hotels/{tourId}', [TourHotelController::class, 'show'])->name('circuits.tour-hotels.show')->whereNumber('tourId');
     Route::get('circuits/tour-hotels/{tourId}/edit', [TourHotelController::class, 'edit'])->name('circuits.tour-hotels.edit')->whereNumber('tourId');

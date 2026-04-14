@@ -1,4 +1,4 @@
-<div class="tab-pane" id="location" role="tabpanel">
+<div class="tab-pane" id="location" role="tabpanel" data-ve-pane-title="Destination">
 <div class="card ve-pane-card destination-ux-card">
                     <div class="card-body destination-ux-body">
                         <div class="destination-ux-header">

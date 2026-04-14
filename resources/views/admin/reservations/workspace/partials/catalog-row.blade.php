@@ -147,7 +147,7 @@
     <td class="ws-td ws-td--cap" data-label="Capacité">
         <span class="ws-td__cap-cell">{{ $capText }}</span>
     </td>
-    <td class="ws-td ws-td--actions" data-label="">
+    <td class="ws-td ws-td--actions" data-label="Actions">
         <div class="ws-td__actions">
             @if(!empty($modalDetail))
                 <button type="button"
@@ -212,6 +212,7 @@
                         <i class="fas fa-map-location-dot"></i>
                     @endif
                 </span>
+                <span class="ws-offer-card__placeholder-text">Visuel indisponible</span>
             </div>
             @if($imageUrl)
                 <img src="{{ e($imageUrl) }}" alt="" class="ws-offer-card__img" loading="lazy" decoding="async"
@@ -230,27 +231,40 @@
             @endif
         </div>
         <h3 class="ws-offer-card__title ws-offer-card__title--compact">{{ $row['name'] }}</h3>
-        <div class="ws-offer-card__facts" role="group" aria-label="Départ, tarif, capacité">
-            <span class="ws-offer-card__fact">
-                @if($hasDepDate)
-                    {{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}
-                    @if($pkgDepCanceled)
-                        <span class="ws-offer-card__fact-note"> · annulé</span>
+        <div class="ws-offer-card__meta-list" role="group" aria-label="Départ, tarif, capacité">
+            <div class="ws-offer-card__meta-item">
+                <span class="ws-offer-card__meta-label"><i class="far fa-calendar-alt" aria-hidden="true"></i>Départ</span>
+                <span class="ws-offer-card__meta-value">
+                    @if($hasDepDate)
+                        {{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}
+                        @if($pkgDepCanceled)
+                            <span class="ws-offer-card__meta-inline-note">annulé</span>
+                        @endif
+                    @else
+                        <span class="ws-offer-card__meta-muted">Non renseigné</span>
                     @endif
-                @else
-                    <span class="ws-offer-meta-item__muted">Date —</span>
-                @endif
-            </span>
-            <span class="ws-offer-card__fact ws-offer-card__fact--price">
-                @if(! empty($row['price_label']))
-                    <strong>{{ $row['price_label'] }}</strong>
-                @else
-                    <span class="ws-offer-meta-item__muted">—</span>
-                @endif
-            </span>
-            @if($typeKey === 'package' && $hasLaravel)
-                <span class="ws-offer-card__fact">{{ $capText === '—' || $capText === 'n/r' ? $capText : $capText.' pl.' }}</span>
-            @endif
+                </span>
+            </div>
+            <div class="ws-offer-card__meta-item ws-offer-card__meta-item--price">
+                <span class="ws-offer-card__meta-label"><i class="fas fa-coins" aria-hidden="true"></i>Prix</span>
+                <span class="ws-offer-card__meta-value ws-offer-card__meta-value--price">
+                    @if(! empty($row['price_label']))
+                        {{ $row['price_label'] }}
+                    @else
+                        <span class="ws-offer-card__meta-muted">Non renseigné</span>
+                    @endif
+                </span>
+            </div>
+            <div class="ws-offer-card__meta-item ws-offer-card__meta-item--cap">
+                <span class="ws-offer-card__meta-label"><i class="fas fa-users" aria-hidden="true"></i>Capacité</span>
+                <span class="ws-offer-card__meta-value">
+                    @if($typeKey === 'package' && $hasLaravel)
+                        {{ $capText === '—' || $capText === 'n/r' ? $capText : $capText.' places' }}
+                    @else
+                        <span class="ws-offer-card__meta-muted">—</span>
+                    @endif
+                </span>
+            </div>
         </div>
         <div class="ws-offer-card__actions ws-offer-card__actions--compact" role="group" aria-label="Actions">
             @if(!empty($modalDetail))

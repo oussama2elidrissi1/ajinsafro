@@ -42,6 +42,64 @@ class UpdateWpTourRequest extends FormRequest
                 return;
             }
 
+            $tourHotels = $this->input('tour_hotels', []);
+            $tourHotels = is_array($tourHotels) ? array_values($tourHotels) : [];
+            $expectedHotelIndexes = [];
+            $hotelIdToIndex = [];
+            foreach ($tourHotels as $hotelIndex => $hotelRow) {
+                if (! is_array($hotelRow)) {
+                    continue;
+                }
+
+                $hotelId = isset($hotelRow['id']) && $hotelRow['id'] !== '' ? (int) $hotelRow['id'] : 0;
+                $hotelName = trim((string) ($hotelRow['hotel_name'] ?? ''));
+                $address = trim((string) ($hotelRow['address'] ?? ''));
+                $mealPlan = trim((string) ($hotelRow['meal_plan'] ?? ''));
+                $notes = trim((string) ($hotelRow['notes'] ?? ''));
+                $hasHotelPayload = $hotelName !== ''
+                    || $address !== ''
+                    || $mealPlan !== ''
+                    || $notes !== ''
+                    || ! empty($hotelRow['image_id'])
+                    || ! empty($hotelRow['is_optional']);
+
+                if (! $hasHotelPayload && $hotelId <= 0) {
+                    continue;
+                }
+
+                $expectedHotelIndexes[] = (int) $hotelIndex;
+                if ($hotelId > 0) {
+                    $hotelIdToIndex[$hotelId] = (int) $hotelIndex;
+                }
+            }
+
+            $travelDateSeatsById = [];
+            $travelDateSeatsByDate = [];
+            $travelDates = $this->input('travel_dates', []);
+            if (is_array($travelDates)) {
+                foreach (array_values($travelDates) as $travelDateRow) {
+                    if (! is_array($travelDateRow)) {
+                        continue;
+                    }
+
+                    $isActive = ! array_key_exists('is_active', $travelDateRow) || (bool) $travelDateRow['is_active'];
+                    if (! $isActive) {
+                        continue;
+                    }
+
+                    $date = trim((string) ($travelDateRow['date'] ?? ''));
+                    $seats = max(0, (int) ($travelDateRow['seats'] ?? 0));
+                    $travelDateId = isset($travelDateRow['id']) && $travelDateRow['id'] !== '' ? (int) $travelDateRow['id'] : 0;
+
+                    if ($travelDateId > 0) {
+                        $travelDateSeatsById[$travelDateId] = $seats;
+                    }
+                    if ($date !== '') {
+                        $travelDateSeatsByDate[$date] = $seats;
+                    }
+                }
+            }
+
             foreach ($departureAllocations as $departureIndex => $departureRow) {
                 if (! is_array($departureRow)) {
                     continue;
@@ -51,6 +109,21 @@ class UpdateWpTourRequest extends FormRequest
                 if (! is_array($rooms)) {
                     continue;
                 }
+
+                $rowTravelDateId = isset($departureRow['travel_date_id']) && $departureRow['travel_date_id'] !== '' ? (int) $departureRow['travel_date_id'] : 0;
+                $rowDate = trim((string) ($departureRow['date'] ?? ''));
+                $targetSeats = 0;
+                if ($rowTravelDateId > 0 && array_key_exists($rowTravelDateId, $travelDateSeatsById)) {
+                    $targetSeats = max(0, (int) $travelDateSeatsById[$rowTravelDateId]);
+                } elseif ($rowDate !== '' && array_key_exists($rowDate, $travelDateSeatsByDate)) {
+                    $targetSeats = max(0, (int) $travelDateSeatsByDate[$rowDate]);
+                }
+
+                $coverageByHotelIndex = [];
+                foreach ($expectedHotelIndexes as $expectedHotelIndex) {
+                    $coverageByHotelIndex[$expectedHotelIndex] = 0;
+                }
+                $roomsTouched = false;
 
                 foreach ($rooms as $roomIndex => $roomRow) {
                     if (! is_array($roomRow)) {
@@ -66,6 +139,50 @@ class UpdateWpTourRequest extends FormRequest
 
                     if ($hasPayload && $roomType === '') {
                         $validator->errors()->add("departure_allocations.$departureIndex.rooms.$roomIndex.room_type", 'Le type de chambre est obligatoire.');
+                    }
+
+                    if (! $hasPayload || $roomType === '') {
+                        continue;
+                    }
+
+                    $roomsTouched = true;
+                    $quantity = max(0, (int) ($roomRow['quantity'] ?? 0));
+                    $capacityPerRoom = max(1, (int) ($roomRow['capacity_per_room'] ?? 1));
+                    $coveredSeats = $quantity * $capacityPerRoom;
+
+                    $hotelIndex = isset($roomRow['hotel_index']) && $roomRow['hotel_index'] !== '' ? max(0, (int) $roomRow['hotel_index']) : null;
+                    $hotelId = isset($roomRow['hotel_id']) && $roomRow['hotel_id'] !== '' ? (int) $roomRow['hotel_id'] : null;
+
+                    if ($hotelId !== null && isset($hotelIdToIndex[$hotelId])) {
+                        $hotelIndex = (int) $hotelIdToIndex[$hotelId];
+                    }
+                    if ($hotelIndex === null && count($expectedHotelIndexes) === 1) {
+                        $hotelIndex = $expectedHotelIndexes[0];
+                    }
+
+                    if ($hotelIndex === null || ! in_array($hotelIndex, $expectedHotelIndexes, true)) {
+                        $validator->errors()->add("departure_allocations.$departureIndex.rooms.$roomIndex.hotel_index", 'Associez cette chambre a un sejour.');
+                        continue;
+                    }
+
+                    if (! isset($coverageByHotelIndex[$hotelIndex])) {
+                        $coverageByHotelIndex[$hotelIndex] = 0;
+                    }
+                    $coverageByHotelIndex[$hotelIndex] += $coveredSeats;
+                }
+
+                if (! $roomsTouched || $targetSeats <= 0 || $expectedHotelIndexes === []) {
+                    continue;
+                }
+
+                foreach ($expectedHotelIndexes as $expectedHotelIndex) {
+                    $coveredSeats = (int) ($coverageByHotelIndex[$expectedHotelIndex] ?? 0);
+                    if ($coveredSeats < $targetSeats) {
+                        $stayNumber = $expectedHotelIndex + 1;
+                        $validator->errors()->add(
+                            "departure_allocations.$departureIndex.rooms",
+                            "Le sejour {$stayNumber} couvre {$coveredSeats}/{$targetSeats} place(s) pour ce depart."
+                        );
                     }
                 }
             }

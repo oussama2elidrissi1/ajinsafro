@@ -2,6 +2,11 @@
     $roomTypeSuggestions = ['Single', 'Double', 'Twin', 'Triple', 'Quadruple', 'Family', 'Suite'];
     $allocationBootstrapRows = [];
     $oldAllocationRows = old('departure_allocations');
+    $tourHotelsOrdered = collect($tourHotels ?? [])->values();
+    $hotelIndexById = $tourHotelsOrdered
+        ->filter(fn ($hotel) => isset($hotel->id))
+        ->mapWithKeys(fn ($hotel, $index) => [(int) $hotel->id => (int) $index])
+        ->all();
 
     if (is_array($oldAllocationRows)) {
         foreach (array_values($oldAllocationRows) as $row) {
@@ -20,6 +25,7 @@
                     'quantity' => (int) ($roomRow['quantity'] ?? 0),
                     'capacity_per_room' => (int) ($roomRow['capacity_per_room'] ?? 1),
                     'hotel_id' => isset($roomRow['hotel_id']) && $roomRow['hotel_id'] !== '' ? (int) $roomRow['hotel_id'] : null,
+                    'hotel_index' => isset($roomRow['hotel_index']) && $roomRow['hotel_index'] !== '' ? (int) $roomRow['hotel_index'] : null,
                 ];
             }
 
@@ -44,6 +50,9 @@
                     'quantity' => (int) ($allocation->quantity ?? 0),
                     'capacity_per_room' => (int) ($allocation->capacity_per_room ?? 1),
                     'hotel_id' => $allocation->hotel_id ? (int) $allocation->hotel_id : null,
+                    'hotel_index' => $allocation->hotel_id && isset($hotelIndexById[(int) $allocation->hotel_id])
+                        ? (int) $hotelIndexById[(int) $allocation->hotel_id]
+                        : null,
                 ])->values()->all(),
                 'manual' => $departureRow->roomAllocations->isNotEmpty(),
             ];

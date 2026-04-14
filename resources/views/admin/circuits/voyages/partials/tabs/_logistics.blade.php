@@ -4,7 +4,7 @@
     $transport = $lm['transport'] ?? [];
     $transportTypeVal = old('logistics_meta.transport.type', $transport['type'] ?? '');
 @endphp
-<div class="tab-pane" id="logistics" role="tabpanel">
+<div class="tab-pane" id="logistics" role="tabpanel" data-ve-pane-title="Logistique">
     <div class="ve-logistics-shell card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="row g-0">

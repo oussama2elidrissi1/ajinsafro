@@ -39,27 +39,10 @@
         </div>
     </div>
 
-    <div class="ve-header-grid">
-        <div class="ve-header-main">
-            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
-                <div>
-                    <h1 class="ve-page-title mb-2">{{ $pageTitle }}</h1>
-                    <p class="ve-page-subtitle mb-0">{{ $pageSubtitle }}</p>
-                </div>
-
-                <div class="d-flex flex-wrap align-items-center gap-2">
-                    @if($publicShowUrl)
-                        <a href="{{ $publicShowUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
-                            <i class="bx bx-link-external"></i> Voir la page client
-                        </a>
-                    @endif
-
-                    <span class="ve-status-badge status-{{ $currentStatus }} align-self-center">
-                        <span class="status-dot"></span>
-                        {{ $statusLabel }}
-                    </span>
-                </div>
-            </div>
+    <div class="ve-header-main ve-header-main--compact">
+        <div class="ve-header-main__content">
+            <h1 class="ve-page-title mb-1">{{ $pageTitle }}</h1>
+            <p class="ve-page-subtitle mb-0">{{ $pageSubtitle }}</p>
 
             <div class="ve-header-meta-line">
                 @if($veDestination)
@@ -67,7 +50,7 @@
                 @endif
 
                 @if($vePriceLabel)
-                    <span class="ve-meta-pill ve-meta-pill--accent"><i class="bx bx-purchase-tag"></i> Prix de base {{ $vePriceLabel }}</span>
+                    <span class="ve-meta-pill ve-meta-pill--accent"><i class="bx bx-purchase-tag"></i> {{ $vePriceLabel }}</span>
                 @endif
 
                 <span class="ve-meta-pill"><i class="bx bx-calendar"></i> {{ $veDatesCount }} départ(s)</span>
@@ -78,32 +61,36 @@
             </div>
         </div>
 
-        <div class="ve-header-aside">
-            <div class="ve-header-panel">
-                <p class="ve-header-panel__eyebrow mb-3">Vue rapide</p>
+        <div class="ve-header-main__actions">
+            <span class="ve-status-badge status-{{ $currentStatus }} align-self-center">
+                <span class="status-dot"></span>
+                {{ $statusLabel }}
+            </span>
 
-                <div class="ve-header-panel__grid">
-                    <div class="ve-header-panel__item">
-                        <span>Statut</span>
-                        <strong>{{ $statusLabel }}</strong>
-                    </div>
+            @if($publicShowUrl)
+                <a href="{{ $publicShowUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
+                    <i class="bx bx-link-external"></i> Voir la page client
+                </a>
+            @endif
+        </div>
+    </div>
 
-                    <div class="ve-header-panel__item">
-                        <span>Départ(s)</span>
-                        <strong>{{ $veDatesCount }}</strong>
-                    </div>
-
-                    <div class="ve-header-panel__item">
-                        <span>Destination</span>
-                        <strong>{{ $veDestination ? Str::limit($veDestination, 28) : 'À définir' }}</strong>
-                    </div>
-
-                    <div class="ve-header-panel__item">
-                        <span>Prix</span>
-                        <strong>{{ $vePriceLabel ?: 'À définir' }}</strong>
-                    </div>
-                </div>
-            </div>
+    <div class="ve-header-quickbar" aria-label="Vue rapide voyage">
+        <div class="ve-quick-item">
+            <span>Statut</span>
+            <strong>{{ $statusLabel }}</strong>
+        </div>
+        <div class="ve-quick-item">
+            <span>Départs</span>
+            <strong>{{ $veDatesCount }}</strong>
+        </div>
+        <div class="ve-quick-item">
+            <span>Destination</span>
+            <strong>{{ $veDestination ? Str::limit($veDestination, 28) : 'À définir' }}</strong>
+        </div>
+        <div class="ve-quick-item">
+            <span>Prix</span>
+            <strong>{{ $vePriceLabel ?: 'À définir' }}</strong>
         </div>
     </div>
 </div>

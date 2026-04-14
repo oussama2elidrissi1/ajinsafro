@@ -1300,6 +1300,53 @@ body.voyage-layout-page .modal-body {
 .voyage-edit-page .ve-departure-card__summary::-webkit-details-marker {
     display: none;
 }
+.voyage-edit-page .ve-stay-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 10px;
+}
+.voyage-edit-page .ve-stay-breakdown__item {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #f8fafc;
+}
+.voyage-edit-page .ve-stay-breakdown__item--exact {
+    border-color: #86efac;
+    background: #f0fdf4;
+}
+.voyage-edit-page .ve-stay-breakdown__item--under {
+    border-color: #facc15;
+    background: #fefce8;
+}
+.voyage-edit-page .ve-stay-breakdown__item--over {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+.voyage-edit-page .ve-stay-breakdown__item--unassigned {
+    border-color: #f59e0b;
+    background: #fff7ed;
+}
+.voyage-edit-page .ve-stay-breakdown__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+.voyage-edit-page .ve-stay-breakdown__title {
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.3;
+}
+.voyage-edit-page .ve-stay-breakdown__ratio {
+    font-size: .95rem;
+    color: #0f172a;
+}
+.voyage-edit-page .ve-stay-breakdown__meta {
+    font-size: .77rem;
+    color: #475569;
+}
 .voyage-edit-page .tour-hotel-row {
     border-radius: 16px;
     overflow: hidden;
@@ -1329,6 +1376,216 @@ body.voyage-layout-page .modal-body {
     letter-spacing: .06em;
     text-transform: uppercase;
     color: #475569;
+}
+.voyage-edit-page .tour-hotel-wp-link-box {
+    background: #f8fafc;
+    border-color: #dbeafe !important;
+}
+.voyage-edit-page .tour-hotel-wp-link-box .form-text {
+    font-size: .74rem;
+    color: #64748b;
+}
+.voyage-edit-page .tour-hotel-linked-summary {
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+.voyage-edit-page .tour-hotel-linked-summary-image-wrap {
+    width: 96px;
+    height: 64px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex: 0 0 96px;
+    border: 1px solid #bfdbfe;
+    background: #fff;
+}
+.voyage-edit-page .tour-hotel-linked-summary-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.voyage-edit-page .tour-hotel-linked-summary-name {
+    color: #0f172a;
+    line-height: 1.3;
+}
+.voyage-edit-page .tour-hotel-linked-summary-meta {
+    line-height: 1.35;
+    margin-top: 2px;
+}
+.voyage-edit-page .tour-hotel-linked-summary-link {
+    text-decoration: none;
+    color: #2563eb;
+}
+.voyage-edit-page .tour-hotel-linked-summary-link:hover {
+    text-decoration: underline;
+}
+.voyage-edit-page .tour-hotel-open-modal-btn {
+    background: #f37a1f;
+    border-color: #f37a1f;
+    color: #fff;
+}
+.voyage-edit-page .tour-hotel-open-modal-btn:hover {
+    background: #d86514;
+    border-color: #d86514;
+    color: #fff;
+}
+.voyage-edit-page .tour-hotel-picker-modal-content .modal-header {
+    border-bottom: 1px solid #dbeafe;
+    background: linear-gradient(135deg, #0e3a5a 0%, #0083c4 100%);
+    color: #fff;
+}
+.voyage-edit-page .tour-hotel-picker-modal-content .modal-header .modal-title {
+    color: #fff;
+}
+.voyage-edit-page .tour-hotel-picker-modal-content .modal-header .text-muted {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+.voyage-edit-page .tour-hotel-picker-modal-content .btn-close {
+    filter: invert(1) brightness(1.6);
+}
+.voyage-edit-page .tour-hotel-picker-results {
+    /* No overflow/max-height here — modal-dialog-scrollable handles the scroll on modal-body */
+    padding: 4px 2px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    width: 100%;
+}
+.voyage-edit-page .tour-hotel-picker-note {
+    grid-column: 1 / -1;
+    font-size: .78rem;
+    color: #64748b;
+    margin-bottom: 2px;
+    padding: 0 2px;
+}
+.voyage-edit-page .tour-hotel-picker-card {
+    border: 1px solid #dbeafe !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transition: all 0.25s ease-in-out !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    min-height: auto !important;
+}
+.voyage-edit-page .tour-hotel-picker-card:hover {
+    border-color: #0e3a5a !important;
+    box-shadow: 0 4px 12px rgba(14, 58, 90, 0.15) !important;
+    transform: translateY(-2px) !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-media {
+    width: 100% !important;
+    height: 160px !important;
+    background: #f1f5f9 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-right: none !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+    transition: transform 0.25s ease-in-out !important;
+}
+.voyage-edit-page .tour-hotel-picker-card:hover .tour-hotel-picker-card-image {
+    transform: scale(1.05) !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-placeholder {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 160px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #94a3b8 !important;
+    font-size: 2.5rem !important;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-body {
+    padding: 14px 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-title {
+    font-size: .96rem !important;
+    font-weight: 700 !important;
+    color: #0e3a5a !important;
+    line-height: 1.4 !important;
+    margin-bottom: 6px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-meta {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+    font-size: .73rem !important;
+    color: #64748b !important;
+    align-items: center !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-meta span {
+    padding: 2px 6px !important;
+    background: #f0f5ff !important;
+    border-radius: 4px !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-stars {
+    color: #f59e0b;
+    font-size: .9rem;
+    letter-spacing: .05em;
+    display: block;
+    margin-bottom: 6px;
+}
+.voyage-edit-page .tour-hotel-picker-card-address {
+    margin-bottom: 10px !important;
+    font-size: .78rem !important;
+    color: #475569 !important;
+    line-height: 1.35 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-foot {
+    margin-top: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding-top: 10px !important;
+    border-top: 1px solid #f0f5ff !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-foot .badge {
+    font-size: .7rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px !important;
+    padding: 4px 8px !important;
+    background: #f0f5ff !important;
+    color: #0e3a5a !important;
+    border: 1px solid #dbeafe !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-foot .btn-primary {
+    background: #f37a1f !important;
+    border-color: #f37a1f !important;
+    font-size: .82rem !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    white-space: nowrap !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.voyage-edit-page .tour-hotel-picker-card-foot .btn-primary:hover {
+    background: #d86514 !important;
+    border-color: #d86514 !important;
+    box-shadow: 0 2px 8px rgba(243, 122, 31, 0.3) !important;
 }
 .voyage-edit-page .tour-room-row {
     border: 1px solid #e2e8f0;
@@ -1378,6 +1635,7 @@ body.voyage-layout-page .modal-body {
     .voyage-edit-page .tour-hotel-card-title {
         font-size: 1rem;
     }
+    /* hotel picker grid keeps 2 columns on tablet — single column only on mobile (≤575px below) */
 }
 
 @media (max-width: 767.98px) {
@@ -1426,6 +1684,29 @@ body.voyage-layout-page .modal-body {
     .voyage-edit-page .form-check-input {
         min-width: 22px;
         min-height: 22px;
+    }
+    .voyage-edit-page .tour-hotel-picker-card-media {
+        width: 92px;
+        min-width: 92px;
+    }
+    .voyage-edit-page .tour-hotel-picker-card-placeholder {
+        min-height: 120px;
+    }
+}
+
+/* ---------- Hotel Picker Modal — scroll & grid fixes ---------- */
+
+/* The modal-body handles scrolling; force a good visible height */
+.voyage-edit-page .tour-hotel-picker-modal-content .modal-body {
+    max-height: 75vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Single column only on phones */
+@media (max-width: 575.98px) {
+    .voyage-edit-page .tour-hotel-picker-results {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -2460,5 +2741,599 @@ body.voyage-layout-page .offcanvas {
 
     .voyage-edit-page .ve-nav-tabs .nav-link {
         padding: 10px 14px;
+    }
+}
+
+/* ============================================================================
+   Voyage Edit - Compact Ajinsafro Workflow Overrides
+   ============================================================================ */
+.voyage-edit-page {
+    --ve-aj-blue: #0e3a5a;
+    --ve-aj-blue-soft: #0083c4;
+    --ve-aj-orange: #f37a1f;
+    --ve-aj-orange-dark: #d86514;
+    --ve-aj-bg: #f5f7fa;
+    --ve-aj-card: #ffffff;
+    --ve-aj-border: #e1e8f0;
+    --ve-aj-text: #1a2c40;
+    --ve-aj-muted: #6c7f95;
+}
+
+.voyage-edit-page .page-content {
+    background: var(--ve-aj-bg) !important;
+    padding-bottom: 44px;
+}
+
+.voyage-edit-page .ve-shell {
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+.voyage-edit-page .ve-page-header {
+    background: linear-gradient(135deg, var(--ve-aj-blue) 0%, var(--ve-aj-blue-soft) 100%);
+    color: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(14, 58, 90, 0.1);
+    box-shadow: 0 8px 24px rgba(14, 58, 90, 0.16);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+
+.voyage-edit-page .ve-header-topbar {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.voyage-edit-page .ve-breadcrumb {
+    font-size: 0.74rem;
+}
+
+.voyage-edit-page .ve-breadcrumb a,
+.voyage-edit-page .ve-breadcrumb .active,
+.voyage-edit-page .ve-breadcrumb li + li::before {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.voyage-edit-page .ve-header-main--compact {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.9rem;
+}
+
+.voyage-edit-page .ve-header-main__content {
+    min-width: 0;
+}
+
+.voyage-edit-page .ve-header-main__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.voyage-edit-page .ve-page-title {
+    font-size: 1.25rem;
+    line-height: 1.2;
+    margin: 0;
+    color: #fff;
+}
+
+.voyage-edit-page .ve-page-subtitle {
+    margin-top: 0.2rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 52rem;
+}
+
+.voyage-edit-page .ve-header-meta-line {
+    margin-top: 0.5rem;
+    gap: 0.35rem;
+}
+
+.voyage-edit-page .ve-meta-pill {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.voyage-edit-page .ve-meta-pill--muted {
+    opacity: 0.9;
+}
+
+.voyage-edit-page .ve-status-badge {
+    padding: 0.32rem 0.62rem;
+    font-size: 0.72rem;
+    border-radius: 999px;
+}
+
+.voyage-edit-page .ve-header-main__actions .btn-primary {
+    min-height: 2rem;
+    border-radius: 10px;
+    background: var(--ve-aj-orange);
+    border-color: var(--ve-aj-orange);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.34rem 0.7rem;
+    box-shadow: 0 4px 10px rgba(243, 122, 31, 0.3);
+}
+
+.voyage-edit-page .ve-header-main__actions .btn-primary:hover {
+    background: var(--ve-aj-orange-dark);
+    border-color: var(--ve-aj-orange-dark);
+}
+
+.voyage-edit-page .ve-header-quickbar {
+    margin-top: 0.55rem;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.voyage-edit-page .ve-quick-item {
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    padding: 0.38rem 0.52rem;
+    min-width: 0;
+}
+
+.voyage-edit-page .ve-quick-item span {
+    display: block;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.76);
+}
+
+.voyage-edit-page .ve-quick-item strong {
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.voyage-edit-page .ve-form-toolbar {
+    margin-bottom: 8px;
+}
+
+.voyage-edit-page .ve-form-toolbar.ve-pane-card,
+.voyage-edit-page .ve-tabs-wrapper,
+.voyage-edit-page .ve-editor-body,
+.voyage-edit-page .ve-danger-zone-card,
+.voyage-edit-page .card {
+    border-radius: 12px;
+    border-color: var(--ve-aj-border);
+    box-shadow: 0 4px 14px rgba(14, 58, 90, 0.06);
+}
+
+.voyage-edit-page .ve-form-actions-body {
+    padding: 0.68rem 0.85rem;
+    gap: 0.6rem;
+}
+
+.voyage-edit-page .ve-form-toolbar__copy h5 {
+    font-size: 0.92rem;
+    color: var(--ve-aj-text);
+}
+
+.voyage-edit-page .ve-form-toolbar__eyebrow {
+    font-size: 0.64rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ve-aj-muted);
+}
+
+.voyage-edit-page .ve-form-actions-buttons .btn {
+    min-height: 2.25rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    padding: 0.38rem 0.8rem;
+}
+
+.voyage-edit-page .ve-form-actions-buttons .btn-primary {
+    background: var(--ve-aj-orange);
+    border-color: var(--ve-aj-orange);
+}
+
+.voyage-edit-page .ve-form-actions-buttons .btn-primary:hover {
+    background: var(--ve-aj-orange-dark);
+    border-color: var(--ve-aj-orange-dark);
+}
+
+.voyage-edit-page .ve-tabs-wrapper--workflow {
+    position: sticky;
+    top: 64px;
+    z-index: 150;
+    padding: 0.7rem 0.8rem;
+    margin-bottom: 8px;
+}
+
+.voyage-edit-page .ve-tabs-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.7rem;
+    margin-bottom: 0.55rem;
+}
+
+.voyage-edit-page .ve-tabs-kicker {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #8093aa;
+}
+
+.voyage-edit-page .ve-tabs-title {
+    font-size: 0.96rem;
+    color: var(--ve-aj-blue);
+}
+
+.voyage-edit-page .ve-stepper {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+}
+
+.voyage-edit-page .ve-stepper__step {
+    border: 1px solid #dbe5f0;
+    background: #f9fbfe;
+    border-radius: 10px;
+    padding: 0.45rem 0.55rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+    color: #4f647d;
+    transition: all 0.18s ease;
+}
+
+.voyage-edit-page .ve-stepper__step:hover {
+    border-color: #bad1e8;
+    background: #f1f7fd;
+}
+
+.voyage-edit-page .ve-stepper__step.is-active {
+    border-color: #0083c4;
+    background: #eaf4fc;
+    color: #0e3a5a;
+}
+
+.voyage-edit-page .ve-stepper__index {
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #fff;
+    background: #90a9c1;
+    flex-shrink: 0;
+}
+
+.voyage-edit-page .ve-stepper__step.is-active .ve-stepper__index {
+    background: #0e3a5a;
+}
+
+.voyage-edit-page .ve-stepper__text {
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.voyage-edit-page .ve-subtabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+
+.voyage-edit-page .ve-subtabs__item {
+    border: 1px solid #d8e3ef;
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.24rem 0.58rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #60758d;
+}
+
+.voyage-edit-page .ve-subtabs__item:hover {
+    border-color: #bad1e8;
+    color: #0e3a5a;
+}
+
+.voyage-edit-page .ve-subtabs__item.is-active {
+    background: #eaf4fc;
+    border-color: #8fc1e5;
+    color: #0e3a5a;
+}
+
+.voyage-edit-page .ve-stepper-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.voyage-edit-page .ve-stepper-nav .btn {
+    min-height: 2.05rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.34rem 0.72rem;
+}
+
+.voyage-edit-page .ve-stepper-nav .btn-primary {
+    background: var(--ve-aj-orange);
+    border-color: var(--ve-aj-orange);
+}
+
+.voyage-edit-page .ve-stepper-nav .btn-primary:hover {
+    background: var(--ve-aj-orange-dark);
+    border-color: var(--ve-aj-orange-dark);
+}
+
+.voyage-edit-page .ve-editor-body {
+    padding-top: 0.35rem;
+}
+
+.voyage-edit-page .ve-tab-content {
+    margin-top: 0;
+}
+
+.voyage-edit-page .ve-tab-content.pt-4 {
+    padding-top: 0.45rem !important;
+}
+
+.voyage-edit-page .card {
+    margin-bottom: 0.85rem;
+}
+
+.voyage-edit-page .card-body {
+    padding: 16px 18px;
+}
+
+.voyage-edit-page .ve-pane-card {
+    margin-bottom: 0.75rem;
+}
+
+@media (max-width: 1199px) {
+    .voyage-edit-page .ve-stepper {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 991px) {
+    .voyage-edit-page .ve-shell {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .voyage-edit-page .ve-header-main--compact {
+        flex-direction: column;
+    }
+
+    .voyage-edit-page .ve-header-main__actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .voyage-edit-page .ve-header-quickbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .voyage-edit-page .ve-tabs-wrapper--workflow {
+        top: 56px;
+    }
+}
+
+@media (max-width: 767px) {
+    .voyage-edit-page .ve-page-header {
+        padding: 10px 11px;
+        margin-bottom: 8px;
+    }
+
+    .voyage-edit-page .ve-page-title {
+        font-size: 1.08rem;
+    }
+
+    .voyage-edit-page .ve-page-subtitle {
+        font-size: 0.76rem;
+    }
+
+    .voyage-edit-page .ve-header-quickbar {
+        grid-template-columns: 1fr;
+    }
+
+    .voyage-edit-page .ve-stepper {
+        grid-template-columns: 1fr;
+    }
+
+    .voyage-edit-page .ve-stepper-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .voyage-edit-page .ve-stepper-nav .btn {
+        width: 100%;
+    }
+}
+
+/* Single workflow navigation: show grouped panes by step only */
+.voyage-edit-page .ve-tabs-wrapper--workflow .ve-tab-scroll {
+    display: none !important;
+}
+
+.voyage-edit-page .ve-tab-content.ve-tab-content--workflow > .tab-pane {
+    display: none !important;
+}
+
+.voyage-edit-page .ve-tab-content.ve-tab-content--workflow > .tab-pane.ve-step-visible {
+    display: block !important;
+    background: #fff;
+    border: 1px solid #dfe8f2;
+    border-radius: 12px;
+    padding: 0.7rem 0.8rem 0.15rem;
+    box-shadow: 0 4px 14px rgba(14, 58, 90, 0.05);
+}
+
+.voyage-edit-page .ve-tab-content.ve-tab-content--workflow > .tab-pane.ve-step-visible + .tab-pane.ve-step-visible {
+    margin-top: 0.8rem;
+}
+
+.voyage-edit-page .ve-tab-content.ve-tab-content--workflow > .tab-pane.ve-step-visible::before {
+    content: attr(data-ve-pane-title);
+    display: block;
+    margin: 0 0 0.65rem;
+    padding: 0.15rem 0.1rem 0.5rem;
+    border-bottom: 1px solid #e8eef5;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #0e3a5a;
+    letter-spacing: 0.02em;
+}
+
+.voyage-edit-page .ve-step-sections {
+    margin-top: 0.72rem;
+    border-top: 1px solid #e8eff7;
+    padding-top: 0.58rem;
+}
+
+.voyage-edit-page .ve-step-sections__title {
+    font-size: 0.66rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #7b8ea5;
+    margin-bottom: 0.38rem;
+}
+
+.voyage-edit-page .ve-detail-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.34rem;
+}
+.voyage-edit-page .ve-step-anchor {
+    display: block;
+    height: 1px;
+    margin-top: -6px;
+    margin-bottom: 4px;
+}
+
+.voyage-edit-page .ve-detail-nav__item {
+    border: 1px solid #d8e6f3;
+    background: #f8fbfe;
+    border-radius: 999px;
+    min-height: 1.9rem;
+    padding: 0.32rem 0.66rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    text-align: left;
+    color: #516983;
+    font-size: 0.74rem;
+    font-weight: 700;
+    transition: all 0.16s ease;
+}
+
+.voyage-edit-page .ve-detail-nav__item:hover {
+    background: #eef6fd;
+    border-color: #b5d0e7;
+    color: #0e3a5a;
+}
+
+.voyage-edit-page .ve-detail-nav__item.is-active {
+    background: #eaf4fc;
+    border-color: #78afd9;
+    color: #0e3a5a;
+    box-shadow: 0 2px 8px rgba(0, 131, 196, 0.15);
+}
+
+.voyage-edit-page .ve-detail-nav__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid #9eb4ca;
+    background: #dce7f3;
+    flex-shrink: 0;
+}
+
+.voyage-edit-page .ve-detail-nav__item.is-active .ve-detail-nav__dot {
+    background: #0083c4;
+    border-color: #0083c4;
+}
+
+.voyage-edit-page .ve-detail-nav__label {
+    min-width: 0;
+    line-height: 1.25;
+}
+
+@media (max-width: 1360px) {
+    .voyage-edit-page .ve-detail-nav {
+        gap: 0.28rem;
+    }
+}
+
+@media (max-width: 1199px) {
+    .voyage-edit-page .ve-detail-nav {
+        gap: 0.3rem;
+    }
+
+    .voyage-edit-page .ve-detail-nav__item {
+        min-height: 1.85rem;
+        padding: 0.28rem 0.52rem;
+        font-size: 0.71rem;
+        border-radius: 999px;
+    }
+}
+
+@media (max-width: 767px) {
+    .voyage-edit-page .ve-step-sections {
+        margin-top: 0.58rem;
+        padding-top: 0.48rem;
+    }
+
+    .voyage-edit-page .ve-step-sections__title {
+        margin-bottom: 0.32rem;
+    }
+
+    .voyage-edit-page .ve-detail-nav {
+        gap: 0.26rem;
+    }
+
+    .voyage-edit-page .ve-detail-nav__item {
+        padding: 0.25rem 0.48rem;
+        min-height: 1.72rem;
+        font-size: 0.69rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .voyage-edit-page .ve-detail-nav {
+        gap: 0.22rem;
+    }
+}
+
+.voyage-edit-page .ve-tab-content.ve-tab-content--workflow > .tab-pane.ve-step-visible > .card:first-child {
+    margin-top: 0;
+}
+
+@media (max-width: 767px) {
+    .voyage-edit-page .ve-tab-content.ve-tab-content--workflow > .tab-pane.ve-step-visible {
+        padding: 0.6rem 0.62rem 0.1rem;
     }
 }

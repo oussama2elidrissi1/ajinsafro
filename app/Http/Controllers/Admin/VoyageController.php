@@ -245,7 +245,7 @@ class VoyageController extends Controller
         $tourHotelImageUrl = null;
         $transferArrivalImageUrl = null;
         $transferDepartureImageUrl = null;
-        $otherTourHotelsForCopy = collect();
+        $otherTourHotelsForCopy = $this->getHotelsFromWordPress();
         $otherTourTitles = [];
         $departurePlaces = collect();
         $departurePlaceFlightsFromTour = collect();
@@ -590,11 +590,8 @@ class VoyageController extends Controller
         ]);
         $tourHotel = $tourHotels->first();
         // Liste dâ€™hÃ´tels dâ€™autres voyages pour Â« Choisir un hÃ´tel existant Â» (copie des donnÃ©es)
-        $otherTourHotelsForCopy = TourHotel::where('tour_id', '!=', $id)->orderBy('hotel_name')->get();
+        $otherTourHotelsForCopy = $this->getHotelsFromWordPress();
         $otherTourTitles = [];
-        if ($otherTourHotelsForCopy->isNotEmpty()) {
-            $otherTourTitles = WpPost::on('wp')->whereIn('ID', $otherTourHotelsForCopy->pluck('tour_id')->unique()->filter()->values()->toArray())->pluck('post_title', 'ID')->toArray();
-        }
         $transfers = TourTransfer::getForTour($id);
         $transferArrivals = $transfers['arrival'];
         $transferDepartures = $transfers['departure'];
@@ -665,6 +662,100 @@ class VoyageController extends Controller
         ]);
 
         return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras'));
+    }
+
+    /**
+     * Source des hÃ´tels "Ajouter comme nouveau sÃ©jour" depuis WordPress (post_type=st_hotel).
+     *
+     * @return \Illuminate\Support\Collection<int, object>
+     */
+    private function getHotelsFromWordPress(): Collection
+    {
+        try {
+            $postsTable = (new \App\Models\WpPost())->getTable();
+            $hotelsTable = (new \App\Models\StHotel())->getTable();
+            $postmetaTable = (new \App\Models\WpPostmeta())->getTable();
+
+            $metaSub = DB::table($postmetaTable . ' as pm')
+                ->select(
+                    'pm.post_id',
+                    DB::raw("MAX(CASE WHEN pm.meta_key = 'address' THEN pm.meta_value END) as meta_address"),
+                    DB::raw("MAX(CASE WHEN pm.meta_key = 'location' THEN pm.meta_value END) as meta_location"),
+                    DB::raw("MAX(CASE WHEN pm.meta_key = 'hotel_star' THEN pm.meta_value END) as meta_stars"),
+                    DB::raw("MAX(CASE WHEN pm.meta_key = '_thumbnail_id' THEN pm.meta_value END) as meta_thumbnail_id")
+                )
+                ->whereIn('pm.meta_key', ['address', 'location', 'hotel_star', '_thumbnail_id'])
+                ->groupBy('pm.post_id');
+
+            $rows = \App\Models\WpPost::query()
+                ->from($postsTable . ' as p')
+                ->leftJoin($hotelsTable . ' as sh', 'sh.post_id', '=', 'p.ID')
+                ->leftJoinSub($metaSub, 'pm', function ($join) {
+                    $join->on('pm.post_id', '=', 'p.ID');
+                })
+                ->select(
+                    'p.ID as wp_post_id',
+                    'p.post_title',
+                    'p.post_status',
+                    DB::raw("COALESCE(NULLIF(sh.address, ''), NULLIF(pm.meta_address, ''), '') as address"),
+                    DB::raw("COALESCE(NULLIF(pm.meta_location, ''), '') as location"),
+                    DB::raw("COALESCE(NULLIF(sh.hotel_star, ''), NULLIF(pm.meta_stars, ''), '') as stars"),
+                    DB::raw("pm.meta_thumbnail_id as thumbnail_id")
+                )
+                ->where('p.post_type', 'st_hotel')
+                ->whereIn('p.post_status', ['publish', 'draft', 'private', 'pending'])
+                ->orderBy('p.post_title')
+                ->orderBy('p.ID')
+                ->get();
+
+            $wpSiteUrl = rtrim((string) config('wordpress.site_url', ''), '/');
+
+            return $rows->map(function ($row) use ($wpSiteUrl) {
+                $starsRaw = trim((string) ($row->stars ?? ''));
+                $stars = null;
+                if ($starsRaw !== '') {
+                    $stars = (int) round((float) str_replace(',', '.', $starsRaw));
+                    $stars = max(0, min(5, $stars));
+                }
+
+                $address = trim((string) ($row->address ?? ''));
+                $location = trim((string) ($row->location ?? ''));
+                $destinationSource = $location !== '' ? $location : $address;
+                $destination = '';
+                if ($destinationSource !== '') {
+                    $segments = preg_split('/[,|-]/', $destinationSource);
+                    $destination = trim((string) ($segments[0] ?? $destinationSource));
+                }
+
+                $imageId = (int) ($row->thumbnail_id ?? 0);
+                $imageUrl = null;
+                if ($imageId > 0) {
+                    try {
+                        $imageUrl = WpHeroImageService::getAttachmentUrl($imageId);
+                    } catch (\Throwable $e) {
+                        $imageUrl = null;
+                    }
+                }
+                $wpUrl = $wpSiteUrl !== '' ? ($wpSiteUrl . '/?post_type=st_hotel&p=' . (int) ($row->wp_post_id ?? 0)) : null;
+
+                return (object) [
+                    'wp_post_id' => (int) ($row->wp_post_id ?? 0),
+                    'hotel_name' => trim((string) ($row->post_title ?? '')),
+                    'address' => $address !== '' ? $address : null,
+                    'location' => $location !== '' ? $location : null,
+                    'destination' => $destination !== '' ? $destination : null,
+                    'stars' => $stars,
+                    'image_id' => $imageId > 0 ? $imageId : null,
+                    'image_url' => ! empty($imageUrl) ? (string) $imageUrl : null,
+                    'wp_url' => $wpUrl,
+                    'post_status' => (string) ($row->post_status ?? ''),
+                ];
+            })->values();
+        } catch (\Throwable $e) {
+            Log::warning('VoyageController@getHotelsFromWordPress failed', ['error' => $e->getMessage()]);
+
+            return collect();
+        }
     }
 
     private function ensureFlightOptionsFromLegacy(int $voyageId, int $lastDayNumber): void
@@ -848,7 +939,6 @@ class VoyageController extends Controller
 
     /**
      * Sync hotels for tour: replace all by request data (tour_hotels[] or tour_hotel).
-     * RÃ¨gle mÃ©tier : un seul hÃ´tel par voyage (premier Ã©lÃ©ment conservÃ© si plusieurs).
      *
      * @return int[] IDs des enregistrements TourHotel crÃ©Ã©s, dans lâ€™ordre dâ€™affichage (pour sync des chambres).
      */
@@ -1531,16 +1621,97 @@ class VoyageController extends Controller
             }
 
             $postedRow = $this->findPostedDepartureAllocationRow($postedAllocations, $departure, $travelDate);
+            $departureCapacity = max(0, (int) ($departure->total_capacity ?? 0));
+            $fallbackRows = $this->buildDefaultDepartureRoomAllocationsFromTourHotels(
+                (int) ($voyage->wp_post_id ?? 0),
+                $departureCapacity
+            );
+            if ($fallbackRows === []) {
+                $fallbackRows = $this->buildDefaultDepartureRoomAllocations($departureCapacity);
+            }
+
             if (is_array($postedRow)) {
                 $rows = $this->normalizePostedDepartureAllocationRooms($postedRow['rooms'] ?? [], $hotelIdsOrdered);
-                $this->replaceDepartureRoomAllocations($departure, $rows !== [] ? $rows : $this->buildDefaultDepartureRoomAllocations((int) $departure->total_capacity));
+                $this->replaceDepartureRoomAllocations($departure, $rows !== [] ? $rows : $fallbackRows);
                 continue;
             }
 
-            if (! $departure->roomAllocations()->exists()) {
-                $this->replaceDepartureRoomAllocations($departure, $this->buildDefaultDepartureRoomAllocations((int) $departure->total_capacity));
+            // Keep allocations aligned with all hotel stays when no explicit payload row is posted.
+            $this->replaceDepartureRoomAllocations($departure, $fallbackRows);
+        }
+    }
+
+    private function buildDefaultDepartureRoomAllocationsFromTourHotels(int $wpTourId, int $capacity): array
+    {
+        if ($wpTourId <= 0) {
+            return [];
+        }
+
+        $capacity = max(0, $capacity);
+        $rows = [];
+        $sortOrder = 0;
+        $tourHotels = TourHotel::getAllForTour($wpTourId)->load('rooms');
+
+        foreach ($tourHotels as $hotel) {
+            $hotelRows = [];
+            $coveredSeats = 0;
+
+            foreach ($hotel->rooms as $room) {
+                if (! (bool) ($room->is_active ?? true)) {
+                    continue;
+                }
+
+                $roomType = trim((string) ($room->room_type ?? ''));
+                if ($roomType === '') {
+                    continue;
+                }
+
+                $quantity = max(0, (int) ($room->room_count ?? 0));
+                if ($quantity <= 0) {
+                    continue;
+                }
+
+                $capacityPerRoom = TourPlacesCalculator::effectiveCapacity(
+                    (int) ($room->capacity_total ?? 0),
+                    (int) ($room->capacity_adults ?? 0),
+                    (int) ($room->capacity_children ?? 0),
+                );
+                if ($capacityPerRoom <= 0) {
+                    continue;
+                }
+
+                $coveredSeats += ($quantity * $capacityPerRoom);
+                $hotelRows[] = [
+                    'hotel_id' => (int) $hotel->id,
+                    'room_type' => $roomType,
+                    'quantity' => $quantity,
+                    'capacity_per_room' => $capacityPerRoom,
+                    'sort_order' => 0,
+                ];
+            }
+
+            if ($hotelRows === []) {
+                $rows = array_merge(
+                    $rows,
+                    $this->buildDefaultDepartureRoomAllocationsForHotel((int) $hotel->id, $capacity, $sortOrder)
+                );
+                continue;
+            }
+
+            foreach ($hotelRows as $hotelRow) {
+                $hotelRow['sort_order'] = $sortOrder++;
+                $rows[] = $hotelRow;
+            }
+
+            if ($capacity > $coveredSeats) {
+                $rows = array_merge(
+                    $rows,
+                    $this->buildDefaultDepartureRoomAllocationsForHotel((int) $hotel->id, $capacity - $coveredSeats, $sortOrder)
+                );
             }
         }
+
+        return $rows;
     }
 
     private function resolveDepartureForTravelDate(Voyage $voyage, TravelDate $travelDate): ?Departure
@@ -1617,6 +1788,10 @@ class VoyageController extends Controller
             } elseif ($hotelId !== null && ! in_array($hotelId, $hotelIdsOrdered, true)) {
                 $hotelId = null;
             }
+            if ($hotelId === null && count($hotelIdsOrdered) === 1) {
+                $singleHotelId = reset($hotelIdsOrdered);
+                $hotelId = $singleHotelId !== false ? (int) $singleHotelId : null;
+            }
 
             $normalized[] = [
                 'hotel_id' => $hotelId,
@@ -1648,6 +1823,13 @@ class VoyageController extends Controller
 
     private function buildDefaultDepartureRoomAllocations(int $capacity): array
     {
+        $sortOrder = 0;
+
+        return $this->buildDefaultDepartureRoomAllocationsForHotel(null, $capacity, $sortOrder);
+    }
+
+    private function buildDefaultDepartureRoomAllocationsForHotel(?int $hotelId, int $capacity, int &$sortOrder): array
+    {
         $capacity = max(0, $capacity);
         if ($capacity === 0) {
             return [];
@@ -1657,21 +1839,21 @@ class VoyageController extends Controller
         $doubleQty = intdiv($capacity, 2);
         if ($doubleQty > 0) {
             $rows[] = [
-                'hotel_id' => null,
+                'hotel_id' => $hotelId,
                 'room_type' => 'Double',
                 'quantity' => $doubleQty,
                 'capacity_per_room' => 2,
-                'sort_order' => 0,
+                'sort_order' => $sortOrder++,
             ];
         }
 
         if ($capacity % 2 !== 0) {
             $rows[] = [
-                'hotel_id' => null,
+                'hotel_id' => $hotelId,
                 'room_type' => 'Single',
                 'quantity' => 1,
                 'capacity_per_room' => 1,
-                'sort_order' => count($rows),
+                'sort_order' => $sortOrder++,
             ];
         }
 

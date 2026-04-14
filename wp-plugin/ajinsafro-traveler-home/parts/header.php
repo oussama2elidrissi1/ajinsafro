@@ -83,9 +83,10 @@ $resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $vo
     return $url_value !== '' ? $url_value : '#';
 };
 
-$is_voyages_page = function_exists( 'ajth_is_voyages_context' ) ? ajth_is_voyages_context() : ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) );
+$is_voyages_page     = function_exists( 'ajth_is_voyages_context' )     ? ajth_is_voyages_context()     : ( is_page( 'voyages' ) || is_post_type_archive( 'st_tours' ) );
 $is_hebergement_page = function_exists( 'ajth_is_hebergement_context' ) ? ajth_is_hebergement_context() : false;
-$is_activites_page = function_exists( 'ajth_is_activites_context' ) ? ajth_is_activites_context() : false;
+$is_activites_page   = function_exists( 'ajth_is_activites_context' )   ? ajth_is_activites_context()   : false;
+$is_group_deals_page = function_exists( 'ajth_is_group_deals_context' ) ? ajth_is_group_deals_context() : is_page( 'group-deals' );
 
 
 $title_icon_map = array(
@@ -147,7 +148,7 @@ $default_menu_items = array(
         'label'    => 'GROUP DEALS',
         'url'      => $group_deals_page_url,
         'icon'     => 'fas fa-users',
-        'active'   => false,
+        'active'   => $is_group_deals_page,
         'children' => array(),
     ),
 );

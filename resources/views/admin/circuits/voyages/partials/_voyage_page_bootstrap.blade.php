@@ -18,6 +18,17 @@
                 'check_in_day' => $hotel->check_in_day ?? $hotel->day_number,
                 'check_out_day' => $hotel->check_out_day ?? $hotel->day_number,
                 'day_number' => $hotel->day_number,
+                'rooms' => collect($hotel->rooms ?? [])->map(function ($room) {
+                    return [
+                        'id' => (int) ($room->id ?? 0),
+                        'room_type' => (string) ($room->room_type ?? ''),
+                        'room_count' => (int) ($room->room_count ?? 0),
+                        'capacity_total' => (int) ($room->capacity_total ?? 0),
+                        'capacity_adults' => (int) ($room->capacity_adults ?? 0),
+                        'capacity_children' => (int) ($room->capacity_children ?? 0),
+                        'is_active' => (bool) ($room->is_active ?? true),
+                    ];
+                })->values()->all(),
             ],
         ];
     })->all();

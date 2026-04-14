@@ -1084,8 +1084,18 @@ function ajth_maybe_flush_rewrite_rules_once(): void
     flush_rewrite_rules(false);
     update_option('ajth_voyages_routing_flush_v1', '1', true);
 }
+
+function ajth_maybe_flush_rewrite_rules_group_deals(): void
+{
+    if (get_option('ajth_group_deals_routing_flush_v1')) {
+        return;
+    }
+    flush_rewrite_rules(false);
+    update_option('ajth_group_deals_routing_flush_v1', '1', true);
+}
 add_action('init', 'ajth_ensure_voyages_page', 10);
 add_action('init', 'ajth_maybe_flush_rewrite_rules_once', 99);
+add_action('init', 'ajth_maybe_flush_rewrite_rules_group_deals', 99);
 
 /* ──────────────────────────────────────────────
  * Ensure "Vols" page exists (slug: vols)
@@ -1168,27 +1178,17 @@ function ajth_get_maintenance_url(): string
 
 function ajth_get_group_deals_url(): string
 {
-    $fallback = home_url('/group-deals/');
-    $login_endpoint = function_exists('ajth_public_login_endpoint')
-        ? trim((string) ajth_public_login_endpoint())
-        : '';
-
-    if ($login_endpoint !== '') {
-        $parts = wp_parse_url($login_endpoint);
-        if (is_array($parts) && ! empty($parts['host'])) {
-            $scheme = ! empty($parts['scheme']) ? (string) $parts['scheme'] : 'https';
-            $base = $scheme.'://'.$parts['host'];
-            if (! empty($parts['port'])) {
-                $base .= ':'.(int) $parts['port'];
-            }
-            $fallback = untrailingslashit($base).'/group-deals';
+    // Même pattern que ajth_get_voyages_page_url() / ajth_get_hebergement_page_url() :
+    // on pointe toujours vers la page WordPress, jamais vers le booking server.
+    $page = get_page_by_path('group-deals');
+    if ($page instanceof WP_Post) {
+        $url = get_permalink($page);
+        if ($url) {
+            return $url;
         }
     }
 
-    $resolved = apply_filters('ajth_group_deals_url', $fallback);
-    $resolved = is_string($resolved) ? trim($resolved) : '';
-
-    return $resolved !== '' ? $resolved : $fallback;
+    return home_url('/group-deals/');
 }
 
 function ajth_is_group_deals_label($label): bool
@@ -1570,8 +1570,14 @@ function ajth_activate()
 }
 register_activation_hook(__FILE__, 'ajth_activate');
 
+function ajth_ensure_group_deals_page(): void
+{
+    ajth_ensure_catalog_page('group-deals', 'Group Deals', '<!-- Ajinsafro Traveler Home : template group-deals (plugin). -->');
+}
+
 add_action('init', 'ajth_ensure_login_page', 20);
 add_action('init', 'ajth_ensure_maintenance_page', 20);
 add_action('init', 'ajth_ensure_hebergement_page', 20);
 add_action('init', 'ajth_ensure_activites_page', 20);
 add_action('init', 'ajth_ensure_transfert_page', 20);
+add_action('init', 'ajth_ensure_group_deals_page', 20);

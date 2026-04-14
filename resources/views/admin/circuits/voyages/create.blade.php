@@ -3,7 +3,7 @@
     Créer un tour WordPress
 @endsection
 @push('styles')
-    <link href="{{ URL::asset('css/voyage-edit.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('css/voyage-edit.css?v=' . md5_file(public_path('css/voyage-edit.css'))) }}" rel="stylesheet" type="text/css" />
 @endpush
 @section('content')
 @php

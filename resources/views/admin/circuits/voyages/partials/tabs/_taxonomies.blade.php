@@ -1,4 +1,4 @@
-<div class="tab-pane" id="taxonomies" role="tabpanel">
+<div class="tab-pane" id="taxonomies" role="tabpanel" data-ve-pane-title="Classement">
                 @include('admin.circuits.voyages.partials._voyage_laravel_themes')
                 <div class="card ve-pane-card">
                     <div class="card-body">

@@ -30,7 +30,7 @@
 @endsection
 
 @push('styles')
-    <link href="{{ URL::asset('css/voyage-edit.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('css/voyage-edit.css?v=' . md5_file(public_path('css/voyage-edit.css'))) }}" rel="stylesheet" type="text/css" />
 @endpush
 
 @section('content')
@@ -75,7 +75,7 @@
                                 @include('admin.circuits.voyages.partials.tabs._availability')
                                 @include('admin.circuits.voyages.partials.tabs._media')
                                 @include('admin.circuits.voyages.partials.tabs._taxonomies')
-                                @include('admin.circuits.voyages.partials.tabs._flights')
+                                @include('admin.circuits.voyages.partials.tabs._logistics')
                                 @include('admin.circuits.voyages.partials.tabs._hotels')
                                 @include('admin.circuits.voyages.partials.tabs._transfers')
                                 @include('admin.circuits.voyages.partials.tabs._activities')
@@ -126,4 +126,256 @@
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-editor-runtime.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-edit-page.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var workflow = document.querySelector('[data-ve-workflow]');
+            if (!workflow) return;
+
+            var stepButtons = Array.prototype.slice.call(workflow.querySelectorAll('[data-ve-step]'));
+            var prevBtn = workflow.querySelector('[data-ve-step-prev]');
+            var nextBtn = workflow.querySelector('[data-ve-step-next]');
+            var currentLabel = workflow.querySelector('[data-ve-current-step-label]');
+            var tabContent = document.querySelector('.ve-tab-content');
+            var allPanes = tabContent ? Array.prototype.slice.call(tabContent.querySelectorAll('.tab-pane')).filter(function (pane) {
+                return pane.parentElement === tabContent;
+            }) : [];
+            var detailNav = workflow.querySelector('[data-ve-detail-nav]');
+            var detailObserver = null;
+
+            function tabLink(target) {
+                return document.querySelector('a[href="' + target + '"][data-bs-toggle="tab"]');
+            }
+
+            function showTab(target) {
+                var link = tabLink(target);
+                if (!link) return false;
+                if (window.bootstrap && bootstrap.Tab) {
+                    bootstrap.Tab.getOrCreateInstance(link).show();
+                    return true;
+                }
+                // Fallback when Bootstrap JS is not exposed globally.
+                var navLinks = Array.prototype.slice.call(document.querySelectorAll('.ve-nav-tabs .nav-link[data-bs-toggle="tab"]'));
+                navLinks.forEach(function (nav) {
+                    var isActive = nav === link;
+                    nav.classList.toggle('active', isActive);
+                    nav.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+                try {
+                    link.dispatchEvent(new Event('shown.bs.tab', { bubbles: true }));
+                } catch (e) {
+                    // Ignore legacy browsers: UI is synced by direct call in handlers.
+                }
+                return true;
+            }
+
+            function getStepForTarget(target) {
+                return stepButtons.find(function (btn) {
+                    var tabs = String(btn.getAttribute('data-ve-step-tabs') || '').split(',').map(function (s) { return s.trim(); });
+                    return tabs.indexOf(target) >= 0;
+                }) || null;
+            }
+
+            function getTabsForStep(stepBtn) {
+                return String(stepBtn.getAttribute('data-ve-step-tabs') || '')
+                    .split(',')
+                    .map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s.charAt(0) === '#'; });
+            }
+
+            function sectionIdForTarget(target) {
+                return 've-sec-' + String(target || '').replace('#', '');
+            }
+
+            function stickyOffset() {
+                var tabsWrap = workflow.closest('.ve-tabs-wrapper--workflow') || workflow;
+                var tabsHeight = tabsWrap ? tabsWrap.getBoundingClientRect().height : 0;
+                return Math.max(84, Math.round(tabsHeight + 30));
+            }
+
+            function ensureSectionAnchors(stepBtn) {
+                var targets = getTabsForStep(stepBtn);
+                targets.forEach(function (target) {
+                    var pane = document.querySelector(target);
+                    if (!pane) return;
+                    var secId = sectionIdForTarget(target);
+                    var existing = pane.querySelector('.ve-step-anchor[data-ve-anchor="' + secId + '"]');
+                    if (!existing) {
+                        var anchor = document.createElement('span');
+                        anchor.className = 've-step-anchor';
+                        anchor.setAttribute('data-ve-anchor', secId);
+                        anchor.setAttribute('id', secId);
+                        anchor.setAttribute('aria-hidden', 'true');
+                        pane.insertBefore(anchor, pane.firstChild);
+                    }
+                });
+            }
+
+            function titleForTarget(target) {
+                var pane = document.querySelector(target);
+                if (!pane) return target.replace('#', '');
+                var t = pane.getAttribute('data-ve-pane-title');
+                return t && t.trim() !== '' ? t : target.replace('#', '');
+            }
+
+            function clearDetailObserver() {
+                if (detailObserver) {
+                    detailObserver.disconnect();
+                    detailObserver = null;
+                }
+            }
+
+            function activateDetailItem(target) {
+                if (!detailNav) return;
+                detailNav.querySelectorAll('[data-ve-detail-target]').forEach(function (item) {
+                    item.classList.toggle('is-active', item.getAttribute('data-ve-detail-target') === target);
+                });
+            }
+
+            function scrollToTarget(target) {
+                if (!target) return;
+                var section = document.getElementById(sectionIdForTarget(target))
+                    || document.querySelector(target + '.ve-step-visible')
+                    || document.querySelector(target);
+                if (!section) return;
+                var top = section.getBoundingClientRect().top + window.pageYOffset - stickyOffset();
+                window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            }
+
+            function renderDetailNav(stepBtn) {
+                if (!detailNav) return;
+                var targets = getTabsForStep(stepBtn);
+                if (!targets.length) {
+                    detailNav.innerHTML = '';
+                    return;
+                }
+                ensureSectionAnchors(stepBtn);
+                detailNav.innerHTML = targets.map(function (target, idx) {
+                    return '<button type="button" class="ve-detail-nav__item' + (idx === 0 ? ' is-active' : '') + '" data-ve-detail-target="' + target + '">' +
+                        '<span class="ve-detail-nav__dot"></span>' +
+                        '<span class="ve-detail-nav__label">' + titleForTarget(target) + '</span>' +
+                    '</button>';
+                }).join('');
+
+                detailNav.querySelectorAll('[data-ve-detail-target]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var target = btn.getAttribute('data-ve-detail-target');
+                        if (!target) return;
+                        var changed = showTab(target);
+                        if (!changed) return;
+                        syncUIFromTarget(target);
+                        window.requestAnimationFrame(function () {
+                            scrollToTarget(target);
+                        });
+                        activateDetailItem(target);
+                    });
+                });
+            }
+
+            function bindDetailObserver(stepBtn) {
+                if (!detailNav || !('IntersectionObserver' in window)) return;
+                clearDetailObserver();
+                var targets = getTabsForStep(stepBtn);
+                var panes = targets.map(function (target) {
+                    return document.querySelector(target + '.ve-step-visible');
+                }).filter(Boolean);
+                if (!panes.length) return;
+
+                detailObserver = new IntersectionObserver(function (entries) {
+                    var visible = entries
+                        .filter(function (entry) { return entry.isIntersecting; })
+                        .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+                    if (!visible.length) return;
+                    var pane = visible[0].target;
+                    if (!pane || !pane.id) return;
+                    activateDetailItem('#' + pane.id);
+                }, { root: null, rootMargin: '-25% 0px -62% 0px', threshold: [0.01, 0.15, 0.3] });
+
+                panes.forEach(function (pane) { detailObserver.observe(pane); });
+            }
+
+            function paintStepPanes(stepBtn) {
+                if (!tabContent || !allPanes.length || !stepBtn) return;
+                tabContent.classList.add('ve-tab-content--workflow');
+                var visibleTargets = getTabsForStep(stepBtn);
+                allPanes.forEach(function (pane) {
+                    var id = pane.getAttribute('id') || '';
+                    var target = id ? ('#' + id) : '';
+                    var visible = visibleTargets.indexOf(target) >= 0;
+                    pane.classList.toggle('show', visible);
+                    pane.classList.toggle('active', visible);
+                    pane.classList.toggle('ve-step-visible', visible);
+                    pane.setAttribute('aria-hidden', visible ? 'false' : 'true');
+                });
+            }
+
+            function syncUIFromTarget(target) {
+                var step = getStepForTarget(target) || stepButtons[0] || null;
+                if (!step) return;
+
+                stepButtons.forEach(function (btn) {
+                    btn.classList.toggle('is-active', btn === step);
+                });
+
+                paintStepPanes(step);
+                renderDetailNav(step);
+                bindDetailObserver(step);
+                if (target) activateDetailItem(target);
+
+                if (currentLabel) {
+                    currentLabel.textContent = step.getAttribute('data-ve-step-label') || '';
+                }
+
+                var currentIndex = stepButtons.indexOf(step);
+                if (prevBtn) prevBtn.disabled = currentIndex <= 0;
+                if (nextBtn) nextBtn.disabled = currentIndex >= stepButtons.length - 1;
+            }
+
+            stepButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var target = btn.getAttribute('data-ve-step-target');
+                    if (!target) return;
+                    var changed = showTab(target);
+                    if (!changed) return;
+                    syncUIFromTarget(target);
+                });
+            });
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function () {
+                    var active = workflow.querySelector('[data-ve-step].is-active');
+                    var index = stepButtons.indexOf(active);
+                    if (index <= 0) return;
+                    var prevStep = stepButtons[index - 1];
+                    var target = prevStep ? prevStep.getAttribute('data-ve-step-target') : null;
+                    if (target && showTab(target)) {
+                        syncUIFromTarget(target);
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function () {
+                    var active = workflow.querySelector('[data-ve-step].is-active');
+                    var index = stepButtons.indexOf(active);
+                    if (index < 0 || index >= stepButtons.length - 1) return;
+                    var nextStep = stepButtons[index + 1];
+                    var target = nextStep ? nextStep.getAttribute('data-ve-step-target') : null;
+                    if (target && showTab(target)) {
+                        syncUIFromTarget(target);
+                    }
+                });
+            }
+
+            document.addEventListener('shown.bs.tab', function (e) {
+                var target = e && e.target ? e.target.getAttribute('href') : null;
+                if (!target || target.charAt(0) !== '#') return;
+                syncUIFromTarget(target);
+            });
+
+            var activeTab = document.querySelector('.ve-nav-tabs .nav-link.active[data-bs-toggle="tab"]');
+            syncUIFromTarget(activeTab ? activeTab.getAttribute('href') : '#basic');
+
+            window.addEventListener('beforeunload', clearDetailObserver);
+        });
+    </script>
 @endpush

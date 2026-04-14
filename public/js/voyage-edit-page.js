@@ -59,6 +59,7 @@
     var bootstrapRows = safeJsonParse(bootstrapEl, []);
     var allocationState = {};
     var openState = {};
+    var lastHotelsTopologyKey = '';
 
     bootstrapRows.forEach(function (row) {
         if (!row) return;
@@ -107,20 +108,153 @@
         };
     }
 
-    function defaultRooms(capacity) {
-        var seats = Math.max(0, parseInt(String(capacity || '0'), 10) || 0);
+    function buildFallbackRoomsForHotel(seats, hotel) {
+        var safeSeats = Math.max(0, parseInt(String(seats || '0'), 10) || 0);
+        if (safeSeats <= 0) return [];
+
+        var hotelId = hotel && hotel.hotel_id ? String(hotel.hotel_id) : '';
+        var hotelIndex = hotel && hotel.index != null ? String(hotel.index) : '';
         var rows = [];
-        var doubles = Math.floor(seats / 2);
+        var doubles = Math.floor(safeSeats / 2);
 
         if (doubles > 0) {
-            rows.push({ room_type: 'Double', quantity: doubles, capacity_per_room: 2, hotel_id: '', hotel_index: '' });
+            rows.push({
+                room_type: 'Double',
+                quantity: doubles,
+                capacity_per_room: 2,
+                hotel_id: hotelId,
+                hotel_index: hotelIndex
+            });
         }
 
-        if (seats % 2 === 1) {
-            rows.push({ room_type: 'Single', quantity: 1, capacity_per_room: 1, hotel_id: '', hotel_index: '' });
+        if (safeSeats % 2 === 1) {
+            rows.push({
+                room_type: 'Single',
+                quantity: 1,
+                capacity_per_room: 1,
+                hotel_id: hotelId,
+                hotel_index: hotelIndex
+            });
         }
 
         return rows;
+    }
+
+    function defaultRooms(capacity, hotelsOverride) {
+        var hotels = Array.isArray(hotelsOverride) ? hotelsOverride : collectHotels();
+        var seats = Math.max(0, parseInt(String(capacity || '0'), 10) || 0);
+
+        if (hotels.length) {
+            var rows = [];
+
+            hotels.forEach(function (hotel) {
+                var hotelRows = [];
+                var covered = 0;
+
+                (hotel.rooms || []).forEach(function (room) {
+                    var roomType = String(room.room_type || '').trim();
+                    var quantity = Math.max(0, parseInt(String(room.room_count || '0'), 10) || 0);
+                    var capacityPerRoom = Math.max(1, parseInt(String(room.capacity_per_room || '1'), 10) || 1);
+                    if (!roomType || quantity <= 0 || capacityPerRoom <= 0) return;
+
+                    covered += quantity * capacityPerRoom;
+                    hotelRows.push({
+                        room_type: roomType,
+                        quantity: quantity,
+                        capacity_per_room: capacityPerRoom,
+                        hotel_id: hotel.hotel_id || '',
+                        hotel_index: hotel.index
+                    });
+                });
+
+                if (!hotelRows.length) {
+                    hotelRows = buildFallbackRoomsForHotel(seats, hotel);
+                } else if (seats > covered) {
+                    hotelRows = hotelRows.concat(buildFallbackRoomsForHotel(seats - covered, hotel));
+                }
+
+                rows = rows.concat(hotelRows);
+            });
+
+            if (rows.length) {
+                return rows;
+            }
+        }
+
+        return buildFallbackRoomsForHotel(seats, null);
+    }
+
+    function buildHotelsTopologyKey(hotels) {
+        return (hotels || []).map(function (hotel, index) {
+            var hotelIndex = hotel && hotel.index != null ? String(hotel.index) : String(index);
+            var hotelId = hotel && hotel.hotel_id != null ? String(hotel.hotel_id) : '';
+            return hotelIndex + '::' + hotelId;
+        }).join('|');
+    }
+
+    function buildUniqueHotelIndexByHotelId(hotels) {
+        var counts = {};
+        (hotels || []).forEach(function (hotel) {
+            if (!hotel || hotel.hotel_id == null || String(hotel.hotel_id) === '') return;
+            var key = String(hotel.hotel_id);
+            counts[key] = (counts[key] || 0) + 1;
+        });
+
+        var unique = {};
+        (hotels || []).forEach(function (hotel, idx) {
+            if (!hotel || hotel.hotel_id == null || String(hotel.hotel_id) === '') return;
+            var key = String(hotel.hotel_id);
+            if ((counts[key] || 0) !== 1) return;
+            var indexKey = hotel.index != null ? String(hotel.index) : String(idx);
+            unique[key] = indexKey;
+        });
+        return unique;
+    }
+
+    function normalizeRoomsAssociations(rooms, hotels) {
+        var normalized = Array.isArray(rooms) ? rooms.map(normalizeRoomRow).filter(Boolean) : [];
+        if (!normalized.length || !Array.isArray(hotels) || !hotels.length) return normalized;
+
+        var byHotelIndex = {};
+        var uniqueHotelIndexByHotelId = buildUniqueHotelIndexByHotelId(hotels);
+        hotels.forEach(function (hotel, idx) {
+            if (!hotel) return;
+            var hotelIndex = hotel.index != null ? String(hotel.index) : String(idx);
+            var hotelId = hotel.hotel_id != null ? String(hotel.hotel_id) : '';
+            byHotelIndex[hotelIndex] = { hotel_index: hotelIndex, hotel_id: hotelId };
+        });
+
+        var firstHotel = hotels[0];
+        var firstIndex = firstHotel && firstHotel.index != null ? String(firstHotel.index) : '0';
+        var firstId = firstHotel && firstHotel.hotel_id != null ? String(firstHotel.hotel_id) : '';
+
+        return normalized.map(function (room) {
+            var roomHotelId = room.hotel_id != null ? String(room.hotel_id) : '';
+            var roomHotelIndex = room.hotel_index != null ? String(room.hotel_index) : '';
+
+            if (roomHotelIndex !== '' && byHotelIndex[roomHotelIndex]) {
+                room.hotel_index = byHotelIndex[roomHotelIndex].hotel_index;
+                room.hotel_id = byHotelIndex[roomHotelIndex].hotel_id;
+                return room;
+            }
+
+            if (roomHotelId !== '' && uniqueHotelIndexByHotelId[roomHotelId] && byHotelIndex[uniqueHotelIndexByHotelId[roomHotelId]]) {
+                var resolved = byHotelIndex[uniqueHotelIndexByHotelId[roomHotelId]];
+                room.hotel_index = resolved.hotel_index;
+                room.hotel_id = resolved.hotel_id;
+                return room;
+            }
+
+            if (hotels.length === 1) {
+                room.hotel_index = firstIndex;
+                room.hotel_id = firstId;
+            } else {
+                room.hotel_index = '';
+                room.hotel_id = '';
+            }
+
+            return room;
+        });
     }
 
     function collectTravelDates() {
@@ -153,37 +287,224 @@
         return parts[2] + '/' + parts[1] + '/' + parts[0];
     }
 
+    function roomCoveredSeats(room) {
+        var quantity = Math.max(0, parseInt(String((room || {}).quantity || '0'), 10) || 0);
+        var capacityPerRoom = Math.max(1, parseInt(String((room || {}).capacity_per_room || '1'), 10) || 1);
+        return quantity * capacityPerRoom;
+    }
+
     function coverageStats(rooms) {
         var covered = 0;
         (rooms || []).forEach(function (room) {
-            covered += (parseInt(String(room.quantity || '0'), 10) || 0) * (parseInt(String(room.capacity_per_room || '1'), 10) || 1);
+            covered += roomCoveredSeats(room);
         });
         return covered;
     }
 
-    function coverageBadge(capacity, covered) {
-        if (covered === capacity) {
-            return '<span class="badge bg-success-subtle text-success border border-success-subtle">Couverture exacte</span>';
-        }
-        if (covered < capacity) {
-            return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Places insuffisantes</span>';
-        }
-        return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Places excédentaires</span>';
+    function getStayCoverageState(expected, covered) {
+        if (covered === expected) return 'exact';
+        if (covered < expected) return 'under';
+        return 'over';
     }
 
-    function coverageStateClass(capacity, covered) {
-        if (covered === capacity) return 've-departure-status--exact';
-        if (covered < capacity) return 've-departure-status--under';
+    function stayCoverageBadge(state) {
+        if (state === 'exact') return 'bg-success-subtle text-success border border-success-subtle';
+        if (state === 'under') return 'bg-warning-subtle text-warning border border-warning-subtle';
+        return 'bg-danger-subtle text-danger border border-danger-subtle';
+    }
+
+    function buildDepartureCoverage(hotels, rooms, seats) {
+        var expected = Math.max(0, parseInt(String(seats || '0'), 10) || 0);
+        var byHotelIndex = {};
+        var uniqueHotelIndexByHotelId = buildUniqueHotelIndexByHotelId(hotels);
+        var stays = (hotels || []).map(function (hotel, idx) {
+            var indexKey = hotel && hotel.index != null ? String(hotel.index) : String(idx);
+            var stay = {
+                index: indexKey,
+                label: hotel && hotel.label ? String(hotel.label) : ('Sejour ' + (idx + 1)),
+                expected: expected,
+                covered: 0,
+                diff: 0,
+                state: 'exact'
+            };
+            byHotelIndex[indexKey] = stay;
+            return stay;
+        });
+
+        var unassigned = 0;
+        (rooms || []).forEach(function (room) {
+            var covered = roomCoveredSeats(room);
+            if (covered <= 0) return;
+
+            var roomHotelId = room && room.hotel_id != null ? String(room.hotel_id) : '';
+            var roomHotelIndex = room && room.hotel_index != null ? String(room.hotel_index) : '';
+            var stay = null;
+            if (roomHotelIndex !== '' && byHotelIndex[roomHotelIndex]) {
+                stay = byHotelIndex[roomHotelIndex];
+            } else if (roomHotelId !== '' && uniqueHotelIndexByHotelId[roomHotelId]) {
+                var resolvedIndex = uniqueHotelIndexByHotelId[roomHotelId];
+                stay = byHotelIndex[resolvedIndex] || null;
+            }
+
+            if (stay) {
+                stay.covered += covered;
+            } else {
+                unassigned += covered;
+            }
+        });
+
+        var exactCount = 0;
+        var underCount = 0;
+        var overCount = 0;
+        stays.forEach(function (stay) {
+            stay.diff = stay.covered - expected;
+            stay.state = getStayCoverageState(expected, stay.covered);
+            if (stay.state === 'exact') exactCount += 1;
+            if (stay.state === 'under') underCount += 1;
+            if (stay.state === 'over') overCount += 1;
+        });
+
+        var status = 'exact';
+        if (!stays.length) {
+            status = getStayCoverageState(expected, coverageStats(rooms));
+        } else if (underCount > 0 || unassigned > 0) {
+            status = 'under';
+        } else if (overCount > 0) {
+            status = 'over';
+        }
+
+        return {
+            expected: expected,
+            stays: stays,
+            unassigned: unassigned,
+            exactCount: exactCount,
+            underCount: underCount,
+            overCount: overCount,
+            status: status,
+            totalCovered: coverageStats(rooms)
+        };
+    }
+
+    function departureCoverageStateClass(coverage) {
+        if (!coverage) return 've-departure-status--under';
+        if (coverage.status === 'exact') return 've-departure-status--exact';
+        if (coverage.status === 'under') return 've-departure-status--under';
         return 've-departure-status--over';
     }
 
+    function departureCoverageBadge(coverage) {
+        if (!coverage) {
+            return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Couverture a verifier</span>';
+        }
+        if (coverage.status === 'exact') {
+            return '<span class="badge bg-success-subtle text-success border border-success-subtle">Sejours couverts</span>';
+        }
+        if (coverage.status === 'under') {
+            return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Sejours incomplets</span>';
+        }
+        return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Sejours excedentaires</span>';
+    }
+
+    function renderStayCoverage(coverage) {
+        if (!coverage || !coverage.stays || !coverage.stays.length) return '';
+
+        var items = coverage.stays.map(function (stay, idx) {
+            var title = escapeHtml(stay.label || ('Sejour ' + (idx + 1)));
+            var diffText = stay.diff === 0 ? 'Ecart 0' : ('Ecart ' + (stay.diff > 0 ? '+' : '') + stay.diff);
+            return '<span class="badge ' + stayCoverageBadge(stay.state) + '">' +
+                title + ' : ' + stay.covered + '/' + stay.expected + ' (' + diffText + ')' +
+            '</span>';
+        });
+
+        if (coverage.unassigned > 0) {
+            items.push('<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Non associe : ' + coverage.unassigned + ' place(s)</span>');
+        }
+
+        return '<div class="d-flex flex-wrap gap-2 mb-2">' + items.join('') + '</div>';
+    }
+
+    function renderStayCoverageDetails(coverage) {
+        if (!coverage || !coverage.stays || !coverage.stays.length) return '';
+
+        var cards = coverage.stays.map(function (stay, idx) {
+            var title = escapeHtml(stay.label || ('Sejour ' + (idx + 1)));
+            var stateClass = stay.state === 'exact'
+                ? 've-stay-breakdown__item--exact'
+                : (stay.state === 'under' ? 've-stay-breakdown__item--under' : 've-stay-breakdown__item--over');
+            var diffText = stay.diff === 0 ? 'Ecart 0' : ('Ecart ' + (stay.diff > 0 ? '+' : '') + stay.diff);
+
+            return '' +
+                '<article class="ve-stay-breakdown__item ' + stateClass + '">' +
+                '  <header class="ve-stay-breakdown__head">' +
+                '    <span class="ve-stay-breakdown__title">' + title + '</span>' +
+                '    <strong class="ve-stay-breakdown__ratio">' + stay.covered + '/' + stay.expected + '</strong>' +
+                '  </header>' +
+                '  <div class="ve-stay-breakdown__meta">' + diffText + '</div>' +
+                '</article>';
+        });
+
+        if (coverage.unassigned > 0) {
+            cards.push(
+                '<article class="ve-stay-breakdown__item ve-stay-breakdown__item--unassigned">' +
+                '  <header class="ve-stay-breakdown__head">' +
+                '    <span class="ve-stay-breakdown__title">Non associe</span>' +
+                '    <strong class="ve-stay-breakdown__ratio">' + coverage.unassigned + '</strong>' +
+                '  </header>' +
+                '  <div class="ve-stay-breakdown__meta">Places sans sejour</div>' +
+                '</article>'
+            );
+        }
+
+        return '<div class="ve-stay-breakdown mb-3">' + cards.join('') + '</div>';
+    }
+
     function collectHotels() {
+        var bootstrapHotels = window.tourHotelsData || {};
+
+        function effectiveCapacity(room) {
+            var total = Math.max(0, parseInt(String((room || {}).capacity_total || '0'), 10) || 0);
+            if (total > 0) return total;
+            var adults = Math.max(0, parseInt(String((room || {}).capacity_adults || '0'), 10) || 0);
+            var children = Math.max(0, parseInt(String((room || {}).capacity_children || '0'), 10) || 0);
+            return Math.max(0, adults + children);
+        }
+
+        function roomsForRow(hotelId, index) {
+            var key = hotelId ? String(hotelId) : '';
+            var source = key && bootstrapHotels[key] ? bootstrapHotels[key] : null;
+            if (!source) {
+                var fallback = Object.values(bootstrapHotels || {});
+                source = fallback[index] || null;
+            }
+            var sourceRooms = source && Array.isArray(source.rooms) ? source.rooms : [];
+            return sourceRooms
+                .filter(function (room) {
+                    return !!room && (room.is_active === undefined || !!room.is_active);
+                })
+                .map(function (room) {
+                    return {
+                        room_type: String(room.room_type || '').trim(),
+                        room_count: Math.max(0, parseInt(String(room.room_count || '0'), 10) || 0),
+                        capacity_per_room: Math.max(1, effectiveCapacity(room))
+                    };
+                })
+                .filter(function (room) {
+                    return room.room_type !== '' && room.room_count > 0 && room.capacity_per_room > 0;
+                });
+        }
+
         return Array.prototype.slice.call(document.querySelectorAll('#tour-hotels-container .tour-hotel-row')).map(function (row, index) {
-            var idInput = row.querySelector('input[name^="tour_hotels["][name$="[id]"]');
+            var linkedHotelIdInput = row.querySelector('input[name^="tour_hotels["][name$="[hotel_id]"]');
+            var sourceHotelIdInput = row.querySelector('input[name^="tour_hotels["][name$="[source_hotel_id]"]');
             var nameInput = row.querySelector('.tour-hotel-name-input');
             var checkInInput = row.querySelector('.tour-hotel-check-in');
             var checkOutInput = row.querySelector('.tour-hotel-check-out');
-            var hotelId = idInput && idInput.value !== '' ? String(idInput.value) : '';
+            var hotelId = '';
+            if (linkedHotelIdInput && linkedHotelIdInput.value !== '') {
+                hotelId = String(linkedHotelIdInput.value);
+            } else if (sourceHotelIdInput && sourceHotelIdInput.value !== '') {
+                hotelId = String(sourceHotelIdInput.value);
+            }
             var name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'Hotel ' + (index + 1);
             var stay = '';
             if (checkInInput && checkOutInput) {
@@ -192,29 +513,48 @@
                 stay = checkIn === checkOut ? 'Jour ' + checkIn : 'J' + checkIn + ' a J' + checkOut;
             }
             return {
-                index: String(index),
+                index: String(row.getAttribute('data-index') || index),
                 hotel_id: hotelId,
-                label: stay ? name + ' - ' + stay : name
+                label: stay ? name + ' - ' + stay : name,
+                rooms: roomsForRow(hotelId, index)
             };
         });
     }
 
     function hotelSelectOptions(selectedIndex, selectedHotelId) {
         var hotels = collectHotels();
+        var uniqueHotelIndexByHotelId = buildUniqueHotelIndexByHotelId(hotels);
         var hasSelection = false;
+        var selectedLabel = '';
         var options = ['<option value="">Aucun hotel</option>'];
+        var autoSelectSingle = selectedHotelId === '' && selectedIndex === '' && hotels.length === 1;
+        var autoSelectedDone = false;
+        var normalizedSelectedIndex = selectedIndex == null ? '' : String(selectedIndex);
+        var normalizedSelectedHotelId = selectedHotelId == null ? '' : String(selectedHotelId);
+        var selectedStayIndex = '';
+        if (normalizedSelectedIndex !== '') {
+            selectedStayIndex = normalizedSelectedIndex;
+        } else if (normalizedSelectedHotelId !== '' && uniqueHotelIndexByHotelId[normalizedSelectedHotelId]) {
+            selectedStayIndex = uniqueHotelIndexByHotelId[normalizedSelectedHotelId];
+        }
 
         hotels.forEach(function (hotel) {
-            var selected = selectedHotelId !== ''
-                ? String(selectedHotelId) === String(hotel.hotel_id)
-                : (selectedIndex !== '' && String(selectedIndex) === hotel.index);
-            if (selected) hasSelection = true;
+            var selected = selectedStayIndex !== '' && selectedStayIndex === String(hotel.index);
+            if (!selected && autoSelectSingle && !autoSelectedDone) {
+                selected = true;
+                autoSelectedDone = true;
+            }
+            if (selected) {
+                hasSelection = true;
+                selectedLabel = hotel.label || '';
+            }
             options.push('<option value="' + escapeAttr(hotel.index) + '" data-hotel-id="' + escapeAttr(hotel.hotel_id) + '"' + (selected ? ' selected' : '') + '>' + escapeHtml(hotel.label) + '</option>');
         });
 
         return {
             html: options.join(''),
-            hasSelection: hasSelection
+            hasSelection: hasSelection,
+            selectedLabel: selectedLabel
         };
     }
 
@@ -234,6 +574,9 @@
     function render() {
         captureOpenState();
         var travelDates = collectTravelDates().filter(function (item) { return item.isActive; });
+        var hotels = collectHotels();
+        var hotelsTopologyKey = buildHotelsTopologyKey(hotels);
+        var hotelsTopologyChanged = lastHotelsTopologyKey !== '' && hotelsTopologyKey !== lastHotelsTopologyKey;
         var activeKeys = {};
 
         if (!travelDates.length) {
@@ -251,21 +594,24 @@
                     departureId: null,
                     travelDateId: travelDate.travelDateId,
                     date: travelDate.date,
-                    rooms: defaultRooms(travelDate.seats),
+                    rooms: defaultRooms(travelDate.seats, hotels),
                     manual: false
                 };
             } else {
                 allocationState[key].travelDateId = travelDate.travelDateId;
                 allocationState[key].date = travelDate.date;
-                if (!allocationState[key].manual) {
-                    allocationState[key].rooms = defaultRooms(travelDate.seats);
+                allocationState[key].rooms = normalizeRoomsAssociations(allocationState[key].rooms, hotels);
+                if (hotelsTopologyChanged) {
+                    allocationState[key].rooms = defaultRooms(travelDate.seats, hotels);
+                    allocationState[key].manual = false;
+                } else if (!allocationState[key].manual) {
+                    allocationState[key].rooms = defaultRooms(travelDate.seats, hotels);
                 }
             }
 
             var state = allocationState[key];
             var rooms = Array.isArray(state.rooms) ? state.rooms : [];
-            var covered = coverageStats(rooms);
-            var diff = covered - travelDate.seats;
+            var coverage = buildDepartureCoverage(hotels, rooms, travelDate.seats);
 
             return {
                 key: key,
@@ -273,25 +619,24 @@
                 travelDate: travelDate,
                 state: state,
                 rooms: rooms,
-                covered: covered,
-                diff: diff
+                coverage: coverage
             };
         });
 
         renderSummary(viewRows);
         listEl.innerHTML = viewRows.map(function (row) {
             return '' +
-                '<details class="card border mb-3 ve-departure-card ' + coverageStateClass(row.travelDate.seats, row.covered) + '" data-allocation-key="' + escapeHtml(row.key) + '"' + (openState[row.key] ? ' open' : '') + '>' +
+                '<details class="card border mb-3 ve-departure-card ' + departureCoverageStateClass(row.coverage) + '" data-allocation-key="' + escapeHtml(row.key) + '"' + (openState[row.key] ? ' open' : '') + '>' +
                 '  <summary class="card-body ve-departure-card__summary">' +
                 '    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">' +
                 '      <div>' +
                 '        <h6 class="mb-1">Depart du ' + escapeHtml(row.travelDate.label) + '</h6>' +
-                '        <div class="text-muted small">Capacite cible : <strong>' + row.travelDate.seats + '</strong> place(s)</div>' +
+                '        <div class="text-muted small">Capacite cible par sejour : <strong>' + row.travelDate.seats + '</strong> place(s)</div>' +
                 '      </div>' +
                 '      <div class="text-end">' +
-                '        <div class="small mb-1">Couvert : <strong>' + row.covered + '</strong> place(s)</div>' +
-                '        ' + coverageBadge(row.travelDate.seats, row.covered) +
-                '        <div class="text-muted small mt-1">' + (row.diff === 0 ? 'Ecart : 0' : 'Ecart : ' + (row.diff > 0 ? '+' : '') + row.diff) + '</div>' +
+                '        <div class="small mb-1">Sejours exacts : <strong>' + row.coverage.exactCount + '/' + row.coverage.stays.length + '</strong></div>' +
+                '        ' + departureCoverageBadge(row.coverage) +
+                (row.coverage.unassigned > 0 ? ('<div class="text-muted small mt-1">Non associe : ' + row.coverage.unassigned + ' place(s)</div>') : '') +
                 '      </div>' +
                 '    </div>' +
                 '  </summary>' +
@@ -299,9 +644,11 @@
                 '    <input type="hidden" name="departure_allocations[' + row.index + '][departure_id]" value="' + escapeAttr(row.state.departureId || '') + '">' +
                 '    <input type="hidden" name="departure_allocations[' + row.index + '][travel_date_id]" value="' + escapeAttr(row.travelDate.travelDateId || '') + '">' +
                 '    <input type="hidden" name="departure_allocations[' + row.index + '][date]" value="' + escapeAttr(row.travelDate.date) + '">' +
+                renderStayCoverage(row.coverage) +
+                renderStayCoverageDetails(row.coverage) +
                 '    <div class="table-responsive">' +
                 '      <table class="table table-sm align-middle mb-2">' +
-                '        <thead><tr><th>Type</th><th>Quantite</th><th>Cap./chambre</th><th>Hotel</th><th>Places couvertes</th><th></th></tr></thead>' +
+                '        <thead><tr><th>Type</th><th>Quantite</th><th>Cap./chambre</th><th>Sejour</th><th>Places couvertes</th><th></th></tr></thead>' +
                 '        <tbody>' + renderRooms(row.index, row.rooms) + '</tbody>' +
                 '      </table>' +
                 '    </div>' +
@@ -316,20 +663,25 @@
         Object.keys(allocationState).forEach(function (key) {
             if (!activeKeys[key]) delete allocationState[key];
         });
+        lastHotelsTopologyKey = hotelsTopologyKey;
     }
 
     function renderSummary(viewRows) {
         summaryEl.innerHTML = viewRows.map(function (row) {
+            var summaryMeta = [];
+            if (row.coverage.underCount > 0) summaryMeta.push('Incomplets ' + row.coverage.underCount);
+            if (row.coverage.overCount > 0) summaryMeta.push('Excedentaires ' + row.coverage.overCount);
+            if (row.coverage.unassigned > 0) summaryMeta.push('Non associe ' + row.coverage.unassigned);
             return '' +
                 '<div class="col-xl-3 col-md-6">' +
-                '  <div class="ve-departure-summary ' + coverageStateClass(row.travelDate.seats, row.covered) + '">' +
+                '  <div class="ve-departure-summary ' + departureCoverageStateClass(row.coverage) + '">' +
                 '    <div class="ve-departure-summary__date">' + escapeHtml(row.travelDate.label) + '</div>' +
                 '    <div class="ve-departure-summary__stats">' +
-                '      <span>Cible <strong>' + row.travelDate.seats + '</strong></span>' +
-                '      <span>Couvert <strong>' + row.covered + '</strong></span>' +
+                '      <span>Cible/sejour <strong>' + row.travelDate.seats + '</strong></span>' +
+                '      <span>Exacts <strong>' + row.coverage.exactCount + '/' + row.coverage.stays.length + '</strong></span>' +
                 '    </div>' +
-                '    <div class="ve-departure-summary__meta">' + (row.diff === 0 ? 'Ecart 0' : 'Ecart ' + (row.diff > 0 ? '+' : '') + row.diff) + '</div>' +
-                '    <div class="mt-2">' + coverageBadge(row.travelDate.seats, row.covered) + '</div>' +
+                '    <div class="ve-departure-summary__meta">' + (summaryMeta.length ? summaryMeta.join(' | ') : 'Tous les sejours sont exacts') + '</div>' +
+                '    <div class="mt-2">' + departureCoverageBadge(row.coverage) + '</div>' +
                 '  </div>' +
                 '</div>';
         }).join('');
@@ -356,7 +708,9 @@
                 '  <td>' +
                 '    <input type="hidden" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_id]" value="' + escapeAttr(hotelId) + '">' +
                 '    <select class="form-select form-select-sm" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_index]">' + hotelOptions.html + '</select>' +
-                (hotelOptions.hasSelection ? '' : '<div class="small text-warning mt-1">Associer un hotel.</div>') +
+                (hotelOptions.hasSelection
+                    ? '<div class="small text-muted mt-1">Sejour: ' + escapeHtml(hotelOptions.selectedLabel || '') + '</div>'
+                    : '<div class="small text-warning mt-1">Associer un sejour.</div>') +
                 '  </td>' +
                 '  <td><span class="small fw-semibold">' + (quantity * capacityPerRoom) + '</span></td>' +
                 '  <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-allocation-action="remove-room" data-room-index="' + roomIndex + '">×</button></td>' +
@@ -391,7 +745,15 @@
         if (!key || !allocationState[key]) return;
 
         if (btn.getAttribute('data-allocation-action') === 'add-room') {
-            allocationState[key].rooms.push({ room_type: '', quantity: 0, capacity_per_room: 1, hotel_id: '', hotel_index: '' });
+            var hotels = collectHotels();
+            var defaultHotel = hotels.length ? hotels[0] : null;
+            allocationState[key].rooms.push({
+                room_type: '',
+                quantity: 0,
+                capacity_per_room: 1,
+                hotel_id: defaultHotel && defaultHotel.hotel_id ? String(defaultHotel.hotel_id) : '',
+                hotel_index: defaultHotel && defaultHotel.index != null ? String(defaultHotel.index) : ''
+            });
             allocationState[key].manual = true;
             openState[key] = true;
             render();
@@ -402,7 +764,7 @@
             var travelDate = collectTravelDates().find(function (item) {
                 return (item.travelDateId && ('td:' + String(item.travelDateId)) === key) || ('date:' + item.date) === key;
             });
-            allocationState[key].rooms = defaultRooms(travelDate ? travelDate.seats : 0);
+            allocationState[key].rooms = defaultRooms(travelDate ? travelDate.seats : 0, collectHotels());
             allocationState[key].manual = false;
             openState[key] = true;
             render();
