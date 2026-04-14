@@ -1015,12 +1015,18 @@ function ajth_is_transfert_context()
     return is_page('transfert') || is_post_type_archive('st_cars') || (is_search() && get_query_var('post_type') === 'st_cars');
 }
 
+function ajth_is_group_deals_context()
+{
+    return is_page('group-deals');
+}
+
 function ajth_is_catalog_context()
 {
     return ajth_is_voyages_context()
         || ajth_is_hebergement_context()
         || ajth_is_activites_context()
-        || ajth_is_transfert_context();
+        || ajth_is_transfert_context()
+        || ajth_is_group_deals_context();
 }
 
 /* ──────────────────────────────────────────────

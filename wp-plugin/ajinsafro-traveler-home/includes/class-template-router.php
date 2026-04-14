@@ -77,6 +77,13 @@ class AJTH_Template_Router {
             }
         }
 
+        if ( function_exists( 'ajth_is_group_deals_context' ) && ajth_is_group_deals_context() ) {
+            $group_deals = AJTH_DIR . 'templates/group-deals.php';
+            if ( file_exists( $group_deals ) ) {
+                return $group_deals;
+            }
+        }
+
         if ( function_exists( 'ajth_is_transfert_context' ) && ajth_is_transfert_context() ) {
             $transfert = AJTH_DIR . 'templates/transfert.php';
             if ( file_exists( $transfert ) ) {
