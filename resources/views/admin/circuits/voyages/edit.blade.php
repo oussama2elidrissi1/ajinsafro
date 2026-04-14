@@ -1,6 +1,10 @@
 @php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
     $laravelV = $laravelVoyage ?? null;
+    $voyageEditCssPath = public_path('css/voyage-edit.css');
+    $voyageEditCssVersion = file_exists($voyageEditCssPath) ? (string) filemtime($voyageEditCssPath) : '1';
+    $voyageEditJsPath = public_path('js/voyage-edit-page.js');
+    $voyageEditJsVersion = file_exists($voyageEditJsPath) ? (string) filemtime($voyageEditJsPath) : '1';
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     $veAdultRaw = $meta['adult_price'] ?? (method_exists($voyage, 'getMeta') ? $voyage->getMeta('adult_price') : null);
     $vePriceLabel = null;
@@ -30,7 +34,7 @@
 @endsection
 
 @push('styles')
-    <link href="{{ URL::asset('css/voyage-edit.css?v=' . md5_file(public_path('css/voyage-edit.css'))) }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('css/voyage-edit.css?v=' . $voyageEditCssVersion) }}" rel="stylesheet" type="text/css" />
 @endpush
 
 @section('content')
@@ -125,7 +129,7 @@
     <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-editor-runtime.js') }}"></script>
-    <script src="{{ URL::asset('js/voyage-edit-page.js') }}"></script>
+    <script src="{{ URL::asset('js/voyage-edit-page.js?v=' . $voyageEditJsVersion) }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var workflow = document.querySelector('[data-ve-workflow]');
