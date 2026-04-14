@@ -144,7 +144,6 @@
                 return pane.parentElement === tabContent;
             }) : [];
             var detailNav = workflow.querySelector('[data-ve-detail-nav]');
-            var detailObserver = null;
 
             function tabLink(target) {
                 return document.querySelector('a[href="' + target + '"][data-bs-toggle="tab"]');
@@ -186,6 +185,23 @@
                     .filter(function (s) { return s.charAt(0) === '#'; });
             }
 
+            function targetExists(target) {
+                return !!(target && document.querySelector(target));
+            }
+
+            function normalizeTargetForStep(stepBtn, target) {
+                var tabs = getTabsForStep(stepBtn);
+                if (target && tabs.indexOf(target) >= 0 && targetExists(target)) {
+                    return target;
+                }
+                var firstExisting = tabs.find(function (tabTarget) {
+                    return targetExists(tabTarget);
+                });
+                if (firstExisting) return firstExisting;
+                var firstPane = allPanes[0] || null;
+                return firstPane && firstPane.id ? ('#' + firstPane.id) : null;
+            }
+
             function sectionIdForTarget(target) {
                 return 've-sec-' + String(target || '').replace('#', '');
             }
@@ -221,13 +237,6 @@
                 return t && t.trim() !== '' ? t : target.replace('#', '');
             }
 
-            function clearDetailObserver() {
-                if (detailObserver) {
-                    detailObserver.disconnect();
-                    detailObserver = null;
-                }
-            }
-
             function activateDetailItem(target) {
                 if (!detailNav) return;
                 detailNav.querySelectorAll('[data-ve-detail-target]').forEach(function (item) {
@@ -245,7 +254,7 @@
                 window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
             }
 
-            function renderDetailNav(stepBtn) {
+            function renderDetailNav(stepBtn, activeTarget) {
                 if (!detailNav) return;
                 var targets = getTabsForStep(stepBtn);
                 if (!targets.length) {
@@ -253,8 +262,9 @@
                     return;
                 }
                 ensureSectionAnchors(stepBtn);
-                detailNav.innerHTML = targets.map(function (target, idx) {
-                    return '<button type="button" class="ve-detail-nav__item' + (idx === 0 ? ' is-active' : '') + '" data-ve-detail-target="' + target + '">' +
+                detailNav.innerHTML = targets.map(function (target) {
+                    var isActive = target === activeTarget;
+                    return '<button type="button" class="ve-detail-nav__item' + (isActive ? ' is-active' : '') + '" data-ve-detail-target="' + target + '">' +
                         '<span class="ve-detail-nav__dot"></span>' +
                         '<span class="ve-detail-nav__label">' + titleForTarget(target) + '</span>' +
                     '</button>';
@@ -270,41 +280,18 @@
                         window.requestAnimationFrame(function () {
                             scrollToTarget(target);
                         });
-                        activateDetailItem(target);
                     });
                 });
             }
 
-            function bindDetailObserver(stepBtn) {
-                if (!detailNav || !('IntersectionObserver' in window)) return;
-                clearDetailObserver();
-                var targets = getTabsForStep(stepBtn);
-                var panes = targets.map(function (target) {
-                    return document.querySelector(target + '.ve-step-visible');
-                }).filter(Boolean);
-                if (!panes.length) return;
-
-                detailObserver = new IntersectionObserver(function (entries) {
-                    var visible = entries
-                        .filter(function (entry) { return entry.isIntersecting; })
-                        .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
-                    if (!visible.length) return;
-                    var pane = visible[0].target;
-                    if (!pane || !pane.id) return;
-                    activateDetailItem('#' + pane.id);
-                }, { root: null, rootMargin: '-25% 0px -62% 0px', threshold: [0.01, 0.15, 0.3] });
-
-                panes.forEach(function (pane) { detailObserver.observe(pane); });
-            }
-
-            function paintStepPanes(stepBtn) {
+            function paintStepPanes(stepBtn, activeTarget) {
                 if (!tabContent || !allPanes.length || !stepBtn) return;
                 tabContent.classList.add('ve-tab-content--workflow');
                 var visibleTargets = getTabsForStep(stepBtn);
                 allPanes.forEach(function (pane) {
                     var id = pane.getAttribute('id') || '';
                     var target = id ? ('#' + id) : '';
-                    var visible = visibleTargets.indexOf(target) >= 0;
+                    var visible = visibleTargets.indexOf(target) >= 0 && target === activeTarget;
                     pane.classList.toggle('show', visible);
                     pane.classList.toggle('active', visible);
                     pane.classList.toggle('ve-step-visible', visible);
@@ -315,15 +302,15 @@
             function syncUIFromTarget(target) {
                 var step = getStepForTarget(target) || stepButtons[0] || null;
                 if (!step) return;
+                var activeTarget = normalizeTargetForStep(step, target);
 
                 stepButtons.forEach(function (btn) {
                     btn.classList.toggle('is-active', btn === step);
                 });
 
-                paintStepPanes(step);
-                renderDetailNav(step);
-                bindDetailObserver(step);
-                if (target) activateDetailItem(target);
+                paintStepPanes(step, activeTarget);
+                renderDetailNav(step, activeTarget);
+                if (activeTarget) activateDetailItem(activeTarget);
 
                 if (currentLabel) {
                     currentLabel.textContent = step.getAttribute('data-ve-step-label') || '';
@@ -378,8 +365,6 @@
 
             var activeTab = document.querySelector('.ve-nav-tabs .nav-link.active[data-bs-toggle="tab"]');
             syncUIFromTarget(activeTab ? activeTab.getAttribute('href') : '#basic');
-
-            window.addEventListener('beforeunload', clearDetailObserver);
         });
     </script>
 @endpush

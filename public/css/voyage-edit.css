@@ -3173,7 +3173,7 @@ body.voyage-layout-page .offcanvas {
     }
 }
 
-/* Single workflow navigation: show grouped panes by step only */
+/* Single workflow navigation: keep one active pane visible at a time */
 .voyage-edit-page .ve-tabs-wrapper--workflow .ve-tab-scroll {
     display: none !important;
 }
@@ -3189,10 +3189,6 @@ body.voyage-layout-page .offcanvas {
     border-radius: 12px;
     padding: 0.7rem 0.8rem 0.15rem;
     box-shadow: 0 4px 14px rgba(14, 58, 90, 0.05);
-}
-
-.voyage-edit-page .ve-tab-content.ve-tab-content--workflow > .tab-pane.ve-step-visible + .tab-pane.ve-step-visible {
-    margin-top: 0.8rem;
 }
 
 .voyage-edit-page .ve-tab-content.ve-tab-content--workflow > .tab-pane.ve-step-visible::before {
