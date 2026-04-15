@@ -105,6 +105,10 @@ class UpdateWpTourRequest extends FormRequest
                     continue;
                 }
 
+                if ($expectedHotelIndexes === []) {
+                    continue;
+                }
+
                 $rooms = $departureRow['rooms'] ?? [];
                 if (! is_array($rooms)) {
                     continue;
@@ -191,6 +195,74 @@ class UpdateWpTourRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $departurePlaces = $this->input('departure_places', []);
+        $departurePlaces = is_array($departurePlaces) ? array_values($departurePlaces) : [];
+
+        // Clean flight_options: normalize departure_place_id and airline_id to integers/null.
+        $flightOptions = $this->input('flight_options', []);
+        if (is_array($flightOptions)) {
+            foreach (array_keys($flightOptions) as $index) {
+                // departure_place_id can be numeric or temporary NEW_x from UI.
+                if (isset($flightOptions[$index]['departure_place_id'])) {
+                    $val = $flightOptions[$index]['departure_place_id'];
+                    $normalizedPlaceId = null;
+
+                    if (is_numeric($val) && (int) $val > 0) {
+                        $normalizedPlaceId = (int) $val;
+                    } elseif (is_string($val) && preg_match('/^NEW_(\d+)$/', $val, $matches)) {
+                        $placeIndex = (int) ($matches[1] ?? -1);
+                        $linkedPlace = $departurePlaces[$placeIndex] ?? null;
+                        $linkedPlaceId = is_array($linkedPlace) ? ($linkedPlace['id'] ?? null) : null;
+                        if (is_numeric($linkedPlaceId) && (int) $linkedPlaceId > 0) {
+                            $normalizedPlaceId = (int) $linkedPlaceId;
+                        }
+                    }
+
+                    $flightOptions[$index]['departure_place_id'] = $normalizedPlaceId;
+                }
+
+                // Normalize airline_id
+                if (isset($flightOptions[$index]['airline_id'])) {
+                    $val = $flightOptions[$index]['airline_id'];
+                    if (! is_numeric($val) || (int) $val <= 0) {
+                        $flightOptions[$index]['airline_id'] = null;
+                    } else {
+                        $flightOptions[$index]['airline_id'] = (int) $val;
+                    }
+                }
+            }
+            $this->merge(['flight_options' => $flightOptions]);
+        }
+
+        // Clean departure_allocations: remove rooms without hotel_index
+        $departureAllocations = $this->input('departure_allocations', []);
+        if (is_array($departureAllocations)) {
+            foreach (array_keys($departureAllocations) as $depIndex) {
+                if (isset($departureAllocations[$depIndex]['rooms']) && is_array($departureAllocations[$depIndex]['rooms'])) {
+                    $rooms = $departureAllocations[$depIndex]['rooms'];
+                    $cleanedRooms = [];
+                    foreach ($rooms as $roomIndex => $room) {
+                        if (!is_array($room)) {
+                            continue;
+                        }
+                        // Keep only rooms that are effectively mapped to a stay.
+                        $hotelIndex = $room['hotel_index'] ?? null;
+                        if ($hotelIndex === 'null' || $hotelIndex === 'undefined') {
+                            $hotelIndex = null;
+                        }
+
+                        if (is_numeric($hotelIndex) && (int) $hotelIndex >= 0) {
+                            $room['hotel_index'] = (int) $hotelIndex;
+                            $cleanedRooms[$roomIndex] = $room;
+                        }
+                    }
+                    $departureAllocations[$depIndex]['rooms'] = $cleanedRooms;
+                }
+            }
+            $this->merge(['departure_allocations' => $departureAllocations]);
+        }
+
+        // Decode programme_days_payload for programme days structure
         $payload = $this->input('programme_days_payload');
 
         if (!is_string($payload) || trim($payload) === '') {

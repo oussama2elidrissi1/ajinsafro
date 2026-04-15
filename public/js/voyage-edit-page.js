@@ -3871,7 +3871,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                // Enregistrer : mise ÃƒÂ  jour des libellÃ©s en vue puis soumission du formulaire pour sauvegarder cÃ´tÃ© serveur
+                // Enregistrer : met à jour l'affichage local uniquement.
+                // La persistance serveur se fait une seule fois via le bouton principal "Enregistrer".
                 if (e.target.closest('.flight-opt-save-btn')) {
                     var card = e.target.closest('.flight-opt-card');
                     if (!card) return;
@@ -3908,18 +3909,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (badgeWrap) badgeWrap.style.display = (tentativeCb && tentativeCb.checked) ? '' : 'none';
                     if (view) view.style.display = '';
                     if (edit) edit.style.display = 'none';
-                    // Soumettre le formulaire principal pour enregistrer les flight_options (lieu de dÃ©part, heures, etc.) cÃ´tÃ© serveur
-                    var form = document.getElementById('edit-voyage-form');
-                    if (form) {
-                        if (window.syncProgrammeDaysPayload) {
-                            window.syncProgrammeDaysPayload(true);
-                        }
-                        if (typeof form.requestSubmit === 'function') {
-                            form.requestSubmit();
-                        } else {
-                            form.submit();
-                        }
-                    }
                     return;
                 }
 
@@ -3941,9 +3930,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 var btn = document.getElementById('edit-voyage-submit-btn');
                 var form = document.getElementById('edit-voyage-form');
                 if (!btn || !form) return;
+
+                // Anti double-submit: une seule requête active à la fois.
+                if (form.dataset.singleSubmitBound !== '1') {
+                    form.dataset.singleSubmitBound = '1';
+                    form.addEventListener('submit', function(e) {
+                        if (form.dataset.isSubmitting === '1') {
+                            e.preventDefault();
+                            return;
+                        }
+
+                        form.dataset.isSubmitting = '1';
+                        if (btn) {
+                            btn.setAttribute('disabled', 'disabled');
+                            btn.classList.add('disabled');
+                        }
+                    }, true);
+                }
+
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
+
+                    if (form.dataset.isSubmitting === '1') {
+                        return;
+                    }
+
                     var acc = document.getElementById('accordionProgrammeDays');
                     var durationInput = document.getElementById('duration_day');
                     if (acc && durationInput) {
