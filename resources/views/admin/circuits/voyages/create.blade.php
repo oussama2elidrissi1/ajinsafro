@@ -237,9 +237,9 @@
                         <div class="mb-4">
                             <label for="tours_program_style" class="form-label">Program Style</label>
                             <select name="tours_program_style" id="tours_program_style" class="form-select">
-                                <option value="style1" selected>Style 1</option>
-                                <option value="style2">Style 2</option>
-                                <option value="style3">Style 3</option>
+                                <option value="style1" {{ old('tours_program_style', 'style1') === 'style1' ? 'selected' : '' }}>Style 1</option>
+                                <option value="style2" {{ old('tours_program_style') === 'style2' ? 'selected' : '' }}>Style 2</option>
+                                <option value="style3" {{ old('tours_program_style') === 'style3' ? 'selected' : '' }}>Style 3</option>
                             </select>
                             <small class="text-muted">Choisissez le style d'affichage du programme sur le front-end</small>
                         </div>
@@ -627,10 +627,10 @@
 
         // Tour Program: Add/Remove items (create form)
         document.addEventListener('DOMContentLoaded', function() {
+            const oldProgramItems = @json(old('tours_program', []));
             let programItemIndex = 0;
-            
-            // Add new program item
-            document.getElementById('addProgramItemCreate').addEventListener('click', function() {
+
+            function appendProgramItem(title, desc) {
                 const container = document.getElementById('programItemsListCreate');
                 const newItem = document.createElement('div');
                 newItem.className = 'program-item card mb-3';
@@ -643,26 +643,41 @@
                                 <i class="bx bx-trash"></i> Remove
                             </button>
                         </div>
-                        
                         <div class="mb-3">
                             <label class="form-label">Title</label>
-                            <input type="text" 
-                                   name="tours_program[${programItemIndex}][title]" 
-                                   class="form-control" 
-                                   placeholder="Ex: 08:00 - Départ de l'hôtel">
+                            <input type="text"
+                                   name="tours_program[${programItemIndex}][title]"
+                                   class="form-control"
+                                   placeholder="Ex: 08:00 - Départ de l'hôtel"
+                                   value="${String(title || '').replace(/"/g, '&quot;')}">
                         </div>
-                        
                         <div class="mb-0">
                             <label class="form-label">Description</label>
-                            <textarea name="tours_program[${programItemIndex}][desc]" 
-                                      class="form-control" 
+                            <textarea name="tours_program[${programItemIndex}][desc]"
+                                      class="form-control"
                                       rows="3"
-                                      placeholder="Description détaillée de cette étape du programme"></textarea>
+                                      placeholder="Description détaillée de cette étape du programme">${String(desc || '')}</textarea>
                         </div>
                     </div>
                 `;
                 container.appendChild(newItem);
                 programItemIndex++;
+                const emptyAlert = document.getElementById('emptyProgramAlert');
+                if (emptyAlert) {
+                    emptyAlert.style.display = 'none';
+                }
+            }
+
+            if (Array.isArray(oldProgramItems) && oldProgramItems.length > 0) {
+                oldProgramItems.forEach(function(item) {
+                    if (!item) return;
+                    appendProgramItem(item.title || '', item.desc || '');
+                });
+            }
+            
+            // Add new program item
+            document.getElementById('addProgramItemCreate').addEventListener('click', function() {
+                appendProgramItem('', '');
                 
                 // Hide empty message
                 const emptyAlert = document.getElementById('emptyProgramAlert');

@@ -2205,12 +2205,10 @@ class VoyageController extends Controller
         $wpPost = $this->repository->getPost($wpPostId);
         $title = trim((string) ($validated['title'] ?? ($wpPost->post_title ?? 'Tour')));
         $slugInput = trim((string) ($validated['slug'] ?? ''));
-        $slug = $slugInput !== '' ? $slugInput : ('tour-'.$wpPostId);
+        $baseSlug = $slugInput !== '' ? $slugInput : ('tour-' . $wpPostId);
 
-        $voyage = Voyage::firstOrCreate(
-            ['wp_post_id' => $wpPostId],
-            ['name' => $title, 'slug' => $slug]
-        );
+        $voyage = Voyage::firstOrNew(['wp_post_id' => $wpPostId]);
+        $slug = $this->ensureUniqueVoyageSlug($baseSlug, $voyage->exists ? (int) $voyage->id : null);
 
         $voyage->fill([
             'name' => $title !== '' ? $title : ('Tour '.$wpPostId),
@@ -2222,6 +2220,32 @@ class VoyageController extends Controller
         $voyage->save();
 
         return $voyage;
+    }
+
+    /**
+     * Ensure Laravel voyage slug is unique before saving.
+     */
+    protected function ensureUniqueVoyageSlug(string $baseSlug, ?int $excludeId = null): string
+    {
+        $slug = Str::slug($baseSlug);
+        if ($slug === '') {
+            $slug = 'voyage';
+        }
+
+        $candidate = $slug;
+        $suffix = 2;
+
+        while (Voyage::query()
+            ->where('slug', $candidate)
+            ->when($excludeId, function ($query) use ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            })
+            ->exists()) {
+            $candidate = $slug . '-' . $suffix;
+            $suffix++;
+        }
+
+        return $candidate;
     }
 
     /**
