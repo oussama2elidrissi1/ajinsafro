@@ -35,6 +35,7 @@
 
 @push('styles')
     <link href="{{ URL::asset('css/voyage-edit.css?v=' . $voyageEditCssVersion) }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('css/flight-options-new.css') }}" rel="stylesheet" type="text/css" />
 @endpush
 
 @section('content')
@@ -55,7 +56,11 @@
         @include('admin.circuits.voyages.partials._voyage_form_alerts')
     </div>
 
-    <form action="{{ $isCreate ? route('admin.circuits.voyages.store') : route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST" id="edit-voyage-form" data-voyage-id="{{ $voyage->ID ?? 0 }}">
+    <div class="ve-shell">
+        <div id="ve-tab-guard-alert" class="alert alert-warning d-none mb-3 ve-tab-guard-alert" role="alert"></div>
+    </div>
+
+    <form action="{{ $isCreate ? route('admin.circuits.voyages.store') : route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST" id="edit-voyage-form" data-voyage-id="{{ $voyage->ID ?? 0 }}" novalidate>
         @csrf
         @if (!$isCreate)
             @method('PUT')
@@ -121,6 +126,8 @@
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-editor-runtime.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-edit-page.js?v=' . $voyageEditJsVersion) }}"></script>
+    <script src="{{ URL::asset('js/flight-options-fix.js') }}"></script>
+    <script src="{{ URL::asset('js/flight-options-manager.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var workflow = document.querySelector('[data-ve-workflow]');
@@ -135,6 +142,247 @@
                 return pane.parentElement === tabContent;
             }) : [];
             var detailNav = workflow.querySelector('[data-ve-detail-nav]');
+            var form = document.getElementById('edit-voyage-form');
+            var guardAlert = document.getElementById('ve-tab-guard-alert');
+            var submitBtn = document.getElementById('edit-voyage-submit-btn');
+            var submitting = false;
+            var paneSnapshots = {};
+            var sectionLabels = {
+                '#basic': 'Basique',
+                '#location': 'Destination',
+                '#price': 'Prix & Paiement',
+                '#information': 'Détails',
+                '#voyage-extras': 'Extras',
+                '#availability': 'Départs',
+                '#flights': 'Vols',
+                '#media': 'Médias',
+                '#taxonomies': 'Classement',
+                '#logistics': 'Logistique',
+                '#hotels': 'Hôtels',
+                '#activities': 'Activités',
+                '#program-days': 'Programme'
+            };
+
+            function escapeHtml(value) {
+                return String(value == null ? '' : value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function paneTarget(pane) {
+                return pane && pane.id ? ('#' + pane.id) : null;
+            }
+
+            function getPane(target) {
+                return target ? document.querySelector(target) : null;
+            }
+
+            function getActiveTarget() {
+                var activeLink = document.querySelector('.ve-nav-tabs .nav-link.active[data-bs-toggle="tab"]');
+                if (activeLink && activeLink.getAttribute('href')) {
+                    return activeLink.getAttribute('href');
+                }
+                var activePane = document.querySelector('.ve-tab-content .tab-pane.active');
+                return activePane && activePane.id ? ('#' + activePane.id) : '#basic';
+            }
+
+            function stepButtonForTarget(target) {
+                return stepButtons.find(function (btn) {
+                    return String(btn.getAttribute('data-ve-step-target') || '') === target;
+                }) || null;
+            }
+
+            function detailButtonForTarget(target) {
+                if (!detailNav) return null;
+                return detailNav.querySelector('[data-ve-detail-target="' + target + '"]');
+            }
+
+            function labelForTarget(target) {
+                var pane = getPane(target);
+                if (sectionLabels[target]) {
+                    return sectionLabels[target];
+                }
+                if (pane) {
+                    var paneLabel = pane.getAttribute('data-ve-pane-title');
+                    if (paneLabel && paneLabel.trim() !== '') {
+                        return paneLabel.trim();
+                    }
+                }
+                return target ? target.replace('#', '') : '';
+            }
+
+            function fieldValue(field) {
+                if (!field) return '';
+                if (field.type === 'checkbox') {
+                    return field.checked ? '1' : '0';
+                }
+                if (field.type === 'radio') {
+                    return field.checked ? String(field.value || '') : '';
+                }
+                if (field.tagName === 'SELECT' && field.multiple) {
+                    return Array.prototype.slice.call(field.selectedOptions).map(function (option) {
+                        return option.value;
+                    }).join('|');
+                }
+                return String(field.value == null ? '' : field.value);
+            }
+
+            function snapshotPane(pane) {
+                return Array.prototype.slice.call(pane.querySelectorAll('input,select,textarea')).filter(function (field) {
+                    return !!field.name && field.type !== 'button' && field.type !== 'submit' && field.type !== 'reset';
+                }).map(function (field) {
+                    return field.name + '=' + fieldValue(field);
+                }).join('\u0001');
+            }
+
+            function capturePaneSnapshot(pane) {
+                var target = paneTarget(pane);
+                if (!target) return;
+                paneSnapshots[target] = snapshotPane(pane);
+            }
+
+            function clearFieldValidation(field) {
+                if (!field) return;
+                field.classList.remove('is-invalid');
+                field.removeAttribute('aria-invalid');
+            }
+
+            function firstInvalidField(pane) {
+                var fields = Array.prototype.slice.call(pane.querySelectorAll('input,select,textarea')).filter(function (field) {
+                    return !!field.name && !field.disabled && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit' && field.type !== 'reset';
+                });
+
+                for (var i = 0; i < fields.length; i++) {
+                    var field = fields[i];
+                    if (typeof field.checkValidity === 'function' && !field.checkValidity()) {
+                        return field;
+                    }
+                }
+
+                return null;
+            }
+
+            function isPaneDirty(pane) {
+                var target = paneTarget(pane);
+                if (!target) return false;
+                if (typeof paneSnapshots[target] === 'undefined') return false;
+                return snapshotPane(pane) !== (paneSnapshots[target] || '');
+            }
+
+            function applyTabState(target, state) {
+                var link = tabLink(target);
+                var stepBtn = stepButtonForTarget(target);
+                var detailBtn = detailButtonForTarget(target);
+
+                [link, stepBtn, detailBtn].forEach(function (el) {
+                    if (!el) return;
+                    el.classList.remove('ve-tab-state--dirty', 've-tab-state--invalid');
+                    if (state === 'dirty') {
+                        el.classList.add('ve-tab-state--dirty');
+                    } else if (state === 'invalid') {
+                        el.classList.add('ve-tab-state--invalid');
+                    }
+                });
+            }
+
+            function updatePaneState(pane) {
+                if (!pane) return { state: 'clean', field: null };
+                var target = paneTarget(pane);
+                var invalidField = firstInvalidField(pane);
+                var state = 'clean';
+
+                if (invalidField) {
+                    state = 'invalid';
+                    invalidField.classList.add('is-invalid');
+                    invalidField.setAttribute('aria-invalid', 'true');
+                } else if (isPaneDirty(pane)) {
+                    state = 'dirty';
+                }
+
+                pane.dataset.veState = state;
+                applyTabState(target, state);
+                return { state: state, field: invalidField };
+            }
+
+            function syncAllPaneStates() {
+                allPanes.forEach(function (pane) {
+                    updatePaneState(pane);
+                });
+            }
+
+            function showGuardMessage(kind, label) {
+                if (!guardAlert) return;
+                var message, alertClass, iconClass;
+                if (kind === 'invalid') {
+                    message = 'La section \u00ab\u00a0' + label + '\u00a0\u00bb contient des champs obligatoires non remplis.';
+                    alertClass = 'alert-danger';
+                    iconClass = 'bx-error-circle';
+                } else if (kind === 'success') {
+                    message = 'Enregistr\u00e9. Vous \u00eates maintenant dans\u00a0: ' + label + '.';
+                    alertClass = 'alert-success';
+                    iconClass = 'bx-check-circle';
+                } else {
+                    message = 'Vous avez des modifications non enregistr\u00e9es dans \u00ab\u00a0' + label + '\u00a0\u00bb. Veuillez enregistrer avant de changer de section.';
+                    alertClass = 'alert-warning';
+                    iconClass = 'bx-info-circle';
+                }
+                guardAlert.classList.remove('d-none', 'alert-danger', 'alert-warning', 'alert-info', 'alert-success');
+                guardAlert.classList.add(alertClass);
+                guardAlert.innerHTML = '<i class="bx ' + iconClass + ' me-2"></i><span>' + escapeHtml(message) + '</span>';
+                guardAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            function hideGuardMessage() {
+                if (!guardAlert) return;
+                guardAlert.classList.add('d-none');
+                guardAlert.classList.remove('alert-danger', 'alert-warning', 'alert-info', 'alert-success');
+                guardAlert.innerHTML = '';
+            }
+
+            function scrollToField(field) {
+                if (!field) return;
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                try {
+                    field.focus({ preventScroll: true });
+                } catch (e) {
+                    field.focus();
+                }
+            }
+
+            function requestTabChange(target) {
+                if (!target) return false;
+                if (target === getActiveTarget()) return true;
+
+                var activeTarget = getActiveTarget();
+                var activePane = getPane(activeTarget);
+                if (activePane) {
+                    var state = updatePaneState(activePane);
+                    if (state.state !== 'clean') {
+                        showGuardMessage(state.state, labelForTarget(activeTarget));
+                        if (state.field) {
+                            scrollToField(state.field);
+                        }
+                        return false;
+                    }
+                }
+
+                hideGuardMessage();
+                return showTab(target);
+            }
+
+            function firstInvalidFieldInForm() {
+                for (var i = 0; i < allPanes.length; i++) {
+                    var invalidField = firstInvalidField(allPanes[i]);
+                    if (invalidField) {
+                        return { pane: allPanes[i], field: invalidField };
+                    }
+                }
+
+                return null;
+            }
 
             function tabLink(target) {
                 return document.querySelector('a[href="' + target + '"][data-bs-toggle="tab"]');
@@ -174,6 +422,24 @@
                     .split(',')
                     .map(function (s) { return s.trim(); })
                     .filter(function (s) { return s.charAt(0) === '#'; });
+            }
+
+            function getNextSubSectionTarget(fromTarget) {
+                var activeTarget = fromTarget || getActiveTarget();
+                var currentStep = getStepForTarget(activeTarget);
+                if (!currentStep) return null;
+                var tabs = getTabsForStep(currentStep);
+                var idx = tabs.indexOf(activeTarget);
+                // Next sub-section within same step
+                if (idx >= 0 && idx < tabs.length - 1) return tabs[idx + 1];
+                // Last sub-section — first tab of next step
+                var stepIndex = stepButtons.indexOf(currentStep);
+                if (stepIndex >= 0 && stepIndex < stepButtons.length - 1) {
+                    var nextStep = stepButtons[stepIndex + 1];
+                    var nextTabs = getTabsForStep(nextStep);
+                    return nextTabs.length > 0 ? nextTabs[0] : null;
+                }
+                return null;
             }
 
             function targetExists(target) {
@@ -265,7 +531,7 @@
                     btn.addEventListener('click', function () {
                         var target = btn.getAttribute('data-ve-detail-target');
                         if (!target) return;
-                        var changed = showTab(target);
+                        var changed = requestTabChange(target);
                         if (!changed) return;
                         syncUIFromTarget(target);
                         window.requestAnimationFrame(function () {
@@ -302,21 +568,24 @@
                 paintStepPanes(step, activeTarget);
                 renderDetailNav(step, activeTarget);
                 if (activeTarget) activateDetailItem(activeTarget);
+                syncAllPaneStates();
 
                 if (currentLabel) {
                     currentLabel.textContent = step.getAttribute('data-ve-step-label') || '';
                 }
 
                 var currentIndex = stepButtons.indexOf(step);
-                if (prevBtn) prevBtn.disabled = currentIndex <= 0;
-                if (nextBtn) nextBtn.disabled = currentIndex >= stepButtons.length - 1;
+                var tabs = getTabsForStep(step);
+                var subIdx = tabs.indexOf(activeTarget);
+                if (prevBtn) prevBtn.disabled = (currentIndex <= 0 && subIdx <= 0);
+                if (nextBtn) nextBtn.disabled = (getNextSubSectionTarget(activeTarget) === null);
             }
 
             stepButtons.forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     var target = btn.getAttribute('data-ve-step-target');
                     if (!target) return;
-                    var changed = showTab(target);
+                    var changed = requestTabChange(target);
                     if (!changed) return;
                     syncUIFromTarget(target);
                 });
@@ -324,28 +593,155 @@
 
             if (prevBtn) {
                 prevBtn.addEventListener('click', function () {
-                    var active = workflow.querySelector('[data-ve-step].is-active');
-                    var index = stepButtons.indexOf(active);
-                    if (index <= 0) return;
-                    var prevStep = stepButtons[index - 1];
-                    var target = prevStep ? prevStep.getAttribute('data-ve-step-target') : null;
-                    if (target && showTab(target)) {
-                        syncUIFromTarget(target);
+                    var activeTarget = getActiveTarget();
+                    var currentStep = getStepForTarget(activeTarget);
+                    if (!currentStep) return;
+
+                    var tabs = getTabsForStep(currentStep);
+                    var idx = tabs.indexOf(activeTarget);
+
+                    var prevTarget;
+                    if (idx > 0) {
+                        // Previous sub-section within same step
+                        prevTarget = tabs[idx - 1];
+                    } else {
+                        // First sub-section of step — go to last sub-section of previous step
+                        var stepIndex = stepButtons.indexOf(currentStep);
+                        if (stepIndex <= 0) return;
+                        var prevStep = stepButtons[stepIndex - 1];
+                        var prevTabs = getTabsForStep(prevStep);
+                        prevTarget = prevTabs.length > 0 ? prevTabs[prevTabs.length - 1] : prevStep.getAttribute('data-ve-step-target');
                     }
+
+                    if (!prevTarget) return;
+                    hideGuardMessage();
+                    showTab(prevTarget);
+                    syncUIFromTarget(prevTarget);
                 });
             }
 
             if (nextBtn) {
                 nextBtn.addEventListener('click', function () {
-                    var active = workflow.querySelector('[data-ve-step].is-active');
-                    var index = stepButtons.indexOf(active);
-                    if (index < 0 || index >= stepButtons.length - 1) return;
-                    var nextStep = stepButtons[index + 1];
-                    var target = nextStep ? nextStep.getAttribute('data-ve-step-target') : null;
-                    if (target && showTab(target)) {
-                        syncUIFromTarget(target);
+                    var activeTarget = getActiveTarget();
+                    var nextTarget = getNextSubSectionTarget(activeTarget);
+                    if (!nextTarget) return;
+
+                    var activePane = getPane(activeTarget);
+                    if (activePane) {
+                        var state = updatePaneState(activePane);
+                        if (state.state === 'invalid') {
+                            showGuardMessage('invalid', labelForTarget(activeTarget));
+                            if (state.field) scrollToField(state.field);
+                            return;
+                        }
+                        if (state.state === 'dirty') {
+                            // Store where to go after save, then submit form
+                            try { sessionStorage.setItem('ve_pending_next_tab', nextTarget); } catch (e) {}
+                            if (form) {
+                                if (typeof form.requestSubmit === 'function') {
+                                    form.requestSubmit();
+                                } else if (submitBtn) {
+                                    submitBtn.click();
+                                } else {
+                                    form.submit();
+                                }
+                            }
+                            return;
+                        }
+                    }
+
+                    // Pane is clean — navigate directly
+                    hideGuardMessage();
+                    showTab(nextTarget);
+                    syncUIFromTarget(nextTarget);
+                    showGuardMessage('success', labelForTarget(nextTarget));
+                    setTimeout(function () { hideGuardMessage(); }, 3500);
+                });
+            }
+
+            document.addEventListener('click', function (e) {
+                var link = e.target && e.target.closest ? e.target.closest('.ve-nav-tabs .nav-link[data-bs-toggle="tab"]') : null;
+                if (!link) return;
+                var target = link.getAttribute('href');
+                if (!target || target === getActiveTarget()) return;
+                if (!requestTabChange(target)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+
+            if (form) {
+                form.addEventListener('input', function (e) {
+                    var field = e.target;
+                    var pane = field && field.closest ? field.closest('.tab-pane') : null;
+                    if (!pane) return;
+                    clearFieldValidation(field);
+                    updatePaneState(pane);
+                }, true);
+
+                form.addEventListener('change', function (e) {
+                    var field = e.target;
+                    var pane = field && field.closest ? field.closest('.tab-pane') : null;
+                    if (!pane) return;
+                    clearFieldValidation(field);
+                    updatePaneState(pane);
+                }, true);
+
+                form.addEventListener('submit', function (e) {
+                    if (submitting) {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    syncAllPaneStates();
+
+                    var firstInvalid = firstInvalidFieldInForm();
+                    if (firstInvalid) {
+                        e.preventDefault();
+                        submitting = false;
+                        if (form) {
+                            form.dataset.isSubmitting = '0';
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.classList.remove('disabled');
+                            submitBtn.removeAttribute('disabled');
+                        }
+                        var invalidTarget = paneTarget(firstInvalid.pane);
+                        showGuardMessage('invalid', labelForTarget(invalidTarget));
+                        if (invalidTarget && invalidTarget !== getActiveTarget() && showTab(invalidTarget)) {
+                            syncUIFromTarget(invalidTarget);
+                        }
+                        updatePaneState(firstInvalid.pane);
+                        window.requestAnimationFrame(function () {
+                            scrollToField(firstInvalid.field);
+                        });
+                        return;
+                    }
+
+                    hideGuardMessage();
+                    submitting = true;
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
                     }
                 });
+            }
+
+            function initialisePaneTracking() {
+                allPanes.forEach(function (pane) {
+                    capturePaneSnapshot(pane);
+                });
+
+                syncAllPaneStates();
+
+                if (window.MutationObserver) {
+                    allPanes.forEach(function (pane) {
+                        var observer = new MutationObserver(function () {
+                            updatePaneState(pane);
+                        });
+                        observer.observe(pane, { childList: true, subtree: true });
+                    });
+                }
             }
 
             document.addEventListener('shown.bs.tab', function (e) {
@@ -354,8 +750,29 @@
                 syncUIFromTarget(target);
             });
 
+            // After-save pending navigation: if a save was triggered by "Étape suivante",
+            // redirect to the target section that was stored before submit.
+            var _pendingTab = (function () {
+                try { return sessionStorage.getItem('ve_pending_next_tab'); } catch (e) { return null; }
+            })();
+            if (_pendingTab) {
+                try { sessionStorage.removeItem('ve_pending_next_tab'); } catch (e) {}
+            }
+
             var activeTab = document.querySelector('.ve-nav-tabs .nav-link.active[data-bs-toggle="tab"]');
-            syncUIFromTarget(activeTab ? activeTab.getAttribute('href') : '#basic');
+            var _initialTarget = _pendingTab && targetExists(_pendingTab) ? _pendingTab : (activeTab ? activeTab.getAttribute('href') : '#basic');
+            syncUIFromTarget(_initialTarget);
+            if (_pendingTab && targetExists(_pendingTab)) {
+                showTab(_pendingTab);
+            }
+            initialisePaneTracking();
+
+            if (_pendingTab && targetExists(_pendingTab)) {
+                setTimeout(function () {
+                    showGuardMessage('success', labelForTarget(_pendingTab));
+                    setTimeout(function () { hideGuardMessage(); }, 4000);
+                }, 400);
+            }
         });
     </script>
 @endpush

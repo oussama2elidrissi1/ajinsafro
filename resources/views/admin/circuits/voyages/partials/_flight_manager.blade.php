@@ -19,7 +19,6 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
     $dayNumber = $dayNumber ?? 1;
     $totalDays = $totalDays ?? $lastDayNumber;
     $containerId = $isCompact ? ($mode . '-flights-container') : 'flights-container';
-    $withoutFlight = $withoutFlight ?? empty($flightOptionsWithIndex);
     $fmtDate = function($d) {
         if (!$d) return null;
         return $d instanceof \Carbon\Carbon ? $d->format('D, d M') : \Carbon\Carbon::parse($d)->format('D, d M');
@@ -140,21 +139,7 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
         </p>
     @endif
 
-    <div class="flight-option-toggle mb-3">
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="no-flights-toggle-{{ $containerId }}"
-                   name="without_flight_toggle"
-                   {{ $withoutFlight ? 'checked' : '' }}
-                   aria-describedby="no-flights-msg-{{ $containerId }}">
-            <label class="form-check-label fw-bold text-muted" for="no-flights-toggle-{{ $containerId }}">
-                Sans vol (circuit terrestre uniquement)
-            </label>
-        </div>
-        @if(!$isCompact)<input type="hidden" name="without_flight" id="without_flight-{{ $containerId }}" value="{{ $withoutFlight ? '1' : '0' }}">@endif
-        <p class="small text-muted mt-2 mb-0 {{ $withoutFlight ? '' : 'd-none' }}" id="no-flights-msg-{{ $containerId }}" role="status">Sans vol activé.</p>
-    </div>
-
-    <div class="flights-content" style="{{ $withoutFlight ? 'display: none;' : '' }}" data-without-flight-target>
+    <div class="flights-content">
 
         @if(!$isCompact)
             <div class="mb-3">
@@ -343,7 +328,6 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
         if (!container || container.dataset.flightManagerInitialized) return;
         container.dataset.flightManagerInitialized = 'true';
 
-        const noFlightsToggle = container.querySelector('#no-flights-toggle-{{ $containerId }}');
         const flightsContent = container.querySelector('.flights-content');
         const validationAlert = container.querySelector('#flight-validation-error');
         const titleEl = container.querySelector('[data-flight-context-title]');
@@ -395,18 +379,6 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
             hideValidationError();
         }
 
-        if (noFlightsToggle && flightsContent) {
-            var withoutFlightHidden = container.querySelector('#without_flight-{{ $containerId }}');
-            var noFlightsMsg = container.querySelector('#no-flights-msg-{{ $containerId }}');
-            noFlightsToggle.addEventListener('change', function() {
-                var without = this.checked;
-                flightsContent.style.display = without ? 'none' : '';
-                if (withoutFlightHidden) withoutFlightHidden.value = without ? '1' : '0';
-                if (noFlightsMsg) noFlightsMsg.classList.toggle('d-none', !without);
-                hideValidationError();
-            });
-        }
-
         container.addEventListener('click', function(e) {
             const jumpBtn = e.target.closest('[data-flight-jump-day]');
             if (!jumpBtn) return;
@@ -427,39 +399,12 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
     })();
     </script>
 @else
-    {{-- Full mode (onglet Vols Create/Edit): toggle CRUD visibility and sync without_flight --}}
+    {{-- Full mode (onglet Vols Create/Edit) --}}
     <script>
     (function() {
         var container = document.getElementById('{{ $containerId }}');
         if (!container || container.dataset.fullFlightToggleInit) return;
         container.dataset.fullFlightToggleInit = 'true';
-
-        var toggle = container.querySelector('#no-flights-toggle-{{ $containerId }}');
-        var hidden = document.getElementById('without_flight-{{ $containerId }}');
-        var flightsContent = container.querySelector('.flights-content');
-        var msgEl = document.getElementById('no-flights-msg-{{ $containerId }}');
-
-        function setWithoutFlight(without) {
-            if (hidden) hidden.value = without ? '1' : '0';
-            if (flightsContent) flightsContent.style.display = without ? 'none' : '';
-            if (msgEl) {
-                msgEl.classList.toggle('d-none', !without);
-            }
-            if (flightsContent) {
-                flightsContent.querySelectorAll('input, select, textarea, button').forEach(function(el) {
-                    if (el.name && el.name.indexOf('flight_options') === 0) {
-                        el.disabled = without;
-                    }
-                });
-            }
-        }
-
-        if (toggle) {
-            toggle.addEventListener('change', function() {
-                setWithoutFlight(this.checked);
-            });
-            setWithoutFlight(toggle.checked);
-        }
 
         if (window.__airlineManagerInit) {
             return;

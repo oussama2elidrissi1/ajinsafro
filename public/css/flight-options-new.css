@@ -1,0 +1,219 @@
+/**
+ * FLIGHT OPTIONS STYLES - New Direct-Edit Card Design
+ * ===================================================
+ * Replaces old view/edit toggle with single inline-editable card
+ */
+
+/* Flight Option Card: New Direct-Edit Structure */
+.voyage-edit-page .flight-opt-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    overflow: hidden;
+}
+
+.voyage-edit-page .flight-opt-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+}
+
+/* Card Header: Route display with delete button */
+.voyage-edit-page .flight-opt-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 16px;
+    gap: 12px;
+}
+
+.voyage-edit-page .flight-opt-route-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.voyage-edit-page .flight-opt-route-display input {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.voyage-edit-page .flight-opt-route-display input::placeholder {
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+.voyage-edit-page .flight-opt-remove {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-color: #fca5a5 !important;
+    color: #dc2626 !important;
+    flex-shrink: 0;
+}
+
+.voyage-edit-page .flight-opt-remove:hover {
+    background: #fee2e2 !important;
+}
+
+/* Card Body: Form fields directly editable */
+.voyage-edit-page .flight-opt-body {
+    padding: 16px !important;
+    background: #ffffff;
+}
+
+.voyage-edit-page .flight-opt-body .row {
+    margin: 0;
+}
+
+.voyage-edit-page .flight-opt-body .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.voyage-edit-page .flight-opt-body .form-control,
+.voyage-edit-page .flight-opt-body .form-select {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.voyage-edit-page .flight-opt-body .form-control:focus,
+.voyage-edit-page .flight-opt-body .form-select:focus {
+    background: #fff;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Section dividers (visual grouping) */
+.voyage-edit-page .flight-opt-body > .row > div:first-child {
+    /* First section - no top border */
+}
+
+.voyage-edit-page .flight-opt-body > .row > div:nth-of-type(3) {
+    /* Section 2 (Dates) starts here - optional dividing line */
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
+    margin-top: 8px;
+}
+
+/* Checkbox styling */
+.voyage-edit-page .flight-opt-body .form-check {
+    margin: 0;
+}
+
+.voyage-edit-page .flight-opt-body .form-check-input {
+    border-color: #cbd5e1;
+    margin-top: 4px;
+}
+
+.voyage-edit-page .flight-opt-body .form-check-input:checked {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.voyage-edit-page .flight-opt-body .form-check-label {
+    color: #475569;
+    font-size: 13px;
+    margin-left: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .voyage-edit-page .flight-opt-card {
+        margin-bottom: 12px;
+    }
+
+    .voyage-edit-page .flight-opt-header {
+        padding: 10px 12px;
+    }
+
+    .voyage-edit-page .flight-opt-body {
+        padding: 12px !important;
+    }
+
+    .voyage-edit-page .flight-opt-body .form-label {
+        font-size: 11px;
+    }
+
+    .voyage-edit-page .flight-opt-route-display {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .voyage-edit-page .flight-opt-route-display > div {
+        width: 100%;
+    }
+
+    .voyage-edit-page .flight-opt-remove {
+        width: 100%;
+    }
+}
+
+/* Button styling for add/remove */
+.voyage-edit-page .btn-add-flight-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.voyage-edit-page .btn-add-flight-opt:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+/* Flight sections styling */
+.voyage-edit-page .flight-opt-section {
+    margin-bottom: 28px;
+}
+
+.voyage-edit-page .flight-opt-section h6 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.voyage-edit-page .flight-opt-section h6 i {
+    font-size: 18px;
+    color: #4f46e5;
+}
+
+/* Empty state message */
+.voyage-edit-page .flight-opt-cards-outbound:empty::before,
+.voyage-edit-page .flight-opt-cards-return:empty::before,
+.voyage-edit-page .flight-opt-cards-segment:empty::before {
+    content: "Aucun vol pour cette section — Cliquez sur 'Ajouter' pour en créer un";
+    display: block;
+    padding: 20px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}

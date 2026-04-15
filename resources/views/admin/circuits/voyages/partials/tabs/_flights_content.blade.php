@@ -11,5 +11,4 @@
     'lastDayNumber' => $lastDayNumber,
     'airlines' => $airlines ?? collect(),
     'departurePlaces' => $departurePlaces ?? collect(),
-    'without_flight' => empty($flightOptionsWithIndex),
 ])

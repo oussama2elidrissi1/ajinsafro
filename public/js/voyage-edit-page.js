@@ -4771,25 +4771,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     console.log('Ã°Å¸â€œÅ  Total flight_options valides:', count);
                     
-                    var withoutFlight = fd.get('without_flight') === '1';
-                    if (count === 0 && !withoutFlight) {
-                        console.error('Ã¢ÂÅ’ AUCUN flight_options dÃ©tectÃ© dans le FormData!');
-                        console.log('VÃ©rifications:');
-                        console.log('  1. Les inputs ont-ils les bons attributs name?');
-                        console.log('  2. Les inputs sont-ils dans le formulaire #edit-voyage-form?');
-                        console.log('  3. Les inputs sont-ils disabled?');
-                        
-                        if (!confirm('Ã¢Å¡Â Ã¯Â¸Â ATTENTION: Aucun flight_options dÃ©tectÃ©!\n\nVoulez-vous quand mÃªme envoyer le formulaire?\n(Cliquez sur Cancel pour dÃ©boguer)')) {
-                            e.preventDefault();
-                            e.stopImmediatePropagation();
-                            // RÃ©activer les inputs du drawer
-                            drawerInputsDisabled.forEach(function(el) {
-                                el.removeAttribute('disabled');
-                                el.removeAttribute('data-was-enabled');
-                            });
-                        }
-                    } else if (withoutFlight) {
-                        console.log('Ã¢Å“â€¦ Sans vol activÃ©, soumission OK (aucun flight_options attendu)');
+                    if (count === 0) {
+                        console.log('Ã¢Å“â€¦ Aucun flight_options dÃ©tectÃ©: voyage considÃ©rÃ© sans vol, soumission OK');
                     } else {
                         console.log('Ã¢Å“â€¦ Flight options detectÃ©s, soumission OK');
                     }

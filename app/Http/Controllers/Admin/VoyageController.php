@@ -304,7 +304,7 @@ class VoyageController extends Controller
                 ]);
             }
 
-            if (!$request->boolean('without_flight') && $request->input('without_flight') !== '1' && $request->has('flights')) {
+            if ($request->has('flights')) {
                 try {
                     $this->voyageFlightService->syncFlights($laravelVoyage->id, $request->input('flights', []));
                 } catch (\Throwable $e) {
@@ -2079,19 +2079,20 @@ class VoyageController extends Controller
                 ]);
             }
             
-            $withoutFlight = $request->boolean('without_flight') || $request->input('without_flight') === '1';
-            if ($withoutFlight) {
+            $flightOptionsInput = $request->input('flight_options');
+            $hasFlightOptions = is_array($flightOptionsInput) && !empty($flightOptionsInput);
+
+            if (empty($request->input('flight_options')) && !$request->has('flights')) {
                 try {
                     $this->voyageFlightOptionService->syncOptions($laravelVoyage->id, [], $lastDayNumber);
                     if ($laravelVoyage->wp_post_id) {
                         $this->voyageFlightOptionService->syncOptionsToWp($laravelVoyage->id, (int) $laravelVoyage->wp_post_id, $lastDayNumber);
                     }
                 } catch (\Throwable $e) {
-                    \Log::warning('VoyageController@update clear flights (without_flight) failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
+                    \Log::warning('VoyageController@update clear flights (empty flight_options) failed', ['tour_id' => $id, 'message' => $e->getMessage()]);
                 }
-            } elseif ($request->has('flight_options') && is_array($request->input('flight_options'))) {
+            } elseif ($hasFlightOptions) {
                 try {
-                    $flightOptionsInput = $request->input('flight_options');
                     \Log::debug('VoyageController@update flight_options payload FULL', [
                         'tour_id' => $id,
                         'voyage_id' => $laravelVoyage->id,

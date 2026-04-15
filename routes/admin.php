@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TaxonomyTermController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
+use App\Http\Controllers\Admin\LaravelVoyageThemeController;
 use App\Http\Controllers\Admin\TravelDayItemController;
 use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\UserAccessController;
@@ -264,6 +265,12 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('circuits/voyages/{voyage}/departures/hotels/{departureHotel}/rooms', [VoyageDepartureManageController::class, 'storeRoom'])->name('circuits.voyages.departures.rooms.store');
         Route::put('circuits/voyages/{voyage}/departures/rooms/{departureHotelRoom}', [VoyageDepartureManageController::class, 'updateRoom'])->name('circuits.voyages.departures.rooms.update');
         Route::delete('circuits/voyages/{voyage}/departures/rooms/{departureHotelRoom}', [VoyageDepartureManageController::class, 'destroyRoom'])->name('circuits.voyages.departures.rooms.destroy');
+
+        Route::get('circuits/voyage-themes', [LaravelVoyageThemeController::class, 'index'])->name('circuits.voyage-themes.index');
+        Route::post('circuits/voyage-themes', [LaravelVoyageThemeController::class, 'store'])->name('circuits.voyage-themes.store');
+        Route::match(['put', 'patch'], 'circuits/voyage-themes/{voyageTheme}', [LaravelVoyageThemeController::class, 'update'])->name('circuits.voyage-themes.update');
+        Route::delete('circuits/voyage-themes/{voyageTheme}', [LaravelVoyageThemeController::class, 'destroy'])->name('circuits.voyage-themes.destroy');
+        Route::get('circuits/voyage-themes/{voyageTheme}/impact', [LaravelVoyageThemeController::class, 'impact'])->name('circuits.voyage-themes.impact');
 
         Route::post('circuits/voyages/{voyage}/items', [TravelDayItemController::class, 'store'])->name('circuits.voyages.items.store');
         Route::get('circuits/voyages/{voyage}/items/{item}/edit', [TravelDayItemController::class, 'edit'])->name('circuits.voyages.items.edit');

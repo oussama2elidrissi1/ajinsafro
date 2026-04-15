@@ -76,18 +76,8 @@
             $airlines = $airlines ?? collect();
             $hasSecondFlightCreate = old('flights.1.airline_id') || old('flights.1.cabin_class');
             $flightDash = '—';
-            $createWithoutFlight = old('without_flight', false);
         @endphp
-                <div class="mb-3 p-3 rounded border bg-light">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="create-no-flights-toggle" name="without_flight_toggle"
-                               {{ $createWithoutFlight ? 'checked' : '' }} aria-describedby="create-no-flights-msg">
-                        <label class="form-check-label fw-bold text-muted" for="create-no-flights-toggle">Sans vol (circuit terrestre uniquement)</label>
-                    </div>
-                    <input type="hidden" name="without_flight" id="create-without-flight" value="{{ $createWithoutFlight ? '1' : '0' }}">
-                    <p class="small text-muted mt-2 mb-0 {{ $createWithoutFlight ? '' : 'd-none' }}" id="create-no-flights-msg" role="status">Sans vol activé.</p>
-                </div>
-                <div id="create-flights-content" class="create-flights-crud" style="{{ $createWithoutFlight ? 'display: none;' : '' }}">
+                <div id="create-flights-content" class="create-flights-crud">
                 <style>
                 .flight-card-admin { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #e9ecef; overflow: hidden; }
                 .flight-card-admin .flight-card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
@@ -505,28 +495,6 @@
             });
         });
         
-        // Create: Sans vol switch — show/hide CRUD vols and sync hidden input
-        document.addEventListener('DOMContentLoaded', function() {
-            var toggle = document.getElementById('create-no-flights-toggle');
-            var hidden = document.getElementById('create-without-flight');
-            var content = document.getElementById('create-flights-content');
-            var msgEl = document.getElementById('create-no-flights-msg');
-            function setCreateWithoutFlight(without) {
-                if (hidden) hidden.value = without ? '1' : '0';
-                if (content) content.style.display = without ? 'none' : '';
-                if (msgEl) msgEl.classList.toggle('d-none', !without);
-                if (content) {
-                    content.querySelectorAll('input, select, textarea, button').forEach(function(el) {
-                        if (el.name && el.name.indexOf('flights[') === 0) el.disabled = without;
-                    });
-                }
-            }
-            if (toggle) {
-                toggle.addEventListener('change', function() { setCreateWithoutFlight(this.checked); });
-                setCreateWithoutFlight(toggle.checked);
-            }
-        });
-
         // Vols: flight cards + edit mode (create form)
         document.addEventListener('DOMContentLoaded', function() {
             var dash = '—';

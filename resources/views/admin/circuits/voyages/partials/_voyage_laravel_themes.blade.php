@@ -98,7 +98,7 @@
 
 <script>
 (function() {
-    const baseUrl = @json(url('admin/circuits/voyage-themes'));
+    const baseUrl = @json(route('admin.circuits.voyage-themes.index'));
     const csrf = @json(csrf_token());
 
     function getCheckedThemeIds(container) {
