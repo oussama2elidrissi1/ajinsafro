@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Role;
 
@@ -152,6 +153,11 @@ class UserAccessController extends Controller
             ->toArray();
 
         $selectedRole = $user->roles->first()?->name ?? $user->base_role;
+        $accessMode = $user->access_mode ?: 'role';
+
+        $directPermissions = $user->permissions->pluck('name')->values()->all();
+        $rolePermissions = $selectedRole ? ($rolePermissionsMap[$selectedRole] ?? []) : [];
+        $selectedPermissions = $accessMode === 'role' ? $rolePermissions : $directPermissions;
 
         $managersQuery = User::query()->where('is_active', true)->whereNotNull('branch_id');
         $this->branchScope->scopeUsers($managersQuery, request()->user());
@@ -165,7 +171,7 @@ class UserAccessController extends Controller
             'permissionGroups' => $permissionGroups,
             'rolePermissionsMap' => $rolePermissionsMap,
             'selectedRole' => $selectedRole,
-            'selectedPermissions' => $user->permissions->pluck('name')->toArray(),
+            'selectedPermissions' => $selectedPermissions,
             'isEdit' => $user->exists,
         ];
     }
@@ -201,6 +207,7 @@ class UserAccessController extends Controller
         }
 
         $data = $request->validate($baseRules);
+        $data['permissions'] = $this->normalizePermissionsInput($data['permissions'] ?? []);
 
         if ($data['access_mode'] === 'role' && empty($data['role_name'])) {
             throw ValidationException::withMessages([
@@ -211,10 +218,38 @@ class UserAccessController extends Controller
         return $data;
     }
 
+    private function normalizePermissionsInput(mixed $permissions): array
+    {
+        if (! is_array($permissions)) {
+            return [];
+        }
+
+        $permissions = array_values(array_unique(array_filter(array_map(static fn ($value) => is_string($value) ? trim($value) : '', $permissions))));
+
+        if (empty($permissions)) {
+            return [];
+        }
+
+        return \Spatie\Permission\Models\Permission::query()
+            ->whereIn('name', $permissions)
+            ->pluck('name')
+            ->values()
+            ->all();
+    }
+
     private function syncUserAccess(User $user, array $data): void
     {
         $accessMode = $data['access_mode'];
         $roleName = $data['role_name'] ?? null;
+        $permissions = $this->normalizePermissionsInput($data['permissions'] ?? []);
+
+        \Log::debug('UserAccessController@syncUserAccess payload', [
+            'user_id' => $user->id,
+            'access_mode' => $accessMode,
+            'role_name' => $roleName,
+            'permissions_count' => count($permissions),
+            'permissions' => $permissions,
+        ]);
 
         if ($accessMode === 'role') {
             $user->syncRoles($roleName ? [$roleName] : []);
@@ -224,22 +259,37 @@ class UserAccessController extends Controller
         }
 
         $user->syncRoles([]);
-        $user->syncPermissions($data['permissions'] ?? []);
+        $user->syncPermissions($permissions);
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     private function permissionGroups(): array
     {
         $groups = [];
+        $availablePermissions = Permission::query()->pluck('name')->flip();
 
         foreach (config('admin_menu.items', []) as $section) {
             $permissions = [];
+            $addedInGroup = [];
+
+            $pushPermission = static function (string $name, string $label) use (&$permissions, &$addedInGroup, $availablePermissions): void {
+                if (! $availablePermissions->has($name)) {
+                    return;
+                }
+
+                if (isset($addedInGroup[$name])) {
+                    return;
+                }
+
+                $permissions[] = [
+                    'name' => $name,
+                    'label' => $label,
+                ];
+                $addedInGroup[$name] = true;
+            };
 
             if (! empty($section['permission'])) {
-                $permissions[] = [
-                    'name' => $section['permission'],
-                    'label' => 'Accès section: ' . $section['label'],
-                ];
+                $pushPermission((string) $section['permission'], 'Accès section: ' . $section['label']);
             }
 
             foreach ($section['children'] ?? [] as $child) {
@@ -247,10 +297,7 @@ class UserAccessController extends Controller
                     continue;
                 }
 
-                $permissions[] = [
-                    'name' => $child['permission'],
-                    'label' => $child['label'],
-                ];
+                $pushPermission((string) $child['permission'], (string) ($child['label'] ?? $child['permission']));
             }
 
             if (! empty($permissions)) {

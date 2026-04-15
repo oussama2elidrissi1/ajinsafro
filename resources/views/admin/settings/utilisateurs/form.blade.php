@@ -152,21 +152,37 @@
                             </div>
 
                             <div class="tab-pane" id="tab-access" role="tabpanel">
+                                <div class="alert alert-info py-2 small mb-3" id="permissions-mode-alert">
+                                    En mode <strong>Hériter d'un rôle</strong>, les permissions suivent uniquement le rôle sélectionné.
+                                    Passez en <strong>Permissions personnalisées</strong> pour définir une sélection manuelle.
+                                </div>
+
                                 <div class="d-flex gap-2 mb-3">
                                     <button type="button" class="btn btn-sm btn-outline-primary" id="check-all">Tout cocher</button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" id="uncheck-all">Tout décocher</button>
                                     <button type="button" class="btn btn-sm btn-outline-info" id="apply-role-defaults">Réinitialiser selon rôle</button>
+                                    <span class="badge bg-soft-primary text-primary align-self-center" id="permissions-count">0 sélectionnée(s)</span>
                                 </div>
 
+                                @error('permissions')
+                                    <div class="alert alert-danger py-2">{{ $message }}</div>
+                                @enderror
+                                @error('permissions.*')
+                                    <div class="alert alert-danger py-2">{{ $message }}</div>
+                                @enderror
+
                                 @php
-                                    $selectedPermissions = old('permissions', $selectedPermissions ?? []);
+                                    $selectedPermissions = array_values(array_unique(old('permissions', $selectedPermissions ?? [])));
                                 @endphp
 
                                 @foreach($permissionGroups as $group)
                                     <div class="border rounded p-3 mb-3 permission-group" data-group="{{ $group['key'] }}">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <h6 class="mb-0">{{ $group['label'] }}</h6>
-                                            <button type="button" class="btn btn-sm btn-light check-section" data-group="{{ $group['key'] }}">Cocher section</button>
+                                            <div class="d-flex gap-1">
+                                                <button type="button" class="btn btn-sm btn-light check-section" data-group="{{ $group['key'] }}">Cocher section</button>
+                                                <button type="button" class="btn btn-sm btn-light uncheck-section" data-group="{{ $group['key'] }}">Décocher section</button>
+                                            </div>
                                         </div>
                                         <div class="row">
                                             @foreach($group['permissions'] as $permission)
@@ -206,33 +222,86 @@
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
         (function() {
+            const formEl = document.querySelector('form');
             const accessModeEl = document.getElementById('access_mode');
             const roleWrapper = document.getElementById('role-wrapper');
+            const modeAlert = document.getElementById('permissions-mode-alert');
             const checkAllBtn = document.getElementById('check-all');
             const uncheckAllBtn = document.getElementById('uncheck-all');
             const applyRoleDefaultsBtn = document.getElementById('apply-role-defaults');
+            const selectedCountEl = document.getElementById('permissions-count');
             const checkboxes = Array.from(document.querySelectorAll('.permission-checkbox'));
             const rolePermissionsMap = @json($rolePermissionsMap);
+            const roleSelect = roleWrapper ? roleWrapper.querySelector('select[name="role_name"]') : null;
 
-            function updateRoleVisibility() {
-                const isRoleMode = accessModeEl.value === 'role';
-                roleWrapper.style.display = isRoleMode ? '' : 'none';
+            const byPermissionValue = new Map();
+            checkboxes.forEach((checkbox) => {
+                const key = checkbox.value;
+                if (!byPermissionValue.has(key)) {
+                    byPermissionValue.set(key, []);
+                }
+                byPermissionValue.get(key).push(checkbox);
+            });
+
+            function currentModeIsCustom() {
+                return accessModeEl.value === 'custom';
             }
 
-            function setAll(state) {
+            function updateRoleVisibility() {
+                const isRoleMode = !currentModeIsCustom();
+                roleWrapper.style.display = isRoleMode ? '' : 'none';
+                if (modeAlert) {
+                    modeAlert.classList.toggle('alert-info', isRoleMode);
+                    modeAlert.classList.toggle('alert-success', !isRoleMode);
+                    modeAlert.innerHTML = isRoleMode
+                        ? 'En mode <strong>Héritage rôle</strong>, les permissions ci-dessous sont en lecture seule et suivent le rôle sélectionné.'
+                        : 'En mode <strong>Permissions personnalisées</strong>, les cases cochées sont exactement celles enregistrées pour cet utilisateur.';
+                }
+
+                const disabled = isRoleMode;
                 checkboxes.forEach((checkbox) => {
+                    checkbox.disabled = disabled;
+                });
+
+                [checkAllBtn, uncheckAllBtn, applyRoleDefaultsBtn].forEach((btn) => {
+                    if (!btn) return;
+                    btn.disabled = disabled;
+                });
+
+                document.querySelectorAll('.check-section, .uncheck-section').forEach((btn) => {
+                    btn.disabled = disabled;
+                });
+
+                updateSelectedCount();
+            }
+
+            function updateSelectedCount() {
+                if (!selectedCountEl) return;
+                const count = checkboxes.filter((checkbox) => checkbox.checked).length;
+                selectedCountEl.textContent = count + ' sélectionnée(s)';
+            }
+
+            function setPermissionState(permissionName, state) {
+                (byPermissionValue.get(permissionName) || []).forEach((checkbox) => {
                     checkbox.checked = state;
                 });
             }
 
+            function setAll(state) {
+                byPermissionValue.forEach((_, permissionName) => {
+                    setPermissionState(permissionName, state);
+                });
+                updateSelectedCount();
+            }
+
             function applyRoleDefaults() {
-                const roleSelect = roleWrapper.querySelector('select[name="role_name"]');
                 const roleName = roleSelect ? roleSelect.value : '';
                 const allowed = new Set(rolePermissionsMap[roleName] || []);
 
-                checkboxes.forEach((checkbox) => {
-                    checkbox.checked = allowed.has(checkbox.value);
+                byPermissionValue.forEach((_, permissionName) => {
+                    setPermissionState(permissionName, allowed.has(permissionName));
                 });
+                updateSelectedCount();
             }
 
             accessModeEl.addEventListener('change', updateRoleVisibility);
@@ -240,15 +309,58 @@
             uncheckAllBtn.addEventListener('click', () => setAll(false));
             applyRoleDefaultsBtn.addEventListener('click', applyRoleDefaults);
 
+            if (roleSelect) {
+                roleSelect.addEventListener('change', () => {
+                    if (!currentModeIsCustom()) {
+                        applyRoleDefaults();
+                    }
+                });
+            }
+
+            checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    setPermissionState(checkbox.value, checkbox.checked);
+                    updateSelectedCount();
+                });
+            });
+
             document.querySelectorAll('.check-section').forEach((button) => {
                 button.addEventListener('click', () => {
                     const group = button.dataset.group;
                     document.querySelectorAll('.permission-checkbox[data-group="' + group + '"]').forEach((checkbox) => {
-                        checkbox.checked = true;
+                        setPermissionState(checkbox.value, true);
                     });
+                    updateSelectedCount();
                 });
             });
 
+            document.querySelectorAll('.uncheck-section').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const group = button.dataset.group;
+                    document.querySelectorAll('.permission-checkbox[data-group="' + group + '"]').forEach((checkbox) => {
+                        setPermissionState(checkbox.value, false);
+                    });
+                    updateSelectedCount();
+                });
+            });
+
+            if (formEl) {
+                formEl.addEventListener('submit', () => {
+                    const selected = Array.from(byPermissionValue.keys()).filter((permissionName) => {
+                        const refs = byPermissionValue.get(permissionName) || [];
+                        return refs.some((checkbox) => checkbox.checked);
+                    });
+
+                    console.debug('UserAccess permissions submit payload', {
+                        access_mode: accessModeEl.value,
+                        role_name: roleSelect ? roleSelect.value : null,
+                        permissions_count: selected.length,
+                        permissions: selected,
+                    });
+                });
+            }
+
+            updateSelectedCount();
             updateRoleVisibility();
         })();
     </script>
