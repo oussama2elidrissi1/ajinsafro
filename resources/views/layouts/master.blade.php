@@ -13,12 +13,15 @@
     @include('layouts.head-css')
 </head>
 
-<body data-layout="detached" data-topbar="colored">
+<body class="internal-v2-topbar-hidden" data-layout="detached" data-topbar="colored">
     <!-- Begin page -->
     <div class="container-fluid">
         <div id="layout-wrapper">
-            @include('layouts.topbar')
+            @include('layouts.partials.internal-v2-topbar')
             @include('layouts.sidebar')
+            <button type="button" class="btn btn-primary d-lg-none internal-v2-menu-toggle" id="vertical-menu-btn" aria-label="Ouvrir le menu">
+                <i class="fa fa-fw fa-bars"></i>
+            </button>
             <div class="main-content">
                 <div class="page-content">
                     @yield('content')
