@@ -51,17 +51,17 @@
                     <label class="form-label">Ville</label>
                     <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][city]" value="{{ old('programme_days.'.$dayIndex.'.city', $day->city ?? '') }}" placeholder="Ex. : Marrakech">
                 </div>
-                <div class="field-resume">
+                <div class="field-resume ve-rich-field">
                     <label class="form-label">Résumé</label>
-                    <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][description]" rows="3" placeholder="Résumé du jour">{{ old('programme_days.'.$dayIndex.'.description', $day->description ?? '') }}</textarea>
+                    <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][description]" rows="3" placeholder="Résumé du jour">{{ old('programme_days.'.$dayIndex.'.description', $day->description ?? '') }}</textarea>
                 </div>
-                <div class="field-description programme-day-detail">
+                <div class="field-description programme-day-detail ve-rich-field">
                     <label class="form-label">Description détaillée</label>
-                    <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="5" placeholder="Programme détaillé du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
+                    <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="5" placeholder="Programme détaillé du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
                 </div>
-                <div class="field-notes programme-day-notes">
+                <div class="field-notes programme-day-notes ve-rich-field">
                     <label class="form-label">Notes</label>
-                    <textarea class="form-control rich-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="4" placeholder="Notes du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                    <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="4" placeholder="Notes du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
                 </div>
             </div>
 
@@ -93,7 +93,7 @@
                                 </span>
                                 @if($da->is_editable)
                                     <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:220px" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}" placeholder="Titre personnalisé">
-                                    <textarea class="form-control form-control-sm rich-editor" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="2" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
+                                    <textarea class="form-control form-control-sm programme-plain-editor" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" rows="2" placeholder="Description personnalisée">{{ $da->custom_description }}</textarea>
                                 @else
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_title]" value="{{ $da->custom_title }}">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][custom_description]" value="{{ $da->custom_description }}">

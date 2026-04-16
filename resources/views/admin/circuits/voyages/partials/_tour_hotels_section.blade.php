@@ -22,32 +22,6 @@
 
 <div id="tour-hotels-wrapper" data-wp-site-url="{{ $wpSiteUrl }}">
 
-    {{-- Copier depuis un hebergement WordPress (st_hotel) --}}
-    @if($otherHotels->isNotEmpty())
-    <div class="alert alert-light border d-flex flex-wrap align-items-center gap-2 mb-3 py-2 px-3" id="tour-hotels-copy-bar">
-        <span class="text-muted small me-1"><i class="bx bx-copy-alt"></i> Ajouter un sejour depuis un hebergement WordPress :</span>
-        <select class="form-select form-select-sm" id="copy-from-hotel-select" style="max-width:380px;">
-            <option value="">Selectionner un hebergement...</option>
-            @foreach($otherHotels as $oh)
-                @php
-                    $wpHotelId = (int) ($oh->wp_post_id ?? 0);
-                    $hotelLabel = trim((string) ($oh->hotel_name ?? '')) !== '' ? (string) $oh->hotel_name : ('Hotel #' . $wpHotelId);
-                    $hotelAddress = trim((string) ($oh->address ?? ''));
-                    $starsSuffix = isset($oh->stars) && $oh->stars !== null && $oh->stars !== ''
-                        ? (' - ' . (int) $oh->stars . ' etoile' . ((int) $oh->stars > 1 ? 's' : ''))
-                        : '';
-                    $label = $hotelAddress !== '' ? ($hotelLabel . ' - ' . $hotelAddress . $starsSuffix) : ($hotelLabel . $starsSuffix);
-                @endphp
-                @continue($wpHotelId <= 0)
-                <option value="{{ $wpHotelId }}">{{ \Str::limit($label, 78) }}</option>
-            @endforeach
-        </select>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="copy-from-hotel-btn">
-            <i class="bx bx-import"></i> Ajouter comme nouveau séjour
-        </button>
-    </div>
-    @endif
-
     @if($otherHotels->isNotEmpty())
         <datalist id="tour-hotels-wp-datalist">
             @foreach($otherHotels as $oh)
@@ -1105,26 +1079,6 @@
         updateGlobalTitle();
         notify();
     });
-
-    var copySelect = document.getElementById('copy-from-hotel-select');
-    var copyBtn = document.getElementById('copy-from-hotel-btn');
-    if (copySelect && copyBtn) {
-        copyBtn.addEventListener('click', function () {
-            var wpHotelId = parseWpHotelId(copySelect.value);
-            if (!wpHotelId) return;
-            copyBtn.disabled = true;
-            addBtn.click();
-            var rows = container.querySelectorAll('.tour-hotel-row');
-            var target = rows[rows.length - 1] || null;
-            if (!target) {
-                copyBtn.disabled = false;
-                return;
-            }
-            linkWpHotelToRow(target, wpHotelId, copyBtn).finally(function () {
-                copySelect.value = '';
-            });
-        });
-    }
 
     if (pickerSearchInput) {
         pickerSearchInput.addEventListener('input', renderPickerResults);

@@ -81,6 +81,7 @@
         });
     }
     window.refreshDeparturePlaceSelects = refreshDeparturePlaceSelects;
+    refreshDeparturePlaceSelects();
 
     function nextIndex() {
         var rows = container.querySelectorAll('.departure-place-inline-row');

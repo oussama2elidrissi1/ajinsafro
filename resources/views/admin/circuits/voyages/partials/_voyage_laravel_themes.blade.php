@@ -57,7 +57,7 @@
                         </div>
                     @endforeach
                     @if ($allVoyageThemes->isEmpty())
-                        <p class="text-muted small mb-0 ve-voyage-themes-empty">Aucun thème. Cliquez sur Ajouter ou exécutez le seeder.</p>
+                        <p class="text-muted small mb-0 ve-voyage-themes-empty">Aucun thème disponible pour le moment.</p>
                     @endif
                 </div>
             </div>
@@ -124,7 +124,7 @@
                 '<button type="button" class="btn btn-outline-danger ve-voyage-theme-delete" data-theme-id="' + id + '" data-name="' + safeName + '" title="Supprimer"><i class="bx bx-trash"></i></button>' +
                 '</div></div>';
         });
-        listEl.innerHTML = html || '<p class="text-muted small mb-0 ve-voyage-themes-empty">Aucun thème. Cliquez sur Ajouter ou exécutez le seeder.</p>';
+        listEl.innerHTML = html || '<p class="text-muted small mb-0 ve-voyage-themes-empty">Aucun thème disponible pour le moment.</p>';
         listEl.setAttribute('data-assigned-ids', assignedIds.join(','));
         bindThemeListEvents(listEl);
     }

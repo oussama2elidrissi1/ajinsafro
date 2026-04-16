@@ -14,13 +14,7 @@
                         <p class="small text-muted mb-0">Choisissez un mode, puis renseignez le formulaire.</p>
                     </div>
                     <nav class="nav nav-pills flex-column px-3 pb-4 gap-1" id="ve-logistics-nav" role="tablist">
-                        <button type="button" class="nav-link nav-link-ve active text-start" data-bs-toggle="tab" data-bs-target="#logistics-pane-flight" role="tab" aria-controls="logistics-pane-flight" aria-selected="true">
-                            <i class="bx bx-plane me-2"></i> Vol
-                        </button>
-                        <button type="button" class="nav-link nav-link-ve text-start" data-bs-toggle="tab" data-bs-target="#logistics-pane-transfer" role="tab">
-                            <i class="bx bx-car me-2"></i> Transfert
-                        </button>
-                        <button type="button" class="nav-link nav-link-ve text-start" data-bs-toggle="tab" data-bs-target="#logistics-pane-train" role="tab">
+                        <button type="button" class="nav-link nav-link-ve active text-start" data-bs-toggle="tab" data-bs-target="#logistics-pane-train" role="tab" aria-controls="logistics-pane-train" aria-selected="true">
                             <i class="bx bx-train me-2"></i> Train
                         </button>
                         <button type="button" class="nav-link nav-link-ve text-start" data-bs-toggle="tab" data-bs-target="#logistics-pane-boat" role="tab">
@@ -34,13 +28,7 @@
                 <div class="col-lg-9">
                     <div class="p-3 p-lg-4">
                         <div class="tab-content">
-                            <div class="tab-pane fade show active" id="logistics-pane-flight" role="tabpanel">
-                                @include('admin.circuits.voyages.partials.tabs._flights_content')
-                            </div>
-                            <div class="tab-pane fade" id="logistics-pane-transfer" role="tabpanel">
-                                @include('admin.circuits.voyages.partials.tabs._transfers_content')
-                            </div>
-                            <div class="tab-pane fade" id="logistics-pane-train" role="tabpanel">
+                            <div class="tab-pane fade show active" id="logistics-pane-train" role="tabpanel">
                                 @php $train = $lm['train'] ?? []; @endphp
                                 <div class="ve-logistics-pane-card card border-0 shadow-sm">
                                     <div class="card-header bg-white border-bottom py-3">

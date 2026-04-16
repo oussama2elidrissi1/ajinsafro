@@ -4,25 +4,26 @@
    ============================================================================ */
 
 .voyage-index-page {
-    --vi-primary: #4f46e5;
-    --vi-primary-dark: #3730a3;
-    --vi-primary-light: #818cf8;
-    --vi-primary-bg: rgba(79, 70, 229, 0.08);
+    --vi-primary: #0f766e;
+    --vi-primary-dark: #115e59;
+    --vi-primary-light: #14b8a6;
+    --vi-primary-bg: rgba(15, 118, 110, 0.1);
+    --vi-accent: #d97706;
     --vi-surface: #ffffff;
-    --vi-border: #e2e8f0;
+    --vi-border: #dfe7ee;
     --vi-text: #1e293b;
     --vi-muted: #64748b;
-    --vi-shadow: 0 1px 3px rgba(0, 0, 0, .04), 0 4px 14px rgba(0, 0, 0, .06);
+    --vi-shadow: 0 2px 8px rgba(15, 23, 42, .06), 0 10px 22px rgba(15, 23, 42, .06);
     --vi-radius: 14px;
 }
 
 .voyage-index-page .vi-page-header {
-    background: linear-gradient(135deg, var(--vi-primary) 0%, var(--vi-primary-dark) 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #0b5f71 50%, #0f3f66 100%);
     border-radius: var(--vi-radius);
     padding: 24px 28px;
     margin-bottom: 24px;
     color: #fff;
-    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.25);
+    box-shadow: 0 10px 28px rgba(15, 94, 89, 0.28);
     position: relative;
     overflow: hidden;
 }
@@ -35,7 +36,7 @@
     width: 280px;
     height: 280px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.09);
 }
 
 .voyage-index-page .vi-page-title {
@@ -90,8 +91,8 @@
     border: 0;
     border-radius: 10px;
     font-weight: 600;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.32);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 6px 16px rgba(217, 119, 6, 0.32);
 }
 
 .voyage-index-page .vi-header-cta:hover {
@@ -115,18 +116,30 @@
     padding: 22px 24px;
 }
 
-.voyage-index-page .vi-info-banner {
-    border: 1px solid #bfdbfe;
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
-    color: #1e40af;
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 0.88rem;
+.voyage-index-page .vi-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
 }
 
-.voyage-index-page .vi-info-banner i {
-    font-size: 1.1rem;
-    margin-top: 2px;
+.voyage-index-page .vi-stat-card {
+    border: 1px solid var(--vi-border);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbfc 100%);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+
+.voyage-index-page .vi-stat-label {
+    display: block;
+    color: var(--vi-muted);
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+}
+
+.voyage-index-page .vi-stat-value {
+    color: var(--vi-text);
+    font-size: 1.05rem;
+    font-weight: 700;
 }
 
 .voyage-index-page .vi-count-chip {
@@ -138,7 +151,27 @@
     font-weight: 600;
     color: var(--vi-primary);
     background: var(--vi-primary-bg);
-    border: 1px solid rgba(79, 70, 229, 0.18);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.voyage-index-page .vi-filters {
+    border-color: var(--vi-border) !important;
+    border-radius: 12px;
+    background: #fbfdfd;
+}
+
+.voyage-index-page .vi-filters .form-label {
+    color: #475569;
+    font-weight: 600;
+}
+
+.voyage-index-page .vi-filters .form-control,
+.voyage-index-page .vi-filters .form-select {
+    border-color: #cfd9e3;
+}
+
+.voyage-index-page .vi-filter-actions .btn {
+    min-width: 120px;
 }
 
 .voyage-index-page .vi-table-wrap {
@@ -152,7 +185,7 @@
 }
 
 .voyage-index-page .vi-table thead th {
-    background: #f8fafc;
+    background: #f1f6f8;
     color: var(--vi-muted);
     font-size: 0.77rem;
     text-transform: uppercase;
@@ -185,7 +218,7 @@
 }
 
 .voyage-index-page .vi-status-publish {
-    background: rgba(16, 185, 129, .16);
+    background: rgba(16, 185, 129, .14);
     color: #047857;
 }
 
@@ -229,6 +262,10 @@
 }
 
 @media (max-width: 991.98px) {
+    .voyage-index-page .vi-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .voyage-index-page .vi-page-header {
         padding: 18px;
     }
@@ -243,12 +280,12 @@
 }
 
 @media (max-width: 767.98px) {
-    .voyage-index-page .vi-header-cta {
-        width: 100%;
+    .voyage-index-page .vi-stats-grid {
+        grid-template-columns: 1fr;
     }
 
-    .voyage-index-page .vi-info-banner {
-        font-size: 0.82rem;
+    .voyage-index-page .vi-header-cta {
+        width: 100%;
     }
 
     .voyage-index-page .vi-table thead th,

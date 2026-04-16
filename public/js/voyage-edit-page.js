@@ -869,7 +869,8 @@ render();
 
 (function() {
                 var boot = window.VOYAGE_EDIT_BOOTSTRAP || {};
-                var wpTourId = parseInt(String(boot.wpTourId || '0'), 10) || 0;
+                var voyageForm = document.getElementById('edit-voyage-form');
+                var v2Page = document.querySelector('.v2-page');
                 var heroUploadUrl = boot.heroUploadUrl || '';
                 var heroSelectUrl = boot.heroSelectUrl || '';
                 var heroRemoveUrl = boot.heroRemoveUrl || '';
@@ -888,22 +889,37 @@ render();
                 var wpFeaturedPreview = document.getElementById('wp-featured-preview');
                 var wpFeaturedPreviewWrap = document.getElementById('wp-featured-preview-wrap');
                 var wpFeaturedRemoveBtn = document.getElementById('wp-featured-remove-btn');
-
-                function notifySaveFirst() {
-                    alert('Veuillez dâ€™abord enregistrer le voyage avant de gÃ©rer les images.');
+                function parsePositiveInt(value) {
+                    var parsed = parseInt(String(value || '0'), 10) || 0;
+                    return parsed > 0 ? parsed : 0;
                 }
 
-                if (wpTourId <= 0) {
-                    ['hero-upload-btn', 'hero-choose-media-btn', 'hero-remove-btn', 'wp-featured-choose-btn', 'wp-featured-upload-btn', 'wp-featured-remove-btn']
-                        .forEach(function (id) {
-                            var el = document.getElementById(id);
-                            if (!el) return;
-                            el.addEventListener('click', function (e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                notifySaveFirst();
-                            }, true);
-                        });
+                function getCurrentWpTourId() {
+                    var fromForm = voyageForm ? parsePositiveInt(voyageForm.getAttribute('data-voyage-id')) : 0;
+                    var fromV2 = v2Page ? parsePositiveInt(v2Page.getAttribute('data-v2-initial-id')) : 0;
+                    var fromBoot = parsePositiveInt(boot.wpTourId);
+                    var id = fromForm || fromV2 || fromBoot || 0;
+
+                    if (id > 0) {
+                        boot.wpTourId = id;
+                        window.PROGRAM_VOYAGE_ID = id;
+                    }
+
+                    return id;
+                }
+
+                function withCurrentTourId(url) {
+                    var raw = String(url || '');
+                    var currentId = getCurrentWpTourId();
+                    if (!raw || currentId <= 0) return raw;
+
+                    return raw.replace(/(\/circuits\/voyages\/)\d+(\/hero-image(?:\/select|\/remove)?)/, function (m, prefix, suffix) {
+                        return prefix + currentId + suffix;
+                    });
+                }
+
+                function notifySaveFirst() {
+                    alert("Veuillez d'abord enregistrer le voyage avant de gerer les images.");
                 }
 
                 function setHeroPreview(url, id) {
@@ -917,7 +933,7 @@ render();
                 }
                 if (heroFileInput) {
                     heroFileInput.addEventListener('change', function() {
-                        if (wpTourId <= 0) { heroFileInput.value = ''; notifySaveFirst(); return; }
+                        if (getCurrentWpTourId() <= 0) { heroFileInput.value = ''; notifySaveFirst(); return; }
                         if (!this.files || !this.files[0]) return;
                         var file = this.files[0];
                         var errEl = document.getElementById('hero-upload-error');
@@ -931,7 +947,7 @@ render();
                         var formData = new FormData();
                         formData.append('hero_image', file);
                         formData.append('_token', csrfToken);
-                        fetch(heroUploadUrl, {
+                        fetch(withCurrentTourId(heroUploadUrl), {
                             method: 'POST',
                             body: formData,
                             credentials: 'same-origin',
@@ -961,11 +977,11 @@ render();
 
                 if (document.getElementById('hero-remove-btn')) {
                     document.getElementById('hero-remove-btn').addEventListener('click', function() {
-                        if (wpTourId <= 0) { notifySaveFirst(); return; }
+                        if (getCurrentWpTourId() <= 0) { notifySaveFirst(); return; }
                         if (!confirm('Retirer l\'image principale ?')) return;
                         var fd = new FormData();
                         if (csrfToken) fd.append('_token', csrfToken);
-                        fetch(heroRemoveUrl, {
+                        fetch(withCurrentTourId(heroRemoveUrl), {
                             method: 'POST',
                             body: fd,
                             credentials: 'same-origin',
@@ -1031,7 +1047,7 @@ render();
                                             var fd = new FormData();
                                             fd.append('attachment_id', id);
                                             if (csrfToken) fd.append('_token', csrfToken);
-                                            fetch(heroSelectUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' } })
+                                            fetch(withCurrentTourId(heroSelectUrl), { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' } })
                                                 .then(function(r) { return r.json(); })
                                                 .then(function(r) {
                                                     if (r.success) { setHeroPreview(r.url, r.attachment_id); hideModal(mediaModal); }
@@ -1055,6 +1071,7 @@ render();
                 window.logistiqueMediaTarget = null;
                 if (document.getElementById('hero-choose-media-btn')) {
                     document.getElementById('hero-choose-media-btn').addEventListener('click', function() {
+                        if (getCurrentWpTourId() <= 0) { notifySaveFirst(); return; }
                         window.logistiqueMediaTarget = null;
                         var mediaModalInstance = getModalInstance(mediaModal);
                         if (mediaModalInstance) {
@@ -1284,6 +1301,7 @@ render();
 
                     featuredFileInput.addEventListener('change', function() {
                         if (!this.files || !this.files[0]) return;
+                        if (getCurrentWpTourId() <= 0) { this.value = ''; notifySaveFirst(); return; }
                         setFeaturedError('');
                         var file = this.files[0];
 
@@ -1295,7 +1313,7 @@ render();
 
                         var fd = new FormData();
                         fd.append('image', file);
-                        fd.append('post_parent_id', String(wpTourId));
+                        fd.append('post_parent_id', String(getCurrentWpTourId()));
                         if (csrfToken) fd.append('_token', csrfToken);
 
                         fetch(wpFeaturedMediaUploadUrl, {
@@ -1399,6 +1417,7 @@ render();
                 // Upload buttons
                 document.querySelectorAll('.hero-gallery-upload-btn').forEach(function(btn) {
                     btn.addEventListener('click', function() {
+                        if (getCurrentWpTourId() <= 0) { notifySaveFirst(); return; }
                         var index = this.getAttribute('data-index');
                         heroGalleryCurrentIndex = index;
                         var fileInput = document.createElement('input');
@@ -1410,7 +1429,7 @@ render();
                             var formData = new FormData();
                             formData.append('hero_image', file);
                             if (csrfToken) formData.append('_token', csrfToken);
-                            fetch(heroGalleryUploadUrl, {
+                            fetch(withCurrentTourId(heroGalleryUploadUrl), {
                                 method: 'POST',
                                 body: formData,
                                 credentials: 'same-origin',
@@ -1622,6 +1641,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!el || el.tagName !== 'TEXTAREA') return;
                 if (!el.classList.contains('rich-editor')) return;
                 if (el.dataset.richEditorInitialized === 'true') return;
+                if (!window.tinymce || typeof tinymce.init !== 'function') return;
 
                 var id = ensureId(el);
                 if (window.tinymce && tinymce.get(id)) {
@@ -1682,6 +1702,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 document.addEventListener('shown.bs.tab', function (e) {
                     var target = e && e.target ? document.querySelector(e.target.getAttribute('href')) : null;
+                    if (target) initAll(target);
+                });
+
+                document.addEventListener('shown.bs.collapse', function (e) {
+                    var target = e && e.target ? e.target : null;
                     if (target) initAll(target);
                 });
             }
@@ -2594,6 +2619,95 @@ document.addEventListener('DOMContentLoaded', function () {
                     durationInput.value = n > 0 ? n : (durationInput.value || 1);
                 }
             }
+            function parseRequestedDuration() {
+                if (!durationInput) return count() || 1;
+                var parsed = parseInt(String(durationInput.value || '').trim(), 10);
+                if (!Number.isFinite(parsed) || parsed < 1) parsed = 1;
+                if (parsed > 365) parsed = 365;
+                return parsed;
+            }
+            function dayCardHasMeaningfulData(card) {
+                if (!card) return false;
+                if (card.querySelectorAll('.programme-activity-row').length > 0) return true;
+
+                var titleInput = card.querySelector('input[name$="[day_title]"]');
+                if (titleInput && String(titleInput.value || '').trim() !== '') return true;
+
+                var cityInput = card.querySelector('input[name$="[city]"]');
+                if (cityInput && String(cityInput.value || '').trim() !== '') return true;
+
+                var descriptionInput = card.querySelector('textarea[name$="[description]"]');
+                if (descriptionInput && String(descriptionInput.value || '').trim() !== '') return true;
+
+                var contentInput = card.querySelector('textarea[name$="[content_html]"]');
+                if (contentInput && String(contentInput.value || '').trim() !== '') return true;
+
+                var notesInput = card.querySelector('textarea[name$="[notes]"]');
+                if (notesInput && String(notesInput.value || '').trim() !== '') return true;
+
+                return false;
+            }
+            function syncDaysFromDuration(options) {
+                if (!accordion) return;
+                var opts = options || {};
+                var desired = parseRequestedDuration();
+                var current = count();
+
+                if (desired === current) return;
+
+                if (desired > current) {
+                    while (count() < desired) {
+                        addDay({
+                            openNewDay: false,
+                            skipExtrasRefresh: true,
+                            skipDurationSync: true
+                        });
+                    }
+                    renumber();
+
+                    if (opts.openLast !== false) {
+                        var lastCard = accordion.querySelector('.programme-day-card:last-child');
+                        var collapseEl = lastCard ? lastCard.querySelector('.accordion-collapse') : null;
+                        var toggleBtn = lastCard ? lastCard.querySelector('.accordion-button') : null;
+                        if (collapseEl) {
+                            accordion.querySelectorAll('.accordion-collapse.show').forEach(function(el) {
+                                el.classList.remove('show');
+                            });
+                            accordion.querySelectorAll('.accordion-button').forEach(function(btn) {
+                                btn.classList.add('collapsed');
+                                btn.setAttribute('aria-expanded', 'false');
+                            });
+                            if (window.bootstrap && bootstrap.Collapse) {
+                                new bootstrap.Collapse(collapseEl, { toggle: true });
+                            } else {
+                                collapseEl.classList.add('show');
+                            }
+                        }
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('collapsed');
+                            toggleBtn.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                    return;
+                }
+
+                var cards = Array.prototype.slice.call(accordion.querySelectorAll('.programme-day-card'));
+                var toRemove = cards.slice(desired);
+                if (!toRemove.length) return;
+
+                var hasData = toRemove.some(dayCardHasMeaningfulData);
+                if (hasData && opts.force !== true) {
+                    var ok = confirm('La durée est inférieure au nombre de jours existants. Les derniers jours contiennent des données. Voulez-vous les supprimer ?');
+                    if (!ok) {
+                        durationInput.value = current;
+                        return;
+                    }
+                }
+
+                toRemove.forEach(function(card) { card.remove(); });
+                if (count() === 0 && noDaysAlert) noDaysAlert.style.display = '';
+                renumber();
+            }
             function escapeDayTypeHtml(s) {
                 var d = document.createElement('div');
                 d.textContent = s != null ? String(s) : '';
@@ -2652,22 +2766,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div class="accordion-body" data-day-index="' + index + '" data-day-id="">' +
                     '<input type="hidden" name="programme_days[' + index + '][id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][day_id]" value="">' +
-                    '<div class="row g-4 mb-3 programme-day-settings"><div class="col-md-4"><label class="form-label">Mode</label>' +
+                    '<div class="program-day-form" data-day-index="' + index + '">' +
+                    '<div class="field-mode"><label class="form-label">Type / mode</label>' +
                     '<select name="programme_days[' + index + '][mode]" class="form-select programme-day-mode">' +
-                    '<option value="program" selected>Programme</option><option value="free">Libre</option></select></div>' +
-                    '<div class="col-md-4"><label class="form-label">Type de jour</label>' +
+                    '<option value="program" selected>Visite / programme</option><option value="free">Libre</option></select></div>' +
+                    '<div class="field-type"><label class="form-label">Type de jour</label>' +
                     '<select name="programme_days[' + index + '][day_type]" class="form-select">' +
                     buildProgramDayTypeOptionsHtml('visite') + '</select></div>' +
-                    '<div class="col-md-4"><label class="form-label">Titre du jour</label>' +
-                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex. : Jour ' + (index + 1) + ' — Arrivée"></div></div>' +
-                    '<div class="row mb-3 programme-day-split"><div class="col-md-6"><label class="form-label">Ville</label>' +
+                    '<div class="field-title"><label class="form-label">Titre du jour</label>' +
+                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex. : Jour ' + (index + 1) + ' — Arrivée"></div>' +
+                    '<div class="field-ville"><label class="form-label">Ville</label>' +
                     '<input type="text" class="form-control" name="programme_days[' + index + '][city]" placeholder="Ex. : Marrakech"></div>' +
-                    '<div class="col-md-6"><label class="form-label">Résumé</label>' +
-                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="Résumé du jour"></textarea></div></div>' +
-                    '<div class="mb-3 programme-day-detail"><label class="form-label">Description détaillée</label>' +
-                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][content_html]" rows="5" placeholder="Programme détaillé du jour"></textarea></div>' +
-                    '<div class="mb-3 programme-day-notes"><label class="form-label">Notes</label>' +
-                    '<textarea class="form-control rich-editor" name="programme_days[' + index + '][notes]" rows="4" placeholder="Notes du jour"></textarea></div>' +
+                    '<div class="field-resume ve-rich-field"><label class="form-label">Résumé</label>' +
+                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="Résumé du jour"></textarea></div>' +
+                    '<div class="field-description programme-day-detail ve-rich-field"><label class="form-label">Description détaillée</label>' +
+                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][content_html]" rows="5" placeholder="Programme détaillé du jour"></textarea></div>' +
+                    '<div class="field-notes programme-day-notes ve-rich-field"><label class="form-label">Notes</label>' +
+                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][notes]" rows="4" placeholder="Notes du jour"></textarea></div>' +
+                    '</div>' +
                     '<input type="hidden" name="programme_days[' + index + '][title]" value="Jour ' + (index + 1) + '">' +
                     '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][hotel_id]" value="">' +
@@ -2676,21 +2792,48 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
                     '</div></div></div>';
             }
-            function addDay() {
+            function addDay(options) {
+                var opts = options || {};
                 if (!accordion) return;
                 if (noDaysAlert) noDaysAlert.style.display = 'none';
                 var n = count();
                 var div = document.createElement('div');
                 div.innerHTML = newDayHtml(n).trim();
                 accordion.appendChild(div.firstChild);
-                renumber();
+                if (opts.skipDurationSync === true) {
+                    updateBadge();
+                } else {
+                    renumber();
+                }
                 var lastCard = accordion.querySelector('.programme-day-card:last-child');
-                if (lastCard && window.bootstrap && bootstrap.Collapse) {
+                if (lastCard && opts.openNewDay !== false) {
                     var collapseEl = lastCard.querySelector('.accordion-collapse');
-                    if (collapseEl) new bootstrap.Collapse(collapseEl, { toggle: true });
+                    var toggleBtn = lastCard.querySelector('.accordion-button');
+                    if (collapseEl) {
+                        accordion.querySelectorAll('.accordion-collapse.show').forEach(function(el) {
+                            el.classList.remove('show');
+                        });
+                        accordion.querySelectorAll('.accordion-button').forEach(function(btn) {
+                            btn.classList.add('collapsed');
+                            btn.setAttribute('aria-expanded', 'false');
+                        });
+                        if (window.bootstrap && bootstrap.Collapse) {
+                            new bootstrap.Collapse(collapseEl, { toggle: true });
+                        } else {
+                            collapseEl.classList.add('show');
+                        }
+                    }
+                    if (toggleBtn) {
+                        toggleBtn.classList.remove('collapsed');
+                        toggleBtn.setAttribute('aria-expanded', 'true');
+                    }
                 }
                 attachDragToCards();
-                if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(String(count() - 1));
+                if (window.updateProgrammeDayExtras && opts.skipExtrasRefresh !== true) {
+                    try {
+                        window.updateProgrammeDayExtras(String(count() - 1));
+                    } catch (e) {}
+                }
             }
             function removeDay(btn) {
                 var card = btn.closest('.programme-day-card');
@@ -2736,6 +2879,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('edit-voyage-form') && document.getElementById('edit-voyage-form').addEventListener('submit', function() {
                     if (durationInput) durationInput.value = count() || 1;
                 });
+
+                if (durationInput) {
+                    durationInput.addEventListener('change', function () {
+                        syncDaysFromDuration({ openLast: false });
+                    });
+                    durationInput.addEventListener('blur', function () {
+                        syncDaysFromDuration({ openLast: false });
+                    });
+                }
+
+                document.addEventListener('click', function (e) {
+                    var trigger = e.target && e.target.closest
+                        ? e.target.closest('[data-v2-nav="s-programme"], [data-v2-next="s-programme"], a[href="#program-days"]')
+                        : null;
+                    if (!trigger) return;
+                    setTimeout(function () {
+                        syncDaysFromDuration({ openLast: false });
+                    }, 0);
+                });
+
+                document.addEventListener('shown.bs.tab', function (e) {
+                    var href = e && e.target && e.target.getAttribute ? e.target.getAttribute('href') : '';
+                    if (href === '#program-days') {
+                        syncDaysFromDuration({ openLast: false });
+                    }
+                });
+
                 attachDragToCards();
             }
 
@@ -3412,7 +3582,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
                 '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
-                '<textarea class="form-control form-control-sm rich-editor" name="' + prefix + '[custom_description]" rows="2" placeholder="Description"></textarea>' +
+                '<textarea class="form-control form-control-sm programme-plain-editor" name="' + prefix + '[custom_description]" rows="2" placeholder="Description"></textarea>' +
                 '<button type="button" class="btn btn-sm btn-outline-danger remove-programme-activity"><i class="bx bx-trash"></i></button></div></div>';
             list.appendChild(row);
             updateProgrammeDayInclus(card);

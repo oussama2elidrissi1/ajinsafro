@@ -135,7 +135,7 @@
                         $dpSorted = $departurePlaces->values();
                         $selDp = (string) old('flight_options.'.$index.'.departure_place_id', $opt ? (string) ($opt->departure_place_id ?? '') : '');
                     @endphp
-                    <select name="flight_options[{{ $index }}][departure_place_id]" class="form-select form-select-sm">
+                    <select name="flight_options[{{ $index }}][departure_place_id]" class="form-select form-select-sm ve-flight-departure-place-select">
                         <option value="">— Aucun —</option>
                         @foreach($dpSorted as $dpPos => $place)
                             @php

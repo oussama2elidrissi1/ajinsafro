@@ -72,10 +72,7 @@
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="duration_day" class="form-label">Durée (jours)</label>
-                            <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1" readonly>
-                        </div>
+                        <input type="hidden" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? 1) }}">
 
                         <div class="mb-3">
                             <label for="min_people" class="form-label">Min. personnes</label>

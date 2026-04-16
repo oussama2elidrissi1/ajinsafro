@@ -24,17 +24,17 @@
                         </div>
                         <div class="card-body pt-5">
                             <div class="p-2">
-                                <form method="POST" action="{{ route('login') }}">
+                                <form method="POST" action="{{ route('auth.public-login') }}">
                                     @csrf
                                     <div class="mb-3">
-                                        <label class="form-label" for="email">Email <span class="text-danger">*
+                                        <label class="form-label" for="login">Email ou nom d'utilisateur <span class="text-danger">*
                                             </span></label>
-                                        <input type="email" class="form-control {{ isset($errors) && $errors->has('email') ? 'is-invalid' : '' }}"
-                                            name="email" id="email" value="{{ old('email', '') }}" required
-                                            autocomplete="email" autofocus placeholder="Enter email">
-                                        @if(isset($errors) && $errors->has('email'))
+                                        <input type="text" class="form-control {{ isset($errors) && $errors->has('login') ? 'is-invalid' : '' }}"
+                                            name="login" id="login" value="{{ old('login', old('email', '')) }}" required
+                                            autocomplete="username" autofocus placeholder="Entrez votre email ou identifiant">
+                                        @if(isset($errors) && $errors->has('login'))
                                             <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $errors->first('email') }}</strong>
+                                                <strong>{{ $errors->first('login') }}</strong>
                                             </span>
                                         @endif
                                     </div>

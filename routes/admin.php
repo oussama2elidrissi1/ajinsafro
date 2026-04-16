@@ -223,9 +223,13 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
 
         Route::get('circuits/voyages', [VoyageController::class, 'index'])->name('circuits.voyages.index');
         Route::get('circuits/voyages/create', [VoyageController::class, 'create'])->name('circuits.voyages.create');
+        Route::get('circuits/voyages/create-v2', [VoyageController::class, 'createV2'])->name('circuits.voyages.create-v2');
+        Route::post('circuits/voyages/v2/steps/{step}/save', [VoyageController::class, 'saveStepV2'])->name('circuits.voyages.v2.steps.save.create');
         Route::post('circuits/voyages', [VoyageController::class, 'store'])->name('circuits.voyages.store');
         Route::get('circuits/voyages/{id}', [VoyageController::class, 'show'])->name('circuits.voyages.show')->whereNumber('id');
         Route::get('circuits/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('circuits.voyages.edit')->whereNumber('id');
+        Route::get('circuits/voyages/{id}/edit-v2', [VoyageController::class, 'editV2'])->name('circuits.voyages.edit-v2')->whereNumber('id');
+        Route::post('circuits/voyages/{id}/v2/steps/{step}/save', [VoyageController::class, 'saveStepV2'])->name('circuits.voyages.v2.steps.save')->whereNumber('id');
         Route::get('circuits/voyages/{voyage}/reservation-data', VoyageReservationDataController::class)->name('circuits.voyages.reservation-data');
         Route::match(['put', 'patch'], 'circuits/voyages/{id}', [VoyageController::class, 'update'])->name('circuits.voyages.update')->whereNumber('id');
         Route::delete('circuits/voyages/{id}', [VoyageController::class, 'destroy'])->name('circuits.voyages.destroy')->whereNumber('id');

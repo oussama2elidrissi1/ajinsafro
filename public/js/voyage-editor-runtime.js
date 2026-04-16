@@ -522,6 +522,7 @@
                 }
             }, true);
         }
+
     }
 
     function syncProgrammeDaysPayloadForSubmit(form) {

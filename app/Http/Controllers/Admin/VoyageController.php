@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\VoyageTheme;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWpTourRequest;
 use App\Http\Requests\UpdateWpTourRequest;
@@ -33,12 +34,14 @@ use App\Services\Wp\TourProgramService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
 use App\Support\TourPlacesCalculator;
+use Database\Seeders\VoyageThemeSeeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -57,6 +60,23 @@ class VoyageController extends Controller
 
     protected VoyageAvailabilityService $voyageAvailabilityService;
 
+    private const V2_STEPS = [
+        's-general',
+        's-pricing',
+        's-location',
+        's-media',
+        's-programme',
+        's-information',
+        's-taxonomies',
+        's-flights',
+        's-hotels',
+        's-transfers',
+        's-activities',
+        's-extras',
+        's-availability',
+        's-logistics',
+    ];
+
     public function __construct(WpTourRepository $repository, TourProgramService $programService, VoyageFlightService $voyageFlightService, VoyageFlightOptionService $voyageFlightOptionService, ProgramJsonService $programJsonService, VoyageAvailabilityService $voyageAvailabilityService)
     {
         $this->repository = $repository;
@@ -70,11 +90,33 @@ class VoyageController extends Controller
     /**
      * Display listing of WordPress tours.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $wpConnectionFailed = false;
+        $wpCatalogErrorMessage = null;
+        $filters = AdminWpTourCatalogQuery::filtersFromRequest($request);
+        $filterTourTypes = collect();
+        $catalogSummary = [
+            'total' => 0,
+            'published' => 0,
+            'draft' => 0,
+            'private' => 0,
+            'pending' => 0,
+            'with_departures' => 0,
+        ];
+
         try {
-            $tours = AdminWpTourCatalogQuery::baseQuery()->paginate(20);
+            $filterTourTypes = AdminWpTourCatalogQuery::tourTypeOptions()
+                ->map(fn ($tt) => [
+                    'term_id' => (int) ($tt['term_id'] ?? 0),
+                    'name' => (string) ($tt['name'] ?? ''),
+                ])
+                ->filter(fn (array $tt) => $tt['term_id'] > 0 && $tt['name'] !== '')
+                ->values();
+            $catalogSummary = AdminWpTourCatalogQuery::catalogSummary($filters);
+            $tours = AdminWpTourCatalogQuery::queryFromFilters($filters)
+                ->paginate(20)
+                ->appends($request->query());
 
             if (config('app.debug')) {
                 Log::debug('VoyageController@index WP catalog', [
@@ -110,34 +152,42 @@ class VoyageController extends Controller
         } catch (\Throwable $e) {
             \Log::warning('VoyageController@index: WP connection failed', ['error' => $e->getMessage()]);
             $wpConnectionFailed = true;
+            $wpCatalogErrorMessage = 'La liste des voyages ne peut pas Ãªtre chargÃ©e pour le moment.';
             $tours = new \Illuminate\Pagination\LengthAwarePaginator(
                 [],
                 0,
                 20,
                 \Illuminate\Pagination\Paginator::resolveCurrentPage(),
-                ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+                ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
             );
         }
 
-        return view('admin.circuits.voyages.index', compact('tours', 'wpConnectionFailed'));
+        return view('admin.circuits.voyages.index', compact(
+            'tours',
+            'wpConnectionFailed',
+            'wpCatalogErrorMessage',
+            'filterTourTypes',
+            'catalogSummary',
+            'filters'
+        ));
     }
 
     /**
-     * Show single tour (dÃ©tail).
+     * Show single tour (dÃƒÂ©tail).
      */
     public function show(int $id): View
     {
         $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
         
-        // CrÃ©er un objet compatible avec les vues existantes
+        // CrÃƒÂ©er un objet compatible avec les vues existantes
         $voyage = $wpPost;
-        $voyage->name = $wpPost->post_title; // Alias pour compatibilitÃ©
+        $voyage->name = $wpPost->post_title; // Alias pour compatibilitÃƒÂ©
         $voyage->slug = $wpPost->post_name;
         $voyage->description = $wpPost->post_content;
         $voyage->updated_at = $wpPost->post_modified;
         $voyage->created_at = $wpPost->post_date;
         
-        // Charger les metas (max_people et places sont calculÃ©s Ã  partir des chambres et enregistrÃ©s Ã  la sauvegarde)
+        // Charger les metas (max_people et places sont calculÃƒÂ©s ÃƒÂ  partir des chambres et enregistrÃƒÂ©s ÃƒÂ  la sauvegarde)
         $meta = [
             'adult_price' => $wpPost->getMeta('adult_price'),
             'child_price' => $wpPost->getMeta('child_price'),
@@ -153,7 +203,7 @@ class VoyageController extends Controller
             'gallery' => $wpPost->getMeta('gallery'),
         ];
 
-        // Programme par jours (aj_tour_days + activitÃ©s) pour la timeline "Programme du circuit"
+        // Programme par jours (aj_tour_days + activitÃƒÂ©s) pour la timeline "Programme du circuit"
         $programDays = collect();
         try {
             $programDays = $this->programService->loadProgram((int) $id);
@@ -223,7 +273,7 @@ class VoyageController extends Controller
             $airlines = collect();
         }
 
-        // Pas de modÃ¨le Voyage Laravel tant que le tour WP nâ€™existe pas : null Ã©vite les accÃ¨s Ã  des attributs manquants dans la vue partagÃ©e create/edit.
+        // Pas de modÃƒÂ¨le Voyage Laravel tant que le tour WP nÃ¢â‚¬â„¢existe pas : null ÃƒÂ©vite les accÃƒÂ¨s ÃƒÂ  des attributs manquants dans la vue partagÃƒÂ©e create/edit.
         $laravelVoyage = null;
         $outboundFlight = null;
         $inboundFlight = null;
@@ -256,6 +306,7 @@ class VoyageController extends Controller
         $tourActivities = collect();
         $totalPlacesVoyage = 0;
         $voyageExtras = collect();
+        $allVoyageThemes = $this->loadVoyageThemesForEdit();
 
         return view('admin.circuits.voyages.edit', compact(
             'voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds',
@@ -265,8 +316,959 @@ class VoyageController extends Controller
             'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo',
             'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl',
             'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers',
-            'totalPlacesVoyage', 'voyageExtras'
+            'totalPlacesVoyage', 'voyageExtras', 'allVoyageThemes'
         ));
+    }
+
+    /**
+     * V2: Show create form with new sidebar navigation design.
+     */
+    public function createV2(): View
+    {
+        $view = $this->create();
+        $data = $view->getData();
+        $data['v2StepStates'] = collect(self::V2_STEPS)
+            ->mapWithKeys(fn ($stepId) => [$stepId => 'incomplete'])
+            ->all();
+        return view('admin.circuits.voyages.create_v2', $data);
+    }
+
+    /**
+     * V2: Show edit form with new sidebar navigation design.
+     */
+    public function editV2(int $id): View
+    {
+        $view = $this->edit($id);
+        $data = $view->getData();
+        $data['v2StepStates'] = $this->buildV2StepStates($id);
+        return view('admin.circuits.voyages.edit_v2', $data);
+    }
+
+    /**
+     * V2: Enregistrement d'une Ã©tape (AJAX), avec crÃ©ation brouillon au premier save.
+     */
+    public function saveStepV2(Request $request, string $stepOrId, ?string $step = null): JsonResponse
+    {
+        $routeStep = $step ?? $stepOrId;
+        $routeId = $step === null ? 0 : (int) $stepOrId;
+
+        $step = $this->normalizeV2StepId($routeStep);
+        if ($step === null) {
+            return response()->json([
+                'ok' => false,
+                'state' => 'error',
+                'message' => 'Ã‰tape inconnue.',
+            ], 404);
+        }
+
+        $wpPostId = $routeId > 0 ? $routeId : (int) $request->input('voyage_id', 0);
+
+        $this->mergeProgrammeDaysPayloadIntoRequest($request);
+        $this->normalizeStepCheckboxDefaults($request, $step);
+
+        $validator = Validator::make(
+            $request->all(),
+            $this->v2StepValidationRules($step),
+            [],
+            [
+                'title' => 'titre',
+                'slug' => 'slug',
+                'post_status' => 'statut',
+                'adult_price' => 'prix adulte',
+                'child_price' => 'prix enfant',
+                'min_price' => 'prix minimum',
+                'travel_dates.*.date' => 'date de dÃ©part',
+                'travel_dates.*.seats' => 'nombre de places',
+            ]
+        );
+        $this->appendV2StepRequiredValidationErrors($validator, $step, $request);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'ok' => false,
+                'state' => 'error',
+                'step' => $step,
+                'errors' => $validator->errors()->toArray(),
+                'step_states' => $wpPostId > 0 ? $this->buildV2StepStates($wpPostId) : [],
+                'message' => 'Completez les champs obligatoires de cette etape avant de continuer.',
+            ], 422);
+        }
+
+        try {
+            if ($wpPostId <= 0) {
+                $wpPostId = $this->createV2DraftFromStep($request);
+            }
+
+            $this->persistV2Step($step, $wpPostId, $request);
+
+            return response()->json([
+                'ok' => true,
+                'state' => 'saved',
+                'step' => $step,
+                'voyage_id' => $wpPostId,
+                'redirect_url' => route('admin.circuits.voyages.edit-v2', $wpPostId),
+                'step_states' => $this->buildV2StepStates($wpPostId),
+                'saved_at' => now()->toIso8601String(),
+                'message' => 'Ã‰tape enregistrÃ©e.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('VoyageController@saveStepV2 failed', [
+                'step' => $step,
+                'tour_id' => $wpPostId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok' => false,
+                'state' => 'error',
+                'step' => $step,
+                'message' => 'Erreur lors de lâ€™enregistrement de lâ€™Ã©tape.',
+            ], 500);
+        }
+    }
+
+    private function normalizeV2StepId(string $step): ?string
+    {
+        $step = trim($step);
+
+        return in_array($step, self::V2_STEPS, true) ? $step : null;
+    }
+
+    private function mergeProgrammeDaysPayloadIntoRequest(Request $request): void
+    {
+        $payload = $request->input('programme_days_payload');
+        if (! is_string($payload) || trim($payload) === '') {
+            return;
+        }
+
+        $decoded = json_decode($payload, true);
+        if (! is_array($decoded)) {
+            return;
+        }
+
+        if (isset($decoded['programme_days']) && is_array($decoded['programme_days'])) {
+            $decoded = $decoded['programme_days'];
+        }
+
+        $request->merge([
+            'programme_days' => array_values(array_filter($decoded, 'is_array')),
+        ]);
+    }
+
+    private function normalizeStepCheckboxDefaults(Request $request, string $step): void
+    {
+        $defaultsByStep = [
+            's-general' => ['is_featured', 'is_group_deal'],
+            's-media' => ['hero_use_as_thumbnail'],
+            's-availability' => ['st_allow_cancel'],
+        ];
+
+        $defaults = $defaultsByStep[$step] ?? [];
+        if ($defaults === []) {
+            return;
+        }
+
+        $merged = [];
+        foreach ($defaults as $key) {
+            if (! $request->exists($key)) {
+                $merged[$key] = 0;
+            }
+        }
+
+        if ($merged !== []) {
+            $request->merge($merged);
+        }
+    }
+
+    private function v2StepValidationRules(string $step): array
+    {
+        return match ($step) {
+            's-general' => [
+                'title' => 'required|string|max:255',
+                'slug' => 'nullable|string|max:255',
+                'content' => 'nullable|string',
+                'excerpt' => 'nullable|string',
+                'post_status' => 'nullable|in:publish,draft,pending,private',
+                'destination' => 'nullable|string|max:255',
+                'duration_text' => 'nullable|string|max:100',
+                'is_featured' => 'nullable',
+                'is_group_deal' => 'nullable',
+            ],
+            's-pricing' => [
+                'adult_price' => 'nullable|numeric|min:0',
+                'child_price' => 'nullable|numeric|min:0',
+                'min_price' => 'nullable|numeric|min:0',
+                'base_price' => 'nullable|numeric|min:0',
+                'sale_price' => 'nullable|numeric|min:0',
+                'infant_price' => 'nullable|numeric|min:0',
+                'commission_adulte' => 'nullable|numeric|min:0',
+                'commission_enfant' => 'nullable|numeric|min:0',
+                'discount' => 'nullable|string',
+                'discount_type' => 'nullable|string|max:100',
+                'discount_by_people_type' => 'nullable|string|max:100',
+                'calculator_discount_by_people_type' => 'nullable|string|max:100',
+                'min_people' => 'nullable|integer|min:1',
+                'max_people' => 'nullable|integer|min:0',
+            ],
+            's-location' => [
+                'locations' => 'nullable|array',
+                'locations.*' => 'integer|min:1',
+                'address' => 'nullable|string|max:500',
+                'contact_email' => 'nullable|email',
+                'phone' => 'nullable|string|max:255',
+                'fax' => 'nullable|string|max:255',
+                'website' => 'nullable|string|max:255',
+                'map_lat' => 'nullable|string|max:100',
+                'map_lng' => 'nullable|string|max:100',
+                'map_zoom' => 'nullable|integer|min:0',
+                'map_type' => 'nullable|string|max:100',
+            ],
+            's-media' => [
+                'thumbnail_id' => 'nullable|integer|min:0',
+                'hero_image_id' => 'nullable|integer|min:0',
+                'hero_gallery_ids' => 'nullable|string',
+                'gallery_ids' => 'nullable|string',
+                'video' => 'nullable|string|max:1000',
+                'st_google_map' => 'nullable|string',
+                'hero_use_as_thumbnail' => 'nullable',
+            ],
+            's-programme' => [
+                'programme_days' => 'nullable|array',
+                'programme_days.*.id' => 'nullable|integer',
+                'programme_days.*.day_id' => 'nullable|integer',
+                'programme_days.*.mode' => 'nullable|string|in:free,program',
+                'programme_days.*.day_title' => 'nullable|string|max:255',
+                'programme_days.*.title' => 'nullable|string|max:255',
+                'programme_days.*.description' => 'nullable|string',
+                'programme_days.*.notes' => 'nullable|string',
+                'programme_days.*.activities' => 'nullable|array',
+                'programme_days.*.activities.*.day_activity_id' => 'nullable|integer',
+                'programme_days.*.activities.*.activity_id' => 'nullable|integer',
+                'programme_days.*.activities.*.custom_title' => 'nullable|string|max:255',
+                'programme_days.*.activities.*.custom_description' => 'nullable|string',
+            ],
+            's-information' => [
+                'tours_include' => 'nullable|string',
+                'tours_exclude' => 'nullable|string',
+                'tours_highlight' => 'nullable|string',
+                'tours_faq' => 'nullable|string',
+                'tours_program_style' => 'nullable|string|max:100',
+            ],
+            's-taxonomies' => [
+                'st_tour_type' => 'nullable|array',
+                'st_tour_type.*' => 'integer|min:1',
+                'durations' => 'nullable|array',
+                'durations.*' => 'integer|min:1',
+                'language' => 'nullable|array',
+                'language.*' => 'integer|min:1',
+                'languages' => 'nullable|array',
+                'languages.*' => 'integer|min:1',
+                'voyage_theme_ids' => 'nullable|array',
+                'voyage_theme_ids.*' => 'integer|min:1',
+            ],
+            's-flights' => [
+                'departure_places' => 'nullable|array',
+                'departure_places.*.id' => 'nullable|integer',
+                'departure_places.*.name' => 'nullable|string|max:255',
+                'departure_places.*.code' => 'nullable|string|max:100',
+                'departure_places.*.price' => 'nullable|numeric|min:0',
+                'departure_places.*.is_active' => 'nullable|boolean',
+                'flight_options' => 'nullable|array',
+                'flight_options.*.id' => 'nullable|integer',
+                'flight_options.*.type' => 'nullable|string|in:outbound,return,segment',
+                'flight_options.*.day_number' => 'nullable|integer|min:1',
+                'flight_options.*.departure_place_id' => 'nullable',
+                'flight_options.*.airline_id' => 'nullable|integer|min:1',
+                'flight_options.*.cabin' => 'nullable|string|in:economy,business,first',
+                'flight_options.*.from_city' => 'nullable|string|max:255',
+                'flight_options.*.to_city' => 'nullable|string|max:255',
+                'flight_options.*.departure_date' => 'nullable|date',
+                'flight_options.*.departure_time' => 'nullable|string|max:20',
+                'flight_options.*.arrival_date' => 'nullable|date',
+                'flight_options.*.arrival_time' => 'nullable|string|max:20',
+                'flight_options.*.flight_number' => 'nullable|string|max:50',
+                'flight_options.*.baggage_cabin_kg' => 'nullable|integer|min:0',
+                'flight_options.*.baggage_checkin_kg' => 'nullable|integer|min:0',
+                'flight_options.*.notes' => 'nullable|string|max:2000',
+            ],
+            's-hotels' => [
+                'tour_hotels' => 'nullable|array',
+                'tour_hotels.*.id' => 'nullable|integer',
+                'tour_hotels.*.hotel_name' => 'nullable|string|max:255',
+                'tour_hotels.*.stars' => 'nullable|integer|min:0|max:5',
+                'tour_hotels.*.address' => 'nullable|string|max:500',
+                'tour_hotels.*.meal_plan' => 'nullable|string|max:255',
+                'tour_hotels.*.notes' => 'nullable|string|max:2000',
+                'tour_hotels.*.is_optional' => 'nullable|boolean',
+                'tour_hotels.*.image_id' => 'nullable|integer|min:0',
+                'tour_hotels.*.rooms' => 'nullable|array',
+                'tour_hotels.*.rooms.*.id' => 'nullable|integer',
+                'tour_hotels.*.rooms.*.room_type' => 'nullable|string|max:100',
+                'tour_hotels.*.rooms.*.room_count' => 'nullable|integer|min:0',
+                'tour_hotels.*.rooms.*.capacity_adults' => 'nullable|integer|min:0',
+                'tour_hotels.*.rooms.*.capacity_children' => 'nullable|integer|min:0',
+                'tour_hotels.*.rooms.*.capacity_total' => 'nullable|integer|min:0',
+                'tour_hotels.*.rooms.*.supplement' => 'nullable|numeric|min:0',
+                'tour_hotels.*.rooms.*.is_active' => 'nullable',
+                'tour_hotels.*.rooms.*.is_default' => 'nullable',
+                'departure_allocations' => 'nullable|array',
+                'departure_allocations.*.rooms' => 'nullable|array',
+                'departure_allocations.*.rooms.*.room_type' => 'nullable|string|max:100',
+                'departure_allocations.*.rooms.*.quantity' => 'nullable|integer|min:0',
+                'departure_allocations.*.rooms.*.capacity_per_room' => 'nullable|integer|min:1',
+                'departure_allocations.*.rooms.*.hotel_index' => 'nullable|integer|min:0',
+                'departure_allocations.*.rooms.*.hotel_id' => 'nullable|integer',
+            ],
+            's-transfers' => [
+                'tour_transfers' => 'nullable|array',
+                'tour_transfers.*.id' => 'nullable|integer',
+                'tour_transfers.*.day_number' => 'nullable|integer|min:1',
+                'tour_transfers.*.is_optional' => 'nullable|boolean',
+                'tour_transfers.*.from_label' => 'nullable|string|max:255',
+                'tour_transfers.*.to_label' => 'nullable|string|max:255',
+                'tour_transfers.*.pickup_time' => 'nullable|string|max:20',
+                'tour_transfers.*.dropoff_time' => 'nullable|string|max:20',
+                'tour_transfers.*.vehicle_type' => 'nullable|string|max:255',
+                'tour_transfers.*.notes' => 'nullable|string|max:2000',
+                'tour_transfers.*.image_id' => 'nullable|integer|min:0',
+                'tour_transfer_arrivals' => 'nullable|array',
+                'tour_transfer_arrivals.*.day_number' => 'nullable|integer|min:1',
+                'tour_transfer_arrivals.*.from_label' => 'nullable|string|max:255',
+                'tour_transfer_arrivals.*.to_label' => 'nullable|string|max:255',
+                'tour_transfer_arrivals.*.pickup_time' => 'nullable|string|max:20',
+                'tour_transfer_arrivals.*.dropoff_time' => 'nullable|string|max:20',
+                'tour_transfer_arrivals.*.vehicle_type' => 'nullable|string|max:255',
+                'tour_transfer_arrivals.*.notes' => 'nullable|string|max:2000',
+                'tour_transfer_arrivals.*.image_id' => 'nullable|integer|min:0',
+                'tour_transfer_departures' => 'nullable|array',
+                'tour_transfer_departures.*.day_number' => 'nullable|integer|min:1',
+                'tour_transfer_departures.*.from_label' => 'nullable|string|max:255',
+                'tour_transfer_departures.*.to_label' => 'nullable|string|max:255',
+                'tour_transfer_departures.*.pickup_time' => 'nullable|string|max:20',
+                'tour_transfer_departures.*.dropoff_time' => 'nullable|string|max:20',
+                'tour_transfer_departures.*.vehicle_type' => 'nullable|string|max:255',
+                'tour_transfer_departures.*.notes' => 'nullable|string|max:2000',
+                'tour_transfer_departures.*.image_id' => 'nullable|integer|min:0',
+            ],
+            's-activities' => [
+                'tour_activities' => 'nullable|array',
+                'tour_activities.*.id' => 'nullable|integer',
+                'tour_activities.*.activity_id' => 'nullable|integer',
+                'tour_activities.*.title' => 'nullable|string|max:255',
+                'tour_activities.*.description' => 'nullable|string|max:5000',
+                'tour_activities.*.pricing_type' => 'nullable|string|max:100',
+                'tour_activities.*.unit_price' => 'nullable|numeric|min:0',
+                'tour_activities.*.child_price' => 'nullable|numeric|min:0',
+            ],
+            's-extras' => [
+                'voyage_extras' => 'nullable|array',
+                'voyage_extras.*.id' => 'nullable|integer',
+                'voyage_extras.*.name' => 'nullable|string|max:255',
+                'voyage_extras.*.description' => 'nullable|string|max:2000',
+                'voyage_extras.*.price_adult' => 'nullable|numeric|min:0',
+                'voyage_extras.*.price_child' => 'nullable|numeric|min:0',
+                'voyage_extras.*.is_active' => 'nullable|boolean',
+                'voyage_extras.*.extra_type' => 'nullable|string|max:64',
+                'voyage_extras.*.icon' => 'nullable|string|max:80',
+            ],
+            's-availability' => [
+                'tours_booking_period' => 'nullable|string|max:255',
+                'st_booking_option_type' => 'nullable|string|max:255',
+                'check_in' => 'nullable|string|max:20',
+                'check_out' => 'nullable|string|max:20',
+                'st_allow_cancel' => 'nullable',
+                'st_cancel_percent' => 'nullable|integer|min:0|max:100',
+                'st_cancel_number_day' => 'nullable|integer|min:0',
+                'ical_url' => 'nullable|string|max:1000',
+                'travel_dates' => 'nullable|array',
+                'travel_dates.*.id' => 'nullable|integer',
+                'travel_dates.*.date' => 'nullable|date',
+                'travel_dates.*.seats' => 'nullable|integer|min:0',
+                'travel_dates.*.is_active' => 'nullable|boolean',
+                'travel_dates.*.price_override' => 'nullable|numeric|min:0',
+            ],
+            's-logistics' => [
+                'logistics_meta' => 'nullable|array',
+                'logistics_meta.train.reference' => 'nullable|string|max:255',
+                'logistics_meta.train.class' => 'nullable|string|max:255',
+                'logistics_meta.train.notes' => 'nullable|string|max:2000',
+                'logistics_meta.boat.route' => 'nullable|string|max:255',
+                'logistics_meta.boat.company' => 'nullable|string|max:255',
+                'logistics_meta.boat.notes' => 'nullable|string|max:2000',
+                'logistics_meta.transport.type' => 'nullable|string|max:100',
+                'logistics_meta.transport.capacity' => 'nullable|string|max:100',
+                'logistics_meta.transport.notes' => 'nullable|string|max:2000',
+            ],
+            default => [],
+        };
+    }
+
+    private function appendV2StepRequiredValidationErrors($validator, string $step, Request $request): void
+    {
+        $validator->after(function ($validator) use ($step, $request) {
+            switch ($step) {
+                case 's-general':
+                    if (trim((string) $request->input('title', '')) === '') {
+                        $validator->errors()->add('title', 'Le titre du voyage est obligatoire.');
+                    }
+                    break;
+
+                case 's-pricing':
+                    $priceKeys = ['adult_price', 'base_price', 'min_price', 'sale_price'];
+                    $hasPrice = collect($priceKeys)->contains(
+                        fn (string $key) => trim((string) $request->input($key, '')) !== ''
+                    );
+                    if (! $hasPrice) {
+                        $validator->errors()->add('adult_price', 'Renseignez au moins un prix (adulte, base, minimum ou solde).');
+                    }
+                    break;
+
+                case 's-location':
+                    $locationIds = collect($this->normalizeArrayInput($request->input('locations')))
+                        ->map(fn ($id) => (int) $id)
+                        ->filter(fn (int $id) => $id > 0)
+                        ->values();
+                    if ($locationIds->isEmpty()) {
+                        $validator->errors()->add('locations', 'Selectionnez au moins une destination.');
+                    }
+                    break;
+
+                case 's-media':
+                    $hasHero = (int) $request->input('hero_image_id', 0) > 0;
+                    $hasThumbnail = (int) $request->input('thumbnail_id', 0) > 0;
+                    $hasHeroGallery = $this->countCsvValues($request->input('hero_gallery_ids', '')) > 0;
+                    $hasGallery = $this->countCsvValues($request->input('gallery_ids', '')) > 0;
+                    if (! $hasHero && ! $hasThumbnail && ! $hasHeroGallery && ! $hasGallery) {
+                        $validator->errors()->add('hero_image_id', 'Ajoutez au moins un media (hero, image a la une ou galerie).');
+                    }
+                    break;
+
+                case 's-programme':
+                    $programmeDays = collect($this->normalizeArrayInput($request->input('programme_days')))
+                        ->filter(static fn ($value): bool => is_array($value))
+                        ->values();
+                    $hasProgrammeDay = $programmeDays->contains(function (array $day): bool {
+                        return trim((string) ($day['day_title'] ?? '')) !== ''
+                            || trim((string) ($day['title'] ?? '')) !== ''
+                            || trim((string) ($day['description'] ?? '')) !== '';
+                    });
+                    if (! $hasProgrammeDay) {
+                        $validator->errors()->add('programme_days', 'Ajoutez au moins un jour au programme.');
+                    }
+                    break;
+
+                case 's-information':
+                    if (trim((string) $request->input('tours_include', '')) === '') {
+                        $validator->errors()->add('tours_include', 'Le bloc "Inclus" est obligatoire.');
+                    }
+                    if (trim((string) $request->input('tours_exclude', '')) === '') {
+                        $validator->errors()->add('tours_exclude', 'Le bloc "Exclus" est obligatoire.');
+                    }
+                    break;
+
+                case 's-taxonomies':
+                    $taxonomyKeys = ['st_tour_type', 'durations', 'language', 'languages', 'voyage_theme_ids'];
+                    $hasTaxonomy = collect($taxonomyKeys)->contains(function (string $key) use ($request): bool {
+                        return collect($this->normalizeArrayInput($request->input($key)))
+                            ->map(fn ($id) => (int) $id)
+                            ->contains(fn (int $id) => $id > 0);
+                    });
+                    if (! $hasTaxonomy) {
+                        $validator->errors()->add('st_tour_type', 'Selectionnez au moins une categorie (taxonomie ou theme).');
+                    }
+                    break;
+
+                case 's-flights':
+                    $departurePlaces = collect($this->normalizeArrayInput($request->input('departure_places')))
+                        ->filter(static fn ($value): bool => is_array($value));
+                    $hasDeparturePlace = $departurePlaces->contains(function (array $row): bool {
+                        return trim((string) ($row['name'] ?? '')) !== ''
+                            || trim((string) ($row['code'] ?? '')) !== ''
+                            || trim((string) ($row['id'] ?? '')) !== '';
+                    });
+
+                    $flightOptions = collect($this->normalizeArrayInput($request->input('flight_options')))
+                        ->filter(static fn ($value): bool => is_array($value));
+                    $hasFlightOption = $flightOptions->contains(function (array $row): bool {
+                        // Accept any meaningful flight option payload to avoid false validation blocks
+                        // when only part of the option is filled at this stage.
+                        return trim((string) ($row['from_city'] ?? '')) !== ''
+                            || trim((string) ($row['to_city'] ?? '')) !== ''
+                            || trim((string) ($row['departure_place_id'] ?? '')) !== ''
+                            || trim((string) ($row['flight_number'] ?? '')) !== ''
+                            || trim((string) ($row['departure_date'] ?? '')) !== ''
+                            || trim((string) ($row['departure_time'] ?? '')) !== ''
+                            || trim((string) ($row['arrival_time'] ?? '')) !== '';
+                    });
+
+                    if (! $hasDeparturePlace && ! $hasFlightOption) {
+                        // Final defensive fallback: if nested arrays are not materialized as expected,
+                        // still allow progression when any non-empty scalar exists under flights payload.
+                        $hasFlightOption = $this->hasAnyNonEmptyScalar($request->input('flight_options', []));
+                        $hasDeparturePlace = $this->hasAnyNonEmptyScalar($request->input('departure_places', []));
+                    }
+
+                    if (! $hasDeparturePlace && ! $hasFlightOption) {
+                        $validator->errors()->add('flight_options', 'Ajoutez au moins un lieu de depart ou une option de vol complete.');
+                    }
+                    break;
+
+                case 's-hotels':
+                    $hotels = collect($this->normalizeArrayInput($request->input('tour_hotels')))
+                        ->filter(static fn ($value): bool => is_array($value));
+                    $hasHotel = $hotels->contains(function (array $row): bool {
+                        // Accept both manual hotels and hotels linked/imported from WordPress.
+                        return trim((string) ($row['hotel_name'] ?? '')) !== ''
+                            || (int) ($row['hotel_id'] ?? 0) > 0
+                            || (int) ($row['source_hotel_id'] ?? 0) > 0
+                            || (int) ($row['id'] ?? 0) > 0;
+                    });
+                    if (! $hasHotel) {
+                        $validator->errors()->add('tour_hotels', 'Ajoutez au moins un hotel.');
+                    }
+                    break;
+
+                case 's-transfers':
+                    // Optional step in V2 workflow: no minimum transfer required.
+                    break;
+
+                case 's-activities':
+                    // Optional step in V2 workflow: no minimum activity required.
+                    break;
+
+                case 's-extras':
+                    // Optional step in V2 workflow: no minimum extra required.
+                    break;
+
+                case 's-availability':
+                    $dates = collect($this->normalizeArrayInput($request->input('travel_dates')))
+                        ->filter(static fn ($value): bool => is_array($value));
+                    $hasDate = $dates->contains(function (array $row): bool {
+                        return trim((string) ($row['date'] ?? '')) !== ''
+                            && trim((string) ($row['seats'] ?? '')) !== '';
+                    });
+                    if (! $hasDate) {
+                        $validator->errors()->add('travel_dates', 'Ajoutez au moins une date de depart avec le nombre de places.');
+                    }
+                    break;
+
+                case 's-logistics':
+                    if (! $this->hasAnyNonEmptyScalar($request->input('logistics_meta', []))) {
+                        $validator->errors()->add('logistics_meta', 'Renseignez au moins une information logistique.');
+                    }
+                    break;
+            }
+        });
+    }
+
+    /**
+     * @param mixed $value
+     * @return array<int,mixed>
+     */
+    private function normalizeArrayInput(mixed $value): array
+    {
+        return is_array($value) ? array_values($value) : [];
+    }
+
+    private function countCsvValues(mixed $value): int
+    {
+        if (! is_string($value)) {
+            return 0;
+        }
+
+        return count(array_filter(array_map('trim', explode(',', $value)), fn (string $v) => $v !== ''));
+    }
+
+    private function hasAnyNonEmptyScalar(mixed $value): bool
+    {
+        if (is_array($value)) {
+            foreach ($value as $entry) {
+                if ($this->hasAnyNonEmptyScalar($entry)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return true;
+        }
+
+        return trim((string) $value) !== '';
+    }
+
+    private function createV2DraftFromStep(Request $request): int
+    {
+        $title = trim((string) $request->input('title', ''));
+        if ($title === '') {
+            $title = 'Brouillon voyage ' . now()->format('Y-m-d H:i');
+        }
+
+        $slugInput = trim((string) $request->input('slug', ''));
+        $slug = $slugInput !== '' ? $slugInput : Str::slug($title);
+        if ($slug === '') {
+            $slug = 'voyage-' . now()->format('YmdHis');
+        }
+
+        $tour = $this->repository->createTour([
+            'title' => $title,
+            'slug' => $slug,
+            'content' => (string) $request->input('content', ''),
+            'excerpt' => (string) $request->input('excerpt', ''),
+            'post_status' => 'draft',
+        ]);
+
+        $this->syncLaravelVoyageFromRequest((int) $tour->ID, [
+            'title' => $title,
+            'slug' => $slug,
+            'destination' => $request->input('destination'),
+            'duration_text' => $request->input('duration_text'),
+            'is_group_deal' => $this->normalizeCheckboxValue($request->input('is_group_deal', 0), 0),
+        ]);
+
+        return (int) $tour->ID;
+    }
+
+    private function persistV2Step(string $step, int $wpPostId, Request $request): void
+    {
+        $wpPayload = $this->extractWpPayloadForV2Step($step, $request);
+        if ($wpPayload !== []) {
+            $this->repository->updateTour($wpPostId, $wpPayload);
+        }
+
+        $laravelVoyage = null;
+        if (in_array($step, ['s-general', 's-location', 's-taxonomies'], true)) {
+            $laravelVoyage = $this->syncLaravelVoyageFromRequest($wpPostId, $this->extractLaravelPayloadForV2Step($step, $request));
+        }
+
+        switch ($step) {
+            case 's-programme':
+                if ($request->has('programme_days')) {
+                    $this->syncProgrammeDaysAndActivities($wpPostId, $request);
+                    $this->repository->updateTour($wpPostId, [
+                        'duration_day' => $this->programService->countDays($wpPostId),
+                    ]);
+                }
+                break;
+
+            case 's-flights':
+                $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
+                $lastDayNumber = $this->resolveLastDayNumberForV2($wpPostId, $request);
+                $hasDeparturePlaces = $request->exists('departure_places');
+                $hasFlightOptions = $request->exists('flight_options');
+                $hasLegacyFlights = $request->exists('flights');
+
+                if (! $hasDeparturePlaces && ! $hasFlightOptions && ! $hasLegacyFlights) {
+                    break;
+                }
+
+                if ($hasDeparturePlaces) {
+                    $this->syncDeparturePlaces($wpPostId, $request);
+                }
+
+                if ($hasFlightOptions) {
+                    $flightOptionsInput = $request->input('flight_options');
+                    $flightOptionsPayload = is_array($flightOptionsInput) ? $flightOptionsInput : [];
+                    $this->voyageFlightOptionService->syncOptions($laravelVoyage->id, $flightOptionsPayload, $lastDayNumber);
+                    if ($laravelVoyage->wp_post_id) {
+                        $this->voyageFlightOptionService->syncOptionsToWp($laravelVoyage->id, (int) $laravelVoyage->wp_post_id, $lastDayNumber);
+                    }
+                    break;
+                }
+
+                if ($hasLegacyFlights) {
+                    $legacyFlights = $request->input('flights', []);
+                    $legacyFlights = is_array($legacyFlights) ? $legacyFlights : [];
+                    $this->voyageFlightService->syncFlights($laravelVoyage->id, $legacyFlights);
+                    $this->ensureFlightOptionsFromLegacy($laravelVoyage->id, $lastDayNumber);
+                    if ($laravelVoyage->wp_post_id) {
+                        $this->voyageFlightOptionService->syncOptionsToWp($laravelVoyage->id, (int) $laravelVoyage->wp_post_id, $lastDayNumber);
+                    }
+                }
+                break;
+
+            case 's-hotels':
+                $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
+                $hasTourHotels = $request->exists('tour_hotels');
+                $hasDepartureAllocations = $request->exists('departure_allocations');
+                if (! $hasTourHotels && ! $hasDepartureAllocations) {
+                    break;
+                }
+
+                $hotelIdsOrdered = $hasTourHotels
+                    ? $this->syncTourHotels($wpPostId, $request)
+                    : TourHotel::query()
+                        ->where('tour_id', $wpPostId)
+                        ->orderBy('day_number')
+                        ->orderBy('id')
+                        ->pluck('id')
+                        ->map(fn ($id) => (int) $id)
+                        ->values()
+                        ->all();
+                $roomIdsByHotelIndex = $hasTourHotels
+                    ? $this->syncTourHotelRooms($wpPostId, $request, $hotelIdsOrdered)
+                    : [];
+                $travelDates = TravelDate::getDatesForTour($wpPostId);
+                if ($hasTourHotels) {
+                    $this->syncTourHotelRoomDateAvailabilities($wpPostId, $request, $hotelIdsOrdered, $roomIdsByHotelIndex, $travelDates);
+                }
+                if ($hasDepartureAllocations) {
+                    $this->syncDepartureRoomAllocations($laravelVoyage, $request, $travelDates, $hotelIdsOrdered);
+                }
+                break;
+
+            case 's-transfers':
+                if (! $request->exists('tour_transfers') && ! $request->exists('tour_transfer_arrivals') && ! $request->exists('tour_transfer_departures')) {
+                    break;
+                }
+                $this->syncTourTransfers($wpPostId, $request, $this->resolveLastDayNumberForV2($wpPostId, $request));
+                break;
+
+            case 's-activities':
+                if (! $request->exists('tour_activities')) {
+                    break;
+                }
+                $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
+                $this->syncActivities($laravelVoyage, $request);
+                break;
+
+            case 's-extras':
+                if (! $request->exists('voyage_extras')) {
+                    break;
+                }
+                $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
+                $this->syncVoyageExtras($laravelVoyage, $request);
+                break;
+
+            case 's-availability':
+                $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
+                $hasTravelDates = $request->exists('travel_dates');
+                $hasDepartureAllocations = $request->exists('departure_allocations');
+                if (! $hasTravelDates && ! $hasDepartureAllocations) {
+                    break;
+                }
+
+                $travelDates = $hasTravelDates
+                    ? $this->syncTravelDates($wpPostId, $request)
+                    : TravelDate::getDatesForTour($wpPostId);
+                $travelDates = $travelDates->isNotEmpty() ? $travelDates : TravelDate::getDatesForTour($wpPostId);
+
+                if ($hasTravelDates) {
+                    $maxPeople = $this->computeMaxPeopleFromTravelDates($travelDates, (int) $request->input('max_people', 0));
+                    $this->repository->updateTour($wpPostId, ['max_people' => $maxPeople, 'places' => $maxPeople]);
+                    $lastDayNumber = $this->resolveLastDayNumberForV2($wpPostId, $request);
+                    $this->syncLaravelDeparturesFromWpTravelDates($laravelVoyage, $travelDates, $lastDayNumber, $request);
+                }
+
+                if ($hasDepartureAllocations) {
+                    $this->syncDepartureRoomAllocations($laravelVoyage, $request, $travelDates);
+                }
+                break;
+
+            case 's-logistics':
+                if (! $request->exists('logistics_meta')) {
+                    break;
+                }
+                $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
+                $this->syncVoyageLogisticsMeta($laravelVoyage, $request);
+                break;
+        }
+    }
+
+    private function extractWpPayloadForV2Step(string $step, Request $request): array
+    {
+        $fieldsByStep = [
+            's-general' => ['title', 'slug', 'content', 'excerpt', 'post_status', 'duration_text', 'destination', 'is_featured'],
+            's-pricing' => ['adult_price', 'child_price', 'min_price', 'base_price', 'sale_price', 'infant_price', 'commission_adulte', 'commission_enfant', 'discount', 'discount_type', 'discount_by_people_type', 'calculator_discount_by_people_type', 'min_people', 'max_people'],
+            's-location' => ['locations', 'address', 'contact_email', 'phone', 'fax', 'website', 'map_lat', 'map_lng', 'map_zoom', 'map_type'],
+            's-media' => ['thumbnail_id', 'hero_image_id', 'hero_gallery_ids', 'gallery_ids', 'video', 'st_google_map', 'hero_use_as_thumbnail'],
+            's-information' => ['tours_include', 'tours_exclude', 'tours_highlight', 'tours_faq', 'tours_program_style'],
+            's-taxonomies' => ['st_tour_type', 'durations', 'language', 'languages'],
+            's-availability' => ['tours_booking_period', 'st_booking_option_type', 'check_in', 'check_out', 'st_allow_cancel', 'st_cancel_percent', 'st_cancel_number_day', 'ical_url'],
+        ];
+
+        $fields = $fieldsByStep[$step] ?? [];
+        $payload = [];
+        foreach ($fields as $field) {
+            if (! $request->exists($field)) {
+                continue;
+            }
+            $payload[$field] = $request->input($field);
+        }
+
+        if (array_key_exists('slug', $payload) && trim((string) $payload['slug']) === '') {
+            $title = trim((string) ($payload['title'] ?? $request->input('title', '')));
+            if ($title !== '') {
+                $payload['slug'] = Str::slug($title);
+            } else {
+                unset($payload['slug']);
+            }
+        }
+
+        return $payload;
+    }
+
+    private function extractLaravelPayloadForV2Step(string $step, Request $request): array
+    {
+        $fieldsByStep = [
+            's-general' => ['title', 'slug', 'destination', 'duration_text', 'is_group_deal'],
+            's-location' => ['destination'],
+            's-taxonomies' => ['voyage_theme_ids'],
+        ];
+
+        $fields = $fieldsByStep[$step] ?? [];
+        $payload = [];
+        foreach ($fields as $field) {
+            if ($request->exists($field)) {
+                $payload[$field] = $request->input($field);
+            }
+        }
+
+        if ($step === 's-general' && array_key_exists('slug', $payload) && trim((string) $payload['slug']) === '') {
+            $title = trim((string) $request->input('title', ''));
+            if ($title !== '') {
+                $payload['slug'] = Str::slug($title);
+            } else {
+                unset($payload['slug']);
+            }
+        }
+
+        return $payload;
+    }
+
+    private function resolveOrCreateLaravelVoyage(int $wpPostId): Voyage
+    {
+        return Voyage::firstOrCreate(
+            ['wp_post_id' => $wpPostId],
+            ['name' => optional($this->repository->getPost($wpPostId))->post_title ?? 'Tour', 'slug' => 'tour-' . $wpPostId]
+        );
+    }
+
+    private function resolveLastDayNumberForV2(int $wpPostId, Request $request): int
+    {
+        $fromRequest = (int) $request->input('duration_day', 0);
+        if ($fromRequest > 0) {
+            return $fromRequest;
+        }
+
+        try {
+            $program = $this->programJsonService->getProgram($wpPostId);
+            $count = count($program['program_days'] ?? []);
+            if ($count > 0) {
+                return $count;
+            }
+        } catch (\Throwable $e) {
+            // ignore and fallback below
+        }
+
+        $post = $this->repository->getPost($wpPostId);
+        $metaDuration = $this->parseDurationDays($post?->getMeta('duration_day'));
+
+        return max(1, $metaDuration);
+    }
+
+    private function syncVoyageLogisticsMeta(Voyage $voyage, Request $request): void
+    {
+        $payload = $request->input('logistics_meta', []);
+        if (! is_array($payload)) {
+            $payload = [];
+        }
+
+        $voyage->logistics_meta = $payload;
+        $voyage->save();
+    }
+
+    private function buildV2StepStates(int $wpPostId): array
+    {
+        $post = $this->repository->getPost($wpPostId);
+        if (! $post) {
+            return collect(self::V2_STEPS)->mapWithKeys(fn ($stepId) => [$stepId => 'incomplete'])->all();
+        }
+
+        $laravelVoyage = Voyage::query()->where('wp_post_id', $wpPostId)->first();
+        $multiLocations = $this->repository->parseMultiLocation($post->getMeta('multi_location'));
+        $hasTaxonomies = collect($this->getPostTaxonomies($wpPostId))->flatten()->isNotEmpty();
+        $hasThemes = $laravelVoyage && Schema::hasTable('voyage_voyage_theme') && $laravelVoyage->themes()->exists();
+        $hasFlightDeparturePlace = $laravelVoyage
+            ? VoyageDeparturePlace::query()
+                ->where('voyage_id', $laravelVoyage->id)
+                ->whereNotNull('name')
+                ->where('name', '!=', '')
+                ->exists()
+            : false;
+        $hasFlightOption = $laravelVoyage
+            ? $laravelVoyage->flightOptions()
+                ->whereNotNull('from_city')
+                ->where('from_city', '!=', '')
+                ->whereNotNull('to_city')
+                ->where('to_city', '!=', '')
+                ->exists()
+            : false;
+
+        $states = [
+            's-general' => trim((string) $post->post_title) !== '',
+            's-pricing' => collect(['adult_price', 'base_price', 'min_price', 'sale_price'])
+                ->contains(fn ($key) => trim((string) $post->getMeta($key)) !== ''),
+            's-location' => ! empty($multiLocations),
+            's-media' => trim((string) $post->getMeta('_thumbnail_id')) !== ''
+                || trim((string) $post->getMeta('_tour_hero_image_id')) !== ''
+                || trim((string) $post->getMeta('_tour_hero_gallery_ids')) !== ''
+                || trim((string) $post->getMeta('gallery')) !== '',
+            's-programme' => TourDay::query()
+                ->where('tour_id', $wpPostId)
+                ->where(function ($query) {
+                    $query->whereNotNull('day_title')->where('day_title', '!=', '')
+                        ->orWhere(function ($q) {
+                            $q->whereNotNull('title')->where('title', '!=', '');
+                        })
+                        ->orWhere(function ($q) {
+                            $q->whereNotNull('description')->where('description', '!=', '');
+                        });
+                })
+                ->exists(),
+            's-information' => trim((string) $post->getMeta('tours_include')) !== ''
+                && trim((string) $post->getMeta('tours_exclude')) !== '',
+            's-taxonomies' => $hasTaxonomies || $hasThemes,
+            's-flights' => $hasFlightOption || $hasFlightDeparturePlace,
+            's-hotels' => TourHotel::query()
+                ->where('tour_id', $wpPostId)
+                ->whereNotNull('hotel_name')
+                ->where('hotel_name', '!=', '')
+                ->exists(),
+            's-transfers' => TourTransfer::query()
+                ->where('tour_id', $wpPostId)
+                ->whereNotNull('from_label')
+                ->where('from_label', '!=', '')
+                ->whereNotNull('to_label')
+                ->where('to_label', '!=', '')
+                ->exists(),
+            's-activities' => $laravelVoyage
+                ? TravelDayItem::query()->where('voyage_id', $laravelVoyage->id)->where('type', 'activity')->exists()
+                : false,
+            's-extras' => $laravelVoyage
+                ? VoyageExtra::query()
+                    ->where('voyage_id', $laravelVoyage->id)
+                    ->whereNotNull('name')
+                    ->where('name', '!=', '')
+                    ->exists()
+                : false,
+            's-availability' => TravelDate::query()
+                ->where('travel_id', $wpPostId)
+                ->where('is_active', true)
+                ->whereNotNull('date')
+                ->whereNotNull('seats')
+                ->exists(),
+            's-logistics' => $laravelVoyage ? $this->hasAnyNonEmptyScalar($laravelVoyage->logistics_meta ?? []) : false,
+        ];
+
+        return collect(self::V2_STEPS)
+            ->mapWithKeys(fn ($stepId) => [$stepId => ! empty($states[$stepId]) ? 'complete' : 'incomplete'])
+            ->all();
     }
 
     /**
@@ -276,7 +1278,7 @@ class VoyageController extends Controller
     {
         $validated = $request->validated();
 
-        // GÃ©nÃ©rer slug si vide
+        // GÃƒÂ©nÃƒÂ©rer slug si vide
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['title']);
         }
@@ -289,6 +1291,7 @@ class VoyageController extends Controller
         try {
             $tour = $this->repository->createTour($validated);
             $laravelVoyage = $this->syncLaravelVoyageFromRequest((int) $tour->ID, $validated);
+            $this->syncVoyageLogisticsMeta($laravelVoyage, $request);
             
             // Save tour program if provided (PHP serialized)
             if ($request->has('tours_program')) {
@@ -314,11 +1317,11 @@ class VoyageController extends Controller
 
             return redirect()
                 ->route('admin.circuits.voyages.edit', $tour->ID)
-                ->with('success', 'Tour créé avec succès dans WordPress ! Visible immédiatement sur ajinsafro.net');
+                ->with('success', 'Tour crÃ©Ã© avec succÃ¨s dans WordPress ! Visible immÃ©diatement sur ajinsafro.net');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Erreur lors de la création : ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Erreur lors de la crÃ©ation : ' . $e->getMessage()]);
         }
     }
 
@@ -329,7 +1332,7 @@ class VoyageController extends Controller
     {
         $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
         
-        // CrÃ©er un objet compatible avec les vues existantes
+        // CrÃƒÂ©er un objet compatible avec les vues existantes
         $voyage = $wpPost;
         $voyage->name = $wpPost->post_title;
         $voyage->slug = $wpPost->post_name;
@@ -339,7 +1342,7 @@ class VoyageController extends Controller
         $voyage->created_at = $wpPost->post_date;
         $voyage->status = $wpPost->post_status;
         
-        // Charger TOUTES les metas Traveler (lecture complÃ¨te)
+        // Charger TOUTES les metas Traveler (lecture complÃƒÂ¨te)
         $meta = [
             // LOCATION
             'address' => $wpPost->getMeta('address'),
@@ -430,7 +1433,7 @@ class VoyageController extends Controller
         // Charger les taxonomies disponibles
         $availableTaxonomies = $this->getAvailableTaxonomies();
         
-        // Charger les taxonomies assignÃ©es Ã  ce tour
+        // Charger les taxonomies assignÃƒÂ©es ÃƒÂ  ce tour
         $assignedTaxonomies = $this->getPostTaxonomies($id);
         
         // Charger les locations (tree)
@@ -446,9 +1449,9 @@ class VoyageController extends Controller
         $worldCities = config('world_cities', []);
         $mergedCitiesByCode = $this->buildMergedCitiesByCode($worldCountries, $worldCities, $countryCitiesData);
 
-        // Programme par jours (Laravel: aj_tour_days + activitÃ©s). The Blade loop iterates over
+        // Programme par jours (Laravel: aj_tour_days + activitÃƒÂ©s). The Blade loop iterates over
         // loadProgram() (WP aj_tour_days). If duration_day meta is stale (e.g. 4) but travel_program_days
-        // has 7 rows, ensureDaysExist() only used meta and WP stayed at 4 days â€” the UI showed 4 cards.
+        // has 7 rows, ensureDaysExist() only used meta and WP stayed at 4 days Ã¢â‚¬â€ the UI showed 4 cards.
         $laravelVoyage = Voyage::firstOrCreate(
             ['wp_post_id' => $id],
             ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
@@ -492,7 +1495,7 @@ class VoyageController extends Controller
         }
 
         // Charger les TravelProgramDay avec relations hotels/transfers pour le modal par jour
-        // ClÃ© par index du jour (0, 1, 2...) pour correspondre Ã  $dayIndex dans la vue (programme_days)
+        // ClÃƒÂ© par index du jour (0, 1, 2...) pour correspondre ÃƒÂ  $dayIndex dans la vue (programme_days)
         $programDayHotelsTransfers = [];
         $travelProgramDaysWithRelations = collect();
         try {
@@ -584,12 +1587,12 @@ class VoyageController extends Controller
             $heroImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
         }
 
-        // HÃ´tel + Transferts (aj_tour_hotels, aj_tour_transfers) â€” multi-row support
+        // HÃƒÂ´tel + Transferts (aj_tour_hotels, aj_tour_transfers) Ã¢â‚¬â€ multi-row support
         $tourHotels = TourHotel::getAllForTour($id)->load([
             'rooms.dateAvailabilities' => fn ($query) => $query->orderBy('travel_date_id')->orderBy('id'),
         ]);
         $tourHotel = $tourHotels->first();
-        // Liste dâ€™hÃ´tels dâ€™autres voyages pour Â« Choisir un hÃ´tel existant Â» (copie des donnÃ©es)
+        // Liste dÃ¢â‚¬â„¢hÃƒÂ´tels dÃ¢â‚¬â„¢autres voyages pour Ã‚Â« Choisir un hÃƒÂ´tel existant Ã‚Â» (copie des donnÃƒÂ©es)
         $otherTourHotelsForCopy = $this->getHotelsFromWordPress();
         $otherTourTitles = [];
         $transfers = TourTransfer::getForTour($id);
@@ -597,7 +1600,7 @@ class VoyageController extends Controller
         $transferDepartures = $transfers['departure'];
         $transferArrival = $transferArrivals->first();
         $transferDeparture = $transferDepartures->first();
-        // Valeurs suggÃ©rÃ©es : transfert aller = aÃ©roport d'arrivÃ©e (vol aller to_city) â†’ hÃ´tel ; transfert retour = hÃ´tel â†’ aÃ©roport de dÃ©part (vol retour from_city)
+        // Valeurs suggÃƒÂ©rÃƒÂ©es : transfert aller = aÃƒÂ©roport d'arrivÃƒÂ©e (vol aller to_city) Ã¢â€ â€™ hÃƒÂ´tel ; transfert retour = hÃƒÂ´tel Ã¢â€ â€™ aÃƒÂ©roport de dÃƒÂ©part (vol retour from_city)
         $suggestedArrivalFrom = $outboundFlight ? trim($outboundFlight->to_city ?? $outboundFlight->to_label ?? '') : '';
         $suggestedArrivalTo = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
         $suggestedDepartureFrom = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
@@ -607,11 +1610,11 @@ class VoyageController extends Controller
         $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
         $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
 
-        // Lieux de dÃ©part : source Laravel (voyage_departure_places) pour affichage et ajout dans l'onglet Vols
+        // Lieux de dÃƒÂ©part : source Laravel (voyage_departure_places) pour affichage et ajout dans l'onglet Vols
         $departurePlaces = $laravelVoyage
             ? VoyageDeparturePlace::where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
             : collect();
-        // Vols associÃ©s par lieu (source unique : aj_tour_flights.departure_place_id) pour l'onglet Lieux de dÃ©part en lecture seule
+        // Vols associÃƒÂ©s par lieu (source unique : aj_tour_flights.departure_place_id) pour l'onglet Lieux de dÃƒÂ©part en lecture seule
         $departurePlaceFlightsFromTour = collect();
         try {
             if (\Illuminate\Support\Facades\Schema::connection('wp')->hasColumn('aj_tour_flights', 'departure_place_id')) {
@@ -647,12 +1650,13 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        // Total places calculÃ© Ã  partir des chambres (affichÃ© en lecture seule dans paramÃ¨tres gÃ©nÃ©raux)
+        // Total places calculÃƒÂ© ÃƒÂ  partir des chambres (affichÃƒÂ© en lecture seule dans paramÃƒÂ¨tres gÃƒÂ©nÃƒÂ©raux)
         $totalPlacesVoyage = $this->computeTourTotalPlacesFromRooms($id);
 
         $voyageExtras = ($laravelVoyage && $this->voyageExtrasTableAvailable())
             ? VoyageExtra::query()->where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
             : collect();
+        $allVoyageThemes = $this->loadVoyageThemesForEdit();
 
         \Log::info('EDIT PROGRAM DAYS COUNT', [
             'voyage_id' => $laravelVoyage->id,
@@ -661,11 +1665,11 @@ class VoyageController extends Controller
             'day_numbers' => $programDays->pluck('day.day_number')->filter()->values()->toArray(),
         ]);
 
-        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras'));
+        return view('admin.circuits.voyages.edit', compact('voyage', 'meta', 'gallery_csv', 'availableTaxonomies', 'assignedTaxonomies', 'locationsTree', 'selectedLocationIds', 'worldCountries', 'countryCitiesData', 'mergedCitiesByCode', 'programDays', 'activitiesCatalog', 'tourActivities', 'airlines', 'laravelVoyage', 'outboundFlight', 'inboundFlight', 'flightOptionsByType', 'flightOptionsWithIndex', 'nextFlightOptionIndex', 'lastDayNumber', 'heroImageUrl', 'tourHotel', 'tourHotels', 'otherTourHotelsForCopy', 'otherTourTitles', 'transferArrival', 'transferDeparture', 'transferArrivals', 'transferDepartures', 'suggestedArrivalFrom', 'suggestedArrivalTo', 'suggestedDepartureFrom', 'suggestedDepartureTo', 'tourHotelImageUrl', 'transferArrivalImageUrl', 'transferDepartureImageUrl', 'departurePlaces', 'departurePlaceFlightsFromTour', 'travelDates', 'programJson', 'programApiUrl', 'programDayHotelsTransfers', 'totalPlacesVoyage', 'voyageExtras', 'allVoyageThemes'));
     }
 
     /**
-     * Source des hÃ´tels "Ajouter comme nouveau sÃ©jour" depuis WordPress (post_type=st_hotel).
+     * Source des hÃƒÂ´tels "Ajouter comme nouveau sÃƒÂ©jour" depuis WordPress (post_type=st_hotel).
      *
      * @return \Illuminate\Support\Collection<int, object>
      */
@@ -799,7 +1803,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Associer les pays du monde (config) aux locations WP (arbre) et produire les donnÃ©es pour le select + villes.
+     * Associer les pays du monde (config) aux locations WP (arbre) et produire les donnÃƒÂ©es pour le select + villes.
      *
      * @param array $worldCountries [ code => nom ]
      * @param array $locationsTree  [ [ 'id', 'title', 'children' => [...] ], ... ]
@@ -809,7 +1813,7 @@ class VoyageController extends Controller
     {
         $normalize = function (string $s): string {
             $s = mb_strtolower($s, 'UTF-8');
-            $accents = ['à'=>'a','á'=>'a','â'=>'a','ã'=>'a','ä'=>'a','å'=>'a','æ'=>'ae','ç'=>'c','è'=>'e','é'=>'e','ê'=>'e','ë'=>'e','ì'=>'i','í'=>'i','î'=>'i','ï'=>'i','ñ'=>'n','ò'=>'o','ó'=>'o','ô'=>'o','õ'=>'o','ö'=>'o','ù'=>'u','ú'=>'u','û'=>'u','ü'=>'u','ý'=>'y','ÿ'=>'y','œ'=>'oe'];
+            $accents = ['Ã '=>'a','Ã¡'=>'a','Ã¢'=>'a','Ã£'=>'a','Ã¤'=>'a','Ã¥'=>'a','Ã¦'=>'ae','Ã§'=>'c','Ã¨'=>'e','Ã©'=>'e','Ãª'=>'e','Ã«'=>'e','Ã¬'=>'i','Ã­'=>'i','Ã®'=>'i','Ã¯'=>'i','Ã±'=>'n','Ã²'=>'o','Ã³'=>'o','Ã´'=>'o','Ãµ'=>'o','Ã¶'=>'o','Ã¹'=>'u','Ãº'=>'u','Ã»'=>'u','Ã¼'=>'u','Ã½'=>'y','Ã¿'=>'y','Å“'=>'oe'];
             return strtr($s, $accents);
         };
         $nameToCode = [];
@@ -839,7 +1843,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Construire la liste fusionnÃ©e Pays â†’ Villes (catalogue + WP) pour lâ€™UI.
+     * Construire la liste fusionnÃƒÂ©e Pays Ã¢â€ â€™ Villes (catalogue + WP) pour lÃ¢â‚¬â„¢UI.
      * Chaque ville a : id (WP ou null), title, needsCreate (true si pas encore en WP).
      *
      * @param array $worldCountries [ code => nom ]
@@ -851,7 +1855,7 @@ class VoyageController extends Controller
     {
         $normalize = function (string $s): string {
             $s = mb_strtolower($s, 'UTF-8');
-            $accents = ['à'=>'a','á'=>'a','â'=>'a','ã'=>'a','ä'=>'a','å'=>'a','æ'=>'ae','ç'=>'c','è'=>'e','é'=>'e','ê'=>'e','ë'=>'e','ì'=>'i','í'=>'i','î'=>'i','ï'=>'i','ñ'=>'n','ò'=>'o','ó'=>'o','ô'=>'o','õ'=>'o','ö'=>'o','ù'=>'u','ú'=>'u','û'=>'u','ü'=>'u','ý'=>'y','ÿ'=>'y','œ'=>'oe'];
+            $accents = ['Ã '=>'a','Ã¡'=>'a','Ã¢'=>'a','Ã£'=>'a','Ã¤'=>'a','Ã¥'=>'a','Ã¦'=>'ae','Ã§'=>'c','Ã¨'=>'e','Ã©'=>'e','Ãª'=>'e','Ã«'=>'e','Ã¬'=>'i','Ã­'=>'i','Ã®'=>'i','Ã¯'=>'i','Ã±'=>'n','Ã²'=>'o','Ã³'=>'o','Ã´'=>'o','Ãµ'=>'o','Ã¶'=>'o','Ã¹'=>'u','Ãº'=>'u','Ã»'=>'u','Ã¼'=>'u','Ã½'=>'y','Ã¿'=>'y','Å“'=>'oe'];
             return strtr($s, $accents);
         };
         
@@ -868,7 +1872,7 @@ class VoyageController extends Controller
             $list = [];
             $seenNorm = [];
 
-            // Dâ€™abord les villes du catalogue world_cities
+            // DÃ¢â‚¬â„¢abord les villes du catalogue world_cities
             foreach ($worldCities[$code] ?? [] as $title) {
                 $norm = $normalize($title);
                 $seenNorm[$norm] = true;
@@ -931,7 +1935,7 @@ class VoyageController extends Controller
                 'city_name' => $request->input('city_name'),
             ]);
             return response()->json([
-                'error' => 'Impossible de créer la destination.',
+                'error' => 'Impossible de crÃ©er la destination.',
                 'message' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -940,7 +1944,7 @@ class VoyageController extends Controller
     /**
      * Sync hotels for tour: replace all by request data (tour_hotels[] or tour_hotel).
      *
-     * @return int[] IDs des enregistrements TourHotel crÃ©Ã©s, dans lâ€™ordre dâ€™affichage (pour sync des chambres).
+     * @return int[] IDs des enregistrements TourHotel crÃƒÂ©ÃƒÂ©s, dans lÃ¢â‚¬â„¢ordre dÃ¢â‚¬â„¢affichage (pour sync des chambres).
      */
         private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): array
     {
@@ -1137,7 +2141,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * @see TourPlacesCalculator Logique unique partagÃ©e avec le formulaire (JS).
+     * @see TourPlacesCalculator Logique unique partagÃƒÂ©e avec le formulaire (JS).
      */
     private function computeTourTotalPlacesFromRooms(int $tourId): int
     {
@@ -1158,7 +2162,7 @@ class VoyageController extends Controller
     {
         $transfers = [];
         
-        // Nouveau format unifiÃ© : tour_transfers[]
+        // Nouveau format unifiÃƒÂ© : tour_transfers[]
         if ($request->has('tour_transfers') && is_array($request->input('tour_transfers'))) {
             foreach ($request->input('tour_transfers') as $transfer) {
                 if (is_array($transfer) && (isset($transfer['from_label']) || isset($transfer['to_label']) || isset($transfer['pickup_time']))) {
@@ -1167,7 +2171,7 @@ class VoyageController extends Controller
             }
         }
         
-        // Ancien format : tour_transfer_arrivals[] et tour_transfer_departures[] (compatibilitÃ©)
+        // Ancien format : tour_transfer_arrivals[] et tour_transfer_departures[] (compatibilitÃƒÂ©)
         $arrivals = [];
         if ($request->has('tour_transfer_arrivals') && is_array($request->input('tour_transfer_arrivals'))) {
             foreach ($request->input('tour_transfer_arrivals') as $arr) {
@@ -1196,17 +2200,17 @@ class VoyageController extends Controller
             }
         }
         
-        // Si nouveau format utilisÃ©, ignorer l'ancien format
+        // Si nouveau format utilisÃƒÂ©, ignorer l'ancien format
         if (!empty($transfers)) {
             TourTransfer::where('tour_id', $tourId)->delete();
             $sortOrder = 0;
             foreach ($transfers as $transfer) {
                 $dayNumber = isset($transfer['day_number']) && $transfer['day_number'] !== '' ? max(1, (int) $transfer['day_number']) : 1;
-                // Par dÃ©faut, on utilise 'arrival' comme direction (peut Ãªtre changÃ© plus tard si nÃ©cessaire)
-                // Pour l'instant, on garde la compatibilitÃ© avec le modÃ¨le qui nÃ©cessite une direction
+                // Par dÃƒÂ©faut, on utilise 'arrival' comme direction (peut ÃƒÂªtre changÃƒÂ© plus tard si nÃƒÂ©cessaire)
+                // Pour l'instant, on garde la compatibilitÃƒÂ© avec le modÃƒÂ¨le qui nÃƒÂ©cessite une direction
                 TourTransfer::create([
                     'tour_id' => $tourId,
-                    'direction' => TourTransfer::DIRECTION_ARRIVAL, // Par dÃ©faut, peut Ãªtre adaptÃ© selon besoin
+                    'direction' => TourTransfer::DIRECTION_ARRIVAL, // Par dÃƒÂ©faut, peut ÃƒÂªtre adaptÃƒÂ© selon besoin
                     'day_number' => $dayNumber,
                     'sort_order' => $sortOrder++,
                     'is_optional' => !empty($transfer['is_optional']) ? 1 : 0,
@@ -1325,7 +2329,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Extras rÃ©servation (workspace) : une ligne par option, liÃ©e au voyage Laravel.
+     * Extras rÃƒÂ©servation (workspace) : une ligne par option, liÃƒÂ©e au voyage Laravel.
      */
     private function syncVoyageExtras(Voyage $voyage, Request $request): void
     {
@@ -1414,7 +2418,7 @@ class VoyageController extends Controller
         $existingDates = TravelDate::where('travel_id', $tourId)->orderBy('date')->orderBy('id')->get();
         $existingById = $existingDates->keyBy('id');
         $existingByDate = $existingDates->keyBy(fn (TravelDate $travelDate) => optional($travelDate->date)->format('Y-m-d'));
-        /** @var array<string, TravelDate> Même requête : évite plusieurs lignes aj_travel_dates pour la même date (clé unique travel_id+date). */
+        /** @var array<string, TravelDate> MÃªme requÃªte : Ã©vite plusieurs lignes aj_travel_dates pour la mÃªme date (clÃ© unique travel_id+date). */
         $resolvedByDate = [];
         foreach ($existingByDate as $ymd => $td) {
             $resolvedByDate[$ymd] = $td;
@@ -1598,8 +2602,8 @@ class VoyageController extends Controller
     }
 
     /**
-     * Compatibilité : 1 date WP (aj_travel_dates) = 1 départ Laravel (departures).
-     * Stocke wp_travel_date_id pour faire le lien avec les réservations existantes (travel_date_id).
+     * CompatibilitÃ© : 1 date WP (aj_travel_dates) = 1 dÃ©part Laravel (departures).
+     * Stocke wp_travel_date_id pour faire le lien avec les rÃ©servations existantes (travel_date_id).
      */
     private function syncDepartureRoomAllocations(Voyage $voyage, Request $request, Collection $travelDates, array $hotelIdsOrdered = []): void
     {
@@ -1978,7 +2982,7 @@ class VoyageController extends Controller
     {
         $validated = $request->validated();
 
-        // Option "Utiliser l'image principale comme image Ã  la une WP"
+        // Option "Utiliser l'image principale comme image ÃƒÂ  la une WP"
         if (!empty($validated['hero_use_as_thumbnail']) && !empty($validated['hero_image_id'])) {
             $validated['thumbnail_id'] = $validated['hero_image_id'];
         }
@@ -1991,7 +2995,7 @@ class VoyageController extends Controller
         try {
             $this->repository->updateTour($id, $validated);
 
-            // Programme par jours uniquement (aj_tour_days + aj_tour_day_activities). Plus d'Ã©dition tours_program.
+            // Programme par jours uniquement (aj_tour_days + aj_tour_day_activities). Plus d'ÃƒÂ©dition tours_program.
             if ($request->has('programme_days')) {
                 try {
                     $voyage = Voyage::firstOrCreate(
@@ -2045,7 +3049,7 @@ class VoyageController extends Controller
                 // keep 1
             }
             
-            // Log TOUTES les clÃ©s de la requÃªte pour diagnostic
+            // Log TOUTES les clÃƒÂ©s de la requÃƒÂªte pour diagnostic
             \Log::info('VoyageController@update - Request keys received', [
                 'tour_id' => $id,
                 'has_flight_options' => $request->has('flight_options'),
@@ -2054,7 +3058,7 @@ class VoyageController extends Controller
                 'flight_options_count' => $request->has('flight_options') ? count($request->input('flight_options', [])) : 0,
             ]);
 
-            // Diagnostic chambres: vÃ©rifier si le payload contient bien tour_hotels[*].rooms
+            // Diagnostic chambres: vÃƒÂ©rifier si le payload contient bien tour_hotels[*].rooms
             try {
                 $tourHotels = $request->input('tour_hotels', []);
                 $tourHotels = is_array($tourHotels) ? $tourHotels : [];
@@ -2122,15 +3126,15 @@ class VoyageController extends Controller
                 }
             }
 
-            // HÃ´tels puis chambres (IDs nouveaux aprÃ¨s delete/create) â€” un seul sync hÃ´tels
+            // HÃƒÂ´tels puis chambres (IDs nouveaux aprÃƒÂ¨s delete/create) Ã¢â‚¬â€ un seul sync hÃƒÂ´tels
             $hotelIdsOrdered = $this->syncTourHotels($id, $request);
             $this->syncTourTransfers($id, $request, $lastDayNumber);
 
             // Synchroniser les lieux de d?part et les dates disponibles
             $this->syncDeparturePlaces($id, $request);
             $this->syncTravelDates($id, $request);
-            // Vérité terrain après écriture WP : la collection retournée par syncTravelDates peut être vide
-            // si le POST ne repasse pas travel_dates (ex. soumission partielle), alors que aj_travel_dates contient déjà des lignes.
+            // VÃ©ritÃ© terrain aprÃ¨s Ã©criture WP : la collection retournÃ©e par syncTravelDates peut Ãªtre vide
+            // si le POST ne repasse pas travel_dates (ex. soumission partielle), alors que aj_travel_dates contient dÃ©jÃ  des lignes.
             $travelDates = TravelDate::getDatesForTour($id);
 
             \Log::info('AVAILABILITY_SYNC_CHECK', [
@@ -2170,7 +3174,8 @@ class VoyageController extends Controller
             ]);
 
             $this->syncVoyageExtras($laravelVoyage, $request);
-            // Toujours synchroniser les vols Laravel â†’ WP aprÃ¨s chaque enregistrement (pour que le plugin affiche les vols)
+            $this->syncVoyageLogisticsMeta($laravelVoyage, $request);
+            // Toujours synchroniser les vols Laravel Ã¢â€ â€™ WP aprÃƒÂ¨s chaque enregistrement (pour que le plugin affiche les vols)
             if ($laravelVoyage && $laravelVoyage->wp_post_id) {
                 try {
                     $this->voyageFlightOptionService->syncOptionsToWp(
@@ -2188,11 +3193,11 @@ class VoyageController extends Controller
 
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
-                ->with('success', 'Tour mis à jour avec succès dans WordPress ! Modifications visibles immédiatement.');
+                ->with('success', 'Tour mis Ã  jour avec succÃ¨s dans WordPress ! Modifications visibles immÃ©diatement.');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Erreur lors de la mise Ã  jour : ' . $e->getMessage()]);
         }
     }
 
@@ -2204,23 +3209,90 @@ class VoyageController extends Controller
     protected function syncLaravelVoyageFromRequest(int $wpPostId, array $validated): Voyage
     {
         $wpPost = $this->repository->getPost($wpPostId);
-        $title = trim((string) ($validated['title'] ?? ($wpPost->post_title ?? 'Tour')));
-        $slugInput = trim((string) ($validated['slug'] ?? ''));
-        $baseSlug = $slugInput !== '' ? $slugInput : ('tour-' . $wpPostId);
-
         $voyage = Voyage::firstOrNew(['wp_post_id' => $wpPostId]);
-        $slug = $this->ensureUniqueVoyageSlug($baseSlug, $voyage->exists ? (int) $voyage->id : null);
+        $fallbackTitle = trim((string) ($wpPost->post_title ?? ('Tour ' . $wpPostId)));
+        $titleFromInput = array_key_exists('title', $validated)
+            ? trim((string) ($validated['title'] ?? ''))
+            : null;
 
-        $voyage->fill([
-            'name' => $title !== '' ? $title : ('Tour '.$wpPostId),
-            'slug' => $slug,
-            'destination' => isset($validated['destination']) ? trim((string) $validated['destination']) : null,
-            'duration_text' => isset($validated['duration_text']) ? trim((string) $validated['duration_text']) : null,
-            'is_group_deal' => (bool) ($validated['is_group_deal'] ?? false),
-        ]);
+        $fill = [
+            'name' => $titleFromInput !== null
+                ? ($titleFromInput !== '' ? $titleFromInput : $fallbackTitle)
+                : ($voyage->name ?: $fallbackTitle),
+        ];
+
+        $shouldSyncSlug = array_key_exists('slug', $validated) || ! $voyage->exists || empty($voyage->slug);
+        if ($shouldSyncSlug) {
+            $slugInput = array_key_exists('slug', $validated)
+                ? trim((string) ($validated['slug'] ?? ''))
+                : '';
+            $baseSlug = $slugInput !== ''
+                ? $slugInput
+                : ($voyage->slug ?: ('tour-' . $wpPostId));
+            $fill['slug'] = $this->ensureUniqueVoyageSlug($baseSlug, $voyage->exists ? (int) $voyage->id : null);
+        }
+
+        if (array_key_exists('destination', $validated)) {
+            $destination = trim((string) ($validated['destination'] ?? ''));
+            $fill['destination'] = $destination !== '' ? $destination : null;
+        }
+        if (array_key_exists('duration_text', $validated)) {
+            $durationText = trim((string) ($validated['duration_text'] ?? ''));
+            $fill['duration_text'] = $durationText !== '' ? $durationText : null;
+        }
+        if (array_key_exists('is_group_deal', $validated)) {
+            $fill['is_group_deal'] = (bool) ($validated['is_group_deal'] ?? false);
+        }
+
+        $voyage->fill($fill);
         $voyage->save();
 
+        if (Schema::hasTable('voyage_voyage_theme') && array_key_exists('voyage_theme_ids', $validated)) {
+            $themeIds = collect($validated['voyage_theme_ids'] ?? [])
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values()
+                ->all();
+
+            $voyage->themes()->sync($themeIds);
+        }
+
         return $voyage;
+    }
+
+    /**
+     * Charge les thÃ¨mes Laravel pour l'onglet taxonomies.
+     * Si la table est vide, initialise une seule fois les thÃ¨mes par dÃ©faut.
+     */
+    protected function loadVoyageThemesForEdit(): Collection
+    {
+        if (! Schema::hasTable('voyage_themes')) {
+            return collect();
+        }
+
+        $themes = VoyageTheme::query()
+            ->ordered()
+            ->get(['id', 'name', 'slug', 'is_active', 'sort_order']);
+
+        if ($themes->isNotEmpty()) {
+            return $themes;
+        }
+
+        foreach (VoyageThemeSeeder::defaultThemes() as $row) {
+            VoyageTheme::query()->updateOrCreate(
+                ['slug' => $row['slug']],
+                [
+                    'name' => $row['name'],
+                    'is_active' => true,
+                    'sort_order' => (int) $row['sort_order'],
+                ]
+            );
+        }
+
+        return VoyageTheme::query()
+            ->ordered()
+            ->get(['id', 'name', 'slug', 'is_active', 'sort_order']);
     }
 
     /**
@@ -2335,7 +3407,7 @@ class VoyageController extends Controller
                 }
             }
 
-            // Sync hotel & transfers for this day (TravelProgramDay, rÃ©solu depuis TourDay)
+            // Sync hotel & transfers for this day (TravelProgramDay, rÃƒÂ©solu depuis TourDay)
             $this->syncDayHotelsAndTransfers($tourId, $dayId, is_array($dayRow) ? $dayRow : []);
         }
 
@@ -2361,10 +3433,10 @@ class VoyageController extends Controller
     }
 
     /**
-     * Sync inline "ActivitÃ©s" tab rows for a voyage (save-global strategy).
+     * Sync inline "ActivitÃƒÂ©s" tab rows for a voyage (save-global strategy).
      * Stores rows in travel_day_items with type=activity and source=voyage_activities_tab.
      */
-    protected function syncActivities(Voyage $voyage, UpdateWpTourRequest $request): void
+    protected function syncActivities(Voyage $voyage, Request $request): void
     {
         $payload = $request->input('tour_activities', []);
         if (!is_array($payload)) {
@@ -2385,7 +3457,7 @@ class VoyageController extends Controller
             }
 
             $activity = Activity::find($activityId);
-            $title = trim((string) ($row['title'] ?? ($activity?->title ?? 'Activité')));
+            $title = trim((string) ($row['title'] ?? ($activity?->title ?? 'ActivitÃ©')));
             $pricingType = ($row['pricing_type'] ?? 'per_person') === 'fixed' ? 'fixed' : 'per_person';
             $unitPrice = (float) ($row['unit_price'] ?? 0);
             $unitPrice = $unitPrice < 0 ? 0 : round($unitPrice, 2);
@@ -2399,7 +3471,7 @@ class VoyageController extends Controller
                 'end_day' => 1,
                 'nights' => 0,
                 'type' => 'activity',
-                'title' => $title !== '' ? $title : ($activity?->title ?? 'Activité'),
+                'title' => $title !== '' ? $title : ($activity?->title ?? 'ActivitÃ©'),
                 'details' => null,
                 'included' => true,
                 'price_delta_per_person' => $pricingType === 'per_person' ? (int) round($unitPrice * 100) : 0,
@@ -2445,9 +3517,9 @@ class VoyageController extends Controller
     /**
      * Sync hotel and transfers for a specific day.
      * - $tourId: WP tour id (wp_posts.ID)
-     * - $dayId: TourDay.id (aj_tour_days) envoyÃ© par le formulaire
+     * - $dayId: TourDay.id (aj_tour_days) envoyÃƒÂ© par le formulaire
      * - $dayRow: current programme_days[$i] request array
-     * On rÃ©sout TourDay -> day_number puis TravelProgramDay par voyage_id + day_number.
+     * On rÃƒÂ©sout TourDay -> day_number puis TravelProgramDay par voyage_id + day_number.
      */
     protected function syncDayHotelsAndTransfers(int $tourId, int $dayId, array $dayRow): void
     {
@@ -2464,7 +3536,7 @@ class VoyageController extends Controller
             return;
         }
 
-        // Syncer l'hÃ´tel (0..1). Si hotel_id vide, lier au TourHotel crÃ©Ã© pour ce jour (ex. ajout depuis le drawer).
+        // Syncer l'hÃƒÂ´tel (0..1). Si hotel_id vide, lier au TourHotel crÃƒÂ©ÃƒÂ© pour ce jour (ex. ajout depuis le drawer).
         $hotelId = !empty($dayRow['hotel_id']) ? (int) $dayRow['hotel_id'] : null;
         if ($hotelId) {
             $hotel = TourHotel::find($hotelId);
@@ -2474,7 +3546,7 @@ class VoyageController extends Controller
                 $day->update(['hotel_id' => null]);
             }
         } else {
-            // Chercher un hÃ´tel oÃ¹ le jour est dans la plage check-in -> check-out
+            // Chercher un hÃƒÂ´tel oÃƒÂ¹ le jour est dans la plage check-in -> check-out
             $dayNumber = (int) $tourDay->day_number;
             $hotelForDay = TourHotel::where('tour_id', $tourId)
                 ->where(function($query) use ($dayNumber) {
@@ -2485,7 +3557,7 @@ class VoyageController extends Controller
                           ->where('check_in_day', '<=', $dayNumber)
                           ->where('check_out_day', '>=', $dayNumber);
                     })
-                    // CompatibilitÃ© ancien format : day_number
+                    // CompatibilitÃƒÂ© ancien format : day_number
                     ->orWhere(function($q) use ($dayNumber) {
                         $q->whereNull('check_in_day')
                           ->whereNull('check_out_day')
@@ -2514,7 +3586,7 @@ class VoyageController extends Controller
 
         // Valider que chaque transfert existe, puis syncer
         // Utiliser directement DB::connection('mysql') pour forcer la bonne connexion pour la table pivot
-        // car la relation belongsToMany utilise la connexion du modÃ¨le liÃ© (TourTransfer sur 'wp')
+        // car la relation belongsToMany utilise la connexion du modÃƒÂ¨le liÃƒÂ© (TourTransfer sur 'wp')
         if (!empty($transferIds)) {
             $validIds = TourTransfer::whereIn('id', $transferIds)->pluck('id')->toArray();
             
@@ -2527,7 +3599,7 @@ class VoyageController extends Controller
                 ->where('program_day_id', $programDayId)
                 ->delete();
             
-            // InsÃ©rer les nouvelles associations
+            // InsÃƒÂ©rer les nouvelles associations
             if (!empty($validIds)) {
                 $insertData = array_map(function($transferId) use ($programDayId) {
                     return [
@@ -2681,7 +3753,7 @@ class VoyageController extends Controller
                         'custom_title' => (string) ($activityRow['custom_title'] ?? ''),
                         'custom_description' => (string) ($activityRow['custom_description'] ?? ''),
                         'activity' => (object) [
-                            'title' => $catalogActivity->title ?? ('Activité #' . $activityId),
+                            'title' => $catalogActivity->title ?? ('ActivitÃ© #' . $activityId),
                         ],
                     ];
                 });
@@ -2760,7 +3832,7 @@ class VoyageController extends Controller
             $this->programService->addDay($id);
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
-                ->with('success', 'Jour ajouté.')
+                ->with('success', 'Jour ajoutÃ©.')
                 ->withFragment('program-days');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Impossible d\'ajouter le jour : ' . $e->getMessage()]);
@@ -2781,7 +3853,7 @@ class VoyageController extends Controller
             $this->repository->updateTour($id, ['duration_day' => $this->programService->countDays($id)]);
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
-                ->with('success', 'Jour supprimé.')
+                ->with('success', 'Jour supprimÃ©.')
                 ->withFragment('program-days');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Impossible de supprimer le jour : ' . $e->getMessage()]);
@@ -2798,7 +3870,7 @@ class VoyageController extends Controller
 
             return redirect()
                 ->route('admin.circuits.voyages.index')
-                ->with('success', 'Tour supprimé avec succès de WordPress !');
+                ->with('success', 'Tour supprimÃ© avec succÃ¨s de WordPress !');
         } catch (\Exception $e) {
             return back()
                 ->withErrors(['error' => 'Erreur lors de la suppression : ' . $e->getMessage()]);

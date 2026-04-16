@@ -2082,6 +2082,23 @@ body.voyage-layout-page .offcanvas {
 }
 .voyage-edit-page .ve-rich-field .tox-tinymce {
     box-sizing: border-box;
+    min-height: 250px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+.voyage-edit-page .ve-rich-field .tox-editor-container {
+    min-height: 250px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+.voyage-edit-page .ve-rich-field .tox-edit-area {
+    min-height: 230px !important;
+    display: block !important;
+    flex: 1 !important;
+}
+.voyage-edit-page .ve-rich-field .tox-edit-area__iframe {
+    min-height: 230px !important;
+    height: 230px !important;
 }
 .voyage-edit-page .programme-day-card--dragging {
     width: 100% !important;
@@ -2167,6 +2184,16 @@ body.voyage-layout-page .offcanvas {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+}
+
+.voyage-edit-page .program-day-form textarea.programme-plain-editor {
+    min-height: 130px;
+    resize: vertical;
+    line-height: 1.45;
+}
+
+.voyage-edit-page .program-day-form .field-resume textarea.programme-plain-editor {
+    min-height: 96px;
 }
 
 @media (max-width: 992px) {

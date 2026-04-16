@@ -23,6 +23,63 @@
                 <span class="text-muted small">Chaque date active met a jour le depart correspondant.</span>
             </div>
 
+            <div class="ve-dates-section mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div>
+                        <h5 class="ve-subsection-title mb-1"><i class="bx bx-calendar-check"></i> Dates de depart</h5>
+                        <p class="text-muted small mb-0">Une ligne par date, avec stock et prix specifique si besoin.</p>
+                    </div>
+
+                    <button type="button" class="btn btn-primary btn-sm" id="add-travel-date">
+                        <i class="bx bx-plus"></i> Ajouter une date
+                    </button>
+                </div>
+
+                <div id="travel-dates-container">
+                    @php $datesList = $travelDates ?? collect(); @endphp
+                    @forelse($datesList as $di => $dateItem)
+                        <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
+                            <div class="card-body py-2">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                        @if(!empty($dateItem->id))
+                                            <input type="hidden" name="travel_dates[{{ $di }}][id]" value="{{ $dateItem->id }}">
+                                        @endif
+                                        <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
+                                    </div>
+
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small mb-1">Places <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? 0) }}" min="0" required>
+                                    </div>
+
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small mb-1">Prix specifique</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="-">
+                                    </div>
+
+                                    <div class="col-6 col-md-2">
+                                        <div class="form-check mb-0 pb-1">
+                                            <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
+                                            <label class="form-check-label small">Actif</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-1 text-md-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer cette date">x</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="alert alert-warning mb-0">
+                            Aucune date configuree pour le moment. Ajoutez un depart pour ouvrir la vente.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
             <div class="ve-settings-grid mb-4">
                 <div class="ve-settings-block">
                     <h5 class="ve-subsection-title">Reservation</h5>
@@ -95,62 +152,6 @@
                 </div>
             </div>
 
-            <div class="ve-dates-section">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                    <div>
-                        <h5 class="ve-subsection-title mb-1"><i class="bx bx-calendar-check"></i> Dates de depart</h5>
-                        <p class="text-muted small mb-0">Une ligne par date, avec stock et prix specifique si besoin.</p>
-                    </div>
-
-                    <button type="button" class="btn btn-primary btn-sm" id="add-travel-date">
-                        <i class="bx bx-plus"></i> Ajouter une date
-                    </button>
-                </div>
-
-                <div id="travel-dates-container">
-                    @php $datesList = $travelDates ?? collect(); @endphp
-                    @forelse($datesList as $di => $dateItem)
-                        <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
-                            <div class="card-body py-2">
-                                <div class="row g-2 align-items-end">
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
-                                        @if(!empty($dateItem->id))
-                                            <input type="hidden" name="travel_dates[{{ $di }}][id]" value="{{ $dateItem->id }}">
-                                        @endif
-                                        <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
-                                    </div>
-
-                                    <div class="col-6 col-md-2">
-                                        <label class="form-label small mb-1">Places <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? 0) }}" min="0" required>
-                                    </div>
-
-                                    <div class="col-6 col-md-2">
-                                        <label class="form-label small mb-1">Prix specifique</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="-">
-                                    </div>
-
-                                    <div class="col-6 col-md-2">
-                                        <div class="form-check mb-0 pb-1">
-                                            <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
-                                            <label class="form-check-label small">Actif</label>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12 col-md-1 text-md-end">
-                                        <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer cette date">x</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="alert alert-warning mb-0">
-                            Aucune date configuree pour le moment. Ajoutez un depart pour ouvrir la vente.
-                        </div>
-                    @endforelse
-                </div>
-            </div>
         </div>
     </div>
 </div>
