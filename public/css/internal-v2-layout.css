@@ -138,6 +138,33 @@
     padding-top: var(--internal-v2-topbar-height);
 }
 
+.internal-v2-topbar-hidden[data-layout="detached"] .container-fluid {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.internal-v2-topbar-hidden[data-layout="detached"] .main-content {
+    width: 100% !important;
+}
+
+.internal-v2-topbar-hidden[data-layout="detached"] .page-content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.partner-v2.internal-v2-topbar-hidden main > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.partner-v2.internal-v2-topbar-hidden .agent-portal-main {
+    width: 100% !important;
+    max-width: none !important;
+}
+
 .internal-v2-menu-toggle {
     position: fixed;
     top: calc(var(--internal-v2-topbar-height) + 0.5rem);
