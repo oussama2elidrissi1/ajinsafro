@@ -853,9 +853,7 @@ class VoyageController extends Controller
                     break;
 
                 case 's-logistics':
-                    if (! $this->hasAnyNonEmptyScalar($request->input('logistics_meta', []))) {
-                        $validator->errors()->add('logistics_meta', 'Renseignez au moins une information logistique.');
-                    }
+                    // Optional step in V2 workflow: no minimum logistics information required.
                     break;
             }
         });
