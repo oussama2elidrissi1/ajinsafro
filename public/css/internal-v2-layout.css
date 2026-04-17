@@ -209,23 +209,3 @@
         padding-left: 0;
     }
 }
-
-@media (max-width: 1440px) and (min-width: 992px) {
-    .internal-v2-topbar-hidden[data-layout="detached"] .vertical-menu {
-        width: 220px;
-    }
-
-    .internal-v2-topbar-hidden[data-layout="detached"] .main-content {
-        margin-left: 220px;
-    }
-}
-
-@media (max-width: 1280px) and (min-width: 992px) {
-    .internal-v2-topbar-hidden[data-layout="detached"] .vertical-menu {
-        width: 200px;
-    }
-
-    .internal-v2-topbar-hidden[data-layout="detached"] .main-content {
-        margin-left: 200px;
-    }
-}

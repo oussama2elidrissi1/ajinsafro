@@ -123,7 +123,7 @@
     $dashboardActive = $current === 'agent.dashboard';
 @endphp
 
-<aside class="w-full lg:w-64 xl:w-72 shrink-0">
+<aside class="w-full lg:w-72 shrink-0">
     <div class="bg-white rounded-2xl shadow-custom overflow-hidden sticky top-6 lg:top-8 border border-gray-100">
         <div class="px-6 py-5 border-b border-gray-100 bg-white">
             <a href="{{ route('agent.dashboard') }}" class="flex items-center justify-center">
