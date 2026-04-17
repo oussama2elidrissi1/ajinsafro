@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Wp\WpPost;
 use App\Models\WpPost as LegacyWpPost;
+use App\Models\WpPostmeta as LegacyWpPostmeta;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -534,7 +535,7 @@ class WordPressMediaService
             'previous_status' => $previousStatus,
             'candidate_status' => $newStatus,
         ]);
-        $post->setMeta('_thumbnail_id', (string) (int) $attachmentId);
+        $this->upsertPostMeta($post, '_thumbnail_id', (string) (int) $attachmentId);
     }
 
     public function setPostGalleryMetasFiltered(WpPost|LegacyWpPost $post, array $attachmentIds, array $metaKeys, array $context = []): void
@@ -556,8 +557,24 @@ class WordPressMediaService
             'value' => $value,
         ]);
         foreach ($metaKeys as $k) {
-            $post->setMeta((string) $k, $value);
+            $this->upsertPostMeta($post, (string) $k, $value);
         }
+    }
+
+    /**
+     * Compat meta upsert for both models:
+     * - App\Models\Wp\WpPost supports setMeta()
+     * - App\Models\WpPost (legacy) requires static WpPostmeta helper
+     */
+    protected function upsertPostMeta(WpPost|LegacyWpPost $post, string $key, ?string $value): void
+    {
+        if (method_exists($post, 'setMeta')) {
+            $post->setMeta($key, $value);
+
+            return;
+        }
+
+        LegacyWpPostmeta::updateOrInsertMeta((int) $post->ID, $key, $value);
     }
 
     public function isAttachmentStrictlyValidForWrite(int $attachmentId): bool
