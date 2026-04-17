@@ -110,6 +110,15 @@
         </div>
     </form>
 
+    @if (!$isCreate && $laravelV)
+        @include('admin.circuits.voyages.partials.room_availability.modal', [
+            'voyage' => $laravelV,
+            'wpTourPostId' => $veWpId,
+            'serverWpTravelDatesCount' => isset($travelDates) && $travelDates instanceof \Illuminate\Support\Collection ? $travelDates->count() : 0,
+            'serverLaravelDeparturesCount' => (int) ($laravelV->departures()->count() ?? 0),
+        ])
+    @endif
+
     @if (!$isCreate)
         <form id="delete-voyage-form" action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="d-none">
             @csrf
@@ -126,6 +135,7 @@
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-editor-runtime.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-edit-page.js?v=' . $voyageEditJsVersion) }}"></script>
+    <script src="{{ URL::asset('js/voyage-room-availability-modal.js') }}"></script>
     <script src="{{ URL::asset('js/flight-options-fix.js') }}"></script>
     <script src="{{ URL::asset('js/flight-options-manager.js') }}"></script>
     <script>

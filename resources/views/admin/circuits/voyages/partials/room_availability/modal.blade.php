@@ -38,6 +38,25 @@
                     <p class="mb-2"><strong>Information.</strong> Les départs sont synchronisés automatiquement depuis WordPress à l’ouverture de cette fenêtre.</p>
                     <p class="mb-0 d-none" id="ra-sync-hint-resync"></p>
                 </div>
+
+                <div id="ra-departure-table-wrap" class="mb-3 d-none">
+                    <div class="table-responsive border rounded">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Départ</th>
+                                    <th>Retour</th>
+                                    <th>Total</th>
+                                    <th>Réservées</th>
+                                    <th>Disponibles</th>
+                                    <th>Statut</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ra-departure-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-8">
                         <label for="ra-departure-select" class="form-label small fw-semibold text-uppercase text-muted">Départ</label>

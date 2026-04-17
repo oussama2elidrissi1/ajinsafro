@@ -6,6 +6,9 @@
                     ? $laravelVoyage->departures()->orderBy('start_date')->get()
                     : collect();
                 $firstDepartureRow = $departureRows->first();
+                $departureService = app(\App\Services\DepartureManagementService::class);
+                $departureMetrics = $departureService->buildDepartureMetrics($departureRows);
+                $departureSummary = $departureService->summarizeMetrics($departureMetrics);
             @endphp
 
             <p class="ve-section-kicker mb-2">Departs & disponibilites</p>
@@ -21,6 +24,60 @@
                     @endif
                 </div>
                 <span class="text-muted small">Chaque date active met a jour le depart correspondant.</span>
+            </div>
+
+            <div class="card border mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div>
+                            <h5 class="mb-1">Gestion opérationnelle des départs</h5>
+                            <p class="text-muted small mb-0">Même logique que la page globale Départs & Disponibilités.</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#voyageRoomAvailabilityModal">
+                            <i class="bx bx-bed me-1"></i> Gérer départs et chambres
+                        </button>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3"><div class="border rounded p-2 bg-light"><small class="text-muted d-block">Départs</small><strong>{{ (int) ($departureSummary['total_departures'] ?? 0) }}</strong></div></div>
+                        <div class="col-md-3"><div class="border rounded p-2 bg-light"><small class="text-muted d-block">Actifs</small><strong class="text-success">{{ (int) ($departureSummary['active_departures'] ?? 0) }}</strong></div></div>
+                        <div class="col-md-3"><div class="border rounded p-2 bg-light"><small class="text-muted d-block">Réservées</small><strong>{{ (int) ($departureSummary['reserved_capacity'] ?? 0) }}</strong></div></div>
+                        <div class="col-md-3"><div class="border rounded p-2 bg-light"><small class="text-muted d-block">Disponibles</small><strong class="text-primary">{{ (int) ($departureSummary['available_capacity'] ?? 0) }}</strong></div></div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Départ</th>
+                                    <th>Retour</th>
+                                    <th>Total</th>
+                                    <th>Réservées</th>
+                                    <th>Disponibles</th>
+                                    <th>Statut</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($departureMetrics as $metric)
+                                    <tr>
+                                        <td>{{ $metric['start_date_label'] ?? '—' }}</td>
+                                        <td>{{ $metric['end_date_label'] ?? '—' }}</td>
+                                        <td>{{ (int) ($metric['total_capacity'] ?? 0) }}</td>
+                                        <td>{{ (int) ($metric['reserved_capacity'] ?? 0) }}</td>
+                                        <td><strong>{{ (int) ($metric['available_capacity'] ?? 0) }}</strong></td>
+                                        <td>{{ $metric['status_label'] ?? ($metric['status'] ?? '') }}</td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-ra-open-modal="1" data-ra-select-departure="{{ (int) ($metric['id'] ?? 0) }}" data-bs-toggle="modal" data-bs-target="#voyageRoomAvailabilityModal">Ouvrir</button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="7" class="text-center text-muted">Aucun départ synchronisé.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <div class="ve-dates-section mb-4">

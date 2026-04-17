@@ -10,6 +10,15 @@
         </a>
     </div>
 
+    <div class="mb-3">
+        @include('admin.circuits.voyages.departures.partials._settings_card', [
+            'voyage' => $voyage,
+            'departure' => $departure,
+            'statuses' => $statuses,
+            'modalAjax' => true,
+        ])
+    </div>
+
     @include('admin.circuits.voyages.departures.partials._hotels_section', [
         'voyage' => $voyage,
         'departure' => $departure,

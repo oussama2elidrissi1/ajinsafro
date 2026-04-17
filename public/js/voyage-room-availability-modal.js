@@ -6,9 +6,9 @@
   var modalEl = document.getElementById('voyageRoomAvailabilityModal');
   if (!modalEl) return;
 
-  var departuresUrl = modalEl.getAttribute('data-departures-url');
-  var syncDeparturesUrl = modalEl.getAttribute('data-sync-departures-url');
-  var panelBase = modalEl.getAttribute('data-panel-base');
+  var departuresUrl = '';
+  var syncDeparturesUrl = '';
+  var panelBase = '';
   var selectEl = document.getElementById('ra-departure-select');
   var contentEl = document.getElementById('ra-departure-content');
   var loadingEl = document.getElementById('ra-departure-loading');
@@ -16,6 +16,16 @@
   var alertEl = document.getElementById('ra-modal-alert');
   var syncHintEl = document.getElementById('ra-sync-hint');
   var syncHintResyncEl = document.getElementById('ra-sync-hint-resync');
+  var tableWrapEl = document.getElementById('ra-departure-table-wrap');
+  var tableBodyEl = document.getElementById('ra-departure-table-body');
+
+  function readEndpointsFromModal() {
+    departuresUrl = modalEl.getAttribute('data-departures-url') || '';
+    syncDeparturesUrl = modalEl.getAttribute('data-sync-departures-url') || '';
+    panelBase = modalEl.getAttribute('data-panel-base') || '';
+  }
+
+  readEndpointsFromModal();
 
   function csrfToken() {
     var m = document.querySelector('meta[name="csrf-token"]');
@@ -42,6 +52,10 @@
   }
 
   function loadDepartures() {
+    if (!departuresUrl) {
+      return Promise.reject(new Error('URL des départs manquante.'));
+    }
+
     return fetch(departuresUrl, {
       headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       credentials: 'same-origin',
@@ -136,6 +150,40 @@
       sel.appendChild(opt);
     });
     applyDeparturesEmptyState(departures);
+    renderDepartureTable(departures || []);
+  }
+
+  function renderDepartureTable(departures) {
+    if (!tableWrapEl || !tableBodyEl) return;
+
+    tableBodyEl.innerHTML = '';
+    if (!departures.length) {
+      tableWrapEl.classList.add('d-none');
+      return;
+    }
+
+    tableWrapEl.classList.remove('d-none');
+    departures.forEach(function (d) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + (d.start_date || '—') + '</td>' +
+        '<td>' + (d.end_date || '—') + '</td>' +
+        '<td>' + (d.total_capacity != null ? d.total_capacity : 0) + '</td>' +
+        '<td>' + (d.reserved_capacity != null ? d.reserved_capacity : 0) + '</td>' +
+        '<td><strong>' + (d.available_capacity != null ? d.available_capacity : 0) + '</strong></td>' +
+        '<td>' + (d.status_label || d.status || '') + '</td>' +
+        '<td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary" data-ra-choose="' + d.id + '">Choisir</button></td>';
+      tableBodyEl.appendChild(tr);
+    });
+
+    tableBodyEl.querySelectorAll('[data-ra-choose]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-ra-choose');
+        if (!id) return;
+        selectEl.value = id;
+        selectEl.dispatchEvent(new Event('change'));
+      });
+    });
   }
 
   function updateBadgesFromOption(opt) {
@@ -206,6 +254,10 @@
     }
     setLoading(true);
     showAlert('');
+    if (!panelBase) {
+      setLoading(false);
+      return Promise.reject(new Error('URL du panneau départ manquante.'));
+    }
     var url = panelBase + '/' + departureId + '/panel';
     return fetch(url, {
       headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' },
@@ -294,14 +346,39 @@
   });
 
   var pendingDep = null;
-  document.querySelectorAll('[data-ra-select-departure]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var id = btn.getAttribute('data-ra-select-departure');
-      if (id) pendingDep = id;
-    });
+  function applyContextFromTrigger(btn) {
+    if (!btn) return;
+
+    var depUrl = btn.getAttribute('data-ra-departures-url');
+    var syncUrl = btn.getAttribute('data-ra-sync-url');
+    var panel = btn.getAttribute('data-ra-panel-base');
+    var voyageId = btn.getAttribute('data-ra-voyage-id');
+    var preselect = btn.getAttribute('data-ra-select-departure');
+
+    if (depUrl) modalEl.setAttribute('data-departures-url', depUrl);
+    if (syncUrl) modalEl.setAttribute('data-sync-departures-url', syncUrl);
+    if (panel) modalEl.setAttribute('data-panel-base', panel);
+    if (voyageId) modalEl.setAttribute('data-laravel-voyage-id', voyageId);
+
+    readEndpointsFromModal();
+
+    if (preselect) {
+      pendingDep = preselect;
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    var target = e.target;
+    if (!target || typeof target.closest !== 'function') return;
+    var btn = target.closest('[data-ra-open-modal], [data-ra-select-departure]');
+    if (!btn) return;
+    applyContextFromTrigger(btn);
+    var id = btn.getAttribute('data-ra-select-departure');
+    if (id) pendingDep = id;
   });
 
   modalEl.addEventListener('show.bs.modal', function () {
+    readEndpointsFromModal();
     showAlert('');
     setLoading(true);
     if (typeof console !== 'undefined' && console.info) {

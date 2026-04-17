@@ -1,3 +1,4 @@
+@php $modalAjax = $modalAjax ?? false; @endphp
 <div class="card border shadow-sm">
     <div class="card-header bg-white py-3 border-bottom">
         <h5 class="mb-0"><i class="bx bx-cog me-1 text-primary"></i> Paramètres du départ</h5>
@@ -6,6 +7,8 @@
         <form method="post" action="{{ route('admin.circuits.voyages.departures.settings.update', [$voyage, $departure]) }}">
             @csrf
             @method('PUT')
+            @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
+            <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label">Date début <span class="text-danger">*</span></label>
@@ -21,7 +24,7 @@
                     <label class="form-label">Statut <span class="text-danger">*</span></label>
                     <select name="status" class="form-select" required>
                         @foreach($statuses as $st)
-                            <option value="{{ $st }}" {{ old('status', $departure->status) === $st ? 'selected' : '' }}>{{ $st }}</option>
+                            <option value="{{ $st }}" {{ old('status', $departure->status) === $st ? 'selected' : '' }}>{{ \App\Models\Departure::make(['status' => $st])->status_label }}</option>
                         @endforeach
                     </select>
                 </div>

@@ -128,6 +128,7 @@ class VoyageDepartureManageController extends Controller
             'voyage' => $voyage,
             'departure' => $departure,
             'hotelsCatalog' => $hotelsCatalog,
+            'statuses' => Departure::STATUSES,
             'roomStatuses' => DepartureHotelRoom::STATUSES,
         ]);
     }
@@ -155,7 +156,7 @@ class VoyageDepartureManageController extends Controller
         ]);
     }
 
-    public function updateSettings(Request $request, Voyage $voyage, Departure $departure): RedirectResponse
+    public function updateSettings(Request $request, Voyage $voyage, Departure $departure): RedirectResponse|JsonResponse
     {
         $this->assertDepartureBelongsToVoyage($voyage, $departure);
 
@@ -182,9 +183,16 @@ class VoyageDepartureManageController extends Controller
         ]);
         $departure->save();
 
-        return redirect()
-            ->route('admin.circuits.voyages.departures.show', [$voyage, $departure])
-            ->with('success', 'Paramètres du départ enregistrés.');
+        $target = trim((string) $request->input('redirect_to', ''));
+        $redirect = ($target !== '' && str_starts_with((string) (parse_url($target, PHP_URL_PATH) ?? ''), '/admin/'))
+            ? redirect()->to($target)
+            : redirect()->route('admin.circuits.voyages.departures.show', [$voyage, $departure]);
+
+        return $this->jsonOrRedirect(
+            $request,
+            $redirect->with('success', 'Paramètres du départ enregistrés.'),
+            'Paramètres du départ enregistrés.'
+        );
     }
 
     public function storeHotel(Request $request, Voyage $voyage, Departure $departure): RedirectResponse|JsonResponse

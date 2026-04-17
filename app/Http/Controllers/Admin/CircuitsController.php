@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Departure;
 use App\Models\Voyage;
+use App\Services\DepartureManagementService;
 use Illuminate\Http\Request;
 
 class CircuitsController extends Controller
@@ -30,10 +31,11 @@ class CircuitsController extends Controller
         $search = trim((string) $request->query('q', ''));
         $status = trim((string) $request->query('status', ''));
         $statuses = Departure::STATUSES;
-        $stockStatuses = $this->stockConsumingStatuses();
+        $departureService = app(DepartureManagementService::class);
+        $stockStatuses = $departureService->stockConsumingStatuses();
 
         $voyages = Voyage::query()
-            ->select(['id', 'wp_post_id', 'name', 'status'])
+            ->select(['id', 'wp_post_id', 'name', 'destination', 'featured_image', 'status'])
             ->whereHas('departures')
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($inner) use ($search) {
@@ -62,26 +64,22 @@ class CircuitsController extends Controller
 
         $voyages->appends($request->query());
 
+        $voyages->setCollection(
+            $voyages->getCollection()->map(function (Voyage $voyage) use ($departureService) {
+                $metrics = $departureService->buildDepartureMetrics($voyage->departures ?? collect());
+                $summary = $departureService->summarizeMetrics($metrics);
+                $voyage->setAttribute('departure_metrics', $metrics);
+                $voyage->setAttribute('departure_summary', $summary);
+
+                return $voyage;
+            })
+        );
+
         return view('admin.circuits.departs-dates.index', [
             'voyages' => $voyages,
             'search' => $search,
             'status' => $status,
             'statuses' => $statuses,
         ]);
-    }
-
-    private function stockConsumingStatuses(): array
-    {
-        $consuming = (array) config('booking_lifecycle.stock_consuming_statuses', []);
-
-        if ((bool) config('booking_lifecycle.option_holds_stock', false)) {
-            $consuming = array_merge($consuming, (array) config('booking_lifecycle.stock_hold_statuses', []));
-        }
-
-        return collect($consuming)
-            ->filter(fn ($status) => is_string($status) && $status !== '')
-            ->unique()
-            ->values()
-            ->all();
     }
 }
