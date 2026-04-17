@@ -69,6 +69,10 @@
             departureId: row.departure_id || null,
             travelDateId: row.travel_date_id || null,
             date: row.date || '',
+            targetCapacity: row.target_capacity == null ? null : Math.max(0, parseInt(String(row.target_capacity), 10) || 0),
+            reservedCapacity: row.reserved_capacity == null ? null : Math.max(0, parseInt(String(row.reserved_capacity), 10) || 0),
+            availableCapacity: row.available_capacity == null ? null : Math.max(0, parseInt(String(row.available_capacity), 10) || 0),
+            departureStatusLabel: String(row.status_label || row.status || '').trim(),
             rooms: Array.isArray(row.rooms) ? row.rooms.map(normalizeRoomRow).filter(Boolean) : [],
             manual: !!row.manual
         };
@@ -594,12 +598,17 @@
                     departureId: null,
                     travelDateId: travelDate.travelDateId,
                     date: travelDate.date,
+                    targetCapacity: travelDate.seats,
+                    reservedCapacity: null,
+                    availableCapacity: null,
+                    departureStatusLabel: '',
                     rooms: defaultRooms(travelDate.seats, hotels),
                     manual: false
                 };
             } else {
                 allocationState[key].travelDateId = travelDate.travelDateId;
                 allocationState[key].date = travelDate.date;
+                allocationState[key].targetCapacity = travelDate.seats;
                 allocationState[key].rooms = normalizeRoomsAssociations(allocationState[key].rooms, hotels);
                 if (hotelsTopologyChanged) {
                     allocationState[key].rooms = defaultRooms(travelDate.seats, hotels);
@@ -611,13 +620,17 @@
 
             var state = allocationState[key];
             var rooms = Array.isArray(state.rooms) ? state.rooms : [];
-            var coverage = buildDepartureCoverage(hotels, rooms, travelDate.seats);
+            var expectedCapacity = state.targetCapacity == null
+                ? travelDate.seats
+                : Math.max(0, parseInt(String(state.targetCapacity), 10) || 0);
+            var coverage = buildDepartureCoverage(hotels, rooms, expectedCapacity);
 
             return {
                 key: key,
                 index: index,
                 travelDate: travelDate,
                 state: state,
+                expectedCapacity: expectedCapacity,
                 rooms: rooms,
                 coverage: coverage
             };
@@ -631,7 +644,8 @@
                 '    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">' +
                 '      <div>' +
                 '        <h6 class="mb-1">Depart du ' + escapeHtml(row.travelDate.label) + '</h6>' +
-                '        <div class="text-muted small">Capacite cible par sejour : <strong>' + row.travelDate.seats + '</strong> place(s)</div>' +
+                '        <div class="text-muted small">Capacite de depart (source): <strong>' + row.expectedCapacity + '</strong> place(s)</div>' +
+                '        <div class="text-muted small">Reservations: <strong>' + (row.state.reservedCapacity == null ? '—' : row.state.reservedCapacity) + '</strong> · Disponibles: <strong>' + (row.state.availableCapacity == null ? '—' : row.state.availableCapacity) + '</strong>' + (row.state.departureStatusLabel ? (' · Statut: <strong>' + escapeHtml(row.state.departureStatusLabel) + '</strong>') : '') + '</div>' +
                 '      </div>' +
                 '      <div class="text-end">' +
                 '        <div class="small mb-1">Sejours exacts : <strong>' + row.coverage.exactCount + '/' + row.coverage.stays.length + '</strong></div>' +
@@ -677,10 +691,13 @@
                 '  <div class="ve-departure-summary ' + departureCoverageStateClass(row.coverage) + '">' +
                 '    <div class="ve-departure-summary__date">' + escapeHtml(row.travelDate.label) + '</div>' +
                 '    <div class="ve-departure-summary__stats">' +
-                '      <span>Cible/sejour <strong>' + row.travelDate.seats + '</strong></span>' +
+                '      <span>Capacite depart <strong>' + row.expectedCapacity + '</strong></span>' +
                 '      <span>Exacts <strong>' + row.coverage.exactCount + '/' + row.coverage.stays.length + '</strong></span>' +
                 '    </div>' +
-                '    <div class="ve-departure-summary__meta">' + (summaryMeta.length ? summaryMeta.join(' | ') : 'Tous les sejours sont exacts') + '</div>' +
+                '    <div class="ve-departure-summary__meta">' +
+                (summaryMeta.length ? summaryMeta.join(' | ') : 'Tous les sejours sont exacts') +
+                (row.state.departureStatusLabel ? (' | Statut ' + row.state.departureStatusLabel) : '') +
+                '</div>' +
                 '    <div class="mt-2">' + departureCoverageBadge(row.coverage) + '</div>' +
                 '  </div>' +
                 '</div>';

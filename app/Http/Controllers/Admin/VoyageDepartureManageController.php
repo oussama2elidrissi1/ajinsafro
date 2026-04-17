@@ -10,6 +10,7 @@ use App\Models\Hotel;
 use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Services\Booking\DepartureRoomStockService;
+use App\Services\DepartureManagementService;
 use App\Services\VoyageAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -21,10 +22,12 @@ use Illuminate\View\View;
 class VoyageDepartureManageController extends Controller
 {
     private VoyageAvailabilityService $voyageAvailabilityService;
+    private DepartureManagementService $departureManagementService;
 
-    public function __construct(VoyageAvailabilityService $voyageAvailabilityService)
+    public function __construct(VoyageAvailabilityService $voyageAvailabilityService, DepartureManagementService $departureManagementService)
     {
         $this->voyageAvailabilityService = $voyageAvailabilityService;
+        $this->departureManagementService = $departureManagementService;
     }
 
     private function assertDepartureBelongsToVoyage(Voyage $voyage, Departure $departure): void
@@ -49,29 +52,32 @@ class VoyageDepartureManageController extends Controller
     public function modalDeparturesJson(Voyage $voyage): JsonResponse
     {
         $departures = $this->voyageAvailabilityService->syncFromWpDates($voyage);
+        $metrics = $this->departureManagementService->buildDepartureMetrics($departures);
 
         Log::info('ROOM_STOCK_MODAL_DEPARTURES', [
             'laravel_voyage_id' => (int) $voyage->id,
             'wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
-            'found_departures_count' => $departures->count(),
-            'departures_for_selector' => $departures->map(fn (Departure $d) => [
-                'id' => $d->id,
-                'start_date' => $d->start_date ? Carbon::parse($d->start_date)->format('Y-m-d') : null,
-                'wp_travel_date_id' => $d->wp_travel_date_id,
-                'status' => $d->status,
+            'found_departures_count' => $metrics->count(),
+            'departures_for_selector' => $metrics->map(fn (array $row) => [
+                'id' => (int) ($row['id'] ?? 0),
+                'start_date' => $row['start_date_iso'] ?? null,
+                'status' => $row['status'] ?? null,
             ])->values()->all(),
         ]);
 
         return response()->json([
-            'departures' => $departures->map(fn (Departure $d) => [
-                'id' => $d->id,
-                'start_date' => $d->start_date ? Carbon::parse($d->start_date)->format('Y-m-d') : null,
-                'end_date' => $d->end_date ? Carbon::parse($d->end_date)->format('Y-m-d') : null,
-                'status' => $d->status,
-                'status_label' => $d->status_label,
-                'total_capacity' => (int) ($d->total_capacity ?? 0),
-                'reserved_capacity' => (int) ($d->reserved_capacity ?? 0),
-                'available_capacity' => (int) ($d->available_capacity ?? 0),
+            'departures' => $metrics->map(fn (array $row) => [
+                'id' => (int) ($row['id'] ?? 0),
+                'start_date' => $row['start_date_iso'] ?? null,
+                'end_date' => $row['end_date_iso'] ?? null,
+                'status' => $row['status'] ?? null,
+                'status_label' => $row['status_label'] ?? null,
+                'total_capacity' => (int) ($row['total_capacity'] ?? 0),
+                'reserved_capacity' => (int) ($row['reserved_capacity'] ?? 0),
+                'available_capacity' => (int) ($row['available_capacity'] ?? 0),
+                'room_total_places' => (int) ($row['room_total_places'] ?? 0),
+                'room_available_places' => (int) ($row['room_available_places'] ?? 0),
+                'room_mismatch' => (bool) ($row['room_mismatch'] ?? false),
             ])->values(),
         ]);
     }
@@ -164,24 +170,52 @@ class VoyageDepartureManageController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|string|in:'.implode(',', Departure::STATUSES),
-            'total_capacity' => 'nullable|integer|min:0',
-            'available_capacity' => 'nullable|integer|min:0',
+            'total_capacity' => 'required|integer|min:0',
             'base_price' => 'nullable|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:5000',
         ]);
 
+        $dateExists = Departure::query()
+            ->where('voyage_id', (int) $voyage->id)
+            ->where('id', '!=', (int) $departure->id)
+            ->whereDate('start_date', $data['start_date'])
+            ->exists();
+
+        if ($dateExists) {
+            $target = trim((string) $request->input('redirect_to', ''));
+            $redirect = ($target !== '' && str_starts_with((string) (parse_url($target, PHP_URL_PATH) ?? ''), '/admin/'))
+                ? redirect()->to($target)
+                : redirect()->route('admin.circuits.voyages.departures.show', [$voyage, $departure]);
+
+            return $this->jsonOrRedirect(
+                $request,
+                $redirect->withErrors(['start_date' => 'Une autre ligne existe déjà pour cette date de départ.'])->withInput(),
+                'Une autre ligne existe déjà pour cette date de départ.'
+            );
+        }
+
+        $reserved = (int) ($this->departureManagementService->reservedPassengersByDepartureIds([(int) $departure->id])[(int) $departure->id] ?? 0);
+        [$status, $available] = $this->departureManagementService->normalizeStatusAndAvailability(
+            (string) $data['status'],
+            (int) $data['total_capacity'],
+            $reserved
+        );
+
         $departure->fill([
             'start_date' => $data['start_date'],
             'end_date' => $data['end_date'] ?? null,
-            'status' => $data['status'],
-            'total_capacity' => $data['total_capacity'] ?? $departure->total_capacity,
-            'available_capacity' => $data['available_capacity'] ?? $departure->available_capacity,
+            'status' => $status,
+            'total_capacity' => (int) $data['total_capacity'],
+            'reserved_capacity' => $reserved,
+            'available_capacity' => $available,
             'base_price' => $data['base_price'] ?? null,
             'sale_price' => $data['sale_price'] ?? null,
             'notes' => $data['notes'] ?? null,
         ]);
         $departure->save();
+
+        $this->syncWpTravelDateFromDeparture($voyage, $departure);
 
         $target = trim((string) $request->input('redirect_to', ''));
         $redirect = ($target !== '' && str_starts_with((string) (parse_url($target, PHP_URL_PATH) ?? ''), '/admin/'))
@@ -193,6 +227,65 @@ class VoyageDepartureManageController extends Controller
             $redirect->with('success', 'Paramètres du départ enregistrés.'),
             'Paramètres du départ enregistrés.'
         );
+    }
+
+    private function syncWpTravelDateFromDeparture(Voyage $voyage, Departure $departure): void
+    {
+        $wpPostId = (int) ($voyage->wp_post_id ?? 0);
+        if ($wpPostId <= 0 || ! $departure->start_date) {
+            return;
+        }
+
+        $startDateIso = Carbon::parse($departure->start_date)->format('Y-m-d');
+        $wpTravelDateId = (int) ($departure->wp_travel_date_id ?? 0);
+
+        $existingSameDate = TravelDate::query()
+            ->where('travel_id', $wpPostId)
+            ->whereDate('date', $startDateIso)
+            ->when($wpTravelDateId > 0, fn ($q) => $q->where('id', '!=', $wpTravelDateId))
+            ->first();
+
+        if ($existingSameDate && $wpTravelDateId > 0) {
+            $departure->wp_travel_date_id = (int) $existingSameDate->id;
+            $departure->save();
+            $wpTravelDateId = (int) $existingSameDate->id;
+        }
+
+        $travelDate = null;
+        if ($wpTravelDateId > 0) {
+            $travelDate = TravelDate::query()
+                ->where('travel_id', $wpPostId)
+                ->where('id', $wpTravelDateId)
+                ->first();
+        }
+
+        if (! $travelDate) {
+            $travelDate = $existingSameDate ?: TravelDate::query()
+                ->where('travel_id', $wpPostId)
+                ->whereDate('date', $startDateIso)
+                ->first();
+        }
+
+        if (! $travelDate) {
+            $travelDate = new TravelDate([
+                'travel_id' => $wpPostId,
+            ]);
+        }
+
+        $isInactive = in_array((string) $departure->status, [Departure::STATUS_CLOSED, Departure::STATUS_CANCELED, Departure::STATUS_CANCELLED], true);
+
+        $travelDate->fill([
+            'travel_id' => $wpPostId,
+            'date' => $startDateIso,
+            'seats' => max(0, (int) ($departure->total_capacity ?? 0)),
+            'is_active' => ! $isInactive,
+        ]);
+        $travelDate->save();
+
+        if ((int) ($departure->wp_travel_date_id ?? 0) !== (int) $travelDate->id) {
+            $departure->wp_travel_date_id = (int) $travelDate->id;
+            $departure->save();
+        }
     }
 
     public function storeHotel(Request $request, Voyage $voyage, Departure $departure): RedirectResponse|JsonResponse

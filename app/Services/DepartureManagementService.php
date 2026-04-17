@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\Departure;
+use App\Models\Reservation;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 class DepartureManagementService
 {
@@ -29,13 +31,19 @@ class DepartureManagementService
     public function buildDepartureMetrics(Collection|array $departures): Collection
     {
         $rows = $departures instanceof Collection ? $departures : collect($departures);
+        $departureIds = $rows
+            ->map(fn (Departure $departure) => (int) $departure->id)
+            ->filter(fn (int $id) => $id > 0)
+            ->values();
 
-        return $rows->map(function (Departure $departure) {
+        $reservedByDeparture = $this->reservedPassengersByDepartureIds($departureIds->all());
+
+        return $rows->map(function (Departure $departure) use ($reservedByDeparture) {
             $hotels = collect($departure->departureHotels ?? []);
             $rooms = $hotels->flatMap(fn ($hotel) => collect($hotel->rooms ?? []));
 
             $total = max(0, (int) ($departure->total_capacity ?? 0));
-            $reserved = max(0, (int) ($departure->reserved_passengers_sum ?? $departure->reserved_capacity ?? 0));
+            $reserved = max(0, (int) ($reservedByDeparture[(int) $departure->id] ?? $departure->reserved_passengers_sum ?? $departure->reserved_capacity ?? 0));
             if ($reserved > $total) {
                 $reserved = $total;
             }
@@ -63,6 +71,58 @@ class DepartureManagementService
                 'room_mismatch' => $roomTotal > 0 && $roomTotal !== $total,
             ];
         })->values();
+    }
+
+    /**
+     * @param array<int, int> $departureIds
+     * @return array<int, int>
+     */
+    public function reservedPassengersByDepartureIds(array $departureIds): array
+    {
+        $ids = collect($departureIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        $statuses = $this->stockConsumingStatuses();
+
+        return Reservation::query()
+            ->selectRaw('departure_id, COALESCE(SUM(passengers_count), 0) as reserved_total')
+            ->whereIn('departure_id', $ids)
+            ->whereIn('status', $statuses)
+            ->groupBy('departure_id')
+            ->pluck('reserved_total', 'departure_id')
+            ->map(fn ($total) => max(0, (int) $total))
+            ->all();
+    }
+
+    public function normalizeStatusAndAvailability(string $status, int $totalCapacity, int $reservedCapacity): array
+    {
+        $total = max(0, $totalCapacity);
+        $reserved = max(0, $reservedCapacity);
+
+        if ($reserved > $total) {
+            throw ValidationException::withMessages([
+                'total_capacity' => 'Capacité totale inférieure au nombre de places déjà réservées.',
+            ]);
+        }
+
+        $available = max(0, $total - $reserved);
+
+        if ($available === 0 && in_array($status, [Departure::STATUS_OPEN, Departure::STATUS_LIMITED, Departure::STATUS_FULL], true)) {
+            $status = Departure::STATUS_FULL;
+        }
+
+        if ($available > 0 && $status === Departure::STATUS_FULL) {
+            $status = Departure::STATUS_OPEN;
+        }
+
+        return [$status, $available];
     }
 
     /**

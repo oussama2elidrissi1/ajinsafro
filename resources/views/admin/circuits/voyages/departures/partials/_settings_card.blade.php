@@ -29,10 +29,10 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Places restantes (agrégat)</label>
-                    <input type="number" name="available_capacity" class="form-control" min="0"
-                           value="{{ old('available_capacity', $departure->available_capacity) }}">
-                    <small class="text-muted">Recalculé depuis le stock chambres si vous enregistrez les lignes ci-dessous.</small>
+                      <label class="form-label">Places restantes (calculées)</label>
+                      <input type="number" class="form-control" min="0"
+                          value="{{ (int) ($departure->available_capacity ?? 0) }}" readonly>
+                      <small class="text-muted">Valeur calculée automatiquement depuis capacité totale et réservations actives.</small>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Capacité totale</label>

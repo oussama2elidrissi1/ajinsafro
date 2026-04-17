@@ -1,4 +1,5 @@
 @php
+    $departureService = app(\App\Services\DepartureManagementService::class);
     $roomTypeSuggestions = ['Single', 'Double', 'Twin', 'Triple', 'Quadruple', 'Family', 'Suite'];
     $allocationBootstrapRows = [];
     $oldAllocationRows = old('departure_allocations');
@@ -39,11 +40,21 @@
         }
     } elseif (isset($laravelVoyage) && $laravelVoyage) {
         $departureRows = $laravelVoyage->departures()->with('roomAllocations')->orderBy('start_date')->get();
+        $departureMetricsById = $departureService
+            ->buildDepartureMetrics($departureRows)
+            ->keyBy('id');
+
         foreach ($departureRows as $departureRow) {
+            $metric = (array) ($departureMetricsById->get((int) $departureRow->id) ?? []);
             $allocationBootstrapRows[] = [
                 'departure_id' => (int) $departureRow->id,
                 'travel_date_id' => $departureRow->wp_travel_date_id ? (int) $departureRow->wp_travel_date_id : null,
                 'date' => optional($departureRow->start_date)->format('Y-m-d'),
+                'target_capacity' => (int) ($metric['total_capacity'] ?? $departureRow->total_capacity ?? 0),
+                'reserved_capacity' => (int) ($metric['reserved_capacity'] ?? $departureRow->reserved_capacity ?? 0),
+                'available_capacity' => (int) ($metric['available_capacity'] ?? $departureRow->available_capacity ?? 0),
+                'status' => (string) ($metric['status'] ?? $departureRow->status ?? ''),
+                'status_label' => (string) ($metric['status_label'] ?? $departureRow->status_label ?? ''),
                 'rooms' => $departureRow->roomAllocations->map(fn ($allocation) => [
                     'id' => (int) $allocation->id,
                     'room_type' => (string) ($allocation->room_type ?? ''),

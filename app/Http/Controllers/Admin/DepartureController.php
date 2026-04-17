@@ -4,15 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Departure;
-use App\Models\Reservation;
 use App\Models\Voyage;
+use App\Services\DepartureManagementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class DepartureController extends Controller
 {
+    public function __construct(private readonly DepartureManagementService $departureManagementService)
+    {
+    }
+
     public function store(Request $request, Voyage $voyage): RedirectResponse
     {
         $validated = $request->validate([
@@ -29,7 +32,7 @@ class DepartureController extends Controller
             ->exists();
 
         $reserved = 0;
-        [$status, $available] = $this->normalizeStatusAndAvailability(
+        [$status, $available] = $this->departureManagementService->normalizeStatusAndAvailability(
             $validated['status'],
             (int) $validated['total_capacity'],
             $reserved
@@ -78,8 +81,8 @@ class DepartureController extends Controller
                 ->withErrors(['start_date' => 'Une autre ligne existe déjà pour cette date de départ. Modifiez-la ou fusionnez les départs.']);
         }
 
-        $reserved = $this->computeReservedCapacity($departure);
-        [$status, $available] = $this->normalizeStatusAndAvailability(
+        $reserved = (int) ($this->departureManagementService->reservedPassengersByDepartureIds([(int) $departure->id])[(int) $departure->id] ?? 0);
+        [$status, $available] = $this->departureManagementService->normalizeStatusAndAvailability(
             $validated['status'],
             (int) $validated['total_capacity'],
             $reserved
@@ -99,7 +102,7 @@ class DepartureController extends Controller
             ->with('success', 'Départ mis à jour.');
     }
 
-    public function destroy(Voyage $voyage, Departure $departure): RedirectResponse
+    public function destroy(Request $request, Voyage $voyage, Departure $departure): RedirectResponse
     {
         if ($departure->voyage_id !== $voyage->id) {
             abort(404);
@@ -107,48 +110,6 @@ class DepartureController extends Controller
         $departure->delete();
         return $this->resolveRedirect($request, $voyage)
             ->with('success', 'Départ supprimé.');
-    }
-
-    private function stockConsumingStatuses(): array
-    {
-        $consuming = (array) config('booking_lifecycle.stock_consuming_statuses', []);
-        if ((bool) config('booking_lifecycle.option_holds_stock', false)) {
-            $consuming = array_merge($consuming, (array) config('booking_lifecycle.stock_hold_statuses', []));
-        }
-
-        return array_values(array_unique(array_filter($consuming, fn ($s) => is_string($s) && $s !== '')));
-    }
-
-    private function computeReservedCapacity(Departure $departure): int
-    {
-        return (int) Reservation::query()
-            ->where('departure_id', $departure->id)
-            ->whereIn('status', $this->stockConsumingStatuses())
-            ->sum('passengers_count');
-    }
-
-    private function normalizeStatusAndAvailability(string $status, int $totalCapacity, int $reservedCapacity): array
-    {
-        $total = max(0, $totalCapacity);
-        $reserved = max(0, $reservedCapacity);
-
-        if ($reserved > $total) {
-            throw ValidationException::withMessages([
-                'total_capacity' => 'Capacité totale inférieure au nombre de places déjà réservées.',
-            ]);
-        }
-
-        $available = max(0, $total - $reserved);
-
-        if ($available === 0 && in_array($status, [Departure::STATUS_OPEN, Departure::STATUS_LIMITED, Departure::STATUS_FULL], true)) {
-            $status = Departure::STATUS_FULL;
-        }
-
-        if ($available > 0 && $status === Departure::STATUS_FULL) {
-            $status = Departure::STATUS_OPEN;
-        }
-
-        return [$status, $available];
     }
 
     private function resolveRedirect(Request $request, Voyage $voyage): RedirectResponse
