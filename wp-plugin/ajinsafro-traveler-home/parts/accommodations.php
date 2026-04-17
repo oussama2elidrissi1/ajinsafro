@@ -1,7 +1,6 @@
 <?php
 /**
- * Part: Découvrez des séjours uniques — Accommodation cards
- * Displays hotels from st_hotel post type
+ * Part: Hébergements mis en avant.
  * @package AjinsafroTravelerHome
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -10,19 +9,10 @@ $accom_settings = isset( $settings['accommodations'] ) && is_array( $settings['a
     ? $settings['accommodations']
     : array();
 
-$section_title = ! empty( $accom_settings['title'] ) ? $accom_settings['title'] : 'Découvrez des séjours uniques';
+$section_title = ! empty( $accom_settings['title'] ) ? $accom_settings['title'] : 'Hébergements sélectionnés';
 $items_count   = ! empty( $accom_settings['count'] ) ? max( 1, intval( $accom_settings['count'] ) ) : 4;
-
-$query_args = array(
-    'post_type'      => array( 'st_hotel', 'st_rental' ),
-    'posts_per_page' => $items_count,
-    'orderby'        => 'date',
-    'order'          => 'DESC',
-    'post_status'    => 'publish',
-);
-
-$q = new WP_Query( $query_args );
-if ( ! $q->have_posts() ) return;
+$hebergements = function_exists( 'getAjinsafroHebergements' ) ? getAjinsafroHebergements( $items_count ) : array();
+if ( empty( $hebergements ) ) return;
 ?>
 
 <section class="aj-accom" id="aj-sejours">
@@ -36,53 +26,31 @@ if ( ! $q->have_posts() ) return;
         </div>
 
         <div class="aj-slider-v2" id="aj-accom-track">
-            <?php while ( $q->have_posts() ) : $q->the_post();
-                $price      = get_post_meta( get_the_ID(), 'price', true );
-                $sale_price = get_post_meta( get_the_ID(), 'sale_price', true );
-                $avg_rating = get_post_meta( get_the_ID(), 'avg_rating', true );
-                $location   = get_post_meta( get_the_ID(), 'address', true );
-                $stars      = get_post_meta( get_the_ID(), 'hotel_star', true );
-                // Fallback: Laravel / Traveler often store canonical data in st_hotel while this slider reads metas.
-                if ( ( $location === '' || $location === false ) && get_post_type() === 'st_hotel' ) {
-                    global $wpdb;
-                    $row = $wpdb->get_row( $wpdb->prepare( "SELECT address, min_price, hotel_star FROM {$wpdb->prefix}st_hotel WHERE post_id = %d", get_the_ID() ), ARRAY_A );
-                    if ( is_array( $row ) ) {
-                        if ( ( $location === '' || $location === false ) && ! empty( $row['address'] ) ) {
-                            $location = $row['address'];
-                        }
-                        if ( ( $price === '' || $price === false ) && ! empty( $row['min_price'] ) ) {
-                            $price = $row['min_price'];
-                        }
-                        if ( ( $stars === '' || $stars === false ) && isset( $row['hotel_star'] ) && $row['hotel_star'] !== '' ) {
-                            $stars = $row['hotel_star'];
-                        }
-                    }
-                }
-                $category   = '';
-                $terms = get_the_terms( get_the_ID(), 'hotel_type' );
-                if ( $terms && ! is_wp_error( $terms ) ) {
-                    $category = $terms[0]->name;
-                }
-                if ( empty( $category ) ) {
-                    $category = ( get_post_type() === 'st_rental' ) ? 'Appartement' : 'Hôtel';
-                }
-                $dp = $sale_price ?: $price;
-                $star_count = $stars ? intval( $stars ) : 0;
+            <?php foreach ( $hebergements as $hebergement ) :
+                $star_count = isset( $hebergement['stars'] ) ? max( 0, (int) $hebergement['stars'] ) : 0;
+                $price_value = isset( $hebergement['price'] ) ? $hebergement['price'] : null;
+                $price_label = $price_value !== null && $price_value !== '' ? number_format_i18n( (float) $price_value, 0 ) : '';
             ?>
             <div class="aj-slider-v2__item">
-                <a href="<?php the_permalink(); ?>" class="aj-card2 aj-hover-glass" style="text-decoration:none;">
+                <a href="<?php echo esc_url( $hebergement['url'] ); ?>" class="aj-card2 aj-hover-glass" style="text-decoration:none;" aria-label="<?php echo esc_attr( $hebergement['title'] ); ?>">
                     <div class="aj-card2__image">
-                        <?php ajth_render_catalog_card_image( get_the_ID() ); ?>
+                        <img src="<?php echo esc_url( $hebergement['image_url'] ); ?>" alt="<?php echo esc_attr( $hebergement['title'] ); ?>" loading="lazy">
+                        <?php if ( ! empty( $hebergement['category'] ) ) : ?>
+                        <span class="aj-card2__badge aj-card2__badge--info"><?php echo esc_html( $hebergement['category'] ); ?></span>
+                        <?php endif; ?>
                     </div>
                     <div class="aj-card2__body">
-                        <h3 class="aj-card2__title"><?php the_title(); ?></h3>
-                        <?php if ( $location ) : ?>
-                        <div class="aj-card2__location"><i class="fas fa-map-marker-alt"></i> <?php echo esc_html( $location ); ?></div>
+                        <h3 class="aj-card2__title"><?php echo esc_html( $hebergement['title'] ); ?></h3>
+                        <?php if ( ! empty( $hebergement['location'] ) ) : ?>
+                        <div class="aj-card2__location"><i class="fas fa-map-marker-alt"></i> <?php echo esc_html( $hebergement['location'] ); ?></div>
+                        <?php endif; ?>
+                        <?php if ( ! empty( $hebergement['excerpt'] ) ) : ?>
+                        <p class="aj-card2__desc"><?php echo esc_html( $hebergement['excerpt'] ); ?></p>
                         <?php endif; ?>
                         <div class="aj-card2__meta">
-                            <span class="aj-card2__category"><?php echo esc_html( $category ); ?></span>
+                            <span class="aj-card2__category"><?php echo esc_html( $hebergement['category'] ?? 'Hôtel' ); ?></span>
                             <?php if ( $star_count > 0 ) : ?>
-                            <div class="aj-card2__stars">
+                            <div class="aj-card2__stars" aria-label="<?php echo esc_attr( sprintf( _n( '%d étoile', '%d étoiles', $star_count, 'ajinsafro-traveler-home' ), $star_count ) ); ?>">
                                 <?php for ( $s = 0; $s < 5; $s++ ) : ?>
                                     <i class="<?php echo $s < $star_count ? 'fas' : 'far'; ?> fa-star"></i>
                                 <?php endfor; ?>
@@ -91,22 +59,21 @@ if ( ! $q->have_posts() ) return;
                         </div>
                         <div class="aj-card2__footer">
                             <div>
-                                <?php if ( $dp ) : ?>
-                                <span class="aj-card2__price-label">à partir de</span>
+                                <?php if ( $price_label !== '' ) : ?>
+                                <span class="aj-card2__price-label">À partir de</span>
                                 <div class="aj-card2__price">
-                                    <?php echo esc_html( number_format( floatval( $dp ), 0, ',', ' ' ) ); ?>
+                                    <?php echo esc_html( $price_label ); ?>
                                     <span class="aj-card2__price-currency">DHS</span>
                                 </div>
-                                <span class="aj-card2__price-note">prix par personne par nuit</span>
+                                <span class="aj-card2__price-note">prix indicatif par nuit</span>
                                 <?php endif; ?>
                             </div>
-                            <span class="aj-card2__cta">VOIR L'OFFRE</span>
+                            <span class="aj-card2__cta">Découvrir</span>
                         </div>
                     </div>
                 </a>
             </div>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         </div>
     </div>
 </section>
-<?php wp_reset_postdata(); ?>

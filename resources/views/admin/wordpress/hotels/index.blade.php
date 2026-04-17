@@ -1,17 +1,17 @@
 @extends('layouts.master-ajinsafro')
 @section('title')
-    WordPress – Hotels
+    Catalogue Hébergements
 @endsection
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">WordPress – Hotels</h4>
+                <h4 class="page-title mb-0 font-size-18">Catalogue Hébergements</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item">WordPress</li>
-                        <li class="breadcrumb-item active">Hotels</li>
+                        <li class="breadcrumb-item">Hébergements</li>
+                        <li class="breadcrumb-item active">Catalogue</li>
                     </ol>
                 </div>
             </div>
@@ -30,9 +30,9 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                        <h4 class="card-title mb-0">Liste des hôtels (TravelerWP)</h4>
+                        <h4 class="card-title mb-0">Liste des hébergements</h4>
                         <a href="{{ route('admin.wordpress.hotels.create') }}" class="btn btn-primary waves-effect waves-light">
-                            <i class="bx bx-plus me-1"></i> Créer un hôtel
+                            <i class="bx bx-plus me-1"></i> Créer un hébergement
                         </a>
                     </div>
                     <form method="GET" class="row g-3 mb-4">
@@ -65,7 +65,7 @@
                         </div>
                     </form>
                     @if($hotels->isEmpty())
-                        <p class="text-muted mb-0">Aucun hôtel. <a href="{{ route('admin.wordpress.hotels.create') }}">Créer un hôtel</a> pour commencer.</p>
+                        <p class="text-muted mb-0">Aucun hébergement. <a href="{{ route('admin.wordpress.hotels.create') }}">Créer un hébergement</a> pour commencer.</p>
                     @else
                         <div class="table-responsive">
                             <table class="table table-hover table-centered mb-0">

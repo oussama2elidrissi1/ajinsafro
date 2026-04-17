@@ -53,8 +53,9 @@ class HotelController extends Controller
             ->when($featured === '1', fn ($query) => $query->where($hotelsTable.'.is_featured', 'on'))
             ->when($star !== '' && ctype_digit($star), fn ($query) => $query->where($hotelsTable.'.hotel_star', $star))
             ->orderByDesc($postsTable.'.post_modified')
-            ->paginate(15)
-            ->withQueryString();
+            ->paginate(15);
+
+        $hotels->appends($request->query());
 
         return view('admin.wordpress.hotels.index', [
             'hotels' => $hotels,
@@ -116,6 +117,7 @@ class HotelController extends Controller
             $stHotel->save();
 
             $this->saveHotelMeta($post->ID, $validated);
+            WpPostmeta::updateOrInsertMeta($post->ID, '_ajinsafro_catalog_source', 'laravel-hotel-crud');
 
             if ($request->hasFile('featured_image')) {
                 $attachmentId = $this->media->tryUploadAndCreateAttachment($request->file('featured_image'), (int) $post->ID);
@@ -248,6 +250,7 @@ class HotelController extends Controller
             $stHotel->save();
 
             $this->saveHotelMeta($hotel->ID, $validated);
+            WpPostmeta::updateOrInsertMeta($hotel->ID, '_ajinsafro_catalog_source', 'laravel-hotel-crud');
 
             if ($request->hasFile('featured_image')) {
                 $attachmentId = $this->media->tryUploadAndCreateAttachment($request->file('featured_image'), (int) $hotel->ID);

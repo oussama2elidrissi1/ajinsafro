@@ -37,6 +37,7 @@ if (! defined('AJINSAFRO_HOME_URL')) {
 require_once AJTH_DIR.'includes/class-template-router.php';
 require_once AJTH_DIR.'includes/hebergement-catalog-image.php';
 require_once AJTH_DIR.'includes/catalog-image-helpers.php';
+require_once AJTH_DIR.'includes/hebergement-catalog.php';
 require_once AJTH_DIR.'includes/class-catalog-cache-invalidate.php';
 require_once AJTH_DIR.'includes/class-admin-settings.php';
 require_once AJTH_DIR.'includes/tour-category-defaults.php';
