@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Wp\WpPost;
+use App\Models\WpPost as LegacyWpPost;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -480,7 +481,7 @@ class WordPressMediaService
         }
     }
 
-    public function setPostThumbnailIfValid(WpPost $post, int $attachmentId, array $context = []): void
+    public function setPostThumbnailIfValid(WpPost|LegacyWpPost $post, int $attachmentId, array $context = []): void
     {
         $this->setPostThumbnailIfValidWithPolicy($post, $attachmentId, $context);
     }
@@ -494,7 +495,7 @@ class WordPressMediaService
      * - Si le nouveau thumbnail n'est pas strictement valide => rejet (on ne touche pas à l'existant)
      */
     public function setPostThumbnailIfValidWithPolicy(
-        WpPost $post,
+        WpPost|LegacyWpPost $post,
         int $attachmentId,
         array $context = [],
         bool $allowReplaceIfCurrentValid = false,
@@ -536,7 +537,7 @@ class WordPressMediaService
         $post->setMeta('_thumbnail_id', (string) (int) $attachmentId);
     }
 
-    public function setPostGalleryMetasFiltered(WpPost $post, array $attachmentIds, array $metaKeys, array $context = []): void
+    public function setPostGalleryMetasFiltered(WpPost|LegacyWpPost $post, array $attachmentIds, array $metaKeys, array $context = []): void
     {
         if (! $this->uploadsPathExplicitlyConfigured || ! is_dir($this->uploadsPath)) {
             $this->logMediaWrite('gallery_rejected_uploads_unavailable', $post, null, $context + [
@@ -594,7 +595,7 @@ class WordPressMediaService
         return $out;
     }
 
-    protected function logMediaWrite(string $event, WpPost $post, ?int $attachmentId, array $context = []): void
+    protected function logMediaWrite(string $event, WpPost|LegacyWpPost $post, ?int $attachmentId, array $context = []): void
     {
         $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
         $trace = array_map(function ($f) {
