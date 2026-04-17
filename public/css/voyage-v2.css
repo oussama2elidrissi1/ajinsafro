@@ -461,3 +461,142 @@
     width: 100%;
   }
 }
+
+/* ============================================================================
+   Critical laptop zone (1280-1440)
+   Goal: one primary focus (form), no 4-column overload.
+   ============================================================================ */
+@media (max-width: 1400px) and (min-width: 1200px) {
+  .v2-body {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  /* Stepper transforms to top horizontal rail */
+  .v2-sidebar {
+    order: 1;
+    position: sticky;
+    top: 64px;
+    z-index: 180;
+    max-height: none;
+    overflow: visible;
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .v2-sb-group {
+    display: none;
+  }
+
+  .v2-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: thin;
+  }
+
+  .v2-sb-item {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 190px;
+    max-width: 240px;
+    grid-template-columns: 20px 24px minmax(0, 1fr) 8px;
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .v2-sb-label {
+    font-size: 12px;
+  }
+
+  .v2-sb-meta {
+    font-size: 10px;
+  }
+
+  .v2-sb-footer {
+    display: none;
+  }
+
+  .v2-main {
+    order: 2;
+  }
+
+  /* Right panel must move below main content */
+  .v2-rail {
+    order: 3;
+    position: static;
+    max-height: none;
+    overflow: visible;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .v2-rail-card + .v2-rail-card {
+    margin-top: 0;
+  }
+
+  .v2-card-body {
+    padding: 14px;
+  }
+
+  /* Form density: max 2 columns on this range */
+  .v2-main .row > .col-md-3,
+  .v2-main .row > .col-md-4,
+  .v2-main .row > .col-lg-3,
+  .v2-main .row > .col-lg-4,
+  .v2-main .row > .col-xl-3,
+  .v2-main .row > .col-xl-4 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+/* Compact global admin menu on V2 pages to avoid left-side dominance */
+@media (max-width: 1400px) and (min-width: 1200px) {
+  body.voyage-layout-page[data-layout="detached"] .vertical-menu {
+    width: 76px !important;
+  }
+
+  body.voyage-layout-page[data-layout="detached"] .main-content {
+    margin-left: 76px !important;
+  }
+
+  body.voyage-layout-page[data-layout="detached"] .vertical-menu .menu-title,
+  body.voyage-layout-page[data-layout="detached"] .vertical-menu #sidebar-menu ul li a span,
+  body.voyage-layout-page[data-layout="detached"] .vertical-menu #sidebar-menu ul li a .badge {
+    display: none !important;
+  }
+
+  body.voyage-layout-page[data-layout="detached"] .vertical-menu #sidebar-menu ul li a {
+    justify-content: center;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  body.voyage-layout-page[data-layout="detached"] .vertical-menu #sidebar-menu ul li a i {
+    margin-right: 0 !important;
+    font-size: 18px;
+  }
+
+  body.voyage-layout-page[data-layout="detached"] .vertical-menu #sidebar-menu ul ul {
+    display: none !important;
+  }
+}
+
+/* Tablet and below: keep full vertical stack and single-column form fields. */
+@media (max-width: 1199px) {
+  .v2-main .row > .col-md-3,
+  .v2-main .row > .col-md-4,
+  .v2-main .row > .col-lg-3,
+  .v2-main .row > .col-lg-4,
+  .v2-main .row > .col-xl-3,
+  .v2-main .row > .col-xl-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
