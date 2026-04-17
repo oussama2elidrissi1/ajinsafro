@@ -37,6 +37,12 @@
     height: 280px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.09);
+    pointer-events: none;
+}
+
+.voyage-index-page .vi-page-header > * {
+    position: relative;
+    z-index: 1;
 }
 
 .voyage-index-page .vi-page-title {
