@@ -84,7 +84,11 @@ if ($hero_count <= 1) {
     $hero_gallery_class = 'ajtb-v1-gallery--count-4';
 }
 
-$search_departure = isset($tour_data['search']['departure_place']) ? (string) $tour_data['search']['departure_place'] : 'Casablanca';
+$search_departure = isset($tour_data['search']['departure_place']) ? (string) $tour_data['search']['departure_place'] : '';
+$search_departure_id = isset($tour_data['search']['departure_place_id']) ? (int) $tour_data['search']['departure_place_id'] : 0;
+$search_place_options = !empty($tour_data['search']['place_options']) && is_array($tour_data['search']['place_options'])
+    ? $tour_data['search']['place_options']
+    : [];
 $search_date = isset($tour_data['search']['departure_date']) ? (string) $tour_data['search']['departure_date'] : 'Date a confirmer';
 $search_guests = isset($tour_data['search']['guests']) ? (string) $tour_data['search']['guests'] : '2 Adultes';
 $guest_config = isset($tour_data['search']['guest_config']) && is_array($tour_data['search']['guest_config'])
@@ -162,6 +166,12 @@ $best_deals = !empty($tour_data['best_deals']) && is_array($tour_data['best_deal
 
 $price_amount = $tour_data['pricing']['display_amount'] ?? '12 900';
 $price_currency = $tour_data['pricing']['currency_symbol'] ?? 'MAD';
+$price_adult = isset($tour_data['pricing']['adult_price']) ? (float) $tour_data['pricing']['adult_price'] : 0.0;
+$price_child = isset($tour_data['pricing']['child_price']) ? (float) $tour_data['pricing']['child_price'] : 0.0;
+$price_date_map = !empty($tour_data['search']['date_prices']) && is_array($tour_data['search']['date_prices'])
+    ? $tour_data['search']['date_prices']
+    : [];
+$price_date_map_json = wp_json_encode($price_date_map);
 $price_note = !empty($tour_data['pricing']['note']) ? (string) $tour_data['pricing']['note'] : 'Tarif indicatif par adulte.';
 
 if (empty($days)) {
@@ -234,13 +244,36 @@ get_header();
             <section class="ajtb-v1-search-box" id="ajtb-v1-search-box" aria-label="Search box premium">
                 <div class="ajtb-v1-search-card">
                     <span class="ajtb-v1-search-label">Ville de depart</span>
-                    <span class="ajtb-v1-search-value"><span class="ajtb-v1-search-text"><?php echo esc_html($search_departure); ?></span><strong aria-hidden="true">▾</strong></span>
+                    <?php if (!empty($search_place_options)): ?>
+                        <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
+                            <select class="ajtb-v1-search-select" id="ajtb-v1-search-from" aria-label="Lieux de depart disponibles">
+                                <?php foreach ($search_place_options as $place_option): ?>
+                                    <?php
+                                    $place_id = isset($place_option['id']) ? (int) $place_option['id'] : 0;
+                                    $place_name = isset($place_option['name']) ? trim((string) $place_option['name']) : '';
+                                    $place_code = isset($place_option['code']) ? trim((string) $place_option['code']) : '';
+                                    if ($place_name === '') {
+                                        continue;
+                                    }
+                                    $is_selected = ($search_departure_id > 0 && $place_id === $search_departure_id)
+                                        || ($search_departure_id <= 0 && $search_departure !== '' && $place_name === $search_departure);
+                                    ?>
+                                    <option value="<?php echo esc_attr((string) $place_id); ?>" data-place-name="<?php echo esc_attr($place_name); ?>" data-place-code="<?php echo esc_attr($place_code); ?>"<?php selected($is_selected, true); ?>>
+                                        <?php echo esc_html($place_name); ?><?php echo $place_code !== '' ? esc_html(' (' . $place_code . ')') : ''; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <strong aria-hidden="true">▾</strong>
+                        </span>
+                    <?php else: ?>
+                        <span class="ajtb-v1-search-value"><span class="ajtb-v1-search-text"><?php echo esc_html($search_departure !== '' ? $search_departure : 'Aucun lieu de depart configure'); ?></span><strong aria-hidden="true">▾</strong></span>
+                    <?php endif; ?>
                 </div>
                 <div class="ajtb-v1-search-card">
                     <span class="ajtb-v1-search-label">Date de voyage</span>
                     <?php if (!empty($search_date_options)): ?>
                         <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
-                            <select class="ajtb-v1-search-select" aria-label="Dates de depart disponibles">
+                            <select class="ajtb-v1-search-select" id="ajtb-v1-search-date" aria-label="Dates de depart disponibles">
                                 <?php foreach ($search_date_options as $date_option): ?>
                                     <option value="<?php echo esc_attr((string) $date_option['value']); ?>"<?php selected((string) $date_option['value'], $selected_search_date); ?>>
                                         <?php echo esc_html((string) $date_option['display']); ?>
@@ -295,7 +328,6 @@ get_header();
                         <input type="hidden" id="ajtb-v1-guest-children-input" value="<?php echo esc_attr((string) $guest_children); ?>">
                     </div>
                 </div>
-                <button type="button" class="ajtb-v1-search-btn">Rechercher</button>
             </section>
 
             <section class="ajtb-v1-hero" aria-label="Hero tour">
@@ -580,9 +612,15 @@ get_header();
                 </div>
 
                 <aside class="ajtb-v1-sidebar">
-                    <div class="ajtb-v1-side-card ajtb-v1-price-card" id="ajtb-v1-price-card">
+                    <div
+                        class="ajtb-v1-side-card ajtb-v1-price-card"
+                        id="ajtb-v1-price-card"
+                        data-base-adult-price="<?php echo esc_attr((string) $price_adult); ?>"
+                        data-base-child-price="<?php echo esc_attr((string) $price_child); ?>"
+                        data-currency="<?php echo esc_attr($price_currency); ?>"
+                        data-date-prices="<?php echo esc_attr((string) $price_date_map_json); ?>">
                         <h3>Starting price</h3>
-                        <p class="ajtb-v1-price"><span><?php echo esc_html($price_amount); ?></span> <?php echo esc_html($price_currency); ?> / adulte</p>
+                        <p class="ajtb-v1-price"><span id="ajtb-v1-price-amount"><?php echo esc_html($price_amount); ?></span> <span id="ajtb-v1-price-currency"><?php echo esc_html($price_currency); ?></span> <span id="ajtb-v1-price-suffix">/ total</span></p>
                         <p class="ajtb-v1-price-note"><?php echo esc_html($price_note); ?></p>
                         <ul class="ajtb-v1-price-includes">
                             <?php

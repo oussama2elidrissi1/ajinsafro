@@ -202,6 +202,14 @@
             adultsInput.value = String(state.adults);
             childrenInput.value = String(state.children);
             summary.textContent = formatSummary();
+            document.dispatchEvent(
+                new CustomEvent("ajtb:v1:travellers-changed", {
+                    detail: {
+                        adults: state.adults,
+                        children: state.children,
+                    },
+                }),
+            );
         }
 
         function clampTotals() {
@@ -288,6 +296,143 @@
 
         clampTotals();
         render();
+    }
+
+    function initDynamicStartingPrice() {
+        var priceCard = document.getElementById("ajtb-v1-price-card");
+        var amountEl = document.getElementById("ajtb-v1-price-amount");
+        if (!priceCard || !amountEl) {
+            return;
+        }
+
+        var currencyEl = document.getElementById("ajtb-v1-price-currency");
+        var suffixEl = document.getElementById("ajtb-v1-price-suffix");
+        var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+        var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+        var dateSelect = document.getElementById("ajtb-v1-search-date");
+        var fromSelect = document.getElementById("ajtb-v1-search-from");
+
+        var baseAdultPrice = parseFloat(
+            priceCard.getAttribute("data-base-adult-price") || "0",
+        );
+        var baseChildPrice = parseFloat(
+            priceCard.getAttribute("data-base-child-price") || "0",
+        );
+        var currency = priceCard.getAttribute("data-currency") || "MAD";
+        var datePricesRaw = priceCard.getAttribute("data-date-prices") || "{}";
+        var datePrices = {};
+
+        if (!isFinite(baseAdultPrice) || baseAdultPrice < 0) {
+            baseAdultPrice = 0;
+        }
+        if (!isFinite(baseChildPrice) || baseChildPrice < 0) {
+            baseChildPrice = 0;
+        }
+
+        try {
+            datePrices = JSON.parse(datePricesRaw);
+        } catch (err) {
+            datePrices = {};
+        }
+
+        function getTravellerValue(input, fallback) {
+            if (!input) {
+                return fallback;
+            }
+            var parsed = parseInt(input.value || String(fallback), 10);
+            if (!isFinite(parsed)) {
+                return fallback;
+            }
+            return parsed;
+        }
+
+        function getDateSpecificAdultPrice() {
+            if (!dateSelect) {
+                return null;
+            }
+            var selectedDate = dateSelect.value || "";
+            if (!selectedDate || !datePrices || !datePrices[selectedDate]) {
+                return null;
+            }
+
+            var info = datePrices[selectedDate];
+            var selectedPlaceId = fromSelect ? parseInt(fromSelect.value || "0", 10) : 0;
+            var datePlaceId =
+                info && info.departure_place_id !== null && info.departure_place_id !== undefined
+                    ? parseInt(info.departure_place_id, 10)
+                    : 0;
+
+            if (
+                isFinite(datePlaceId) &&
+                datePlaceId > 0 &&
+                isFinite(selectedPlaceId) &&
+                selectedPlaceId > 0 &&
+                datePlaceId !== selectedPlaceId
+            ) {
+                return null;
+            }
+
+            if (
+                info &&
+                info.specific_price !== null &&
+                info.specific_price !== undefined
+            ) {
+                var parsed = parseFloat(info.specific_price);
+                if (isFinite(parsed) && parsed > 0) {
+                    return parsed;
+                }
+            }
+            return null;
+        }
+
+        function formatAmount(value) {
+            return Math.round(value)
+                .toString()
+                .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        function recalculate() {
+            var adults = Math.max(1, getTravellerValue(adultsInput, 2));
+            var children = Math.max(0, getTravellerValue(childrenInput, 0));
+
+            var adultUnit = baseAdultPrice;
+            var dateAdult = getDateSpecificAdultPrice();
+            if (dateAdult !== null) {
+                adultUnit = dateAdult;
+            }
+            if (!isFinite(adultUnit) || adultUnit < 0) {
+                adultUnit = 0;
+            }
+
+            var childUnit = baseChildPrice > 0 ? baseChildPrice : adultUnit;
+            var total = adults * adultUnit + children * childUnit;
+            if (total <= 0) {
+                total = adultUnit;
+            }
+
+            amountEl.textContent = formatAmount(total);
+            if (currencyEl) {
+                currencyEl.textContent = currency;
+            }
+            if (suffixEl) {
+                suffixEl.textContent = "/ total";
+            }
+        }
+
+        if (dateSelect) {
+            dateSelect.addEventListener("change", function () {
+                recalculate();
+                document.dispatchEvent(new CustomEvent("ajtb:v1:date-changed"));
+            });
+        }
+
+        if (fromSelect) {
+            fromSelect.addEventListener("change", recalculate);
+        }
+
+        document.addEventListener("ajtb:v1:travellers-changed", recalculate);
+        document.addEventListener("ajtb:v1:date-changed", recalculate);
+        recalculate();
     }
 
     function initStickySearchBox() {
@@ -418,6 +563,7 @@
         initDayChips();
         initFloatingButton();
         initGuestsPicker();
+        initDynamicStartingPrice();
         initStickySearchBox();
     });
 })();

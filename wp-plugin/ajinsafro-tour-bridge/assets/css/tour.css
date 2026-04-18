@@ -167,7 +167,7 @@ body.single-st_tours .footer-bottom {
 
 .ajtb-v1-search-box {
     display: grid;
-    grid-template-columns: 1.15fr 1fr 1fr auto;
+    grid-template-columns: 1.15fr 1fr 1fr;
     gap: 14px;
     padding: 16px;
     border-radius: 22px;

@@ -31,6 +31,7 @@ class AJTB_V1_Data_Provider
         $overview = '';
         $pricing = null;
         $flights = [];
+        $departure_places = [];
         $departure_dates = [];
 
         if (class_exists('AJTB_Tour_Repository')) {
@@ -50,6 +51,7 @@ class AJTB_V1_Data_Provider
             $overview = (string) $laravel_repo->get_overview();
             $pricing = $laravel_repo->get_current_pricing();
             $flights = $laravel_repo->get_flights();
+            $departure_places = $laravel_repo->get_departure_places(true);
             $departure_dates = $laravel_repo->get_departure_dates(true);
         }
 
@@ -60,14 +62,14 @@ class AJTB_V1_Data_Provider
 
         $destination = self::resolve_destination($wp_data, $flights, $title);
         $hero_images = self::resolve_images($wp_data);
-        $dates_and_places = self::resolve_departures($flights, $departure_dates);
+        $dates_and_places = self::resolve_departures($departure_places, $departure_dates);
 
         $duration_days = self::resolve_duration_days($wp_data, $laravel_days);
         $duration_label = $duration_days > 0
             ? sprintf('%d jours / %d nuits', $duration_days, max(0, $duration_days - 1))
             : '5 jours / 4 nuits';
 
-        $price_data = self::resolve_price($wp_data, $pricing);
+        $price_data = self::resolve_price($wp_data, $pricing, $dates_and_places['date_prices']);
         $rating_label = self::resolve_rating_label($wp_data);
         $guests_label = self::resolve_guests_label($wp_data);
         $overview_points = self::resolve_overview_points($overview, $wp_data);
@@ -110,7 +112,8 @@ class AJTB_V1_Data_Provider
                 'all' => $hero_images['all'],
             ],
             'search' => [
-                'departure_place' => $dates_and_places['first_place'] ?: 'Casablanca',
+                'departure_place' => $dates_and_places['first_place'],
+                'departure_place_id' => $dates_and_places['first_place_id'],
                 'departure_date' => $dates_and_places['first_date_label'] ?: 'Date a confirmer',
                 'guests' => $guests_label,
                 'guest_config' => [
@@ -121,8 +124,10 @@ class AJTB_V1_Data_Provider
                     'max_total' => max(1, $group_size),
                 ],
                 'places' => $dates_and_places['places'],
+                'place_options' => $dates_and_places['place_options'],
                 'dates' => $dates_and_places['dates'],
                 'date_options' => $dates_and_places['date_options'],
+                'date_prices' => $dates_and_places['date_prices'],
             ],
             'pricing' => $price_data,
             'overview_points' => $overview_points,
@@ -205,11 +210,34 @@ class AJTB_V1_Data_Provider
         ];
     }
 
-    private static function resolve_departures(array $flights, array $departure_dates = []): array
+    private static function resolve_departures(array $departure_places = [], array $departure_dates = []): array
     {
         $places = [];
+        $place_options = [];
         $raw_dates = [];
         $date_options_by_value = [];
+        $date_prices = [];
+
+        foreach ($departure_places as $place_row) {
+            if (!is_array($place_row)) {
+                continue;
+            }
+
+            $name = isset($place_row['name']) ? trim((string) $place_row['name']) : '';
+            if ($name === '') {
+                continue;
+            }
+
+            $place_id = isset($place_row['id']) ? (int) $place_row['id'] : 0;
+            $code = isset($place_row['code']) ? trim((string) $place_row['code']) : '';
+            $places[] = $name;
+            $place_options[] = [
+                'id' => $place_id,
+                'name' => $name,
+                'code' => $code,
+                'value' => (string) $place_id,
+            ];
+        }
 
         foreach ($departure_dates as $departure_row) {
             if (!is_array($departure_row)) {
@@ -231,39 +259,36 @@ class AJTB_V1_Data_Provider
                 $specific_price = (float) $departure_row['specific_price'];
             }
 
+            $departure_place_id = null;
+            if (array_key_exists('departure_place_id', $departure_row) && $departure_row['departure_place_id'] !== null && $departure_row['departure_place_id'] !== '') {
+                $departure_place_id = (int) $departure_row['departure_place_id'];
+            }
+
             $raw_dates[] = $raw_date;
             $date_options_by_value[$raw_date] = self::build_departure_date_option($raw_date, $stock, $specific_price);
-        }
-
-        foreach ($flights as $flight) {
-            if (!empty($flight['departure_place_name'])) {
-                $places[] = trim((string) $flight['departure_place_name']);
-            } elseif (!empty($flight['from_city'])) {
-                $places[] = trim((string) $flight['from_city']);
-            }
-            if (!empty($flight['depart_date'])) {
-                $raw_dates[] = (string) $flight['depart_date'];
-            }
+            $date_prices[$raw_date] = [
+                'specific_price' => $specific_price,
+                'departure_place_id' => $departure_place_id,
+            ];
         }
 
         $places = self::unique_non_empty($places);
         $raw_dates = self::unique_non_empty($raw_dates);
         sort($raw_dates);
 
-        foreach ($raw_dates as $raw_date) {
-            if (!isset($date_options_by_value[$raw_date])) {
-                $date_options_by_value[$raw_date] = self::build_departure_date_option($raw_date, null, null);
-            }
-        }
-
         ksort($date_options_by_value);
         $first_date = !empty($raw_dates[0]) ? $raw_dates[0] : '';
+        $first_place = !empty($place_options) ? (string) $place_options[0]['name'] : '';
+        $first_place_id = !empty($place_options) ? (int) $place_options[0]['id'] : 0;
 
         return [
             'places' => $places,
+            'place_options' => $place_options,
             'dates' => array_map([self::class, 'format_date_label'], $raw_dates),
             'date_options' => array_values($date_options_by_value),
-            'first_place' => !empty($places[0]) ? $places[0] : '',
+            'date_prices' => $date_prices,
+            'first_place' => $first_place,
+            'first_place_id' => $first_place_id,
             'first_date' => $first_date,
             'first_date_label' => $first_date !== '' ? self::format_date_label($first_date) : '',
         ];
@@ -307,13 +332,15 @@ class AJTB_V1_Data_Provider
         return 5;
     }
 
-    private static function resolve_price(array $wp_data, ?array $pricing): array
+    private static function resolve_price(array $wp_data, ?array $pricing, array $date_prices = []): array
     {
-        $amount = 0.0;
+        $adult_price = 0.0;
+        $child_price = 0.0;
         $season_name = '';
         $period_label = '';
         if (is_array($pricing) && isset($pricing['adult_price'])) {
-            $amount = (float) $pricing['adult_price'];
+            $adult_price = (float) $pricing['adult_price'];
+            $child_price = isset($pricing['child_price']) ? (float) $pricing['child_price'] : 0.0;
             $season_name = !empty($pricing['season_name']) ? trim((string) $pricing['season_name']) : '';
             if (!empty($pricing['start_date']) || !empty($pricing['end_date'])) {
                 $start = !empty($pricing['start_date']) ? self::format_date_label((string) $pricing['start_date']) : '';
@@ -321,11 +348,25 @@ class AJTB_V1_Data_Provider
                 $period_label = trim($start . ($start !== '' && $end !== '' ? ' - ' : '') . $end);
             }
         }
-        if ($amount <= 0 && !empty($wp_data['pricing']['display_price'])) {
-            $amount = (float) $wp_data['pricing']['display_price'];
+        if ($adult_price <= 0 && !empty($wp_data['pricing']['display_price'])) {
+            $adult_price = (float) $wp_data['pricing']['display_price'];
         }
-        if ($amount <= 0) {
-            $amount = 12900.0;
+        if ($adult_price <= 0) {
+            $adult_price = 12900.0;
+        }
+        if ($child_price < 0) {
+            $child_price = 0.0;
+        }
+
+        $default_amount = $adult_price;
+        foreach ($date_prices as $date_info) {
+            if (!is_array($date_info)) {
+                continue;
+            }
+            if (isset($date_info['specific_price']) && $date_info['specific_price'] !== null && (float) $date_info['specific_price'] > 0) {
+                $default_amount = (float) $date_info['specific_price'];
+                break;
+            }
         }
 
         $currency_symbol = !empty($wp_data['pricing']['currency_symbol'])
@@ -340,9 +381,11 @@ class AJTB_V1_Data_Provider
         }
 
         return [
-            'amount' => $amount,
-            'display_amount' => number_format($amount, 0, ',', ' '),
+            'amount' => $default_amount,
+            'display_amount' => number_format($default_amount, 0, ',', ' '),
             'currency_symbol' => $currency_symbol,
+            'adult_price' => $adult_price,
+            'child_price' => $child_price,
             'season_name' => $season_name,
             'period_label' => $period_label,
             'note' => $note,
