@@ -245,6 +245,133 @@ body.single-st_tours .footer-bottom {
     flex: 0 0 auto;
 }
 
+.ajtb-v1-search-value--select {
+    align-items: stretch;
+}
+
+.ajtb-v1-search-select {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: #102540;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.25;
+    padding: 0;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    outline: none;
+    cursor: pointer;
+}
+
+.ajtb-v1-search-select:focus {
+    color: #0b3c65;
+}
+
+.ajtb-v1-guests-picker {
+    position: relative;
+}
+
+.ajtb-v1-guest-trigger {
+    width: 100%;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.ajtb-v1-guest-popover {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 40;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #dbe7f5;
+    background: #ffffff;
+    box-shadow: 0 18px 34px rgba(16, 37, 64, 0.16);
+}
+
+.ajtb-v1-guest-popover[hidden] {
+    display: none;
+}
+
+.ajtb-v1-guest-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.ajtb-v1-guest-row + .ajtb-v1-guest-row {
+    border-top: 1px solid #edf3fb;
+}
+
+.ajtb-v1-guest-row strong {
+    display: block;
+    color: #122840;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ajtb-v1-guest-row span {
+    color: #6c7d95;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ajtb-v1-guest-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ajtb-v1-guest-stepper button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #d2e3f6;
+    border-radius: 8px;
+    background: #f6faff;
+    color: #25496d;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ajtb-v1-guest-stepper span {
+    min-width: 20px;
+    text-align: center;
+    color: #102540;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ajtb-v1-guest-apply {
+    margin-top: 10px;
+    width: 100%;
+    min-height: 40px;
+    border: 0;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: linear-gradient(180deg, #1d8eff, #005ff7);
+    cursor: pointer;
+}
+
 .ajtb-v1-search-btn {
     border: 0;
     border-radius: 16px;
@@ -910,6 +1037,14 @@ body.single-st_tours .footer-bottom {
     line-height: 1.6;
 }
 
+.ajtb-v1-departure-list {
+    margin: 0 0 8px;
+    padding-left: 18px;
+    color: #355272;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
 .ajtb-v1-coupon {
     display: flex;
     justify-content: space-between;
@@ -1174,6 +1309,12 @@ body.single-st_tours .footer-bottom {
 
     .ajtb-v1-search-value {
         font-size: 16px;
+    }
+
+    .ajtb-v1-guest-popover {
+        position: static;
+        margin-top: 8px;
+        box-shadow: 0 10px 20px rgba(16, 37, 64, 0.12);
     }
 
     .ajtb-v1-search-btn {

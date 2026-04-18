@@ -932,6 +932,7 @@ class AJTB_Laravel_Repository
                     'day' => (int) $row['day_number'],
                     'title' => $row['title'] ?? '',
                     'description' => $row['description'] ?? '',
+                    'content_html' => isset($row['content_html']) ? $row['content_html'] : '',
                     'meals' => $row['meals'] ?? '',
                     'accommodation' => $row['accommodation'] ?? '',
                     'image' => '',
@@ -940,6 +941,26 @@ class AJTB_Laravel_Repository
                     'notes' => isset($row['notes']) ? $row['notes'] : '',
                     'activities' => [],
                 ];
+            }
+
+            // Enrich from CRUD detailed program (travel_program_days.content_html)
+            // so front can display "Description detaillee" when available.
+            $crud_day_content_map = $this->get_travel_program_day_content_map();
+            if (!empty($crud_day_content_map)) {
+                foreach ($days_by_id as &$day_row) {
+                    $dn = isset($day_row['day']) ? (int) $day_row['day'] : 0;
+                    if ($dn < 1 || empty($crud_day_content_map[$dn])) {
+                        continue;
+                    }
+                    $crud = $crud_day_content_map[$dn];
+                    if (!empty($crud['content_html'])) {
+                        $day_row['content_html'] = (string) $crud['content_html'];
+                    }
+                    if (!empty($crud['description'])) {
+                        $day_row['description'] = (string) $crud['description'];
+                    }
+                }
+                unset($day_row);
             }
 
             if ($has_activities) {
@@ -984,6 +1005,87 @@ class AJTB_Laravel_Repository
                                 'is_mandatory' => !empty($ar['is_mandatory']),
                                 'is_included' => !empty($ar['is_included']),
                             ];
+                        }
+                    }
+                }
+            }
+
+            // Merge activities from CRUD tab "s-activities" (travel_day_items, source=voyage_activities_tab)
+            // so V1 can display the same selected activities from edit-v2#s-activities.
+            $voyage_tab_activities_by_day = $this->get_voyage_tab_activities_by_day();
+            if (!empty($voyage_tab_activities_by_day) && !empty($days_by_id)) {
+                $day_ids_by_number = [];
+                foreach ($days_by_id as $existing_day_id => $existing_day_row) {
+                    $existing_day_number = isset($existing_day_row['day']) ? (int) $existing_day_row['day'] : 0;
+                    if ($existing_day_number < 1) {
+                        $existing_day_number = 1;
+                    }
+                    if (!isset($day_ids_by_number[$existing_day_number])) {
+                        $day_ids_by_number[$existing_day_number] = [];
+                    }
+                    $day_ids_by_number[$existing_day_number][] = (int) $existing_day_id;
+                }
+                $fallback_day_ids = !empty($day_ids_by_number) ? reset($day_ids_by_number) : [];
+                if (!is_array($fallback_day_ids)) {
+                    $fallback_day_ids = [];
+                }
+
+                foreach ($voyage_tab_activities_by_day as $tab_day_number => $tab_activities) {
+                    if (!is_array($tab_activities) || empty($tab_activities)) {
+                        continue;
+                    }
+
+                    $target_day_number = (int) $tab_day_number;
+                    if ($target_day_number < 1) {
+                        $target_day_number = 1;
+                    }
+                    $target_day_ids = $day_ids_by_number[$target_day_number] ?? $fallback_day_ids;
+                    if (!is_array($target_day_ids) || empty($target_day_ids)) {
+                        continue;
+                    }
+
+                    foreach ($target_day_ids as $target_day_id) {
+                        if (!isset($days_by_id[$target_day_id])) {
+                            continue;
+                        }
+                        if (!isset($days_by_id[$target_day_id]['activities']) || !is_array($days_by_id[$target_day_id]['activities'])) {
+                            $days_by_id[$target_day_id]['activities'] = [];
+                        }
+
+                        $seen_activity_ids = [];
+                        $seen_titles = [];
+                        foreach ($days_by_id[$target_day_id]['activities'] as $existing_activity) {
+                            $existing_activity_id = isset($existing_activity['activity_id']) ? (int) $existing_activity['activity_id'] : 0;
+                            if ($existing_activity_id > 0) {
+                                $seen_activity_ids[$existing_activity_id] = true;
+                            }
+                            $existing_title = strtolower(trim((string) ($existing_activity['title'] ?? '')));
+                            if ($existing_title !== '') {
+                                $seen_titles[$existing_title] = true;
+                            }
+                        }
+
+                        foreach ($tab_activities as $tab_activity) {
+                            if (!is_array($tab_activity)) {
+                                continue;
+                            }
+                            $candidate_activity_id = isset($tab_activity['activity_id']) ? (int) $tab_activity['activity_id'] : 0;
+                            $candidate_title = strtolower(trim((string) ($tab_activity['title'] ?? '')));
+
+                            if ($candidate_activity_id > 0 && isset($seen_activity_ids[$candidate_activity_id])) {
+                                continue;
+                            }
+                            if ($candidate_activity_id <= 0 && $candidate_title !== '' && isset($seen_titles[$candidate_title])) {
+                                continue;
+                            }
+
+                            $days_by_id[$target_day_id]['activities'][] = $tab_activity;
+                            if ($candidate_activity_id > 0) {
+                                $seen_activity_ids[$candidate_activity_id] = true;
+                            }
+                            if ($candidate_title !== '') {
+                                $seen_titles[$candidate_title] = true;
+                            }
                         }
                     }
                 }
@@ -1050,9 +1152,6 @@ class AJTB_Laravel_Repository
                     $transfers_by_day_direction[$last_day_number]['departure'] = $transfers_flat['departure'];
                 }
             }
-            $hotels_all = $hotels_grouped['all'] ?? [];
-            $hotel_first = isset($hotels_all[0]) ? $hotels_all[0] : null;
-
             foreach ($days_array as &$day) {
                 $day['flight'] = [];
                 $day['flight_return'] = [];
@@ -1072,7 +1171,7 @@ class AJTB_Laravel_Repository
                 $day['transfer'] = isset($day_transfers['arrival']) ? $day_transfers['arrival'] : [];
                 $day['transfer_return'] = isset($day_transfers['departure']) ? $day_transfers['departure'] : [];
                 $day['hotels'] = $day_hotels;
-                $day['hotel'] = isset($day_hotels[0]) ? $day_hotels[0] : $hotel_first;
+                $day['hotel'] = isset($day_hotels[0]) ? $day_hotels[0] : null;
                 if ($last_day_number > 0 && $dn === $last_day_number && !empty($day_hotels)) {
                     $day['hotel_checkout'] = true;
                 }
@@ -1091,6 +1190,379 @@ class AJTB_Laravel_Repository
             return $days_array;
         } catch (Exception $e) {
             $this->log_error('get_days', $e);
+            return [];
+        }
+    }
+
+    /**
+     * Get voyage activities saved in edit-v2 "s-activities" tab.
+     * Data source: travel_day_items (type=activity, meta_json.source=voyage_activities_tab|NULL).
+     *
+     * @return array<int, array<int, array<string,mixed>>> keyed by day_number
+     */
+    private function get_voyage_tab_activities_by_day()
+    {
+        $voyage_table = $this->find_first_existing_table([
+            'voyages',
+            'aj_voyages',
+            $this->wpdb->prefix . 'voyages',
+            $this->wpdb->prefix . 'aj_voyages',
+        ]);
+        if ($voyage_table === '') {
+            return [];
+        }
+
+        $day_items_table = $this->find_first_existing_table([
+            'travel_day_items',
+            'aj_travel_day_items',
+            $this->wpdb->prefix . 'travel_day_items',
+            $this->wpdb->prefix . 'aj_travel_day_items',
+        ]);
+        if ($day_items_table === '') {
+            return [];
+        }
+
+        $has_col = function ($table, $column) {
+            return (bool) $this->wpdb->get_var($this->wpdb->prepare(
+                "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s",
+                $table,
+                $column
+            ));
+        };
+
+        if (!$has_col($voyage_table, 'id') || !$has_col($voyage_table, 'wp_post_id')) {
+            return [];
+        }
+        if (!$has_col($day_items_table, 'voyage_id') || !$has_col($day_items_table, 'type')) {
+            return [];
+        }
+
+        $voyage_id = (int) $this->wpdb->get_var(
+            $this->wpdb->prepare(
+                "SELECT id FROM {$voyage_table} WHERE wp_post_id = %d ORDER BY id DESC LIMIT 1",
+                $this->tour_id
+            )
+        );
+        if ($voyage_id <= 0) {
+            return [];
+        }
+
+        $has_day_number = $has_col($day_items_table, 'day_number');
+        $has_title = $has_col($day_items_table, 'title');
+        $has_details = $has_col($day_items_table, 'details');
+        $has_included = $has_col($day_items_table, 'included');
+        $has_price_delta = $has_col($day_items_table, 'price_delta_per_person');
+        $has_options_json = $has_col($day_items_table, 'options_json');
+        $has_meta_json = $has_col($day_items_table, 'meta_json');
+        $has_sort_order = $has_col($day_items_table, 'sort_order');
+
+        $select_parts = ['i.id'];
+        $select_parts[] = $has_day_number ? 'i.day_number' : '1 AS day_number';
+        $select_parts[] = $has_title ? 'i.title' : "'' AS title";
+        $select_parts[] = $has_details ? 'i.details' : "'' AS details";
+        $select_parts[] = $has_included ? 'i.included' : '1 AS included';
+        $select_parts[] = $has_price_delta ? 'i.price_delta_per_person' : 'NULL AS price_delta_per_person';
+        $select_parts[] = $has_options_json ? 'i.options_json' : 'NULL AS options_json';
+        $select_parts[] = $has_meta_json ? 'i.meta_json' : 'NULL AS meta_json';
+        $select_parts[] = $has_sort_order ? 'i.sort_order' : '0 AS sort_order';
+
+        $order_by = $has_day_number ? 'i.day_number ASC' : 'i.id ASC';
+        if ($has_sort_order) {
+            $order_by .= ', i.sort_order ASC';
+        }
+        $order_by .= ', i.id ASC';
+
+        $sql = "SELECT " . implode(', ', $select_parts) .
+            " FROM {$day_items_table} i" .
+            " WHERE i.voyage_id = %d AND i.type = %s" .
+            " ORDER BY {$order_by}";
+
+        try {
+            $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $voyage_id, 'activity'), ARRAY_A);
+            if (!$rows) {
+                return [];
+            }
+
+            $activity_ids = [];
+            foreach ($rows as $row) {
+                $options = $this->decode_json_assoc($row['options_json'] ?? null);
+                $activity_id = isset($options['activity_id']) ? (int) $options['activity_id'] : 0;
+                if ($activity_id > 0) {
+                    $activity_ids[$activity_id] = true;
+                }
+            }
+
+            $catalog_by_id = [];
+            $activities_table = $this->table('activities');
+            if ($this->table_exists($activities_table) && !empty($activity_ids)) {
+                $activity_ids = array_values(array_map('intval', array_keys($activity_ids)));
+                $activity_ids = array_values(array_filter($activity_ids, static function ($id) {
+                    return $id > 0;
+                }));
+
+                if (!empty($activity_ids)) {
+                    $placeholders = implode(',', array_fill(0, count($activity_ids), '%d'));
+                    $catalog_has_col = function ($column) use ($activities_table, $has_col) {
+                        return $has_col($activities_table, $column);
+                    };
+                    $catalog_select = ['id'];
+                    if ($catalog_has_col('title')) {
+                        $catalog_select[] = 'title';
+                    }
+                    if ($catalog_has_col('description')) {
+                        $catalog_select[] = 'description';
+                    }
+                    if ($catalog_has_col('image_id')) {
+                        $catalog_select[] = 'image_id';
+                    }
+                    if ($catalog_has_col('adult_price')) {
+                        $catalog_select[] = 'adult_price';
+                    }
+                    if ($catalog_has_col('base_price')) {
+                        $catalog_select[] = 'base_price';
+                    }
+
+                    $catalog_sql = "SELECT " . implode(', ', $catalog_select) . " FROM {$activities_table} WHERE id IN ({$placeholders})";
+                    $catalog_rows = $this->wpdb->get_results($this->wpdb->prepare($catalog_sql, $activity_ids), ARRAY_A);
+                    if (is_array($catalog_rows)) {
+                        foreach ($catalog_rows as $catalog_row) {
+                            $catalog_id = isset($catalog_row['id']) ? (int) $catalog_row['id'] : 0;
+                            if ($catalog_id > 0) {
+                                $catalog_by_id[$catalog_id] = $catalog_row;
+                            }
+                        }
+                    }
+                }
+            }
+
+            $by_day = [];
+            foreach ($rows as $row) {
+                $meta = $this->decode_json_assoc($row['meta_json'] ?? null);
+                $source = isset($meta['source']) ? strtolower(trim((string) $meta['source'])) : '';
+                if ($source !== '' && $source !== 'voyage_activities_tab') {
+                    continue;
+                }
+
+                $options = $this->decode_json_assoc($row['options_json'] ?? null);
+                $day_number = isset($row['day_number']) ? (int) $row['day_number'] : 1;
+                if ($day_number < 1) {
+                    $day_number = 1;
+                }
+                $activity_id = isset($options['activity_id']) ? (int) $options['activity_id'] : 0;
+                $catalog = $activity_id > 0 && isset($catalog_by_id[$activity_id]) ? $catalog_by_id[$activity_id] : [];
+
+                $image_url = '';
+                if (!empty($catalog['image_id'])) {
+                    if (function_exists('ajtb_get_attachment_image_url')) {
+                        $image_url = (string) ajtb_get_attachment_image_url((int) $catalog['image_id'], 'medium');
+                    } elseif (function_exists('wp_get_attachment_image_url')) {
+                        $image_url = (string) wp_get_attachment_image_url((int) $catalog['image_id'], 'medium');
+                    }
+                }
+
+                $title = trim((string) ($row['title'] ?? ''));
+                if ($title === '' && !empty($options['title'])) {
+                    $title = trim((string) $options['title']);
+                }
+                if ($title === '' && !empty($catalog['title'])) {
+                    $title = trim((string) $catalog['title']);
+                }
+                if ($title === '') {
+                    $title = 'Activite';
+                }
+
+                $description = trim((string) ($row['details'] ?? ''));
+                if ($description === '' && !empty($options['description'])) {
+                    $description = trim((string) $options['description']);
+                }
+                if ($description === '' && !empty($catalog['description'])) {
+                    $description = trim((string) $catalog['description']);
+                }
+
+                $custom_price = null;
+                if (isset($options['unit_price']) && $options['unit_price'] !== '' && $options['unit_price'] !== null) {
+                    $custom_price = (float) $options['unit_price'];
+                } elseif (isset($row['price_delta_per_person']) && $row['price_delta_per_person'] !== null && $row['price_delta_per_person'] !== '') {
+                    $price_cents = (int) $row['price_delta_per_person'];
+                    if ($price_cents !== 0) {
+                        $custom_price = (float) ($price_cents / 100);
+                    }
+                }
+
+                $base_price = null;
+                if (isset($catalog['adult_price']) && $catalog['adult_price'] !== null && $catalog['adult_price'] !== '') {
+                    $base_price = (float) $catalog['adult_price'];
+                } elseif (isset($catalog['base_price']) && $catalog['base_price'] !== null && $catalog['base_price'] !== '') {
+                    $base_price = (float) $catalog['base_price'];
+                }
+
+                if (!isset($by_day[$day_number])) {
+                    $by_day[$day_number] = [];
+                }
+
+                $by_day[$day_number][] = [
+                    'id' => isset($row['id']) ? (int) $row['id'] : 0,
+                    'activity_id' => $activity_id,
+                    'title' => $title,
+                    'description' => $description,
+                    'custom_price' => $custom_price,
+                    'base_price' => $base_price,
+                    'image_url' => $image_url,
+                    'activity_image_id' => !empty($catalog['image_id']) ? (int) $catalog['image_id'] : null,
+                    'start_time' => !empty($options['start_time']) ? (string) $options['start_time'] : null,
+                    'end_time' => !empty($options['end_time']) ? (string) $options['end_time'] : null,
+                    'is_mandatory' => false,
+                    'is_included' => isset($row['included']) ? !empty($row['included']) : true,
+                ];
+            }
+
+            return $by_day;
+        } catch (Exception $e) {
+            $this->log_error('get_voyage_tab_activities_by_day', $e);
+            return [];
+        }
+    }
+
+    /**
+     * Decode JSON column (or passthrough array) to associative array.
+     *
+     * @param mixed $value
+     * @return array
+     */
+    private function decode_json_assoc($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Return first existing table from candidates.
+     *
+     * @param array $candidates
+     * @return string
+     */
+    private function find_first_existing_table(array $candidates)
+    {
+        $candidates = array_values(array_unique(array_filter(array_map('strval', $candidates))));
+        foreach ($candidates as $candidate) {
+            if ($candidate !== '' && $this->table_exists($candidate)) {
+                return $candidate;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Fetch per-day detailed content from CRUD tables when present.
+     * Joins voyages (wp_post_id) -> travel_program_days by day_number.
+     *
+     * @return array<int, array{content_html: string, description: string}>
+     */
+    private function get_travel_program_day_content_map()
+    {
+        $voyage_tables = array_values(array_unique([
+            'voyages',
+            'aj_voyages',
+            $this->wpdb->prefix . 'voyages',
+            $this->wpdb->prefix . 'aj_voyages',
+        ]));
+
+        $day_tables = array_values(array_unique([
+            'travel_program_days',
+            'aj_travel_program_days',
+            $this->wpdb->prefix . 'travel_program_days',
+            $this->wpdb->prefix . 'aj_travel_program_days',
+        ]));
+
+        $voyage_table = '';
+        foreach ($voyage_tables as $t) {
+            if (is_string($t) && $t !== '' && $this->table_exists($t)) {
+                $voyage_table = $t;
+                break;
+            }
+        }
+        if ($voyage_table === '') {
+            return [];
+        }
+
+        $day_table = '';
+        foreach ($day_tables as $t) {
+            if (is_string($t) && $t !== '' && $this->table_exists($t)) {
+                $day_table = $t;
+                break;
+            }
+        }
+        if ($day_table === '') {
+            return [];
+        }
+
+        $has_col = function ($table, $column) {
+            return (bool) $this->wpdb->get_var($this->wpdb->prepare(
+                "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s",
+                $table,
+                $column
+            ));
+        };
+
+        if (!$has_col($voyage_table, 'id') || !$has_col($voyage_table, 'wp_post_id')) {
+            return [];
+        }
+        if (!$has_col($day_table, 'day_number') || !$has_col($day_table, 'content_html')) {
+            return [];
+        }
+
+        $fk_col = $has_col($day_table, 'voyage_id')
+            ? 'voyage_id'
+            : ($has_col($day_table, 'travel_id') ? 'travel_id' : '');
+        if ($fk_col === '') {
+            return [];
+        }
+
+        $has_description = $has_col($day_table, 'description');
+
+        try {
+            $sql = "SELECT d.day_number, d.content_html";
+            if ($has_description) {
+                $sql .= ", d.description";
+            } else {
+                $sql .= ", '' AS description";
+            }
+            $sql .= " FROM {$day_table} d";
+            $sql .= " INNER JOIN {$voyage_table} v ON v.id = d.{$fk_col}";
+            $sql .= " WHERE v.wp_post_id = %d";
+            $sql .= " ORDER BY d.day_number ASC";
+
+            $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $this->tour_id), ARRAY_A);
+            if (!$rows) {
+                return [];
+            }
+
+            $map = [];
+            foreach ($rows as $row) {
+                $day_number = isset($row['day_number']) ? (int) $row['day_number'] : 0;
+                if ($day_number < 1) {
+                    continue;
+                }
+                $content_html = isset($row['content_html']) ? trim((string) $row['content_html']) : '';
+                $description = isset($row['description']) ? trim((string) $row['description']) : '';
+                if ($content_html === '' && $description === '') {
+                    continue;
+                }
+                $map[$day_number] = [
+                    'content_html' => $content_html,
+                    'description' => $description,
+                ];
+            }
+
+            return $map;
+        } catch (Exception $e) {
+            $this->log_error('get_travel_program_day_content_map', $e);
             return [];
         }
     }
@@ -1262,6 +1734,126 @@ class AJTB_Laravel_Repository
 
         // Return first rule as default if no date match
         return $rules[0] ?? null;
+    }
+
+    /**
+     * Get departure dates configured in CRUD (Dates de depart).
+     * Supports both travel_id and tour_id schemas and optional stock/price columns.
+     *
+     * @param bool $active_only Only return active dates when the column exists.
+     * @return array<int, array<string, mixed>>
+     */
+    public function get_departure_dates($active_only = true)
+    {
+        $candidates = [];
+        $candidates[] = $this->table('travel_dates');
+        $candidates[] = $this->table('tour_dates');
+
+        $flights_table = function_exists('ajtb_flights_table') ? ajtb_flights_table($this->tour_id) : $this->table('tour_flights');
+        if (is_string($flights_table) && preg_match('/^(.*)aj_tour_flights$/', $flights_table, $m)) {
+            $alt_prefix = $m[1];
+            $candidates[] = $alt_prefix . 'aj_travel_dates';
+            $candidates[] = $alt_prefix . 'aj_tour_dates';
+        }
+
+        $candidates = array_values(array_unique(array_filter(array_map('strval', $candidates))));
+        $table = '';
+        foreach ($candidates as $candidate) {
+            if ($this->table_exists($candidate)) {
+                $table = $candidate;
+                break;
+            }
+        }
+
+        if ($table === '') {
+            return [];
+        }
+
+        $has_col = function ($column) use ($table) {
+            return (bool) $this->wpdb->get_var($this->wpdb->prepare(
+                "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s",
+                $table,
+                $column
+            ));
+        };
+
+        $date_col = $has_col('date') ? 'date' : ($has_col('start_date') ? 'start_date' : '');
+        $tour_col = $has_col('travel_id') ? 'travel_id' : ($has_col('tour_id') ? 'tour_id' : '');
+
+        if ($date_col === '' || $tour_col === '') {
+            return [];
+        }
+
+        $stock_col = $has_col('stock') ? 'stock' : ($has_col('places') ? 'places' : ($has_col('available_seats') ? 'available_seats' : ($has_col('seats_available') ? 'seats_available' : '')));
+        $price_col = $has_col('specific_price') ? 'specific_price' : ($has_col('adult_price') ? 'adult_price' : ($has_col('price') ? 'price' : ''));
+        $active_col = $has_col('is_active') ? 'is_active' : ($has_col('active') ? 'active' : '');
+        $place_id_col = $has_col('departure_place_id') ? 'departure_place_id' : '';
+
+        try {
+            $sql = "SELECT id, {$date_col} AS departure_date";
+            if ($stock_col !== '') {
+                $sql .= ", {$stock_col} AS stock_value";
+            }
+            if ($price_col !== '') {
+                $sql .= ", {$price_col} AS price_value";
+            }
+            if ($active_col !== '') {
+                $sql .= ", {$active_col} AS is_active_value";
+            }
+            if ($place_id_col !== '') {
+                $sql .= ", {$place_id_col} AS departure_place_id";
+            }
+            $sql .= " FROM {$table} WHERE {$tour_col} = %d";
+
+            $params = [$this->tour_id];
+            if ($active_only && $active_col !== '') {
+                $sql .= " AND {$active_col} = 1";
+            }
+
+            $sql .= " ORDER BY {$date_col} ASC, id ASC";
+
+            $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $params), ARRAY_A);
+            if (!$rows) {
+                return [];
+            }
+
+            $out = [];
+            foreach ($rows as $row) {
+                $raw_date = isset($row['departure_date']) ? trim((string) $row['departure_date']) : '';
+                if ($raw_date === '') {
+                    continue;
+                }
+
+                $stock = null;
+                if (array_key_exists('stock_value', $row) && $row['stock_value'] !== null && $row['stock_value'] !== '') {
+                    $stock = (int) $row['stock_value'];
+                }
+
+                $specific_price = null;
+                if (array_key_exists('price_value', $row) && $row['price_value'] !== null && $row['price_value'] !== '') {
+                    $specific_price = (float) $row['price_value'];
+                }
+
+                $is_active = true;
+                if (array_key_exists('is_active_value', $row)) {
+                    $is_active = !empty($row['is_active_value']);
+                }
+
+                $out[] = [
+                    'id' => isset($row['id']) ? (int) $row['id'] : 0,
+                    'date' => $raw_date,
+                    'stock' => $stock,
+                    'specific_price' => $specific_price,
+                    'is_active' => $is_active,
+                    'departure_place_id' => isset($row['departure_place_id']) && $row['departure_place_id'] !== '' ? (int) $row['departure_place_id'] : null,
+                ];
+            }
+
+            return $out;
+        } catch (Exception $e) {
+            $this->log_error('get_departure_dates', $e);
+            return [];
+        }
     }
 
     /**

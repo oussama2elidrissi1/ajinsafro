@@ -427,6 +427,8 @@ class UpdateWpTourRequest extends FormRequest
             'tour_activities.*.activity_id' => 'required|integer|exists:wp.aj_activities,id',
             'tour_activities.*.title' => 'nullable|string|max:255',
             'tour_activities.*.description' => 'nullable|string|max:5000',
+            'tour_activities.*.day_number' => 'nullable|integer|min:1',
+            'tour_activities.*.sort_order' => 'nullable|integer|min:0',
             'tour_activities.*.pricing_type' => 'nullable|string|max:64',
             'tour_activities.*.unit_price' => 'nullable|numeric|min:0',
             'tour_activities.*.child_price' => 'nullable|numeric|min:0',

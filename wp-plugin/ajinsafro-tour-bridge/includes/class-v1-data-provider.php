@@ -31,6 +31,7 @@ class AJTB_V1_Data_Provider
         $overview = '';
         $pricing = null;
         $flights = [];
+        $departure_dates = [];
 
         if (class_exists('AJTB_Tour_Repository')) {
             $wp_repo = new AJTB_Tour_Repository($tour_id);
@@ -49,6 +50,7 @@ class AJTB_V1_Data_Provider
             $overview = (string) $laravel_repo->get_overview();
             $pricing = $laravel_repo->get_current_pricing();
             $flights = $laravel_repo->get_flights();
+            $departure_dates = $laravel_repo->get_departure_dates(true);
         }
 
         $title = trim((string) get_the_title($tour_id));
@@ -58,7 +60,7 @@ class AJTB_V1_Data_Provider
 
         $destination = self::resolve_destination($wp_data, $flights, $title);
         $hero_images = self::resolve_images($wp_data);
-        $dates_and_places = self::resolve_departures($flights);
+        $dates_and_places = self::resolve_departures($flights, $departure_dates);
 
         $duration_days = self::resolve_duration_days($wp_data, $laravel_days);
         $duration_label = $duration_days > 0
@@ -111,8 +113,16 @@ class AJTB_V1_Data_Provider
                 'departure_place' => $dates_and_places['first_place'] ?: 'Casablanca',
                 'departure_date' => $dates_and_places['first_date_label'] ?: 'Date a confirmer',
                 'guests' => $guests_label,
+                'guest_config' => [
+                    'adults' => 2,
+                    'children' => 0,
+                    'max_adults' => max(1, $group_size),
+                    'max_children' => 8,
+                    'max_total' => max(1, $group_size),
+                ],
                 'places' => $dates_and_places['places'],
                 'dates' => $dates_and_places['dates'],
+                'date_options' => $dates_and_places['date_options'],
             ],
             'pricing' => $price_data,
             'overview_points' => $overview_points,
@@ -195,10 +205,36 @@ class AJTB_V1_Data_Provider
         ];
     }
 
-    private static function resolve_departures(array $flights): array
+    private static function resolve_departures(array $flights, array $departure_dates = []): array
     {
         $places = [];
-        $dates = [];
+        $raw_dates = [];
+        $date_options_by_value = [];
+
+        foreach ($departure_dates as $departure_row) {
+            if (!is_array($departure_row)) {
+                continue;
+            }
+
+            $raw_date = isset($departure_row['date']) ? trim((string) $departure_row['date']) : '';
+            if ($raw_date === '') {
+                continue;
+            }
+
+            $stock = null;
+            if (array_key_exists('stock', $departure_row) && $departure_row['stock'] !== null && $departure_row['stock'] !== '') {
+                $stock = (int) $departure_row['stock'];
+            }
+
+            $specific_price = null;
+            if (array_key_exists('specific_price', $departure_row) && $departure_row['specific_price'] !== null && $departure_row['specific_price'] !== '') {
+                $specific_price = (float) $departure_row['specific_price'];
+            }
+
+            $raw_dates[] = $raw_date;
+            $date_options_by_value[$raw_date] = self::build_departure_date_option($raw_date, $stock, $specific_price);
+        }
+
         foreach ($flights as $flight) {
             if (!empty($flight['departure_place_name'])) {
                 $places[] = trim((string) $flight['departure_place_name']);
@@ -206,21 +242,52 @@ class AJTB_V1_Data_Provider
                 $places[] = trim((string) $flight['from_city']);
             }
             if (!empty($flight['depart_date'])) {
-                $dates[] = (string) $flight['depart_date'];
+                $raw_dates[] = (string) $flight['depart_date'];
             }
         }
 
         $places = self::unique_non_empty($places);
-        $dates = self::unique_non_empty($dates);
-        sort($dates);
+        $raw_dates = self::unique_non_empty($raw_dates);
+        sort($raw_dates);
 
-        $first_date = !empty($dates[0]) ? $dates[0] : '';
+        foreach ($raw_dates as $raw_date) {
+            if (!isset($date_options_by_value[$raw_date])) {
+                $date_options_by_value[$raw_date] = self::build_departure_date_option($raw_date, null, null);
+            }
+        }
+
+        ksort($date_options_by_value);
+        $first_date = !empty($raw_dates[0]) ? $raw_dates[0] : '';
+
         return [
             'places' => $places,
-            'dates' => array_map([self::class, 'format_date_label'], $dates),
+            'dates' => array_map([self::class, 'format_date_label'], $raw_dates),
+            'date_options' => array_values($date_options_by_value),
             'first_place' => !empty($places[0]) ? $places[0] : '',
             'first_date' => $first_date,
             'first_date_label' => $first_date !== '' ? self::format_date_label($first_date) : '',
+        ];
+    }
+
+    private static function build_departure_date_option(string $raw_date, ?int $stock, ?float $specific_price): array
+    {
+        $label = self::format_date_label($raw_date);
+        $parts = [$label];
+
+        if ($stock !== null) {
+            $parts[] = sprintf('%d place%s', $stock, $stock > 1 ? 's' : '');
+        }
+
+        if ($specific_price !== null && $specific_price > 0) {
+            $parts[] = number_format($specific_price, 0, ',', ' ') . ' MAD';
+        }
+
+        return [
+            'value' => $raw_date,
+            'label' => $label,
+            'display' => implode(' - ', $parts),
+            'stock' => $stock,
+            'specific_price' => $specific_price,
         ];
     }
 
@@ -467,9 +534,9 @@ class AJTB_V1_Data_Provider
                     $title = 'Day ' . $day_number;
                 }
 
-                $description = trim((string) ($row['description'] ?? ''));
+                $description = self::normalize_rich_text((string) ($row['content_html'] ?? ''));
                 if ($description === '') {
-                    $description = trim((string) ($row['notes'] ?? ''));
+                    $description = trim((string) ($row['description'] ?? ''));
                 }
                 if ($description === '') {
                     $description = 'Programme detaille communique avant le depart.';
@@ -715,6 +782,44 @@ class AJTB_V1_Data_Provider
             }
         }
         return self::unique_non_empty($out);
+    }
+
+    /**
+     * Convert rich HTML content into readable plain text while preserving line breaks.
+     */
+    private static function normalize_rich_text(string $html): string
+    {
+        $html = trim($html);
+        if ($html === '') {
+            return '';
+        }
+
+        $break_tags = ['<br>', '<br/>', '<br />', '</p>', '</div>', '</li>', '</h1>', '</h2>', '</h3>', '</h4>', '</h5>', '</h6>'];
+        $html = str_ireplace($break_tags, "\n", $html);
+        $html = preg_replace('/<li\b[^>]*>/i', "- ", $html);
+        if (!is_string($html)) {
+            return '';
+        }
+
+        $text = wp_strip_all_tags($html);
+        if (function_exists('html_entity_decode')) {
+            $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+
+        $lines = preg_split('/\R+/', $text);
+        if (!is_array($lines)) {
+            return trim($text);
+        }
+
+        $clean = [];
+        foreach ($lines as $line) {
+            $line = trim((string) $line);
+            if ($line !== '') {
+                $clean[] = $line;
+            }
+        }
+
+        return trim(implode("\n", $clean));
     }
 
     private static function extract_lines(string $content, int $limit = 10): array

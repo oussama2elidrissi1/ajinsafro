@@ -135,6 +135,161 @@
         });
     }
 
+    function initGuestsPicker() {
+        var picker = document.querySelector(".ajtb-v1-guests-picker");
+        if (!picker) {
+            return;
+        }
+
+        var trigger = document.getElementById("ajtb-v1-guest-trigger");
+        var popover = document.getElementById("ajtb-v1-guest-popover");
+        var applyBtn = document.getElementById("ajtb-v1-guest-apply");
+        var summary = document.getElementById("ajtb-v1-guest-summary");
+        var adultsValue = document.getElementById("ajtb-v1-guest-adults-value");
+        var childrenValue = document.getElementById("ajtb-v1-guest-children-value");
+        var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+        var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+
+        if (
+            !trigger ||
+            !popover ||
+            !summary ||
+            !adultsValue ||
+            !childrenValue ||
+            !adultsInput ||
+            !childrenInput
+        ) {
+            return;
+        }
+
+        var maxAdults = parseInt(picker.getAttribute("data-max-adults"), 10);
+        var maxChildren = parseInt(picker.getAttribute("data-max-children"), 10);
+        var maxTotal = parseInt(picker.getAttribute("data-max-total"), 10);
+
+        if (isNaN(maxAdults) || maxAdults < 1) {
+            maxAdults = 20;
+        }
+        if (isNaN(maxChildren) || maxChildren < 0) {
+            maxChildren = 8;
+        }
+        if (isNaN(maxTotal) || maxTotal < 1) {
+            maxTotal = maxAdults + maxChildren;
+        }
+
+        var state = {
+            adults: Math.max(1, parseInt(adultsInput.value || "2", 10) || 2),
+            children: Math.max(0, parseInt(childrenInput.value || "0", 10) || 0),
+        };
+
+        function formatSummary() {
+            var txt =
+                state.adults +
+                " " +
+                (state.adults > 1 ? "adultes" : "adulte");
+            if (state.children > 0) {
+                txt +=
+                    ", " +
+                    state.children +
+                    " " +
+                    (state.children > 1 ? "enfants" : "enfant");
+            }
+            return txt;
+        }
+
+        function render() {
+            adultsValue.textContent = String(state.adults);
+            childrenValue.textContent = String(state.children);
+            adultsInput.value = String(state.adults);
+            childrenInput.value = String(state.children);
+            summary.textContent = formatSummary();
+        }
+
+        function clampTotals() {
+            if (state.adults > maxAdults) {
+                state.adults = maxAdults;
+            }
+            if (state.children > maxChildren) {
+                state.children = maxChildren;
+            }
+            if (state.adults < 1) {
+                state.adults = 1;
+            }
+            if (state.children < 0) {
+                state.children = 0;
+            }
+
+            while (state.adults + state.children > maxTotal) {
+                if (state.children > 0) {
+                    state.children -= 1;
+                } else if (state.adults > 1) {
+                    state.adults -= 1;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        function setOpen(open) {
+            if (open) {
+                popover.removeAttribute("hidden");
+                trigger.setAttribute("aria-expanded", "true");
+                picker.classList.add("is-open");
+            } else {
+                popover.setAttribute("hidden", "");
+                trigger.setAttribute("aria-expanded", "false");
+                picker.classList.remove("is-open");
+            }
+        }
+
+        picker.addEventListener("click", function (event) {
+            var control = event.target.closest("[data-ajtb-guest-action]");
+            if (!control) {
+                return;
+            }
+            event.preventDefault();
+
+            var action = control.getAttribute("data-ajtb-guest-action");
+            var target = control.getAttribute("data-ajtb-guest-target");
+
+            if (target === "adults") {
+                if (action === "plus") {
+                    state.adults += 1;
+                } else if (action === "minus") {
+                    state.adults -= 1;
+                }
+            } else if (target === "children") {
+                if (action === "plus") {
+                    state.children += 1;
+                } else if (action === "minus") {
+                    state.children -= 1;
+                }
+            }
+
+            clampTotals();
+            render();
+        });
+
+        trigger.addEventListener("click", function () {
+            var isOpen = !popover.hasAttribute("hidden");
+            setOpen(!isOpen);
+        });
+
+        if (applyBtn) {
+            applyBtn.addEventListener("click", function () {
+                setOpen(false);
+            });
+        }
+
+        document.addEventListener("click", function (event) {
+            if (!picker.contains(event.target)) {
+                setOpen(false);
+            }
+        });
+
+        clampTotals();
+        render();
+    }
+
     function initStickySearchBox() {
         var searchBox = document.getElementById("ajtb-v1-search-box");
         var pageRoot = document.getElementById("ajtb-v1-page");
@@ -262,6 +417,7 @@
         initTabs();
         initDayChips();
         initFloatingButton();
+        initGuestsPicker();
         initStickySearchBox();
     });
 })();

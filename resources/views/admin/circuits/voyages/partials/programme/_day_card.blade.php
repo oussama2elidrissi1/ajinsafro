@@ -7,7 +7,7 @@
     $dayHotelsTransfers = ($programDayHotelsTransfers ?? [])[$dayIndex] ?? [];
 @endphp
 
-<div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}" data-day-index="{{ $dayIndex }}">
+<div class="accordion-item programme-day-card" data-day-id="{{ $day->id }}" data-day-index="{{ $dayIndex }}" data-day-number="{{ (int) $day->day_number }}">
     <h2 class="accordion-header programme-day-header">
         <span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer" aria-hidden="true"><i class="bx bx-dots-vertical-rounded"></i></span>
         <button class="accordion-button flex-grow-1 {{ $isFirst ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
@@ -56,12 +56,12 @@
                     <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][description]" rows="3" placeholder="Résumé du jour">{{ old('programme_days.'.$dayIndex.'.description', $day->description ?? '') }}</textarea>
                 </div>
                 <div class="field-description programme-day-detail ve-rich-field">
-                    <label class="form-label">Notes</label>
-                    <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="5" placeholder="Notes du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
+                    <label class="form-label">Description détaillée</label>
+                    <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="5" placeholder="Programme détaillé du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
                 </div>
                 <div class="field-notes programme-day-notes ve-rich-field">
-                    <label class="form-label">Description détaillée</label>
-                    <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="4" placeholder="Programme détaillé du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][notes]" rows="4" placeholder="Notes du jour">{{ old('programme_days.'.$dayIndex.'.notes', $day->notes ?? $day->description) }}</textarea>
                 </div>
             </div>
 

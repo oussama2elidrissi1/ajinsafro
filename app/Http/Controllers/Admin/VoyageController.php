@@ -650,6 +650,8 @@ class VoyageController extends Controller
                 'tour_activities.*.activity_id' => 'nullable|integer',
                 'tour_activities.*.title' => 'nullable|string|max:255',
                 'tour_activities.*.description' => 'nullable|string|max:5000',
+                'tour_activities.*.day_number' => 'nullable|integer|min:1',
+                'tour_activities.*.sort_order' => 'nullable|integer|min:0',
                 'tour_activities.*.pricing_type' => 'nullable|string|max:100',
                 'tour_activities.*.unit_price' => 'nullable|numeric|min:0',
                 'tour_activities.*.child_price' => 'nullable|numeric|min:0',
@@ -1454,6 +1456,7 @@ class VoyageController extends Controller
                     $query->where('meta_json->source', 'voyage_activities_tab')
                         ->orWhereNull('meta_json');
                 })
+                ->orderBy('day_number')
                 ->orderBy('sort_order')
                 ->orderBy('id')
                 ->get();
@@ -3417,6 +3420,47 @@ class VoyageController extends Controller
         $keptIds = [];
         $sortOrder = 0;
 
+        $wpTourId = (int) ($voyage->wp_post_id ?? 0);
+        $validDayNumbers = [];
+        if ($wpTourId > 0) {
+            $validDayNumbers = TourDay::query()
+                ->where('tour_id', $wpTourId)
+                ->orderBy('day_number')
+                ->pluck('day_number')
+                ->map(fn ($dayNumber) => (int) $dayNumber)
+                ->filter(fn (int $dayNumber) => $dayNumber > 0)
+                ->unique()
+                ->values()
+                ->all();
+        }
+        if (empty($validDayNumbers)) {
+            $validDayNumbers = [1];
+        }
+
+        $minDayNumber = (int) min($validDayNumbers);
+        $maxDayNumber = (int) max($validDayNumbers);
+        $normalizeDayNumber = static function ($rawDayNumber) use ($validDayNumbers, $minDayNumber, $maxDayNumber): int {
+            $dayNumber = (int) $rawDayNumber;
+            if ($dayNumber <= 0) {
+                return $minDayNumber;
+            }
+            if (in_array($dayNumber, $validDayNumbers, true)) {
+                return $dayNumber;
+            }
+            if ($dayNumber < $minDayNumber) {
+                return $minDayNumber;
+            }
+            if ($dayNumber > $maxDayNumber) {
+                return $maxDayNumber;
+            }
+            foreach ($validDayNumbers as $validDayNumber) {
+                if ($dayNumber <= (int) $validDayNumber) {
+                    return (int) $validDayNumber;
+                }
+            }
+            return $maxDayNumber;
+        };
+
         foreach ($payload as $row) {
             if (!is_array($row)) {
                 continue;
@@ -3428,22 +3472,27 @@ class VoyageController extends Controller
             }
 
             $activity = Activity::find($activityId);
-            $title = trim((string) ($row['title'] ?? ($activity?->title ?? 'ActivitÃ©')));
+            $title = trim((string) ($row['title'] ?? ($activity?->title ?? 'Activite')));
             $pricingType = ($row['pricing_type'] ?? 'per_person') === 'fixed' ? 'fixed' : 'per_person';
             $unitPrice = (float) ($row['unit_price'] ?? 0);
             $unitPrice = $unitPrice < 0 ? 0 : round($unitPrice, 2);
             $quantity = (int) ($row['quantity'] ?? 1);
             $quantity = $quantity < 1 ? 1 : $quantity;
+            $dayNumber = $normalizeDayNumber($row['day_number'] ?? 0);
+            $description = trim((string) ($row['description'] ?? ''));
+            $rowSortOrder = isset($row['sort_order']) && $row['sort_order'] !== ''
+                ? max(0, (int) $row['sort_order'])
+                : $sortOrder;
 
             $itemData = [
                 'voyage_id' => $voyage->id,
-                'day_number' => 1,
-                'start_day' => 1,
-                'end_day' => 1,
+                'day_number' => $dayNumber,
+                'start_day' => $dayNumber,
+                'end_day' => $dayNumber,
                 'nights' => 0,
                 'type' => 'activity',
-                'title' => $title !== '' ? $title : ($activity?->title ?? 'ActivitÃ©'),
-                'details' => null,
+                'title' => $title !== '' ? $title : ($activity?->title ?? 'Activite'),
+                'details' => $description !== '' ? $description : null,
                 'included' => true,
                 'price_delta_per_person' => $pricingType === 'per_person' ? (int) round($unitPrice * 100) : 0,
                 'options_json' => [
@@ -3451,11 +3500,13 @@ class VoyageController extends Controller
                     'pricing_type' => $pricingType,
                     'unit_price' => $unitPrice,
                     'quantity' => $quantity,
+                    'description' => $description,
+                    'day_number' => $dayNumber,
                 ],
                 'meta_json' => [
                     'source' => 'voyage_activities_tab',
                 ],
-                'sort_order' => $sortOrder++,
+                'sort_order' => $rowSortOrder,
             ];
 
             $itemId = (int) ($row['id'] ?? 0);
@@ -3475,6 +3526,8 @@ class VoyageController extends Controller
                 $new = TravelDayItem::create($itemData);
                 $keptIds[] = $new->id;
             }
+
+            $sortOrder++;
         }
 
         TravelDayItem::query()
