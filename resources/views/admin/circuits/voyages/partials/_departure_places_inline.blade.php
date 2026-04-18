@@ -1,4 +1,4 @@
-{{-- Lieux de départ (éditables) en haut de l'onglet Vols. Uniquement name, code, is_active — les vols sont gérés dans les options Aller/Retour ci-dessous. --}}
+{{-- Lieux de depart (editables) rattaches a l'etape Disponibilites. Les options de vol peuvent referencer ces lieux via "Lieu de depart". --}}
 @php
     $departurePlaces = $departurePlaces ?? collect();
     $placesList = $departurePlaces->isEmpty() ? [] : $departurePlaces->all();
@@ -6,7 +6,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <h5 class="card-title mb-2"><i class="bx bx-map-pin"></i> Lieux de départ (Starting from)</h5>
-        <p class="text-muted small mb-3">Lieux proposés comme départ ; chaque vol peut référencer un lieu ci-dessous.</p>
+        <p class="text-muted small mb-3">Definissez ici les lieux proposes au depart ; chaque option de vol peut referencer un lieu ci-dessous.</p>
         <div id="departure-places-inline-container">
             @foreach($placesList as $pi => $place)
             <div class="card mb-2 departure-place-inline-row" data-index="{{ $pi }}">

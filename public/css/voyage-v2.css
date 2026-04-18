@@ -329,6 +329,243 @@
 .v2-panel [data-ve-step-prev],
 .v2-panel [data-ve-step-next] { display: none !important; }
 
+/* Availability V2: compact premium layout */
+.voyage-edit-page #availability .ve-pane-card {
+  border: 1px solid #e7dcc9;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(47, 36, 20, 0.05);
+  background: #fff;
+}
+
+.voyage-edit-page #availability .ve-pane-card > .card-body {
+  padding: 16px 18px;
+}
+
+.voyage-edit-page #availability .avl-intro {
+  border: 1px solid #eee3d2;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #fffdf9, #fdf8ef);
+}
+
+.voyage-edit-page #availability .ve-section-kicker {
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #9a8764;
+}
+
+.voyage-edit-page #availability .avl-intro .card-title {
+  font-size: 1.16rem;
+  font-weight: 800;
+  color: #2e271c;
+}
+
+.voyage-edit-page #availability .avl-intro .text-muted {
+  font-size: 12.5px;
+}
+
+.voyage-edit-page #availability .avl-surface,
+.voyage-edit-page #availability .avl-places-wrap > .card,
+.voyage-edit-page #availability .ve-settings-block,
+.voyage-edit-page #availability .avl-ops-card {
+  border: 1px solid #e9ddca;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(47, 36, 20, 0.03);
+}
+
+.voyage-edit-page #availability .avl-surface {
+  padding: 12px;
+}
+
+.voyage-edit-page #availability .avl-section-head .ve-subsection-title,
+.voyage-edit-page #availability .ve-settings-block .ve-subsection-title,
+.voyage-edit-page #availability .avl-places-wrap .card-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  color: #2f281c;
+}
+
+.voyage-edit-page #availability .avl-add-btn,
+.voyage-edit-page #availability #add-departure-place-inline {
+  border-radius: 9px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.voyage-edit-page #availability .avl-inline-list {
+  display: grid;
+  gap: 8px;
+}
+
+.voyage-edit-page #availability .travel-date-row,
+.voyage-edit-page #availability .departure-place-inline-row {
+  border: 1px solid #e9dfcf;
+  border-radius: 10px;
+  background: #fcfaf5 !important;
+  margin-bottom: 0 !important;
+}
+
+.voyage-edit-page #availability .travel-date-row .card-body,
+.voyage-edit-page #availability .departure-place-inline-row .card-body {
+  padding: 8px 10px !important;
+}
+
+.voyage-edit-page #availability .travel-date-row .form-label,
+.voyage-edit-page #availability .departure-place-inline-row .form-label,
+.voyage-edit-page #availability .ve-settings-block .form-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6f624c;
+  margin-bottom: 4px !important;
+}
+
+.voyage-edit-page #availability .travel-date-row .form-control,
+.voyage-edit-page #availability .departure-place-inline-row .form-control,
+.voyage-edit-page #availability .ve-settings-block .form-control {
+  height: 34px;
+  min-height: 34px;
+  padding: 5px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.voyage-edit-page #availability .avl-check-inline,
+.voyage-edit-page #availability .departure-place-inline-row .form-check {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.voyage-edit-page #availability .avl-check-inline .form-check-input,
+.voyage-edit-page #availability .departure-place-inline-row .form-check-input {
+  margin-top: 0;
+}
+
+.voyage-edit-page #availability .avl-check-inline .form-check-label,
+.voyage-edit-page #availability .departure-place-inline-row .form-check-label {
+  font-size: 12px;
+  color: #5f523c;
+}
+
+.voyage-edit-page #availability .avl-remove-col,
+.voyage-edit-page #availability .departure-place-inline-row .col-md-1 {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.voyage-edit-page #availability .remove-travel-date,
+.voyage-edit-page #availability .remove-departure-place-inline {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voyage-edit-page #availability .avl-places-wrap > .card {
+  margin-bottom: 0 !important;
+}
+
+.voyage-edit-page #availability .avl-places-wrap > .card > .card-body {
+  padding: 12px;
+}
+
+.voyage-edit-page #availability .avl-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.voyage-edit-page #availability .ve-settings-block {
+  padding: 12px;
+}
+
+.voyage-edit-page #availability .ve-settings-block .row {
+  --bs-gutter-x: .6rem;
+}
+
+.voyage-edit-page #availability .avl-ops-wrap {
+  border-top: 1px solid #eee3d2;
+  margin-top: 2px;
+  padding-top: 12px;
+}
+
+.voyage-edit-page #availability .avl-ops-wrap > .card-title {
+  font-size: 1.03rem;
+  font-weight: 800;
+}
+
+.voyage-edit-page #availability .ve-inline-note {
+  padding: 9px 12px;
+  border-radius: 10px;
+  margin-bottom: 10px !important;
+}
+
+.voyage-edit-page #availability .avl-ops-btn {
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 11px;
+}
+
+.voyage-edit-page #availability .avl-ops-card .row.g-2.mb-3 {
+  margin-bottom: 10px !important;
+}
+
+.voyage-edit-page #availability .avl-ops-card .row.g-2.mb-3 > div > div {
+  padding: 8px 9px !important;
+  border-color: #e6dbc8 !important;
+  border-radius: 9px !important;
+  background: #fcf9f2 !important;
+}
+
+.voyage-edit-page #availability .avl-ops-card .table thead th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #7a6a50;
+  font-weight: 700;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.voyage-edit-page #availability .avl-ops-card .table td {
+  font-size: 12.5px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.voyage-edit-page #availability .avl-ops-card .btn-sm {
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 5px 9px;
+}
+
+@media (max-width: 991.98px) {
+  .voyage-edit-page #availability .avl-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .voyage-edit-page #availability .avl-remove-col,
+  .voyage-edit-page #availability .departure-place-inline-row .col-md-1 {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 1400px) {
   .v2-body { grid-template-columns: 270px minmax(0, 1fr) 280px; }
 }

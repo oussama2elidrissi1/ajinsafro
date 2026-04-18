@@ -11,9 +11,148 @@
                 $departureSummary = $departureService->summarizeMetrics($departureMetrics);
             @endphp
 
-            <p class="ve-section-kicker mb-2">Departs & disponibilites</p>
-            <h4 class="card-title mb-2">Dates, stock et reservation</h4>
-            <p class="text-muted small mb-4">Renseignez les dates ouvertes a la vente, le stock et les regles de reservation du voyage.</p>
+            <div class="avl-intro mb-3">
+                <p class="ve-section-kicker mb-1">Departs & disponibilites</p>
+                <h4 class="card-title mb-1">Disponibilites du voyage</h4>
+                <p class="text-muted small mb-0">Renseignez les dates de depart, les lieux de depart et les parametres de reservation.</p>
+            </div>
+
+            <div class="ve-dates-section avl-surface mb-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 avl-section-head">
+                    <div>
+                        <h5 class="ve-subsection-title mb-1"><i class="bx bx-calendar-check"></i> Dates de depart</h5>
+                        <p class="text-muted small mb-0">Une ligne par date, avec stock et prix specifique si besoin.</p>
+                    </div>
+
+                    <button type="button" class="btn btn-primary btn-sm avl-add-btn" id="add-travel-date">
+                        <i class="bx bx-plus"></i> Ajouter une date
+                    </button>
+                </div>
+
+                <div id="travel-dates-container" class="avl-inline-list">
+                    @php $datesList = $travelDates ?? collect(); @endphp
+                    @forelse($datesList as $di => $dateItem)
+                        <div class="card mb-2 bg-light travel-date-row avl-inline-row" data-index="{{ $di }}">
+                            <div class="card-body py-2">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
+                                        @if(!empty($dateItem->id))
+                                            <input type="hidden" name="travel_dates[{{ $di }}][id]" value="{{ $dateItem->id }}">
+                                        @endif
+                                        <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
+                                    </div>
+
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small mb-1">Places <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? 0) }}" min="0" required>
+                                    </div>
+
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small mb-1">Prix specifique</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="-">
+                                    </div>
+
+                                    <div class="col-6 col-md-2">
+                                        <div class="form-check mb-0 pb-1 avl-check-inline">
+                                            <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
+                                            <label class="form-check-label small">Actif</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-6 col-md-2 text-md-end avl-remove-col">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer cette date">x</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="alert alert-warning mb-0">
+                            Aucune date configuree pour le moment. Ajoutez un depart pour ouvrir la vente.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="avl-places-wrap mb-3">
+                @include('admin.circuits.voyages.partials._departure_places_inline', ['departurePlaces' => $departurePlaces ?? collect()])
+            </div>
+
+            <div class="ve-settings-grid avl-settings-grid mb-3">
+                <div class="ve-settings-block">
+                    <h5 class="ve-subsection-title">Reservation</h5>
+
+                    <div class="mb-3">
+                        <label for="tours_booking_period" class="form-label">Periode de reservation</label>
+                        <input type="text" class="form-control" id="tours_booking_period" name="tours_booking_period" value="{{ old('tours_booking_period', $meta['tours_booking_period'] ?? '') }}">
+                    </div>
+
+                    <div class="mb-0">
+                        <label for="st_booking_option_type" class="form-label">Type d'option de reservation</label>
+                        <input type="text" class="form-control" id="st_booking_option_type" name="st_booking_option_type" value="{{ old('st_booking_option_type', $meta['st_booking_option_type'] ?? '') }}">
+                    </div>
+                </div>
+
+                <div class="ve-settings-block">
+                    <h5 class="ve-subsection-title">Horaires</h5>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3 mb-lg-0">
+                                <label for="check_in" class="form-label">Check-in</label>
+                                <input type="time" class="form-control" id="check_in" name="check_in" value="{{ old('check_in', $meta['check_in'] ?? '') }}">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="mb-0">
+                                <label for="check_out" class="form-label">Check-out</label>
+                                <input type="time" class="form-control" id="check_out" name="check_out" value="{{ old('check_out', $meta['check_out'] ?? '') }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ve-settings-grid avl-settings-grid mb-3">
+                <div class="ve-settings-block">
+                    <h5 class="ve-subsection-title">Annulation</h5>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="st_allow_cancel" name="st_allow_cancel" value="1" {{ old('st_allow_cancel', $meta['st_allow_cancel'] ?? '') === 'on' ? 'checked' : '' }}>
+                        <label class="form-check-label" for="st_allow_cancel">Autoriser l'annulation</label>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3 mb-lg-0">
+                                <label for="st_cancel_percent" class="form-label">% de remboursement</label>
+                                <input type="number" class="form-control" id="st_cancel_percent" name="st_cancel_percent" value="{{ old('st_cancel_percent', $meta['st_cancel_percent'] ?? '') }}" min="0" max="100">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="mb-0">
+                                <label for="st_cancel_number_day" class="form-label">Jours avant depart</label>
+                                <input type="number" class="form-control" id="st_cancel_number_day" name="st_cancel_number_day" value="{{ old('st_cancel_number_day', $meta['st_cancel_number_day'] ?? '') }}" min="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ve-settings-block">
+                    <h5 class="ve-subsection-title">Synchronisation calendrier</h5>
+
+                    <div class="mb-0">
+                        <label for="ical_url" class="form-label">URL iCal</label>
+                        <input type="text" class="form-control" id="ical_url" name="ical_url" value="{{ old('ical_url', $meta['ical_url'] ?? '') }}" placeholder="https://...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="avl-ops-wrap">
+            <h4 class="card-title mb-1">Dates, stock et reservation</h4>
+            <p class="text-muted small mb-3">Renseignez les dates ouvertes a la vente, le stock et les regles de reservation du voyage.</p>
 
             <div class="ve-inline-note mb-4">
                 <div>
@@ -26,14 +165,14 @@
                 <span class="text-muted small">Chaque date active met a jour le depart correspondant.</span>
             </div>
 
-            <div class="card border mb-4">
+            <div class="card border mb-0 avl-ops-card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                         <div>
                             <h5 class="mb-1">Gestion opérationnelle des départs</h5>
                             <p class="text-muted small mb-0">Même logique que la page globale Départs & Disponibilités.</p>
                         </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#voyageRoomAvailabilityModal">
+                        <button type="button" class="btn btn-outline-primary btn-sm avl-ops-btn" data-bs-toggle="modal" data-bs-target="#voyageRoomAvailabilityModal">
                             <i class="bx bx-bed me-1"></i> Gérer départs et chambres
                         </button>
                     </div>
@@ -79,134 +218,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="ve-dates-section mb-4">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                    <div>
-                        <h5 class="ve-subsection-title mb-1"><i class="bx bx-calendar-check"></i> Dates de depart</h5>
-                        <p class="text-muted small mb-0">Une ligne par date, avec stock et prix specifique si besoin.</p>
-                    </div>
-
-                    <button type="button" class="btn btn-primary btn-sm" id="add-travel-date">
-                        <i class="bx bx-plus"></i> Ajouter une date
-                    </button>
-                </div>
-
-                <div id="travel-dates-container">
-                    @php $datesList = $travelDates ?? collect(); @endphp
-                    @forelse($datesList as $di => $dateItem)
-                        <div class="card mb-2 bg-light travel-date-row" data-index="{{ $di }}">
-                            <div class="card-body py-2">
-                                <div class="row g-2 align-items-end">
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label small mb-1">Date <span class="text-danger">*</span></label>
-                                        @if(!empty($dateItem->id))
-                                            <input type="hidden" name="travel_dates[{{ $di }}][id]" value="{{ $dateItem->id }}">
-                                        @endif
-                                        <input type="date" class="form-control form-control-sm" name="travel_dates[{{ $di }}][date]" value="{{ old("travel_dates.{$di}.date", optional($dateItem)->date ? $dateItem->date->format('Y-m-d') : '') }}" required>
-                                    </div>
-
-                                    <div class="col-6 col-md-2">
-                                        <label class="form-label small mb-1">Places <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control form-control-sm" name="travel_dates[{{ $di }}][seats]" value="{{ old("travel_dates.{$di}.seats", $dateItem->seats ?? 0) }}" min="0" required>
-                                    </div>
-
-                                    <div class="col-6 col-md-2">
-                                        <label class="form-label small mb-1">Prix specifique</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[{{ $di }}][price_override]" value="{{ old("travel_dates.{$di}.price_override", $dateItem->price_override ?? '') }}" placeholder="-">
-                                    </div>
-
-                                    <div class="col-6 col-md-2">
-                                        <div class="form-check mb-0 pb-1">
-                                            <input type="checkbox" class="form-check-input" name="travel_dates[{{ $di }}][is_active]" value="1" {{ old("travel_dates.{$di}.is_active", $dateItem->is_active ?? true) ? 'checked' : '' }}>
-                                            <label class="form-check-label small">Actif</label>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12 col-md-1 text-md-end">
-                                        <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer cette date">x</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="alert alert-warning mb-0">
-                            Aucune date configuree pour le moment. Ajoutez un depart pour ouvrir la vente.
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-
-            <div class="ve-settings-grid mb-4">
-                <div class="ve-settings-block">
-                    <h5 class="ve-subsection-title">Reservation</h5>
-
-                    <div class="mb-3">
-                        <label for="tours_booking_period" class="form-label">Periode de reservation</label>
-                        <input type="text" class="form-control" id="tours_booking_period" name="tours_booking_period" value="{{ old('tours_booking_period', $meta['tours_booking_period'] ?? '') }}">
-                    </div>
-
-                    <div class="mb-0">
-                        <label for="st_booking_option_type" class="form-label">Type d'option de reservation</label>
-                        <input type="text" class="form-control" id="st_booking_option_type" name="st_booking_option_type" value="{{ old('st_booking_option_type', $meta['st_booking_option_type'] ?? '') }}">
-                    </div>
-                </div>
-
-                <div class="ve-settings-block">
-                    <h5 class="ve-subsection-title">Horaires</h5>
-
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="mb-3 mb-lg-0">
-                                <label for="check_in" class="form-label">Check-in</label>
-                                <input type="time" class="form-control" id="check_in" name="check_in" value="{{ old('check_in', $meta['check_in'] ?? '') }}">
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="mb-0">
-                                <label for="check_out" class="form-label">Check-out</label>
-                                <input type="time" class="form-control" id="check_out" name="check_out" value="{{ old('check_out', $meta['check_out'] ?? '') }}">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="ve-settings-grid mb-4">
-                <div class="ve-settings-block">
-                    <h5 class="ve-subsection-title">Annulation</h5>
-
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="st_allow_cancel" name="st_allow_cancel" value="1" {{ old('st_allow_cancel', $meta['st_allow_cancel'] ?? '') === 'on' ? 'checked' : '' }}>
-                        <label class="form-check-label" for="st_allow_cancel">Autoriser l'annulation</label>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="mb-3 mb-lg-0">
-                                <label for="st_cancel_percent" class="form-label">% de remboursement</label>
-                                <input type="number" class="form-control" id="st_cancel_percent" name="st_cancel_percent" value="{{ old('st_cancel_percent', $meta['st_cancel_percent'] ?? '') }}" min="0" max="100">
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="mb-0">
-                                <label for="st_cancel_number_day" class="form-label">Jours avant depart</label>
-                                <input type="number" class="form-control" id="st_cancel_number_day" name="st_cancel_number_day" value="{{ old('st_cancel_number_day', $meta['st_cancel_number_day'] ?? '') }}" min="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ve-settings-block">
-                    <h5 class="ve-subsection-title">Synchronisation calendrier</h5>
-
-                    <div class="mb-0">
-                        <label for="ical_url" class="form-label">URL iCal</label>
-                        <input type="text" class="form-control" id="ical_url" name="ical_url" value="{{ old('ical_url', $meta['ical_url'] ?? '') }}" placeholder="https://...">
-                    </div>
-                </div>
             </div>
 
         </div>

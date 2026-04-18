@@ -567,12 +567,6 @@ class VoyageController extends Controller
                 'voyage_theme_ids.*' => 'integer|min:1',
             ],
             's-flights' => [
-                'departure_places' => 'nullable|array',
-                'departure_places.*.id' => 'nullable|integer',
-                'departure_places.*.name' => 'nullable|string|max:255',
-                'departure_places.*.code' => 'nullable|string|max:100',
-                'departure_places.*.price' => 'nullable|numeric|min:0',
-                'departure_places.*.is_active' => 'nullable|boolean',
                 'flight_options' => 'nullable|array',
                 'flight_options.*.id' => 'nullable|integer',
                 'flight_options.*.type' => 'nullable|string|in:outbound,return,segment',
@@ -680,6 +674,12 @@ class VoyageController extends Controller
                 'st_cancel_percent' => 'nullable|integer|min:0|max:100',
                 'st_cancel_number_day' => 'nullable|integer|min:0',
                 'ical_url' => 'nullable|string|max:1000',
+                'departure_places' => 'nullable|array',
+                'departure_places.*.id' => 'nullable|integer',
+                'departure_places.*.name' => 'nullable|string|max:255',
+                'departure_places.*.code' => 'nullable|string|max:100',
+                'departure_places.*.price' => 'nullable|numeric|min:0',
+                'departure_places.*.is_active' => 'nullable|boolean',
                 'travel_dates' => 'nullable|array',
                 'travel_dates.*.id' => 'nullable|integer',
                 'travel_dates.*.date' => 'nullable|date',
@@ -779,38 +779,7 @@ class VoyageController extends Controller
                     break;
 
                 case 's-flights':
-                    $departurePlaces = collect($this->normalizeArrayInput($request->input('departure_places')))
-                        ->filter(static fn ($value): bool => is_array($value));
-                    $hasDeparturePlace = $departurePlaces->contains(function (array $row): bool {
-                        return trim((string) ($row['name'] ?? '')) !== ''
-                            || trim((string) ($row['code'] ?? '')) !== ''
-                            || trim((string) ($row['id'] ?? '')) !== '';
-                    });
-
-                    $flightOptions = collect($this->normalizeArrayInput($request->input('flight_options')))
-                        ->filter(static fn ($value): bool => is_array($value));
-                    $hasFlightOption = $flightOptions->contains(function (array $row): bool {
-                        // Accept any meaningful flight option payload to avoid false validation blocks
-                        // when only part of the option is filled at this stage.
-                        return trim((string) ($row['from_city'] ?? '')) !== ''
-                            || trim((string) ($row['to_city'] ?? '')) !== ''
-                            || trim((string) ($row['departure_place_id'] ?? '')) !== ''
-                            || trim((string) ($row['flight_number'] ?? '')) !== ''
-                            || trim((string) ($row['departure_date'] ?? '')) !== ''
-                            || trim((string) ($row['departure_time'] ?? '')) !== ''
-                            || trim((string) ($row['arrival_time'] ?? '')) !== '';
-                    });
-
-                    if (! $hasDeparturePlace && ! $hasFlightOption) {
-                        // Final defensive fallback: if nested arrays are not materialized as expected,
-                        // still allow progression when any non-empty scalar exists under flights payload.
-                        $hasFlightOption = $this->hasAnyNonEmptyScalar($request->input('flight_options', []));
-                        $hasDeparturePlace = $this->hasAnyNonEmptyScalar($request->input('departure_places', []));
-                    }
-
-                    if (! $hasDeparturePlace && ! $hasFlightOption) {
-                        $validator->errors()->add('flight_options', 'Ajoutez au moins un lieu de depart ou une option de vol complete.');
-                    }
+                    // Optional step in V2 workflow: no minimum flight option required.
                     break;
 
                 case 's-hotels':
@@ -957,16 +926,11 @@ class VoyageController extends Controller
             case 's-flights':
                 $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
                 $lastDayNumber = $this->resolveLastDayNumberForV2($wpPostId, $request);
-                $hasDeparturePlaces = $request->exists('departure_places');
                 $hasFlightOptions = $request->exists('flight_options');
                 $hasLegacyFlights = $request->exists('flights');
 
-                if (! $hasDeparturePlaces && ! $hasFlightOptions && ! $hasLegacyFlights) {
+                if (! $hasFlightOptions && ! $hasLegacyFlights) {
                     break;
-                }
-
-                if ($hasDeparturePlaces) {
-                    $this->syncDeparturePlaces($wpPostId, $request);
                 }
 
                 if ($hasFlightOptions) {
@@ -1045,10 +1009,15 @@ class VoyageController extends Controller
 
             case 's-availability':
                 $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
+                $hasDeparturePlaces = $request->exists('departure_places');
                 $hasTravelDates = $request->exists('travel_dates');
                 $hasDepartureAllocations = $request->exists('departure_allocations');
-                if (! $hasTravelDates && ! $hasDepartureAllocations) {
+                if (! $hasDeparturePlaces && ! $hasTravelDates && ! $hasDepartureAllocations) {
                     break;
+                }
+
+                if ($hasDeparturePlaces) {
+                    $this->syncDeparturePlaces($wpPostId, $request);
                 }
 
                 $travelDates = $hasTravelDates
@@ -1192,19 +1161,23 @@ class VoyageController extends Controller
         $multiLocations = $this->repository->parseMultiLocation($post->getMeta('multi_location'));
         $hasTaxonomies = collect($this->getPostTaxonomies($wpPostId))->flatten()->isNotEmpty();
         $hasThemes = $laravelVoyage && Schema::hasTable('voyage_voyage_theme') && $laravelVoyage->themes()->exists();
-        $hasFlightDeparturePlace = $laravelVoyage
-            ? VoyageDeparturePlace::query()
-                ->where('voyage_id', $laravelVoyage->id)
-                ->whereNotNull('name')
-                ->where('name', '!=', '')
-                ->exists()
-            : false;
+        $hasDeparturePlaceColumn = Schema::hasTable('voyage_flight_options')
+            && Schema::hasColumn('voyage_flight_options', 'departure_place_id');
         $hasFlightOption = $laravelVoyage
             ? $laravelVoyage->flightOptions()
-                ->whereNotNull('from_city')
-                ->where('from_city', '!=', '')
-                ->whereNotNull('to_city')
-                ->where('to_city', '!=', '')
+                ->where(function ($query) use ($hasDeparturePlaceColumn) {
+                    $query->where(function ($q) {
+                        $q->whereNotNull('from_city')->where('from_city', '!=', '');
+                    })->orWhere(function ($q) {
+                        $q->whereNotNull('to_city')->where('to_city', '!=', '');
+                    })->orWhere(function ($q) {
+                        $q->whereNotNull('flight_number')->where('flight_number', '!=', '');
+                    })->orWhereNotNull('depart_at')
+                      ->orWhereNotNull('arrive_at');
+                    if ($hasDeparturePlaceColumn) {
+                        $query->orWhereNotNull('departure_place_id');
+                    }
+                })
                 ->exists()
             : false;
 
@@ -1232,7 +1205,7 @@ class VoyageController extends Controller
             's-information' => trim((string) $post->getMeta('tours_include')) !== ''
                 && trim((string) $post->getMeta('tours_exclude')) !== '',
             's-taxonomies' => $hasTaxonomies || $hasThemes,
-            's-flights' => $hasFlightOption || $hasFlightDeparturePlace,
+            's-flights' => $hasFlightOption,
             's-hotels' => TourHotel::query()
                 ->where('tour_id', $wpPostId)
                 ->whereNotNull('hotel_name')
@@ -1608,7 +1581,7 @@ class VoyageController extends Controller
         $transferArrivalImageUrl = $transferArrival && $transferArrival->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferArrival->image_id) : null;
         $transferDepartureImageUrl = $transferDeparture && $transferDeparture->image_id ? WpHeroImageService::getAttachmentUrl((int) $transferDeparture->image_id) : null;
 
-        // Lieux de dÃƒÂ©part : source Laravel (voyage_departure_places) pour affichage et ajout dans l'onglet Vols
+        // Lieux de depart : source Laravel (voyage_departure_places) pour affichage et edition dans l'etape Disponibilites
         $departurePlaces = $laravelVoyage
             ? VoyageDeparturePlace::where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
             : collect();

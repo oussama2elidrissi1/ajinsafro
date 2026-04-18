@@ -500,8 +500,14 @@ class AJTB_Laravel_Repository
         ), ARRAY_A);
         $by_day_direction = [];
         foreach ($rows ?: [] as $r) {
-            if (isset($r['image_id']) && $r['image_id'] && function_exists('wp_get_attachment_image_url')) {
-                $r['image_url'] = wp_get_attachment_image_url((int) $r['image_id'], 'medium') ?: '';
+            if (isset($r['image_id']) && $r['image_id']) {
+                if (function_exists('ajtb_get_attachment_image_url')) {
+                    $r['image_url'] = ajtb_get_attachment_image_url((int) $r['image_id'], 'medium') ?: '';
+                } elseif (function_exists('wp_get_attachment_image_url')) {
+                    $r['image_url'] = wp_get_attachment_image_url((int) $r['image_id'], 'medium') ?: '';
+                } else {
+                    $r['image_url'] = '';
+                }
             } else {
                 $r['image_url'] = '';
             }
@@ -569,8 +575,14 @@ class AJTB_Laravel_Repository
         $by_day = [];
         $all = [];
         foreach ($rows ?: [] as $row) {
-            if (isset($row['image_id']) && $row['image_id'] && function_exists('wp_get_attachment_image_url')) {
-                $row['image_url'] = wp_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
+            if (isset($row['image_id']) && $row['image_id']) {
+                if (function_exists('ajtb_get_attachment_image_url')) {
+                    $row['image_url'] = ajtb_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
+                } elseif (function_exists('wp_get_attachment_image_url')) {
+                    $row['image_url'] = wp_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
+                } else {
+                    $row['image_url'] = '';
+                }
             } else {
                 $row['image_url'] = '';
             }
@@ -922,7 +934,7 @@ class AJTB_Laravel_Repository
                     'description' => $row['description'] ?? '',
                     'meals' => $row['meals'] ?? '',
                     'accommodation' => $row['accommodation'] ?? '',
-                    'image' => $row['image_url'] ?? '',
+                    'image' => '',
                     'mode' => isset($row['mode']) ? $row['mode'] : 'program',
                     'day_title' => isset($row['day_title']) ? $row['day_title'] : '',
                     'notes' => isset($row['notes']) ? $row['notes'] : '',
@@ -952,7 +964,11 @@ class AJTB_Laravel_Repository
                             }
                             $image_url = null;
                             if (!empty($ar['activity_image_id'])) {
-                                $image_url = wp_get_attachment_image_url((int) $ar['activity_image_id'], 'medium');
+                                if (function_exists('ajtb_get_attachment_image_url')) {
+                                    $image_url = ajtb_get_attachment_image_url((int) $ar['activity_image_id'], 'medium');
+                                } else {
+                                    $image_url = wp_get_attachment_image_url((int) $ar['activity_image_id'], 'medium');
+                                }
                             }
                             $days_by_id[$day_id]['activities'][] = [
                                 'id' => (int) $ar['id'],
@@ -971,6 +987,24 @@ class AJTB_Laravel_Repository
                         }
                     }
                 }
+            }
+
+            foreach ($results as $row) {
+                $day_id = (int) $row['id'];
+                if (!isset($days_by_id[$day_id])) {
+                    continue;
+                }
+                $day_image = '';
+                if (!empty($row['image_url'])) {
+                    $day_image = (string) $row['image_url'];
+                } elseif (!empty($row['image_id'])) {
+                    if (function_exists('ajtb_get_attachment_image_url')) {
+                        $day_image = (string) ajtb_get_attachment_image_url((int) $row['image_id'], 'large');
+                    } elseif (function_exists('wp_get_attachment_image_url')) {
+                        $day_image = (string) wp_get_attachment_image_url((int) $row['image_id'], 'large');
+                    }
+                }
+                $days_by_id[$day_id]['image'] = $day_image;
             }
 
             $days_array = array_values($days_by_id);

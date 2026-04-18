@@ -1,0 +1,25 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900'>
+  <defs>
+    <linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'>
+      <stop offset='0%' stop-color='#3e5684'/>
+      <stop offset='100%' stop-color='#6f88b7'/>
+    </linearGradient>
+    <linearGradient id='sea' x1='0' y1='0' x2='1' y2='0'>
+      <stop offset='0%' stop-color='#5a91b6'/>
+      <stop offset='100%' stop-color='#2ec6d3'/>
+    </linearGradient>
+    <linearGradient id='sand' x1='0' y1='0' x2='1' y2='0'>
+      <stop offset='0%' stop-color='#d1b27a'/>
+      <stop offset='100%' stop-color='#f4cc85'/>
+    </linearGradient>
+  </defs>
+  <rect width='1600' height='900' fill='url(#sky)'/>
+  <ellipse cx='1310' cy='168' rx='120' ry='120' fill='rgba(255,255,255,0.34)'/>
+  <path d='M0 540 C180 510 300 620 500 590 C690 560 770 470 920 510 C1100 555 1250 610 1600 560 L1600 760 L0 760 Z' fill='url(#sea)'/>
+  <path d='M0 680 C190 650 380 740 560 700 C770 652 960 750 1160 705 C1300 674 1450 735 1600 710 L1600 900 L0 900 Z' fill='url(#sand)'/>
+  <path d='M1120 442 L1162 320 L1210 442 Z' fill='rgba(255,255,255,0.84)'/>
+  <path d='M1198 442 L1242 356 L1280 442 Z' fill='rgba(255,255,255,0.54)'/>
+  <text x='84' y='138' fill='white' font-family='Poppins,Segoe UI,Arial,sans-serif' font-size='54' font-weight='700'>Signature Activity</text>
+  <text x='84' y='196' fill='rgba(255,255,255,0.92)' font-family='Poppins,Segoe UI,Arial,sans-serif' font-size='30' font-weight='500'>Guided sessions and equipment</text>
+  <text x='84' y='838' fill='rgba(22,44,68,0.80)' font-family='Poppins,Segoe UI,Arial,sans-serif' font-size='28' font-weight='600'>Ajinsafro Dakhla Collection</text>
+</svg>

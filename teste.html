@@ -1,0 +1,1048 @@
+<!DOCTYPE html<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paris Group Summer 2026 - Static Clone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #6e7a90;
+      --line: #dde5f0;
+      --blue: #1177ff;
+      --navy: #082e58;
+      --teal: #0ab39c;
+      --green: #11a36a;
+      --soft-blue: #e8f1ff;
+      --orange: #ff8c4b;
+      --red: #f06548;
+      --shadow: 0 10px 30px rgba(17, 34, 68, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: var(--bg); }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    .container { width: min(1220px, calc(100vw - 32px)); margin: 0 auto; }
+
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 2px 10px rgba(7, 20, 43, 0.04);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .top-icons {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      border-bottom: 1px solid #eef3f9;
+    }
+
+    .icon-strip, .account-strip { display: flex; align-items: center; gap: 18px; }
+    .chip-mini {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid #edf2f8;
+      font-weight: 600;
+      color: #4a5874;
+    }
+
+    .main-nav {
+      display: grid;
+      grid-template-columns: 210px 1fr 280px;
+      align-items: center;
+      gap: 20px;
+      height: 86px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 20px;
+      color: #1f4a7a;
+    }
+    .logo-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e94d62, #3366ff);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      font-weight: 700;
+      font-size: 13px;
+      color: #43526a;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+
+    .search-pill {
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 26px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #1f8dff, #005cf0);
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 10px 20px rgba(0, 92, 240, .22);
+    }
+
+    .page {
+      padding: 22px 0 48px;
+    }
+
+    .search-box {
+      background: var(--navy);
+      padding: 14px;
+      border-radius: 18px;
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 1fr auto;
+      gap: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .search-card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px 18px;
+      min-height: 88px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border: 1px solid rgba(17,119,255,.08);
+    }
+    .search-card .label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #4d7bba;
+      margin-bottom: 12px;
+    }
+    .search-card .value {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 19px;
+      color: #12203a;
+    }
+    .search-go {
+      border: 0;
+      border-radius: 14px;
+      padding: 0 28px;
+      font-weight: 800;
+      font-size: 14px;
+      background: linear-gradient(180deg, #1d8eff, #005ef6);
+      color: white;
+      box-shadow: 0 14px 24px rgba(0, 94, 246, .26);
+      cursor: pointer;
+    }
+
+    .hero-wrap {
+      margin-top: 20px;
+    }
+
+    .trip-title {
+      font-size: 34px;
+      line-height: 1.15;
+      margin: 0 0 10px;
+      font-weight: 800;
+    }
+
+    .trip-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .meta-pill {
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      font-size: 12px;
+      font-weight: 700;
+      color: #55647f;
+    }
+
+    .gallery-area {
+      display: grid;
+      grid-template-columns: 1.55fr .95fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .gallery-main, .gallery-side img {
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: var(--shadow);
+    }
+    .gallery-main { height: 420px; width: 100%; }
+    .gallery-side {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 12px;
+    }
+    .gallery-side img { width: 100%; height: 204px; }
+
+    .tabs-bar {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      margin-top: 18px;
+      padding: 0 4px;
+      border-bottom: 1px solid var(--line);
+    }
+    .tab-item {
+      position: relative;
+      padding: 14px 0;
+      color: #55647f;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .tab-item.active { color: var(--blue); }
+    .tab-item.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--blue);
+    }
+
+    .content-grid {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-body { padding: 20px; }
+
+    .overview-card {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 16px;
+    }
+    .section-kicker {
+      color: #0b6dff;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+    .overview-card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .overview-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #5b6b85;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .included-bar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0 16px;
+    }
+    .pill-outline {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfdff;
+      font-size: 12px;
+      font-weight: 700;
+      color: #51607a;
+    }
+
+    .itinerary-summary {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .summary-tile {
+      padding: 10px 8px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      text-align: center;
+      background: linear-gradient(180deg, #fbfdff, #f5f9ff);
+    }
+    .summary-num { font-size: 16px; font-weight: 800; color: #142745; }
+    .summary-label { font-size: 11px; font-weight: 700; color: #72809a; text-transform: uppercase; }
+
+    .day-layout {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 18px;
+    }
+    .day-nav {
+      position: sticky;
+      top: 120px;
+      align-self: start;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .day-chip {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      color: #5c6a83;
+      text-align: center;
+    }
+    .day-chip.active {
+      color: white;
+      background: linear-gradient(180deg, #1c8fff, #005ef4);
+      border-color: transparent;
+      box-shadow: 0 10px 18px rgba(0, 94, 244, .22);
+    }
+
+    .timeline { position: relative; }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 17px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, #d7e5fb, #c7daf8);
+    }
+
+    .day-card {
+      position: relative;
+      margin-bottom: 18px;
+      padding-left: 44px;
+    }
+    .day-card::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 20px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      border: 4px solid var(--blue);
+      box-shadow: 0 0 0 6px #edf4ff;
+    }
+    .day-box {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .day-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+    .day-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .day-badge {
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff9b60, #f16d41);
+      color: white;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .day-title { font-size: 18px; font-weight: 800; }
+    .day-tags { color: #6c7a92; font-size: 12px; font-weight: 700; }
+
+    .day-content { padding: 18px; }
+    .day-desc {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #5b6982;
+      margin: 0 0 14px;
+    }
+    .day-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .day-gallery img {
+      height: 120px;
+      width: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .service-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+    .service-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #edf2f8;
+      background: #fbfdff;
+    }
+    .service-type {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #65748d;
+    }
+    .service-action {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--blue);
+      text-transform: uppercase;
+    }
+    .service-body {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .flight-row {
+      display: grid;
+      grid-template-columns: 74px 1fr 74px 1fr auto;
+      align-items: center;
+      gap: 14px;
+    }
+    .flight-time { font-size: 24px; font-weight: 800; }
+    .flight-sub { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .flight-line {
+      height: 2px;
+      background: linear-gradient(90deg, #bcd5ff, #6ba5ff);
+      position: relative;
+      border-radius: 999px;
+    }
+    .flight-line::after {
+      content: "✈";
+      position: absolute;
+      right: -6px;
+      top: -12px;
+      font-size: 18px;
+      color: var(--blue);
+    }
+    .flight-badges { display: grid; gap: 8px; font-size: 12px; color: #61708a; }
+
+    .media-row {
+      display: grid;
+      grid-template-columns: 126px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .media-thumb {
+      width: 126px;
+      height: 94px;
+      object-fit: cover;
+      border-radius: 14px;
+    }
+    .media-title { font-size: 18px; font-weight: 800; margin: 0 0 6px; }
+    .media-text { color: #61708a; font-size: 13px; line-height: 1.65; margin: 0; }
+    .hotel-meta, .activity-meta {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 12px; color: #6b7992; font-weight: 700;
+    }
+
+    .meal-bar, .note-box {
+      padding: 12px 14px;
+      border: 1px dashed #cddcf3;
+      border-radius: 14px;
+      background: #f9fbff;
+      color: #5c6a83;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
+    .sidebar-stack { display: grid; gap: 16px; position: sticky; top: 120px; }
+    .price-card, .coupon-card, .deal-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-section { padding: 18px; border-bottom: 1px solid #edf2f8; }
+    .card-section:last-child { border-bottom: 0; }
+    .side-title { margin: 0 0 10px; font-size: 16px; font-weight: 800; }
+    .price-big { display: flex; align-items: baseline; gap: 6px; }
+    .price-big .amount { font-size: 34px; font-weight: 800; color: #13243f; }
+    .price-big .suffix { font-size: 13px; color: var(--muted); font-weight: 700; }
+    .price-note { margin-top: 6px; color: #6b7992; font-size: 12px; }
+    .cta {
+      margin-top: 14px;
+      width: 100%;
+      border: 0;
+      background: linear-gradient(180deg, #1d8eff, #005ff7);
+      color: white;
+      font-weight: 800;
+      border-radius: 12px;
+      padding: 13px 14px;
+      cursor: pointer;
+    }
+
+    .coupon-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f8fbff;
+      border: 1px solid #e3edf9;
+      margin-bottom: 10px;
+    }
+    .coupon-item:last-child { margin-bottom: 0; }
+    .coupon-code { font-size: 12px; font-weight: 800; color: #1c4d87; }
+    .coupon-desc { font-size: 12px; color: #6b7992; margin-top: 4px; }
+    .coupon-save { font-size: 13px; font-weight: 800; color: #0b6dff; white-space: nowrap; }
+
+    .deal-card {
+      background: linear-gradient(180deg, #0bb39c, #058b78);
+      color: white;
+    }
+    .deal-card .side-title { color: white; }
+    .deal-list { margin: 0; padding-left: 18px; line-height: 1.8; font-size: 13px; }
+
+    .floating-btn {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      padding: 14px 18px;
+      background: linear-gradient(180deg, #7d4dff, #5d32d4);
+      color: white;
+      border-radius: 999px;
+      font-weight: 800;
+      box-shadow: 0 16px 28px rgba(93, 50, 212, .28);
+    }
+
+    @media (max-width: 1100px) {
+      .main-nav { grid-template-columns: 1fr; height: auto; padding: 16px 0; }
+      .nav-links { flex-wrap: wrap; }
+      .search-pill { justify-self: start; }
+      .content-grid, .gallery-area, .day-layout, .search-box { grid-template-columns: 1fr; }
+      .sidebar-stack { position: static; }
+      .day-nav { position: static; flex-direction: row; flex-wrap: wrap; }
+      .gallery-main, .gallery-side img { height: auto; }
+      .gallery-side { grid-template-columns: repeat(2, 1fr); }
+      .itinerary-summary { grid-template-columns: repeat(3, 1fr); }
+      .flight-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .container { width: min(100vw - 20px, 1220px); }
+      .trip-title { font-size: 28px; }
+      .top-icons { display: none; }
+      .tabs-bar { overflow: auto; white-space: nowrap; }
+      .gallery-side { grid-template-columns: 1fr 1fr; }
+      .day-gallery { grid-template-columns: 1fr; }
+      .itinerary-summary { grid-template-columns: repeat(2, 1fr); }
+      .media-row { grid-template-columns: 1fr; }
+      .media-thumb { width: 100%; height: 180px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container top-icons">
+      <div class="icon-strip">
+        <span>🏠 Hotels</span>
+        <span>✈ Flights</span>
+        <span>🚘 Transfers</span>
+        <span>🎟 Activities</span>
+        <span>🍽 Meals</span>
+        <span>🧾 Visa</span>
+      </div>
+      <div class="account-strip">
+        <span>💚 Log in</span>
+        <span>Create Account</span>
+      </div>
+    </div>
+    <div class="container main-nav">
+      <div class="logo">
+        <div class="logo-badge">M</div>
+        <div>
+          <div>make my trip</div>
+          <div style="font-size:12px;color:#6c7a92;font-weight:700">Static UI Clone</div>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="#">Hotels</a>
+        <a href="#">Homestays</a>
+        <a href="#">Packages</a>
+        <a href="#">Activities</a>
+        <a href="#">Visa</a>
+        <a href="#">More</a>
+      </nav>
+      <a class="search-pill" href="#">Search</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <section class="search-box">
+        <div class="search-card">
+          <div class="label">Departure City</div>
+          <div class="value"><span>New Delhi</span><span>▾</span></div>
+        </div>
+        <div class="search-card">
+          <div class="label">Travel Date</div>
+          <div class="value"><span>Thu, 2 Jul 2026</span><span>▾</span></div>
+        </div>
+        <div class="search-card">
+          <div class="label">Rooms & Guests</div>
+          <div class="value"><span>2 Adults</span><span>▾</span></div>
+        </div>
+        <button class="search-go">Search</button>
+      </section>
+
+      <section class="hero-wrap">
+        <h1 class="trip-title">Paris Group Summer 2026</h1>
+        <div class="trip-meta">
+          <span class="meta-pill">5N Group Package</span>
+          <span class="meta-pill">4.9/5</span>
+          <span class="meta-pill">Paris</span>
+          <span class="meta-pill">15 People</span>
+        </div>
+
+        <div class="gallery-area">
+          <img class="gallery-main" src="https://images.unsplash.com/photo-1522093007474-d86e9bf7ba6f?auto=format&fit=crop&w=1200&q=80" alt="Paris Disneyland" />
+          <div class="gallery-side">
+            <img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=800&q=80" alt="Arc de Triomphe" />
+            <img src="https://images.unsplash.com/photo-1502602898536-47ad22581b52?auto=format&fit=crop&w=800&q=80" alt="Paris city" />
+            <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80" alt="Pool" />
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80" alt="Hotel room" />
+          </div>
+        </div>
+
+        <div class="tabs-bar">
+          <a class="tab-item active" href="#">Itinerary</a>
+          <a class="tab-item" href="#">Policies</a>
+          <a class="tab-item" href="#">Summary</a>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel">
+          <div class="panel-body">
+            <div class="overview-card">
+              <div class="section-kicker">Here’s list of activities & inclusions in this package for you</div>
+              <ul class="overview-list">
+                <li>This 5N tour and guide are included.</li>
+                <li>Tour Manager, Service of an experienced group leader and hotel stay.</li>
+                <li>Travel insurance, airport transfers and handpicked attractions.</li>
+              </ul>
+              <div class="included-bar">
+                <span class="pill-outline">Included in trip package</span>
+                <span class="pill-outline">Tour Manager – Europe</span>
+                <span class="pill-outline">VISA Assistance</span>
+              </div>
+            </div>
+
+            <div class="itinerary-summary">
+              <div class="summary-tile"><div class="summary-num">5</div><div class="summary-label">Day Plan</div></div>
+              <div class="summary-tile"><div class="summary-num">2</div><div class="summary-label">Flights</div></div>
+              <div class="summary-tile"><div class="summary-num">2</div><div class="summary-label">Transfers</div></div>
+              <div class="summary-tile"><div class="summary-num">1</div><div class="summary-label">Hotel</div></div>
+              <div class="summary-tile"><div class="summary-num">2</div><div class="summary-label">Activities</div></div>
+            </div>
+
+            <div class="day-layout">
+              <aside class="day-nav">
+                <div class="day-chip active">02 Jul, Thu</div>
+                <div class="day-chip">03 Jul, Fri</div>
+                <div class="day-chip">04 Jul, Sat</div>
+                <div class="day-chip">05 Jul, Sun</div>
+                <div class="day-chip">06 Jul, Mon</div>
+              </aside>
+
+              <div class="timeline">
+                <article class="day-card">
+                  <div class="day-box">
+                    <div class="day-head">
+                      <div class="day-left">
+                        <span class="day-badge">Day 1</span>
+                        <span class="day-title">Arrival in Paris</span>
+                        <span class="day-tags">Included: 1 Flight · 1 Hotel · 1 Transfer · 1 Meal</span>
+                      </div>
+                    </div>
+                    <div class="day-content">
+                      <p class="day-desc">Begin your Paris city escape with arrival at Charles de Gaulle. Meet your tour manager and transfer to the hotel. After check-in, enjoy an orientation walk and evening free time.</p>
+                      <div class="day-gallery">
+                        <img src="https://images.unsplash.com/photo-1502602898536-47ad22581b52?auto=format&fit=crop&w=800&q=80" alt="Paris 1" />
+                        <img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=800&q=80" alt="Paris 2" />
+                        <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80" alt="Paris 3" />
+                      </div>
+
+                      <div class="service-card">
+                        <div class="service-head">
+                          <span class="service-type">Flight · New Delhi to Paris</span>
+                          <span class="service-action">Change</span>
+                        </div>
+                        <div class="service-body">
+                          <div class="flight-row">
+                            <div>
+                              <div class="flight-time">10:25</div>
+                              <div class="flight-sub">Thu, 02 Jul<br/>DEL</div>
+                            </div>
+                            <div class="flight-line"></div>
+                            <div>
+                              <div class="flight-time">11:40</div>
+                              <div class="flight-sub">Thu, 02 Jul<br/>DOH</div>
+                            </div>
+                            <div>
+                              <div class="flight-time">15:20</div>
+                              <div class="flight-sub">Thu, 02 Jul<br/>DOH</div>
+                            </div>
+                            <div>
+                              <div class="flight-time">21:10</div>
+                              <div class="flight-sub">Thu, 02 Jul<br/>Paris</div>
+                            </div>
+                            <div class="flight-badges">
+                              <span>☑ Cabin: 7kg</span>
+                              <span>☑ Check-in: 30kg</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="service-card">
+                        <div class="service-head">
+                          <span class="service-type">Transfer · Airport to Hotel</span>
+                          <span class="service-action">Modify</span>
+                        </div>
+                        <div class="service-body">
+                          <div class="media-row">
+                            <img class="media-thumb" src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80" alt="Transfer" />
+                            <div>
+                              <h4 class="media-title">Shared Transfer</h4>
+                              <p class="media-text">Comfortable transfer from Charles de Gaulle airport to your Paris hotel with English speaking assistance on arrival.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="service-card">
+                        <div class="service-head">
+                          <span class="service-type">Hotel · 4 Nights in Paris</span>
+                          <span class="service-action">View</span>
+                        </div>
+                        <div class="service-body">
+                          <div class="media-row">
+                            <img class="media-thumb" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80" alt="Hotel" />
+                            <div>
+                              <h4 class="media-title">B&B Hotel Paris Nord 2 CDG Airport</h4>
+                              <p class="media-text">Modern hotel with airport access, cozy rooms and great connectivity to central Paris. Ideal for group departures and early airport check-outs.</p>
+                              <div class="hotel-meta">
+                                <span>⭐ 3.4 Good</span>
+                                <span>📍 Paris</span>
+                                <span>🛏 Double Room</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="meal-bar">🍽 Meal · Dinner in Paris</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="day-card">
+                  <div class="day-box">
+                    <div class="day-head">
+                      <div class="day-left">
+                        <span class="day-badge">Day 2</span>
+                        <span class="day-title">Disneyland Paris</span>
+                        <span class="day-tags">Included: 1 Activity · 2 Meals</span>
+                      </div>
+                    </div>
+                    <div class="day-content">
+                      <p class="day-desc">Enjoy a magical day at Disneyland Paris with round-trip assistance and time to explore rides, attractions and shopping.</p>
+                      <div class="day-gallery">
+                        <img src="https://images.unsplash.com/photo-1522093007474-d86e9bf7ba6f?auto=format&fit=crop&w=800&q=80" alt="Disney" />
+                        <img src="https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?auto=format&fit=crop&w=800&q=80" alt="Disney 2" />
+                        <img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80" alt="Disney 3" />
+                      </div>
+
+                      <div class="service-card">
+                        <div class="service-head">
+                          <span class="service-type">Activity · Full Day</span>
+                          <span class="service-action">Included</span>
+                        </div>
+                        <div class="service-body">
+                          <div class="media-row">
+                            <img class="media-thumb" src="https://images.unsplash.com/photo-1522093007474-d86e9bf7ba6f?auto=format&fit=crop&w=800&q=80" alt="Activity" />
+                            <div>
+                              <h4 class="media-title">Disneyland Paris with Fireworks</h4>
+                              <p class="media-text">Spend the day discovering iconic zones, thrilling rides and family attractions before ending with the famous evening show.</p>
+                              <div class="activity-meta">
+                                <span>📍 Disneyland Paris</span>
+                                <span>🎫 Included Ticket</span>
+                                <span>🕘 Full Day</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="meal-bar">🍽 Meal · Breakfast in Paris</div>
+                      <div class="meal-bar">🍽 Meal · Dinner in Paris</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="day-card">
+                  <div class="day-box">
+                    <div class="day-head">
+                      <div class="day-left">
+                        <span class="day-badge">Day 3</span>
+                        <span class="day-title">Paris City Tour</span>
+                        <span class="day-tags">Included: 1 Activity · 2 Meals</span>
+                      </div>
+                    </div>
+                    <div class="day-content">
+                      <p class="day-desc">A guided panorama of Paris highlights including the Eiffel Tower area, Champs-Élysées, Seine viewpoints and photo stops in iconic neighborhoods.</p>
+                      <div class="day-gallery">
+                        <img src="https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=800&q=80" alt="Tour 1" />
+                        <img src="https://images.unsplash.com/photo-1549144511-f099e773c147?auto=format&fit=crop&w=800&q=80" alt="Tour 2" />
+                        <img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=800&q=80" alt="Tour 3" />
+                      </div>
+
+                      <div class="service-card">
+                        <div class="service-head">
+                          <span class="service-type">Activity · Half Day Tour</span>
+                          <span class="service-action">Included</span>
+                        </div>
+                        <div class="service-body">
+                          <div class="media-row">
+                            <img class="media-thumb" src="https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=800&q=80" alt="Paris city tour" />
+                            <div>
+                              <h4 class="media-title">Paris City Tour</h4>
+                              <p class="media-text">Photo stops, famous avenues, elegant boulevards and cultural landmarks with commentary by your local guide and tour manager.</p>
+                              <div class="activity-meta">
+                                <span>🚌 Shared Tour</span>
+                                <span>📍 Central Paris</span>
+                                <span>⏱ 4 Hours</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="meal-bar">🍽 Meal · Breakfast in Paris</div>
+                      <div class="meal-bar">🍽 Meal · Dinner in Paris</div>
+                      <div class="note-box">💡 Add activities to your day — optional Seine cruise, cabaret or Louvre evening access.</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="day-card">
+                  <div class="day-box">
+                    <div class="day-head">
+                      <div class="day-left">
+                        <span class="day-badge">Day 4</span>
+                        <span class="day-title">Leisure Day</span>
+                        <span class="day-tags">Included: 2 Meals</span>
+                      </div>
+                    </div>
+                    <div class="day-content">
+                      <p class="day-desc">Free time for shopping, cafés, museums or optional excursions. Your tour manager can suggest the best experiences depending on your interests.</p>
+                      <div class="day-gallery">
+                        <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80" alt="Leisure 1" />
+                        <img src="https://images.unsplash.com/photo-1543349689-9a4d426bee8e?auto=format&fit=crop&w=800&q=80" alt="Leisure 2" />
+                        <img src="https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=800&q=80" alt="Leisure 3" />
+                      </div>
+                      <div class="meal-bar">🍽 Meal · Breakfast in Paris</div>
+                      <div class="meal-bar">🍽 Meal · Dinner in Paris</div>
+                      <div class="note-box">💡 Add Activities to your day — speed up day closures or add an activity, transfer or meal to your day.</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="day-card">
+                  <div class="day-box">
+                    <div class="day-head">
+                      <div class="day-left">
+                        <span class="day-badge">Day 5</span>
+                        <span class="day-title">Departure from Paris</span>
+                        <span class="day-tags">Included: 1 Flight · 1 Transfer · 1 Meal</span>
+                      </div>
+                    </div>
+                    <div class="day-content">
+                      <p class="day-desc">After breakfast, check out and proceed to the airport for your return journey. Depending on flight time, enjoy a final city stop or duty-free shopping.</p>
+
+                      <div class="meal-bar">🍽 Meal · Breakfast in Paris</div>
+                      <div class="service-card">
+                        <div class="service-head">
+                          <span class="service-type">Transfer · Hotel to Airport</span>
+                          <span class="service-action">Modify</span>
+                        </div>
+                        <div class="service-body">
+                          <div class="media-row">
+                            <img class="media-thumb" src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80" alt="Transfer back" />
+                            <div>
+                              <h4 class="media-title">Shared Transfer</h4>
+                              <p class="media-text">Scheduled departure from your hotel lobby to the airport terminal with comfortable group assistance.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="service-card">
+                        <div class="service-head">
+                          <span class="service-type">Flight · Paris to New Delhi</span>
+                          <span class="service-action">Change</span>
+                        </div>
+                        <div class="service-body">
+                          <div class="flight-row">
+                            <div>
+                              <div class="flight-time">22:40</div>
+                              <div class="flight-sub">Mon, 06 Jul<br/>Paris</div>
+                            </div>
+                            <div class="flight-line"></div>
+                            <div>
+                              <div class="flight-time">06:00</div>
+                              <div class="flight-sub">Tue, 07 Jul<br/>Doha</div>
+                            </div>
+                            <div>
+                              <div class="flight-time">08:40</div>
+                              <div class="flight-sub">Tue, 07 Jul<br/>Doha</div>
+                            </div>
+                            <div>
+                              <div class="flight-time">15:00</div>
+                              <div class="flight-sub">Tue, 07 Jul<br/>New Delhi</div>
+                            </div>
+                            <div class="flight-badges">
+                              <span>☑ Cabin: 7kg</span>
+                              <span>☑ Check-in: 30kg</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="note-box">Your Europe Destination Guide — explore the timeless charm of Paris, iconic landmarks and unforgettable discoveries during this handcrafted summer group departure.</div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="sidebar-stack">
+          <div class="price-card">
+            <div class="card-section">
+              <h3 class="side-title">Starting price</h3>
+              <div class="price-big">
+                <span class="amount">₹1,46,569</span>
+                <span class="suffix">/ adult</span>
+              </div>
+              <div class="price-note">Excluding applicable taxes and charges. Based on double occupancy.</div>
+              <button class="cta">Proceed to Payment</button>
+            </div>
+          </div>
+
+          <div class="coupon-card">
+            <div class="card-section">
+              <h3 class="side-title">Coupons & Offers</h3>
+              <div class="coupon-item">
+                <div>
+                  <div class="coupon-code">EUROPE2026</div>
+                  <div class="coupon-desc">Flat discount on Europe group departures. Apply at checkout.</div>
+                </div>
+                <div class="coupon-save">-₹16,570</div>
+              </div>
+              <div class="coupon-item">
+                <div>
+                  <div class="coupon-code">HDFCMMT</div>
+                  <div class="coupon-desc">Additional bank offer when you pay using selected cards.</div>
+                </div>
+                <div class="coupon-save">-₹10,162</div>
+              </div>
+              <div class="coupon-item">
+                <div>
+                  <div class="coupon-code">EMI12M</div>
+                  <div class="coupon-desc">No-cost EMI available for eligible bookings.</div>
+                </div>
+                <div class="coupon-save">12 Mo</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="deal-card">
+            <div class="card-section">
+              <h3 class="side-title">Best Deals For You</h3>
+              <ul class="deal-list">
+                <li>Free cancellation benefits</li>
+                <li>Lowest group airfare</li>
+                <li>Curated city tour</li>
+                <li>Comfort stay in Paris</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </main>
+
+  <a class="floating-btn" href="#">Customize my trip</a>
+</body>
+</html>
