@@ -171,7 +171,7 @@ class TourProgramService
      *
      * @param int $dayId aj_tour_days.id
      * @param int $activityId aj_activities.id
-     * @param array{sort_order?: int, is_included?: int, is_mandatory?: int, is_editable?: int, custom_title?: string, custom_description?: string, start_time?: string, end_time?: string} $options
+    * @param array{sort_order?: int, is_included?: int, is_mandatory?: int, is_editable?: int, day_scope?: string, custom_title?: string, custom_description?: string, custom_price?: mixed, start_time?: string, end_time?: string} $options
      */
     public function addActivityToDay(int $dayId, int $activityId, array $options = []): TourDayActivity
     {
@@ -184,6 +184,7 @@ class TourProgramService
             'activity_id' => $activityId,
             'sort_order' => $options['sort_order'] ?? $maxOrder + 1,
             'is_included' => $options['is_included'] ?? 1,
+            'day_scope' => ($options['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed',
             'is_mandatory' => $options['is_mandatory'] ?? 0,
             'is_editable' => $options['is_editable'] ?? 1,
             'custom_title' => $options['custom_title'] ?? null,
@@ -201,7 +202,7 @@ class TourProgramService
     public function updateDayActivity(int $dayActivityId, array $data): TourDayActivity
     {
         $da = TourDayActivity::findOrFail($dayActivityId);
-        $fillable = ['sort_order', 'is_included', 'is_mandatory', 'is_editable', 'custom_title', 'custom_description', 'custom_price', 'start_time', 'end_time'];
+        $fillable = ['day_id', 'sort_order', 'is_included', 'day_scope', 'is_mandatory', 'is_editable', 'custom_title', 'custom_description', 'custom_price', 'start_time', 'end_time'];
         $da->fill(array_intersect_key($data, array_flip($fillable)));
         $da->save();
         return $da->load('activity');

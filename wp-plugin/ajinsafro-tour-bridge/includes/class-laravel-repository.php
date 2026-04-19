@@ -719,7 +719,13 @@ class AJTB_Laravel_Repository
             return [];
         }
         $out = [];
+        $seenActivityIds = [];
         foreach ($rows as $ar) {
+            $activityId = (int) $ar['activity_id'];
+            if ($activityId <= 0 || isset($seenActivityIds[$activityId])) {
+                continue;
+            }
+            $seenActivityIds[$activityId] = true;
             $image_url = null;
             if (!empty($ar['activity_image_id'])) {
                 if (function_exists('ajtb_get_attachment_image_url')) {
@@ -730,7 +736,7 @@ class AJTB_Laravel_Repository
             }
             $out[] = [
                 'id' => (int) $ar['id'],
-                'activity_id' => (int) $ar['activity_id'],
+                'activity_id' => $activityId,
                 'title' => !empty($ar['custom_title']) ? $ar['custom_title'] : ($ar['activity_title'] ?? ''),
                 'description' => !empty($ar['custom_description']) ? $ar['custom_description'] : ($ar['activity_description'] ?? ''),
                 'image_url' => $image_url,

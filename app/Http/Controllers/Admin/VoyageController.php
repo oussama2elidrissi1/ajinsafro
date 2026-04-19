@@ -3625,11 +3625,12 @@ class VoyageController extends Controller
             $sortOrder = isset($row['sort_order']) && $row['sort_order'] !== '' ? max(0, (int) $row['sort_order']) : 0;
 
             $existing = TourDayActivity::query()
-                ->where('day_id', (int) $targetDay->id)
+                ->where('tour_id', $tourId)
                 ->where('activity_id', $activityId)
                 ->first();
 
             $data = [
+                'day_id' => (int) $targetDay->id,
                 'sort_order' => $sortOrder,
                 'is_included' => $isIncluded,
                 'day_scope' => $dayScope,
