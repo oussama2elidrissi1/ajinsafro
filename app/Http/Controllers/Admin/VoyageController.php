@@ -1166,9 +1166,19 @@ class VoyageController extends Controller
         $multiLocations = $this->repository->parseMultiLocation($post->getMeta('multi_location'));
         $hasTaxonomies = collect($this->getPostTaxonomies($wpPostId))->flatten()->isNotEmpty();
         $hasThemes = $laravelVoyage && Schema::hasTable('voyage_voyage_theme') && $laravelVoyage->themes()->exists();
-        $hasFlightOption = $laravelVoyage
-            ? $laravelVoyage->flightOptions()->exists()
-            : false;
+        $hasFlightOption = false;
+        if ($laravelVoyage && Schema::hasTable('voyage_flight_options')) {
+            try {
+                $hasFlightOption = DB::table('voyage_flight_options')
+                    ->where('voyage_id', $laravelVoyage->id)
+                    ->exists();
+            } catch (\Throwable $e) {
+                Log::warning('VoyageController@buildV2StepStates flight option check failed', [
+                    'voyage_id' => $laravelVoyage->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         $states = [
             's-general' => trim((string) $post->post_title) !== '',
