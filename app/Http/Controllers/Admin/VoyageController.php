@@ -3360,11 +3360,16 @@ class VoyageController extends Controller
                 $dayActivityId = (int) ($row['day_activity_id'] ?? $row['id'] ?? 0);
                 $isIncluded = $this->normalizeCheckboxValue($row['is_included'] ?? 0, 1);
                 $isMandatory = $this->normalizeCheckboxValue($row['is_mandatory'] ?? 0, 0);
+                $dayScope = ($row['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed';
+                if ($isIncluded) {
+                    $dayScope = 'fixed';
+                }
 
                 if ($dayActivityId > 0) {
                     $this->programService->updateDayActivity($dayActivityId, [
                         'is_mandatory' => $isMandatory,
                         'is_included' => $isIncluded,
+                        'day_scope' => $dayScope,
                         'custom_title' => $row['custom_title'] ?? null,
                         'custom_description' => $row['custom_description'] ?? null,
                         'sort_order' => $k,
@@ -3374,6 +3379,7 @@ class VoyageController extends Controller
                     $newDa = $this->programService->addActivityToDay($dayId, $activityId, [
                         'sort_order' => $k,
                         'is_included' => $isIncluded,
+                        'day_scope' => $dayScope,
                         'is_mandatory' => $isMandatory,
                         'custom_title' => $row['custom_title'] ?? null,
                         'custom_description' => $row['custom_description'] ?? null,
@@ -3775,6 +3781,7 @@ class VoyageController extends Controller
                         'activity_id' => $activityId,
                         'sort_order' => (int) ($activityRow['sort_order'] ?? $actIndex),
                         'is_included' => $this->normalizeCheckboxValue($activityRow['is_included'] ?? 0, 1),
+                        'day_scope' => ($activityRow['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed',
                         'is_mandatory' => $this->normalizeCheckboxValue($activityRow['is_mandatory'] ?? 0, 0),
                         'is_editable' => true,
                         'custom_title' => (string) ($activityRow['custom_title'] ?? ''),

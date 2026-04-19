@@ -3003,6 +3003,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         activity_id: activityId,
                         sort_order: k,
                         is_included: checkboxValue(row, 'input[type="checkbox"][name$="[is_included]"]', 1),
+                        day_scope: fieldValue(row, 'select[name$="[day_scope]"]') || 'fixed',
                         is_mandatory: checkboxValue(row, 'input[type="checkbox"][name$="[is_mandatory]"]', 0),
                         custom_title: fieldValue(row, '[name$="[custom_title]"]'),
                         custom_description: fieldValue(row, '[name$="[custom_description]"]')
@@ -4987,3 +4988,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 removeDisabledFromFlightOptions();
             }, 2000);
         })();
+
+// Toggle day_scope visibility based on is_included checkbox
+(function () {
+    function updateScopeVisibility(checkbox) {
+        var row = checkbox.closest(".programme-activity-row");
+        if (!row) { return; }
+        var wrap = row.querySelector(".programme-act-scope-wrap");
+        if (!wrap) { return; }
+        if (checkbox.checked) {
+            wrap.classList.add("d-none");
+        } else {
+            wrap.classList.remove("d-none");
+        }
+    }
+    document.addEventListener("change", function (e) {
+        if (e.target && e.target.classList.contains("programme-act-is-included")) {
+            updateScopeVisibility(e.target);
+        }
+    });
+})();

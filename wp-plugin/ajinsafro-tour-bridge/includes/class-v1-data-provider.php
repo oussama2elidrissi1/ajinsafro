@@ -33,6 +33,7 @@ class AJTB_V1_Data_Provider
         $flights = [];
         $departure_places = [];
         $departure_dates = [];
+        $session_token = '';
 
         if (class_exists('AJTB_Tour_Repository')) {
             $wp_repo = new AJTB_Tour_Repository($tour_id);
@@ -42,9 +43,13 @@ class AJTB_V1_Data_Provider
             }
         }
 
+        $open_activities = [];
         if (class_exists('AJTB_Laravel_Repository')) {
             $laravel_repo = new AJTB_Laravel_Repository($tour_id);
-            $laravel_days = $laravel_repo->get_days();
+            if (class_exists('AJTB_Activity_Selections')) {
+                $session_token = (string) (new AJTB_Activity_Selections())->get_session_token();
+            }
+            $laravel_days = $laravel_repo->get_days($session_token !== '' ? $session_token : null);
             $sections = $laravel_repo->get_sections();
             $inclusions = $laravel_repo->get_inclusions();
             $exclusions = $laravel_repo->get_exclusions();
@@ -53,6 +58,7 @@ class AJTB_V1_Data_Provider
             $flights = $laravel_repo->get_flights();
             $departure_places = $laravel_repo->get_departure_places(true);
             $departure_dates = $laravel_repo->get_departure_dates(true);
+            $open_activities = $laravel_repo->get_open_optional_activities();
         }
 
         $title = trim((string) get_the_title($tour_id));
@@ -135,10 +141,12 @@ class AJTB_V1_Data_Provider
             'inclusions' => $inclusions,
             'exclusions' => $exclusions,
             'days' => $normalized_days,
+            'open_activities' => $open_activities,
             'stats' => $stats,
             'summary_rows' => self::build_summary_rows($normalized_days),
             'coupons' => $coupon_items,
             'best_deals' => $best_deals,
+            'session_token' => $session_token,
         ];
     }
 
@@ -605,6 +613,7 @@ class AJTB_V1_Data_Provider
                 $date_label = self::day_date_label($first_date, $day_number);
 
                 $days[] = [
+                    'day_id' => isset($row['id']) ? (int) $row['id'] : 0,
                     'day' => $day_number,
                     'date_label' => $date_label,
                     'title' => $title,
@@ -658,6 +667,7 @@ class AJTB_V1_Data_Provider
             }
             $img = !empty($gallery_pool[$i - 1]) ? $gallery_pool[$i - 1] : $fallbacks[min($i - 1, count($fallbacks) - 1)];
             $days[] = [
+                'day_id' => 0,
                 'day' => $i,
                 'date_label' => self::day_date_label($first_date, $i),
                 'title' => $title,

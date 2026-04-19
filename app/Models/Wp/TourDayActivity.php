@@ -16,6 +16,7 @@ class TourDayActivity extends Model
         'activity_id',
         'sort_order',
         'is_included',
+        'day_scope',
         'is_mandatory',
         'is_editable',
         'custom_title',

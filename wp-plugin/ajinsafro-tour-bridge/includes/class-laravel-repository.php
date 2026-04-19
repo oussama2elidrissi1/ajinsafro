@@ -691,6 +691,57 @@ class AJTB_Laravel_Repository
     }
 
     /**
+     * Get optional activities with day_scope='open' for this tour.
+     * These are available from any day's modal.
+     *
+     * @return array List of activity arrays with id, activity_id, title, description, image_url, base_price, custom_price
+     */
+    public function get_open_optional_activities()
+    {
+        $table_activities = $this->table('tour_day_activities');
+        $table_catalog = $this->table('activities');
+        if (!$this->table_exists($table_activities) || !$this->table_exists($table_catalog)) {
+            return [];
+        }
+        $rows = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT da.id, da.activity_id, da.custom_title, da.custom_description, da.custom_price, " .
+                "a.title AS activity_title, a.description AS activity_description, a.image_id AS activity_image_id, a.base_price AS activity_base_price " .
+                "FROM {$table_activities} da " .
+                "INNER JOIN {$table_catalog} a ON a.id = da.activity_id " .
+                "WHERE da.tour_id = %d AND da.is_included = 0 AND COALESCE(da.day_scope, 'fixed') = 'open' " .
+                "ORDER BY da.sort_order ASC",
+                $this->tour_id
+            ),
+            ARRAY_A
+        );
+        if (!$rows) {
+            return [];
+        }
+        $out = [];
+        foreach ($rows as $ar) {
+            $image_url = null;
+            if (!empty($ar['activity_image_id'])) {
+                if (function_exists('ajtb_get_attachment_image_url')) {
+                    $image_url = ajtb_get_attachment_image_url((int) $ar['activity_image_id'], 'medium');
+                } elseif (function_exists('wp_get_attachment_image_url')) {
+                    $image_url = wp_get_attachment_image_url((int) $ar['activity_image_id'], 'medium');
+                }
+            }
+            $out[] = [
+                'id' => (int) $ar['id'],
+                'activity_id' => (int) $ar['activity_id'],
+                'title' => !empty($ar['custom_title']) ? $ar['custom_title'] : ($ar['activity_title'] ?? ''),
+                'description' => !empty($ar['custom_description']) ? $ar['custom_description'] : ($ar['activity_description'] ?? ''),
+                'image_url' => $image_url,
+                'base_price' => $ar['activity_base_price'] !== null ? (float) $ar['activity_base_price'] : null,
+                'custom_price' => $ar['custom_price'] !== null ? (float) $ar['custom_price'] : null,
+            ];
+        }
+        return $out;
+    }
+
+    /**
      * Get activities for modal (with image, price, duration).
      * Used for modal activity picker.
      *
@@ -968,7 +1019,7 @@ class AJTB_Laravel_Repository
                 if (!empty($day_ids)) {
                     $placeholders = implode(',', array_fill(0, count($day_ids), '%d'));
                     $query = $this->wpdb->prepare(
-                        "SELECT da.id, da.day_id, da.activity_id, da.sort_order, da.is_included, da.is_mandatory, da.custom_title, da.custom_description, da.custom_price, da.start_time, da.end_time, " .
+                        "SELECT da.id, da.day_id, da.activity_id, da.sort_order, da.is_included, COALESCE(da.day_scope, 'fixed') AS day_scope, da.is_mandatory, da.custom_title, da.custom_description, da.custom_price, da.start_time, da.end_time, " .
                         "a.title AS activity_title, a.description AS activity_description, a.image_id AS activity_image_id, a.base_price AS activity_base_price " .
                         "FROM {$table_activities} da " .
                         "INNER JOIN {$table_catalog} a ON a.id = da.activity_id " .
@@ -1004,6 +1055,7 @@ class AJTB_Laravel_Repository
                                 'end_time' => $ar['end_time'] ?? null,
                                 'is_mandatory' => !empty($ar['is_mandatory']),
                                 'is_included' => !empty($ar['is_included']),
+                                'day_scope' => isset($ar['day_scope']) ? (string) $ar['day_scope'] : 'fixed',
                             ];
                         }
                     }

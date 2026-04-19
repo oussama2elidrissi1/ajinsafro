@@ -83,8 +83,14 @@
                                 <span class="fw-medium">{{ $da->activity->title ?? 'Activité #'.$da->activity_id }}</span>
                                 <span class="form-check form-check-inline mb-0">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="0">
-                                    <input class="form-check-input" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
+                                    <input class="form-check-input programme-act-is-included" type="checkbox" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_included]" value="1" {{ $da->is_included ? 'checked' : '' }}>
                                     <label class="form-check-label small">Inclus</label>
+                                </span>
+                                <span class="programme-act-scope-wrap ms-1{{ $da->is_included ? ' d-none' : '' }}">
+                                    <select name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][day_scope]" class="form-select form-select-sm programme-act-scope" style="width:auto;display:inline-block">
+                                        <option value="fixed" {{ ($da->day_scope ?? 'fixed') === 'fixed' ? 'selected' : '' }}>Jour défini</option>
+                                        <option value="open" {{ ($da->day_scope ?? 'fixed') === 'open' ? 'selected' : '' }}>Ouvert à tous les jours</option>
+                                    </select>
                                 </span>
                                 <span class="form-check form-check-inline mb-0">
                                     <input type="hidden" name="programme_days[{{ $dayIndex }}][activities][{{ $actIndex }}][is_mandatory]" value="0">

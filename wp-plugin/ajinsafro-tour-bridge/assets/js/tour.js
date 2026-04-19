@@ -681,6 +681,195 @@
         window.addEventListener("load", updateStuckState);
     }
 
+    function initOptionalActivitiesActions() {
+        var page = document.getElementById("ajtb-v1-page");
+        if (!page) {
+            return;
+        }
+
+        var ajaxUrl = window.ajtbData && window.ajtbData.ajaxUrl ? window.ajtbData.ajaxUrl : "";
+        var nonce = window.ajtbData && window.ajtbData.activityNonce ? window.ajtbData.activityNonce : "";
+        if (!ajaxUrl || !nonce) {
+            return;
+        }
+
+        var openActivities = window.ajtbOpenActivities || [];
+        var overlay = document.getElementById("ajtb-act-modal-overlay");
+        var modalBody = document.getElementById("ajtb-act-modal-body");
+        var currentDayId = 0;
+        var currentTourId = parseInt(String(window.ajtbTourId || "0"), 10);
+        // Track added activity_ids per day: { dayId: Set<activityId> }
+        var addedByDay = {};
+
+        function formatPrice(price) {
+            if (price === null || price === undefined) {
+                return "Prix sur demande";
+            }
+            return new Intl.NumberFormat("fr-MA").format(price) + " MAD";
+        }
+
+        function isAdded(dayId, activityId) {
+            return !!(addedByDay[dayId] && addedByDay[dayId][activityId]);
+        }
+
+        function markAdded(dayId, activityId) {
+            if (!addedByDay[dayId]) {
+                addedByDay[dayId] = {};
+            }
+            addedByDay[dayId][activityId] = true;
+        }
+
+        function buildActivityCard(act, dayId, tourId) {
+            var added = isAdded(dayId, act.activity_id);
+            var img = act.image_url
+                ? ‘<img src="’ + act.image_url + ‘" alt="" loading="lazy">’
+                : ‘<div class="ajtb-act-card-img-placeholder"></div>’;
+            var btnHtml = added
+                ? ‘<button type="button" class="ajtb-act-card-btn is-done" disabled>Ajout\u00e9e</button>’
+                : ‘<button type="button" class="ajtb-act-card-btn" data-ajtb-v1-action="add-activity" data-tour-id="’ + tourId + ‘" data-day-id="’ + dayId + ‘" data-activity-id="’ + act.activity_id + ‘">Ajouter</button>’;
+            return ‘<article class="ajtb-act-card" data-activity-id="’ + act.activity_id + ‘">’ +
+                ‘<div class="ajtb-act-card-media">’ + img + ‘</div>’ +
+                ‘<div class="ajtb-act-card-body">’ +
+                ‘<span class="ajtb-act-card-badge">Option client</span>’ +
+                ‘<h4 class="ajtb-act-card-title">’ + escHtml(act.title) + ‘</h4>’ +
+                ‘<p class="ajtb-act-card-desc">’ + escHtml(act.description) + ‘</p>’ +
+                ‘<div class="ajtb-act-card-footer">’ +
+                ‘<span class="ajtb-act-card-price">’ + escHtml(formatPrice(act.price)) + ‘</span>’ +
+                btnHtml +
+                ‘</div></div></article>’;
+        }
+
+        function escHtml(str) {
+            if (!str) { return ""; }
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function openModal(dayId, tourId, dayFixedOpts) {
+            currentDayId = dayId;
+            if (!overlay || !modalBody) { return; }
+
+            var cards = [];
+            // Fixed optional for this day
+            if (dayFixedOpts && dayFixedOpts.length) {
+                dayFixedOpts.forEach(function (act) {
+                    cards.push(buildActivityCard(act, dayId, tourId));
+                });
+            }
+            // Open activities (available from any day)
+            openActivities.forEach(function (act) {
+                cards.push(buildActivityCard(act, dayId, tourId));
+            });
+
+            if (cards.length === 0) {
+                modalBody.innerHTML = ‘<p class="ajtb-act-modal-empty">Aucune activit\u00e9 optionnelle disponible pour ce jour.</p>’;
+            } else {
+                modalBody.innerHTML = ‘<div class="ajtb-act-modal-grid">’ + cards.join("") + ‘</div>’;
+            }
+
+            overlay.removeAttribute("hidden");
+            document.body.classList.add("ajtb-modal-open");
+            var closeBtn = overlay.querySelector("[data-ajtb-v1-action=’close-activity-modal’]");
+            if (closeBtn) { closeBtn.focus(); }
+        }
+
+        function closeModal() {
+            if (!overlay) { return; }
+            overlay.setAttribute("hidden", "");
+            document.body.classList.remove("ajtb-modal-open");
+        }
+
+        function addActivity(button) {
+            var tourId = parseInt(button.getAttribute("data-tour-id") || "0", 10);
+            var dayId = parseInt(button.getAttribute("data-day-id") || "0", 10);
+            var activityId = parseInt(button.getAttribute("data-activity-id") || "0", 10);
+            if (!tourId || !dayId || !activityId) { return; }
+
+            button.disabled = true;
+            button.classList.add("is-loading");
+            button.textContent = "\u2026";
+
+            var formData = new FormData();
+            formData.append("action", "ajtb_v1_toggle_activity");
+            formData.append("nonce", nonce);
+            formData.append("tour_id", String(tourId));
+            formData.append("day_id", String(dayId));
+            formData.append("activity_id", String(activityId));
+            formData.append("activity_action", "added");
+
+            fetch(ajaxUrl, {
+                method: "POST",
+                credentials: "same-origin",
+                body: formData,
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (json) {
+                    if (!json || !json.success) {
+                        throw new Error((json && json.data && json.data.message) || "Erreur");
+                    }
+                    markAdded(dayId, activityId);
+                    button.classList.remove("is-loading");
+                    button.classList.add("is-done");
+                    button.textContent = "Ajout\u00e9e";
+                    // Reload after short delay so the activity appears in the day
+                    setTimeout(function () { window.location.reload(); }, 600);
+                })
+                .catch(function () {
+                    button.disabled = false;
+                    button.classList.remove("is-loading", "is-done");
+                    button.textContent = "Ajouter";
+                });
+        }
+
+        // Close on overlay background click
+        if (overlay) {
+            overlay.addEventListener("click", function (e) {
+                if (e.target === overlay) { closeModal(); }
+            });
+        }
+
+        // Close on Escape key
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && overlay && !overlay.hasAttribute("hidden")) {
+                closeModal();
+            }
+        });
+
+        page.addEventListener("click", function (event) {
+            // Open modal CTA
+            var openBtn = event.target.closest("[data-ajtb-v1-action=’open-activity-modal’]");
+            if (openBtn) {
+                event.preventDefault();
+                var dayId = parseInt(openBtn.getAttribute("data-day-id") || "0", 10);
+                var tourId = parseInt(openBtn.getAttribute("data-tour-id") || "0", 10);
+                var rawOpts = openBtn.getAttribute("data-day-opts") || "[]";
+                var dayFixedOpts = [];
+                try { dayFixedOpts = JSON.parse(rawOpts); } catch (e) {}
+                openModal(dayId, tourId, dayFixedOpts);
+                return;
+            }
+
+            // Close button
+            var closeBtn = event.target.closest("[data-ajtb-v1-action=’close-activity-modal’]");
+            if (closeBtn) {
+                event.preventDefault();
+                closeModal();
+                return;
+            }
+
+            // Add activity inside modal
+            var addBtn = event.target.closest("[data-ajtb-v1-action=’add-activity’]");
+            if (addBtn && !addBtn.disabled) {
+                event.preventDefault();
+                addActivity(addBtn);
+                return;
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         initTabs();
         initDayChips();
@@ -688,5 +877,6 @@
         initGuestsPicker();
         initDynamicStartingPrice();
         initStickySearchBox();
+        initOptionalActivitiesActions();
     });
 })();

@@ -173,6 +173,8 @@ $price_date_map = !empty($tour_data['search']['date_prices']) && is_array($tour_
     : [];
 $price_date_map_json = wp_json_encode($price_date_map);
 $price_note = !empty($tour_data['pricing']['note']) ? (string) $tour_data['pricing']['note'] : 'Tarif indicatif par adulte.';
+$client_activity_enabled = !empty($tour_data['session_token']) && !empty($tour_id);
+$open_activities = is_array($tour_data['open_activities'] ?? null) ? $tour_data['open_activities'] : [];
 
 if (empty($days)) {
     $days = [
@@ -411,8 +413,18 @@ get_header();
                                 ?>
                                 <?php foreach ($days as $day_index => $day): ?>
                                     <?php
+                                    $day_db_id = isset($day['day_id']) ? (int) $day['day_id'] : 0;
                                     $day_num = (int) ($day['day'] ?? 1);
                                     $activities = is_array($day['activities'] ?? null) ? $day['activities'] : [];
+                                    $included_activities = [];
+                                    $optional_activities = [];
+                                    foreach ($activities as $activity_row) {
+                                        if (!empty($activity_row['is_included'])) {
+                                            $included_activities[] = $activity_row;
+                                        } else {
+                                            $optional_activities[] = $activity_row;
+                                        }
+                                    }
                                     $flights_out = is_array($day['flights_out'] ?? null) ? $day['flights_out'] : [];
                                     $flights_in = is_array($day['flights_in'] ?? null) ? $day['flights_in'] : [];
                                     $transfers_in = is_array($day['transfers_in'] ?? null) ? $day['transfers_in'] : [];
@@ -420,6 +432,7 @@ get_header();
                                     $meals = is_array($day['meals'] ?? null) ? $day['meals'] : [];
                                     $hotel = !empty($day['hotel']) && is_array($day['hotel']) ? $day['hotel'] : null;
                                     $show_hotel_card = false;
+                                    $optional_panel_id = 'ajtb-v1-day-options-' . $day_num;
                                     if ($has_any_hotel) {
                                         if (!$hotel_displayed_once && !empty($hotel)) {
                                             $show_hotel_card = true;
@@ -439,8 +452,8 @@ get_header();
                                     if (!empty($transfers_in) || !empty($transfers_out)) {
                                         $included_parts[] = (count($transfers_in) + count($transfers_out)) . ' Transfer';
                                     }
-                                    if (!empty($activities)) {
-                                        $included_parts[] = count($activities) . ' Activity';
+                                    if (!empty($included_activities)) {
+                                        $included_parts[] = count($included_activities) . ' Activity';
                                     }
                                     if (!empty($meals)) {
                                         $included_parts[] = count($meals) . ' Meal';
@@ -538,7 +551,7 @@ get_header();
                                                     </div>
                                                 <?php endif; ?>
 
-                                                <?php foreach ($activities as $activity): ?>
+                                                <?php foreach ($included_activities as $activity): ?>
                                                     <?php
                                                     $act_img = $pick($activity, ['image_url'], '');
                                                     $act_title = $pick($activity, ['title'], 'Activity');
@@ -564,6 +577,46 @@ get_header();
                                                     </div>
                                                 <?php endforeach; ?>
 
+                                                <?php
+                                                // Collect fixed optional activity IDs for this day (day_scope='fixed' or missing)
+                                                $day_fixed_optional = [];
+                                                foreach ($optional_activities as $_oa) {
+                                                    $scope = isset($_oa['day_scope']) ? $_oa['day_scope'] : 'fixed';
+                                                    if ($scope === 'fixed') {
+                                                        $day_fixed_optional[] = $_oa;
+                                                    }
+                                                }
+                                                $has_optional_cta = !empty($day_fixed_optional) || !empty($open_activities);
+                                                ?>
+                                                <?php if ($has_optional_cta && $client_activity_enabled): ?>
+                                                    <?php
+                                                    // Build JSON data for this day's fixed optional activities
+                                                    $day_opts_json = wp_json_encode(array_values(array_map(function ($oa) {
+                                                        $price = isset($oa['custom_price']) && $oa['custom_price'] !== null
+                                                            ? (float) $oa['custom_price']
+                                                            : (isset($oa['base_price']) && $oa['base_price'] !== null ? (float) $oa['base_price'] : null);
+                                                        return [
+                                                            'activity_id' => (int) ($oa['activity_id'] ?? 0),
+                                                            'title' => (string) ($oa['title'] ?? ''),
+                                                            'description' => (string) ($oa['description'] ?? ''),
+                                                            'image_url' => $oa['image_url'] ?? null,
+                                                            'price' => $price,
+                                                        ];
+                                                    }, $day_fixed_optional)));
+                                                    ?>
+                                                    <div class="ajtb-v1-optional-cta-wrap">
+                                                        <button type="button"
+                                                            class="ajtb-v1-optional-trigger"
+                                                            data-ajtb-v1-action="open-activity-modal"
+                                                            data-day-id="<?php echo esc_attr((string) $day_db_id); ?>"
+                                                            data-tour-id="<?php echo esc_attr((string) $tour_id); ?>"
+                                                            data-day-opts="<?php echo esc_attr($day_opts_json); ?>">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                                            Ajouter une activité
+                                                        </button>
+                                                    </div>
+                                                <?php endif; ?>
+
                                                 <?php foreach ($meals as $meal): ?>
                                                     <p class="ajtb-v1-meal">Meal - <?php echo esc_html((string) $meal); ?></p>
                                                 <?php endforeach; ?>
@@ -578,6 +631,41 @@ get_header();
                             </div>
                         </div>
                     </section>
+
+                    <?php if ($client_activity_enabled): ?>
+                    <script>
+                    window.ajtbOpenActivities = <?php echo wp_json_encode(array_values(array_map(function ($oa) {
+                        $price = isset($oa['custom_price']) && $oa['custom_price'] !== null
+                            ? (float) $oa['custom_price']
+                            : (isset($oa['base_price']) && $oa['base_price'] !== null ? (float) $oa['base_price'] : null);
+                        return [
+                            'activity_id' => (int) ($oa['activity_id'] ?? 0),
+                            'title' => (string) ($oa['title'] ?? ''),
+                            'description' => (string) ($oa['description'] ?? ''),
+                            'image_url' => $oa['image_url'] ?? null,
+                            'price' => $price,
+                        ];
+                    }, $open_activities))); ?>;
+                    window.ajtbTourId = <?php echo (int) $tour_id; ?>;
+                    </script>
+                    <?php endif; ?>
+
+                    <div id="ajtb-act-modal-overlay" class="ajtb-act-modal-overlay" hidden aria-modal="true" role="dialog" aria-label="Ajouter une activité">
+                        <div class="ajtb-act-modal-drawer">
+                            <div class="ajtb-act-modal-header">
+                                <div>
+                                    <h3 class="ajtb-act-modal-title">Ajouter une activité</h3>
+                                    <p class="ajtb-act-modal-subtitle">Personnalisez votre programme en ajoutant des activités optionnelles.</p>
+                                </div>
+                                <button type="button" class="ajtb-act-modal-close" data-ajtb-v1-action="close-activity-modal" aria-label="Fermer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                            <div class="ajtb-act-modal-body" id="ajtb-act-modal-body">
+                                <!-- populated by JS -->
+                            </div>
+                        </div>
+                    </div>
 
                     <section class="ajtb-v1-tab-panel" id="ajtb-v1-panel-policies" role="tabpanel" hidden>
                         <article class="ajtb-v1-card">

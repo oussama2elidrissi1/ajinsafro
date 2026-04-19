@@ -26,6 +26,7 @@ define('AJTB_POST_TYPE', 'st_tours');
 require_once AJTB_PLUGIN_DIR . 'includes/helpers.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-tour-repository.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-laravel-repository.php';
+require_once AJTB_PLUGIN_DIR . 'includes/class-activity-selections.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-v1-data-provider.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-single-tour-page.php';
 

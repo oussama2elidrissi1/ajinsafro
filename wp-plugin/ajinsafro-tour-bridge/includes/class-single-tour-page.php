@@ -18,6 +18,8 @@ class AJTB_Single_Tour_Page
     {
         add_filter('template_include', [self::class, 'override_template'], 999);
         add_action('wp_enqueue_scripts', [self::class, 'enqueue_assets'], 20);
+        add_action('wp_ajax_ajtb_v1_toggle_activity', [self::class, 'ajax_toggle_activity']);
+        add_action('wp_ajax_nopriv_ajtb_v1_toggle_activity', [self::class, 'ajax_toggle_activity']);
     }
 
     /**
@@ -116,6 +118,59 @@ class AJTB_Single_Tour_Page
             'postId' => $post_id,
             'tourId' => $post_id,
             'tourTitle' => $post_id > 0 ? get_the_title($post_id) : '',
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'activityNonce' => wp_create_nonce('ajtb_v1_activity_toggle'),
+            'activityMessages' => [
+                'added' => __('Activité ajoutée à votre programme.', 'ajinsafro-tour-bridge'),
+                'error' => __('Impossible d’ajouter l’activité pour le moment.', 'ajinsafro-tour-bridge'),
+            ],
+        ]);
+    }
+
+    /**
+     * Toggle optional activity for the current user/session in V1.
+     */
+    public static function ajax_toggle_activity(): void
+    {
+        if (!class_exists('AJTB_Activity_Selections')) {
+            wp_send_json_error([
+                'message' => __('Service activité indisponible.', 'ajinsafro-tour-bridge'),
+            ], 500);
+        }
+
+        $nonce_ok = check_ajax_referer('ajtb_v1_activity_toggle', 'nonce', false);
+        if (!$nonce_ok) {
+            wp_send_json_error([
+                'message' => __('Requête non autorisée.', 'ajinsafro-tour-bridge'),
+            ], 403);
+        }
+
+        $tour_id = isset($_POST['tour_id']) ? (int) $_POST['tour_id'] : 0;
+        $day_id = isset($_POST['day_id']) ? (int) $_POST['day_id'] : 0;
+        $activity_id = isset($_POST['activity_id']) ? (int) $_POST['activity_id'] : 0;
+        $action = isset($_POST['activity_action']) ? sanitize_text_field((string) $_POST['activity_action']) : 'added';
+        $action = $action === 'removed' ? 'removed' : 'added';
+
+        if ($tour_id <= 0 || $day_id <= 0 || $activity_id <= 0) {
+            wp_send_json_error([
+                'message' => __('Paramètres incomplets pour l’activité.', 'ajinsafro-tour-bridge'),
+            ], 422);
+        }
+
+        $selections = new AJTB_Activity_Selections();
+        $session_token = $selections->get_session_token();
+        $user_id = is_user_logged_in() ? (int) get_current_user_id() : null;
+
+        $result = $selections->toggle($tour_id, $day_id, $activity_id, $action, $session_token, $user_id);
+        if (empty($result['success'])) {
+            wp_send_json_error([
+                'message' => !empty($result['message']) ? (string) $result['message'] : __('Action refusée.', 'ajinsafro-tour-bridge'),
+            ], 400);
+        }
+
+        wp_send_json_success([
+            'message' => !empty($result['message']) ? (string) $result['message'] : __('Activité mise à jour.', 'ajinsafro-tour-bridge'),
+            'day_activities' => isset($result['day_activities']) && is_array($result['day_activities']) ? $result['day_activities'] : [],
         ]);
     }
 
