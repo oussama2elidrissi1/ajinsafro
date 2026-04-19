@@ -396,7 +396,7 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-hero {
-    margin-top: 22px;
+    margin-top: 18px;
 }
 
 .ajtb-v1-hero-kicker {
@@ -411,28 +411,30 @@ body.single-st_tours .footer-bottom {
 .ajtb-v1-title {
     margin: 0;
     color: #15253f;
-    font-size: clamp(30px, 3vw, 42px);
-    line-height: 1.16;
+    font-size: clamp(27px, 2.35vw, 35px);
+    line-height: 1.22;
     font-weight: 800;
+    letter-spacing: -0.012em;
+    max-width: 20ch;
 }
 
 .ajtb-v1-meta-pills {
-    margin-top: 12px;
+    margin-top: 14px;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
 }
 
 .ajtb-v1-pill {
     display: inline-flex;
     align-items: center;
-    min-height: 34px;
-    padding: 0 12px;
+    min-height: 32px;
+    padding: 0 11px;
     border-radius: 999px;
     border: 1px solid var(--ajtb-v1-line);
-    background: #ffffff;
+    background: linear-gradient(180deg, #ffffff, #f8fbff);
     color: #50627d;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
 }
 
@@ -443,25 +445,46 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-gallery {
-    margin-top: 16px;
+    margin-top: 18px;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 12px;
+    gap: 14px;
+    padding: 12px;
+    border-radius: 22px;
+    border: 1px solid #d7e6f4;
+    background: linear-gradient(180deg, #f9fcff, #f2f8ff);
+    box-shadow: 0 14px 30px rgba(14, 58, 90, 0.08);
 }
 
 .ajtb-v1-gallery-item {
     margin: 0;
     grid-column: span 4;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #d6e5f6;
+    box-shadow: 0 10px 22px rgba(14, 58, 90, 0.1);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 
 .ajtb-v1-gallery img {
     width: 100%;
     height: 100%;
-    min-height: 220px;
+    min-height: 0;
+    aspect-ratio: 4 / 3;
     object-fit: cover;
-    border-radius: var(--ajtb-v1-radius-lg);
-    border: 1px solid #d9e7f5;
-    box-shadow: var(--ajtb-v1-shadow);
+    object-position: center;
+    border-radius: 0;
+    border: 0;
+    box-shadow: none;
+    display: block;
+}
+
+@media (hover: hover) {
+    .ajtb-v1-gallery-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(14, 58, 90, 0.14);
+    }
 }
 
 .ajtb-v1-gallery--count-1 .ajtb-v1-gallery-item {
@@ -469,7 +492,7 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-gallery--count-1 .ajtb-v1-gallery-item img {
-    min-height: 430px;
+    aspect-ratio: 16 / 8;
 }
 
 .ajtb-v1-gallery--count-2 .ajtb-v1-gallery-item {
@@ -477,7 +500,7 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-gallery--count-2 .ajtb-v1-gallery-item img {
-    min-height: 360px;
+    aspect-ratio: 16 / 10;
 }
 
 .ajtb-v1-gallery--count-3 .ajtb-v1-gallery-item.is-featured,
@@ -496,17 +519,17 @@ body.single-st_tours .footer-bottom {
 .ajtb-v1-gallery--count-3 .ajtb-v1-gallery-item.is-featured img,
 .ajtb-v1-gallery--count-4 .ajtb-v1-gallery-item.is-featured img,
 .ajtb-v1-gallery--count-many .ajtb-v1-gallery-item.is-featured img {
-    min-height: 440px;
+    aspect-ratio: 16 / 10;
 }
 
 .ajtb-v1-gallery--count-3 .ajtb-v1-gallery-item:not(.is-featured) img,
 .ajtb-v1-gallery--count-4 .ajtb-v1-gallery-item:not(.is-featured) img,
 .ajtb-v1-gallery--count-many .ajtb-v1-gallery-item:not(.is-featured) img {
-    min-height: 214px;
+    aspect-ratio: 4 / 3;
 }
 
 .ajtb-v1-tabs {
-    margin-top: 20px;
+    margin-top: 24px;
     padding: 0 2px;
     border-bottom: 1px solid var(--ajtb-v1-line);
     display: flex;
@@ -544,10 +567,10 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-layout {
-    margin-top: 20px;
+    margin-top: 22px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 330px;
-    gap: 20px;
+    gap: 22px;
     align-items: start;
 }
 
@@ -559,7 +582,7 @@ body.single-st_tours .footer-bottom {
     position: sticky;
     top: var(--ajtb-v1-rail-top);
     display: grid;
-    gap: 16px;
+    gap: 18px;
 }
 
 .ajtb-v1-tab-panel {
@@ -574,12 +597,12 @@ body.single-st_tours .footer-bottom {
 .ajtb-v1-side-card {
     background: var(--ajtb-v1-card);
     border: 1px solid var(--ajtb-v1-line);
-    border-radius: var(--ajtb-v1-radius-lg);
-    box-shadow: var(--ajtb-v1-shadow);
+    border-radius: 18px;
+    box-shadow: 0 12px 28px rgba(14, 58, 90, 0.09);
 }
 
 .ajtb-v1-card {
-    padding: 20px;
+    padding: 22px;
 }
 
 .ajtb-v1-overview-card {
@@ -918,7 +941,7 @@ body.single-st_tours .footer-bottom {
 .ajtb-v1-tab-panel h2 {
     margin: 0 0 12px;
     color: #17304d;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
 }
 
@@ -958,9 +981,177 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-side-card {
-    padding: 18px;
+    padding: 20px;
     position: relative;
     overflow: hidden;
+}
+
+.ajtb-v1-summary-card {
+    display: grid;
+    gap: 14px;
+}
+
+.ajtb-v1-summary-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ajtb-v1-summary-head h3 {
+    margin: 0;
+    color: #152842;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.ajtb-v1-summary-subtitle {
+    margin: 4px 0 0;
+    color: #687a93;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.ajtb-v1-summary-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 11px;
+    border-radius: 999px;
+    background: #ecf7ff;
+    color: #0f6aa8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.ajtb-v1-summary-price-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid #d9e6f5;
+    background: linear-gradient(180deg, #fbfdff, #f3f9ff);
+}
+
+.ajtb-v1-summary-label {
+    display: block;
+    margin-bottom: 4px;
+    color: #6a7d97;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ajtb-v1-summary-price {
+    margin: 0;
+    color: #13243d;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ajtb-v1-summary-price span {
+    color: #0f2a46;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.ajtb-v1-summary-unit {
+    color: #2f4c70;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.ajtb-v1-summary-list {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.ajtb-v1-summary-list div {
+    padding: 11px 12px;
+    border-radius: 14px;
+    border: 1px solid #dce7f4;
+    background: #ffffff;
+}
+
+.ajtb-v1-summary-list dt {
+    margin: 0 0 3px;
+    color: #6d7f99;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ajtb-v1-summary-list dd {
+    margin: 0;
+    color: #16304d;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.ajtb-v1-summary-block {
+    display: grid;
+    gap: 8px;
+}
+
+.ajtb-v1-summary-chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ajtb-v1-summary-chips li {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid #d9e7f6;
+    background: #f8fbff;
+    color: #50627d;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.ajtb-v1-summary-footnote {
+    color: #6c7d95;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.ajtb-v1-summary-action {
+    width: 100%;
+    min-height: 46px;
+    border: 0;
+    border-radius: 14px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #1d8eff, #005ff7);
+    box-shadow: 0 14px 22px rgba(0, 95, 247, 0.22);
+}
+
+.ajtb-v1-summary-action:hover {
+    filter: brightness(1.04);
 }
 
 .ajtb-v1-side-card h3 {
@@ -1256,7 +1447,9 @@ body.single-st_tours .footer-bottom {
 
     .ajtb-v1-gallery {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px;
+        padding: 10px;
+        border-radius: 18px;
     }
 
     .ajtb-v1-gallery-item,
@@ -1275,7 +1468,8 @@ body.single-st_tours .footer-bottom {
     .ajtb-v1-gallery--count-3 .ajtb-v1-gallery-item img,
     .ajtb-v1-gallery--count-4 .ajtb-v1-gallery-item img,
     .ajtb-v1-gallery--count-many .ajtb-v1-gallery-item img {
-        min-height: 190px;
+        min-height: 0;
+        aspect-ratio: 4 / 3;
     }
 
     .ajtb-v1-fallback-footer__grid {
@@ -1324,7 +1518,20 @@ body.single-st_tours .footer-bottom {
     }
 
     .ajtb-v1-title {
-        font-size: 28px;
+        font-size: 24px;
+        line-height: 1.26;
+        max-width: 100%;
+    }
+
+    .ajtb-v1-meta-pills {
+        margin-top: 12px;
+        gap: 7px;
+    }
+
+    .ajtb-v1-pill {
+        min-height: 30px;
+        font-size: 10px;
+        padding: 0 10px;
     }
 
     .ajtb-v1-tabs {
@@ -1345,6 +1552,10 @@ body.single-st_tours .footer-bottom {
 
     .ajtb-v1-gallery {
         grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 8px;
+        border-radius: 16px;
     }
 
     .ajtb-v1-gallery-item,
@@ -1362,7 +1573,8 @@ body.single-st_tours .footer-bottom {
     .ajtb-v1-gallery--count-3 .ajtb-v1-gallery-item img,
     .ajtb-v1-gallery--count-4 .ajtb-v1-gallery-item img,
     .ajtb-v1-gallery--count-many .ajtb-v1-gallery-item img {
-        min-height: 210px;
+        min-height: 0;
+        aspect-ratio: 16 / 11;
     }
 
     .ajtb-v1-day-card {

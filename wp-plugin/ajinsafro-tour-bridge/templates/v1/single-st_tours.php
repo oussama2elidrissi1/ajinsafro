@@ -613,24 +613,90 @@ get_header();
 
                 <aside class="ajtb-v1-sidebar">
                     <div
-                        class="ajtb-v1-side-card ajtb-v1-price-card"
-                        id="ajtb-v1-price-card"
+                        class="ajtb-v1-side-card ajtb-v1-summary-card"
+                        id="ajtb-v1-summary-card"
+                        data-tour-title="<?php echo esc_attr($tour_title); ?>"
+                        data-duration-label="<?php echo esc_attr($duration_label); ?>"
+                        data-default-departure="<?php echo esc_attr($search_departure); ?>"
+                        data-default-date="<?php echo esc_attr($search_date); ?>"
+                        data-default-guests="<?php echo esc_attr($search_guests); ?>"
+                        data-has-flight="<?php echo esc_attr(!empty($tour_data['flights']) ? '1' : '0'); ?>"
+                        data-hotel-label="<?php echo esc_attr(!empty($stats['hotels']) ? 'Inclus' : 'À confirmer'); ?>"
+                        data-activity-label="<?php echo esc_attr(!empty($inclusions) ? count($inclusions) . ' incluses' : 'À confirmer'); ?>"
+                        data-inclusions="<?php echo esc_attr(wp_json_encode(array_values(array_filter(array_slice($inclusions, 0, 5))))); ?>"
+                        data-options="<?php echo esc_attr(wp_json_encode(array_values(array_filter(array_slice($best_deals, 0, 4))))); ?>"
+                        data-availability-label="<?php echo esc_attr(!empty($search_date_options) ? 'Disponible selon la date sélectionnée' : 'Sous réserve de disponibilité'); ?>"
                         data-base-adult-price="<?php echo esc_attr((string) $price_adult); ?>"
                         data-base-child-price="<?php echo esc_attr((string) $price_child); ?>"
                         data-currency="<?php echo esc_attr($price_currency); ?>"
-                        data-date-prices="<?php echo esc_attr((string) $price_date_map_json); ?>">
-                        <h3>Starting price</h3>
-                        <p class="ajtb-v1-price"><span id="ajtb-v1-price-amount"><?php echo esc_html($price_amount); ?></span> <span id="ajtb-v1-price-currency"><?php echo esc_html($price_currency); ?></span> <span id="ajtb-v1-price-suffix">/ total</span></p>
-                        <p class="ajtb-v1-price-note"><?php echo esc_html($price_note); ?></p>
-                        <ul class="ajtb-v1-price-includes">
-                            <?php
-                            $price_items = !empty($inclusions) ? array_slice($inclusions, 0, 4) : ['Programme principal', 'Hebergement', 'Support Ajinsafro', 'Configuration flexible'];
-                            foreach ($price_items as $line):
-                            ?>
-                                <li><?php echo esc_html((string) $line); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <button type="button">Proceed to payment</button>
+                        data-date-prices="<?php echo esc_attr((string) $price_date_map_json); ?>"
+                    >
+                        <div class="ajtb-v1-summary-head">
+                            <div>
+                                <h3>Votre sélection</h3>
+                                <p class="ajtb-v1-summary-subtitle">Récapitulatif dynamique de la réservation</p>
+                            </div>
+                            <span class="ajtb-v1-summary-badge" id="ajtb-v1-availability-badge"><?php echo esc_html(!empty($search_date_options) ? 'Disponible' : 'À confirmer'); ?></span>
+                        </div>
+
+                        <div class="ajtb-v1-summary-price-row">
+                            <div>
+                                <span class="ajtb-v1-summary-label">Prix total</span>
+                                <p class="ajtb-v1-summary-price"><span id="ajtb-v1-price-amount"><?php echo esc_html($price_amount); ?></span> <span id="ajtb-v1-price-currency"><?php echo esc_html($price_currency); ?></span></p>
+                            </div>
+                            <div class="ajtb-v1-summary-unit" id="ajtb-v1-price-per-person"><?php echo esc_html($price_amount); ?> <?php echo esc_html($price_currency); ?> / pers.</div>
+                        </div>
+
+                        <dl class="ajtb-v1-summary-list">
+                            <div>
+                                <dt>Ville de départ</dt>
+                                <dd id="ajtb-v1-summary-departure"><?php echo esc_html($search_departure !== '' ? $search_departure : '—'); ?></dd>
+                            </div>
+                            <div>
+                                <dt>Date de voyage</dt>
+                                <dd id="ajtb-v1-summary-date"><?php echo esc_html($search_date); ?></dd>
+                            </div>
+                            <div>
+                                <dt>Voyageurs</dt>
+                                <dd id="ajtb-v1-summary-guests"><?php echo esc_html($search_guests); ?></dd>
+                            </div>
+                            <div>
+                                <dt>Durée</dt>
+                                <dd id="ajtb-v1-summary-duration"><?php echo esc_html($duration_label); ?></dd>
+                            </div>
+                            <div>
+                                <dt>Hébergement</dt>
+                                <dd id="ajtb-v1-summary-hotel"><?php echo esc_html(!empty($stats['hotels']) ? 'Inclus' : 'À confirmer'); ?></dd>
+                            </div>
+                            <div>
+                                <dt>Activités</dt>
+                                <dd id="ajtb-v1-summary-activities"><?php echo esc_html(!empty($inclusions) ? count($inclusions) . ' incluses' : 'À confirmer'); ?></dd>
+                            </div>
+                            <div>
+                                <dt>Vol</dt>
+                                <dd id="ajtb-v1-summary-flight"><?php echo esc_html(!empty($tour_data['flights']) ? 'Inclus' : 'Non indiqué'); ?></dd>
+                            </div>
+                            <div>
+                                <dt>Disponibilité</dt>
+                                <dd id="ajtb-v1-summary-availability"><?php echo esc_html(!empty($search_date_options) ? 'Disponible selon la date' : 'Sous réserve'); ?></dd>
+                            </div>
+                        </dl>
+
+                        <div class="ajtb-v1-summary-block">
+                            <span class="ajtb-v1-summary-label">Options / suppléments</span>
+                            <ul class="ajtb-v1-summary-chips" id="ajtb-v1-summary-options">
+                                <?php if (!empty($best_deals)): ?>
+                                    <?php foreach (array_slice($best_deals, 0, 4) as $deal): ?>
+                                        <li><?php echo esc_html((string) $deal); ?></li>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <li>Aucune option supplémentaire renseignée</li>
+                                <?php endif; ?>
+                            </ul>
+                        </div>
+
+                        <div class="ajtb-v1-summary-footnote" id="ajtb-v1-summary-note"><?php echo esc_html($price_note); ?></div>
+                        <button type="button" class="ajtb-v1-summary-action" id="ajtb-v1-summary-action">Continuer</button>
                     </div>
 
                     <div class="ajtb-v1-side-card ajtb-v1-side-highlight">

@@ -126,7 +126,7 @@
         }
 
         button.addEventListener("click", function () {
-            var target = document.getElementById("ajtb-v1-price-card");
+            var target = document.getElementById("ajtb-v1-summary-card");
             if (!target) {
                 return;
             }
@@ -299,7 +299,7 @@
     }
 
     function initDynamicStartingPrice() {
-        var priceCard = document.getElementById("ajtb-v1-price-card");
+        var priceCard = document.getElementById("ajtb-v1-summary-card");
         var amountEl = document.getElementById("ajtb-v1-price-amount");
         if (!priceCard || !amountEl) {
             return;
@@ -307,10 +307,25 @@
 
         var currencyEl = document.getElementById("ajtb-v1-price-currency");
         var suffixEl = document.getElementById("ajtb-v1-price-suffix");
+        var perPersonEl = document.getElementById("ajtb-v1-price-per-person");
+        var departureEl = document.getElementById("ajtb-v1-summary-departure");
+        var dateEl = document.getElementById("ajtb-v1-summary-date");
+        var guestsEl = document.getElementById("ajtb-v1-summary-guests");
+        var durationEl = document.getElementById("ajtb-v1-summary-duration");
+        var hotelEl = document.getElementById("ajtb-v1-summary-hotel");
+        var activitiesEl = document.getElementById("ajtb-v1-summary-activities");
+        var flightEl = document.getElementById("ajtb-v1-summary-flight");
+        var availabilityEl = document.getElementById("ajtb-v1-summary-availability");
+        var optionsEl = document.getElementById("ajtb-v1-summary-options");
+        var noteEl = document.getElementById("ajtb-v1-summary-note");
+        var actionEl = document.getElementById("ajtb-v1-summary-action");
+        var availabilityBadgeEl = document.getElementById("ajtb-v1-availability-badge");
         var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
         var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
         var dateSelect = document.getElementById("ajtb-v1-search-date");
         var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var dateDisplayMap = {};
+        var searchBar = document.getElementById("ajtb-v1-search-box");
 
         var baseAdultPrice = parseFloat(
             priceCard.getAttribute("data-base-adult-price") || "0",
@@ -333,6 +348,70 @@
             datePrices = JSON.parse(datePricesRaw);
         } catch (err) {
             datePrices = {};
+        }
+
+        if (dateSelect) {
+            Array.prototype.slice.call(dateSelect.options || []).forEach(function (option) {
+                dateDisplayMap[option.value] = option.textContent || option.value;
+            });
+        }
+
+        function getSelectedDepartureLabel() {
+            if (!fromSelect) {
+                return priceCard.getAttribute("data-default-departure") || "—";
+            }
+            var selectedOption = fromSelect.options[fromSelect.selectedIndex];
+            if (!selectedOption) {
+                return priceCard.getAttribute("data-default-departure") || "—";
+            }
+            var label = (selectedOption.getAttribute("data-place-name") || selectedOption.textContent || "").trim();
+            return label || priceCard.getAttribute("data-default-departure") || "—";
+        }
+
+        function getSelectedDateLabel() {
+            if (!dateSelect) {
+                return priceCard.getAttribute("data-default-date") || "—";
+            }
+            var selectedOption = dateSelect.options[dateSelect.selectedIndex];
+            var selectedLabel = selectedOption ? (selectedOption.textContent || "") : "";
+            return dateDisplayMap[dateSelect.value] || selectedLabel || priceCard.getAttribute("data-default-date") || "—";
+        }
+
+        function getGuestsLabel(adults, children) {
+            var text = adults + " " + (adults > 1 ? "adultes" : "adulte");
+            if (children > 0) {
+                text += ", " + children + " " + (children > 1 ? "enfants" : "enfant");
+            }
+            return text;
+        }
+
+        function getAvailabilityLabel(total, dateAdultPrice) {
+            var baseLabel = priceCard.getAttribute("data-availability-label") || "Sous réserve de disponibilité";
+            if (dateAdultPrice !== null && total > 0) {
+                return "Disponible";
+            }
+            return baseLabel;
+        }
+
+        function renderOptions() {
+            if (!optionsEl) {
+                return;
+            }
+            var rawOptions = [];
+            try {
+                rawOptions = JSON.parse(priceCard.getAttribute("data-options") || "[]");
+            } catch (err) {
+                rawOptions = [];
+            }
+            var html = "";
+            if (rawOptions && rawOptions.length) {
+                rawOptions.forEach(function (item) {
+                    html += "<li>" + escapeHtml(String(item)) + "</li>";
+                });
+            } else {
+                html = "<li>Aucune option supplémentaire renseignée</li>";
+            }
+            optionsEl.innerHTML = html;
         }
 
         function getTravellerValue(input, fallback) {
@@ -410,6 +489,13 @@
                 total = adultUnit;
             }
 
+            var travellerCount = adults + children;
+            var pricePerPerson = travellerCount > 0 ? total / travellerCount : total;
+            var departureLabel = getSelectedDepartureLabel();
+            var dateLabel = getSelectedDateLabel();
+            var guestsLabel = getGuestsLabel(adults, children);
+            var availabilityLabel = getAvailabilityLabel(total, dateAdult);
+
             amountEl.textContent = formatAmount(total);
             if (currencyEl) {
                 currencyEl.textContent = currency;
@@ -417,6 +503,43 @@
             if (suffixEl) {
                 suffixEl.textContent = "/ total";
             }
+            if (perPersonEl) {
+                perPersonEl.textContent = formatAmount(pricePerPerson) + " " + currency + " / pers.";
+            }
+            if (departureEl) {
+                departureEl.textContent = departureLabel;
+            }
+            if (dateEl) {
+                dateEl.textContent = dateLabel;
+            }
+            if (guestsEl) {
+                guestsEl.textContent = guestsLabel;
+            }
+            if (durationEl) {
+                durationEl.textContent = priceCard.getAttribute("data-duration-label") || durationEl.textContent;
+            }
+            if (hotelEl) {
+                hotelEl.textContent = priceCard.getAttribute("data-hotel-label") || hotelEl.textContent;
+            }
+            if (activitiesEl) {
+                activitiesEl.textContent = priceCard.getAttribute("data-activity-label") || activitiesEl.textContent;
+            }
+            if (flightEl) {
+                flightEl.textContent = priceCard.getAttribute("data-has-flight") === "1" ? "Inclus" : "Non indiqué";
+            }
+            if (availabilityEl) {
+                availabilityEl.textContent = availabilityLabel;
+            }
+            if (availabilityBadgeEl) {
+                availabilityBadgeEl.textContent = availabilityLabel === "Disponible" ? "Disponible" : "À confirmer";
+            }
+            if (noteEl) {
+                noteEl.textContent = priceCard.getAttribute("data-default-date") ? "Prix adapté selon la sélection" : noteEl.textContent;
+            }
+            if (actionEl) {
+                actionEl.textContent = "Continuer";
+            }
+            renderOptions();
         }
 
         if (dateSelect) {

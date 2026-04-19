@@ -1747,6 +1747,7 @@ class AJTB_Laravel_Repository
     {
         $candidates = [];
         $candidates[] = $this->table('travel_departure_places');
+        $candidates[] = $this->wpdb->prefix . 'aj_travel_departure_places';
 
         $flights_table = function_exists('ajtb_flights_table') ? ajtb_flights_table($this->tour_id) : $this->table('tour_flights');
         if (is_string($flights_table) && preg_match('/^(.*)aj_tour_flights$/', $flights_table, $m)) {
@@ -1778,68 +1779,118 @@ class AJTB_Laravel_Repository
         $tour_col = $has_col('travel_id') ? 'travel_id' : ($has_col('tour_id') ? 'tour_id' : '');
         $name_col = $has_col('name') ? 'name' : ($has_col('title') ? 'title' : '');
         if ($tour_col === '' || $name_col === '') {
-            return [];
+            $table = '';
         }
 
-        $code_col = $has_col('code') ? 'code' : '';
-        $active_col = $has_col('is_active') ? 'is_active' : ($has_col('active') ? 'active' : '');
-        $sort_col = $has_col('sort_order') ? 'sort_order' : '';
+        $out = [];
 
-        try {
-            $sql = "SELECT id, {$name_col} AS place_name";
-            if ($code_col !== '') {
-                $sql .= ", {$code_col} AS place_code";
-            }
-            if ($sort_col !== '') {
-                $sql .= ", {$sort_col} AS sort_order";
-            }
-            if ($active_col !== '') {
-                $sql .= ", {$active_col} AS is_active_value";
-            }
-            $sql .= " FROM {$table} WHERE {$tour_col} = %d";
+        if ($table !== '') {
+            $code_col = $has_col('code') ? 'code' : '';
+            $active_col = $has_col('is_active') ? 'is_active' : ($has_col('active') ? 'active' : '');
+            $sort_col = $has_col('sort_order') ? 'sort_order' : '';
 
-            $params = [$this->tour_id];
-            if ($active_only && $active_col !== '') {
-                $sql .= " AND {$active_col} = 1";
-            }
+            try {
+                $sql = "SELECT id, {$name_col} AS place_name";
+                if ($code_col !== '') {
+                    $sql .= ", {$code_col} AS place_code";
+                }
+                if ($sort_col !== '') {
+                    $sql .= ", {$sort_col} AS sort_order";
+                }
+                if ($active_col !== '') {
+                    $sql .= ", {$active_col} AS is_active_value";
+                }
+                $sql .= " FROM {$table} WHERE {$tour_col} = %d";
 
-            if ($sort_col !== '') {
-                $sql .= " ORDER BY {$sort_col} ASC, id ASC";
-            } else {
-                $sql .= " ORDER BY id ASC";
-            }
+                $params = [$this->tour_id];
+                if ($active_only && $active_col !== '') {
+                    $sql .= " AND {$active_col} = 1";
+                }
 
-            $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $params), ARRAY_A);
-            if (!$rows) {
-                return [];
-            }
+                if ($sort_col !== '') {
+                    $sql .= " ORDER BY {$sort_col} ASC, id ASC";
+                } else {
+                    $sql .= " ORDER BY id ASC";
+                }
 
-            $out = [];
-            foreach ($rows as $row) {
-                $name = isset($row['place_name']) ? trim((string) $row['place_name']) : '';
-                if ($name === '') {
+                $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $params), ARRAY_A);
+                if (is_array($rows) && !empty($rows)) {
+                    foreach ($rows as $row) {
+                        $name = isset($row['place_name']) ? trim((string) $row['place_name']) : '';
+                        if ($name === '') {
+                            continue;
+                        }
+
+                        $code = isset($row['place_code']) ? trim((string) $row['place_code']) : '';
+                        $is_active = true;
+                        if (array_key_exists('is_active_value', $row)) {
+                            $is_active = !empty($row['is_active_value']);
+                        }
+
+                        $out[] = [
+                            'id' => isset($row['id']) ? (int) $row['id'] : 0,
+                            'name' => $name,
+                            'code' => $code,
+                            'is_active' => $is_active,
+                        ];
+                    }
+                }
+            } catch (Exception $e) {
+                $this->log_error('get_departure_places_wp', $e);
+            }
+        }
+
+        // Fallback to Laravel admin tables when WP sync table has no rows.
+        if (empty($out)) {
+            try {
+                $table_voyages = 'voyages';
+                $table_places = 'voyage_departure_places';
+                if ($this->table_exists($table_voyages) && $this->table_exists($table_places)) {
+                    $active_clause = $active_only ? " AND p.is_active = 1" : "";
+                    $sql = "
+                        SELECT p.id, p.name AS place_name, p.code AS place_code, p.is_active AS is_active_value
+                        FROM {$table_places} p
+                        INNER JOIN {$table_voyages} v ON v.id = p.voyage_id
+                        WHERE v.wp_post_id = %d{$active_clause}
+                        ORDER BY p.sort_order ASC, p.id ASC
+                    ";
+                    $rows = $this->wpdb->get_results($this->wpdb->prepare($sql, $this->tour_id), ARRAY_A);
+                    if (is_array($rows) && !empty($rows)) {
+                        foreach ($rows as $row) {
+                            $name = isset($row['place_name']) ? trim((string) $row['place_name']) : '';
+                            if ($name === '') {
+                                continue;
+                            }
+                            $out[] = [
+                                'id' => isset($row['id']) ? (int) $row['id'] : 0,
+                                'name' => $name,
+                                'code' => isset($row['place_code']) ? trim((string) $row['place_code']) : '',
+                                'is_active' => array_key_exists('is_active_value', $row) ? !empty($row['is_active_value']) : true,
+                            ];
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                $this->log_error('get_departure_places_laravel_fallback', $e);
+            }
+        }
+
+        // Ensure unique names to avoid duplicate options due to mixed sources.
+        if (!empty($out)) {
+            $seen = [];
+            $unique = [];
+            foreach ($out as $row) {
+                $key = strtolower(trim((string) ($row['name'] ?? '')));
+                if ($key === '' || isset($seen[$key])) {
                     continue;
                 }
-
-                $code = isset($row['place_code']) ? trim((string) $row['place_code']) : '';
-                $is_active = true;
-                if (array_key_exists('is_active_value', $row)) {
-                    $is_active = !empty($row['is_active_value']);
-                }
-
-                $out[] = [
-                    'id' => isset($row['id']) ? (int) $row['id'] : 0,
-                    'name' => $name,
-                    'code' => $code,
-                    'is_active' => $is_active,
-                ];
+                $seen[$key] = true;
+                $unique[] = $row;
             }
-
-            return $out;
-        } catch (Exception $e) {
-            $this->log_error('get_departure_places', $e);
-            return [];
+            $out = $unique;
         }
+
+        return $out;
     }
 
     /**

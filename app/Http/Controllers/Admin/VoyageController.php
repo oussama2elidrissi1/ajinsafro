@@ -652,6 +652,7 @@ class VoyageController extends Controller
                 'tour_activities.*.description' => 'nullable|string|max:5000',
                 'tour_activities.*.day_number' => 'nullable|integer|min:1',
                 'tour_activities.*.sort_order' => 'nullable|integer|min:0',
+                'tour_activities.*.included' => 'nullable|boolean',
                 'tour_activities.*.pricing_type' => 'nullable|string|max:100',
                 'tour_activities.*.unit_price' => 'nullable|numeric|min:0',
                 'tour_activities.*.child_price' => 'nullable|numeric|min:0',
@@ -3473,6 +3474,7 @@ class VoyageController extends Controller
 
             $activity = Activity::find($activityId);
             $title = trim((string) ($row['title'] ?? ($activity?->title ?? 'Activite')));
+            $included = $this->normalizeCheckboxValue($row['included'] ?? 1, 1);
             $pricingType = ($row['pricing_type'] ?? 'per_person') === 'fixed' ? 'fixed' : 'per_person';
             $unitPrice = (float) ($row['unit_price'] ?? 0);
             $unitPrice = $unitPrice < 0 ? 0 : round($unitPrice, 2);
@@ -3493,7 +3495,7 @@ class VoyageController extends Controller
                 'type' => 'activity',
                 'title' => $title !== '' ? $title : ($activity?->title ?? 'Activite'),
                 'details' => $description !== '' ? $description : null,
-                'included' => true,
+                'included' => $included,
                 'price_delta_per_person' => $pricingType === 'per_person' ? (int) round($unitPrice * 100) : 0,
                 'options_json' => [
                     'activity_id' => $activityId,
@@ -3502,6 +3504,7 @@ class VoyageController extends Controller
                     'quantity' => $quantity,
                     'description' => $description,
                     'day_number' => $dayNumber,
+                    'included' => $included,
                 ],
                 'meta_json' => [
                     'source' => 'voyage_activities_tab',
