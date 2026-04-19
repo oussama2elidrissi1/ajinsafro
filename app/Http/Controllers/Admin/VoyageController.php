@@ -1166,24 +1166,8 @@ class VoyageController extends Controller
         $multiLocations = $this->repository->parseMultiLocation($post->getMeta('multi_location'));
         $hasTaxonomies = collect($this->getPostTaxonomies($wpPostId))->flatten()->isNotEmpty();
         $hasThemes = $laravelVoyage && Schema::hasTable('voyage_voyage_theme') && $laravelVoyage->themes()->exists();
-        $hasDeparturePlaceColumn = Schema::hasTable('voyage_flight_options')
-            && Schema::hasColumn('voyage_flight_options', 'departure_place_id');
         $hasFlightOption = $laravelVoyage
-            ? $laravelVoyage->flightOptions()
-                ->where(function ($query) use ($hasDeparturePlaceColumn) {
-                    $query->where(function ($q) {
-                        $q->whereNotNull('from_city')->where('from_city', '!=', '');
-                    })->orWhere(function ($q) {
-                        $q->whereNotNull('to_city')->where('to_city', '!=', '');
-                    })->orWhere(function ($q) {
-                        $q->whereNotNull('flight_number')->where('flight_number', '!=', '');
-                    })->orWhereNotNull('depart_at')
-                      ->orWhereNotNull('arrive_at');
-                    if ($hasDeparturePlaceColumn) {
-                        $query->orWhereNotNull('departure_place_id');
-                    }
-                })
-                ->exists()
+            ? $laravelVoyage->flightOptions()->exists()
             : false;
 
         $states = [
