@@ -31,13 +31,14 @@
             </div>
 
             <div class="table-responsive" style="overflow-x:auto;">
-                <table class="table table-bordered align-middle mb-0" style="min-width:1700px;">
+                <table class="table table-bordered align-middle mb-0" style="min-width:1880px;">
                     <thead class="table-light">
                         <tr>
                             <th style="width:70px;">Ordre</th>
                             <th style="min-width:220px;">Activité</th>
                             <th style="min-width:190px;">Jour</th>
                             <th style="min-width:150px;">Statut</th>
+                            <th style="min-width:220px;">Disponibilité client</th>
                             <th style="min-width:220px;">Titre affiché</th>
                             <th style="min-width:260px;">Description</th>
                             <th style="min-width:130px;">Type</th>
@@ -58,6 +59,10 @@
                                 $description = (string) ($tourActivity->details ?? ($opts['description'] ?? ''));
                                 $displayTitle = (string) old('tour_activities.'.$idx.'.title', $tourActivity->title ?? ($opts['title'] ?? ''));
                                 $isIncluded = (int) old('tour_activities.'.$idx.'.included', (int) ($tourActivity->included ?? 1)) === 1;
+                                $dayScope = (string) old('tour_activities.'.$idx.'.day_scope', (string) ($opts['day_scope'] ?? 'fixed'));
+                                if (!in_array($dayScope, ['fixed', 'open'], true)) {
+                                    $dayScope = 'fixed';
+                                }
                                 $selectedDay = (int) old('tour_activities.'.$idx.'.day_number', $tourActivity->day_number ?? ($opts['day_number'] ?? 1));
                                 if ($selectedDay < 1) {
                                     $selectedDay = (int) ($activityDayOptions->first()['number'] ?? 1);
@@ -86,6 +91,16 @@
                                         <option value="0" @selected(!$isIncluded)>Option client</option>
                                     </select>
                                     <div class="small text-muted mt-1 voyage-activity-state-text">{{ $isIncluded ? 'Activité incluse dans le programme.' : 'Activité proposée au client comme option.' }}</div>
+                                </td>
+                                <td>
+                                    <div class="voyage-activity-day-scope-wrap {{ $isIncluded ? 'd-none' : '' }}">
+                                        <select class="form-select form-select-sm voyage-activity-day-scope" data-field="day_scope" name="tour_activities[{{ $idx }}][day_scope]" {{ $isIncluded ? 'disabled' : '' }}>
+                                            <option value="fixed" @selected($dayScope === 'fixed')>Jour précis</option>
+                                            <option value="open" @selected($dayScope === 'open')>Tous les jours du programme</option>
+                                        </select>
+                                        <div class="small text-muted mt-1">Visible au client selon le mode choisi.</div>
+                                    </div>
+                                    <input type="hidden" class="voyage-activity-day-scope-fallback" data-field="day_scope" name="tour_activities[{{ $idx }}][day_scope]" value="fixed" {{ !$isIncluded ? 'disabled' : '' }}>
                                 </td>
                                 <td>
                                     <input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" name="tour_activities[{{ $idx }}][title]" value="{{ old('tour_activities.'.$idx.'.title', $displayTitle) }}" placeholder="Titre affiché dans le voyage">
@@ -118,7 +133,7 @@
                             </tr>
                         @empty
                             <tr class="voyage-activities-empty-row">
-                                <td colspan="11" class="text-center text-muted py-3">Aucune activité ajoutée pour ce voyage.</td>
+                                <td colspan="12" class="text-center text-muted py-3">Aucune activité ajoutée pour ce voyage.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -126,7 +141,7 @@
             </div>
 
             <p class="small text-muted mt-2 mb-0">
-                Les activités sont classées par jour. Vous pouvez changer le jour d’une activité directement dans la colonne <strong>Jour</strong> et basculer son statut entre <strong>Inclus</strong> et <strong>Option client</strong>.
+                Les activités sont classées par jour. Pour une <strong>Option client</strong>, choisissez la portée dans <strong>Disponibilité client</strong> : <strong>Jour précis</strong> ou <strong>Tous les jours du programme</strong>.
             </p>
 
             <div class="alert alert-info mt-3 mb-0" id="voyage-activities-empty-state" style="display:none;">
@@ -319,10 +334,33 @@
         var includedField = row.querySelector('[data-field="included"]');
         var statusText = row.querySelector('.voyage-activity-state-text');
         var totalEl = row.querySelector('.voyage-activity-line-total');
+        var dayScopeWrap = row.querySelector('.voyage-activity-day-scope-wrap');
+        var dayScopeField = row.querySelector('.voyage-activity-day-scope');
+        var dayScopeFallback = row.querySelector('.voyage-activity-day-scope-fallback');
         var included = !includedField || String(includedField.value) === '1';
 
         row.classList.toggle('table-warning', !included);
         row.setAttribute('data-included', included ? '1' : '0');
+
+        if (dayScopeWrap) {
+            dayScopeWrap.classList.toggle('d-none', included);
+        }
+        if (dayScopeField) {
+            if (included) {
+                dayScopeField.setAttribute('disabled', 'disabled');
+                dayScopeField.value = 'fixed';
+            } else {
+                dayScopeField.removeAttribute('disabled');
+            }
+        }
+        if (dayScopeFallback) {
+            if (included) {
+                dayScopeFallback.removeAttribute('disabled');
+                dayScopeFallback.value = 'fixed';
+            } else {
+                dayScopeFallback.setAttribute('disabled', 'disabled');
+            }
+        }
 
         if (statusText) {
             statusText.textContent = included ? 'Activité incluse dans le programme.' : 'Activité proposée au client comme option.';

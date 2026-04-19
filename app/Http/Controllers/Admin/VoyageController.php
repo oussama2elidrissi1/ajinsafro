@@ -653,6 +653,7 @@ class VoyageController extends Controller
                 'tour_activities.*.day_number' => 'nullable|integer|min:1',
                 'tour_activities.*.sort_order' => 'nullable|integer|min:0',
                 'tour_activities.*.included' => 'nullable|boolean',
+                'tour_activities.*.day_scope' => 'nullable|string|in:fixed,open',
                 'tour_activities.*.pricing_type' => 'nullable|string|max:100',
                 'tour_activities.*.unit_price' => 'nullable|numeric|min:0',
                 'tour_activities.*.child_price' => 'nullable|numeric|min:0',
@@ -1000,6 +1001,7 @@ class VoyageController extends Controller
                 }
                 $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
                 $this->syncActivities($laravelVoyage, $request);
+                $this->syncActivitiesTabToWpProgramme($wpPostId, is_array($request->input('tour_activities')) ? $request->input('tour_activities') : []);
                 break;
 
             case 's-extras':
@@ -3016,6 +3018,7 @@ class VoyageController extends Controller
             $laravelVoyage = $this->syncLaravelVoyageFromRequest($id, $validated);
 
             $this->syncActivities($laravelVoyage, $request);
+            $this->syncActivitiesTabToWpProgramme($id, is_array($request->input('tour_activities')) ? $request->input('tour_activities') : []);
             $lastDayNumber = 1;
             try {
                 $program = $this->programJsonService->getProgram($id);
@@ -3481,6 +3484,10 @@ class VoyageController extends Controller
             $activity = Activity::find($activityId);
             $title = trim((string) ($row['title'] ?? ($activity?->title ?? 'Activite')));
             $included = $this->normalizeCheckboxValue($row['included'] ?? 1, 1);
+            $dayScope = ($row['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed';
+            if ($included) {
+                $dayScope = 'fixed';
+            }
             $pricingType = ($row['pricing_type'] ?? 'per_person') === 'fixed' ? 'fixed' : 'per_person';
             $unitPrice = (float) ($row['unit_price'] ?? 0);
             $unitPrice = $unitPrice < 0 ? 0 : round($unitPrice, 2);
@@ -3511,6 +3518,7 @@ class VoyageController extends Controller
                     'description' => $description,
                     'day_number' => $dayNumber,
                     'included' => $included,
+                    'day_scope' => $dayScope,
                 ],
                 'meta_json' => [
                     'source' => 'voyage_activities_tab',
@@ -3545,6 +3553,98 @@ class VoyageController extends Controller
             ->where('meta_json->source', 'voyage_activities_tab')
             ->when(!empty($keptIds), fn ($query) => $query->whereNotIn('id', $keptIds))
             ->delete();
+    }
+
+    /**
+     * Mirror Activities-tab rows into wp.aj_tour_day_activities so front V1 uses the same option-client logic.
+     */
+    protected function syncActivitiesTabToWpProgramme(int $tourId, array $payload): void
+    {
+        if ($tourId <= 0 || empty($payload)) {
+            return;
+        }
+
+        $days = TourDay::query()
+            ->where('tour_id', $tourId)
+            ->orderBy('day_number')
+            ->get();
+
+        if ($days->isEmpty()) {
+            $this->programService->addDay($tourId);
+            $days = TourDay::query()
+                ->where('tour_id', $tourId)
+                ->orderBy('day_number')
+                ->get();
+        }
+
+        if ($days->isEmpty()) {
+            return;
+        }
+
+        $daysByNumber = $days->keyBy(fn (TourDay $day) => (int) $day->day_number);
+        $firstDay = $days->first();
+        $maxDayNumber = (int) $days->max('day_number');
+
+        foreach ($payload as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $activityId = (int) ($row['activity_id'] ?? 0);
+            if ($activityId <= 0) {
+                continue;
+            }
+
+            $dayNumber = (int) ($row['day_number'] ?? 0);
+            if ($dayNumber <= 0) {
+                $dayNumber = (int) ($firstDay?->day_number ?? 1);
+            }
+            if ($dayNumber > $maxDayNumber) {
+                $dayNumber = $maxDayNumber;
+            }
+
+            $targetDay = $daysByNumber->get($dayNumber);
+            if (!$targetDay) {
+                $targetDay = $firstDay;
+            }
+            if (!$targetDay) {
+                continue;
+            }
+
+            $isIncluded = $this->normalizeCheckboxValue($row['included'] ?? 1, 1);
+            $dayScope = ($row['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed';
+            if ($isIncluded) {
+                $dayScope = 'fixed';
+            }
+
+            $customTitle = trim((string) ($row['title'] ?? ''));
+            $customDescription = trim((string) ($row['description'] ?? ''));
+            $customPrice = array_key_exists('unit_price', $row) && $row['unit_price'] !== null && $row['unit_price'] !== ''
+                ? (float) $row['unit_price']
+                : null;
+            $sortOrder = isset($row['sort_order']) && $row['sort_order'] !== '' ? max(0, (int) $row['sort_order']) : 0;
+
+            $existing = TourDayActivity::query()
+                ->where('day_id', (int) $targetDay->id)
+                ->where('activity_id', $activityId)
+                ->first();
+
+            $data = [
+                'sort_order' => $sortOrder,
+                'is_included' => $isIncluded,
+                'day_scope' => $dayScope,
+                'is_mandatory' => 0,
+                'custom_title' => $customTitle !== '' ? $customTitle : null,
+                'custom_description' => $customDescription !== '' ? $customDescription : null,
+                'custom_price' => $customPrice,
+            ];
+
+            if ($existing) {
+                $this->programService->updateDayActivity((int) $existing->id, $data);
+            } else {
+                $this->programService->addActivityToDay((int) $targetDay->id, $activityId, $data);
+            }
+        }
     }
 
     /**

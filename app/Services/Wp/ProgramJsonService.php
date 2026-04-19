@@ -132,6 +132,7 @@ class ProgramJsonService
                     'meta_snapshot' => [
                         'title' => $da->activity->title ?? null,
                         'is_included' => (bool) $da->is_included,
+                        'day_scope' => (($da->day_scope ?? 'fixed') === 'open' ? 'open' : 'fixed'),
                         'is_mandatory' => (bool) $da->is_mandatory,
                     ],
                 ];
@@ -202,28 +203,56 @@ class ProgramJsonService
                 continue;
             }
             $items = $dayRow['items'] ?? [];
-            $activityRefs = [];
+            $activityItems = [];
             foreach ($items as $item) {
                 if (($item['type'] ?? '') === self::ITEM_TYPE_ACTIVITY && !empty($item['ref_id'])) {
-                    $activityRefs[] = (int) $item['ref_id'];
+                    $meta = is_array($item['meta_snapshot'] ?? null) ? $item['meta_snapshot'] : [];
+                    $isIncluded = !empty($meta['is_included']);
+                    $dayScope = (($meta['day_scope'] ?? 'fixed') === 'open') ? 'open' : 'fixed';
+                    if ($isIncluded) {
+                        $dayScope = 'fixed';
+                    }
+                    $activityItems[] = [
+                        'ref_id' => (int) $item['ref_id'],
+                        'sort' => (int) ($item['sort'] ?? count($activityItems)),
+                        'is_included' => $isIncluded,
+                        'is_mandatory' => !empty($meta['is_mandatory']),
+                        'day_scope' => $dayScope,
+                        'title' => isset($meta['title']) ? (string) $meta['title'] : null,
+                    ];
                 }
             }
             $current = TourDayActivity::where('day_id', $day->id)->get();
             foreach ($current as $da) {
-                if (!in_array((int) $da->activity_id, $activityRefs, true) && !$da->is_mandatory) {
+                $keep = false;
+                foreach ($activityItems as $activityItem) {
+                    if ((int) $activityItem['ref_id'] === (int) $da->activity_id) {
+                        $keep = true;
+                        break;
+                    }
+                }
+                if (!$keep && !$da->is_mandatory) {
                     $this->programService->removeDayActivity($da->id);
                 }
             }
             $current = TourDayActivity::where('day_id', $day->id)->get();
-            $order = 0;
-            foreach ($activityRefs as $refId) {
+            foreach ($activityItems as $order => $activityItem) {
+                $refId = (int) $activityItem['ref_id'];
                 $existing = $current->firstWhere('activity_id', $refId);
-                if ($existing) {
-                    $this->programService->updateDayActivity($existing->id, ['sort_order' => $order]);
-                } else {
-                    $this->programService->addActivityToDay($day->id, $refId, ['sort_order' => $order]);
+                $updatePayload = [
+                    'sort_order' => $order,
+                    'is_included' => !empty($activityItem['is_included']) ? 1 : 0,
+                    'is_mandatory' => !empty($activityItem['is_mandatory']) ? 1 : 0,
+                    'day_scope' => ($activityItem['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed',
+                ];
+                if (!empty($activityItem['title'])) {
+                    $updatePayload['custom_title'] = (string) $activityItem['title'];
                 }
-                $order++;
+                if ($existing) {
+                    $this->programService->updateDayActivity($existing->id, $updatePayload);
+                } else {
+                    $this->programService->addActivityToDay($day->id, $refId, $updatePayload);
+                }
             }
         }
 

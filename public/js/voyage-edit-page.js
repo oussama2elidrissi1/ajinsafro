@@ -4261,10 +4261,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             function reindexRows() {
                 rowsContainer.querySelectorAll('.voyage-activity-row').forEach(function(row, index) {
+                    var orderBadge = row.querySelector('.voyage-activity-order');
+                    if (orderBadge) {
+                        orderBadge.textContent = String(index + 1);
+                    }
                     row.querySelectorAll('[data-field]').forEach(function(input) {
                         var field = input.getAttribute('data-field');
                         if (field) {
                             input.name = 'tour_activities[' + index + '][' + field + ']';
+                            if (field === 'sort_order') {
+                                input.value = String(index);
+                            }
                         }
                     });
                     computeLineTotal(row);
@@ -4294,6 +4301,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var defaultChild = toNumber(activity.child_price, 0).toFixed(2);
                 var pricingOpts = Array.isArray(window.VOYAGE_ACTIVITY_PRICING_TYPES) ? window.VOYAGE_ACTIVITY_PRICING_TYPES : [];
                 var pricingSelect = '';
+                var daySelect = '';
                 if (pricingOpts.length) {
                     pricingOpts.forEach(function (pt, i) {
                         pricingSelect += '<option value="' + esc(pt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(pt.label) + '</option>';
@@ -4302,15 +4310,55 @@ document.addEventListener('DOMContentLoaded', function () {
                     pricingSelect = '<option value="per_person" selected>Par personne</option><option value="fixed">Fixe</option>';
                 }
 
+                var dayOptions = [];
+                rowsContainer.querySelectorAll('.voyage-activity-day option').forEach(function(opt) {
+                    dayOptions.push({ value: opt.value, label: opt.textContent });
+                });
+                if (!dayOptions.length) {
+                    dayOptions.push({ value: '1', label: 'Jour 1' });
+                }
+                dayOptions.forEach(function(dayOpt, i) {
+                    daySelect += '<option value="' + esc(dayOpt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(dayOpt.label) + '</option>';
+                });
+
                 var tr = document.createElement('tr');
                 tr.className = 'voyage-activity-row';
                 tr.setAttribute('data-activity-id', activity.id);
+                tr.setAttribute('data-included', '1');
                 tr.innerHTML =
+                    '<td class="text-center">' +
+                        '<span class="badge rounded-pill bg-light text-dark voyage-activity-order">1</span>' +
+                        '<input type="hidden" data-field="sort_order" value="0">' +
+                    '</td>' +
                     '<td>' +
-                        '<span class="fw-medium voyage-activity-title">' + title + '</span>' +
+                        '<div class="fw-medium voyage-activity-title">' + title + '</div>' +
                         '<input type="hidden" data-field="id" value="">' +
                         '<input type="hidden" data-field="activity_id" value="' + activity.id + '">' +
-                        '<input type="hidden" data-field="title" value="' + title + '">' +
+                    '</td>' +
+                    '<td>' +
+                        '<select class="form-select form-select-sm voyage-activity-day" data-field="day_number">' +
+                            daySelect +
+                        '</select>' +
+                    '</td>' +
+                    '<td>' +
+                        '<select class="form-select form-select-sm voyage-activity-included" data-field="included">' +
+                            '<option value="1" selected>Inclus</option>' +
+                            '<option value="0">Option client</option>' +
+                        '</select>' +
+                        '<div class="small text-muted mt-1 voyage-activity-state-text">Activité incluse dans le programme.</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="voyage-activity-day-scope-wrap d-none">' +
+                            '<select class="form-select form-select-sm voyage-activity-day-scope" data-field="day_scope" disabled>' +
+                                '<option value="fixed" selected>Jour précis</option>' +
+                                '<option value="open">Tous les jours du programme</option>' +
+                            '</select>' +
+                            '<div class="small text-muted mt-1">Visible au client selon le mode choisi.</div>' +
+                        '</div>' +
+                        '<input type="hidden" class="voyage-activity-day-scope-fallback" data-field="day_scope" value="fixed">' +
+                    '</td>' +
+                    '<td>' +
+                        '<input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" value="' + title + '" placeholder="Titre affiché dans le voyage">' +
                     '</td>' +
                     '<td>' +
                         '<textarea class="form-control form-control-sm voyage-activity-description" data-field="description" rows="2" placeholder="—"></textarea>' +
