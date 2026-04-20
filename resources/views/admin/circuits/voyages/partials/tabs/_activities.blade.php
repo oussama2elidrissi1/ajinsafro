@@ -20,26 +20,25 @@
         $activityDayOptions = collect([['number' => 1, 'label' => 'Jour 1']]);
     }
 @endphp
-<div class="tab-pane" id="activities" role="tabpanel" data-ve-pane-title="Activités">
+<div class="tab-pane" id="activities" role="tabpanel" data-ve-pane-title="Activites">
     <div class="card ve-pane-card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                <h4 class="card-title mb-0">Activités</h4>
+                <h4 class="card-title mb-0">Activites</h4>
                 <button type="button" class="btn btn-primary" id="btn-open-activities-modal" data-bs-toggle="modal" data-bs-target="#activitiesCatalogModal">
-                    <i class="bx bx-plus me-1"></i> Ajouter une activité
+                    <i class="bx bx-plus me-1"></i> Ajouter une activite
                 </button>
             </div>
 
             <div class="table-responsive" style="overflow-x:auto;">
-                <table class="table table-bordered align-middle mb-0" style="min-width:1880px;">
+                <table class="table table-bordered align-middle mb-0" style="min-width:1760px;">
                     <thead class="table-light">
                         <tr>
                             <th style="width:70px;">Ordre</th>
-                            <th style="min-width:220px;">Activité</th>
-                            <th style="min-width:190px;">Jour</th>
+                            <th style="min-width:220px;">Activite</th>
+                            <th style="min-width:240px;">Jour / visibilite</th>
                             <th style="min-width:150px;">Statut</th>
-                            <th style="min-width:220px;">Disponibilité client</th>
-                            <th style="min-width:220px;">Titre affiché</th>
+                            <th style="min-width:220px;">Titre affiche</th>
                             <th style="min-width:260px;">Description</th>
                             <th style="min-width:130px;">Type</th>
                             <th style="min-width:120px;">Prix adulte</th>
@@ -48,7 +47,7 @@
                             <th style="width:110px;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="voyage-activities-rows">
+                    <tbody id="voyage-activities-rows" data-day-options='@json($activityDayOptions->values()->all())'>
                         @forelse(($tourActivities ?? collect()) as $idx => $tourActivity)
                             @php
                                 $opts = is_array($tourActivity->options_json ?? null) ? $tourActivity->options_json : [];
@@ -67,6 +66,7 @@
                                 if ($selectedDay < 1) {
                                     $selectedDay = (int) ($activityDayOptions->first()['number'] ?? 1);
                                 }
+                                $scopeValue = (!$isIncluded && $dayScope === 'open') ? 'all' : ('day:' . $selectedDay);
                             @endphp
                             <tr class="voyage-activity-row {{ $isIncluded ? '' : 'table-warning' }}" data-activity-id="{{ $activityId }}" data-included="{{ $isIncluded ? '1' : '0' }}">
                                 <td class="text-center">
@@ -79,31 +79,25 @@
                                     <input type="hidden" data-field="activity_id" name="tour_activities[{{ $idx }}][activity_id]" value="{{ $activityId }}">
                                 </td>
                                 <td>
-                                    <select class="form-select form-select-sm voyage-activity-day" data-field="day_number" name="tour_activities[{{ $idx }}][day_number]">
+                                    <select class="form-select form-select-sm voyage-activity-scope-select">
                                         @foreach($activityDayOptions as $dayOption)
-                                            <option value="{{ $dayOption['number'] }}" @selected((int) $dayOption['number'] === $selectedDay)>{{ $dayOption['label'] }}</option>
+                                            <option value="day:{{ $dayOption['number'] }}" @selected($scopeValue === ('day:' . (int) $dayOption['number']))>{{ $dayOption['label'] }}</option>
                                         @endforeach
+                                        <option value="all" @selected($scopeValue === 'all')>Tous les jours du programme</option>
                                     </select>
+                                    <input type="hidden" data-field="day_number" name="tour_activities[{{ $idx }}][day_number]" value="{{ $selectedDay }}">
+                                    <input type="hidden" data-field="day_scope" name="tour_activities[{{ $idx }}][day_scope]" value="{{ $isIncluded ? 'fixed' : $dayScope }}">
+                                    <div class="small text-muted mt-1 voyage-activity-scope-text"></div>
                                 </td>
                                 <td>
                                     <select class="form-select form-select-sm voyage-activity-included" data-field="included" name="tour_activities[{{ $idx }}][included]">
                                         <option value="1" @selected($isIncluded)>Inclus</option>
                                         <option value="0" @selected(!$isIncluded)>Option client</option>
                                     </select>
-                                    <div class="small text-muted mt-1 voyage-activity-state-text">{{ $isIncluded ? 'Activité incluse dans le programme.' : 'Activité proposée au client comme option.' }}</div>
+                                    <div class="small text-muted mt-1 voyage-activity-state-text">{{ $isIncluded ? 'Activite incluse dans le programme.' : 'Activite proposee au client comme option.' }}</div>
                                 </td>
                                 <td>
-                                    <div class="voyage-activity-day-scope-wrap {{ $isIncluded ? 'd-none' : '' }}">
-                                        <select class="form-select form-select-sm voyage-activity-day-scope" data-field="day_scope" name="tour_activities[{{ $idx }}][day_scope]" {{ $isIncluded ? 'disabled' : '' }}>
-                                            <option value="fixed" @selected($dayScope === 'fixed')>Jour précis</option>
-                                            <option value="open" @selected($dayScope === 'open')>Tous les jours du programme</option>
-                                        </select>
-                                        <div class="small text-muted mt-1">Visible au client selon le mode choisi.</div>
-                                    </div>
-                                    <input type="hidden" class="voyage-activity-day-scope-fallback" data-field="day_scope" name="tour_activities[{{ $idx }}][day_scope]" value="fixed" {{ !$isIncluded ? 'disabled' : '' }}>
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" name="tour_activities[{{ $idx }}][title]" value="{{ old('tour_activities.'.$idx.'.title', $displayTitle) }}" placeholder="Titre affiché dans le voyage">
+                                    <input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" name="tour_activities[{{ $idx }}][title]" value="{{ old('tour_activities.'.$idx.'.title', $displayTitle) }}" placeholder="Titre affiche dans le voyage">
                                 </td>
                                 <td>
                                     <textarea class="form-control form-control-sm voyage-activity-description" data-field="description" name="tour_activities[{{ $idx }}][description]" rows="2" placeholder="-">{{ old('tour_activities.'.$idx.'.description', $description) }}</textarea>
@@ -133,7 +127,7 @@
                             </tr>
                         @empty
                             <tr class="voyage-activities-empty-row">
-                                <td colspan="12" class="text-center text-muted py-3">Aucune activité ajoutée pour ce voyage.</td>
+                                <td colspan="11" class="text-center text-muted py-3">Aucune activite ajoutee pour ce voyage.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -141,16 +135,15 @@
             </div>
 
             <p class="small text-muted mt-2 mb-0">
-                Les activités sont classées par jour. Pour une <strong>Option client</strong>, choisissez la portée dans <strong>Disponibilité client</strong> : <strong>Jour précis</strong> ou <strong>Tous les jours du programme</strong>.
+                Les activites sont classees par jour. Pour une <strong>Option client</strong>, utilisez le select <strong>Jour / visibilite</strong> : jour precis ou tous les jours du programme.
             </p>
 
             <div class="alert alert-info mt-3 mb-0" id="voyage-activities-empty-state" style="display:none;">
-                Aucune activité ajoutée. Cliquez sur <strong>Ajouter une activité</strong> pour commencer.
+                Aucune activite ajoutee. Cliquez sur <strong>Ajouter une activite</strong> pour commencer.
             </div>
         </div>
     </div>
-
-    <div class="modal fade" id="activitiesCatalogModal" tabindex="-1" aria-labelledby="activitiesCatalogModalLabel" aria-hidden="true">
+<div class="modal fade" id="activitiesCatalogModal" tabindex="-1" aria-labelledby="activitiesCatalogModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -291,6 +284,9 @@
         return;
     }
 
+    var openModalBtn = document.getElementById('btn-open-activities-modal');
+    var modalEl = document.getElementById('activitiesCatalogModal');
+
     function parsePrice(value) {
         var parsed = parseFloat(String(value || '').replace(',', '.'));
         return isNaN(parsed) ? 0 : parsed;
@@ -330,40 +326,90 @@
         return 'Inclus';
     }
 
+    function parseDayNumberFromScope(scopeValue, fallback) {
+        if (typeof scopeValue === 'string' && scopeValue.indexOf('day:') === 0) {
+            var day = parseInt(scopeValue.slice(4), 10);
+            if (Number.isFinite(day) && day > 0) {
+                return day;
+            }
+        }
+        return fallback;
+    }
+
+    function syncScopeFields(row) {
+        var includedField = row.querySelector('[data-field="included"]');
+        var scopeSelect = row.querySelector('.voyage-activity-scope-select');
+        var dayNumberField = row.querySelector('[data-field="day_number"]');
+        var dayScopeField = row.querySelector('[data-field="day_scope"]');
+        var scopeText = row.querySelector('.voyage-activity-scope-text');
+
+        if (!scopeSelect || !dayNumberField || !dayScopeField) {
+            return;
+        }
+
+        var included = !includedField || String(includedField.value) === '1';
+        var dayOptions = Array.prototype.slice.call(scopeSelect.querySelectorAll('option[value^="day:"]'));
+        if (!dayOptions.length) {
+            return;
+        }
+
+        var firstDayValue = String(dayOptions[0].value || 'day:1');
+        var allOption = scopeSelect.querySelector('option[value="all"]');
+        var scopeValue = String(scopeSelect.value || firstDayValue);
+
+        if (included) {
+            if (scopeValue === 'all') {
+                scopeValue = firstDayValue;
+            }
+            if (allOption) {
+                allOption.disabled = true;
+                allOption.hidden = true;
+            }
+            dayScopeField.value = 'fixed';
+        } else {
+            if (allOption) {
+                allOption.disabled = false;
+                allOption.hidden = false;
+            }
+
+            if (scopeValue === 'all') {
+                dayScopeField.value = 'open';
+            } else {
+                if (scopeValue.indexOf('day:') !== 0) {
+                    scopeValue = firstDayValue;
+                }
+                dayScopeField.value = 'fixed';
+            }
+        }
+
+        scopeSelect.value = scopeValue;
+        var fallbackDay = parseDayNumberFromScope(firstDayValue, 1);
+        dayNumberField.value = String(parseDayNumberFromScope(scopeValue, fallbackDay));
+
+        if (scopeText) {
+            if (included) {
+                scopeText.textContent = 'Affichee sur le jour du programme.';
+            } else if (scopeValue === 'all') {
+                scopeText.textContent = 'Option client visible sur tous les jours du programme.';
+            } else {
+                scopeText.textContent = 'Option client visible sur le jour selectionne.';
+            }
+        }
+    }
+
     function refreshRow(row) {
         var includedField = row.querySelector('[data-field="included"]');
         var statusText = row.querySelector('.voyage-activity-state-text');
         var totalEl = row.querySelector('.voyage-activity-line-total');
-        var dayScopeWrap = row.querySelector('.voyage-activity-day-scope-wrap');
-        var dayScopeField = row.querySelector('.voyage-activity-day-scope');
-        var dayScopeFallback = row.querySelector('.voyage-activity-day-scope-fallback');
         var included = !includedField || String(includedField.value) === '1';
 
         row.classList.toggle('table-warning', !included);
         row.setAttribute('data-included', included ? '1' : '0');
 
-        if (dayScopeWrap) {
-            dayScopeWrap.classList.toggle('d-none', included);
-        }
-        if (dayScopeField) {
-            if (included) {
-                dayScopeField.setAttribute('disabled', 'disabled');
-                dayScopeField.value = 'fixed';
-            } else {
-                dayScopeField.removeAttribute('disabled');
-            }
-        }
-        if (dayScopeFallback) {
-            if (included) {
-                dayScopeFallback.removeAttribute('disabled');
-                dayScopeFallback.value = 'fixed';
-            } else {
-                dayScopeFallback.setAttribute('disabled', 'disabled');
-            }
-        }
+        syncScopeFields(row);
 
         if (statusText) {
-            statusText.textContent = included ? 'Activité incluse dans le programme.' : 'Activité proposée au client comme option.';
+            statusText.textContent = included ? 'Activite incluse dans le programme.' : 'Activite proposee au client comme option.';
         }
 
         if (totalEl) {
@@ -392,6 +438,23 @@
         }
         refreshRow(row);
     });
+
+    if (openModalBtn && modalEl) {
+        openModalBtn.addEventListener('click', function(event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            if (window.bootstrap && window.bootstrap.Modal) {
+                window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                return;
+            }
+
+            if (window.jQuery && typeof window.jQuery(modalEl).modal === 'function') {
+                window.jQuery(modalEl).modal('show');
+            }
+        });
+    }
 
     refreshAllRows();
 })();

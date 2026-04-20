@@ -357,7 +357,7 @@ class VoyageController extends Controller
 
         $step = $this->normalizeV2StepId($routeStep);
         if ($step === null) {
-            $message = 'Étape inconnue.';
+            $message = "\u{00C9}tape inconnue.";
             if (! $isAjax) {
                 return redirect()
                     ->to($this->buildV2SaveRedirectUrl($request, 0, 's-general'))
@@ -422,7 +422,7 @@ class VoyageController extends Controller
             if (! $isAjax) {
                 return redirect()
                     ->to($this->buildV2SaveRedirectUrl($request, $wpPostId, $step))
-                    ->with('success', 'Étape enregistrée.');
+                    ->with('success', "\u{00C9}tape enregistr\u{00E9}e.");
             }
 
             return response()->json([
@@ -433,7 +433,7 @@ class VoyageController extends Controller
                 'redirect_url' => route('admin.circuits.voyages.edit-v2', $wpPostId),
                 'step_states' => $this->buildV2StepStates($wpPostId),
                 'saved_at' => now()->toIso8601String(),
-                'message' => 'Étape enregistrée.',
+                'message' => "\u{00C9}tape enregistr\u{00E9}e.",
             ]);
         } catch (\Throwable $e) {
             Log::error('VoyageController@saveStepV2 failed', [
@@ -445,7 +445,7 @@ class VoyageController extends Controller
             if (! $isAjax) {
                 return redirect()
                     ->to($this->buildV2SaveRedirectUrl($request, $wpPostId, $step))
-                    ->withErrors(['error' => 'Erreur lors de l’enregistrement de l’étape.'])
+                    ->withErrors(['error' => "Erreur lors de l'enregistrement de l'\u{00E9}tape."])
                     ->withInput();
             }
 
@@ -453,7 +453,7 @@ class VoyageController extends Controller
                 'ok' => false,
                 'state' => 'error',
                 'step' => $step,
-                'message' => 'Erreur lors de l’enregistrement de l’étape.',
+                'message' => "Erreur lors de l'enregistrement de l'\u{00E9}tape.",
             ], 500);
         }
     }

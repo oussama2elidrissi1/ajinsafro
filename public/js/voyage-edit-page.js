@@ -4185,6 +4185,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var prevBtn = document.getElementById('activities-catalog-prev');
             var nextBtn = document.getElementById('activities-catalog-next');
             var countLabel = document.getElementById('activities-catalog-count');
+            var regionHint = document.getElementById('activities-catalog-region-hint');
 
             var filteredCatalog = [];
             var page = 1;
@@ -4295,13 +4296,49 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 1800);
             }
 
+            function getDayOptions() {
+                var fromDataset = [];
+                var raw = rowsContainer.getAttribute('data-day-options');
+                if (raw) {
+                    try {
+                        var parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) {
+                            parsed.forEach(function (entry) {
+                                var number = toInt(entry && entry.number, 0);
+                                if (number <= 0) return;
+                                var label = String((entry && entry.label) || ('Jour ' + number));
+                                fromDataset.push({ value: String(number), label: label });
+                            });
+                        }
+                    } catch (e) {
+                        // ignore invalid JSON
+                    }
+                }
+
+                if (fromDataset.length) {
+                    return fromDataset;
+                }
+
+                var fromDom = [];
+                rowsContainer.querySelectorAll('.voyage-activity-scope-select option[value^="day:"]').forEach(function(opt) {
+                    var value = String(opt.value || '').replace('day:', '');
+                    if (!value) return;
+                    fromDom.push({ value: value, label: String(opt.textContent || ('Jour ' + value)) });
+                });
+
+                if (fromDom.length) {
+                    return fromDom;
+                }
+
+                return [{ value: '1', label: 'Jour 1' }];
+            }
             function buildRow(activity) {
-                var title = esc(activity.title || ('Activité #' + activity.id));
+                var title = esc(activity.title || ('Activite #' + activity.id));
                 var defaultPrice = toNumber(activity.adult_price || activity.base_price, 0).toFixed(2);
                 var defaultChild = toNumber(activity.child_price, 0).toFixed(2);
                 var pricingOpts = Array.isArray(window.VOYAGE_ACTIVITY_PRICING_TYPES) ? window.VOYAGE_ACTIVITY_PRICING_TYPES : [];
                 var pricingSelect = '';
-                var daySelect = '';
+                var scopeSelect = '';
                 if (pricingOpts.length) {
                     pricingOpts.forEach(function (pt, i) {
                         pricingSelect += '<option value="' + esc(pt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(pt.label) + '</option>';
@@ -4310,16 +4347,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     pricingSelect = '<option value="per_person" selected>Par personne</option><option value="fixed">Fixe</option>';
                 }
 
-                var dayOptions = [];
-                rowsContainer.querySelectorAll('.voyage-activity-day option').forEach(function(opt) {
-                    dayOptions.push({ value: opt.value, label: opt.textContent });
-                });
-                if (!dayOptions.length) {
-                    dayOptions.push({ value: '1', label: 'Jour 1' });
-                }
+                var dayOptions = getDayOptions();
                 dayOptions.forEach(function(dayOpt, i) {
-                    daySelect += '<option value="' + esc(dayOpt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(dayOpt.label) + '</option>';
+                    scopeSelect += '<option value="day:' + esc(dayOpt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(dayOpt.label) + '</option>';
                 });
+                scopeSelect += '<option value="all">Tous les jours du programme</option>';
+                var firstDayValue = String((dayOptions[0] && dayOptions[0].value) || '1');
 
                 var tr = document.createElement('tr');
                 tr.className = 'voyage-activity-row';
@@ -4336,32 +4369,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<input type="hidden" data-field="activity_id" value="' + activity.id + '">' +
                     '</td>' +
                     '<td>' +
-                        '<select class="form-select form-select-sm voyage-activity-day" data-field="day_number">' +
-                            daySelect +
+                        '<select class="form-select form-select-sm voyage-activity-scope-select">' +
+                            scopeSelect +
                         '</select>' +
+                        '<input type="hidden" data-field="day_number" value="' + esc(firstDayValue) + '">' +
+                        '<input type="hidden" data-field="day_scope" value="fixed">' +
+                        '<div class="small text-muted mt-1 voyage-activity-scope-text"></div>' +
                     '</td>' +
                     '<td>' +
                         '<select class="form-select form-select-sm voyage-activity-included" data-field="included">' +
                             '<option value="1" selected>Inclus</option>' +
                             '<option value="0">Option client</option>' +
                         '</select>' +
-                        '<div class="small text-muted mt-1 voyage-activity-state-text">Activité incluse dans le programme.</div>' +
+                        '<div class="small text-muted mt-1 voyage-activity-state-text">Activite incluse dans le programme.</div>' +
                     '</td>' +
                     '<td>' +
-                        '<div class="voyage-activity-day-scope-wrap d-none">' +
-                            '<select class="form-select form-select-sm voyage-activity-day-scope" data-field="day_scope" disabled>' +
-                                '<option value="fixed" selected>Jour précis</option>' +
-                                '<option value="open">Tous les jours du programme</option>' +
-                            '</select>' +
-                            '<div class="small text-muted mt-1">Visible au client selon le mode choisi.</div>' +
-                        '</div>' +
-                        '<input type="hidden" class="voyage-activity-day-scope-fallback" data-field="day_scope" value="fixed">' +
+                        '<input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" value="' + title + '" placeholder="Titre affiche dans le voyage">' +
                     '</td>' +
                     '<td>' +
-                        '<input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" value="' + title + '" placeholder="Titre affiché dans le voyage">' +
-                    '</td>' +
-                    '<td>' +
-                        '<textarea class="form-control form-control-sm voyage-activity-description" data-field="description" rows="2" placeholder="—"></textarea>' +
+                        '<textarea class="form-control form-control-sm voyage-activity-description" data-field="description" rows="2" placeholder="-"></textarea>' +
                     '</td>' +
                     '<td>' +
                         '<select class="form-select form-select-sm voyage-activity-pricing" data-field="pricing_type">' +
@@ -4393,6 +4419,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 var emptyRow = rowsContainer.querySelector('.voyage-activities-empty-row');
                 if (emptyRow) emptyRow.remove();
                 rowsContainer.appendChild(row);
+                try {
+                    row.dispatchEvent(new Event('change', { bubbles: true }));
+                } catch (e) {
+                    // ignore
+                }
                 reindexRows();
                 updateEmptyState();
                 refreshCatalog();
