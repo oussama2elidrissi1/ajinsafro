@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\DB;
 class TourProgramService
 {
     /**
+     * Cached list of available columns on wp.aj_tour_day_activities.
+     *
+     * @var array<string, bool>|null
+     */
+    private ?array $dayActivityColumns = null;
+
+    /**
      * Load full program for a tour: days + activities sorted.
      *
      * @param int $tourId wp_posts.ID (st_tours)
@@ -178,7 +185,7 @@ class TourProgramService
         $day = TourDay::findOrFail($dayId);
         $maxOrder = TourDayActivity::where('day_id', $dayId)->max('sort_order') ?? 0;
 
-        $da = TourDayActivity::create([
+        $payload = $this->filterDayActivityPayload([
             'tour_id' => $day->tour_id,
             'day_id' => $dayId,
             'activity_id' => $activityId,
@@ -193,6 +200,8 @@ class TourProgramService
             'start_time' => $options['start_time'] ?? null,
             'end_time' => $options['end_time'] ?? null,
         ]);
+
+        $da = TourDayActivity::create($payload);
         return $da->load('activity');
     }
 
@@ -203,9 +212,80 @@ class TourProgramService
     {
         $da = TourDayActivity::findOrFail($dayActivityId);
         $fillable = ['day_id', 'sort_order', 'is_included', 'day_scope', 'is_mandatory', 'is_editable', 'custom_title', 'custom_description', 'custom_price', 'start_time', 'end_time'];
-        $da->fill(array_intersect_key($data, array_flip($fillable)));
+        $payload = array_intersect_key($data, array_flip($fillable));
+        $payload = $this->filterDayActivityPayload($payload);
+        $da->fill($payload);
         $da->save();
         return $da->load('activity');
+    }
+
+    /**
+     * Keep only columns available on wp.aj_tour_day_activities.
+     *
+     * This avoids SQL errors when some production environments lag behind
+     * schema updates (for example day_scope/custom_price).
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function filterDayActivityPayload(array $payload): array
+    {
+        $available = $this->resolveDayActivityColumns();
+
+        return array_filter(
+            $payload,
+            static fn ($value, string $key): bool => isset($available[$key]),
+            ARRAY_FILTER_USE_BOTH
+        );
+    }
+
+    /**
+     * Resolve table columns from WP connection, with a safe fallback.
+     *
+     * @return array<string, bool>
+     */
+    private function resolveDayActivityColumns(): array
+    {
+        if (is_array($this->dayActivityColumns)) {
+            return $this->dayActivityColumns;
+        }
+
+        try {
+            $columns = DB::connection('wp')
+                ->getSchemaBuilder()
+                ->getColumnListing('aj_tour_day_activities');
+
+            if (is_array($columns) && $columns !== []) {
+                $this->dayActivityColumns = array_fill_keys(
+                    array_map(static fn ($column) => (string) $column, $columns),
+                    true
+                );
+
+                return $this->dayActivityColumns;
+            }
+        } catch (\Throwable $e) {
+            // Fall back to the baseline schema below.
+        }
+
+        // Baseline columns guaranteed by the initial table creation.
+        $this->dayActivityColumns = array_fill_keys([
+            'id',
+            'tour_id',
+            'day_id',
+            'activity_id',
+            'sort_order',
+            'is_included',
+            'is_mandatory',
+            'is_editable',
+            'custom_title',
+            'custom_description',
+            'start_time',
+            'end_time',
+            'created_at',
+            'updated_at',
+        ], true);
+
+        return $this->dayActivityColumns;
     }
 
     /**

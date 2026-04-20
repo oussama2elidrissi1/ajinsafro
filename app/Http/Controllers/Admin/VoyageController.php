@@ -439,6 +439,9 @@ class VoyageController extends Controller
             Log::error('VoyageController@saveStepV2 failed', [
                 'step' => $step,
                 'tour_id' => $wpPostId,
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -1059,7 +1062,15 @@ class VoyageController extends Controller
                 }
                 $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
                 $this->syncActivities($laravelVoyage, $request);
-                $this->syncActivitiesTabToWpProgramme($wpPostId, is_array($request->input('tour_activities')) ? $request->input('tour_activities') : []);
+                try {
+                    $this->syncActivitiesTabToWpProgramme($wpPostId, is_array($request->input('tour_activities')) ? $request->input('tour_activities') : []);
+                } catch (\Throwable $e) {
+                    Log::warning('VoyageController@persistV2Step wp activities sync failed', [
+                        'step' => 's-activities',
+                        'tour_id' => $wpPostId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
                 break;
 
             case 's-extras':
@@ -3602,9 +3613,19 @@ class VoyageController extends Controller
         TravelDayItem::query()
             ->where('voyage_id', $voyage->id)
             ->where('type', 'activity')
-            ->where('meta_json->source', 'voyage_activities_tab')
             ->when(!empty($keptIds), fn ($query) => $query->whereNotIn('id', $keptIds))
-            ->delete();
+            ->get(['id', 'meta_json'])
+            ->each(function (TravelDayItem $item): void {
+                $meta = $item->meta_json;
+                if (is_string($meta)) {
+                    $decoded = json_decode($meta, true);
+                    $meta = json_last_error() === JSON_ERROR_NONE && is_array($decoded) ? $decoded : [];
+                }
+                if (!is_array($meta) || ($meta['source'] ?? null) !== 'voyage_activities_tab') {
+                    return;
+                }
+                $item->delete();
+            });
     }
 
     /**
