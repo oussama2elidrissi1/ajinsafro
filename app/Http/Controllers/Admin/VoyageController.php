@@ -366,6 +366,7 @@ class VoyageController extends Controller
             }
 
             return response()->json([
+                'success' => false,
                 'ok' => false,
                 'state' => 'error',
                 'message' => $message,
@@ -376,6 +377,9 @@ class VoyageController extends Controller
 
         $this->mergeProgrammeDaysPayloadIntoRequest($request);
         $this->normalizeStepCheckboxDefaults($request, $step);
+        if ($step === 's-activities') {
+            $this->normalizeV2ActivitiesPayloadIntoRequest($request);
+        }
 
         $validator = Validator::make(
             $request->all(),
@@ -403,6 +407,7 @@ class VoyageController extends Controller
             }
 
             return response()->json([
+                'success' => false,
                 'ok' => false,
                 'state' => 'error',
                 'step' => $step,
@@ -426,6 +431,7 @@ class VoyageController extends Controller
             }
 
             return response()->json([
+                'success' => true,
                 'ok' => true,
                 'state' => 'saved',
                 'step' => $step,
@@ -439,6 +445,8 @@ class VoyageController extends Controller
             Log::error('VoyageController@saveStepV2 failed', [
                 'step' => $step,
                 'tour_id' => $wpPostId,
+                'request_keys' => array_values(array_map('strval', array_keys($request->all()))),
+                'tour_activities_count' => is_array($request->input('tour_activities')) ? count($request->input('tour_activities')) : null,
                 'exception' => get_class($e),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
@@ -453,10 +461,14 @@ class VoyageController extends Controller
             }
 
             return response()->json([
+                'success' => false,
                 'ok' => false,
                 'state' => 'error',
                 'step' => $step,
-                'message' => "Erreur lors de l'enregistrement de l'\u{00E9}tape.",
+                'message' => $this->buildV2StepSaveErrorMessage($e, $step),
+                'errors' => [
+                    'server' => [$this->buildV2StepSaveErrorMessage($e, $step)],
+                ],
             ], 500);
         }
     }
@@ -708,13 +720,13 @@ class VoyageController extends Controller
             's-activities' => [
                 'tour_activities' => 'nullable|array',
                 'tour_activities.*.id' => 'nullable|integer',
-                'tour_activities.*.activity_id' => 'nullable|integer',
+                'tour_activities.*.activity_id' => 'nullable|integer|min:1',
                 'tour_activities.*.title' => 'nullable|string|max:255',
                 'tour_activities.*.description' => 'nullable|string|max:5000',
                 'tour_activities.*.day_number' => 'nullable|integer|min:1',
                 'tour_activities.*.sort_order' => 'nullable|integer|min:0',
                 'tour_activities.*.included' => 'nullable|boolean',
-                'tour_activities.*.day_scope' => 'nullable|string|in:fixed,open',
+                'tour_activities.*.day_scope' => 'nullable|string|in:fixed,open,all',
                 'tour_activities.*.pricing_type' => 'nullable|string|max:100',
                 'tour_activities.*.unit_price' => 'nullable|numeric|min:0',
                 'tour_activities.*.child_price' => 'nullable|numeric|min:0',
@@ -902,6 +914,114 @@ class VoyageController extends Controller
         return is_array($value) ? array_values($value) : [];
     }
 
+    private function normalizeV2ActivitiesPayloadIntoRequest(Request $request): void
+    {
+        $raw = $request->input('tour_activities', []);
+        $request->merge([
+            'tour_activities' => $this->normalizeV2ActivitiesPayload($raw),
+        ]);
+    }
+
+    /**
+     * @param mixed $payload
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeV2ActivitiesPayload(mixed $payload): array
+    {
+        if (is_string($payload) && trim($payload) !== '') {
+            $decoded = json_decode($payload, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $payload = $decoded;
+            }
+        }
+
+        if (! is_array($payload)) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($payload as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $idRaw = $row['id'] ?? null;
+            $activityIdRaw = $row['activity_id'] ?? null;
+            $dayNumberRaw = $row['day_number'] ?? null;
+            $sortOrderRaw = $row['sort_order'] ?? null;
+            $unitPriceRaw = $row['unit_price'] ?? null;
+            $childPriceRaw = $row['child_price'] ?? null;
+            $quantityRaw = $row['quantity'] ?? null;
+
+            $id = is_numeric($idRaw) && (int) $idRaw > 0 ? (int) $idRaw : null;
+            $activityId = is_numeric($activityIdRaw) && (int) $activityIdRaw > 0 ? (int) $activityIdRaw : null;
+            $dayNumber = is_numeric($dayNumberRaw) && (int) $dayNumberRaw > 0 ? (int) $dayNumberRaw : null;
+            $sortOrder = is_numeric($sortOrderRaw) && (int) $sortOrderRaw >= 0 ? (int) $sortOrderRaw : null;
+            $unitPrice = is_numeric($unitPriceRaw) ? max(0, round((float) $unitPriceRaw, 2)) : null;
+            $childPrice = is_numeric($childPriceRaw) ? max(0, round((float) $childPriceRaw, 2)) : null;
+            $quantity = is_numeric($quantityRaw) ? max(1, (int) $quantityRaw) : 1;
+
+            $title = trim((string) ($row['title'] ?? ''));
+            $description = trim((string) ($row['description'] ?? ''));
+
+            $includedSource = array_key_exists('included', $row)
+                ? $row['included']
+                : (array_key_exists('is_optional', $row) ? ($this->normalizeCheckboxValue($row['is_optional'], 0) ? 0 : 1) : 1);
+            $included = $this->normalizeCheckboxValue($includedSource, 1) ? 1 : 0;
+
+            $dayScopeRaw = strtolower(trim((string) ($row['day_scope'] ?? 'fixed')));
+            if ($dayScopeRaw === 'all') {
+                $dayScopeRaw = 'open';
+            }
+            $dayScope = in_array($dayScopeRaw, ['fixed', 'open'], true) ? $dayScopeRaw : 'fixed';
+            if ($included === 1) {
+                $dayScope = 'fixed';
+            }
+
+            $pricingTypeRaw = strtolower(trim((string) ($row['pricing_type'] ?? 'per_person')));
+            $pricingType = $pricingTypeRaw === 'fixed' ? 'fixed' : 'per_person';
+
+            if ($activityId === null && $title === '' && $description === '') {
+                continue;
+            }
+
+            $rows[] = [
+                'id' => $id,
+                'activity_id' => $activityId,
+                'title' => $title !== '' ? $title : null,
+                'description' => $description !== '' ? $description : null,
+                'day_number' => $dayNumber,
+                'sort_order' => $sortOrder,
+                'included' => $included,
+                'day_scope' => $dayScope,
+                'pricing_type' => $pricingType,
+                'unit_price' => $unitPrice,
+                'child_price' => $childPrice,
+                'quantity' => $quantity,
+            ];
+        }
+
+        return array_values($rows);
+    }
+
+    private function buildV2StepSaveErrorMessage(\Throwable $e, string $step): string
+    {
+        $message = trim($e->getMessage());
+
+        if ($e instanceof \Illuminate\Database\QueryException) {
+            if (str_contains($message, 'Duplicate entry') && str_contains($message, 'voyages.slug')) {
+                return "Conflit de slug lors de la synchronisation du voyage Laravel. Rechargez la page et réessayez.";
+            }
+            if (str_contains($message, 'travel_day_items')) {
+                return "Erreur SQL pendant l'enregistrement des activités. Vérifiez la structure de la table travel_day_items.";
+            }
+
+            return "Erreur SQL pendant l'enregistrement de l'étape {$step}.";
+        }
+
+        return $message !== '' ? $message : "Erreur lors de l'enregistrement de l'étape {$step}.";
+    }
+
     private function countCsvValues(mixed $value): int
     {
         if (! is_string($value)) {
@@ -1057,13 +1177,12 @@ class VoyageController extends Controller
                 break;
 
             case 's-activities':
-                if (! $request->exists('tour_activities')) {
-                    break;
-                }
+                $activitiesPayload = $this->normalizeV2ActivitiesPayload($request->input('tour_activities', []));
+                $request->merge(['tour_activities' => $activitiesPayload]);
                 $laravelVoyage = $laravelVoyage ?: $this->resolveOrCreateLaravelVoyage($wpPostId);
-                $this->syncActivities($laravelVoyage, $request);
+                $this->syncActivities($laravelVoyage, $activitiesPayload);
                 try {
-                    $this->syncActivitiesTabToWpProgramme($wpPostId, is_array($request->input('tour_activities')) ? $request->input('tour_activities') : []);
+                    $this->syncActivitiesTabToWpProgramme($wpPostId, $activitiesPayload);
                 } catch (\Throwable $e) {
                     Log::warning('VoyageController@persistV2Step wp activities sync failed', [
                         'step' => 's-activities',
@@ -1258,7 +1377,7 @@ class VoyageController extends Controller
                 || trim((string) $post->getMeta('_tour_hero_image_id')) !== ''
                 || trim((string) $post->getMeta('_tour_hero_gallery_ids')) !== ''
                 || trim((string) $post->getMeta('gallery')) !== '',
-            's-programme' => TourDay::query()
+            's-programme' => $this->safeV2StateCheck('s-programme', fn (): bool => TourDay::query()
                 ->where('tour_id', $wpPostId)
                 ->where(function ($query) {
                     $query->whereNotNull('day_title')->where('day_title', '!=', '')
@@ -1269,45 +1388,62 @@ class VoyageController extends Controller
                             $q->whereNotNull('description')->where('description', '!=', '');
                         });
                 })
-                ->exists(),
+                ->exists()),
             's-information' => trim((string) $post->getMeta('tours_include')) !== ''
                 && trim((string) $post->getMeta('tours_exclude')) !== '',
             's-taxonomies' => $hasTaxonomies || $hasThemes,
             's-flights' => $hasFlightOption,
-            's-hotels' => TourHotel::query()
+            's-hotels' => $this->safeV2StateCheck('s-hotels', fn (): bool => TourHotel::query()
                 ->where('tour_id', $wpPostId)
                 ->whereNotNull('hotel_name')
                 ->where('hotel_name', '!=', '')
-                ->exists(),
-            's-transfers' => TourTransfer::query()
+                ->exists()),
+            's-transfers' => $this->safeV2StateCheck('s-transfers', fn (): bool => TourTransfer::query()
                 ->where('tour_id', $wpPostId)
                 ->whereNotNull('from_label')
                 ->where('from_label', '!=', '')
                 ->whereNotNull('to_label')
                 ->where('to_label', '!=', '')
-                ->exists(),
+                ->exists()),
             's-activities' => $laravelVoyage
-                ? TravelDayItem::query()->where('voyage_id', $laravelVoyage->id)->where('type', 'activity')->exists()
+                ? $this->safeV2StateCheck('s-activities', fn (): bool => TravelDayItem::query()
+                    ->where('voyage_id', $laravelVoyage->id)
+                    ->where('type', 'activity')
+                    ->exists())
                 : false,
             's-extras' => $laravelVoyage
-                ? VoyageExtra::query()
+                ? $this->safeV2StateCheck('s-extras', fn (): bool => VoyageExtra::query()
                     ->where('voyage_id', $laravelVoyage->id)
                     ->whereNotNull('name')
                     ->where('name', '!=', '')
-                    ->exists()
+                    ->exists())
                 : false,
-            's-availability' => TravelDate::query()
+            's-availability' => $this->safeV2StateCheck('s-availability', fn (): bool => TravelDate::query()
                 ->where('travel_id', $wpPostId)
                 ->where('is_active', true)
                 ->whereNotNull('date')
                 ->whereNotNull('seats')
-                ->exists(),
+                ->exists()),
             's-logistics' => $laravelVoyage ? $this->hasAnyNonEmptyScalar($laravelVoyage->logistics_meta ?? []) : false,
         ];
 
         return collect(self::V2_STEPS)
             ->mapWithKeys(fn ($stepId) => [$stepId => ! empty($states[$stepId]) ? 'complete' : 'incomplete'])
             ->all();
+    }
+
+    private function safeV2StateCheck(string $step, callable $resolver): bool
+    {
+        try {
+            return (bool) $resolver();
+        } catch (\Throwable $e) {
+            Log::warning('VoyageController@buildV2StepStates state check failed', [
+                'step' => $step,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     /**
@@ -3080,8 +3216,9 @@ class VoyageController extends Controller
 
             $laravelVoyage = $this->syncLaravelVoyageFromRequest($id, $validated);
 
-            $this->syncActivities($laravelVoyage, $request);
-            $this->syncActivitiesTabToWpProgramme($id, is_array($request->input('tour_activities')) ? $request->input('tour_activities') : []);
+            $activitiesPayload = $this->normalizeV2ActivitiesPayload($request->input('tour_activities', []));
+            $this->syncActivities($laravelVoyage, $activitiesPayload);
+            $this->syncActivitiesTabToWpProgramme($id, $activitiesPayload);
             $lastDayNumber = 1;
             try {
                 $program = $this->programJsonService->getProgram($id);
@@ -3483,12 +3620,9 @@ class VoyageController extends Controller
      * Sync inline "ActivitÃƒÂ©s" tab rows for a voyage (save-global strategy).
      * Stores rows in travel_day_items with type=activity and source=voyage_activities_tab.
      */
-    protected function syncActivities(Voyage $voyage, Request $request): void
+    protected function syncActivities(Voyage $voyage, array $payload): void
     {
-        $payload = $request->input('tour_activities', []);
-        if (!is_array($payload)) {
-            return;
-        }
+        $payload = $this->normalizeV2ActivitiesPayload($payload);
 
         $keptIds = [];
         $sortOrder = 0;
@@ -3508,6 +3642,27 @@ class VoyageController extends Controller
         }
         if (empty($validDayNumbers)) {
             $validDayNumbers = [1];
+        }
+
+        $activityIds = collect($payload)
+            ->map(fn ($row) => is_array($row) ? (int) ($row['activity_id'] ?? 0) : 0)
+            ->filter(fn (int $activityId) => $activityId > 0)
+            ->unique()
+            ->values()
+            ->all();
+        $activityTitleMap = collect();
+        if (! empty($activityIds)) {
+            try {
+                $activityTitleMap = Activity::query()
+                    ->whereIn('id', $activityIds)
+                    ->pluck('title', 'id');
+            } catch (\Throwable $e) {
+                Log::warning('VoyageController@syncActivities activity catalog lookup failed', [
+                    'voyage_id' => $voyage->id,
+                    'tour_id' => $voyage->wp_post_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         $minDayNumber = (int) min($validDayNumbers);
@@ -3540,20 +3695,26 @@ class VoyageController extends Controller
             }
 
             $activityId = (int) ($row['activity_id'] ?? 0);
-            if ($activityId <= 0 || !Activity::whereKey($activityId)->exists()) {
+            if ($activityId <= 0) {
                 continue;
             }
 
-            $activity = Activity::find($activityId);
-            $title = trim((string) ($row['title'] ?? ($activity?->title ?? 'Activite')));
+            $catalogTitle = trim((string) ($activityTitleMap->get($activityId) ?? ''));
+            $title = trim((string) ($row['title'] ?? ''));
             $included = $this->normalizeCheckboxValue($row['included'] ?? 1, 1);
-            $dayScope = ($row['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed';
+            $dayScopeRaw = (string) ($row['day_scope'] ?? 'fixed');
+            if ($dayScopeRaw === 'all') {
+                $dayScopeRaw = 'open';
+            }
+            $dayScope = $dayScopeRaw === 'open' ? 'open' : 'fixed';
             if ($included) {
                 $dayScope = 'fixed';
             }
             $pricingType = ($row['pricing_type'] ?? 'per_person') === 'fixed' ? 'fixed' : 'per_person';
             $unitPrice = (float) ($row['unit_price'] ?? 0);
             $unitPrice = $unitPrice < 0 ? 0 : round($unitPrice, 2);
+            $childPrice = (float) ($row['child_price'] ?? 0);
+            $childPrice = $childPrice < 0 ? 0 : round($childPrice, 2);
             $quantity = (int) ($row['quantity'] ?? 1);
             $quantity = $quantity < 1 ? 1 : $quantity;
             $dayNumber = $normalizeDayNumber($row['day_number'] ?? 0);
@@ -3569,7 +3730,7 @@ class VoyageController extends Controller
                 'end_day' => $dayNumber,
                 'nights' => 0,
                 'type' => 'activity',
-                'title' => $title !== '' ? $title : ($activity?->title ?? 'Activite'),
+                'title' => $title !== '' ? $title : ($catalogTitle !== '' ? $catalogTitle : ('Activite #' . $activityId)),
                 'details' => $description !== '' ? $description : null,
                 'included' => $included,
                 'price_delta_per_person' => $pricingType === 'per_person' ? (int) round($unitPrice * 100) : 0,
@@ -3577,6 +3738,7 @@ class VoyageController extends Controller
                     'activity_id' => $activityId,
                     'pricing_type' => $pricingType,
                     'unit_price' => $unitPrice,
+                    'child_price' => $childPrice,
                     'quantity' => $quantity,
                     'description' => $description,
                     'day_number' => $dayNumber,
@@ -3633,6 +3795,7 @@ class VoyageController extends Controller
      */
     protected function syncActivitiesTabToWpProgramme(int $tourId, array $payload): void
     {
+        $payload = $this->normalizeV2ActivitiesPayload($payload);
         if ($tourId <= 0 || empty($payload)) {
             return;
         }

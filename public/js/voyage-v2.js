@@ -456,6 +456,38 @@
         return fallback;
     }
 
+    function formDataToDebugObject(formData) {
+        var dump = {};
+        formData.forEach(function (value, key) {
+            var current = dump[key];
+            if (typeof current === 'undefined') {
+                dump[key] = value;
+                return;
+            }
+            if (!Array.isArray(current)) {
+                dump[key] = [current];
+            }
+            dump[key].push(value);
+        });
+        return dump;
+    }
+
+    function resolveBackendMessage(data, statusCode) {
+        if (data && typeof data.message === 'string' && data.message.trim()) {
+            return data.message.trim();
+        }
+        if (data && data.errors && typeof data.errors === 'object') {
+            var firstKey = Object.keys(data.errors)[0];
+            if (firstKey && Array.isArray(data.errors[firstKey]) && data.errors[firstKey][0]) {
+                return String(data.errors[firstKey][0]);
+            }
+        }
+        if (statusCode >= 500) {
+            return 'Erreur serveur (' + statusCode + ').';
+        }
+        return 'Le serveur a renvoye une erreur.';
+    }
+
     async function saveStep(stepId, mode, redirectStep) {
         if (!stepId || !panels[stepId]) return false;
         if (state.saving) return false;
@@ -481,6 +513,23 @@
         formData.set('voyage_id', String(state.voyageId || 0));
         formData.set('redirect_step', finalRedirectStep);
         formData.set('v2_save_mode', mode || 'manual');
+        if (stepId === 's-activities') {
+            formData.set('tour_activities_present', '1');
+        }
+
+        if (!formData.get('_token')) {
+            setSaveState('error', 'Erreur CSRF', 'Token CSRF manquant dans le formulaire.');
+            return false;
+        }
+
+        if (window.console && typeof window.console.debug === 'function') {
+            console.debug('[v2.saveStep] payload', {
+                step: stepId,
+                mode: mode || 'manual',
+                url: url,
+                payload: formDataToDebugObject(formData)
+            });
+        }
 
         state.saving = true;
         setSaveState('saving', 'Enregistrement...', 'Sauvegarde de l\'etape ' + stepId + ' en cours.');
@@ -531,7 +580,11 @@
                     return false;
                 }
 
-                setSaveState('error', 'Erreur d\'enregistrement', data.message || 'Le serveur a renvoye une erreur.');
+                if (data.errors && typeof data.errors === 'object') {
+                    markFieldsWithErrors(stepId, data.errors || {});
+                    renderStepErrors(data.errors || {}, resolveBackendMessage(data, response.status));
+                }
+                setSaveState('error', 'Erreur d\'enregistrement', resolveBackendMessage(data, response.status));
                 return false;
             }
 
@@ -544,11 +597,13 @@
             state.snapshots[stepId] = buildPanelSnapshot(stepId);
             applyStepStates();
             var ts = new Date();
-            setSaveState('saved', 'Enregistre', 'Derniere sauvegarde a ' + ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '.');
+            var successMessage = (data && data.message) ? String(data.message) : 'Etape enregistree.';
+            setSaveState('saved', 'Enregistre', successMessage + ' Derniere sauvegarde a ' + ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '.');
             refreshLiveBindings();
             return true;
         } catch (error) {
-            setSaveState('error', 'Erreur reseau', 'Impossible de joindre le serveur.');
+            var reason = (error && error.message) ? String(error.message) : 'Impossible de joindre le serveur.';
+            setSaveState('error', 'Erreur reseau', reason);
             return false;
         } finally {
             state.saving = false;
