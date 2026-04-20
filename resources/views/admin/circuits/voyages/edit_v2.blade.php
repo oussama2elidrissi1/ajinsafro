@@ -193,5 +193,49 @@
             sectionIds: @json(collect($sections)->pluck('id')->values()->all())
         };
     </script>
+    <script>
+        (function () {
+            'use strict';
+
+            function normalizePath(url) {
+                if (!url) return '';
+                try {
+                    return String(new URL(String(url), window.location.origin).pathname || '');
+                } catch (e) {
+                    return '';
+                }
+            }
+
+            function isStepSavePath(pathname) {
+                return /\/v2\/steps\/[^/]+\/save\/?$/.test(String(pathname || ''));
+            }
+
+            function triggerV2Save() {
+                var saveBtn = document.querySelector('[data-v2-save]');
+                if (saveBtn && typeof saveBtn.click === 'function') {
+                    saveBtn.click();
+                }
+            }
+
+            // Guard before main V2 runtime: never allow direct GET navigation to POST-only save URLs.
+            document.addEventListener('click', function (event) {
+                var target = event && event.target && event.target.closest ? event.target.closest('a[href]') : null;
+                if (!target) return;
+                if (!isStepSavePath(normalizePath(target.getAttribute('href')))) return;
+                event.preventDefault();
+                if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                triggerV2Save();
+            }, true);
+
+            document.addEventListener('submit', function (event) {
+                var submittedForm = event && event.target ? event.target : null;
+                if (!submittedForm || !submittedForm.getAttribute) return;
+                if (!isStepSavePath(normalizePath(submittedForm.getAttribute('action') || ''))) return;
+                event.preventDefault();
+                if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                triggerV2Save();
+            }, true);
+        })();
+    </script>
     <script src="{{ URL::asset('js/voyage-v2.js?v=' . $jsV2) }}"></script>
 @endpush
