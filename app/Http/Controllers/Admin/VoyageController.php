@@ -345,19 +345,30 @@ class VoyageController extends Controller
     }
 
     /**
-     * V2: Enregistrement d'une Ã©tape (AJAX), avec crÃ©ation brouillon au premier save.
+     * V2: Enregistrement d'une étape avec un flux unifié.
+     * Browser: POST -> Redirect -> GET (edit-v2#step)
+     * AJAX legacy: JSON.
      */
-    public function saveStepV2(Request $request, string $stepOrId, ?string $step = null): JsonResponse
+    public function saveStepV2(Request $request, string $stepOrId, ?string $step = null): JsonResponse|RedirectResponse
     {
+        $isAjax = $this->isV2AjaxSaveRequest($request);
         $routeStep = $step ?? $stepOrId;
         $routeId = $step === null ? 0 : (int) $stepOrId;
 
         $step = $this->normalizeV2StepId($routeStep);
         if ($step === null) {
+            $message = 'Étape inconnue.';
+            if (! $isAjax) {
+                return redirect()
+                    ->to($this->buildV2SaveRedirectUrl($request, 0, 's-general'))
+                    ->withErrors(['error' => $message])
+                    ->withInput();
+            }
+
             return response()->json([
                 'ok' => false,
                 'state' => 'error',
-                'message' => 'Étape inconnue.',
+                'message' => $message,
             ], 404);
         }
 
@@ -377,13 +388,20 @@ class VoyageController extends Controller
                 'adult_price' => 'prix adulte',
                 'child_price' => 'prix enfant',
                 'min_price' => 'prix minimum',
-                'travel_dates.*.date' => 'date de dÃ©part',
+                'travel_dates.*.date' => 'date de départ',
                 'travel_dates.*.seats' => 'nombre de places',
             ]
         );
         $this->appendV2StepRequiredValidationErrors($validator, $step, $request);
 
         if ($validator->fails()) {
+            if (! $isAjax) {
+                return redirect()
+                    ->to($this->buildV2SaveRedirectUrl($request, $wpPostId, $step))
+                    ->withErrors($validator)
+                    ->withInput();
+            }
+
             return response()->json([
                 'ok' => false,
                 'state' => 'error',
@@ -400,6 +418,12 @@ class VoyageController extends Controller
             }
 
             $this->persistV2Step($step, $wpPostId, $request);
+
+            if (! $isAjax) {
+                return redirect()
+                    ->to($this->buildV2SaveRedirectUrl($request, $wpPostId, $step))
+                    ->with('success', 'Étape enregistrée.');
+            }
 
             return response()->json([
                 'ok' => true,
@@ -418,6 +442,13 @@ class VoyageController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
+            if (! $isAjax) {
+                return redirect()
+                    ->to($this->buildV2SaveRedirectUrl($request, $wpPostId, $step))
+                    ->withErrors(['error' => 'Erreur lors de l’enregistrement de l’étape.'])
+                    ->withInput();
+            }
+
             return response()->json([
                 'ok' => false,
                 'state' => 'error',
@@ -425,6 +456,33 @@ class VoyageController extends Controller
                 'message' => 'Erreur lors de l’enregistrement de l’étape.',
             ], 500);
         }
+    }
+
+    private function isV2AjaxSaveRequest(Request $request): bool
+    {
+        $accept = (string) $request->header('Accept', '');
+
+        return $request->expectsJson()
+            || $request->ajax()
+            || str_contains($accept, 'application/json');
+    }
+
+    private function resolveV2RedirectStep(Request $request, string $fallbackStep): string
+    {
+        $raw = trim((string) $request->input('redirect_step', $fallbackStep));
+        $normalized = $this->normalizeV2StepId($raw);
+
+        return $normalized ?? $fallbackStep;
+    }
+
+    private function buildV2SaveRedirectUrl(Request $request, int $wpPostId, string $fallbackStep): string
+    {
+        $targetStep = $this->resolveV2RedirectStep($request, $fallbackStep);
+        $baseUrl = $wpPostId > 0
+            ? route('admin.circuits.voyages.edit-v2', $wpPostId)
+            : route('admin.circuits.voyages.create-v2');
+
+        return $baseUrl . '#' . $targetStep;
     }
 
     private function normalizeV2StepId(string $step): ?string

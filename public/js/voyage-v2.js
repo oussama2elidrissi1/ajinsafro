@@ -307,84 +307,19 @@
         return '';
     }
 
-    function normalizeUrlPath(url) {
-        if (!url) return '';
-        try {
-            return String(new URL(String(url), window.location.origin).pathname || '');
-        } catch (e) {
-            return '';
-        }
+    function ensureHiddenInput(name) {
+        var input = form.querySelector('input[type="hidden"][name="' + name + '"]');
+        if (input) return input;
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        form.appendChild(input);
+        return input;
     }
 
-    function isStepSavePath(pathname) {
-        return /\/v2\/steps\/[^/]+\/save\/?$/.test(String(pathname || ''));
-    }
-
-    function resolveCsrfToken() {
-        var meta = document.querySelector('meta[name="csrf-token"]');
-        if (meta && meta.getAttribute('content')) {
-            return String(meta.getAttribute('content'));
-        }
-        var tokenField = form.querySelector('input[name="_token"]');
-        if (tokenField && tokenField.value) {
-            return String(tokenField.value);
-        }
-        return '';
-    }
-
-    function appendUncheckedCheckboxes(formData, panel) {
-        if (!panel) return;
-        Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"][name]')).forEach(function (cb) {
-            if (cb.checked) return;
-            var name = cb.getAttribute('name');
-            if (!name) return;
-            if (formData.has(name)) return;
-            formData.append(name, '0');
-        });
-    }
-
-    function buildStepFormData(stepId, panel) {
-        var fd = new FormData();
-
-        var tokenField = form.querySelector('input[name="_token"]');
-        if (tokenField && !tokenField.disabled) {
-            fd.append('_token', tokenField.value || '');
-        }
-
-        Array.prototype.slice.call((panel || form).querySelectorAll('input[name],select[name],textarea[name]')).forEach(function (field) {
-            if (!field || field.disabled) return;
-
-            var name = String(field.name || '');
-            if (!name) return;
-
-            var tag = String(field.tagName || '').toLowerCase();
-            var type = String(field.type || '').toLowerCase();
-
-            if (type === 'button' || type === 'submit' || type === 'reset' || type === 'file') return;
-
-            if ((type === 'checkbox' || type === 'radio') && !field.checked) {
-                return;
-            }
-
-            if (tag === 'select' && field.multiple) {
-                Array.prototype.slice.call(field.options || []).forEach(function (opt) {
-                    if (opt.selected) fd.append(name, opt.value);
-                });
-                return;
-            }
-
-            fd.append(name, field.value == null ? '' : String(field.value));
-        });
-
-        // Programme payload lives at form root (outside step panel), but is required by s-programme.
-        if (stepId === 's-programme') {
-            var programmePayload = form.querySelector('#programme-days-payload');
-            if (programmePayload && !programmePayload.disabled) {
-                fd.set('programme_days_payload', programmePayload.value || '');
-            }
-        }
-
-        return fd;
+    function normalizeTargetStep(stepId, fallback) {
+        if (stepId && panels[stepId]) return stepId;
+        return fallback;
     }
 
     function syncDerivedFormState() {
@@ -431,48 +366,14 @@
         }
     }
 
-    function applyVoyageIdentity(data) {
-        var id = parseInt(String(data && data.voyage_id ? data.voyage_id : state.voyageId), 10) || 0;
-        if (id <= 0) return;
-        var idChanged = id !== state.voyageId;
-        state.voyageId = id;
-        form.setAttribute('data-voyage-id', String(id));
-        page.setAttribute('data-v2-initial-id', String(id));
-
-        if (idChanged) {
-            state.isCreate = false;
-            var redirectUrl = data && data.redirect_url ? String(data.redirect_url) : '';
-            if (redirectUrl && window.history && window.history.replaceState) {
-                window.history.replaceState(null, document.title, redirectUrl + '#' + state.current);
-            }
-
-            var classicLink = document.querySelector('[data-v2-classic-link]');
-            if (classicLink) {
-                classicLink.href = classicLink.href.replace(/\/\d+(\/edit)?$/, '/' + id + '/edit');
-            }
-
-            if (railId) railId.textContent = 'ID #' + id;
-            var subtitle = document.getElementById('v2-live-subtitle');
-            if (subtitle && subtitle.textContent.indexOf('Brouillon') !== -1) {
-                subtitle.textContent = 'ID #' + id;
-            }
-
-            saveButtons.forEach(function (btn) {
-                var span = btn.querySelector('span');
-                if (span) {
-                    span.textContent = 'Enregistrer l\'étape';
-                }
-            });
-        }
-    }
-
-    async function saveStep(stepId, mode) {
+    function saveStep(stepId, mode, redirectStep) {
         if (!stepId || !panels[stepId]) return false;
         if (state.saving) return false;
 
         syncDerivedFormState();
         clearStepErrors();
         clearPanelFieldErrors(stepId);
+        refreshLiveBindings();
 
         var url = resolveSaveUrl(stepId);
         if (!url) {
@@ -480,90 +381,26 @@
             return false;
         }
 
-        var panel = panels[stepId];
-        var formData = buildStepFormData(stepId, panel);
-        // Step-save endpoints are POST-only; avoid Laravel method spoofing from edit form.
-        formData.delete('_method');
-        appendUncheckedCheckboxes(formData, panel);
-        formData.set('current_step', stepId);
-        formData.set('voyage_id', String(state.voyageId || 0));
+        var finalRedirectStep = normalizeTargetStep(redirectStep, stepId);
+        var methodField = form.querySelector('input[name="_method"]');
+        if (methodField) {
+            methodField.disabled = true;
+        }
+
+        ensureHiddenInput('current_step').value = stepId;
+        ensureHiddenInput('voyage_id').value = String(state.voyageId || 0);
+        ensureHiddenInput('redirect_step').value = finalRedirectStep;
+        ensureHiddenInput('v2_save_mode').value = mode || 'manual';
 
         state.saving = true;
         setSaveState('saving', 'Enregistrement…', 'Sauvegarde de l’étape ' + stepId + ' en cours.');
-
-        try {
-            var csrfToken = resolveCsrfToken();
-            var response = await fetch(url, {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            });
-
-            var data = {};
-            try { data = await response.json(); } catch (e) { data = {}; }
-
-            if (!response.ok) {
-                if (response.status === 422) {
-                    var firstInvalidField = markFieldsWithErrors(stepId, data.errors || {});
-                    renderStepErrors(
-                        data.errors || {},
-                        data.message || 'Completez les champs obligatoires de cette etape avant de continuer.'
-                    );
-                    if (firstInvalidField && firstInvalidField.scrollIntoView) {
-                        try {
-                            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            firstInvalidField.focus({ preventScroll: true });
-                        } catch (e) {
-                            // ignore
-                        }
-                    } else if (stepErrorBox && stepErrorBox.scrollIntoView) {
-                        try {
-                            stepErrorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        } catch (e) {
-                            // ignore
-                        }
-                    }
-                    applyStepStates(data.step_states || null);
-                    state.stepStates[stepId] = 'error';
-                    applyStepStates();
-                    setSaveState(
-                        'error',
-                        'Erreur de validation',
-                        data.message || 'Completez les champs obligatoires de cette etape avant de continuer.'
-                    );
-                    return false;
-                }
-
-                setSaveState('error', 'Erreur d’enregistrement', data.message || 'Le serveur a renvoyé une erreur.');
-                return false;
-            }
-
-            applyVoyageIdentity(data);
-            applyStepStates(data.step_states || null);
-            state.dirty[stepId] = false;
-            if (!data.step_states || typeof data.step_states !== 'object') {
-                state.stepStates[stepId] = 'complete';
-            }
-            state.snapshots[stepId] = buildPanelSnapshot(stepId);
-            applyStepStates();
-            var ts = new Date();
-            setSaveState('saved', 'Enregistré', 'Dernière sauvegarde à ' + ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '.');
-            refreshLiveBindings();
-            return true;
-        } catch (error) {
-            setSaveState('error', 'Erreur réseau', 'Impossible de joindre le serveur. Aucune redirection vers l’URL de sauvegarde n’a été faite.');
-            return false;
-        } finally {
-            state.saving = false;
-        }
+        form.setAttribute('action', url);
+        form.setAttribute('method', 'POST');
+        form.submit();
+        return true;
     }
 
-    async function guardedNavigate(nextStepId) {
+    function guardedNavigate(nextStepId) {
         if (!nextStepId || !panels[nextStepId] || nextStepId === state.current) {
             return;
         }
@@ -576,8 +413,8 @@
         var currentState = state.stepStates[state.current] || 'incomplete';
         var mustValidateCurrentStep = state.dirty[state.current] || currentState !== 'complete';
         if (mustValidateCurrentStep) {
-            var ok = await saveStep(state.current, 'guard');
-            if (!ok) return;
+            saveStep(state.current, 'guard', nextStepId);
+            return;
         }
 
         activateStep(nextStepId);
@@ -618,19 +455,9 @@
             if (event) {
                 event.preventDefault();
             }
-            saveStep(state.current, 'manual');
+            saveStep(state.current, 'manual', state.current);
         });
     });
-
-    // Safety net: never allow browser GET navigation to POST-only step save URLs.
-    document.addEventListener('click', function (event) {
-        var target = event && event.target && event.target.closest ? event.target.closest('a[href]') : null;
-        if (!target) return;
-        if (!isStepSavePath(normalizeUrlPath(target.getAttribute('href')))) return;
-        event.preventDefault();
-        if (event.stopPropagation) event.stopPropagation();
-        saveStep(state.current, 'manual');
-    }, true);
 
     form.addEventListener('input', function (event) {
         var target = event.target;
@@ -661,16 +488,7 @@
     form.addEventListener('submit', function (event) {
         event.preventDefault();
         if (event.stopPropagation) event.stopPropagation();
-        saveStep(state.current, 'manual');
-    }, true);
-
-    document.addEventListener('submit', function (event) {
-        var submittedForm = event && event.target ? event.target : null;
-        if (!submittedForm || submittedForm === form || !submittedForm.getAttribute) return;
-        if (!isStepSavePath(normalizeUrlPath(submittedForm.getAttribute('action') || ''))) return;
-        event.preventDefault();
-        if (event.stopPropagation) event.stopPropagation();
-        saveStep(state.current, 'manual');
+        saveStep(state.current, 'manual', state.current);
     }, true);
 
     window.addEventListener('beforeunload', function (event) {
