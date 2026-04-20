@@ -307,6 +307,16 @@
         return '';
     }
 
+    function isV2StepSaveUrl(rawUrl) {
+        if (!rawUrl) return false;
+        try {
+            var parsed = new URL(String(rawUrl), window.location.origin);
+            return /\/admin\/circuits\/voyages(?:\/\d+)?\/v2\/steps\/[^/]+\/save\/?$/.test(parsed.pathname);
+        } catch (e) {
+            return false;
+        }
+    }
+
     function appendUncheckedCheckboxes(formData, panel) {
         if (!panel) return;
         Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"][name]')).forEach(function (cb) {
@@ -642,6 +652,27 @@
         event.preventDefault();
         event.returnValue = '';
     });
+
+    document.addEventListener('click', function (event) {
+        var target = event.target;
+        if (!target || !target.closest) return;
+        var anchor = target.closest('a[href]');
+        if (!anchor) return;
+        if (!isV2StepSaveUrl(anchor.getAttribute('href'))) return;
+        event.preventDefault();
+        if (event.stopPropagation) event.stopPropagation();
+        saveStep(state.current, 'manual', state.current);
+    }, true);
+
+    document.addEventListener('submit', function (event) {
+        var submittedForm = event.target;
+        if (!submittedForm || submittedForm === form || !submittedForm.getAttribute) return;
+        var action = submittedForm.getAttribute('action') || '';
+        if (!isV2StepSaveUrl(action)) return;
+        event.preventDefault();
+        if (event.stopPropagation) event.stopPropagation();
+        saveStep(state.current, 'manual', state.current);
+    }, true);
 
     window.addEventListener('hashchange', function () {
         var targetStep = String(window.location.hash || '').replace('#', '');
