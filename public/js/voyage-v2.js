@@ -307,6 +307,31 @@
         return '';
     }
 
+    function normalizeUrlPath(url) {
+        if (!url) return '';
+        try {
+            return String(new URL(String(url), window.location.origin).pathname || '');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function isStepSavePath(pathname) {
+        return /\/v2\/steps\/[^/]+\/save\/?$/.test(String(pathname || ''));
+    }
+
+    function resolveCsrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta && meta.getAttribute('content')) {
+            return String(meta.getAttribute('content'));
+        }
+        var tokenField = form.querySelector('input[name="_token"]');
+        if (tokenField && tokenField.value) {
+            return String(tokenField.value);
+        }
+        return '';
+    }
+
     function appendUncheckedCheckboxes(formData, panel) {
         if (!panel) return;
         Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"][name]')).forEach(function (cb) {
@@ -467,13 +492,15 @@
         setSaveState('saving', 'Enregistrement…', 'Sauvegarde de l’étape ' + stepId + ' en cours.');
 
         try {
+            var csrfToken = resolveCsrfToken();
             var response = await fetch(url, {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
                 }
             });
 
@@ -529,20 +556,7 @@
             refreshLiveBindings();
             return true;
         } catch (error) {
-            setSaveState('warning', 'Sauvegarde directe', 'La sauvegarde AJAX a échoué, envoi du formulaire complet.');
-            if (form) {
-                try {
-                    if (typeof form.requestSubmit === 'function') {
-                        form.requestSubmit();
-                    } else {
-                        form.submit();
-                    }
-                } catch (submitError) {
-                    setSaveState('error', 'Erreur réseau', 'Impossible de joindre le serveur.');
-                }
-            } else {
-                setSaveState('error', 'Erreur réseau', 'Impossible de joindre le serveur.');
-            }
+            setSaveState('error', 'Erreur réseau', 'Impossible de joindre le serveur. Aucune redirection vers l’URL de sauvegarde n’a été faite.');
             return false;
         } finally {
             state.saving = false;
@@ -570,31 +584,53 @@
     }
 
     stepButtons.forEach(function (btn) {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (event) {
+            if (event) {
+                event.preventDefault();
+            }
             var target = String(btn.getAttribute('data-v2-nav') || '').trim();
             guardedNavigate(target);
         });
     });
 
     nextButtons.forEach(function (btn) {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (event) {
+            if (event) {
+                event.preventDefault();
+            }
             var target = String(btn.getAttribute('data-v2-next') || '').trim();
             guardedNavigate(target);
         });
     });
 
     prevButtons.forEach(function (btn) {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (event) {
+            if (event) {
+                event.preventDefault();
+            }
             var target = String(btn.getAttribute('data-v2-prev') || '').trim();
             guardedNavigate(target);
         });
     });
 
     saveButtons.forEach(function (btn) {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (event) {
+            if (event) {
+                event.preventDefault();
+            }
             saveStep(state.current, 'manual');
         });
     });
+
+    // Safety net: never allow browser GET navigation to POST-only step save URLs.
+    document.addEventListener('click', function (event) {
+        var target = event && event.target && event.target.closest ? event.target.closest('a[href]') : null;
+        if (!target) return;
+        if (!isStepSavePath(normalizeUrlPath(target.getAttribute('href')))) return;
+        event.preventDefault();
+        if (event.stopPropagation) event.stopPropagation();
+        saveStep(state.current, 'manual');
+    }, true);
 
     form.addEventListener('input', function (event) {
         var target = event.target;
@@ -624,8 +660,18 @@
 
     form.addEventListener('submit', function (event) {
         event.preventDefault();
+        if (event.stopPropagation) event.stopPropagation();
         saveStep(state.current, 'manual');
-    });
+    }, true);
+
+    document.addEventListener('submit', function (event) {
+        var submittedForm = event && event.target ? event.target : null;
+        if (!submittedForm || submittedForm === form || !submittedForm.getAttribute) return;
+        if (!isStepSavePath(normalizeUrlPath(submittedForm.getAttribute('action') || ''))) return;
+        event.preventDefault();
+        if (event.stopPropagation) event.stopPropagation();
+        saveStep(state.current, 'manual');
+    }, true);
 
     window.addEventListener('beforeunload', function (event) {
         var hasDirty = stepIds.some(function (id) { return !!state.dirty[id]; });

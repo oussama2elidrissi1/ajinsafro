@@ -357,7 +357,7 @@ class VoyageController extends Controller
             return response()->json([
                 'ok' => false,
                 'state' => 'error',
-                'message' => 'Ã‰tape inconnue.',
+                'message' => 'Étape inconnue.',
             ], 404);
         }
 
@@ -409,7 +409,7 @@ class VoyageController extends Controller
                 'redirect_url' => route('admin.circuits.voyages.edit-v2', $wpPostId),
                 'step_states' => $this->buildV2StepStates($wpPostId),
                 'saved_at' => now()->toIso8601String(),
-                'message' => 'Ã‰tape enregistrÃ©e.',
+                'message' => 'Étape enregistrée.',
             ]);
         } catch (\Throwable $e) {
             Log::error('VoyageController@saveStepV2 failed', [
@@ -422,7 +422,7 @@ class VoyageController extends Controller
                 'ok' => false,
                 'state' => 'error',
                 'step' => $step,
-                'message' => 'Erreur lors de lâ€™enregistrement de lâ€™Ã©tape.',
+                'message' => 'Erreur lors de l’enregistrement de l’étape.',
             ], 500);
         }
     }
