@@ -1,61 +1,286 @@
 @extends('client.layout')
 @section('title', 'Dashboard')
-@section('page_title', 'Dashboard client')
+@section('page_title', 'Espace client')
+
+@section('page_styles')
+<style>
+    /* ── Hero welcome card ── */
+    .aj-hero-card {
+        background: linear-gradient(135deg, var(--aj-navy) 0%, #0d2847 60%, #162f4e 100%);
+        border-radius: var(--aj-radius);
+        padding: 2.5rem 2rem 2rem;
+        position: relative;
+        overflow: hidden;
+        color: #fff;
+        border: 1px solid rgba(201,145,61,0.2);
+        box-shadow: var(--aj-shadow);
+    }
+    .aj-hero-card::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(201,145,61,0.15) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .aj-hero-card::after {
+        content: '';
+        position: absolute;
+        bottom: -30px; left: 30%;
+        width: 150px; height: 150px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(201,145,61,0.08) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .aj-avatar {
+        width: 58px; height: 58px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--aj-gold) 0%, #e8a84a 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.4rem; font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(201,145,61,0.4);
+        letter-spacing: 0.04em;
+    }
+    .aj-hero-name {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0 0 0.2rem;
+        letter-spacing: 0.01em;
+    }
+    .aj-hero-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--aj-gold-light);
+    }
+    .aj-hero-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .aj-hero-meta-item {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 0.82rem;
+        color: rgba(255,255,255,0.72);
+    }
+    .aj-hero-meta-item i {
+        color: var(--aj-gold);
+        font-size: 1rem;
+    }
+
+    /* ── Stat tiles ── */
+    .aj-stat-tile {
+        background: var(--aj-card);
+        border-radius: var(--aj-radius);
+        border: 1px solid var(--aj-border);
+        box-shadow: var(--aj-shadow);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        transition: box-shadow 0.25s;
+    }
+    .aj-stat-tile:hover { box-shadow: var(--aj-shadow-hover); }
+    .aj-stat-icon {
+        width: 48px; height: 48px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+    .aj-stat-icon-navy  { background: #EEF3FA; color: var(--aj-navy); }
+    .aj-stat-icon-gold  { background: #FDF4E7; color: var(--aj-gold); }
+    .aj-stat-icon-green { background: #ECFDF5; color: #059669; }
+    .aj-stat-val {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--aj-navy);
+        line-height: 1;
+        margin: 0;
+    }
+    .aj-stat-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--aj-muted);
+        margin-top: 0.2rem;
+    }
+
+    /* ── Reservation row card ── */
+    .aj-res-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.1rem 1.75rem;
+        border-bottom: 1px solid #F2EFE9;
+        transition: background 0.15s;
+        flex-wrap: wrap;
+    }
+    .aj-res-row:last-child { border-bottom: none; }
+    .aj-res-row:hover { background: #FAFAF7; }
+    .aj-res-num {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--aj-navy);
+        min-width: 52px;
+    }
+    .aj-res-voyage {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.9rem;
+        color: var(--aj-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .aj-res-date {
+        font-size: 0.78rem;
+        color: var(--aj-muted);
+        white-space: nowrap;
+    }
+    .aj-res-actions { margin-left: auto; flex-shrink: 0; }
+
+    @media (max-width: 576px) {
+        .aj-hero-card { padding: 1.75rem 1.25rem 1.5rem; }
+        .aj-res-voyage { display: none; }
+    }
+</style>
+@endsection
 
 @section('content')
-    <div class="row">
-        <div class="col-xl-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title mb-2">Bienvenue</h5>
-                    <div class="text-muted">
-                        {{ $client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? '')) ?: 'Client' }}
-                    </div>
-                    <div class="mt-2">
-                        <div><span class="text-muted">Email:</span> {{ $client->email ?: '—' }}</div>
-                        <div><span class="text-muted">Téléphone:</span> {{ $client->phone ?: '—' }}</div>
-                    </div>
-                </div>
-            </div>
+
+@php
+    $name = $client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? '')) ?: 'Client';
+    $initials = collect(explode(' ', $name))->map(fn($w) => strtoupper(substr($w,0,1)))->take(2)->implode('');
+
+    $totalRes   = $recentReservations->count();
+    $confirmed  = $recentReservations->filter(fn($r) => in_array($r->status ?? '', ['confirmed','paid','validée','confirmée']))->count();
+    $pending    = $recentReservations->filter(fn($r) => in_array($r->status ?? '', ['pending','en_attente','en attente']))->count();
+
+    $statusMap = [
+        'confirmed'  => 'aj-badge-confirmed',
+        'paid'       => 'aj-badge-confirmed',
+        'validée'    => 'aj-badge-confirmed',
+        'confirmée'  => 'aj-badge-confirmed',
+        'pending'    => 'aj-badge-pending',
+        'en_attente' => 'aj-badge-pending',
+        'cancelled'  => 'aj-badge-cancelled',
+        'annulée'    => 'aj-badge-cancelled',
+    ];
+@endphp
+
+{{-- ── Welcome hero ── --}}
+<div class="aj-hero-card mb-4">
+    <div class="d-flex align-items-center gap-3 mb-1">
+        <div class="aj-avatar">{{ $initials }}</div>
+        <div>
+            <div class="aj-hero-label">Bienvenue</div>
+            <div class="aj-hero-name">{{ $name }}</div>
         </div>
-        <div class="col-xl-8">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="card-title mb-0">Dernières réservations</h5>
-                        <a href="{{ route('client.reservations.index') }}" class="btn btn-sm btn-outline-secondary">Voir tout</a>
-                    </div>
-                    @if($recentReservations->isEmpty())
-                        <div class="text-muted">Aucune réservation pour le moment.</div>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Statut</th>
-                                    <th>Date</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach($recentReservations as $r)
-                                    <tr>
-                                        <td>#{{ $r->id }}</td>
-                                        <td>{{ $r->statusLabelFr() }}</td>
-                                        <td>{{ $r->created_at?->format('d/m/Y H:i') }}</td>
-                                        <td class="text-end">
-                                            <a class="btn btn-sm btn-soft-primary" href="{{ route('client.reservations.show', $r) }}">Détail</a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
-                </div>
+    </div>
+    <div class="aj-hero-meta">
+        @if($client->email)
+        <div class="aj-hero-meta-item">
+            <i class="ri-mail-line"></i>
+            {{ $client->email }}
+        </div>
+        @endif
+        @if($client->phone)
+        <div class="aj-hero-meta-item">
+            <i class="ri-phone-line"></i>
+            {{ $client->phone }}
+        </div>
+        @endif
+        @if($client->city)
+        <div class="aj-hero-meta-item">
+            <i class="ri-map-pin-line"></i>
+            {{ $client->city }}
+        </div>
+        @endif
+    </div>
+</div>
+
+{{-- ── Stats row ── --}}
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="aj-stat-tile">
+            <div class="aj-stat-icon aj-stat-icon-navy"><i class="ri-suitcase-3-line"></i></div>
+            <div>
+                <div class="aj-stat-val">{{ $recentReservations->count() }}</div>
+                <div class="aj-stat-label">Réservations</div>
             </div>
         </div>
     </div>
-@endsection
+    <div class="col-sm-4">
+        <div class="aj-stat-tile">
+            <div class="aj-stat-icon aj-stat-icon-green"><i class="ri-checkbox-circle-line"></i></div>
+            <div>
+                <div class="aj-stat-val">{{ $confirmed }}</div>
+                <div class="aj-stat-label">Confirmées</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="aj-stat-tile">
+            <div class="aj-stat-icon aj-stat-icon-gold"><i class="ri-time-line"></i></div>
+            <div>
+                <div class="aj-stat-val">{{ $pending }}</div>
+                <div class="aj-stat-label">En attente</div>
+            </div>
+        </div>
+    </div>
+</div>
 
+{{-- ── Recent reservations ── --}}
+<div class="aj-card">
+    <div class="aj-card-header" style="padding: 1.5rem 1.75rem 1rem;">
+        <div>
+            <h2 class="aj-card-title">Dernières réservations</h2>
+        </div>
+        <a href="{{ route('client.reservations.index') }}" class="btn-aj-outline">
+            Voir tout <i class="ri-arrow-right-line"></i>
+        </a>
+    </div>
+
+    @if($recentReservations->isEmpty())
+        <div class="aj-empty">
+            <div class="aj-empty-icon"><i class="ri-suitcase-3-line"></i></div>
+            <strong style="color:var(--aj-navy);font-family:'Cormorant Garamond',serif;font-size:1.15rem;">Aucune réservation</strong>
+            <p>Vos voyages réservés apparaîtront ici.</p>
+        </div>
+    @else
+        @foreach($recentReservations as $r)
+            @php
+                $statusLabel = $r->statusLabelFr();
+                $statusKey   = strtolower(str_replace(' ', '_', $r->status ?? ''));
+                $badgeClass  = $statusMap[$statusKey] ?? 'aj-badge-default';
+            @endphp
+            <div class="aj-res-row">
+                <span class="aj-res-num">#{{ $r->id }}</span>
+                <span class="aj-res-voyage">
+                    {{ $r->tour?->title ?: ($r->tour_id ? 'Tour #'.$r->tour_id : 'Voyage') }}
+                </span>
+                <span class="aj-badge {{ $badgeClass }}">{{ $statusLabel }}</span>
+                <span class="aj-res-date">{{ $r->created_at?->format('d/m/Y') }}</span>
+                <div class="aj-res-actions">
+                    <a class="btn-aj-primary" href="{{ route('client.reservations.show', $r) }}" style="padding:0.38rem 1rem;font-size:0.78rem;">
+                        Détail <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                </div>
+            </div>
+        @endforeach
+    @endif
+</div>
+
+@endsection
