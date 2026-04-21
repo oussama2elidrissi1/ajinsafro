@@ -116,6 +116,7 @@
             hotel_index: row.hotel_index === '' || row.hotel_index == null ? '' : String(row.hotel_index)
         };
     }
+    
 
     function buildFallbackRoomsForHotel(seats, hotel) {
         var safeSeats = Math.max(0, parseInt(String(seats || '0'), 10) || 0);
