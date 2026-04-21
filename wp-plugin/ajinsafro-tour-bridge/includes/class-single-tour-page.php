@@ -246,6 +246,18 @@ class AJTB_Single_Tour_Page
             $created = $user_id > 0;
         }
 
+        // Safety: ensure no back-office role is attached to client portal users.
+        if ($user_id > 0) {
+            try {
+                $wpdb->delete('model_has_roles', [
+                    'model_id' => $user_id,
+                    'model_type' => 'App\\Models\\User',
+                ]);
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+
         // Link client -> user and store temp password if created (admin-only visibility).
         if ($client_id > 0) {
             $client_updates = [];

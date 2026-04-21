@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -147,12 +148,28 @@ class User extends Authenticatable
         return $this->hasRole('Partenaire');
     }
 
+    public function isClientPortal(): bool
+    {
+        if ((string) ($this->user_type ?? '') === 'client') {
+            return true;
+        }
+        if ((string) ($this->base_role ?? '') === 'client') {
+            return true;
+        }
+        // Fallback: if a client record is linked to this user.
+        return Client::query()->where('user_id', $this->id)->exists();
+    }
+
     /**
      * Whether the user can access the admin area (dashboard, reservations, etc.).
      * True if is_admin or has any of the Ajinsafro admin roles.
      */
     public function canAccessAdmin(): bool
     {
+        // Client portal accounts must never access agent/admin area.
+        if ($this->isClientPortal()) {
+            return false;
+        }
         if ($this->is_admin) {
             return true;
         }

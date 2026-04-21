@@ -57,6 +57,7 @@ class Kernel extends HttpKernel
         'partner' => \App\Http\Middleware\PartnerMiddleware::class,
         'partner.validated' => \App\Http\Middleware\PartnerValidatedMiddleware::class,
         'client' => \App\Http\Middleware\EnsureClientPortalUser::class,
+        'not.client' => \App\Http\Middleware\RedirectClientAwayFromAgent::class,
         'auth' => \App\Http\Middleware\Authenticate::class,
         'ensure.not.locked' => \App\Http\Middleware\EnsureNotLocked::class,
         'route.permission' => \App\Http\Middleware\EnsureRoutePermission::class,

@@ -35,7 +35,7 @@ class LoginRedirectService
         }
 
         // Client portal (no back-office access).
-        if ((string) ($user->user_type ?? '') === 'client') {
+        if (method_exists($user, 'isClientPortal') && $user->isClientPortal()) {
             return $adminUrl . '/client/dashboard';
         }
 

@@ -40,6 +40,9 @@ use App\Http\Controllers\Admin\VoyageReservationDataController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\WpTourController;
+use App\Http\Controllers\Client\ClientDashboardController;
+use App\Http\Controllers\Client\ClientProfileController;
+use App\Http\Controllers\Client\ClientReservationsController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController;
@@ -90,6 +93,14 @@ Route::get('logout', function (\Illuminate\Http\Request $request) {
 Route::middleware('auth')->group(function () {
     Route::get('lock-screen', [LockScreenController::class, 'show'])->name('lock-screen');
     Route::post('lock-screen', [LockScreenController::class, 'unlock'])->name('lock-screen.unlock');
+});
+
+Route::middleware(['auth', 'client'])->prefix('client')->name('client.')->group(function () {
+    Route::get('dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('reservations', [ClientReservationsController::class, 'index'])->name('reservations.index');
+    Route::get('reservations/{reservation}', [ClientReservationsController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
+    Route::get('profile', [ClientProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('profile', [ClientProfileController::class, 'update'])->name('profile.update');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -427,7 +438,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         });
     });
 
-Route::middleware(['auth', 'admin', 'ensure.not.locked'])
+Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
     ->prefix('agent')
     ->name('agent.')
     ->group(function () {
