@@ -54,6 +54,11 @@
     var roomTypesEl = document.getElementById('departure-room-allocation-room-types');
 
     if (!manager || !listEl || !summaryEl || !travelDatesContainer) return;
+    console.log('[DepartureRoomAllocation] init ok', {
+        hasManager: !!manager,
+        hasTravelDates: !!travelDatesContainer,
+        bootstrapLen: (bootstrapEl && bootstrapEl.textContent ? bootstrapEl.textContent.length : 0)
+    });
 
     var roomTypeSuggestions = safeJsonParse(roomTypesEl, ['Single', 'Double', 'Twin', 'Triple', 'Quadruple', 'Family', 'Suite']);
     var bootstrapRows = safeJsonParse(bootstrapEl, []);
