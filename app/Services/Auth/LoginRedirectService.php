@@ -34,6 +34,11 @@ class LoginRedirectService
             $adminUrl = rtrim((string) config('app.url', 'https://booking.ajinsafro.net'), '/');
         }
 
+        // Client portal (no back-office access).
+        if ((string) ($user->user_type ?? '') === 'client') {
+            return $adminUrl . '/client/dashboard';
+        }
+
         // Manager uses the same portal entrypoint as agent/commercial.
         if ($user->hasRole([
             BranchScopeService::ROLE_MANAGER,

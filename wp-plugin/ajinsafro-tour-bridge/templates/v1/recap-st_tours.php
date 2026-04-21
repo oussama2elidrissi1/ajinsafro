@@ -283,6 +283,41 @@ get_header();
     </main>
 </div>
 
+<div class="modal fade" id="ajtb-account-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Votre compte client Ajinsafro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2" id="ajtb-account-modal-message">Votre réservation est confirmée.</p>
+                <div class="border rounded p-3 bg-light">
+                    <div class="mb-2">
+                        <div class="text-muted small">Login</div>
+                        <div class="d-flex align-items-center justify-content-between gap-2">
+                            <code id="ajtb-account-login">—</code>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-ajtb-copy="#ajtb-account-login">Copier</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Mot de passe</div>
+                        <div class="d-flex align-items-center justify-content-between gap-2">
+                            <code id="ajtb-account-password">—</code>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-ajtb-copy="#ajtb-account-password">Copier</button>
+                        </div>
+                        <div class="form-text">Note: ce mot de passe est affiché juste après création. Conservez-le.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" href="https://booking.ajinsafro.net/login">Se connecter</a>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 window.ajtbRecapBase = <?php echo wp_json_encode([
     'tourId' => (int) $tour_id,

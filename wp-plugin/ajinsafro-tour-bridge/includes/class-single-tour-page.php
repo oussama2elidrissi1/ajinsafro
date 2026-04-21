@@ -13,6 +13,7 @@ class AJTB_Single_Tour_Page
 {
     private const RECAP_ENDPOINT = 'ajtb-recap';
     private const RECAP_QUERY_VAR = 'ajtb_recap';
+    private const CLIENT_PASSWORD_VALID_HOURS = 72;
 
     /**
      * Initialize V1 single tour flow.
@@ -97,6 +98,178 @@ class AJTB_Single_Tour_Page
             }
         }
         return '';
+    }
+
+    private static function normalize_phone(string $phone): string
+    {
+        $phone = trim($phone);
+        if ($phone === '') {
+            return '';
+        }
+        // Keep digits only; enough for deduping in DB.
+        $digits = preg_replace('/\D+/', '', $phone);
+        return is_string($digits) ? $digits : '';
+    }
+
+    private static function generate_temp_password(int $len = 10): string
+    {
+        $len = max(8, min(32, $len));
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#';
+        $out = '';
+        $max = strlen($alphabet) - 1;
+        for ($i = 0; $i < $len; $i++) {
+            $out .= $alphabet[random_int(0, $max)];
+        }
+        return $out;
+    }
+
+    /**
+     * Ensure (or reuse) a Laravel client + portal user account.
+     *
+     * Returns:
+     * - client_id (int)
+     * - user_id (int|null)
+     * - login (string)   // we use email as login in Laravel auth
+     * - password (string|null) // only when newly created
+     * - created (bool)   // account created now
+     */
+    private static function ensure_client_portal_account(array $payload): array
+    {
+        global $wpdb;
+
+        $first = isset($payload['first_name']) ? sanitize_text_field((string) $payload['first_name']) : '';
+        $last = isset($payload['last_name']) ? sanitize_text_field((string) $payload['last_name']) : '';
+        $email = isset($payload['email']) ? sanitize_email((string) $payload['email']) : '';
+        $phone_raw = isset($payload['phone']) ? sanitize_text_field((string) $payload['phone']) : '';
+        $phone_norm = self::normalize_phone($phone_raw);
+
+        $clients_table = 'clients';
+        $users_table = 'users';
+
+        $client = null;
+        if ($email !== '') {
+            $client = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$clients_table} WHERE email = %s ORDER BY id DESC LIMIT 1", $email), ARRAY_A);
+        }
+        if (!$client && $phone_norm !== '') {
+            // Best-effort: match by phone OR whatsapp_number when present.
+            $client = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$clients_table} WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone,'+',''),' ',''),'-',''),'(', '') LIKE %s OR REPLACE(REPLACE(REPLACE(REPLACE(whatsapp_number,'+',''),' ',''),'-',''),'(', '') LIKE %s ORDER BY id DESC LIMIT 1",
+                '%' . $phone_norm . '%',
+                '%' . $phone_norm . '%'
+            ), ARRAY_A);
+        }
+
+        $now_gmt = current_time('mysql', true);
+        $client_id = 0;
+        if ($client && isset($client['id'])) {
+            $client_id = (int) $client['id'];
+            // Soft update missing identity fields (avoid overwriting manually curated CRM data).
+            $updates = [];
+            if (($client['first_name'] ?? '') === '' && $first !== '') $updates['first_name'] = $first;
+            if (($client['last_name'] ?? '') === '' && $last !== '') $updates['last_name'] = $last;
+            if (($client['full_name'] ?? '') === '' && ($first !== '' || $last !== '')) $updates['full_name'] = trim($first . ' ' . $last);
+            if (($client['email'] ?? '') === '' && $email !== '') $updates['email'] = $email;
+            if (($client['phone'] ?? '') === '' && $phone_raw !== '') $updates['phone'] = $phone_raw;
+            if (!empty($updates)) {
+                $updates['updated_at'] = $now_gmt;
+                $wpdb->update($clients_table, $updates, ['id' => $client_id]);
+            }
+        } else {
+            // Generate CL-YYYY-XXXX compatible with Laravel Client::generateClientCode().
+            $year = gmdate('Y');
+            $last_code = (string) $wpdb->get_var($wpdb->prepare(
+                "SELECT client_code FROM {$clients_table} WHERE client_code LIKE %s ORDER BY id DESC LIMIT 1",
+                'CL-' . $year . '-%'
+            ));
+            $num = 1;
+            if ($last_code !== '') {
+                $tail = substr($last_code, -4);
+                $n = is_string($tail) ? (int) $tail : 0;
+                if ($n > 0) $num = $n + 1;
+            }
+            $client_code = 'CL-' . $year . '-' . str_pad((string) $num, 4, '0', STR_PAD_LEFT);
+
+            if ($first === '') $first = 'Client';
+            if ($last === '') $last = 'Ajinsafro';
+            $full = trim($first . ' ' . $last);
+
+            $wpdb->insert($clients_table, [
+                'uuid' => wp_generate_uuid4(),
+                'client_code' => $client_code,
+                'client_type' => 'individual',
+                'status' => 'active',
+                'source' => 'wp_front_v1',
+                'first_name' => $first,
+                'last_name' => $last,
+                'full_name' => $full,
+                'email' => $email ?: null,
+                'phone' => $phone_raw ?: null,
+                'created_at' => $now_gmt,
+                'updated_at' => $now_gmt,
+            ]);
+            $client_id = (int) $wpdb->insert_id;
+        }
+
+        // Ensure user account (email required in Laravel users).
+        $created = false;
+        $password_plain = null;
+        $user_id = null;
+        $login_email = $email;
+
+        if ($login_email === '') {
+            // Deterministic fallback if customer didn't provide email.
+            $suffix = $phone_norm !== '' ? $phone_norm : (string) $client_id;
+            $login_email = 'client+' . $suffix . '@ajinsafro.local';
+        }
+
+        $user = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$users_table} WHERE email = %s ORDER BY id DESC LIMIT 1", $login_email), ARRAY_A);
+        if ($user && isset($user['id'])) {
+            $user_id = (int) $user['id'];
+        } else {
+            $password_plain = self::generate_temp_password(12);
+            $hash = password_hash($password_plain, PASSWORD_BCRYPT);
+            $name = trim($first . ' ' . $last);
+            if ($name === '') $name = 'Client Ajinsafro';
+            $wpdb->insert($users_table, [
+                'name' => $name,
+                'email' => $login_email,
+                'password' => $hash,
+                'user_type' => 'client',
+                'is_admin' => 0,
+                'is_active' => 1,
+                'access_mode' => 'role',
+                'base_role' => 'client',
+                'created_at' => $now_gmt,
+                'updated_at' => $now_gmt,
+            ]);
+            $user_id = (int) $wpdb->insert_id;
+            $created = $user_id > 0;
+        }
+
+        // Link client -> user and store temp password if created (admin-only visibility).
+        if ($client_id > 0) {
+            $client_updates = [];
+            if ($user_id) {
+                $client_updates['user_id'] = $user_id;
+                $client_updates['portal_username'] = $login_email;
+            }
+            if ($created && $password_plain) {
+                $client_updates['portal_temp_password'] = $password_plain;
+                $client_updates['portal_temp_password_created_at'] = $now_gmt;
+            }
+            if (!empty($client_updates)) {
+                $client_updates['updated_at'] = $now_gmt;
+                $wpdb->update($clients_table, $client_updates, ['id' => $client_id]);
+            }
+        }
+
+        return [
+            'client_id' => $client_id,
+            'user_id' => $user_id,
+            'login' => $login_email,
+            'password' => $password_plain,
+            'created' => (bool) $created,
+        ];
     }
 
     /**
@@ -189,10 +362,21 @@ class AJTB_Single_Tour_Page
             $tour_css_version
         );
 
+        // Bootstrap modal is used on recap for credentials display.
+        if (!wp_script_is('ajtb-bootstrap-bundle', 'enqueued')) {
+            wp_enqueue_script(
+                'ajtb-bootstrap-bundle',
+                'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
+                [],
+                '5.3.3',
+                true
+            );
+        }
+
         wp_enqueue_script(
             'ajtb-tour-js',
             AJTB_PLUGIN_URL . 'assets/js/tour.js',
-            [],
+            ['ajtb-bootstrap-bundle'],
             $tour_js_version,
             true
         );
@@ -308,6 +492,27 @@ class AJTB_Single_Tour_Page
             wp_send_json_error([
                 'message' => __('Veuillez sélectionner un client existant.', 'ajinsafro-tour-bridge'),
             ], 422);
+        }
+
+        // Always resolve/create the client account from identity data to avoid duplicates.
+        // Reservation will be linked to clients.id (client_external_id).
+        $account = null;
+        try {
+            $account = self::ensure_client_portal_account([
+                'first_name' => $client_first_name,
+                'last_name' => $client_last_name,
+                'email' => $client_email,
+                'phone' => $client_phone,
+            ]);
+        } catch (Throwable $e) {
+            // Do not block reservation creation; log and keep legacy snapshot fields.
+            error_log('[AJTB] ensure_client_portal_account failed: ' . $e->getMessage());
+            $account = null;
+        }
+
+        if (is_array($account) && !empty($account['client_id'])) {
+            $client_external_id = (int) $account['client_id'];
+            $client_mode = 'existing';
         }
 
         $passengers = json_decode($passengers_json, true);
@@ -475,6 +680,9 @@ class AJTB_Single_Tour_Page
         wp_send_json_success([
             'reservation_id' => $reservation_id,
             'status' => 'pending',
+            'account_created' => (bool) ($account['created'] ?? false),
+            'login' => (string) ($account['login'] ?? ''),
+            'password' => (string) ($account['password'] ?? ''),
         ]);
     }
 

@@ -1611,13 +1611,55 @@
 
             var total = adults * adultUnit + children * childUnit + activitiesTotal;
             var roomTotal = 0;
-            if (state.room && isFinite(state.room.supplement)) {
-                var rs = parseFloat(state.room.supplement || "0");
-                if (isFinite(rs) && rs > 0) {
-                    roomTotal = rs * (adults + children);
+            (function computeRoomSupplementTotal() {
+                var rooms = Array.isArray(state.availableRoomsCurrent) ? state.availableRoomsCurrent : [];
+                var alloc = state.roomAllocation && typeof state.roomAllocation === "object" ? state.roomAllocation : {};
+                var travellers = adults + children;
+                if (!isFinite(travellers) || travellers < 1) { travellers = 1; }
+                if (!rooms.length) { return; }
+
+                // Build selected room blocks and allocate travellers into supplemented rooms first.
+                // This matches user intent: if they select a "Single" with supplement, at least one traveller uses it.
+                var selected = [];
+                rooms.forEach(function (r) {
+                    if (!r) { return; }
+                    var id = String(r.id || "");
+                    if (!id) { return; }
+                    var qtyRooms = parseInt(alloc[id] || "0", 10) || 0;
+                    qtyRooms = Math.max(0, qtyRooms);
+                    if (qtyRooms <= 0) { return; }
+                    var cap = parseInt(r.capacity_per_room || "1", 10) || 1;
+                    cap = Math.max(1, cap);
+                    var covered = qtyRooms * cap;
+                    if (covered <= 0) { return; }
+                    var supp = parseFloat(r.supplement || "0");
+                    if (!isFinite(supp) || supp < 0) { supp = 0; }
+                    selected.push({ covered: covered, supp: supp });
+                });
+                if (!selected.length) { return; }
+
+                selected.sort(function (a, b) {
+                    // supplemented first, then higher supplement first
+                    var sa = a.supp > 0 ? 1 : 0;
+                    var sb = b.supp > 0 ? 1 : 0;
+                    if (sa !== sb) return sb - sa;
+                    return (b.supp || 0) - (a.supp || 0);
+                });
+
+                var remaining = travellers;
+                selected.forEach(function (blk) {
+                    if (remaining <= 0) { return; }
+                    var assigned = Math.min(remaining, blk.covered);
+                    if (blk.supp > 0) {
+                        roomTotal += assigned * blk.supp;
+                    }
+                    remaining -= assigned;
+                });
+
+                if (roomTotal > 0) {
                     total += roomTotal;
                 }
-            }
+            })();
             var extrasTotal = 0;
             if (state.extras && state.extras.length) {
                 var travellerTypes = Array.isArray(state.travellerTypes) ? state.travellerTypes : null;
@@ -1755,6 +1797,7 @@
                 return;
             }
             payload.roomAllocation = payload.roomAllocation && typeof payload.roomAllocation === "object" ? payload.roomAllocation : {};
+            payload.availableRoomsCurrent = rooms;
 
             function travellersCount() {
                 var a = payload.guests ? (parseInt(payload.guests.adults || "1", 10) || 1) : 1;
@@ -1764,7 +1807,7 @@
 
             function allocationCapacity() {
                 var total = 0;
-                rooms.forEach(function (r) {
+                (payload.availableRoomsCurrent || rooms).forEach(function (r) {
                     var id = String(r.id || "");
                     var qty = parseInt(payload.roomAllocation[id] || "0", 10) || 0;
                     var cap = parseInt(r.capacity_per_room || "1", 10) || 1;
@@ -1776,7 +1819,7 @@
             function suggestAllInOneRoom() {
                 var n = travellersCount();
                 var candidate = null;
-                rooms.forEach(function (r) {
+                (payload.availableRoomsCurrent || rooms).forEach(function (r) {
                     var cap = parseInt(r.capacity_per_room || "1", 10) || 1;
                     var stock = parseInt(r.quantity || "0", 10) || 0;
                     if (stock <= 0) return;
@@ -1798,7 +1841,8 @@
             var hasAny = Object.keys(payload.roomAllocation).some(function (k) { return (parseInt(payload.roomAllocation[k] || "0", 10) || 0) > 0; });
             if (!hasAny) {
                 if (!suggestAllInOneRoom()) {
-                    var first = rooms.find(function (r) { return (parseInt(r.quantity || "0", 10) || 0) > 0; });
+                    var curRooms = payload.availableRoomsCurrent || rooms;
+                    var first = curRooms.find(function (r) { return (parseInt(r.quantity || "0", 10) || 0) > 0; });
                     if (first) {
                         payload.roomAllocation = {};
                         payload.roomAllocation[String(first.id)] = 1;
@@ -1818,7 +1862,7 @@
                     '</div>' +
                     '<div class="ajtb-v1-room-alloc-badge">' + (ok ? 'OK' : 'À compléter') + '</div>' +
                     '</div>' +
-                    rooms.map(function (r) {
+                    (payload.availableRoomsCurrent || rooms).map(function (r) {
                         var id = String(r.id || "");
                         var cap = parseInt(r.capacity_per_room || "1", 10) || 1;
                         var stock = parseInt(r.quantity || "0", 10) || 0;
@@ -1847,11 +1891,18 @@
             renderRecap(payload);
             try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
 
+            // IMPORTANT: avoid binding multiple listeners (otherwise + adds twice).
+            if (box.dataset.ajtbRoomHandlerBound === "1") {
+                return;
+            }
+            box.dataset.ajtbRoomHandlerBound = "1";
+
             box.addEventListener("click", function (e) {
                 var suggest = e.target && e.target.closest ? e.target.closest("[data-ajtb-room-suggest]") : null;
                 if (suggest) {
                     suggestAllInOneRoom();
                     render();
+                    renderRecap(payload);
                     return;
                 }
                 var row = e.target && e.target.closest ? e.target.closest("[data-ajtb-room-id]") : null;
@@ -1862,7 +1913,8 @@
                 var isMinus = e.target && e.target.closest ? e.target.closest("[data-ajtb-room-minus]") : null;
                 if (!isPlus && !isMinus) return;
 
-                var r = rooms.find(function (x) { return String(x.id) === id; });
+                var curRooms = payload.availableRoomsCurrent || rooms;
+                var r = curRooms.find(function (x) { return String(x.id) === id; });
                 if (!r) return;
                 var stock = parseInt(r.quantity || "0", 10) || 0;
                 var qty = parseInt(payload.roomAllocation[id] || "0", 10) || 0;
@@ -1871,6 +1923,7 @@
                 if (isMinus && qty > 0) qty -= 1;
                 payload.roomAllocation[id] = qty;
                 render();
+                renderRecap(payload);
             }, { passive: true });
         }
 
@@ -2440,7 +2493,32 @@
                         if (!json || !json.success) {
                             throw new Error((json && json.data && json.data.message) ? json.data.message : "Erreur lors de la réservation.");
                         }
-                        alert("Réservation créée (ID " + json.data.reservation_id + "). Statut: " + json.data.status);
+                        var rid = json.data && json.data.reservation_id ? json.data.reservation_id : null;
+                        var created = !!(json.data && json.data.account_created);
+                        var login = json.data && json.data.login ? String(json.data.login) : "";
+                        var password = json.data && json.data.password ? String(json.data.password) : "";
+
+                        var modalEl = document.getElementById("ajtb-account-modal");
+                        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                            var msgEl = document.getElementById("ajtb-account-modal-message");
+                            var loginEl = document.getElementById("ajtb-account-login");
+                            var passEl = document.getElementById("ajtb-account-password");
+                            if (msgEl) {
+                                msgEl.textContent = created
+                                    ? ("Votre compte client a été créé. Réservation #" + String(rid) + ".")
+                                    : ("Réservation #" + String(rid) + " créée. Utilisez votre email pour vous connecter.");
+                            }
+                            if (loginEl) loginEl.textContent = login || "—";
+                            if (passEl) passEl.textContent = password || "—";
+                            try {
+                                var m = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+                                m.show();
+                            } catch (eModal) {
+                                alert("Réservation créée (ID " + rid + "). Login: " + login + (password ? (" / MDP: " + password) : ""));
+                            }
+                        } else {
+                            alert("Réservation créée (ID " + rid + "). Login: " + login + (password ? (" / MDP: " + password) : ""));
+                        }
                     })
                     .catch(function (e) {
                         alert(e && e.message ? e.message : "Erreur lors de la réservation.");
@@ -2449,6 +2527,30 @@
                         submitBtn.disabled = false;
                         submitBtn.textContent = "Confirmer la réservation";
                     });
+            });
+
+            // Copy helpers for modal credentials
+            document.addEventListener("click", function (e) {
+                var btn = e.target && e.target.closest ? e.target.closest("[data-ajtb-copy]") : null;
+                if (!btn) return;
+                var sel = btn.getAttribute("data-ajtb-copy") || "";
+                var el = sel ? document.querySelector(sel) : null;
+                var text = el ? String(el.textContent || "").trim() : "";
+                if (!text || text === "—") return;
+                if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {});
+                    return;
+                }
+                try {
+                    var ta = document.createElement("textarea");
+                    ta.value = text;
+                    ta.style.position = "fixed";
+                    ta.style.opacity = "0";
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                } catch (e2) {}
             });
         })();
 

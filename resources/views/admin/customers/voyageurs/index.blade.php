@@ -87,6 +87,9 @@
                                     <th>Nom complet</th>
                                     <th>Téléphone</th>
                                     <th>Email</th>
+                                    <th>Login</th>
+                                    <th>Mot de passe (temp.)</th>
+                                    <th>Réservations</th>
                                     <th>Ville</th>
                                     <th>CIN / Passeport</th>
                                     <th>Statut</th>
@@ -115,6 +118,26 @@
                                         </td>
                                         <td>{{ $c->phone ?? '—' }}</td>
                                         <td>{{ $c->email ?? '—' }}</td>
+                                        <td>
+                                            @if($c->portal_username)
+                                                <code>{{ $c->portal_username }}</code>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($c->portal_temp_password)
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <code class="text-danger">{{ $c->portal_temp_password }}</code>
+                                                    <small class="text-muted">temp.</small>
+                                                </div>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td>
+                                            {{ (int) ($c->reservations_count ?? 0) }}
+                                        </td>
                                         <td>{{ $c->city ?? '—' }}</td>
                                         <td>{{ $idDoc ?: '—' }}</td>
                                         <td><span class="badge {{ $statusBadge }}">{{ $c->status ?? '—' }}</span></td>

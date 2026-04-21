@@ -48,6 +48,9 @@ use App\Http\Controllers\Front\HomeController as FrontHomeController;
 use App\Http\Controllers\Front\SearchController as FrontSearchController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
 use App\Http\Controllers\Internal\SyncInboundController;
+use App\Http\Controllers\Client\ClientDashboardController;
+use App\Http\Controllers\Client\ClientProfileController;
+use App\Http\Controllers\Client\ClientReservationsController;
 use App\Http\Controllers\Partner\CatalogueController as PartnerCatalogueController;
 use App\Http\Controllers\Partner\ClientsController as PartnerClientsController;
 use App\Http\Controllers\Partner\CommissionsController as PartnerCommissionsController;
@@ -119,6 +122,14 @@ Route::middleware(['auth', 'partner'])->prefix('partner')->name('partner.')->gro
         Route::get('commissions', [PartnerCommissionsController::class, 'index'])->name('commissions.index');
         Route::get('documents', [PartnerDocumentsController::class, 'index'])->name('documents.index');
     });
+});
+
+Route::middleware(['auth', 'client'])->prefix('client')->name('client.')->group(function () {
+    Route::get('dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('reservations', [ClientReservationsController::class, 'index'])->name('reservations.index');
+    Route::get('reservations/{reservation}', [ClientReservationsController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
+    Route::get('profile', [ClientProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('profile', [ClientProfileController::class, 'update'])->name('profile.update');
 });
 
 Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->prefix('admin')->name('admin.')->group(function () {

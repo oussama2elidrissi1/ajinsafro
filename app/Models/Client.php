@@ -78,6 +78,13 @@ class Client extends Model
         'loyalty_points',
         'last_contacted_at',
         'next_follow_up_at',
+
+        // Client portal account link (Laravel users)
+        'user_id',
+        'portal_username',
+        'portal_temp_password',
+        'portal_temp_password_created_at',
+
         'avatar',
         'internal_notes',
         'blacklist_reason',
@@ -158,6 +165,11 @@ class Client extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -186,6 +198,11 @@ class Client extends Model
     public function scopeBlocked(Builder $query): Builder
     {
         return $query->where('status', 'blocked');
+    }
+
+    public function reservations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Reservation::class, 'client_external_id');
     }
 
     public function getBudgetDisplayAttribute(): ?string

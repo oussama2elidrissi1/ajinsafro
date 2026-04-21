@@ -57,6 +57,7 @@ class CustomersController extends Controller
         }
 
         $clients = $query
+            ->withCount('reservations')
             ->orderByDesc('created_at')
             ->paginate((int) $request->query('per_page', 20))
             ->withQueryString();
