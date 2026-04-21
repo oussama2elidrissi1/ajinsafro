@@ -578,14 +578,9 @@ get_header();
                                                 <?php endforeach; ?>
 
                                                 <?php
-                                                // Collect fixed optional activity IDs for this day (day_scope='fixed' or missing)
-                                                $day_fixed_optional = [];
-                                                foreach ($optional_activities as $_oa) {
-                                                    $scope = isset($_oa['day_scope']) ? $_oa['day_scope'] : 'fixed';
-                                                    if ($scope === 'fixed') {
-                                                        $day_fixed_optional[] = $_oa;
-                                                    }
-                                                }
+                                                // Pass all optional activities (fixed + open) to the modal via data-day-opts.
+                                                // JS activityMatchesDay() filters per day; open-scope also covered by window.ajtbOpenActivities fallback.
+                                                $day_fixed_optional = $optional_activities;
                                                 $has_optional_cta = !empty($day_fixed_optional) || !empty($open_activities);
                                                 ?>
                                                 <?php if ($day_db_id > 0): ?>
