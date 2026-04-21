@@ -817,7 +817,15 @@
         event.stopPropagation();
 
         var key = btn.getAttribute('data-allocation-key') || btn.closest('[data-allocation-key]') && btn.closest('[data-allocation-key]').getAttribute('data-allocation-key');
-        if (!key || !allocationState[key]) return;
+        if (!key) {
+            console.warn('[DepartureRoomAllocation] Click without key', btn);
+            return;
+        }
+        if (!allocationState[key]) {
+            console.warn('[DepartureRoomAllocation] Unknown allocation key', key, Object.keys(allocationState || {}));
+            alert('Impossible d’ajouter un type: depart introuvable (rechargez la page).');
+            return;
+        }
 
         if (btn.getAttribute('data-allocation-action') === 'add-room') {
             var hotels = collectHotels();
@@ -831,7 +839,12 @@
             });
             allocationState[key].manual = true;
             openState[key] = true;
-            render();
+            try {
+                render();
+            } catch (e) {
+                console.error('[DepartureRoomAllocation] render failed after add-room', e);
+                alert('Erreur JS lors de l’ajout d’un type (voir console).');
+            }
             return;
         }
 
@@ -842,7 +855,12 @@
             allocationState[key].rooms = defaultRooms(travelDate ? travelDate.seats : 0, collectHotels());
             allocationState[key].manual = false;
             openState[key] = true;
-            render();
+            try {
+                render();
+            } catch (e) {
+                console.error('[DepartureRoomAllocation] render failed after regenerate', e);
+                alert('Erreur JS lors de la regeneration (voir console).');
+            }
             return;
         }
 
@@ -852,7 +870,12 @@
                 allocationState[key].rooms.splice(roomIndex, 1);
                 allocationState[key].manual = true;
                 openState[key] = true;
-                render();
+                try {
+                    render();
+                } catch (e) {
+                    console.error('[DepartureRoomAllocation] render failed after remove-room', e);
+                    alert('Erreur JS lors de la suppression (voir console).');
+                }
             }
         }
     });
