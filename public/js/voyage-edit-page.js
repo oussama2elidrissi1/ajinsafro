@@ -673,7 +673,7 @@
                 '    <div class="table-responsive">' +
                 '      <table class="table table-sm align-middle mb-2">' +
                 '        <thead><tr><th>Type</th><th>Quantite</th><th>Cap./chambre</th><th>Sejour</th><th>Places couvertes</th><th></th></tr></thead>' +
-                '        <tbody>' + renderRooms(row.index, row.rooms) + '</tbody>' +
+                '        <tbody>' + renderRooms(row.index, row.rooms, row.travelDate) + '</tbody>' +
                 '      </table>' +
                 '    </div>' +
                 '    <div class="d-flex flex-wrap gap-2">' +
@@ -714,7 +714,7 @@
         }).join('');
     }
 
-    function renderRooms(cardIndex, rooms) {
+    function renderRooms(cardIndex, rooms, travelDate) {
         if (!rooms.length) {
             return '<tr><td colspan="6" class="text-muted small">Aucune chambre configuree pour ce depart.</td></tr>';
         }
@@ -725,7 +725,6 @@
             var hotelId = room.hotel_id == null ? '' : String(room.hotel_id);
             var hotelIndex = room.hotel_index == null ? '' : String(room.hotel_index);
             var hotelOptions = hotelSelectOptions(hotelIndex, hotelId);
-            var travelDate = collectTravelDates().filter(function (item) { return item.isActive; })[cardIndex] || null;
             var availableRoomsInfo = resolveRoomStockForSelection(travelDate, room, hotelOptions);
             var availableRooms = availableRoomsInfo.availableRooms;
             var stockLabel = availableRooms == null ? '—' : String(availableRooms);
