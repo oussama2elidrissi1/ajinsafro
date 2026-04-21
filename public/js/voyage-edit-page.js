@@ -106,9 +106,12 @@
         var quantity = parseInt(String(row.quantity || '0'), 10);
         var capacityPerRoom = parseInt(String(row.capacity_per_room || '1'), 10);
 
-        if (!roomType && !quantity) return null;
+        // Keep draft rows created by "Ajouter un type" even when empty,
+        // otherwise they are immediately filtered out on re-render.
+        if (!roomType && !quantity && !row.__draft) return null;
 
         return {
+            __draft: !!row.__draft,
             room_type: roomType,
             quantity: isNaN(quantity) ? 0 : Math.max(0, quantity),
             capacity_per_room: isNaN(capacityPerRoom) ? 1 : Math.max(1, capacityPerRoom),
@@ -837,6 +840,7 @@
             var hotels = collectHotels();
             var defaultHotel = hotels.length ? hotels[0] : null;
             allocationState[key].rooms.push({
+                __draft: true,
                 room_type: '',
                 quantity: 0,
                 capacity_per_room: 1,
