@@ -277,6 +277,24 @@
             );
         }
 
+        // Allow other components (recap finalize) to update the travellers widget
+        // by changing hidden inputs + dispatching ajtb:v1:travellers-changed.
+        function syncFromInputs() {
+            var a = Math.max(1, parseInt(adultsInput.value || "1", 10) || 1);
+            var c = Math.max(0, parseInt(childrenInput.value || "0", 10) || 0);
+            if (a === state.adults && c === state.children) {
+                return;
+            }
+            state.adults = a;
+            state.children = c;
+            clampTotals();
+            adultsValue.textContent = String(state.adults);
+            childrenValue.textContent = String(state.children);
+            summary.textContent = formatSummary();
+        }
+
+        document.addEventListener("ajtb:v1:travellers-changed", syncFromInputs);
+
         function clampTotals() {
             if (state.adults > maxAdults) {
                 state.adults = maxAdults;
@@ -1280,6 +1298,1162 @@
         seedAddedFromProgram();
     }
 
+    function safeJsonParse(raw, fallback) {
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function formatMoney(amount) {
+        var num = typeof amount === "number" ? amount : parseFloat(String(amount || "0"));
+        if (!isFinite(num)) {
+            num = 0;
+        }
+        return Math.round(num)
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function collectRecapPayloadFromSingle() {
+        var priceCard = document.getElementById("ajtb-v1-summary-card");
+        if (!priceCard) {
+            return null;
+        }
+        var tourId = (window.ajtbData && window.ajtbData.tourId) ? parseInt(String(window.ajtbData.tourId), 10) : 0;
+        if (!tourId) {
+            tourId = parseInt(priceCard.getAttribute("data-tour-id") || "0", 10) || 0;
+        }
+
+        var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+        var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+        var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var dateSelect = document.getElementById("ajtb-v1-search-date");
+
+        var adults = adultsInput ? parseInt(adultsInput.value || "2", 10) : 2;
+        var children = childrenInput ? parseInt(childrenInput.value || "0", 10) : 0;
+        if (!isFinite(adults) || adults < 1) { adults = 1; }
+        if (!isFinite(children) || children < 0) { children = 0; }
+
+        var departureLabel = priceCard.getAttribute("data-default-departure") || "—";
+        var departurePlaceId = 0;
+        if (fromSelect && fromSelect.options && fromSelect.selectedIndex >= 0) {
+            var opt = fromSelect.options[fromSelect.selectedIndex];
+            departurePlaceId = parseInt(fromSelect.value || "0", 10) || 0;
+            departureLabel = (opt.getAttribute("data-place-name") || opt.textContent || departureLabel).trim();
+        }
+
+        var dateValue = "";
+        var dateLabel = priceCard.getAttribute("data-default-date") || "—";
+        if (dateSelect && dateSelect.options && dateSelect.selectedIndex >= 0) {
+            var dateOpt = dateSelect.options[dateSelect.selectedIndex];
+            dateValue = String(dateSelect.value || "");
+            dateLabel = String(dateOpt.textContent || dateValue || dateLabel).trim();
+        }
+
+        var currency = priceCard.getAttribute("data-currency") || "MAD";
+        var totalTextEl = document.getElementById("ajtb-v1-price-amount");
+        var totalText = totalTextEl ? String(totalTextEl.textContent || "").trim() : "";
+        var total = parseFloat(totalText.replace(/\s+/g, "").replace(",", ".")) || 0;
+
+        // Selected activities are the DOM-added client cards.
+        var activities = Array.prototype.slice.call(document.querySelectorAll(".activity-card[data-client-added='1']"))
+            .map(function (row) {
+                return {
+                    activity_id: parseInt(row.getAttribute("data-activity-id") || "0", 10) || 0,
+                    title: String(row.getAttribute("data-activity-title") || "").trim() || (row.querySelector("h4") ? row.querySelector("h4").textContent.trim() : "Activité"),
+                    price: row.getAttribute("data-activity-price") || "",
+                    assigned: [],
+                };
+            })
+            .filter(function (a) { return a.activity_id > 0; });
+
+        // Options shown in summary chips (best deals + activities selections).
+        var options = [];
+        var optionsEl = document.getElementById("ajtb-v1-summary-options");
+        if (optionsEl) {
+            options = Array.prototype.slice.call(optionsEl.querySelectorAll("li")).map(function (li) {
+                return String(li.textContent || "").trim();
+            }).filter(Boolean);
+        }
+
+        var recapUrl = priceCard.getAttribute("data-recap-url") || "";
+
+        return {
+            version: 1,
+            capturedAt: Date.now(),
+            tourId: tourId,
+            departure: {
+                id: departurePlaceId,
+                label: departureLabel || "—",
+            },
+            date: {
+                value: dateValue,
+                label: dateLabel || "—",
+            },
+            guests: {
+                adults: adults,
+                children: children,
+                label: (document.getElementById("ajtb-v1-summary-guests") ? document.getElementById("ajtb-v1-summary-guests").textContent : "") || "",
+            },
+            hotel: {
+                label: (document.getElementById("ajtb-v1-summary-hotel") ? document.getElementById("ajtb-v1-summary-hotel").textContent : "") || "",
+            },
+            flight: {
+                label: (document.getElementById("ajtb-v1-summary-flight") ? document.getElementById("ajtb-v1-summary-flight").textContent : "") || "",
+            },
+            transfers: {
+                label: "—",
+            },
+            activities: activities,
+            options: options,
+            price: {
+                total: isFinite(total) ? total : 0,
+                currency: currency,
+            },
+            recapUrl: recapUrl,
+        };
+    }
+
+    function initContinueToRecap() {
+        var actionEl = document.getElementById("ajtb-v1-summary-action");
+        var priceCard = document.getElementById("ajtb-v1-summary-card");
+        if (!actionEl || !priceCard) {
+            return;
+        }
+
+        actionEl.addEventListener("click", function () {
+            var payload = collectRecapPayloadFromSingle();
+            if (!payload) {
+                return;
+            }
+            try {
+                localStorage.setItem("ajtb:v1:recap:" + String(payload.tourId || "0"), JSON.stringify(payload));
+            } catch (e) {}
+
+            var recapUrl = payload.recapUrl || priceCard.getAttribute("data-recap-url") || "";
+            if (!recapUrl && window.ajtbData && window.ajtbData.recapUrl) {
+                recapUrl = window.ajtbData.recapUrl;
+            }
+            if (!recapUrl) {
+                // Fallback: stay on page if recap URL missing.
+                return;
+            }
+            window.location.href = recapUrl;
+        });
+    }
+
+    function initRestoreSelectionFromRecap() {
+        var priceCard = document.getElementById("ajtb-v1-summary-card");
+        if (!priceCard) {
+            return;
+        }
+        // Only when user clicks "Modifier" from recap page.
+        if (!window.location.search || window.location.search.indexOf("ajtb_edit=1") === -1) {
+            return;
+        }
+
+        var tourId = (window.ajtbData && window.ajtbData.tourId) ? parseInt(String(window.ajtbData.tourId), 10) : 0;
+        if (!tourId) {
+            tourId = parseInt(priceCard.getAttribute("data-tour-id") || "0", 10) || 0;
+        }
+        if (!tourId) {
+            return;
+        }
+
+        var payload = null;
+        try {
+            payload = safeJsonParse(localStorage.getItem("ajtb:v1:recap:" + String(tourId)), null);
+        } catch (e) {
+            payload = null;
+        }
+        if (!payload || payload.tourId !== tourId) {
+            return;
+        }
+
+        var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var dateSelect = document.getElementById("ajtb-v1-search-date");
+        var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+        var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+
+        if (fromSelect && payload.departure && payload.departure.id) {
+            fromSelect.value = String(payload.departure.id);
+            fromSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        if (dateSelect && payload.date && payload.date.value) {
+            dateSelect.value = String(payload.date.value);
+            dateSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        if (adultsInput && payload.guests && isFinite(payload.guests.adults)) {
+            adultsInput.value = String(Math.max(1, parseInt(payload.guests.adults, 10) || 1));
+        }
+        if (childrenInput && payload.guests && isFinite(payload.guests.children)) {
+            childrenInput.value = String(Math.max(0, parseInt(payload.guests.children, 10) || 0));
+        }
+        document.dispatchEvent(new CustomEvent("ajtb:v1:travellers-changed"));
+
+        // Scroll back to selection.
+        var searchBox = document.getElementById("ajtb-v1-search-box");
+        if (searchBox) {
+            searchBox.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }
+
+    function initRecapPage() {
+        var root = document.querySelector("[data-ajtb-recap-root]");
+        if (!root) {
+            return;
+        }
+        var tourId = parseInt(root.getAttribute("data-tour-id") || "0", 10) || 0;
+        var hint = document.querySelector("[data-ajtb-recap-hint]");
+        var payload = null;
+        try {
+            payload = safeJsonParse(localStorage.getItem("ajtb:v1:recap:" + String(tourId)), null);
+        } catch (e) {
+            payload = null;
+        }
+        // Allow direct open: create a minimal payload from defaults.
+        if (!payload || payload.tourId !== tourId) {
+            if (hint) { hint.hidden = false; }
+            payload = {
+                version: 1,
+                capturedAt: Date.now(),
+                tourId: tourId,
+                departure: { id: 0, label: "—" },
+                date: { value: "", label: "—" },
+                guests: { adults: 2, children: 0, label: "" },
+                hotel: { label: "" },
+                flight: { label: "" },
+                transfers: { label: "—" },
+                activities: [],
+                options: [],
+                price: { total: 0, currency: "MAD" },
+            };
+        }
+
+        // Normalize activities: default pricing mode is "all" (per traveller)
+        if (payload.activities && payload.activities.length) {
+            payload.activities.forEach(function (a) {
+                if (!a) return;
+                if (!Array.isArray(a.assigned)) a.assigned = [];
+            });
+        }
+
+        function setField(name, value) {
+            var el = document.querySelector("[data-ajtb-recap-field='" + name + "']");
+            if (!el) { return; }
+            el.textContent = (value === null || value === undefined || String(value).trim() === "") ? "—" : String(value);
+        }
+
+        function computeTotalFromState(state) {
+            var base = window.ajtbRecapBase || {};
+            var pricing = base.pricing || {};
+            var datePrices = base.datePrices || {};
+            var currency = pricing.currency || (state.price ? state.price.currency : "MAD") || "MAD";
+            var baseAdult = parseFloat(pricing.adult || "0");
+            var baseChild = parseFloat(pricing.child || "0");
+            if (!isFinite(baseAdult) || baseAdult < 0) { baseAdult = 0; }
+            if (!isFinite(baseChild) || baseChild < 0) { baseChild = 0; }
+
+            var adults = state.guests ? parseInt(state.guests.adults || "2", 10) : 2;
+            var children = state.guests ? parseInt(state.guests.children || "0", 10) : 0;
+            if (!isFinite(adults) || adults < 1) { adults = 1; }
+            if (!isFinite(children) || children < 0) { children = 0; }
+
+            var adultUnit = baseAdult;
+            var dateValue = state.date ? String(state.date.value || "") : "";
+            if (dateValue && datePrices && datePrices[dateValue] && datePrices[dateValue].specific_price !== null && datePrices[dateValue].specific_price !== undefined) {
+                var dp = parseFloat(datePrices[dateValue].specific_price);
+                if (isFinite(dp) && dp > 0) {
+                    adultUnit = dp;
+                }
+            }
+            if (!isFinite(adultUnit) || adultUnit < 0) { adultUnit = 0; }
+            var childUnit = baseChild > 0 ? baseChild : adultUnit;
+
+            var activitiesTotal = 0;
+            if (state.activities && state.activities.length) {
+                state.activities.forEach(function (a) {
+                    var p = parseFloat(a.price || "0");
+                    if (!isFinite(p) || p <= 0) { return; }
+                    var travellers = adults + children;
+                    if (!isFinite(travellers) || travellers < 1) { travellers = 1; }
+
+                    // Per-passenger activation:
+                    // a.assigned is an array of slot indexes (0 = principal client, 1.. = companions).
+                    // If missing, default to all travellers.
+                    var assignedCount = 0;
+                    if (a && Array.isArray(a.assigned) && a.assigned.length) {
+                        var uniq = {};
+                        a.assigned.forEach(function (idx) {
+                            var n = parseInt(idx, 10);
+                            if (!isFinite(n) || n < 0) { return; }
+                            uniq[String(n)] = true;
+                        });
+                        assignedCount = Object.keys(uniq).length;
+                    } else {
+                        assignedCount = travellers;
+                    }
+                    assignedCount = Math.max(0, Math.min(travellers, assignedCount));
+                    activitiesTotal += p * assignedCount;
+                });
+            }
+
+            var total = adults * adultUnit + children * childUnit + activitiesTotal;
+            var roomTotal = 0;
+            if (state.room && isFinite(state.room.supplement)) {
+                var rs = parseFloat(state.room.supplement || "0");
+                if (isFinite(rs) && rs > 0) {
+                    roomTotal = rs * (adults + children);
+                    total += roomTotal;
+                }
+            }
+            var extrasTotal = 0;
+            if (state.extras && state.extras.length) {
+                var travellerTypes = Array.isArray(state.travellerTypes) ? state.travellerTypes : null;
+                state.extras.forEach(function (ex) {
+                    if (!ex) return;
+                    var pa = parseFloat(ex.price_adult || "0");
+                    var pc = parseFloat(ex.price_child || "0");
+                    if (!isFinite(pa) || pa < 0) pa = 0;
+                    if (!isFinite(pc) || pc < 0) pc = 0;
+                    var travellers = adults + children;
+                    if (!isFinite(travellers) || travellers < 1) travellers = 1;
+
+                    var assigned = [];
+                    if (Array.isArray(ex.assigned) && ex.assigned.length) {
+                        assigned = ex.assigned.map(function (x) { return parseInt(x, 10); }).filter(function (n) {
+                            return isFinite(n) && n >= 0 && n < travellers;
+                        });
+                    } else {
+                        for (var i = 0; i < travellers; i++) assigned.push(i);
+                    }
+
+                    var adultCount = 0;
+                    var childCount = 0;
+                    assigned.forEach(function (slot) {
+                        var t = (travellerTypes && travellerTypes[slot]) ? travellerTypes[slot] : (slot === 0 ? "adult" : "adult");
+                        if (t === "child") childCount += 1;
+                        else adultCount += 1;
+                    });
+
+                    if (pa > 0) extrasTotal += pa * adultCount;
+                    if (pc > 0) extrasTotal += pc * childCount;
+                });
+                total += extrasTotal;
+            }
+            if (!isFinite(total) || total < 0) { total = 0; }
+            return { total: total, currency: currency, adultUnit: adultUnit, childUnit: childUnit, activitiesTotal: activitiesTotal, roomTotal: roomTotal, extrasTotal: extrasTotal };
+        }
+
+        function syncFormFromPayload(state) {
+            var fromSelect = document.getElementById("ajtb-v1-search-from");
+            var dateSelect = document.getElementById("ajtb-v1-search-date");
+            var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+            var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+
+            if (fromSelect && state.departure && state.departure.id) {
+                fromSelect.value = String(state.departure.id);
+            }
+            if (dateSelect && state.date && state.date.value) {
+                dateSelect.value = String(state.date.value);
+            }
+            if (adultsInput && state.guests) {
+                adultsInput.value = String(Math.max(1, parseInt(state.guests.adults || "2", 10) || 2));
+            }
+            if (childrenInput && state.guests) {
+                childrenInput.value = String(Math.max(0, parseInt(state.guests.children || "0", 10) || 0));
+            }
+            // Re-render guest summary using existing picker logic (already initialised on page).
+            document.dispatchEvent(new CustomEvent("ajtb:v1:travellers-changed"));
+        }
+
+        function readPayloadFromForm(state) {
+            var next = state || payload;
+            var fromSelect = document.getElementById("ajtb-v1-search-from");
+            var dateSelect = document.getElementById("ajtb-v1-search-date");
+            var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+            var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+
+            if (fromSelect && fromSelect.options && fromSelect.selectedIndex >= 0) {
+                var opt = fromSelect.options[fromSelect.selectedIndex];
+                next.departure = {
+                    id: parseInt(fromSelect.value || "0", 10) || 0,
+                    label: (opt.getAttribute("data-place-name") || opt.textContent || "—").trim(),
+                };
+            }
+            if (dateSelect && dateSelect.options && dateSelect.selectedIndex >= 0) {
+                var dopt = dateSelect.options[dateSelect.selectedIndex];
+                next.date = {
+                    value: String(dateSelect.value || ""),
+                    label: String(dopt.textContent || dateSelect.value || "—").trim(),
+                };
+            }
+            next.guests = next.guests || { adults: 2, children: 0, label: "" };
+            next.guests.adults = adultsInput ? (parseInt(adultsInput.value || "2", 10) || 2) : 2;
+            next.guests.children = childrenInput ? (parseInt(childrenInput.value || "0", 10) || 0) : 0;
+            return next;
+        }
+
+        function renderRecap(state) {
+            state = state || payload;
+            var calc = computeTotalFromState(state);
+
+            setField("hotel", state.hotel && state.hotel.label ? state.hotel.label : "—");
+            setField("flight", state.flight && state.flight.label ? state.flight.label : "Non indiqué");
+            setField("transfers", state.transfers && state.transfers.label ? state.transfers.label : "—");
+
+            var activitiesLabel = "—";
+            if (state.activities && state.activities.length) {
+                activitiesLabel = state.activities.map(function (a) { return a.title; }).filter(Boolean).join(", ");
+            }
+            setField("activities", activitiesLabel);
+
+            var optionsLabel = "—";
+            if (state.options && state.options.length) {
+                optionsLabel = state.options.join(", ");
+            }
+            setField("options", optionsLabel);
+
+            var guestsLabel = (state.guests ? (state.guests.adults + " adulte(s)" + (state.guests.children > 0 ? (", " + state.guests.children + " enfant(s)") : "")) : "—");
+            setField("guests", guestsLabel);
+            setField("guestBreakdown", (state.guests ? (state.guests.adults + " adulte(s)" + (state.guests.children > 0 ? (" • " + state.guests.children + " enfant(s)") : "")) : "—"));
+            setField("departure", state.departure && state.departure.label ? state.departure.label : "—");
+            setField("date", state.date && state.date.label ? state.date.label : "—");
+
+            setField("total", formatMoney(calc.total));
+            setField("currency", calc.currency);
+            var detail = [];
+            if (calc.adultUnit > 0) { detail.push("Adulte: " + formatMoney(calc.adultUnit) + " " + calc.currency); }
+            if (state.guests && state.guests.children > 0) { detail.push("Enfant: " + formatMoney(calc.childUnit) + " " + calc.currency); }
+            if (calc.activitiesTotal > 0) { detail.push("Activités: +" + formatMoney(calc.activitiesTotal) + " " + calc.currency); }
+            if (calc.roomTotal > 0) { detail.push("Chambre: +" + formatMoney(calc.roomTotal) + " " + calc.currency); }
+            if (calc.extrasTotal > 0) { detail.push("Extras: +" + formatMoney(calc.extrasTotal) + " " + calc.currency); }
+            setField("priceDetail", detail.length ? detail.join(" • ") : "—");
+        }
+
+        // Initial render from payload and hydrate controls.
+        syncFormFromPayload(payload);
+        payload = readPayloadFromForm(payload);
+        renderRecap(payload);
+
+        function renderRooms(rooms) {
+            var box = document.getElementById("ajtb-v1-room-picker");
+            if (!box) return;
+            if (!rooms || !rooms.length) {
+                box.innerHTML = '<p class="ajtb-v1-recap-muted">Aucune chambre disponible pour ce départ.</p>';
+                return;
+            }
+            payload.roomAllocation = payload.roomAllocation && typeof payload.roomAllocation === "object" ? payload.roomAllocation : {};
+
+            function travellersCount() {
+                var a = payload.guests ? (parseInt(payload.guests.adults || "1", 10) || 1) : 1;
+                var c = payload.guests ? (parseInt(payload.guests.children || "0", 10) || 0) : 0;
+                return Math.max(1, a) + Math.max(0, c);
+            }
+
+            function allocationCapacity() {
+                var total = 0;
+                rooms.forEach(function (r) {
+                    var id = String(r.id || "");
+                    var qty = parseInt(payload.roomAllocation[id] || "0", 10) || 0;
+                    var cap = parseInt(r.capacity_per_room || "1", 10) || 1;
+                    total += Math.max(0, qty) * Math.max(1, cap);
+                });
+                return total;
+            }
+
+            function suggestAllInOneRoom() {
+                var n = travellersCount();
+                var candidate = null;
+                rooms.forEach(function (r) {
+                    var cap = parseInt(r.capacity_per_room || "1", 10) || 1;
+                    var stock = parseInt(r.quantity || "0", 10) || 0;
+                    if (stock <= 0) return;
+                    if (cap >= n) {
+                        if (!candidate || cap < candidate.cap) {
+                            candidate = { id: String(r.id), cap: cap };
+                        }
+                    }
+                });
+                if (candidate) {
+                    payload.roomAllocation = {};
+                    payload.roomAllocation[candidate.id] = 1;
+                    return true;
+                }
+                return false;
+            }
+
+            // If nothing chosen yet, try best default: everyone in one room, else first available 1 room.
+            var hasAny = Object.keys(payload.roomAllocation).some(function (k) { return (parseInt(payload.roomAllocation[k] || "0", 10) || 0) > 0; });
+            if (!hasAny) {
+                if (!suggestAllInOneRoom()) {
+                    var first = rooms.find(function (r) { return (parseInt(r.quantity || "0", 10) || 0) > 0; });
+                    if (first) {
+                        payload.roomAllocation = {};
+                        payload.roomAllocation[String(first.id)] = 1;
+                    }
+                }
+            }
+
+            function render() {
+                var need = travellersCount();
+                var got = allocationCapacity();
+                var ok = got >= need;
+                box.innerHTML =
+                    '<div class="ajtb-v1-room-alloc-summary">' +
+                    '<div><strong>' + escapeHtml(String(need)) + '</strong> voyageurs · Capacité sélectionnée: <strong>' + escapeHtml(String(got)) + '</strong></div>' +
+                    '<div class="ajtb-v1-room-alloc-actions">' +
+                    '<button type="button" class="ajtb-v1-recap-mini-btn" data-ajtb-room-suggest="1">Tout le monde ensemble</button>' +
+                    '</div>' +
+                    '<div class="ajtb-v1-room-alloc-badge">' + (ok ? 'OK' : 'À compléter') + '</div>' +
+                    '</div>' +
+                    rooms.map(function (r) {
+                        var id = String(r.id || "");
+                        var cap = parseInt(r.capacity_per_room || "1", 10) || 1;
+                        var stock = parseInt(r.quantity || "0", 10) || 0;
+                        var qty = parseInt(payload.roomAllocation[id] || "0", 10) || 0;
+                        qty = Math.max(0, qty);
+                        var canMinus = qty > 0;
+                        var canPlus = qty < stock;
+                        return '' +
+                            '<div class="ajtb-v1-room-alloc-row" data-ajtb-room-id="' + escapeHtml(id) + '">' +
+                            '<div>' +
+                            '<strong>' + escapeHtml(String(r.room_type || "Chambre")) + '</strong>' +
+                            '<small>Cap./chambre: ' + escapeHtml(String(cap)) + ' · Stock: ' + escapeHtml(String(stock)) + '</small>' +
+                            '</div>' +
+                            '<div class="ajtb-v1-room-stepper">' +
+                            '<button type="button" data-ajtb-room-minus ' + (canMinus ? "" : "disabled") + '>-</button>' +
+                            '<span data-ajtb-room-qty>' + escapeHtml(String(qty)) + '</span>' +
+                            '<button type="button" data-ajtb-room-plus ' + (canPlus ? "" : "disabled") + '>+</button>' +
+                            '</div>' +
+                            '</div>';
+                    }).join("");
+            }
+
+            render();
+            renderRecap(payload);
+            try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
+
+            box.addEventListener("click", function (e) {
+                var suggest = e.target && e.target.closest ? e.target.closest("[data-ajtb-room-suggest]") : null;
+                if (suggest) {
+                    suggestAllInOneRoom();
+                    render();
+                    return;
+                }
+                var row = e.target && e.target.closest ? e.target.closest("[data-ajtb-room-id]") : null;
+                if (!row) return;
+                var id = String(row.getAttribute("data-ajtb-room-id") || "");
+                if (!id) return;
+                var isPlus = e.target && e.target.closest ? e.target.closest("[data-ajtb-room-plus]") : null;
+                var isMinus = e.target && e.target.closest ? e.target.closest("[data-ajtb-room-minus]") : null;
+                if (!isPlus && !isMinus) return;
+
+                var r = rooms.find(function (x) { return String(x.id) === id; });
+                if (!r) return;
+                var stock = parseInt(r.quantity || "0", 10) || 0;
+                var qty = parseInt(payload.roomAllocation[id] || "0", 10) || 0;
+                qty = Math.max(0, qty);
+                if (isPlus && qty < stock) qty += 1;
+                if (isMinus && qty > 0) qty -= 1;
+                payload.roomAllocation[id] = qty;
+                render();
+            }, { passive: true });
+        }
+
+        function renderExtras(extras) {
+            var box = document.getElementById("ajtb-v1-extras-picker");
+            if (!box) return;
+            if (!extras || !extras.length) {
+                box.innerHTML = '<p class="ajtb-v1-recap-muted">Aucun extra disponible.</p>';
+                return;
+            }
+            box.innerHTML = extras.map(function (ex) {
+                var priceParts = [];
+                if (ex.price_adult && parseFloat(ex.price_adult) > 0) priceParts.push("Adulte " + formatMoney(ex.price_adult));
+                if (ex.price_child && parseFloat(ex.price_child) > 0) priceParts.push("Enfant " + formatMoney(ex.price_child));
+                var price = priceParts.length ? (priceParts.join(" / ") + " " + (window.ajtbRecapBase && window.ajtbRecapBase.pricing ? window.ajtbRecapBase.pricing.currency : "MAD")) : "—";
+                return '' +
+                    '<div class="ajtb-v1-choice-item">' +
+                    '<span></span>' +
+                    '<span><strong>' + escapeHtml(String(ex.name || "Extra")) + '</strong>' + (ex.description ? ('<small>' + escapeHtml(String(ex.description)) + '</small>') : '') + '</span>' +
+                    '<span class="ajtb-v1-choice-price">' + escapeHtml(price) + '</span>' +
+                    '</div>';
+            }).join("");
+        }
+
+        function getTravellerTypesForExtras() {
+            var list = document.getElementById("ajtb-recap-companions-list");
+            if (list) {
+                var types = ["adult"]; // slot 0 = client
+                Array.prototype.slice.call(list.querySelectorAll("[data-companion-row]")).forEach(function (row) {
+                    var sel = row.querySelector("[data-companion-type]");
+                    var t = sel ? String(sel.value || "adult") : "adult";
+                    types.push(t === "child" ? "child" : "adult");
+                });
+                return types;
+            }
+            // Fallback from guests picker.
+            var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+            var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+            var a = adultsInput ? (parseInt(adultsInput.value || "1", 10) || 1) : 1;
+            var c = childrenInput ? (parseInt(childrenInput.value || "0", 10) || 0) : 0;
+            a = Math.max(1, a); c = Math.max(0, c);
+            var out = ["adult"];
+            for (var i = 1; i < a; i++) out.push("adult");
+            for (var j = 0; j < c; j++) out.push("child");
+            return out;
+        }
+
+        function ensureExtraAssignments() {
+            payload.extras = Array.isArray(payload.extras) ? payload.extras : [];
+            var types = getTravellerTypesForExtras();
+            payload.travellerTypes = types;
+            var travellers = types.length;
+            payload.extras.forEach(function (ex) {
+                if (!ex) return;
+                if (!Array.isArray(ex.assigned) || !ex.assigned.length) {
+                    ex.assigned = [];
+                    for (var i = 0; i < travellers; i++) ex.assigned.push(i);
+                    return;
+                }
+                ex.assigned = ex.assigned.map(function (x) { return parseInt(x, 10); }).filter(function (n) {
+                    return isFinite(n) && n >= 0 && n < travellers;
+                });
+                for (var k = 0; k < travellers; k++) {
+                    if (ex.assigned.indexOf(k) === -1) ex.assigned.push(k);
+                }
+            });
+        }
+
+        function renderExtrasAssignment() {
+            var box = document.getElementById("ajtb-v1-extras-assign");
+            if (!box) return;
+            if (!payload.extras || !payload.extras.length) {
+                box.innerHTML = "";
+                return;
+            }
+            ensureExtraAssignments();
+            var types = payload.travellerTypes || getTravellerTypesForExtras();
+            var travellers = types.length;
+            var labels = types.map(function (t, idx) {
+                if (idx === 0) return "Client";
+                return (t === "child" ? ("Enfant " + idx) : ("Adulte " + idx));
+            });
+
+            box.innerHTML = labels.map(function (title, slot) {
+                return '' +
+                    '<div class="ajtb-v1-extras-person" data-ajtb-extra-person="' + slot + '">' +
+                    '<h3>' + escapeHtml(title) + '</h3>' +
+                    '<div class="ajtb-v1-extras-chips">' +
+                    payload.extras.map(function (ex, exIdx) {
+                        var checked = ex && Array.isArray(ex.assigned) && ex.assigned.indexOf(slot) !== -1;
+                        var t = types[slot] === "child" ? "child" : "adult";
+                        var p = t === "child" ? parseFloat(ex.price_child || "0") : parseFloat(ex.price_adult || "0");
+                        if (!isFinite(p) || p < 0) p = 0;
+                        var label = String(ex.name || "Extra") + (p > 0 ? (" · " + formatMoney(p) + " " + ((window.ajtbRecapBase && window.ajtbRecapBase.pricing) ? window.ajtbRecapBase.pricing.currency : "MAD")) : "");
+                        return '' +
+                            '<label class="ajtb-v1-recap-activity-toggle">' +
+                            '<input type="checkbox" data-ajtb-extra-toggle data-slot="' + slot + '" data-extra-idx="' + exIdx + '"' + (checked ? ' checked' : '') + '>' +
+                            '<span>' + escapeHtml(label) + '</span>' +
+                            '</label>';
+                    }).join("") +
+                    '</div>' +
+                    '</div>';
+            }).join("");
+        }
+
+        function loadRoomsExtras() {
+            var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+            var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+            var dateSelect = document.getElementById("ajtb-v1-search-date");
+            if (!dateSelect || !dateSelect.value) {
+                return;
+            }
+            var formData = new FormData();
+            formData.append("action", "ajtb_v1_get_rooms_extras");
+            formData.append("nonce", (window.ajtbData && window.ajtbData.reservationNonce) ? window.ajtbData.reservationNonce : "");
+            formData.append("tour_id", String(tourId));
+            formData.append("departure_date", String(dateSelect.value || ""));
+            formData.append("adults", String(adultsInput ? adultsInput.value : "1"));
+            formData.append("children", String(childrenInput ? childrenInput.value : "0"));
+
+            fetch((window.ajtbData && window.ajtbData.ajaxUrl) ? window.ajtbData.ajaxUrl : "/wp-admin/admin-ajax.php", {
+                method: "POST",
+                credentials: "same-origin",
+                body: formData,
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (json) {
+                    if (!json || !json.success) return;
+                    payload.availableRooms = (json.data && json.data.rooms) ? json.data.rooms : [];
+                    payload.availableExtras = (json.data && json.data.extras) ? json.data.extras : [];
+                    // Default extras selection: all extras enabled for all travellers.
+                    payload.extras = (payload.availableExtras || []).map(function (ex) {
+                        return {
+                            id: ex.id,
+                            name: ex.name,
+                            description: ex.description,
+                            price_adult: ex.price_adult,
+                            price_child: ex.price_child,
+                            assigned: Array.isArray(ex.assigned) ? ex.assigned : [],
+                        };
+                    });
+                    renderRooms(payload.availableRooms);
+                    renderExtras(payload.availableExtras);
+                    renderRecap(payload);
+                    document.dispatchEvent(new CustomEvent("ajtb:v1:extras-loaded"));
+                    try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
+                    renderExtrasAssignment();
+                })
+                .catch(function () {});
+        }
+
+        // initial fetch
+        loadRoomsExtras();
+
+        // Update live when changing departure/date.
+        var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var dateSelect = document.getElementById("ajtb-v1-search-date");
+        if (fromSelect) {
+            fromSelect.addEventListener("change", function () {
+                payload = readPayloadFromForm(payload);
+                renderRecap(payload);
+                try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
+                loadRoomsExtras();
+            });
+        }
+        if (dateSelect) {
+            dateSelect.addEventListener("change", function () {
+                payload = readPayloadFromForm(payload);
+                renderRecap(payload);
+                try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
+                loadRoomsExtras();
+            });
+        }
+        document.addEventListener("ajtb:v1:travellers-changed", function () {
+            payload = readPayloadFromForm(payload);
+            renderRecap(payload);
+            try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
+            loadRoomsExtras();
+            renderExtrasAssignment();
+        });
+
+        document.addEventListener("ajtb:v1:extras-loaded", function () {
+            renderExtrasAssignment();
+        });
+
+        var extrasAssign = document.getElementById("ajtb-v1-extras-assign");
+        if (extrasAssign) {
+            extrasAssign.addEventListener("change", function (e) {
+                var chk = e.target && e.target.closest ? e.target.closest("[data-ajtb-extra-toggle]") : null;
+                if (!chk) return;
+                var slot = parseInt(chk.getAttribute("data-slot") || "-1", 10);
+                var exIdx = parseInt(chk.getAttribute("data-extra-idx") || "-1", 10);
+                if (!payload.extras || slot < 0 || exIdx < 0 || exIdx >= payload.extras.length) return;
+                payload.extras[exIdx].assigned = payload.extras[exIdx].assigned || [];
+                var i = payload.extras[exIdx].assigned.indexOf(slot);
+                if (chk.checked) {
+                    if (i === -1) payload.extras[exIdx].assigned.push(slot);
+                } else {
+                    if (i !== -1) payload.extras[exIdx].assigned.splice(i, 1);
+                }
+                payload.travellerTypes = getTravellerTypesForExtras();
+                renderRecap(payload);
+                try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e2) {}
+            });
+        }
+
+        // Rooms are managed by allocation stepper in renderRooms()
+
+        // (Activities are managed per traveller in "Client & voyageurs")
+
+        var confirmBtn = document.querySelector("[data-ajtb-recap-action='confirm']");
+        if (confirmBtn) {
+            confirmBtn.addEventListener("click", function () {
+                try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
+                var finalize = document.getElementById("ajtb-v1-recap-finalize");
+                if (finalize) {
+                    finalize.scrollIntoView({ behavior: "smooth", block: "start" });
+                    var first = document.getElementById("ajtb-client-first");
+                    if (first) { first.focus(); }
+                }
+            });
+        }
+
+        (function bindFinalize() {
+            var finalize = document.getElementById("ajtb-v1-recap-finalize");
+            if (!finalize) return;
+
+            var list = document.getElementById("ajtb-recap-companions-list");
+            var addAdultBtn = document.querySelector("[data-ajtb-recap-action='add-adult']");
+            var addChildBtn = document.querySelector("[data-ajtb-recap-action='add-child']");
+            var submitBtn = document.querySelector("[data-ajtb-recap-action='final-submit']");
+            if (!list || !submitBtn) return;
+
+            function companionRowHtml(idx, type) {
+                type = type === "child" ? "child" : "adult";
+                return '' +
+                    '<div class="ajtb-v1-recap-companion-row" data-companion-row="' + idx + '">' +
+                    '<select data-companion-type aria-label="Type voyageur">' +
+                    '<option value="adult"' + (type === "adult" ? " selected" : "") + '>Adulte</option>' +
+                    '<option value="child"' + (type === "child" ? " selected" : "") + '>Enfant</option>' +
+                    '</select>' +
+                    '<input type="text" placeholder="Prénom" data-companion-first>' +
+                    '<input type="text" placeholder="Nom" data-companion-last>' +
+                    '<button type="button" data-companion-remove>✕</button>' +
+                    '<div class="ajtb-v1-recap-companion-activities" data-companion-activities></div>' +
+                    '</div>';
+            }
+
+            function getTravellerTypes() {
+                var types = ["adult"]; // slot 0 = client
+                Array.prototype.slice.call(list.querySelectorAll("[data-companion-row]")).forEach(function (row) {
+                    var sel = row.querySelector("[data-companion-type]");
+                    var t = sel ? String(sel.value || "adult") : "adult";
+                    types.push(t === "child" ? "child" : "adult");
+                });
+                return types;
+            }
+
+            function ensureCompanionsMatchCounts() {
+                var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+                var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+                var adults = adultsInput ? parseInt(adultsInput.value || "1", 10) : 1;
+                var children = childrenInput ? parseInt(childrenInput.value || "0", 10) : 0;
+                if (!isFinite(adults) || adults < 1) adults = 1;
+                if (!isFinite(children) || children < 0) children = 0;
+
+                var desiredAdultCompanions = Math.max(0, adults - 1);
+                var desiredChildCompanions = Math.max(0, children);
+
+                var rows = Array.prototype.slice.call(list.querySelectorAll("[data-companion-row]"));
+                var adultRows = rows.filter(function (r) {
+                    var sel = r.querySelector("[data-companion-type]");
+                    return !sel || String(sel.value || "adult") === "adult";
+                });
+                var childRows = rows.filter(function (r) {
+                    var sel = r.querySelector("[data-companion-type]");
+                    return sel && String(sel.value || "") === "child";
+                });
+
+                function addRow(type) {
+                    var idx = list.querySelectorAll("[data-companion-row]").length;
+                    list.insertAdjacentHTML("beforeend", companionRowHtml(idx, type));
+                }
+                function removeLastOfType(type) {
+                    var candidates = Array.prototype.slice.call(list.querySelectorAll("[data-companion-row]")).filter(function (r) {
+                        var sel = r.querySelector("[data-companion-type]");
+                        var t = sel ? String(sel.value || "adult") : "adult";
+                        return t === type;
+                    });
+                    var last = candidates.length ? candidates[candidates.length - 1] : null;
+                    if (last) last.remove();
+                }
+
+                while (adultRows.length < desiredAdultCompanions) {
+                    addRow("adult");
+                    adultRows.push(true);
+                }
+                while (adultRows.length > desiredAdultCompanions) {
+                    removeLastOfType("adult");
+                    adultRows.pop();
+                }
+                while (childRows.length < desiredChildCompanions) {
+                    addRow("child");
+                    childRows.push(true);
+                }
+                while (childRows.length > desiredChildCompanions) {
+                    removeLastOfType("child");
+                    childRows.pop();
+                }
+            }
+
+            function ensureActivityAssignments() {
+                // Ensure payload activities assigned array matches current travellers.
+                try { payload = readPayloadFromForm(payload); } catch (e) {}
+                if (!payload || !payload.activities) return;
+                var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+                var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+                var travellers = (adultsInput ? (parseInt(adultsInput.value || "1", 10) || 1) : 1) + (childrenInput ? (parseInt(childrenInput.value || "0", 10) || 0) : 0);
+                travellers = Math.max(1, travellers);
+                payload.activities.forEach(function (a) {
+                    if (!a) return;
+                    if (!Array.isArray(a.assigned) || !a.assigned.length) {
+                        a.assigned = [];
+                        for (var i = 0; i < travellers; i++) a.assigned.push(i);
+                        return;
+                    }
+                    a.assigned = a.assigned.map(function (x) { return parseInt(x, 10); }).filter(function (n) {
+                        return isFinite(n) && n >= 0 && n < travellers;
+                    });
+                    // New travellers default to enabled.
+                    for (var j = 0; j < travellers; j++) {
+                        if (a.assigned.indexOf(j) === -1) a.assigned.push(j);
+                    }
+                });
+            }
+
+            function renderActivityToggles() {
+                if (!payload || !payload.activities) return;
+                ensureActivityAssignments();
+
+                var allRows = Array.prototype.slice.call(list.querySelectorAll("[data-companion-row]"));
+
+                function rowForSlot(slotIdx) {
+                    return allRows[slotIdx - 1] ? allRows[slotIdx - 1].querySelector("[data-companion-activities]") : null;
+                }
+
+                var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+                var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+                var travellers = (adultsInput ? (parseInt(adultsInput.value || "1", 10) || 1) : 1) + (childrenInput ? (parseInt(childrenInput.value || "0", 10) || 0) : 0);
+                travellers = Math.max(1, travellers);
+
+                for (var slot = 0; slot < travellers; slot++) {
+                    var host = rowForSlot(slot);
+                    if (!host) continue;
+                    host.innerHTML = payload.activities.map(function (a, aIdx) {
+                        var checked = a && Array.isArray(a.assigned) && a.assigned.indexOf(slot) !== -1;
+                        return '' +
+                            '<label class="ajtb-v1-recap-activity-toggle">' +
+                            '<input type="checkbox" data-ajtb-activity-toggle data-slot="' + slot + '" data-activity-idx="' + aIdx + '"' + (checked ? ' checked' : '') + '>' +
+                            '<span>' + escapeHtml(String((a && a.title) ? a.title : 'Activité')) + '</span>' +
+                            '</label>';
+                    }).join("");
+                }
+            }
+
+
+            function syncCountsFromCompanionRows() {
+                var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+                var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+                if (!adultsInput || !childrenInput) return;
+
+                var rows = Array.prototype.slice.call(list.querySelectorAll("[data-companion-row]"));
+                var adultCompanions = 0;
+                var childCompanions = 0;
+                rows.forEach(function (row) {
+                    var sel = row.querySelector("[data-companion-type]");
+                    var t = sel ? String(sel.value || "adult") : "adult";
+                    if (t === "child") childCompanions += 1;
+                    else adultCompanions += 1;
+                });
+
+                // Principal client is always 1 adult.
+                adultsInput.value = String(Math.max(1, 1 + adultCompanions));
+                childrenInput.value = String(Math.max(0, childCompanions));
+                document.dispatchEvent(new CustomEvent("ajtb:v1:travellers-changed"));
+            }
+
+            function adjustCounts(deltaAdults, deltaChildren) {
+                var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+                var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+                if (!adultsInput || !childrenInput) return;
+                var a = parseInt(adultsInput.value || "1", 10) || 1;
+                var c = parseInt(childrenInput.value || "0", 10) || 0;
+                a = Math.max(1, a + (deltaAdults || 0));
+                c = Math.max(0, c + (deltaChildren || 0));
+                adultsInput.value = String(a);
+                childrenInput.value = String(c);
+                document.dispatchEvent(new CustomEvent("ajtb:v1:travellers-changed"));
+                ensureCompanionsMatchCounts();
+            }
+
+            if (addAdultBtn) {
+                addAdultBtn.addEventListener("click", function () {
+                    adjustCounts(1, 0);
+                    renderActivityToggles();
+                });
+            }
+            if (addChildBtn) {
+                addChildBtn.addEventListener("click", function () {
+                    adjustCounts(0, 1);
+                    renderActivityToggles();
+                });
+            }
+
+            list.addEventListener("click", function (e) {
+                var rm = e.target && e.target.closest ? e.target.closest("[data-companion-remove]") : null;
+                if (!rm) return;
+                var row = rm.closest("[data-companion-row]");
+                if (row) {
+                    var sel = row.querySelector("[data-companion-type]");
+                    var type = sel ? String(sel.value || "adult") : "adult";
+                    row.remove();
+                    // Keep counts consistent with UI intent: removing a row reduces counts.
+                    if (type === "child") adjustCounts(0, -1);
+                    else adjustCounts(-1, 0);
+                    renderActivityToggles();
+                }
+            });
+
+            list.addEventListener("change", function (e) {
+                var typeSel = e.target && e.target.closest ? e.target.closest("[data-companion-type]") : null;
+                if (typeSel) {
+                    // When user changes a row type (adult/enfant), sync the travellers widget.
+                    syncCountsFromCompanionRows();
+                    renderActivityToggles();
+                    return;
+                }
+
+                var chk = e.target && e.target.closest ? e.target.closest("[data-ajtb-activity-toggle]") : null;
+                if (!chk) return;
+                var slot = parseInt(chk.getAttribute("data-slot") || "-1", 10);
+                var aIdx = parseInt(chk.getAttribute("data-activity-idx") || "-1", 10);
+                if (!payload.activities || slot < 0 || aIdx < 0 || aIdx >= payload.activities.length) return;
+                payload.activities[aIdx].assigned = payload.activities[aIdx].assigned || [];
+                var i = payload.activities[aIdx].assigned.indexOf(slot);
+                if (chk.checked) {
+                    if (i === -1) payload.activities[aIdx].assigned.push(slot);
+                } else {
+                    if (i !== -1) payload.activities[aIdx].assigned.splice(i, 1);
+                }
+                renderRecap(payload);
+                try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
+            });
+
+
+            function collectPassengers() {
+                return Array.prototype.slice.call(list.querySelectorAll("[data-companion-row]")).map(function (row) {
+                    var typeSel = row.querySelector("[data-companion-type]");
+                    var first = row.querySelector("[data-companion-first]");
+                    var last = row.querySelector("[data-companion-last]");
+                    return {
+                        first_name: first ? String(first.value || "").trim() : "",
+                        last_name: last ? String(last.value || "").trim() : "",
+                        type: typeSel ? String(typeSel.value || "adult") : "adult",
+                    };
+                }).filter(function (p) {
+                    return p.first_name || p.last_name;
+                });
+            }
+
+            // Keep companion rows aligned with current adults/children selections.
+            ensureCompanionsMatchCounts();
+            document.addEventListener("ajtb:v1:travellers-changed", ensureCompanionsMatchCounts);
+            // Some themes/plugins update inputs after initial paint; re-sync on next ticks.
+            setTimeout(ensureCompanionsMatchCounts, 0);
+            setTimeout(ensureCompanionsMatchCounts, 250);
+            // Render activity toggles per traveller
+            renderActivityToggles();
+            document.addEventListener("ajtb:v1:travellers-changed", function () {
+                // Rows may change; rerender toggles
+                renderActivityToggles();
+            });
+
+            submitBtn.addEventListener("click", function () {
+                var first = document.getElementById("ajtb-client-first");
+                var last = document.getElementById("ajtb-client-last");
+                if (!first || !last) return;
+                var fn = String(first.value || "").trim();
+                var ln = String(last.value || "").trim();
+                if (!fn || !ln) {
+                    alert("Veuillez saisir le prénom et le nom du client.");
+                    return;
+                }
+
+                payload = readPayloadFromForm(payload);
+                var calc = computeTotalFromState(payload);
+                payload.price = payload.price || {};
+                payload.price.total = calc.total;
+                payload.price.currency = calc.currency;
+
+                var formData = new FormData();
+                formData.append("action", "ajtb_v1_create_reservation");
+                formData.append("nonce", (window.ajtbData && window.ajtbData.reservationNonce) ? window.ajtbData.reservationNonce : "");
+                formData.append("tour_id", String(tourId));
+                formData.append("departure_place_id", String(payload.departure && payload.departure.id ? payload.departure.id : 0));
+                formData.append("departure_date", String(payload.date && payload.date.value ? payload.date.value : ""));
+                formData.append("adults", String(payload.guests && payload.guests.adults ? payload.guests.adults : 1));
+                formData.append("children", String(payload.guests && payload.guests.children ? payload.guests.children : 0));
+                formData.append("client_mode", "new");
+                formData.append("client_first_name", fn);
+                formData.append("client_last_name", ln);
+                formData.append("client_phone", document.getElementById("ajtb-client-phone") ? document.getElementById("ajtb-client-phone").value : "");
+                formData.append("client_email", document.getElementById("ajtb-client-email") ? document.getElementById("ajtb-client-email").value : "");
+                formData.append("client_document_type", "");
+                formData.append("client_document_number", "");
+                formData.append("passengers", JSON.stringify(collectPassengers()));
+                formData.append("room_id", String(payload.room && payload.room.id ? payload.room.id : 0));
+                // Store room allocation in notes (backend can parse later)
+                try {
+                    var alloc = payload.roomAllocation && typeof payload.roomAllocation === "object" ? payload.roomAllocation : {};
+                    formData.append("room_allocation_json", JSON.stringify(alloc));
+                } catch (eRoom) {
+                    formData.append("room_allocation_json", "{}");
+                }
+
+                var extrasPayload = [];
+                // Per-traveller extras -> one row per assigned slot (passenger_key = slot:N)
+                if (payload.extras && payload.extras.length) {
+                    var types = getTravellerTypes();
+                    payload.extras.forEach(function (ex) {
+                        if (!ex || !ex.name) return;
+                        var assigned = Array.isArray(ex.assigned) && ex.assigned.length ? ex.assigned : [];
+                        if (!assigned.length) {
+                            for (var s = 0; s < types.length; s++) assigned.push(s);
+                        }
+                        assigned.forEach(function (slot) {
+                            var t = types[slot] === "child" ? "child" : "adult";
+                            var p = t === "child" ? parseFloat(ex.price_child || "0") : parseFloat(ex.price_adult || "0");
+                            if (!isFinite(p) || p <= 0) return;
+                            extrasPayload.push({
+                                name: ex.name,
+                                price: p,
+                                passenger_key: "slot:" + String(slot),
+                            });
+                        });
+                    });
+                }
+                // Add room supplement as an extra line (if any).
+                if (payload.room && payload.room.supplement && parseFloat(payload.room.supplement) > 0) {
+                    extrasPayload.push({
+                        name: "Supplément chambre (" + (payload.room.room_type || "chambre") + ")",
+                        price: (parseFloat(payload.room.supplement) || 0) * ((payload.guests ? (payload.guests.adults || 1) : 1) + (payload.guests ? (payload.guests.children || 0) : 0)),
+                    });
+                }
+                formData.append("extras_json", JSON.stringify(extrasPayload));
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = "En cours…";
+
+                fetch((window.ajtbData && window.ajtbData.ajaxUrl) ? window.ajtbData.ajaxUrl : "/wp-admin/admin-ajax.php", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    body: formData,
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (json) {
+                        if (!json || !json.success) {
+                            throw new Error((json && json.data && json.data.message) ? json.data.message : "Erreur lors de la réservation.");
+                        }
+                        alert("Réservation créée (ID " + json.data.reservation_id + "). Statut: " + json.data.status);
+                    })
+                    .catch(function (e) {
+                        alert(e && e.message ? e.message : "Erreur lors de la réservation.");
+                    })
+                    .finally(function () {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Confirmer la réservation";
+                    });
+            });
+        })();
+
+        // Final sync pass after all handlers are bound.
+        document.dispatchEvent(new CustomEvent("ajtb:v1:travellers-changed"));
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         initTabs();
         initProgramFilters();
@@ -1289,5 +2463,8 @@
         initDynamicStartingPrice();
         initStickySearchBox();
         initOptionalActivitiesActions();
+        initContinueToRecap();
+        initRestoreSelectionFromRecap();
+        initRecapPage();
     });
 })();

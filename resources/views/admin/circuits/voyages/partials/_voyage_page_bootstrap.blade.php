@@ -27,6 +27,16 @@
                         'capacity_adults' => (int) ($room->capacity_adults ?? 0),
                         'capacity_children' => (int) ($room->capacity_children ?? 0),
                         'is_active' => (bool) ($room->is_active ?? true),
+                        'date_availabilities' => collect($room->dateAvailabilities ?? [])->map(function ($availability) {
+                            return [
+                                'id' => (int) ($availability->id ?? 0),
+                                'travel_date_id' => (int) ($availability->travel_date_id ?? 0),
+                                'available_rooms' => (int) ($availability->available_rooms ?? 0),
+                                'available_places' => (int) ($availability->available_places ?? 0),
+                                'status' => (string) ($availability->status ?? ''),
+                                'supplement' => (float) ($availability->supplement ?? 0),
+                            ];
+                        })->values()->all(),
                     ];
                 })->values()->all(),
             ],

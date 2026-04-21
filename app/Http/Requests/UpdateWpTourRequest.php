@@ -190,6 +190,130 @@ class UpdateWpTourRequest extends FormRequest
                     }
                 }
             }
+
+            // Stock control: quantity by room type must not exceed available rooms (global or per travel date).
+            // The UI limits inputs, but we must enforce server-side too.
+            if ($departureAllocations !== [] && $tourHotels !== []) {
+                // Map travel date ID by date string for fallback cases.
+                $travelDateIdByDate = [];
+                foreach ((array) $this->input('travel_dates', []) as $travelDateRow) {
+                    if (! is_array($travelDateRow)) {
+                        continue;
+                    }
+                    $isActive = ! array_key_exists('is_active', $travelDateRow) || (bool) $travelDateRow['is_active'];
+                    if (! $isActive) {
+                        continue;
+                    }
+                    $date = trim((string) ($travelDateRow['date'] ?? ''));
+                    $id = isset($travelDateRow['id']) && $travelDateRow['id'] !== '' ? (int) $travelDateRow['id'] : 0;
+                    if ($date !== '' && $id > 0) {
+                        $travelDateIdByDate[$date] = $id;
+                    }
+                }
+
+                // Build availability map: [hotelIndex][roomTypeLower][travelDateId|null] => availableRooms
+                $availability = [];
+                foreach ($tourHotels as $hotelIndex => $hotelRow) {
+                    if (! is_array($hotelRow)) {
+                        continue;
+                    }
+                    $rooms = isset($hotelRow['rooms']) && is_array($hotelRow['rooms']) ? array_values($hotelRow['rooms']) : [];
+                    foreach ($rooms as $roomRow) {
+                        if (! is_array($roomRow)) {
+                            continue;
+                        }
+                        $type = trim((string) ($roomRow['room_type'] ?? ''));
+                        if ($type === '') {
+                            continue;
+                        }
+                        $typeKey = mb_strtolower($type);
+                        $baseCount = max(0, (int) ($roomRow['room_count'] ?? 0));
+                        $availability[$hotelIndex][$typeKey]['base'] = $baseCount;
+
+                        $dateAvailabilities = isset($roomRow['date_availabilities']) && is_array($roomRow['date_availabilities'])
+                            ? array_values($roomRow['date_availabilities'])
+                            : [];
+                        foreach ($dateAvailabilities as $availRow) {
+                            if (! is_array($availRow)) {
+                                continue;
+                            }
+                            $td = isset($availRow['travel_date_id']) && $availRow['travel_date_id'] !== '' ? (int) $availRow['travel_date_id'] : 0;
+                            if ($td <= 0) {
+                                continue;
+                            }
+                            $availability[$hotelIndex][$typeKey]['td'][$td] = max(0, (int) ($availRow['available_rooms'] ?? 0));
+                        }
+                    }
+                }
+
+                // Aggregate requested quantities per departure, stay and room type, then compare to availability.
+                foreach ($departureAllocations as $departureIndex => $departureRow) {
+                    if (! is_array($departureRow)) {
+                        continue;
+                    }
+                    $rooms = $departureRow['rooms'] ?? [];
+                    if (! is_array($rooms) || $rooms === []) {
+                        continue;
+                    }
+
+                    $rowTravelDateId = isset($departureRow['travel_date_id']) && $departureRow['travel_date_id'] !== '' ? (int) $departureRow['travel_date_id'] : 0;
+                    $rowDate = trim((string) ($departureRow['date'] ?? ''));
+                    if ($rowTravelDateId <= 0 && $rowDate !== '' && isset($travelDateIdByDate[$rowDate])) {
+                        $rowTravelDateId = (int) $travelDateIdByDate[$rowDate];
+                    }
+
+                    $requested = [];
+                    foreach ($rooms as $roomIndex => $roomRow) {
+                        if (! is_array($roomRow)) {
+                            continue;
+                        }
+                        $roomType = trim((string) ($roomRow['room_type'] ?? ''));
+                        if ($roomType === '') {
+                            continue;
+                        }
+                        $quantity = max(0, (int) ($roomRow['quantity'] ?? 0));
+                        if ($quantity <= 0) {
+                            continue;
+                        }
+
+                        $hotelIndex = isset($roomRow['hotel_index']) && $roomRow['hotel_index'] !== '' ? max(0, (int) $roomRow['hotel_index']) : null;
+                        $hotelId = isset($roomRow['hotel_id']) && $roomRow['hotel_id'] !== '' ? (int) $roomRow['hotel_id'] : null;
+                        if ($hotelId !== null && isset($hotelIdToIndex[$hotelId])) {
+                            $hotelIndex = (int) $hotelIdToIndex[$hotelId];
+                        }
+                        if ($hotelIndex === null && count($expectedHotelIndexes) === 1) {
+                            $hotelIndex = $expectedHotelIndexes[0];
+                        }
+                        if ($hotelIndex === null) {
+                            continue;
+                        }
+
+                        $typeKey = mb_strtolower($roomType);
+                        $requested[$hotelIndex][$typeKey] = (int) ($requested[$hotelIndex][$typeKey] ?? 0) + $quantity;
+                    }
+
+                    foreach ($requested as $hotelIndex => $types) {
+                        foreach ($types as $typeKey => $qty) {
+                            $base = $availability[$hotelIndex][$typeKey]['base'] ?? null;
+                            $perDate = $rowTravelDateId > 0
+                                ? ($availability[$hotelIndex][$typeKey]['td'][$rowTravelDateId] ?? null)
+                                : null;
+                            $maxAllowed = $perDate !== null ? $perDate : $base;
+                            if ($maxAllowed === null) {
+                                continue;
+                            }
+                            if ($qty > (int) $maxAllowed) {
+                                $stayNumber = ((int) $hotelIndex) + 1;
+                                $label = $typeKey;
+                                $validator->errors()->add(
+                                    "departure_allocations.$departureIndex.rooms",
+                                    "Stock insuffisant: sejour {$stayNumber} ({$label}) demande {$qty} chambre(s), disponible {$maxAllowed}."
+                                );
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
 

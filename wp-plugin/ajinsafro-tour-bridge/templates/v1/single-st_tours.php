@@ -170,6 +170,7 @@ $price_date_map_json = wp_json_encode($price_date_map);
 $price_note = !empty($tour_data['pricing']['note']) ? (string) $tour_data['pricing']['note'] : 'Tarif indicatif par adulte.';
 $client_activity_enabled = !empty($tour_data['session_token']) && !empty($tour_id);
 $open_activities = is_array($tour_data['open_activities'] ?? null) ? $tour_data['open_activities'] : [];
+$recap_url = class_exists('AJTB_Single_Tour_Page') ? AJTB_Single_Tour_Page::recap_url($tour_id) : '';
 
 if (empty($days)) {
     $days = [
@@ -705,6 +706,7 @@ get_header();
                     <div
                         class="ajtb-v1-side-card ajtb-v1-summary-card"
                         id="ajtb-v1-summary-card"
+                        data-recap-url="<?php echo esc_attr($recap_url); ?>"
                         data-tour-title="<?php echo esc_attr($tour_title); ?>"
                         data-duration-label="<?php echo esc_attr($duration_label); ?>"
                         data-default-departure="<?php echo esc_attr($search_departure); ?>"

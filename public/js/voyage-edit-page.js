@@ -486,10 +486,20 @@
                     return !!room && (room.is_active === undefined || !!room.is_active);
                 })
                 .map(function (room) {
+                    var availByTravelDateId = {};
+                    if (room && Array.isArray(room.date_availabilities)) {
+                        room.date_availabilities.forEach(function (a) {
+                            if (!a) return;
+                            var td = parseInt(String(a.travel_date_id || '0'), 10) || 0;
+                            if (td <= 0) return;
+                            availByTravelDateId[String(td)] = Math.max(0, parseInt(String(a.available_rooms || '0'), 10) || 0);
+                        });
+                    }
                     return {
                         room_type: String(room.room_type || '').trim(),
                         room_count: Math.max(0, parseInt(String(room.room_count || '0'), 10) || 0),
-                        capacity_per_room: Math.max(1, effectiveCapacity(room))
+                        capacity_per_room: Math.max(1, effectiveCapacity(room)),
+                        available_rooms_by_travel_date_id: availByTravelDateId
                     };
                 })
                 .filter(function (room) {
@@ -715,12 +725,20 @@
             var hotelId = room.hotel_id == null ? '' : String(room.hotel_id);
             var hotelIndex = room.hotel_index == null ? '' : String(room.hotel_index);
             var hotelOptions = hotelSelectOptions(hotelIndex, hotelId);
+            var travelDate = collectTravelDates().filter(function (item) { return item.isActive; })[cardIndex] || null;
+            var availableRoomsInfo = resolveRoomStockForSelection(travelDate, room, hotelOptions);
+            var availableRooms = availableRoomsInfo.availableRooms;
+            var stockLabel = availableRooms == null ? '—' : String(availableRooms);
+            var stockHelp = availableRoomsInfo.sourceLabel ? ('<div class="small text-muted mt-1">' + escapeHtml(availableRoomsInfo.sourceLabel) + '</div>') : '';
+            var invalidQty = availableRooms != null && quantity > availableRooms;
             return '' +
                 '<tr data-room-index="' + roomIndex + '">' +
                 '  <td>' +
                 '    <input class="form-control form-control-sm" list="departure-room-type-options" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][room_type]" value="' + escapeAttr(room.room_type || '') + '" placeholder="Double">' +
                 '  </td>' +
-                '  <td><input type="number" class="form-control form-control-sm" min="0" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][quantity]" value="' + quantity + '"></td>' +
+                '  <td><input type="number" class="form-control form-control-sm ' + (invalidQty ? 'is-invalid' : '') + '" min="0"' + (availableRooms != null ? (' max="' + String(availableRooms) + '"') : '') + ' name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][quantity]" value="' + quantity + '">' +
+                (invalidQty ? ('<div class="invalid-feedback">Max ' + escapeHtml(String(availableRooms)) + ' chambre(s) disponible(s).</div>') : '') +
+                '  </td>' +
                 '  <td><input type="number" class="form-control form-control-sm" min="1" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][capacity_per_room]" value="' + capacityPerRoom + '"></td>' +
                 '  <td>' +
                 '    <input type="hidden" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_id]" value="' + escapeAttr(hotelId) + '">' +
@@ -728,11 +746,52 @@
                 (hotelOptions.hasSelection
                     ? '<div class="small text-muted mt-1">Sejour: ' + escapeHtml(hotelOptions.selectedLabel || '') + '</div>'
                     : '<div class="small text-warning mt-1">Associer un sejour.</div>') +
+                '    <div class="small text-muted mt-1">Dispo: <strong>' + escapeHtml(stockLabel) + '</strong></div>' +
+                stockHelp +
                 '  </td>' +
                 '  <td><span class="small fw-semibold">' + (quantity * capacityPerRoom) + '</span></td>' +
                 '  <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-allocation-action="remove-room" data-room-index="' + roomIndex + '">×</button></td>' +
                 '</tr>';
         }).join('');
+    }
+
+    function resolveRoomStockForSelection(travelDate, room, hotelOptions) {
+        var hotels = collectHotels();
+        var roomType = String((room || {}).room_type || '').trim().toLowerCase();
+        if (!roomType) return { availableRooms: null, sourceLabel: '' };
+
+        var stayIndex = (room && room.hotel_index != null && String(room.hotel_index) !== '') ? String(room.hotel_index) : '';
+        if (!stayIndex && hotelOptions && hotelOptions.hasSelection) {
+            // hotelSelectOptions already resolved selection; we can read it back from option HTML only via state,
+            // so fallback is handled by matching hotel_id when unique.
+        }
+
+        var hotelId = room && room.hotel_id != null ? String(room.hotel_id) : '';
+        var selectedHotel = null;
+        if (stayIndex) {
+            selectedHotel = hotels.find(function (h) { return String(h.index) === stayIndex; }) || null;
+        } else if (hotelId) {
+            var unique = buildUniqueHotelIndexByHotelId(hotels);
+            var mapped = unique[hotelId] ? String(unique[hotelId]) : '';
+            if (mapped) selectedHotel = hotels.find(function (h) { return String(h.index) === mapped; }) || null;
+        }
+
+        if (!selectedHotel || !Array.isArray(selectedHotel.rooms)) {
+            return { availableRooms: null, sourceLabel: '' };
+        }
+
+        var matched = selectedHotel.rooms.find(function (r) {
+            return String(r.room_type || '').trim().toLowerCase() === roomType;
+        }) || null;
+        if (!matched) return { availableRooms: null, sourceLabel: '' };
+
+        var base = Math.max(0, parseInt(String(matched.room_count || '0'), 10) || 0);
+        var tdId = travelDate && travelDate.travelDateId ? String(travelDate.travelDateId) : '';
+        var byDate = matched.available_rooms_by_travel_date_id || {};
+        if (tdId && Object.prototype.hasOwnProperty.call(byDate, tdId)) {
+            return { availableRooms: Math.max(0, parseInt(String(byDate[tdId] || '0'), 10) || 0), sourceLabel: 'stock par date' };
+        }
+        return { availableRooms: base, sourceLabel: 'stock global' };
     }
 
     function escapeHtml(value) {

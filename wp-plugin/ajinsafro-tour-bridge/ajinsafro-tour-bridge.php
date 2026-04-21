@@ -33,3 +33,14 @@ require_once AJTB_PLUGIN_DIR . 'includes/class-single-tour-page.php';
 add_action('plugins_loaded', static function () {
     AJTB_Single_Tour_Page::boot();
 }, 20);
+
+register_activation_hook(__FILE__, static function (): void {
+    if (class_exists('AJTB_Single_Tour_Page')) {
+        AJTB_Single_Tour_Page::register_recap_endpoint();
+    }
+    flush_rewrite_rules();
+});
+
+register_deactivation_hook(__FILE__, static function (): void {
+    flush_rewrite_rules();
+});
