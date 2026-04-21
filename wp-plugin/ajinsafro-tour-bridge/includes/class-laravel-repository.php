@@ -1147,6 +1147,38 @@ class AJTB_Laravel_Repository
                         }
                     }
                 }
+
+                // Expand day_scope='open' activities to ALL days (not just day 1 where they are stored)
+                $open_tab_activities = [];
+                foreach ($voyage_tab_activities_by_day as $tab_day_number => $tab_activities) {
+                    foreach ((array) $tab_activities as $tab_act) {
+                        if (isset($tab_act['day_scope']) && $tab_act['day_scope'] === 'open') {
+                            $open_tab_activities[] = $tab_act;
+                        }
+                    }
+                }
+                if (!empty($open_tab_activities)) {
+                    foreach ($days_by_id as $tgt_day_id => $tgt_day_row) {
+                        $tgt_day_number = isset($tgt_day_row['day']) ? (int) $tgt_day_row['day'] : 0;
+                        if ($tgt_day_number < 1) { $tgt_day_number = 1; }
+                        // Day 1 already got these from the primary merge; skip to avoid duplicates
+                        if ($tgt_day_number === 1) { continue; }
+                        if (!isset($days_by_id[$tgt_day_id]['activities']) || !is_array($days_by_id[$tgt_day_id]['activities'])) {
+                            $days_by_id[$tgt_day_id]['activities'] = [];
+                        }
+                        $seen_in_tgt = [];
+                        foreach ($days_by_id[$tgt_day_id]['activities'] as $ea) {
+                            $eaid = isset($ea['activity_id']) ? (int) $ea['activity_id'] : 0;
+                            if ($eaid > 0) { $seen_in_tgt[$eaid] = true; }
+                        }
+                        foreach ($open_tab_activities as $oa) {
+                            $oaid = isset($oa['activity_id']) ? (int) $oa['activity_id'] : 0;
+                            if ($oaid > 0 && isset($seen_in_tgt[$oaid])) { continue; }
+                            $days_by_id[$tgt_day_id]['activities'][] = $oa;
+                            if ($oaid > 0) { $seen_in_tgt[$oaid] = true; }
+                        }
+                    }
+                }
             }
 
             foreach ($results as $row) {
@@ -1406,6 +1438,8 @@ class AJTB_Laravel_Repository
                 if ($day_number < 1) {
                     $day_number = 1;
                 }
+                $day_scope_raw = isset($options['day_scope']) ? strtolower(trim((string) $options['day_scope'])) : 'fixed';
+                $day_scope = ($day_scope_raw === 'open') ? 'open' : 'fixed';
                 $activity_id = isset($options['activity_id']) ? (int) $options['activity_id'] : 0;
                 $catalog = $activity_id > 0 && isset($catalog_by_id[$activity_id]) ? $catalog_by_id[$activity_id] : [];
 
@@ -1458,7 +1492,7 @@ class AJTB_Laravel_Repository
                     $by_day[$day_number] = [];
                 }
 
-                $by_day[$day_number][] = [
+                $activity_entry = [
                     'id' => isset($row['id']) ? (int) $row['id'] : 0,
                     'activity_id' => $activity_id,
                     'title' => $title,
@@ -1471,7 +1505,10 @@ class AJTB_Laravel_Repository
                     'end_time' => !empty($options['end_time']) ? (string) $options['end_time'] : null,
                     'is_mandatory' => false,
                     'is_included' => isset($row['included']) ? !empty($row['included']) : true,
+                    'day_scope' => $day_scope,
+                    'day_number' => $day_number,
                 ];
+                $by_day[$day_number][] = $activity_entry;
             }
 
             return $by_day;

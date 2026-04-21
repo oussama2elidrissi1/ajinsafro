@@ -588,19 +588,21 @@ get_header();
                                                 }
                                                 $has_optional_cta = !empty($day_fixed_optional) || !empty($open_activities);
                                                 ?>
-                                                <?php if ($has_optional_cta && $client_activity_enabled): ?>
+                                                <?php if ($day_db_id > 0): ?>
                                                     <?php
-                                                    // Build JSON data for this day's fixed optional activities
                                                     $day_opts_json = wp_json_encode(array_values(array_map(function ($oa) {
                                                         $price = isset($oa['custom_price']) && $oa['custom_price'] !== null
                                                             ? (float) $oa['custom_price']
                                                             : (isset($oa['base_price']) && $oa['base_price'] !== null ? (float) $oa['base_price'] : null);
+                                                        $scope = isset($oa['day_scope']) ? (string) $oa['day_scope'] : 'fixed';
                                                         return [
                                                             'activity_id' => (int) ($oa['activity_id'] ?? 0),
                                                             'title' => (string) ($oa['title'] ?? ''),
                                                             'description' => (string) ($oa['description'] ?? ''),
                                                             'image_url' => $oa['image_url'] ?? null,
                                                             'price' => $price,
+                                                            'visibility' => $scope === 'open' ? 'all_days' : 'fixed',
+                                                            'day_number' => (int) ($oa['day_number'] ?? 1),
                                                         ];
                                                     }, $day_fixed_optional)));
                                                     ?>
@@ -610,6 +612,7 @@ get_header();
                                                             data-ajtb-v1-action="open-activity-modal"
                                                             data-day-id="<?php echo esc_attr((string) $day_db_id); ?>"
                                                             data-tour-id="<?php echo esc_attr((string) $tour_id); ?>"
+                                                            data-day-number="<?php echo esc_attr((string) $day_num); ?>"
                                                             data-day-opts="<?php echo esc_attr($day_opts_json); ?>">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                                                             Ajouter une activité
@@ -632,7 +635,6 @@ get_header();
                         </div>
                     </section>
 
-                    <?php if ($client_activity_enabled): ?>
                     <script>
                     window.ajtbOpenActivities = <?php echo wp_json_encode(array_values(array_map(function ($oa) {
                         $price = isset($oa['custom_price']) && $oa['custom_price'] !== null
@@ -644,11 +646,11 @@ get_header();
                             'description' => (string) ($oa['description'] ?? ''),
                             'image_url' => $oa['image_url'] ?? null,
                             'price' => $price,
+                            'visibility' => 'all_days',
                         ];
                     }, $open_activities))); ?>;
                     window.ajtbTourId = <?php echo (int) $tour_id; ?>;
                     </script>
-                    <?php endif; ?>
 
                     <div id="ajtb-act-modal-overlay" class="ajtb-act-modal-overlay" hidden aria-modal="true" role="dialog" aria-label="Ajouter une activité">
                         <div class="ajtb-act-modal-drawer">

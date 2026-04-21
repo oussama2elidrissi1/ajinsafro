@@ -5,6 +5,15 @@
 (function () {
     "use strict";
 
+    function escapeHtml(str) {
+        if (!str) { return ""; }
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+
     function initTabs() {
         var tabButtons = Array.prototype.slice.call(
             document.querySelectorAll(".ajtb-v1-tab-btn"),
@@ -741,27 +750,25 @@
                 '</div></div></article>';
         }
 
-        function escHtml(str) {
-            if (!str) { return ""; }
-            return String(str)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;");
+        var escHtml = escapeHtml;
+
+        function activityMatchesDay(activity, dayNumber) {
+            if (!activity) { return false; }
+            if (activity.visibility === "all_days") { return true; }
+            return Number(activity.day_number) === Number(dayNumber);
         }
 
-        function openModal(dayId, tourId, dayFixedOpts) {
+        function openModal(dayId, tourId, dayNumber, dayFixedOpts) {
             if (!overlay || !modalBody) { return; }
 
+            var seenIds = {};
             var cards = [];
-            // Fixed optional for this day
-            if (dayFixedOpts && dayFixedOpts.length) {
-                dayFixedOpts.forEach(function (act) {
-                    cards.push(buildActivityCard(act, dayId, tourId));
-                });
-            }
-            // Open activities (available from any day)
-            openActivities.forEach(function (act) {
+            var allActivities = (dayFixedOpts || []).concat(openActivities);
+            allActivities.forEach(function (act) {
+                if (!activityMatchesDay(act, dayNumber)) { return; }
+                var aid = act.activity_id;
+                if (aid && seenIds[aid]) { return; }
+                if (aid) { seenIds[aid] = true; }
                 cards.push(buildActivityCard(act, dayId, tourId));
             });
 
@@ -850,10 +857,11 @@
                 event.preventDefault();
                 var dayId = parseInt(openBtn.getAttribute("data-day-id") || "0", 10);
                 var tourId = parseInt(openBtn.getAttribute("data-tour-id") || "0", 10);
+                var dayNumber = parseInt(openBtn.getAttribute("data-day-number") || "0", 10);
                 var rawOpts = openBtn.getAttribute("data-day-opts") || "[]";
                 var dayFixedOpts = [];
                 try { dayFixedOpts = JSON.parse(rawOpts); } catch (e) {}
-                openModal(dayId, tourId, dayFixedOpts);
+                openModal(dayId, tourId, dayNumber, dayFixedOpts);
                 return;
             }
 
