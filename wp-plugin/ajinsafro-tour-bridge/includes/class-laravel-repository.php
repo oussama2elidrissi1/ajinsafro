@@ -997,6 +997,7 @@ class AJTB_Laravel_Repository
                     'day_title' => isset($row['day_title']) ? $row['day_title'] : '',
                     'notes' => isset($row['notes']) ? $row['notes'] : '',
                     'activities' => [],
+                    'optional_activities' => [],
                 ];
             }
 
@@ -1062,7 +1063,11 @@ class AJTB_Laravel_Repository
                                 'is_mandatory' => !empty($ar['is_mandatory']),
                                 'is_included' => !empty($ar['is_included']),
                                 'day_scope' => isset($ar['day_scope']) ? (string) $ar['day_scope'] : 'fixed',
+                                'day_number' => isset($days_by_id[$day_id]['day']) ? (int) $days_by_id[$day_id]['day'] : 1,
                             ];
+                            if (empty($ar['is_included']) && !empty($days_by_id[$day_id]['activities'])) {
+                                $days_by_id[$day_id]['optional_activities'][] = end($days_by_id[$day_id]['activities']);
+                            }
                         }
                     }
                 }
@@ -1138,6 +1143,9 @@ class AJTB_Laravel_Repository
                             }
 
                             $days_by_id[$target_day_id]['activities'][] = $tab_activity;
+                            if (empty($tab_activity['is_included'])) {
+                                $days_by_id[$target_day_id]['optional_activities'][] = $tab_activity;
+                            }
                             if ($candidate_activity_id > 0) {
                                 $seen_activity_ids[$candidate_activity_id] = true;
                             }
@@ -1175,6 +1183,9 @@ class AJTB_Laravel_Repository
                             $oaid = isset($oa['activity_id']) ? (int) $oa['activity_id'] : 0;
                             if ($oaid > 0 && isset($seen_in_tgt[$oaid])) { continue; }
                             $days_by_id[$tgt_day_id]['activities'][] = $oa;
+                            if (empty($oa['is_included'])) {
+                                $days_by_id[$tgt_day_id]['optional_activities'][] = $oa;
+                            }
                             if ($oaid > 0) { $seen_in_tgt[$oaid] = true; }
                         }
                     }

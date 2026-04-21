@@ -55,6 +55,62 @@
         });
     }
 
+    function initProgramFilters() {
+        var filterButtons = Array.prototype.slice.call(
+            document.querySelectorAll("[data-program-filter]"),
+        );
+        var dayCards = Array.prototype.slice.call(
+            document.querySelectorAll("[data-program-day-card]"),
+        );
+
+        if (!filterButtons.length || !dayCards.length) {
+            return;
+        }
+
+        function setActiveFilter(filterName) {
+            filterButtons.forEach(function (button) {
+                var isActive = button.getAttribute("data-program-filter") === filterName;
+                button.classList.toggle("is-active", isActive);
+                button.setAttribute("aria-pressed", isActive ? "true" : "false");
+            });
+        }
+
+        function applyFilter(filterName) {
+            var activeFilter = filterName || "all";
+            dayCards.forEach(function (dayCard) {
+                var filterableNodes = Array.prototype.slice.call(
+                    dayCard.querySelectorAll("[data-program-type]"),
+                );
+                var visibleMatches = 0;
+
+                filterableNodes.forEach(function (node) {
+                    var types = String(node.getAttribute("data-program-type") || "")
+                        .split(/\s+/)
+                        .filter(Boolean);
+                    var shouldShow = activeFilter === "all" || types.indexOf(activeFilter) !== -1;
+                    node.hidden = !shouldShow;
+                    if (shouldShow) {
+                        visibleMatches += 1;
+                    }
+                });
+
+                dayCard.hidden = activeFilter === "all" ? false : visibleMatches === 0;
+                dayCard.classList.toggle("is-filtered", activeFilter !== "all");
+            });
+
+            setActiveFilter(activeFilter);
+        }
+
+        filterButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                var filterName = button.getAttribute("data-program-filter") || "all";
+                applyFilter(filterName);
+            });
+        });
+
+        applyFilter("all");
+    }
+
     function initDayChips() {
         var chips = Array.prototype.slice.call(
             document.querySelectorAll(".ajtb-v1-day-chip"),
@@ -1226,6 +1282,7 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         initTabs();
+        initProgramFilters();
         initDayChips();
         initFloatingButton();
         initGuestsPicker();

@@ -654,11 +654,38 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-stat {
-    padding: 11px 8px;
-    border-radius: var(--ajtb-v1-radius-md);
+    appearance: none;
     border: 1px solid #dbe7f5;
     background: linear-gradient(180deg, #fcfeff, #f4f9ff);
+    border-radius: var(--ajtb-v1-radius-md);
+    padding: 11px 8px;
     text-align: center;
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+    box-shadow: 0 4px 12px rgba(15, 79, 121, 0.06);
+}
+
+.ajtb-v1-stat:hover {
+    transform: translateY(-1px);
+    border-color: #b8cef0;
+    box-shadow: 0 10px 22px rgba(15, 79, 121, 0.1);
+}
+
+.ajtb-v1-stat:focus-visible {
+    outline: 3px solid rgba(0, 123, 255, 0.18);
+    outline-offset: 2px;
+}
+
+.ajtb-v1-stat.is-active {
+    color: #fff;
+    border-color: transparent;
+    background: linear-gradient(180deg, var(--ajtb-v1-brand-blue), var(--ajtb-v1-brand-blue-strong));
+    box-shadow: 0 14px 28px rgba(0, 110, 168, 0.22);
+}
+
+.ajtb-v1-stat.is-active strong,
+.ajtb-v1-stat.is-active span {
+    color: #fff;
 }
 
 .ajtb-v1-stat strong {
