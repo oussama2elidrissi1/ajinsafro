@@ -2994,6 +2994,7 @@ class VoyageController extends Controller
                     'room_type' => $roomType,
                     'quantity' => $quantity,
                     'capacity_per_room' => $capacityPerRoom,
+                    'supplement' => max(0, (float) ($room->supplement ?? 0)),
                     'sort_order' => 0,
                 ];
             }
@@ -3106,6 +3107,7 @@ class VoyageController extends Controller
                 'room_type' => $roomType,
                 'quantity' => max(0, (int) ($row['quantity'] ?? 0)),
                 'capacity_per_room' => max(1, (int) ($row['capacity_per_room'] ?? 1)),
+                'supplement' => max(0, (float) ($row['supplement'] ?? 0)),
                 'sort_order' => $sortOrder++,
             ];
         }
@@ -3124,6 +3126,7 @@ class VoyageController extends Controller
                 'room_type' => (string) $row['room_type'],
                 'quantity' => max(0, (int) ($row['quantity'] ?? 0)),
                 'capacity_per_room' => max(1, (int) ($row['capacity_per_room'] ?? 1)),
+                'supplement' => max(0, (float) ($row['supplement'] ?? 0)),
                 'sort_order' => max(0, (int) ($row['sort_order'] ?? 0)),
             ]);
         }
@@ -3151,6 +3154,7 @@ class VoyageController extends Controller
                 'room_type' => 'Double',
                 'quantity' => $doubleQty,
                 'capacity_per_room' => 2,
+                'supplement' => 0,
                 'sort_order' => $sortOrder++,
             ];
         }
@@ -3161,6 +3165,7 @@ class VoyageController extends Controller
                 'room_type' => 'Single',
                 'quantity' => 1,
                 'capacity_per_room' => 1,
+                'supplement' => 0,
                 'sort_order' => $sortOrder++,
             ];
         }

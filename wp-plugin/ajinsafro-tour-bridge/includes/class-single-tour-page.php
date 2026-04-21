@@ -571,7 +571,7 @@ class AJTB_Single_Tour_Page
         ]);
         if ($alloc_table !== '') {
             $room_rows = $wpdb->get_results($wpdb->prepare(
-                "SELECT id, hotel_id, room_type, quantity, capacity_per_room
+                "SELECT id, hotel_id, room_type, quantity, capacity_per_room, supplement
                  FROM {$alloc_table}
                  WHERE departure_id = %d
                  ORDER BY sort_order ASC, id ASC",
@@ -591,7 +591,7 @@ class AJTB_Single_Tour_Page
                 'capacity_per_room' => $cap,
                 'available_rooms' => $qty,
                 'available_places' => max(0, $qty) * max(1, $cap),
-                'supplement' => 0.0,
+                'supplement' => isset($row['supplement']) ? max(0, (float) $row['supplement']) : 0.0,
             ];
         }
 

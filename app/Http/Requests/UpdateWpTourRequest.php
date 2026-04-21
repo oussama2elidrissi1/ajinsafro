@@ -718,6 +718,7 @@ class UpdateWpTourRequest extends FormRequest
             'departure_allocations.*.rooms.*.room_type' => 'nullable|string|max:100',
             'departure_allocations.*.rooms.*.quantity' => 'nullable|integer|min:0',
             'departure_allocations.*.rooms.*.capacity_per_room' => 'nullable|integer|min:1',
+            'departure_allocations.*.rooms.*.supplement' => 'nullable|numeric|min:0',
 
             // Extras réservation (Laravel voyage_extras)
             'voyage_extras' => 'nullable|array',

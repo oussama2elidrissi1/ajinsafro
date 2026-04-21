@@ -105,6 +105,7 @@
         var roomType = String(row.room_type || '').trim();
         var quantity = parseInt(String(row.quantity || '0'), 10);
         var capacityPerRoom = parseInt(String(row.capacity_per_room || '1'), 10);
+        var supplement = parseFloat(String(row.supplement || '0'));
 
         // Keep draft rows created by "Ajouter un type" even when empty,
         // otherwise they are immediately filtered out on re-render.
@@ -115,6 +116,7 @@
             room_type: roomType,
             quantity: isNaN(quantity) ? 0 : Math.max(0, quantity),
             capacity_per_room: isNaN(capacityPerRoom) ? 1 : Math.max(1, capacityPerRoom),
+            supplement: isNaN(supplement) ? 0 : Math.max(0, supplement),
             hotel_id: row.hotel_id || '',
             hotel_index: row.hotel_index === '' || row.hotel_index == null ? '' : String(row.hotel_index)
         };
@@ -681,7 +683,7 @@
                 renderStayCoverageDetails(row.coverage) +
                 '    <div class="table-responsive">' +
                 '      <table class="table table-sm align-middle mb-2">' +
-                '        <thead><tr><th>Type</th><th>Quantite</th><th>Cap./chambre</th><th>Sejour</th><th>Places couvertes</th><th></th></tr></thead>' +
+                '        <thead><tr><th>Type</th><th>Quantite</th><th>Cap./chambre</th><th>Suppl. (DH/pers)</th><th>Sejour</th><th>Places couvertes</th><th></th></tr></thead>' +
                 '        <tbody>' + renderRooms(row.index, row.rooms, row.travelDate) + '</tbody>' +
                 '      </table>' +
                 '    </div>' +
@@ -731,6 +733,7 @@
         return rooms.map(function (room, roomIndex) {
             var quantity = parseInt(String(room.quantity || '0'), 10) || 0;
             var capacityPerRoom = parseInt(String(room.capacity_per_room || '1'), 10) || 1;
+            var supplement = parseFloat(String(room.supplement || '0')) || 0;
             var hotelId = room.hotel_id == null ? '' : String(room.hotel_id);
             var hotelIndex = room.hotel_index == null ? '' : String(room.hotel_index);
             var hotelOptions = hotelSelectOptions(hotelIndex, hotelId);
@@ -748,6 +751,7 @@
                 (invalidQty ? ('<div class="invalid-feedback">Max ' + escapeHtml(String(availableRooms)) + ' chambre(s) disponible(s).</div>') : '') +
                 '  </td>' +
                 '  <td><input type="number" class="form-control form-control-sm" min="1" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][capacity_per_room]" value="' + capacityPerRoom + '"></td>' +
+                '  <td><input type="number" class="form-control form-control-sm" min="0" step="0.01" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][supplement]" value="' + escapeAttr(String(supplement)) + '" placeholder="0"></td>' +
                 '  <td>' +
                 '    <input type="hidden" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_id]" value="' + escapeAttr(hotelId) + '">' +
                 '    <select class="form-select form-select-sm" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_index]">' + hotelOptions.html + '</select>' +
@@ -897,7 +901,7 @@
         var key = card.getAttribute('data-allocation-key');
         if (!key || !allocationState[key]) return;
 
-        var roomMatch = field.name.match(/\[rooms\]\[(\d+)\]\[(room_type|quantity|capacity_per_room|hotel_index)\]$/);
+        var roomMatch = field.name.match(/\[rooms\]\[(\d+)\]\[(room_type|quantity|capacity_per_room|supplement|hotel_index)\]$/);
         if (!roomMatch) return;
 
         var roomIndex = parseInt(roomMatch[1], 10);

@@ -16,6 +16,7 @@ class DepartureRoomAllocation extends Model
         'room_type',
         'quantity',
         'capacity_per_room',
+        'supplement',
         'sort_order',
     ];
 
@@ -24,6 +25,7 @@ class DepartureRoomAllocation extends Model
         'hotel_id' => 'integer',
         'quantity' => 'integer',
         'capacity_per_room' => 'integer',
+        'supplement' => 'decimal:2',
         'sort_order' => 'integer',
     ];
 

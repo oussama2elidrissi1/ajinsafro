@@ -25,6 +25,7 @@
                     'room_type' => (string) ($roomRow['room_type'] ?? ''),
                     'quantity' => (int) ($roomRow['quantity'] ?? 0),
                     'capacity_per_room' => (int) ($roomRow['capacity_per_room'] ?? 1),
+                    'supplement' => (float) ($roomRow['supplement'] ?? 0),
                     'hotel_id' => isset($roomRow['hotel_id']) && $roomRow['hotel_id'] !== '' ? (int) $roomRow['hotel_id'] : null,
                     'hotel_index' => isset($roomRow['hotel_index']) && $roomRow['hotel_index'] !== '' ? (int) $roomRow['hotel_index'] : null,
                 ];
@@ -60,6 +61,7 @@
                     'room_type' => (string) ($allocation->room_type ?? ''),
                     'quantity' => (int) ($allocation->quantity ?? 0),
                     'capacity_per_room' => (int) ($allocation->capacity_per_room ?? 1),
+                    'supplement' => (float) ($allocation->supplement ?? 0),
                     'hotel_id' => $allocation->hotel_id ? (int) $allocation->hotel_id : null,
                     'hotel_index' => $allocation->hotel_id && isset($hotelIndexById[(int) $allocation->hotel_id])
                         ? (int) $hotelIndexById[(int) $allocation->hotel_id]

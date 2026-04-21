@@ -1822,6 +1822,8 @@
                         var id = String(r.id || "");
                         var cap = parseInt(r.capacity_per_room || "1", 10) || 1;
                         var stock = parseInt(r.quantity || "0", 10) || 0;
+                        var supp = parseFloat(r.supplement || "0");
+                        if (!isFinite(supp) || supp < 0) { supp = 0; }
                         var qty = parseInt(payload.roomAllocation[id] || "0", 10) || 0;
                         qty = Math.max(0, qty);
                         var canMinus = qty > 0;
@@ -1830,7 +1832,7 @@
                             '<div class="ajtb-v1-room-alloc-row" data-ajtb-room-id="' + escapeHtml(id) + '">' +
                             '<div>' +
                             '<strong>' + escapeHtml(String(r.room_type || "Chambre")) + '</strong>' +
-                            '<small>Cap./chambre: ' + escapeHtml(String(cap)) + ' · Stock: ' + escapeHtml(String(stock)) + '</small>' +
+                            '<small>Cap./chambre: ' + escapeHtml(String(cap)) + ' · Stock: ' + escapeHtml(String(stock)) + (supp > 0 ? (' · Supplément: +' + escapeHtml(formatMoney(supp)) + ' ' + escapeHtml(String(payload.currency || "MAD")) + '/pers') : '') + '</small>' +
                             '</div>' +
                             '<div class="ajtb-v1-room-stepper">' +
                             '<button type="button" data-ajtb-room-minus ' + (canMinus ? "" : "disabled") + '>-</button>' +
