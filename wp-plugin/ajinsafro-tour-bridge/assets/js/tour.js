@@ -705,6 +705,7 @@
         var currentTourId = parseInt(String(window.ajtbTourId || "0"), 10);
         // Track added activity_ids per day: { dayId: Set<activityId> }
         var addedByDay = {};
+        var currentModalActivitiesById = {};
 
         if (!overlay || !modalBody) {
             return;
@@ -728,7 +729,7 @@
             addedByDay[dayId][activityId] = true;
         }
 
-        function buildActivityCard(act, dayId, tourId) {
+        function buildActivityCard(act, dayId, tourId, dayNumber) {
             var added = isAdded(dayId, act.activity_id);
             var img = act.image_url
                 ? '<img src="' + escHtml(act.image_url) + '" alt="" loading="lazy">'
@@ -736,7 +737,7 @@
             var btnHtml = added
                 ? '<button type="button" class="ajtb-act-card-btn is-done" disabled>Ajoutee</button>'
                 : (canSubmitSelection
-                    ? '<button type="button" class="ajtb-act-card-btn" data-ajtb-v1-action="add-activity" data-tour-id="' + tourId + '" data-day-id="' + dayId + '" data-activity-id="' + act.activity_id + '">Ajouter</button>'
+                    ? '<button type="button" class="ajtb-act-card-btn" data-ajtb-v1-action="add-activity" data-tour-id="' + tourId + '" data-day-id="' + dayId + '" data-day-number="' + dayNumber + '" data-activity-id="' + act.activity_id + '">Ajouter</button>'
                     : '<button type="button" class="ajtb-act-card-btn is-done" disabled>Indisponible</button>');
             return '<article class="ajtb-act-card" data-activity-id="' + act.activity_id + '">' +
                 '<div class="ajtb-act-card-media">' + img + '</div>' +
@@ -758,18 +759,73 @@
             return Number(activity.day_number) === Number(dayNumber);
         }
 
+        function normalizeActivityForProgram(activity) {
+            activity = activity || {};
+            var price = activity.price;
+            if ((price === null || price === undefined || price === "") && activity.custom_price !== undefined) {
+                price = activity.custom_price;
+            }
+            if ((price === null || price === undefined || price === "") && activity.base_price !== undefined) {
+                price = activity.base_price;
+            }
+
+            return {
+                activity_id: parseInt(String(activity.activity_id || activity.id || "0"), 10) || 0,
+                title: String(activity.title || "Activity"),
+                description: String(activity.description || "Activite ajoutee au programme."),
+                image_url: activity.image_url || "",
+                price: price === null || price === undefined || price === "" ? null : Number(price),
+            };
+        }
+
+        function buildProgramActivityCard(activity) {
+            var act = normalizeActivityForProgram(activity);
+            var img = act.image_url
+                ? '<img src="' + escHtml(act.image_url) + '" alt="Activity visual" loading="lazy">'
+                : '<div class="ajtb-act-card-img-placeholder"></div>';
+            var price = act.price === null || Number.isNaN(act.price)
+                ? ""
+                : '<span>' + escHtml(formatPrice(act.price)) + '</span>';
+
+            return '<div class="activity-card ajtb-v1-service-card" data-activity-id="' + act.activity_id + '">' +
+                '<div class="ajtb-v1-service-head"><span>Activity - Program</span><span>Added</span></div>' +
+                '<div class="ajtb-v1-service-body ajtb-v1-media-row">' +
+                img +
+                '<div>' +
+                '<h4>' + escHtml(act.title) + '</h4>' +
+                '<p>' + escHtml(act.description) + '</p>' +
+                '<div class="ajtb-v1-meta-line">' + price + '</div>' +
+                '</div></div></div>';
+        }
+
+        function addActivityToProgram(dayId, dayNumber, activity) {
+            var act = normalizeActivityForProgram(activity);
+            if (!act.activity_id) { return; }
+
+            var list = document.querySelector('[data-day-activities-list][data-day-id="' + dayId + '"]');
+            if (!list) {
+                list = document.querySelector('[data-day-activities-list][data-day-number="' + dayNumber + '"]');
+            }
+            if (!list) { return; }
+            if (list.querySelector('[data-activity-id="' + act.activity_id + '"]')) { return; }
+
+            list.insertAdjacentHTML("beforeend", buildProgramActivityCard(act));
+        }
+
         function openModal(dayId, tourId, dayNumber, dayFixedOpts) {
             if (!overlay || !modalBody) { return; }
 
             var seenIds = {};
             var cards = [];
+            currentModalActivitiesById = {};
             var allActivities = (dayFixedOpts || []).concat(openActivities);
             allActivities.forEach(function (act) {
                 if (!activityMatchesDay(act, dayNumber)) { return; }
                 var aid = act.activity_id;
                 if (aid && seenIds[aid]) { return; }
                 if (aid) { seenIds[aid] = true; }
-                cards.push(buildActivityCard(act, dayId, tourId));
+                currentModalActivitiesById[aid] = act;
+                cards.push(buildActivityCard(act, dayId, tourId, dayNumber));
             });
 
             if (cards.length === 0) {
@@ -797,6 +853,7 @@
 
             var tourId = parseInt(button.getAttribute("data-tour-id") || "0", 10);
             var dayId = parseInt(button.getAttribute("data-day-id") || "0", 10);
+            var dayNumber = parseInt(button.getAttribute("data-day-number") || "0", 10);
             var activityId = parseInt(button.getAttribute("data-activity-id") || "0", 10);
             if (!tourId || !dayId || !activityId) { return; }
 
@@ -823,11 +880,10 @@
                         throw new Error((json && json.data && json.data.message) || "Erreur");
                     }
                     markAdded(dayId, activityId);
+                    addActivityToProgram(dayId, dayNumber, currentModalActivitiesById[activityId] || { activity_id: activityId });
                     button.classList.remove("is-loading");
                     button.classList.add("is-done");
                     button.textContent = "Ajoutee";
-                    // Reload after short delay so the activity appears in the day
-                    setTimeout(function () { window.location.reload(); }, 600);
                 })
                 .catch(function () {
                     button.disabled = false;

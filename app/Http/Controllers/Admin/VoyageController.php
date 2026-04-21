@@ -442,6 +442,28 @@ class VoyageController extends Controller
                 'message' => "\u{00C9}tape enregistr\u{00E9}e.",
             ]);
         } catch (\Throwable $e) {
+            if ($step === 's-activities') {
+                Log::error('Activities Save Error', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'request' => $request->all(),
+                ]);
+
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'ok' => false,
+                        'state' => 'error',
+                        'step' => $step,
+                        'error' => $e->getMessage(),
+                        'message' => $this->buildV2StepSaveErrorMessage($e, $step),
+                        'errors' => [
+                            'server' => [$this->buildV2StepSaveErrorMessage($e, $step)],
+                        ],
+                    ], 500);
+                }
+            }
+
             Log::error('VoyageController@saveStepV2 failed', [
                 'step' => $step,
                 'tour_id' => $wpPostId,
@@ -974,9 +996,6 @@ class VoyageController extends Controller
                 $dayScopeRaw = 'open';
             }
             $dayScope = in_array($dayScopeRaw, ['fixed', 'open'], true) ? $dayScopeRaw : 'fixed';
-            if ($included === 1) {
-                $dayScope = 'fixed';
-            }
 
             $pricingTypeRaw = strtolower(trim((string) ($row['pricing_type'] ?? 'per_person')));
             $pricingType = $pricingTypeRaw === 'fixed' ? 'fixed' : 'per_person';
@@ -3564,9 +3583,6 @@ class VoyageController extends Controller
                 $isIncluded = $this->normalizeCheckboxValue($row['is_included'] ?? 0, 1);
                 $isMandatory = $this->normalizeCheckboxValue($row['is_mandatory'] ?? 0, 0);
                 $dayScope = ($row['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed';
-                if ($isIncluded) {
-                    $dayScope = 'fixed';
-                }
 
                 if ($dayActivityId > 0) {
                     $this->programService->updateDayActivity($dayActivityId, [
@@ -3622,6 +3638,7 @@ class VoyageController extends Controller
      */
     protected function syncActivities(Voyage $voyage, array $payload): void
     {
+        try {
         $payload = $this->normalizeV2ActivitiesPayload($payload);
 
         $keptIds = [];
@@ -3707,9 +3724,6 @@ class VoyageController extends Controller
                 $dayScopeRaw = 'open';
             }
             $dayScope = $dayScopeRaw === 'open' ? 'open' : 'fixed';
-            if ($included) {
-                $dayScope = 'fixed';
-            }
             $pricingType = ($row['pricing_type'] ?? 'per_person') === 'fixed' ? 'fixed' : 'per_person';
             $unitPrice = (float) ($row['unit_price'] ?? 0);
             $unitPrice = $unitPrice < 0 ? 0 : round($unitPrice, 2);
@@ -3788,6 +3802,19 @@ class VoyageController extends Controller
                 }
                 $item->delete();
             });
+        } catch (\Throwable $e) {
+            Log::error('Activities Save Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => [
+                    'voyage_id' => $voyage->id ?? null,
+                    'wp_post_id' => $voyage->wp_post_id ?? null,
+                    'tour_activities' => $payload,
+                ],
+            ]);
+
+            throw $e;
+        }
     }
 
     /**
@@ -3796,7 +3823,7 @@ class VoyageController extends Controller
     protected function syncActivitiesTabToWpProgramme(int $tourId, array $payload): void
     {
         $payload = $this->normalizeV2ActivitiesPayload($payload);
-        if ($tourId <= 0 || empty($payload)) {
+        if ($tourId <= 0) {
             return;
         }
 
@@ -3820,6 +3847,22 @@ class VoyageController extends Controller
         $daysByNumber = $days->keyBy(fn (TourDay $day) => (int) $day->day_number);
         $firstDay = $days->first();
         $maxDayNumber = (int) $days->max('day_number');
+        $minDayNumber = (int) $days->min('day_number');
+        $desiredKeys = [];
+        $resolveDay = function ($rawDayNumber) use ($daysByNumber, $firstDay, $minDayNumber, $maxDayNumber): ?TourDay {
+            $dayNumber = (int) $rawDayNumber;
+            if ($dayNumber <= 0) {
+                $dayNumber = (int) ($firstDay?->day_number ?? 1);
+            }
+            if ($dayNumber < $minDayNumber) {
+                $dayNumber = $minDayNumber;
+            }
+            if ($dayNumber > $maxDayNumber) {
+                $dayNumber = $maxDayNumber;
+            }
+
+            return $daysByNumber->get($dayNumber) ?: $firstDay;
+        };
 
         foreach ($payload as $row) {
             if (!is_array($row)) {
@@ -3831,27 +3874,8 @@ class VoyageController extends Controller
                 continue;
             }
 
-            $dayNumber = (int) ($row['day_number'] ?? 0);
-            if ($dayNumber <= 0) {
-                $dayNumber = (int) ($firstDay?->day_number ?? 1);
-            }
-            if ($dayNumber > $maxDayNumber) {
-                $dayNumber = $maxDayNumber;
-            }
-
-            $targetDay = $daysByNumber->get($dayNumber);
-            if (!$targetDay) {
-                $targetDay = $firstDay;
-            }
-            if (!$targetDay) {
-                continue;
-            }
-
             $isIncluded = $this->normalizeCheckboxValue($row['included'] ?? 1, 1);
             $dayScope = ($row['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed';
-            if ($isIncluded) {
-                $dayScope = 'fixed';
-            }
 
             $customTitle = trim((string) ($row['title'] ?? ''));
             $customDescription = trim((string) ($row['description'] ?? ''));
@@ -3860,28 +3884,58 @@ class VoyageController extends Controller
                 : null;
             $sortOrder = isset($row['sort_order']) && $row['sort_order'] !== '' ? max(0, (int) $row['sort_order']) : 0;
 
-            $existing = TourDayActivity::query()
-                ->where('tour_id', $tourId)
-                ->where('activity_id', $activityId)
-                ->first();
+            $targetDays = $dayScope === 'open'
+                ? $days
+                : collect(array_filter([$resolveDay($row['day_number'] ?? 0)]));
 
-            $data = [
-                'day_id' => (int) $targetDay->id,
-                'sort_order' => $sortOrder,
-                'is_included' => $isIncluded,
-                'day_scope' => $dayScope,
-                'is_mandatory' => 0,
-                'custom_title' => $customTitle !== '' ? $customTitle : null,
-                'custom_description' => $customDescription !== '' ? $customDescription : null,
-                'custom_price' => $customPrice,
-            ];
+            foreach ($targetDays as $targetDay) {
+                if (!$targetDay) {
+                    continue;
+                }
 
-            if ($existing) {
-                $this->programService->updateDayActivity((int) $existing->id, $data);
-            } else {
-                $this->programService->addActivityToDay((int) $targetDay->id, $activityId, $data);
+                $dayId = (int) $targetDay->id;
+                $desiredKeys[$dayId . ':' . $activityId] = true;
+
+                $existing = TourDayActivity::query()
+                    ->where('tour_id', $tourId)
+                    ->where('activity_id', $activityId)
+                    ->where('day_id', $dayId)
+                    ->first();
+
+                $data = [
+                    'day_id' => $dayId,
+                    'sort_order' => $sortOrder,
+                    'is_included' => $isIncluded,
+                    'day_scope' => $dayScope,
+                    'is_mandatory' => 0,
+                    'custom_title' => $customTitle !== '' ? $customTitle : null,
+                    'custom_description' => $customDescription !== '' ? $customDescription : null,
+                    'custom_price' => $customPrice,
+                ];
+
+                if ($existing) {
+                    $this->programService->updateDayActivity((int) $existing->id, $data);
+                } else {
+                    $this->programService->addActivityToDay($dayId, $activityId, $data);
+                }
             }
         }
+
+        TourDayActivity::query()
+            ->where('tour_id', $tourId)
+            ->get()
+            ->each(function (TourDayActivity $dayActivity) use ($desiredKeys): void {
+                if ((int) ($dayActivity->is_mandatory ?? 0) === 1) {
+                    return;
+                }
+
+                $key = (int) $dayActivity->day_id . ':' . (int) $dayActivity->activity_id;
+                if (isset($desiredKeys[$key])) {
+                    return;
+                }
+
+                $this->programService->removeDayActivity((int) $dayActivity->id);
+            });
     }
 
     /**

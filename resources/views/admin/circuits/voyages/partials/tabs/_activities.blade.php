@@ -357,29 +357,18 @@
         var allOption = scopeSelect.querySelector('option[value="all"]');
         var scopeValue = String(scopeSelect.value || firstDayValue);
 
-        if (included) {
-            if (scopeValue === 'all') {
+        if (allOption) {
+            allOption.disabled = false;
+            allOption.hidden = false;
+        }
+
+        if (scopeValue === 'all') {
+            dayScopeField.value = 'open';
+        } else {
+            if (scopeValue.indexOf('day:') !== 0) {
                 scopeValue = firstDayValue;
             }
-            if (allOption) {
-                allOption.disabled = true;
-                allOption.hidden = true;
-            }
             dayScopeField.value = 'fixed';
-        } else {
-            if (allOption) {
-                allOption.disabled = false;
-                allOption.hidden = false;
-            }
-
-            if (scopeValue === 'all') {
-                dayScopeField.value = 'open';
-            } else {
-                if (scopeValue.indexOf('day:') !== 0) {
-                    scopeValue = firstDayValue;
-                }
-                dayScopeField.value = 'fixed';
-            }
         }
 
         scopeSelect.value = scopeValue;
@@ -387,7 +376,9 @@
         dayNumberField.value = String(parseDayNumberFromScope(scopeValue, fallbackDay));
 
         if (scopeText) {
-            if (included) {
+            if (included && scopeValue === 'all') {
+                scopeText.textContent = 'Activite incluse visible sur tous les jours du programme.';
+            } else if (included) {
                 scopeText.textContent = 'Affichee sur le jour du programme.';
             } else if (scopeValue === 'all') {
                 scopeText.textContent = 'Option client visible sur tous les jours du programme.';

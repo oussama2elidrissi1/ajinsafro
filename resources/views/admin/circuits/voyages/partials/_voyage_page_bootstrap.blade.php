@@ -118,6 +118,7 @@
         'wpFeaturedMediaUploadUrl' => route('admin.wp-media.upload'),
         'wpFeaturedMediaSelectUrl' => route('admin.wp-media.select'),
         'wpFeaturedMediaRemoveUrl' => route('admin.wp-media.remove'),
+        'ajaxListActivityUrl' => route('admin.circuits.activities.ajax.list'),
         'ajaxStoreActivityUrl' => route('admin.circuits.activities.ajax.store'),
         'tourHotelsData' => $tourHotelsBootstrap,
         'tourTransfersData' => [

@@ -476,6 +476,9 @@
         if (data && typeof data.message === 'string' && data.message.trim()) {
             return data.message.trim();
         }
+        if (data && typeof data.error === 'string' && data.error.trim()) {
+            return data.error.trim();
+        }
         if (data && data.errors && typeof data.errors === 'object') {
             var firstKey = Object.keys(data.errors)[0];
             if (firstKey && Array.isArray(data.errors[firstKey]) && data.errors[firstKey][0]) {

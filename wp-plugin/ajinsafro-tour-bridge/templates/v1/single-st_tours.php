@@ -551,31 +551,33 @@ get_header();
                                                     </div>
                                                 <?php endif; ?>
 
-                                                <?php foreach ($included_activities as $activity): ?>
-                                                    <?php
-                                                    $act_img = $pick($activity, ['image_url'], '');
-                                                    $act_title = $pick($activity, ['title'], 'Activity');
-                                                    $act_desc = $pick($activity, ['description'], 'Activite incluse selon le programme du jour.');
-                                                    $act_price = isset($activity['custom_price']) && $activity['custom_price'] !== null
-                                                        ? (float) $activity['custom_price']
-                                                        : (isset($activity['base_price']) && $activity['base_price'] !== null ? (float) $activity['base_price'] : null);
-                                                    ?>
-                                                    <div class="ajtb-v1-service-card">
-                                                        <div class="ajtb-v1-service-head"><span>Activity - Program</span><span>Included</span></div>
-                                                        <div class="ajtb-v1-service-body ajtb-v1-media-row">
-                                                            <img src="<?php echo $safe_image($act_img, $default_activity_image); ?>" alt="Activity visual" loading="lazy">
-                                                            <div>
-                                                                <h4><?php echo esc_html($act_title); ?></h4>
-                                                                <p><?php echo esc_html($act_desc); ?></p>
-                                                                <div class="ajtb-v1-meta-line">
-                                                                    <?php if ($act_price !== null): ?><span><?php echo esc_html(number_format($act_price, 0, ',', ' ') . ' MAD'); ?></span><?php endif; ?>
-                                                                    <?php if (!empty($activity['start_time'])): ?><span><?php echo esc_html((string) $activity['start_time']); ?></span><?php endif; ?>
-                                                                    <?php if (!empty($activity['end_time'])): ?><span><?php echo esc_html((string) $activity['end_time']); ?></span><?php endif; ?>
+                                                <div class="ajtb-v1-day-activities" data-day-activities-list data-day-id="<?php echo esc_attr((string) $day_db_id); ?>" data-day-number="<?php echo esc_attr((string) $day_num); ?>">
+                                                    <?php foreach ($included_activities as $activity): ?>
+                                                        <?php
+                                                        $act_img = $pick($activity, ['image_url'], '');
+                                                        $act_title = $pick($activity, ['title'], 'Activity');
+                                                        $act_desc = $pick($activity, ['description'], 'Activite incluse selon le programme du jour.');
+                                                        $act_price = isset($activity['custom_price']) && $activity['custom_price'] !== null
+                                                            ? (float) $activity['custom_price']
+                                                            : (isset($activity['base_price']) && $activity['base_price'] !== null ? (float) $activity['base_price'] : null);
+                                                        ?>
+                                                        <div class="activity-card ajtb-v1-service-card" data-activity-id="<?php echo esc_attr((string) (int) ($activity['activity_id'] ?? 0)); ?>">
+                                                            <div class="ajtb-v1-service-head"><span>Activity - Program</span><span>Included</span></div>
+                                                            <div class="ajtb-v1-service-body ajtb-v1-media-row">
+                                                                <img src="<?php echo $safe_image($act_img, $default_activity_image); ?>" alt="Activity visual" loading="lazy">
+                                                                <div>
+                                                                    <h4><?php echo esc_html($act_title); ?></h4>
+                                                                    <p><?php echo esc_html($act_desc); ?></p>
+                                                                    <div class="ajtb-v1-meta-line">
+                                                                        <?php if ($act_price !== null): ?><span><?php echo esc_html(number_format($act_price, 0, ',', ' ') . ' MAD'); ?></span><?php endif; ?>
+                                                                        <?php if (!empty($activity['start_time'])): ?><span><?php echo esc_html((string) $activity['start_time']); ?></span><?php endif; ?>
+                                                                        <?php if (!empty($activity['end_time'])): ?><span><?php echo esc_html((string) $activity['end_time']); ?></span><?php endif; ?>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                <?php endforeach; ?>
+                                                    <?php endforeach; ?>
+                                                </div>
 
                                                 <?php
                                                 // Pass all optional activities (fixed + open) to the modal via data-day-opts.

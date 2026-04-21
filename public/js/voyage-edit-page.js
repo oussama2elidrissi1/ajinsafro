@@ -4186,10 +4186,14 @@ document.addEventListener('DOMContentLoaded', function () {
             var nextBtn = document.getElementById('activities-catalog-next');
             var countLabel = document.getElementById('activities-catalog-count');
             var regionHint = document.getElementById('activities-catalog-region-hint');
+            var boot = window.VOYAGE_EDIT_BOOTSTRAP || {};
+            var ajaxListUrl = boot.ajaxListActivityUrl || '';
 
             var filteredCatalog = [];
             var page = 1;
             var pageSize = 8;
+            var catalogLoading = false;
+            var catalogLoadedFromServer = false;
 
             function fullCatalog() {
                 return Array.isArray(window.ALL_TOUR_ACTIVITIES_CATALOG) ? window.ALL_TOUR_ACTIVITIES_CATALOG : [];
@@ -4228,6 +4232,105 @@ document.addEventListener('DOMContentLoaded', function () {
             function toInt(value, fallback) {
                 var num = parseInt(value, 10);
                 return Number.isFinite(num) ? num : fallback;
+            }
+
+            function normalizeActivity(raw) {
+                raw = raw || {};
+                return {
+                    id: toInt(raw.id, 0),
+                    title: raw.title || '',
+                    description: raw.description || '',
+                    activity_type: raw.activity_type || '',
+                    region_name: raw.region_name || raw.location_text || raw.place_text || '',
+                    location_text: raw.location_text || raw.region_name || raw.place_text || '',
+                    place_text: raw.place_text || raw.region_name || raw.location_text || '',
+                    adult_price: toNumber(raw.adult_price || raw.base_price || raw.price, 0),
+                    child_price: toNumber(raw.child_price, 0),
+                    base_price: toNumber(raw.base_price || raw.adult_price || raw.price, 0),
+                    default_duration_minutes: toInt(raw.default_duration_minutes || raw.duration_minutes, 0),
+                    min_age: toInt(raw.min_age, 0),
+                    max_age: toInt(raw.max_age, 0),
+                };
+            }
+
+            function currentRegionTerms() {
+                if (window.AjinsafroActivityRegionFilter && typeof window.AjinsafroActivityRegionFilter.currentTerms === 'function') {
+                    return window.AjinsafroActivityRegionFilter.currentTerms();
+                }
+
+                var addressInput = document.getElementById('address');
+                return addressInput && addressInput.value.trim() ? [addressInput.value.trim()] : [];
+            }
+
+            function syncGlobalCatalog(items) {
+                var normalized = Array.isArray(items)
+                    ? items.map(normalizeActivity).filter(function(item) { return item.id > 0; })
+                    : [];
+
+                ['ALL_TOUR_ACTIVITIES_CATALOG', 'TOUR_ACTIVITIES_CATALOG'].forEach(function(key) {
+                    if (!Array.isArray(window[key])) {
+                        window[key] = [];
+                    }
+
+                    normalized.forEach(function(activity) {
+                        var idx = window[key].findIndex(function(item) {
+                            return Number(item.id) === Number(activity.id);
+                        });
+                        if (idx >= 0) {
+                            window[key][idx] = Object.assign({}, window[key][idx], activity);
+                        } else {
+                            window[key].push(activity);
+                        }
+                    });
+                });
+            }
+
+            async function loadCatalogFromServer(force) {
+                if (!ajaxListUrl || catalogLoading || (catalogLoadedFromServer && !force)) {
+                    return;
+                }
+
+                catalogLoading = true;
+                if (catalogBody && !fullCatalog().length) {
+                    catalogBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">Chargement du catalogue...</td></tr>';
+                }
+
+                try {
+                    var url = new URL(ajaxListUrl, window.location.origin);
+                    currentRegionTerms().forEach(function(term) {
+                        url.searchParams.append('regions[]', term);
+                    });
+
+                    var response = await fetch(url.toString(), {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    var json = await response.json().catch(function() { return null; });
+                    if (!response.ok || !json || json.success === false || !Array.isArray(json.data)) {
+                        throw new Error((json && json.message) || 'Impossible de charger le catalogue.');
+                    }
+
+                    syncGlobalCatalog(json.data);
+                    catalogLoadedFromServer = true;
+                } catch (error) {
+                    if (catalogBody && !fullCatalog().length) {
+                        catalogBody.innerHTML = '<tr><td colspan="4" class="text-danger text-center">' + esc(error.message || 'Catalogue indisponible.') + '</td></tr>';
+                    }
+                } finally {
+                    catalogLoading = false;
+                }
+            }
+
+            function notifyActivitiesChanged() {
+                try {
+                    rowsContainer.dispatchEvent(new Event('change', { bubbles: true }));
+                } catch (e) {
+                    // ignore
+                }
             }
 
             function updateEmptyState() {
@@ -4333,7 +4436,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 return [{ value: '1', label: 'Jour 1' }];
             }
             function buildRow(activity) {
+                activity = normalizeActivity(activity);
                 var title = esc(activity.title || ('Activite #' + activity.id));
+                var description = esc(activity.description || '');
                 var defaultPrice = toNumber(activity.adult_price || activity.base_price, 0).toFixed(2);
                 var defaultChild = toNumber(activity.child_price, 0).toFixed(2);
                 var pricingOpts = Array.isArray(window.VOYAGE_ACTIVITY_PRICING_TYPES) ? window.VOYAGE_ACTIVITY_PRICING_TYPES : [];
@@ -4387,7 +4492,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" value="' + title + '" placeholder="Titre affiche dans le voyage">' +
                     '</td>' +
                     '<td>' +
-                        '<textarea class="form-control form-control-sm voyage-activity-description" data-field="description" rows="2" placeholder="-"></textarea>' +
+                        '<textarea class="form-control form-control-sm voyage-activity-description" data-field="description" rows="2" placeholder="-">' + description + '</textarea>' +
                     '</td>' +
                     '<td>' +
                         '<select class="form-select form-select-sm voyage-activity-pricing" data-field="pricing_type">' +
@@ -4428,6 +4533,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateEmptyState();
                 refreshCatalog();
                 focusActivityRow(activity.id);
+                notifyActivitiesChanged();
 
                 return true;
             }
@@ -4491,6 +4597,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         row.remove();
                         reindexRows();
                         refreshCatalog();
+                        notifyActivitiesChanged();
                     }
                     return;
                 }
@@ -4561,6 +4668,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (modalEl) {
                 modalEl.addEventListener('shown.bs.modal', function() {
+                    loadCatalogFromServer(!fullCatalog().length).then(function() {
+                        refreshCatalog();
+                    });
                     refreshCatalog();
                     if (regionHint) {
                         var filtered = Array.isArray(window.TOUR_ACTIVITIES_CATALOG) ? window.TOUR_ACTIVITIES_CATALOG : [];
@@ -4575,7 +4685,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             document.addEventListener('voyage-activity-region-change', function() {
                 page = 1;
-                refreshCatalog();
+                catalogLoadedFromServer = false;
+                loadCatalogFromServer(true).then(function() {
+                    refreshCatalog();
+                });
             });
 
             window.__voyageActivitiesModalAdd = appendActivityToVoyage;
