@@ -345,6 +345,7 @@
         var currency = priceCard.getAttribute("data-currency") || "MAD";
         var datePricesRaw = priceCard.getAttribute("data-date-prices") || "{}";
         var datePrices = {};
+        var selectedActivities = [];
 
         if (!isFinite(baseAdultPrice) || baseAdultPrice < 0) {
             baseAdultPrice = 0;
@@ -402,7 +403,7 @@
             return baseLabel;
         }
 
-        function renderOptions() {
+        function renderOptions(activityTotal) {
             if (!optionsEl) {
                 return;
             }
@@ -417,12 +418,59 @@
                 rawOptions.forEach(function (item) {
                     html += "<li>" + escapeHtml(String(item)) + "</li>";
                 });
-            } else {
-                html = "<li>Aucune option supplémentaire renseignée</li>";
+            }
+            if (selectedActivities.length) {
+                selectedActivities.forEach(function (activity) {
+                    var label = activity.title || "Activite";
+                    var price = isFinite(activity.price) && activity.price > 0
+                        ? " +" + formatAmount(activity.price) + " " + currency
+                        : "";
+                    html += "<li>" + escapeHtml(label + price) + "</li>";
+                });
+                if (activityTotal > 0) {
+                    html += '<li class="ajtb-v1-summary-chip-total">Activites ajoutees: +' + escapeHtml(formatAmount(activityTotal) + " " + currency) + "</li>";
+                }
+            }
+            if (!html) {
+                html = "<li>Aucune option supplementaire renseignee</li>";
             }
             optionsEl.innerHTML = html;
         }
 
+        function normalizeSelectedActivity(activity) {
+            activity = activity || {};
+            var price = parseFloat(activity.price);
+            if (!isFinite(price) || price < 0) {
+                price = 0;
+            }
+
+            return {
+                activity_id: parseInt(String(activity.activity_id || activity.id || "0"), 10) || 0,
+                title: String(activity.title || "Activite"),
+                price: price,
+            };
+        }
+
+        function collectClientActivitiesFromDom() {
+            selectedActivities = Array.prototype.slice.call(document.querySelectorAll(".activity-card[data-client-added='1']"))
+                .map(function (row) {
+                    var titleEl = row.querySelector("h4");
+                    return normalizeSelectedActivity({
+                        activity_id: row.getAttribute("data-activity-id") || "0",
+                        title: row.getAttribute("data-activity-title") || (titleEl ? titleEl.textContent : "Activite"),
+                        price: row.getAttribute("data-activity-price") || "0",
+                    });
+                })
+                .filter(function (activity) {
+                    return activity.activity_id > 0;
+                });
+        }
+
+        function selectedActivitiesTotal() {
+            return selectedActivities.reduce(function (sum, activity) {
+                return sum + (isFinite(activity.price) ? Math.max(0, activity.price) : 0);
+            }, 0);
+        }
         function getTravellerValue(input, fallback) {
             if (!input) {
                 return fallback;
@@ -493,13 +541,17 @@
             }
 
             var childUnit = baseChildPrice > 0 ? baseChildPrice : adultUnit;
+            collectClientActivitiesFromDom();
+            var activityTotal = selectedActivitiesTotal();
             var total = adults * adultUnit + children * childUnit;
             if (total <= 0) {
                 total = adultUnit;
             }
+            total += activityTotal;
 
             var travellerCount = adults + children;
-            var pricePerPerson = travellerCount > 0 ? total / travellerCount : total;
+            var baseTravellerTotal = Math.max(0, total - activityTotal);
+            var pricePerPerson = travellerCount > 0 ? baseTravellerTotal / travellerCount : baseTravellerTotal;
             var departureLabel = getSelectedDepartureLabel();
             var dateLabel = getSelectedDateLabel();
             var guestsLabel = getGuestsLabel(adults, children);
@@ -531,7 +583,10 @@
                 hotelEl.textContent = priceCard.getAttribute("data-hotel-label") || hotelEl.textContent;
             }
             if (activitiesEl) {
-                activitiesEl.textContent = priceCard.getAttribute("data-activity-label") || activitiesEl.textContent;
+                var baseActivityLabel = priceCard.getAttribute("data-activity-label") || activitiesEl.textContent;
+                activitiesEl.textContent = selectedActivities.length
+                    ? baseActivityLabel + " + " + selectedActivities.length + " option" + (selectedActivities.length > 1 ? "s" : "") + " (+" + formatAmount(activityTotal) + " " + currency + ")"
+                    : baseActivityLabel;
             }
             if (flightEl) {
                 flightEl.textContent = priceCard.getAttribute("data-has-flight") === "1" ? "Inclus" : "Non indiqué";
@@ -543,12 +598,14 @@
                 availabilityBadgeEl.textContent = availabilityLabel === "Disponible" ? "Disponible" : "À confirmer";
             }
             if (noteEl) {
-                noteEl.textContent = priceCard.getAttribute("data-default-date") ? "Prix adapté selon la sélection" : noteEl.textContent;
+                noteEl.textContent = activityTotal > 0
+                    ? "Prix total mis a jour avec les activites ajoutees."
+                    : (priceCard.getAttribute("data-default-date") ? "Prix adapte selon la selection" : noteEl.textContent);
             }
             if (actionEl) {
                 actionEl.textContent = "Continuer";
             }
-            renderOptions();
+            renderOptions(activityTotal);
         }
 
         if (dateSelect) {
@@ -564,6 +621,7 @@
 
         document.addEventListener("ajtb:v1:travellers-changed", recalculate);
         document.addEventListener("ajtb:v1:date-changed", recalculate);
+        document.addEventListener("ajtb:v1:activities-changed", recalculate);
         recalculate();
     }
 
@@ -698,7 +756,6 @@
 
         var ajaxUrl = window.ajtbData && window.ajtbData.ajaxUrl ? window.ajtbData.ajaxUrl : "";
         var nonce = window.ajtbData && window.ajtbData.activityNonce ? window.ajtbData.activityNonce : "";
-        var canSubmitSelection = !!ajaxUrl && !!nonce;
         var openActivities = window.ajtbOpenActivities || [];
         var overlay = document.getElementById("ajtb-act-modal-overlay");
         var modalBody = document.getElementById("ajtb-act-modal-body");
@@ -729,6 +786,23 @@
             addedByDay[dayId][activityId] = true;
         }
 
+        function unmarkAdded(dayId, activityId) {
+            if (addedByDay[dayId] && addedByDay[dayId][activityId]) {
+                delete addedByDay[dayId][activityId];
+            }
+        }
+
+        function seedAddedFromProgram() {
+            Array.prototype.slice.call(page.querySelectorAll(".activity-card[data-client-added='1']")).forEach(function (card) {
+                var list = card.closest("[data-day-activities-list]");
+                var dayId = list ? parseInt(list.getAttribute("data-day-id") || "0", 10) : 0;
+                var activityId = parseInt(card.getAttribute("data-activity-id") || "0", 10);
+                if (dayId && activityId) {
+                    markAdded(dayId, activityId);
+                }
+            });
+        }
+
         function buildActivityCard(act, dayId, tourId, dayNumber) {
             var added = isAdded(dayId, act.activity_id);
             var img = act.image_url
@@ -736,18 +810,22 @@
                 : '<div class="ajtb-act-card-img-placeholder"></div>';
             var btnHtml = added
                 ? '<button type="button" class="ajtb-act-card-btn is-done" disabled>Ajoutee</button>'
-                : (canSubmitSelection
-                    ? '<button type="button" class="ajtb-act-card-btn" data-ajtb-v1-action="add-activity" data-tour-id="' + tourId + '" data-day-id="' + dayId + '" data-day-number="' + dayNumber + '" data-activity-id="' + act.activity_id + '">Ajouter</button>'
-                    : '<button type="button" class="ajtb-act-card-btn is-done" disabled>Indisponible</button>');
+                : '<button type="button" class="ajtb-act-card-btn" data-ajtb-v1-action="add-activity" data-tour-id="' + tourId + '" data-day-id="' + dayId + '" data-day-number="' + dayNumber + '" data-activity-id="' + act.activity_id + '">Ajouter</button>';
             return '<article class="ajtb-act-card" data-activity-id="' + act.activity_id + '">' +
                 '<div class="ajtb-act-card-media">' + img + '</div>' +
                 '<div class="ajtb-act-card-body">' +
                 '<span class="ajtb-act-card-badge">Option client</span>' +
                 '<h4 class="ajtb-act-card-title">' + escHtml(act.title) + '</h4>' +
-                '<p class="ajtb-act-card-desc">' + escHtml(act.description) + '</p>' +
-                '<div class="ajtb-act-card-footer">' +
+                '<div class="ajtb-act-card-actions">' +
                 '<span class="ajtb-act-card-price">' + escHtml(formatPrice(act.price)) + '</span>' +
                 btnHtml +
+                '</div>' +
+                '<p class="ajtb-act-card-desc">' + escHtml(act.description) + '</p>' +
+                '<div class="ajtb-act-card-footer">' +
+                '<div class="ajtb-act-progress" data-ajtb-add-progress hidden>' +
+                '<div class="ajtb-act-progress-top"><span data-ajtb-progress-state>Preparation</span><strong data-ajtb-progress-percent>0%</strong></div>' +
+                '<div class="ajtb-act-progress-track"><span data-ajtb-progress-fill style="width: 0%"></span></div>' +
+                '</div>' +
                 '</div></div></article>';
         }
 
@@ -787,15 +865,22 @@
                 ? ""
                 : '<span>' + escHtml(formatPrice(act.price)) + '</span>';
 
-            return '<div class="activity-card ajtb-v1-service-card" data-activity-id="' + act.activity_id + '">' +
-                '<div class="ajtb-v1-service-head"><span>Activity - Program</span><span>Added</span></div>' +
+            return '<div class="activity-card ajtb-v1-service-card" data-activity-id="' + act.activity_id + '" data-activity-title="' + escHtml(act.title) + '" data-activity-price="' + escHtml(act.price === null || Number.isNaN(act.price) ? "" : String(act.price)) + '" data-client-added="1">' +
+                '<div class="ajtb-v1-service-head"><span>Activity - Program</span>' +
+                '<button type="button" class="ajtb-v1-service-remove" data-ajtb-v1-action="remove-program-activity" data-day-id="" data-day-number="" data-activity-id="' + act.activity_id + '">Retirer</button></div>' +
                 '<div class="ajtb-v1-service-body ajtb-v1-media-row">' +
                 img +
                 '<div>' +
                 '<h4>' + escHtml(act.title) + '</h4>' +
                 '<p>' + escHtml(act.description) + '</p>' +
                 '<div class="ajtb-v1-meta-line">' + price + '</div>' +
-                '</div></div></div>';
+                '</div></div>' +
+                '<div class="ajtb-v1-service-progress">' +
+                '<div class="ajtb-act-progress" data-ajtb-remove-progress hidden>' +
+                '<div class="ajtb-act-progress-top"><span data-ajtb-progress-state>Preparation</span><strong data-ajtb-progress-percent>0%</strong></div>' +
+                '<div class="ajtb-act-progress-track"><span data-ajtb-progress-fill style="width: 0%"></span></div>' +
+                '</div>' +
+                '</div></div>';
         }
 
         function addActivityToProgram(dayId, dayNumber, activity) {
@@ -810,6 +895,14 @@
             if (list.querySelector('[data-activity-id="' + act.activity_id + '"]')) { return; }
 
             list.insertAdjacentHTML("beforeend", buildProgramActivityCard(act));
+            var row = list.querySelector('[data-client-added="1"][data-activity-id="' + act.activity_id + '"]');
+            var removeBtn = row ? row.querySelector('[data-ajtb-v1-action="remove-program-activity"]') : null;
+            if (removeBtn) {
+                removeBtn.setAttribute("data-tour-id", String(currentTourId || ""));
+                removeBtn.setAttribute("data-day-id", String(dayId || ""));
+                removeBtn.setAttribute("data-day-number", String(dayNumber || ""));
+            }
+            document.dispatchEvent(new CustomEvent("ajtb:v1:activities-changed"));
         }
 
         function openModal(dayId, tourId, dayNumber, dayFixedOpts) {
@@ -846,20 +939,143 @@
             document.body.classList.remove("ajtb-modal-open");
         }
 
-        function addActivity(button) {
-            if (!ajaxUrl || !nonce) {
-                return;
+        function startButtonProgress(button, options) {
+            options = options || {};
+            var cardSelector = options.cardSelector || ".ajtb-act-card";
+            var progressSelector = options.progressSelector || "[data-ajtb-add-progress]";
+            var busyClass = options.busyClass || "is-adding";
+            var finalState = options.finalState || "Ajoute au programme";
+
+            var card = button.closest(cardSelector);
+            var progressEl = card ? card.querySelector(progressSelector) : null;
+            var fillEl = progressEl ? progressEl.querySelector("[data-ajtb-progress-fill]") : null;
+            var percentEl = progressEl ? progressEl.querySelector("[data-ajtb-progress-percent]") : null;
+            var stateEl = progressEl ? progressEl.querySelector("[data-ajtb-progress-state]") : null;
+            var value = 0;
+            var startedAt = Date.now();
+            var timer = null;
+
+            function stateFor(nextValue) {
+                if (nextValue >= 92) { return "Confirmation"; }
+                if (nextValue >= 64) { return "Mise a jour du programme"; }
+                if (nextValue >= 35) { return "Enregistrement"; }
+                return "Preparation";
             }
 
+            function apply(nextValue, label) {
+                value = Math.max(0, Math.min(100, Math.round(nextValue)));
+                if (fillEl) {
+                    fillEl.style.width = value + "%";
+                }
+                if (percentEl) {
+                    percentEl.textContent = value + "%";
+                }
+                if (stateEl) {
+                    stateEl.textContent = label || stateFor(value);
+                }
+                if (value < 100) {
+                    button.textContent = value + "%";
+                }
+            }
+
+            if (progressEl) {
+                progressEl.hidden = false;
+                progressEl.classList.remove("is-error", "is-complete");
+            }
+            if (card) {
+                card.classList.add(busyClass);
+            }
+
+            apply(8, "Preparation");
+            timer = window.setInterval(function () {
+                if (value >= 88) {
+                    return;
+                }
+                apply(value + Math.max(4, Math.round((90 - value) / 5)));
+            }, 90);
+
+            return {
+                complete: function (callback) {
+                    var wait = Math.max(0, 420 - (Date.now() - startedAt));
+                    window.setTimeout(function () {
+                        if (timer) {
+                            window.clearInterval(timer);
+                        }
+                        apply(100, finalState);
+                        button.textContent = "100%";
+                        if (progressEl) {
+                            progressEl.classList.add("is-complete");
+                        }
+                        window.setTimeout(function () {
+                            if (card) {
+                                card.classList.remove(busyClass);
+                            }
+                            if (typeof callback === "function") {
+                                callback();
+                            }
+                        }, 180);
+                    }, wait);
+                },
+                fail: function () {
+                    if (timer) {
+                        window.clearInterval(timer);
+                    }
+                    apply(value > 0 ? value : 1, "Erreur, reessayez");
+                    if (progressEl) {
+                        progressEl.classList.add("is-error");
+                    }
+                    if (card) {
+                        card.classList.remove(busyClass);
+                    }
+                },
+            };
+        }
+
+        function startAddProgress(button) {
+            return startButtonProgress(button, {
+                cardSelector: ".ajtb-act-card",
+                progressSelector: "[data-ajtb-add-progress]",
+                busyClass: "is-adding",
+                finalState: "Ajoute au programme",
+            });
+        }
+
+        function startRemoveProgress(button) {
+            return startButtonProgress(button, {
+                cardSelector: ".activity-card",
+                progressSelector: "[data-ajtb-remove-progress]",
+                busyClass: "is-removing",
+                finalState: "Retire du programme",
+            });
+        }
+
+        function addActivity(button) {
             var tourId = parseInt(button.getAttribute("data-tour-id") || "0", 10);
             var dayId = parseInt(button.getAttribute("data-day-id") || "0", 10);
             var dayNumber = parseInt(button.getAttribute("data-day-number") || "0", 10);
             var activityId = parseInt(button.getAttribute("data-activity-id") || "0", 10);
             if (!tourId || !dayId || !activityId) { return; }
 
+            var progress = startAddProgress(button);
             button.disabled = true;
             button.classList.add("is-loading");
-            button.textContent = "\u2026";
+            button.textContent = "0%";
+
+            function finishAdded() {
+                progress.complete(function () {
+                    markAdded(dayId, activityId);
+                    addActivityToProgram(dayId, dayNumber, currentModalActivitiesById[activityId] || { activity_id: activityId });
+                    button.classList.remove("is-loading");
+                    button.classList.add("is-done");
+                    button.textContent = "Ajoutee";
+                    button.disabled = true;
+                });
+            }
+
+            if (!ajaxUrl || !nonce) {
+                finishAdded();
+                return;
+            }
 
             var formData = new FormData();
             formData.append("action", "ajtb_v1_toggle_activity");
@@ -879,16 +1095,76 @@
                     if (!json || !json.success) {
                         throw new Error((json && json.data && json.data.message) || "Erreur");
                     }
-                    markAdded(dayId, activityId);
-                    addActivityToProgram(dayId, dayNumber, currentModalActivitiesById[activityId] || { activity_id: activityId });
-                    button.classList.remove("is-loading");
-                    button.classList.add("is-done");
-                    button.textContent = "Ajoutee";
+                    finishAdded();
                 })
                 .catch(function () {
+                    progress.fail();
                     button.disabled = false;
                     button.classList.remove("is-loading", "is-done");
                     button.textContent = "Ajouter";
+                });
+        }
+
+        function removeActivityFromProgram(button) {
+            var tourId = parseInt(button.getAttribute("data-tour-id") || "0", 10) || currentTourId;
+            var dayId = parseInt(button.getAttribute("data-day-id") || "0", 10);
+            var activityId = parseInt(button.getAttribute("data-activity-id") || "0", 10);
+            if (!tourId || !dayId || !activityId) { return; }
+
+            var card = button.closest(".activity-card");
+            var progress = startRemoveProgress(button);
+            button.disabled = true;
+            button.classList.add("is-loading");
+            button.textContent = "0%";
+
+            function finishRemoved() {
+                progress.complete(function () {
+                    unmarkAdded(dayId, activityId);
+                    if (card) {
+                        card.remove();
+                    }
+                    document.dispatchEvent(new CustomEvent("ajtb:v1:activities-changed"));
+                    if (modalBody) {
+                        var modalBtn = modalBody.querySelector('[data-ajtb-v1-action="add-activity"][data-day-id="' + dayId + '"][data-activity-id="' + activityId + '"]');
+                        if (modalBtn) {
+                            modalBtn.disabled = false;
+                            modalBtn.classList.remove("is-done", "is-loading");
+                            modalBtn.textContent = "Ajouter";
+                        }
+                    }
+                });
+            }
+
+            if (!ajaxUrl || !nonce) {
+                finishRemoved();
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("action", "ajtb_v1_toggle_activity");
+            formData.append("nonce", nonce);
+            formData.append("tour_id", String(tourId));
+            formData.append("day_id", String(dayId));
+            formData.append("activity_id", String(activityId));
+            formData.append("activity_action", "removed");
+
+            fetch(ajaxUrl, {
+                method: "POST",
+                credentials: "same-origin",
+                body: formData,
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (json) {
+                    if (!json || !json.success) {
+                        throw new Error((json && json.data && json.data.message) || "Erreur");
+                    }
+                    finishRemoved();
+                })
+                .catch(function () {
+                    progress.fail();
+                    button.disabled = false;
+                    button.classList.remove("is-loading");
+                    button.textContent = "Retirer";
                 });
         }
 
@@ -929,6 +1205,13 @@
                 return;
             }
 
+            var removeBtn = event.target.closest("[data-ajtb-v1-action='remove-program-activity']");
+            if (removeBtn && !removeBtn.disabled) {
+                event.preventDefault();
+                removeActivityFromProgram(removeBtn);
+                return;
+            }
+
             // Add activity inside modal
             var addBtn = event.target.closest("[data-ajtb-v1-action='add-activity']");
             if (addBtn && !addBtn.disabled) {
@@ -937,6 +1220,8 @@
                 return;
             }
         });
+
+        seedAddedFromProgram();
     }
 
     document.addEventListener("DOMContentLoaded", function () {

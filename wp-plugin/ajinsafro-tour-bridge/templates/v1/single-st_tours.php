@@ -561,8 +561,23 @@ get_header();
                                                             ? (float) $activity['custom_price']
                                                             : (isset($activity['base_price']) && $activity['base_price'] !== null ? (float) $activity['base_price'] : null);
                                                         ?>
-                                                        <div class="activity-card ajtb-v1-service-card" data-activity-id="<?php echo esc_attr((string) (int) ($activity['activity_id'] ?? 0)); ?>">
-                                                            <div class="ajtb-v1-service-head"><span>Activity - Program</span><span>Included</span></div>
+                                                        <div class="activity-card ajtb-v1-service-card" data-activity-id="<?php echo esc_attr((string) (int) ($activity['activity_id'] ?? 0)); ?>" data-activity-title="<?php echo esc_attr($act_title); ?>" data-activity-price="<?php echo esc_attr($act_price !== null ? (string) $act_price : ''); ?>" data-client-added="<?php echo !empty($activity['client_added']) ? '1' : '0'; ?>">
+                                                            <div class="ajtb-v1-service-head">
+                                                                <span>Activity - Program</span>
+                                                                <?php if (!empty($activity['client_added'])): ?>
+                                                                    <button type="button"
+                                                                        class="ajtb-v1-service-remove"
+                                                                        data-ajtb-v1-action="remove-program-activity"
+                                                                        data-tour-id="<?php echo esc_attr((string) $tour_id); ?>"
+                                                                        data-day-id="<?php echo esc_attr((string) $day_db_id); ?>"
+                                                                        data-day-number="<?php echo esc_attr((string) $day_num); ?>"
+                                                                        data-activity-id="<?php echo esc_attr((string) (int) ($activity['activity_id'] ?? 0)); ?>">
+                                                                        Retirer
+                                                                    </button>
+                                                                <?php else: ?>
+                                                                    <span>Included</span>
+                                                                <?php endif; ?>
+                                                            </div>
                                                             <div class="ajtb-v1-service-body ajtb-v1-media-row">
                                                                 <img src="<?php echo $safe_image($act_img, $default_activity_image); ?>" alt="Activity visual" loading="lazy">
                                                                 <div>

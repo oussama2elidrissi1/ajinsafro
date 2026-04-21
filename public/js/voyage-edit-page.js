@@ -4383,12 +4383,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateEmptyState();
             }
 
-            function hasActivity(activityId) {
-                return !!rowsContainer.querySelector('.voyage-activity-row[data-activity-id="' + activityId + '"]');
-            }
-
-            function focusActivityRow(activityId) {
-                var row = rowsContainer.querySelector('.voyage-activity-row[data-activity-id="' + activityId + '"]');
+            function focusActivityRow(row) {
                 if (!row) return;
 
                 row.classList.add('table-success');
@@ -4423,8 +4418,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 var fromDom = [];
-                rowsContainer.querySelectorAll('.voyage-activity-scope-select option[value^="day:"]').forEach(function(opt) {
-                    var value = String(opt.value || '').replace('day:', '');
+                rowsContainer.querySelectorAll('.voyage-activity-day-select option').forEach(function(opt) {
+                    var value = String(opt.value || '');
                     if (!value) return;
                     fromDom.push({ value: value, label: String(opt.textContent || ('Jour ' + value)) });
                 });
@@ -4435,6 +4430,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 return [{ value: '1', label: 'Jour 1' }];
             }
+
+            function createGroupUuid() {
+                return 'grp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+            }
+
+            function buildMultiDayCheckboxes(dayOptions, selectedDays) {
+                return dayOptions.map(function(dayOpt) {
+                    var checked = selectedDays.indexOf(String(dayOpt.value)) !== -1 ? ' checked' : '';
+                    return '<label class="form-check form-check-inline mb-0 small">'
+                        + '<input type="checkbox" class="form-check-input voyage-activity-day-checkbox" value="' + esc(dayOpt.value) + '"' + checked + '>'
+                        + '<span class="form-check-label">J' + esc(dayOpt.value) + '</span>'
+                        + '</label>';
+                }).join('');
+            }
+
             function buildRow(activity) {
                 activity = normalizeActivity(activity);
                 var title = esc(activity.title || ('Activite #' + activity.id));
@@ -4443,7 +4453,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 var defaultChild = toNumber(activity.child_price, 0).toFixed(2);
                 var pricingOpts = Array.isArray(window.VOYAGE_ACTIVITY_PRICING_TYPES) ? window.VOYAGE_ACTIVITY_PRICING_TYPES : [];
                 var pricingSelect = '';
-                var scopeSelect = '';
                 if (pricingOpts.length) {
                     pricingOpts.forEach(function (pt, i) {
                         pricingSelect += '<option value="' + esc(pt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(pt.label) + '</option>';
@@ -4453,11 +4462,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 var dayOptions = getDayOptions();
-                dayOptions.forEach(function(dayOpt, i) {
-                    scopeSelect += '<option value="day:' + esc(dayOpt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(dayOpt.label) + '</option>';
-                });
-                scopeSelect += '<option value="all">Tous les jours du programme</option>';
                 var firstDayValue = String((dayOptions[0] && dayOptions[0].value) || '1');
+                var selectedDays = [firstDayValue];
+                var groupUuid = createGroupUuid();
 
                 var tr = document.createElement('tr');
                 tr.className = 'voyage-activity-row';
@@ -4472,14 +4479,36 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<div class="fw-medium voyage-activity-title">' + title + '</div>' +
                         '<input type="hidden" data-field="id" value="">' +
                         '<input type="hidden" data-field="activity_id" value="' + activity.id + '">' +
+                        '<input type="hidden" data-field="group_uuid" value="' + esc(groupUuid) + '">' +
                     '</td>' +
                     '<td>' +
-                        '<select class="form-select form-select-sm voyage-activity-scope-select">' +
-                            scopeSelect +
+                        '<select class="form-select form-select-sm voyage-activity-visibility-mode" data-field="visibility_mode">' +
+                            '<option value="single_day" selected>Jour unique</option>' +
+                            '<option value="multiple_days">Plusieurs jours</option>' +
+                            '<option value="all_days">Tous les jours</option>' +
                         '</select>' +
+                        '<div class="mt-2 voyage-activity-single-day-wrap">' +
+                            '<select class="form-select form-select-sm voyage-activity-day-select">'
+                            + dayOptions.map(function(dayOpt, i) {
+                                return '<option value="' + esc(dayOpt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(dayOpt.label) + '</option>';
+                            }).join('')
+                            + '</select>' +
+                        '</div>' +
+                        '<div class="mt-2 voyage-activity-multi-days-wrap d-none">' +
+                            '<div class="d-flex flex-wrap gap-2">' + buildMultiDayCheckboxes(dayOptions, selectedDays) + '</div>' +
+                        '</div>' +
                         '<input type="hidden" data-field="day_number" value="' + esc(firstDayValue) + '">' +
+                        '<input type="hidden" data-field="days" value="' + esc(selectedDays.join(',')) + '">' +
                         '<input type="hidden" data-field="day_scope" value="fixed">' +
                         '<div class="small text-muted mt-1 voyage-activity-scope-text"></div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="d-flex align-items-center gap-1">' +
+                            '<input type="time" class="form-control form-control-sm" data-field="start_time" value="">' +
+                            '<span class="small text-muted">a</span>' +
+                            '<input type="time" class="form-control form-control-sm" data-field="end_time" value="">' +
+                        '</div>' +
+                        '<div class="small text-muted mt-1">Optionnel</div>' +
                     '</td>' +
                     '<td>' +
                         '<select class="form-select form-select-sm voyage-activity-included" data-field="included">' +
@@ -4504,6 +4533,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<td><span class="voyage-activity-line-total fw-semibold">0.00</span></td>' +
                     '<td>' +
                         '<div class="d-flex gap-1">' +
+                            '<button type="button" class="btn btn-sm btn-outline-secondary voyage-activity-duplicate" title="Dupliquer"><i class="bx bx-copy"></i></button>' +
                             '<button type="button" class="btn btn-sm btn-outline-primary voyage-activity-edit"><i class="bx bx-pencil"></i></button>' +
                             '<button type="button" class="btn btn-sm btn-outline-danger voyage-activity-remove"><i class="bx bx-trash"></i></button>' +
                         '</div>' +
@@ -4513,10 +4543,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             function appendActivityToVoyage(activity) {
-                if (!activity || !activity.id || hasActivity(activity.id)) {
-                    if (activity && activity.id) {
-                        focusActivityRow(activity.id);
-                    }
+                if (!activity || !activity.id) {
                     return false;
                 }
 
@@ -4532,7 +4559,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 reindexRows();
                 updateEmptyState();
                 refreshCatalog();
-                focusActivityRow(activity.id);
+                focusActivityRow(row);
                 notifyActivitiesChanged();
 
                 return true;
@@ -4578,18 +4605,39 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 catalogBody.innerHTML = current.map(function(item) {
-                    var isSelected = hasActivity(item.id);
                     var highlightClass = Number(item.id) === Number(window.__voyageActivitiesLastCreatedId || 0) ? ' class="table-success"' : '';
                     return '<tr' + highlightClass + '>' +
                         '<td>' + item.id + '</td>' +
                         '<td>' + esc(item.title) + '</td>' +
                         '<td><div class="fw-medium">' + esc(item.activity_type || 'Non renseigné') + '</div><div class="small text-muted">' + esc(item.region_name || item.location_text || 'Non renseignée') + '</div></td>' +
-                        '<td><button type="button" class="btn btn-sm ' + (isSelected ? 'btn-outline-secondary' : 'btn-success') + ' add-catalog-activity" data-activity-id="' + item.id + '" ' + (isSelected ? 'disabled' : '') + '>' + (isSelected ? 'Ajoutée' : 'Ajouter') + '</button></td>' +
+                        '<td><button type="button" class="btn btn-sm btn-success add-catalog-activity" data-activity-id="' + item.id + '">Ajouter</button></td>' +
                     '</tr>';
                 }).join('');
             }
 
             rowsContainer.addEventListener('click', function(e) {
+                var duplicateBtn = e.target.closest('.voyage-activity-duplicate');
+                if (duplicateBtn) {
+                    var sourceRow = duplicateBtn.closest('.voyage-activity-row');
+                    if (!sourceRow) {
+                        return;
+                    }
+                    var clonedRow = sourceRow.cloneNode(true);
+                    var idField = clonedRow.querySelector('[data-field="id"]');
+                    if (idField) {
+                        idField.value = '';
+                    }
+                    var groupUuidField = clonedRow.querySelector('[data-field="group_uuid"]');
+                    if (groupUuidField) {
+                        groupUuidField.value = createGroupUuid();
+                    }
+                    sourceRow.insertAdjacentElement('afterend', clonedRow);
+                    reindexRows();
+                    notifyActivitiesChanged();
+                    focusActivityRow(clonedRow);
+                    return;
+                }
+
                 var removeBtn = e.target.closest('.voyage-activity-remove');
                 if (removeBtn) {
                     var row = removeBtn.closest('.voyage-activity-row');
