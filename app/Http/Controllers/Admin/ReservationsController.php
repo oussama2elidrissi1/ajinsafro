@@ -85,6 +85,7 @@ class ReservationsController extends Controller
                 'tour_name' => $r->offer?->name,
                 'tour_wp_post_id' => $r->offer?->wp_post_id,
                 'wp_tour_post_id' => $r->wp_tour_post_id ?? null,
+                'channel' => $r->channel ?? null,
                 'catalog_source_code' => $r->catalog_source_code ?? null,
                 'voyage_flight_id' => $r->voyage_flight_id ?? null,
                 'prestation_type' => $r->prestation_type,

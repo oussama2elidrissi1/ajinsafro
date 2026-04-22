@@ -84,6 +84,17 @@ class AJTB_Single_Tour_Page
         return (string) $found === $table;
     }
 
+    private static function table_has_column(string $table, string $column): bool
+    {
+        global $wpdb;
+        if (!isset($wpdb) || !is_object($wpdb) || trim($table) === '' || trim($column) === '') {
+            return false;
+        }
+
+        $found = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", $column));
+        return (string) $found === $column;
+    }
+
     /**
      * Find first existing table name from candidates.
      *
@@ -643,7 +654,7 @@ class AJTB_Single_Tour_Page
         $ownership = self::resolve_default_reservation_ownership();
         $auditUserId = !empty($ownership['sales_manager_id']) ? (int) $ownership['sales_manager_id'] : null;
 
-        $inserted = $wpdb->insert($reservations_table, [
+        $reservation_payload = [
             'tour_id' => $voyage_id,
             'voyage_id' => $voyage_id,
             'departure_id' => $departure_id,
@@ -669,7 +680,12 @@ class AJTB_Single_Tour_Page
             'notes' => 'Front booking (WP) - departure_place_id=' . $departure_place_id . ' adults=' . $adults . ' children=' . $children . ($room_id > 0 ? (' room_id=' . $room_id) : '') . ($room_allocation_json !== '' ? (' room_alloc=' . $room_allocation_json) : ''),
             'created_at' => current_time('mysql', true),
             'updated_at' => current_time('mysql', true),
-        ]);
+        ];
+        if (self::table_has_column($reservations_table, 'channel')) {
+            $reservation_payload['channel'] = 'client';
+        }
+
+        $inserted = $wpdb->insert($reservations_table, $reservation_payload);
 
         if (!$inserted) {
             wp_send_json_error([

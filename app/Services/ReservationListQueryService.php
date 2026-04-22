@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\TravelDate;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Source unique pour les listes admin : même périmètre d’accès (agence / portail)
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 final class ReservationListQueryService
 {
+    private ?bool $reservationsHasChannelColumn = null;
+
     public function __construct(
         private BranchScopeService $branchScope,
     ) {}
@@ -128,7 +131,14 @@ final class ReservationListQueryService
         if ($c === 'client') {
             // Include both WP bridge bookings and future Laravel client-portal created bookings.
             $q->where(function (Builder $sub) {
-                $sub->where('catalog_source_code', 'wp_front_v1')
+                if ($this->reservationsHasChannelColumn()) {
+                    $sub->where('channel', 'client')
+                        ->orWhereIn('catalog_source_code', ['wp_front_v1', 'front_kiosk']);
+                } else {
+                    $sub->whereIn('catalog_source_code', ['wp_front_v1', 'front_kiosk']);
+                }
+
+                $sub
                     // Some legacy/front flows may not fill catalog_source_code; rely on linked client portal account.
                     ->orWhereHas('client', fn (Builder $cq) => $cq->whereNotNull('user_id'))
                     ->orWhereHas('creator', fn (Builder $u) => $u->where('user_type', 'client'))
@@ -137,6 +147,12 @@ final class ReservationListQueryService
         }
 
         return $q;
+    }
+
+    private function reservationsHasChannelColumn(): bool
+    {
+        return $this->reservationsHasChannelColumn
+            ??= Schema::connection('mysql')->hasColumn('reservations', 'channel');
     }
 
     /**

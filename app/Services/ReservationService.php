@@ -24,6 +24,8 @@ class ReservationService
 
     private ?bool $reservationsHasRoomSupplementTotalColumn = null;
 
+    private ?bool $reservationsHasChannelColumn = null;
+
     public function __construct(
         private readonly WordPressMediaService $mediaService,
         private readonly PartnerCommissionService $commissionService,
@@ -301,6 +303,10 @@ class ReservationService
         if (array_key_exists('wp_tour_post_id', $data)) {
             $wp = $data['wp_tour_post_id'];
             $reservation->wp_tour_post_id = $wp !== null && $wp !== '' ? (int) $wp : null;
+        }
+        if (array_key_exists('channel', $data) && $this->reservationsHasChannelColumn()) {
+            $channel = $data['channel'];
+            $reservation->channel = $channel !== null && $channel !== '' ? (string) $channel : null;
         }
         if (array_key_exists('catalog_source_code', $data)) {
             $c = $data['catalog_source_code'];
@@ -939,5 +945,11 @@ class ReservationService
     {
         return $this->reservationsHasRoomSupplementTotalColumn
             ??= Schema::connection('mysql')->hasColumn('reservations', 'room_supplement_total');
+    }
+
+    private function reservationsHasChannelColumn(): bool
+    {
+        return $this->reservationsHasChannelColumn
+            ??= Schema::connection('mysql')->hasColumn('reservations', 'channel');
     }
 }

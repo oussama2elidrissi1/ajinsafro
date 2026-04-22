@@ -69,6 +69,7 @@ class VoyageReservationController extends Controller
             'passengers' => $data['passengers'] ?? [],
             'status' => Reservation::STATUS_PENDING,
             'wp_tour_post_id' => $voyage->wp_post_id ? (int) $voyage->wp_post_id : null,
+            'channel' => 'client',
             'catalog_source_code' => 'front_kiosk',
             'extras_json' => $data['extras_json'] ?? null,
         ];
