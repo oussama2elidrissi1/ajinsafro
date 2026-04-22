@@ -28,6 +28,8 @@ final class ReservationListQueryService
             'tour_id' => (int) ($context['tour_id'] ?? 0),
             'travel_date_id' => (int) ($context['travel_date_id'] ?? 0),
             'departure_id' => (int) ($context['departure_id'] ?? 0),
+            'channel' => trim((string) ($context['channel'] ?? '')),
+            'catalog_source_code' => trim((string) ($context['catalog_source_code'] ?? '')),
             'shared_operational_aggregate' => ! empty($context['shared_operational_aggregate']),
         ];
 

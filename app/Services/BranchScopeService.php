@@ -136,7 +136,7 @@ class BranchScopeService
     /**
      * Ne pas restreindre par agence : stats catalogue, ou liste filtrée par voyage / date / départ.
      *
-     * @param  array{tour_id?: int|null, travel_date_id?: int|null, departure_id?: int|null, shared_operational_aggregate?: bool}  $context
+     * @param  array{tour_id?: int|null, travel_date_id?: int|null, departure_id?: int|null, channel?: string|null, catalog_source_code?: string|null, shared_operational_aggregate?: bool}  $context
      */
     public function shouldBypassBranchScopeForSharedOperationalView(User $user, array $context): bool
     {
@@ -153,8 +153,14 @@ class BranchScopeService
         $tourId = (int) ($context['tour_id'] ?? 0);
         $travelDateId = (int) ($context['travel_date_id'] ?? 0);
         $departureId = (int) ($context['departure_id'] ?? 0);
+        $channel = trim((string) ($context['channel'] ?? ''));
+        $catalogSourceCode = trim((string) ($context['catalog_source_code'] ?? ''));
 
-        return $tourId > 0 || $travelDateId > 0 || $departureId > 0;
+        return $tourId > 0
+            || $travelDateId > 0
+            || $departureId > 0
+            || $channel === 'client'
+            || in_array($catalogSourceCode, ['wp_front_v1', 'front_kiosk'], true);
     }
 
     /**
@@ -175,7 +181,7 @@ class BranchScopeService
     /**
      * Scope les réservations selon le rôle / agence de l'utilisateur.
      *
-     * @param  array{tour_id?: int|null, travel_date_id?: int|null, departure_id?: int|null, shared_operational_aggregate?: bool}  $context
+     * @param  array{tour_id?: int|null, travel_date_id?: int|null, departure_id?: int|null, channel?: string|null, catalog_source_code?: string|null, shared_operational_aggregate?: bool}  $context
      */
     public function scopeReservations(Builder $query, User $user, array $context = []): Builder
     {
@@ -516,6 +522,7 @@ class BranchScopeService
             || (int) ($context['travel_date_id'] ?? 0) > 0
             || (int) ($context['voyage_flight_id'] ?? 0) > 0
             || (int) ($context['tour_hotel_id'] ?? 0) > 0
+            || trim((string) ($context['channel'] ?? '')) === 'client'
             || trim((string) ($context['catalog_source_code'] ?? '')) !== '';
     }
 

@@ -1020,16 +1020,17 @@ class ReservationsController extends Controller
         }
 
         $travelDateFilter = (int) $request->query('travel_date_id', 0);
+        $channel = (string) $request->query('channel', '');
         $base = $this->reservationListQuery->baseQuery($user, [
             'tour_id' => $tourFilter > 0 ? $tourFilter : 0,
             'travel_date_id' => $travelDateFilter > 0 ? $travelDateFilter : 0,
+            'channel' => $channel !== '' ? $channel : null,
         ]);
 
         $this->reservationListQuery->applyTourFilter($base, $tourFilter);
 
         $this->reservationListQuery->applyTravelDateFilter($base, $travelDateFilter > 0 ? $travelDateFilter : null);
 
-        $channel = (string) $request->query('channel', '');
         $this->reservationListQuery->applyChannelFilter($base, $channel !== '' ? $channel : null);
 
         $search = (string) $request->query('search', '');
