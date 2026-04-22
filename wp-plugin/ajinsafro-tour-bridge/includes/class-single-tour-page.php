@@ -285,6 +285,31 @@ class AJTB_Single_Tour_Page
     }
 
     /**
+     * Pick a default branch/sales manager for web bookings.
+     *
+     * @return array{branch_id: int|null, sales_manager_id: int|null}
+     */
+    private static function resolve_default_reservation_ownership(): array
+    {
+        global $wpdb;
+        $branches = 'branches';
+        $branchId = (int) $wpdb->get_var("SELECT id FROM {$branches} WHERE COALESCE(is_active, 1) = 1 ORDER BY id ASC LIMIT 1");
+        if ($branchId <= 0) {
+            $branchId = (int) $wpdb->get_var("SELECT id FROM {$branches} ORDER BY id ASC LIMIT 1");
+        }
+        $branchId = $branchId > 0 ? $branchId : null;
+
+        $salesManagerId = null;
+        if ($branchId) {
+            $sm = $wpdb->get_var($wpdb->prepare("SELECT manager_user_id FROM {$branches} WHERE id = %d LIMIT 1", $branchId));
+            $sm = (int) $sm;
+            $salesManagerId = $sm > 0 ? $sm : null;
+        }
+
+        return ['branch_id' => $branchId, 'sales_manager_id' => $salesManagerId];
+    }
+
+    /**
      * Route single st_tours requests to the clean V1 template.
      */
     public static function override_template(string $template): string
@@ -614,11 +639,15 @@ class AJTB_Single_Tour_Page
             }
         }
 
+        $ownership = self::resolve_default_reservation_ownership();
+
         $inserted = $wpdb->insert($reservations_table, [
             'tour_id' => $voyage_id,
             'voyage_id' => $voyage_id,
             'departure_id' => $departure_id,
             'travel_date_id' => $travel_date_id,
+            'branch_id' => $ownership['branch_id'],
+            'sales_manager_id' => $ownership['sales_manager_id'],
             'client_mode' => $client_mode,
             'client_external_id' => $client_external_id ?: null,
             'client_first_name' => $client_first_name ?: null,
