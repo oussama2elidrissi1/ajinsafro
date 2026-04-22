@@ -107,6 +107,8 @@ final class ReservationListQueryService
             // Include both WP bridge bookings and future Laravel client-portal created bookings.
             $q->where(function (Builder $sub) {
                 $sub->where('catalog_source_code', 'wp_front_v1')
+                    // Some legacy/front flows may not fill catalog_source_code; rely on linked client portal account.
+                    ->orWhereHas('client', fn (Builder $cq) => $cq->whereNotNull('user_id'))
                     ->orWhereHas('creator', fn (Builder $u) => $u->where('user_type', 'client'))
                     ->orWhereHas('createdBy', fn (Builder $u) => $u->where('user_type', 'client'));
             });
