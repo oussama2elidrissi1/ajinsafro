@@ -1046,6 +1046,39 @@ class ReservationsController extends Controller
         }
         $this->reservationListQuery->applyStatusFilter($base, $statusParam !== '' ? $statusParam : null);
 
+        // Optional SQL debug for production diagnostics:
+        // /admin/reservations?...&sql_debug=1
+        // Logs query, bindings, and count to laravel.log (no response change).
+        if ($request->query('sql_debug') === '1'
+            && $user
+            && ($user->is_admin || $user->hasRole(BranchScopeService::ROLE_SUPER_ADMIN) || $user->hasRole(BranchScopeService::ROLE_SIEGE_ADMIN))
+        ) {
+            try {
+                $sql = $base->toSql();
+                $bindings = $base->getBindings();
+                $count = (clone $base)->count();
+
+                Log::debug('reservations.hub.sql_debug', [
+                    'url' => $request->fullUrl(),
+                    'filters' => [
+                        'voyage_id' => $tourFilter,
+                        'travel_date_id' => $travelDateFilter,
+                        'channel' => $channel,
+                        'status' => $statusParam,
+                        'search' => $search,
+                    ],
+                    'sql' => $sql,
+                    'bindings' => $bindings,
+                    'count' => $count,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('reservations.hub.sql_debug_failed', [
+                    'url' => $request->fullUrl(),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return $base;
     }
 
