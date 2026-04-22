@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Reservation;
+use App\Models\TravelDate;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -63,7 +64,28 @@ final class ReservationListQueryService
     public function applyTravelDateFilter(Builder $q, ?int $travelDateId): Builder
     {
         if ($travelDateId !== null && $travelDateId > 0) {
-            $q->where('travel_date_id', $travelDateId);
+            // Some WP installs have duplicate aj_travel_dates rows for the same travel_id + date.
+            // To keep hub/workspace filters consistent, expand "travel_date_id" filter to the full set
+            // of IDs that represent the same departure date.
+            $td = TravelDate::query()->find($travelDateId);
+            if ($td && $td->date && (int) ($td->travel_id ?? 0) > 0) {
+                $ids = TravelDate::query()
+                    ->where('travel_id', (int) $td->travel_id)
+                    ->whereDate('date', $td->date->toDateString())
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->filter(fn ($id) => $id > 0)
+                    ->unique()
+                    ->values()
+                    ->all();
+                if (count($ids) > 1) {
+                    $q->whereIn('travel_date_id', $ids);
+                } else {
+                    $q->where('travel_date_id', $travelDateId);
+                }
+            } else {
+                $q->where('travel_date_id', $travelDateId);
+            }
         }
 
         return $q;
