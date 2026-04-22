@@ -525,8 +525,11 @@ class BranchScopeService
      */
     private function shouldSkipPortalOwnershipReservationScope(User $user): bool
     {
+        // Managers should see the full branch portfolio (same expectation as branch admin),
+        // otherwise web/client-created reservations (no explicit agent ownership) become invisible in hub lists.
         if ($user->isManager()) {
-            return false;
+            $branchIds = $this->visibleBranchIds($user);
+            return $branchIds !== null && $branchIds !== [];
         }
 
         // Responsable d’agence : tout le portefeuille de l’agence (même si le shell portail évolue).
