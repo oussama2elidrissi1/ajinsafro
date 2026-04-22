@@ -91,6 +91,31 @@ final class ReservationListQueryService
     }
 
     /**
+     * Filtre "canal" (ex: réservations créées par les clients portail).
+     *
+     * @param  Builder<\App\Models\Reservation>  $q
+     * @return Builder<\App\Models\Reservation>
+     */
+    public function applyChannelFilter(Builder $q, ?string $channel): Builder
+    {
+        $c = $channel !== null ? trim($channel) : '';
+        if ($c === '') {
+            return $q;
+        }
+
+        if ($c === 'client') {
+            // Include both WP bridge bookings and future Laravel client-portal created bookings.
+            $q->where(function (Builder $sub) {
+                $sub->where('catalog_source_code', 'wp_front_v1')
+                    ->orWhereHas('creator', fn (Builder $u) => $u->where('user_type', 'client'))
+                    ->orWhereHas('createdBy', fn (Builder $u) => $u->where('user_type', 'client'));
+            });
+        }
+
+        return $q;
+    }
+
+    /**
      * @param  Builder<\App\Models\Reservation>  $q
      * @return Builder<\App\Models\Reservation>
      */

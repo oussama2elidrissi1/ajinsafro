@@ -1028,6 +1028,9 @@ class ReservationsController extends Controller
 
         $this->reservationListQuery->applyTravelDateFilter($base, $travelDateFilter > 0 ? $travelDateFilter : null);
 
+        $channel = (string) $request->query('channel', '');
+        $this->reservationListQuery->applyChannelFilter($base, $channel !== '' ? $channel : null);
+
         $search = (string) $request->query('search', '');
         $this->reservationListQuery->applyClientSearch($base, $search);
 

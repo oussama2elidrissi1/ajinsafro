@@ -127,6 +127,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('dashboard/alertes', [DashboardController::class, 'page'])->name('dashboard.alertes')->defaults('submenu', 'alertes');
 
         Route::get('reservations', [ReservationsController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/clients', function (\Illuminate\Http\Request $request) {
+            $query = $request->query();
+            $query['channel'] = 'client';
+            return redirect()->route('admin.reservations.index', $query);
+        })->name('reservations.clients');
         Route::get('reservations/toutes', [ReservationsController::class, 'page'])->name('reservations.toutes')->defaults('submenu', 'toutes');
         Route::get('reservations/en-attente', [ReservationsController::class, 'page'])->name('reservations.en-attente')->defaults('submenu', 'en-attente');
         Route::get('reservations/confirmees', [ReservationsController::class, 'page'])->name('reservations.confirmees')->defaults('submenu', 'confirmees');

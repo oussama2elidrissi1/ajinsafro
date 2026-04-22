@@ -677,6 +677,9 @@
             <a href="{{ route('admin.reservations.index') }}" class="ws-hero__btn ws-hero__btn--primary">
                 <i class="fas fa-list-ul" aria-hidden="true"></i> Liste des réservations
             </a>
+            <a href="{{ route('admin.reservations.clients') }}" class="ws-hero__btn ws-hero__btn--outline">
+                <i class="fas fa-user" aria-hidden="true"></i> Réservations clients
+            </a>
         </div>
     </header>
 
