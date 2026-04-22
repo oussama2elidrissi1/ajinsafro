@@ -513,6 +513,11 @@ class BranchScopeService
 
     private function shouldUseBranchWideFilteredReservationVisibility(User $user, array $context): bool
     {
+        if (trim((string) ($context['channel'] ?? '')) === 'client'
+            || trim((string) ($context['catalog_source_code'] ?? '')) !== '') {
+            return true;
+        }
+
         $branchIds = $this->visibleBranchIds($user);
         if ($branchIds === [] || $branchIds === null) {
             return false;
@@ -521,9 +526,7 @@ class BranchScopeService
         return (int) ($context['tour_id'] ?? 0) > 0
             || (int) ($context['travel_date_id'] ?? 0) > 0
             || (int) ($context['voyage_flight_id'] ?? 0) > 0
-            || (int) ($context['tour_hotel_id'] ?? 0) > 0
-            || trim((string) ($context['channel'] ?? '')) === 'client'
-            || trim((string) ($context['catalog_source_code'] ?? '')) !== '';
+            || (int) ($context['tour_hotel_id'] ?? 0) > 0;
     }
 
     /**
