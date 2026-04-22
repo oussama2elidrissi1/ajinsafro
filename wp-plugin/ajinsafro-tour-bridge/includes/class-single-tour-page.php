@@ -594,7 +594,8 @@ class AJTB_Single_Tour_Page
             ], 500);
         }
         $voyage_id = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$voyages_table} WHERE wp_post_id = %d ORDER BY id DESC LIMIT 1",
+            // IMPORTANT: use canonical Laravel voyage row (smallest id) to align all admin lists/filters.
+            "SELECT id FROM {$voyages_table} WHERE wp_post_id = %d ORDER BY id ASC LIMIT 1",
             $tour_id
         ));
         if ($voyage_id <= 0) {
@@ -652,6 +653,7 @@ class AJTB_Single_Tour_Page
             'agent_id' => $auditUserId,
             'created_by' => $auditUserId,
             'created_by_user_id' => $auditUserId,
+            'prestation_type' => 'package',
             'client_mode' => $client_mode,
             'client_external_id' => $client_external_id ?: null,
             'client_first_name' => $client_first_name ?: null,
