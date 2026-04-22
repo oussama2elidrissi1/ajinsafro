@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Reservation;
 use App\Models\TravelDate;
 use App\Models\User;
+use App\Models\Voyage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
@@ -50,12 +51,36 @@ final class ReservationListQueryService
             return $q;
         }
 
+        // Primary: Laravel voyage ids (including duplicates sharing the same wp_post_id).
         $ids = ReservationLinkResolver::physicalTourIdsForVoyage($tourId);
-        if (count($ids) === 1) {
-            $q->where('tour_id', $ids[0]);
-        } else {
-            $q->whereIn('tour_id', $ids);
+
+        // Fallback: some links/pages may pass wp_post_id instead of voyages.id.
+        // In that case, include all voyages that map to that wp_post_id.
+        $voyage = Voyage::query()->find($tourId);
+        if (! $voyage) {
+            $wpPostId = $tourId;
+            $ids = Voyage::query()
+                ->where('wp_post_id', $wpPostId)
+                ->orderBy('id')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->values()
+                ->all();
         }
+
+        // Also include wp_tour_post_id match when available (legacy reservations storing only wp id).
+        $wpFallback = $voyage?->wp_post_id;
+        $q->where(function (Builder $sub) use ($ids, $wpFallback) {
+            if (count($ids) === 1) {
+                $sub->where('tour_id', $ids[0]);
+            } elseif ($ids !== []) {
+                $sub->whereIn('tour_id', $ids);
+            }
+            if ($wpFallback && (int) $wpFallback > 0) {
+                $sub->orWhere('wp_tour_post_id', (int) $wpFallback);
+            }
+        });
 
         return $q;
     }
