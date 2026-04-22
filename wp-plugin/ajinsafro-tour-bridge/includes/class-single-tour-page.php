@@ -640,6 +640,7 @@ class AJTB_Single_Tour_Page
         }
 
         $ownership = self::resolve_default_reservation_ownership();
+        $auditUserId = !empty($ownership['sales_manager_id']) ? (int) $ownership['sales_manager_id'] : null;
 
         $inserted = $wpdb->insert($reservations_table, [
             'tour_id' => $voyage_id,
@@ -648,6 +649,9 @@ class AJTB_Single_Tour_Page
             'travel_date_id' => $travel_date_id,
             'branch_id' => $ownership['branch_id'],
             'sales_manager_id' => $ownership['sales_manager_id'],
+            'agent_id' => $auditUserId,
+            'created_by' => $auditUserId,
+            'created_by_user_id' => $auditUserId,
             'client_mode' => $client_mode,
             'client_external_id' => $client_external_id ?: null,
             'client_first_name' => $client_first_name ?: null,
