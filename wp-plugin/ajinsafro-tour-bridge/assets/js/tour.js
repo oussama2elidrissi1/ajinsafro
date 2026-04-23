@@ -1514,6 +1514,61 @@
         if (!root) {
             return;
         }
+        var stepLinks = Array.prototype.slice.call(document.querySelectorAll(".ajtb-v1-recap-step"));
+        var stepTargets = stepLinks.map(function (link) {
+            var href = link.getAttribute("href") || "";
+            if (!href || href.charAt(0) !== "#") {
+                return null;
+            }
+            var target = document.querySelector(href);
+            if (!target) {
+                return null;
+            }
+            return { link: link, target: target };
+        }).filter(Boolean);
+
+        function setActiveStep(targetId) {
+            stepLinks.forEach(function (link) {
+                var href = link.getAttribute("href") || "";
+                link.classList.toggle("is-active", href === ("#" + targetId));
+            });
+        }
+
+        stepLinks.forEach(function (link) {
+            link.addEventListener("click", function (event) {
+                var href = link.getAttribute("href") || "";
+                if (!href || href.charAt(0) !== "#") {
+                    return;
+                }
+                var target = document.querySelector(href);
+                if (!target) {
+                    return;
+                }
+                event.preventDefault();
+                setActiveStep(String(target.id || ""));
+                target.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        });
+
+        if (stepTargets.length) {
+            var onScroll = function () {
+                var viewportOffset = 170;
+                var current = stepTargets[0];
+                stepTargets.forEach(function (entry) {
+                    var top = entry.target.getBoundingClientRect().top;
+                    if (top <= viewportOffset) {
+                        current = entry;
+                    }
+                });
+                if (current && current.target && current.target.id) {
+                    setActiveStep(String(current.target.id));
+                }
+            };
+            window.addEventListener("scroll", onScroll, { passive: true });
+            window.addEventListener("resize", onScroll, { passive: true });
+            onScroll();
+        }
+
         var tourId = parseInt(root.getAttribute("data-tour-id") || "0", 10) || 0;
         var hint = document.querySelector("[data-ajtb-recap-hint]");
         var payload = null;
@@ -1553,6 +1608,18 @@
             var el = document.querySelector("[data-ajtb-recap-field='" + name + "']");
             if (!el) { return; }
             el.textContent = (value === null || value === undefined || String(value).trim() === "") ? "—" : String(value);
+        }
+
+        function setRowVisibility(name, visible) {
+            var row = document.querySelector("[data-ajtb-recap-row='" + name + "']");
+            if (!row) {
+                return;
+            }
+            if (visible) {
+                row.removeAttribute("hidden");
+            } else {
+                row.setAttribute("hidden", "");
+            }
         }
 
         function computeTotalFromState(state) {
@@ -1609,7 +1676,9 @@
                 });
             }
 
-            var total = adults * adultUnit + children * childUnit + activitiesTotal;
+            var adultSubtotal = adults * adultUnit;
+            var childSubtotal = children * childUnit;
+            var total = adultSubtotal + childSubtotal + activitiesTotal;
             var roomTotal = 0;
             (function computeRoomSupplementTotal() {
                 var rooms = Array.isArray(state.availableRoomsCurrent) ? state.availableRoomsCurrent : [];
@@ -1695,7 +1764,19 @@
                 total += extrasTotal;
             }
             if (!isFinite(total) || total < 0) { total = 0; }
-            return { total: total, currency: currency, adultUnit: adultUnit, childUnit: childUnit, activitiesTotal: activitiesTotal, roomTotal: roomTotal, extrasTotal: extrasTotal };
+            return {
+                total: total,
+                currency: currency,
+                adultUnit: adultUnit,
+                childUnit: childUnit,
+                adults: adults,
+                children: children,
+                adultSubtotal: adultSubtotal,
+                childSubtotal: childSubtotal,
+                activitiesTotal: activitiesTotal,
+                roomTotal: roomTotal,
+                extrasTotal: extrasTotal,
+            };
         }
 
         function syncFormFromPayload(state) {
@@ -1774,14 +1855,16 @@
             setField("date", state.date && state.date.label ? state.date.label : "—");
 
             setField("total", formatMoney(calc.total));
+            setField("totalLine", formatMoney(calc.total));
             setField("currency", calc.currency);
-            var detail = [];
-            if (calc.adultUnit > 0) { detail.push("Adulte: " + formatMoney(calc.adultUnit) + " " + calc.currency); }
-            if (state.guests && state.guests.children > 0) { detail.push("Enfant: " + formatMoney(calc.childUnit) + " " + calc.currency); }
-            if (calc.activitiesTotal > 0) { detail.push("Activités: +" + formatMoney(calc.activitiesTotal) + " " + calc.currency); }
-            if (calc.roomTotal > 0) { detail.push("Chambre: +" + formatMoney(calc.roomTotal) + " " + calc.currency); }
-            if (calc.extrasTotal > 0) { detail.push("Extras: +" + formatMoney(calc.extrasTotal) + " " + calc.currency); }
-            setField("priceDetail", detail.length ? detail.join(" • ") : "—");
+            setField("currencyLine", calc.currency);
+            setField("priceAdults", formatMoney(calc.adultSubtotal) + " " + calc.currency);
+            setField("priceChildren", formatMoney(calc.childSubtotal) + " " + calc.currency);
+            setField("priceActivities", formatMoney(calc.activitiesTotal) + " " + calc.currency);
+            setField("priceExtras", formatMoney(calc.extrasTotal) + " " + calc.currency);
+            setField("priceRoom", formatMoney(calc.roomTotal) + " " + calc.currency);
+            setRowVisibility("children", calc.children > 0);
+            setRowVisibility("room", calc.roomTotal > 0);
         }
 
         // Initial render from payload and hydrate controls.
@@ -2133,19 +2216,6 @@
         // Rooms are managed by allocation stepper in renderRooms()
 
         // (Activities are managed per traveller in "Client & voyageurs")
-
-        var confirmBtn = document.querySelector("[data-ajtb-recap-action='confirm']");
-        if (confirmBtn) {
-            confirmBtn.addEventListener("click", function () {
-                try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
-                var finalize = document.getElementById("ajtb-v1-recap-finalize");
-                if (finalize) {
-                    finalize.scrollIntoView({ behavior: "smooth", block: "start" });
-                    var first = document.getElementById("ajtb-client-first");
-                    if (first) { first.focus(); }
-                }
-            });
-        }
 
         (function bindFinalize() {
             var finalize = document.getElementById("ajtb-v1-recap-finalize");

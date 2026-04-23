@@ -1861,6 +1861,102 @@ body.ajtb-modal-open {
     font-weight: 600;
 }
 
+.ajtb-v1-recap-steps {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid #d5e5f7;
+    background: linear-gradient(180deg, #fafdff, #f2f8ff);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.ajtb-v1-recap-step {
+    min-height: 56px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid #d9e6f5;
+    background: #ffffff;
+    color: #17304d;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.ajtb-v1-recap-step:hover {
+    border-color: #bdd7f3;
+    box-shadow: 0 8px 16px rgba(14, 58, 90, 0.1);
+    transform: translateY(-1px);
+}
+
+.ajtb-v1-recap-step-index {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eaf4ff;
+    border: 1px solid #c8def6;
+    color: #0f4f79;
+    font-size: 12px;
+    font-weight: 900;
+    flex: 0 0 auto;
+}
+
+.ajtb-v1-recap-step-label {
+    color: #1f3652;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.ajtb-v1-recap-step.is-active {
+    border-color: #94c6ef;
+    background: linear-gradient(180deg, #f7fbff, #edf6ff);
+    box-shadow: 0 10px 18px rgba(15, 79, 121, 0.12);
+}
+
+.ajtb-v1-recap-step.is-active .ajtb-v1-recap-step-index {
+    color: #fff;
+    border-color: transparent;
+    background: linear-gradient(180deg, #1285f4, #0061e4);
+}
+
+.ajtb-v1-recap-wizard {
+    display: grid;
+    gap: 16px;
+}
+
+.ajtb-v1-recap-panel {
+    display: grid;
+    gap: 14px;
+}
+
+.ajtb-v1-recap-panel[hidden] {
+    display: none !important;
+}
+
+.ajtb-v1-recap-step-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.ajtb-v1-recap-step-actions--final {
+    justify-content: space-between;
+    margin-top: 14px;
+}
+
+.ajtb-v1-recap-wizard .ajtb-v1-recap-price {
+    position: static;
+    top: auto;
+}
+
 .ajtb-v1-recap-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 380px;
@@ -1914,6 +2010,16 @@ body.ajtb-modal-open {
     color: #17304d;
     font-size: 18px;
     font-weight: 800;
+}
+
+.ajtb-v1-recap-step-kicker {
+    display: inline-block;
+    margin-right: 8px;
+    color: #0f5e8a;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .ajtb-v1-recap-tour-points {
@@ -2070,44 +2176,94 @@ body.ajtb-modal-open {
 .ajtb-v1-recap-price {
     position: sticky;
     top: var(--ajtb-v1-rail-top);
+    border: 1px solid #bcdaf5;
+    box-shadow: 0 18px 32px rgba(14, 58, 90, 0.14);
+    background: linear-gradient(180deg, #ffffff 0%, #f5faff 100%);
 }
 
 .ajtb-v1-recap-total {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 12px 12px 14px;
+    display: grid;
+    gap: 6px;
+    padding: 18px;
     border-radius: 16px;
-    border: 1px solid #d9e6f5;
-    background: linear-gradient(180deg, #fbfdff, #f3f9ff);
+    border: 1px solid #9ecaf0;
+    background: radial-gradient(circle at 90% 10%, rgba(29, 142, 255, 0.15), transparent 46%), linear-gradient(160deg, #0f4f79, #0e6ba4);
+    box-shadow: 0 16px 28px rgba(12, 78, 124, 0.22);
 }
 
 .ajtb-v1-recap-total span {
-    color: #6a7d97;
-    font-size: 11px;
+    color: rgba(232, 243, 255, 0.95);
+    font-size: 12px;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
 
 .ajtb-v1-recap-total strong {
-    color: #0f2a46;
-    font-size: 22px;
+    color: #ffffff;
+    font-size: clamp(34px, 3vw, 44px);
     font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
 }
 
 .ajtb-v1-recap-total small {
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 900;
-    color: #2f4c70;
+    color: #d8ecff;
 }
 
 .ajtb-v1-recap-price-detail {
-    margin-top: 10px;
-    color: #60718b;
-    font-size: 12px;
-    line-height: 1.6;
+    margin-top: 14px;
+    border: 1px solid #d4e5f7;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 12px;
+    display: grid;
+    gap: 8px;
+}
+
+.ajtb-v1-recap-price-line {
+    padding: 10px 8px;
+    border-radius: 10px;
+    background: #f8fbff;
+    border: 1px solid #e2ecf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.ajtb-v1-recap-price-line span {
+    color: #415b79;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.ajtb-v1-recap-price-line strong {
+    color: #123150;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.ajtb-v1-recap-price-line--total {
+    border-color: #9ecaf0;
+    background: linear-gradient(180deg, #eaf5ff, #dff0ff);
+}
+
+.ajtb-v1-recap-price-line--total span {
+    color: #0f4f79;
+    font-size: 14px;
+}
+
+.ajtb-v1-recap-price-line--total strong {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.ajtb-v1-recap-price-line--total small {
+    font-size: 13px;
+    color: #1d4f78;
 }
 
 .ajtb-v1-recap-actions {
@@ -2523,6 +2679,9 @@ body.ajtb-modal-open {
 }
 
 @media (max-width: 1200px) {
+    .ajtb-v1-recap-steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .ajtb-v1-recap-grid {
         grid-template-columns: 1fr;
     }
@@ -2535,6 +2694,18 @@ body.ajtb-modal-open {
 }
 
 @media (max-width: 767px) {
+    .ajtb-v1-recap-steps {
+        grid-template-columns: 1fr;
+    }
+    .ajtb-v1-recap-step-actions {
+        flex-direction: column;
+    }
+    .ajtb-v1-recap-step-actions .ajtb-v1-recap-btn {
+        width: 100%;
+    }
+    .ajtb-v1-recap-step-actions--final {
+        justify-content: flex-start;
+    }
     .ajtb-v1-recap-tour {
         grid-template-columns: 1fr;
     }
