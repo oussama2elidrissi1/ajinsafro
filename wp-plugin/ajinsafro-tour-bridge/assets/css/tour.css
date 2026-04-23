@@ -2294,6 +2294,11 @@ body.ajtb-modal-open {
     box-shadow: 0 14px 22px rgba(0, 95, 247, 0.22);
 }
 
+.ajtb-v1-recap-submit {
+    width: 100%;
+    margin-top: 12px;
+}
+
 .ajtb-v1-recap-btn--ghost {
     color: #0f4f79;
     background: #eef7ff;

@@ -248,9 +248,6 @@ get_header();
                             </div>
                             <div id="ajtb-recap-companions-list" data-ajtb-companions></div>
                         </div>
-
-                        <button type="button" class="ajtb-v1-recap-btn ajtb-v1-recap-btn--primary" data-ajtb-recap-action="final-submit">Confirmer la réservation</button>
-                        <p class="ajtb-v1-recap-note">La réservation sera créée en statut “pending” dans Laravel.</p>
                     </article>
 
                     <article class="ajtb-v1-card ajtb-v1-recap-details">
@@ -318,6 +315,8 @@ get_header();
                         </div>
 
                         <p class="ajtb-v1-recap-note">Vérifiez le total avant de confirmer.</p>
+                        <button type="button" class="ajtb-v1-recap-btn ajtb-v1-recap-btn--primary ajtb-v1-recap-submit" data-ajtb-recap-action="final-submit">Confirmer la réservation</button>
+                        <p class="ajtb-v1-recap-note">La réservation sera créée en statut “pending” dans Laravel.</p>
                     </article>
                 </aside>
             </section>
