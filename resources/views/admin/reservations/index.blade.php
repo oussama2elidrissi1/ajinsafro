@@ -122,6 +122,8 @@
                     <select name="status" class="form-select form-select-sm">
                         <option value="">Tous</option>
                         <option value="{{ \App\Models\Reservation::STATUS_EN_COURS }}" @selected($filterStatus === \App\Models\Reservation::STATUS_EN_COURS)>En attente</option>
+                        <option value="{{ \App\Models\Reservation::STATUS_SHARED_ROOM_PENDING }}" @selected($filterStatus === \App\Models\Reservation::STATUS_SHARED_ROOM_PENDING)>En attente de jumelage demi-double</option>
+                        <option value="{{ \App\Models\Reservation::STATUS_SHARED_ROOM_PAIRED }}" @selected($filterStatus === \App\Models\Reservation::STATUS_SHARED_ROOM_PAIRED)>Demi-double jumelée</option>
                         <option value="{{ \App\Models\Reservation::STATUS_VALIDEE }}" @selected($filterStatus === \App\Models\Reservation::STATUS_VALIDEE)>Confirmée</option>
                         <option value="{{ \App\Models\Reservation::STATUS_ANNULEE }}" @selected($filterStatus === \App\Models\Reservation::STATUS_ANNULEE)>Annulée</option>
                     </select>

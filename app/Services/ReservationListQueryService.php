@@ -203,6 +203,8 @@ final class ReservationListQueryService
             Reservation::STATUS_DRAFT,
             Reservation::STATUS_PENDING,
             Reservation::STATUS_OPTION,
+            Reservation::STATUS_SHARED_ROOM_PENDING,
+            Reservation::STATUS_SHARED_ROOM_PAIRED,
             Reservation::STATUS_CONFIRMED,
             Reservation::STATUS_PARTIALLY_PAID,
             Reservation::STATUS_PAID,
@@ -233,7 +235,9 @@ final class ReservationListQueryService
 
         return [
             'total' => (int) $rows->sum(),
-            'en_cours' => (int) ($rows[Reservation::STATUS_EN_COURS] ?? 0),
+            'en_cours' => (int) (($rows[Reservation::STATUS_EN_COURS] ?? 0)
+                + ($rows[Reservation::STATUS_SHARED_ROOM_PENDING] ?? 0)
+                + ($rows[Reservation::STATUS_SHARED_ROOM_PAIRED] ?? 0)),
             'validee' => (int) ($rows[Reservation::STATUS_VALIDEE] ?? 0),
             'annulee' => (int) ($rows[Reservation::STATUS_ANNULEE] ?? 0),
         ];

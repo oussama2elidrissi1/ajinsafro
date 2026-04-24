@@ -274,6 +274,8 @@ class Reservation extends Model
             self::STATUS_VALIDEE => 'Confirmée',
             self::STATUS_ANNULEE => 'Annulée',
             self::STATUS_PENDING => 'En attente',
+            self::STATUS_SHARED_ROOM_PENDING => 'En attente de jumelage demi-double',
+            self::STATUS_SHARED_ROOM_PAIRED => 'Demi-double jumelée',
             self::STATUS_CONFIRMED => 'Confirmée',
             self::STATUS_CANCELLED => 'Annulée',
             default => (string) $this->status,

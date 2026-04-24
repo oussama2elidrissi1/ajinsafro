@@ -29,8 +29,8 @@ final class AdminReservationFlash
             Reservation::STATUS_EN_COURS => 'En attente',
             Reservation::STATUS_VALIDEE => 'Confirmée',
             Reservation::STATUS_ANNULEE => 'Annulée',
-            Reservation::STATUS_SHARED_ROOM_PENDING => 'Chambre partagée (en attente)',
-            Reservation::STATUS_SHARED_ROOM_PAIRED => 'Chambre partagée (appariée)',
+            Reservation::STATUS_SHARED_ROOM_PENDING => 'En attente de jumelage demi-double',
+            Reservation::STATUS_SHARED_ROOM_PAIRED => 'Demi-double jumelée',
             default => (string) $reservation->status,
         };
 

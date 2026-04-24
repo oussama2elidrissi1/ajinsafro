@@ -2555,6 +2555,10 @@ body.ajtb-modal-open {
     background: #ffffff;
 }
 
+.ajtb-v1-room-card {
+    box-shadow: 0 10px 18px rgba(16, 54, 92, 0.05);
+}
+
 .ajtb-v1-room-alloc-row strong {
     display: block;
     font-size: 13px;
@@ -2567,6 +2571,19 @@ body.ajtb-modal-open {
     color: #6b87a4;
     font-weight: 700;
     margin-top: 2px;
+}
+
+.ajtb-v1-room-alloc-row .ajtb-v1-room-pending {
+    display: inline-flex;
+    width: fit-content;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #f0c995;
+    background: #fff4e8;
+    color: #9e5300;
+    font-size: 11px;
+    font-weight: 900;
 }
 
 .ajtb-v1-room-stepper {

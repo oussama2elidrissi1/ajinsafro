@@ -203,7 +203,7 @@ get_header();
                     </article>
 
                     <article class="ajtb-v1-card ajtb-v1-recap-room">
-                        <h2 class="ajtb-v1-recap-section-title">Choisissez votre chambre</h2>
+                        <h2 class="ajtb-v1-recap-section-title">Répartition des chambres</h2>
                         <div id="ajtb-v1-room-picker" class="ajtb-v1-room-alloc">
                             <p class="ajtb-v1-recap-muted">Sélectionnez une date et une ville de départ pour voir les chambres disponibles.</p>
                         </div>
@@ -289,7 +289,7 @@ get_header();
 
                         <div class="ajtb-v1-recap-price-detail" data-ajtb-recap-field="priceDetail">
                             <div class="ajtb-v1-recap-price-line">
-                                <span>Adulte</span>
+                                <span>Adultes</span>
                                 <strong data-ajtb-recap-field="priceAdults">—</strong>
                             </div>
                             <div class="ajtb-v1-recap-price-line" data-ajtb-recap-row="children" hidden>
@@ -308,6 +308,10 @@ get_header();
                                 <span>Suppléments chambre</span>
                                 <strong data-ajtb-recap-field="priceRoom">—</strong>
                             </div>
+                            <div class="ajtb-v1-recap-price-line" data-ajtb-recap-row="demiDouble" hidden>
+                                <span>Demi-double</span>
+                                <strong data-ajtb-recap-field="demiDoubleStatus">—</strong>
+                            </div>
                             <div class="ajtb-v1-recap-price-line ajtb-v1-recap-price-line--total">
                                 <span>Total</span>
                                 <strong><span data-ajtb-recap-field="totalLine">—</span> <small data-ajtb-recap-field="currencyLine">MAD</small></strong>
@@ -316,7 +320,7 @@ get_header();
 
                         <p class="ajtb-v1-recap-note">Vérifiez le total avant de confirmer.</p>
                         <button type="button" class="ajtb-v1-recap-btn ajtb-v1-recap-btn--primary ajtb-v1-recap-submit" data-ajtb-recap-action="final-submit">Confirmer la réservation</button>
-                        <p class="ajtb-v1-recap-note">La réservation sera créée en statut “pending” dans Laravel.</p>
+                        <p class="ajtb-v1-recap-note">Si une demi-double est choisie, la réservation sera créée en attente de jumelage dans Laravel.</p>
                     </article>
                 </aside>
             </section>

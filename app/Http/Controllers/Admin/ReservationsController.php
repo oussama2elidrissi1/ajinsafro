@@ -28,7 +28,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -228,11 +230,31 @@ class ReservationsController extends Controller
                 $dhr = $rr->departureHotelRoom;
 
                 return [
-                    'room_type' => $dhr?->room_type,
+                    'room_type' => $dhr?->room_type ?: $rr->room_type_snapshot,
                     'room_count' => $rr->room_count,
+                    'passenger_count' => $rr->passenger_count,
+                    'room_mode' => $rr->room_mode,
+                    'shared_room_status' => $rr->shared_room_status,
+                    'source_room_type' => $rr->source_room_type,
+                    'source_room_id' => $rr->source_room_id,
+                    'departure_hotel_id' => $rr->departure_hotel_id,
                     'departure_hotel_room_id' => $rr->departure_hotel_room_id,
                 ];
             })->values()->all(),
+            'demi_double_pending_seats' => $reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING
+                ? (int) $reservation->reservationRooms
+                    ->filter(function ($rr) {
+                        $mode = (string) ($rr->room_mode ?? '');
+                        $sharedStatus = (string) ($rr->shared_room_status ?? 'pending');
+                        $sourceType = (string) ($rr->source_room_type ?? '');
+                        if ($mode === 'shared_double' && $sharedStatus !== 'paired') {
+                            return true;
+                        }
+
+                        return $mode === '' && $sourceType === 'double' && (int) ($rr->passenger_count ?? 0) === 1;
+                    })
+                    ->sum(fn ($rr) => (int) ($rr->passenger_count ?? 0))
+                : 0,
             'prestation_type' => $reservation->prestation_type,
             'base_price' => $reservation->base_price,
             'paid_amount' => $reservation->paid_amount,
@@ -977,6 +999,94 @@ class ReservationsController extends Controller
     }
 
     /**
+     * Jumelage manuel de deux réservations demi-double compatibles.
+     */
+    public function pairSharedRoom(Request $request, Reservation $reservation): RedirectResponse
+    {
+        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+
+        if ($reservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
+            return redirect()->back()->with('error', 'Cette réservation n’est pas en attente de jumelage demi-double.');
+        }
+
+        $hasSourceRoomId = Schema::connection('mysql')->hasColumn('reservation_rooms', 'source_room_id');
+        $hasRoomMode = Schema::connection('mysql')->hasColumn('reservation_rooms', 'room_mode');
+        $hasSharedRoomStatus = Schema::connection('mysql')->hasColumn('reservation_rooms', 'shared_room_status');
+        $hasDepartureHotelId = Schema::connection('mysql')->hasColumn('reservation_rooms', 'departure_hotel_id');
+
+        $targetLines = DB::table('reservation_rooms')
+            ->where('reservation_id', $reservation->id)
+            ->when($hasRoomMode, fn ($q) => $q->where('room_mode', 'shared_double'))
+            ->when($hasSharedRoomStatus, fn ($q) => $q->where(function ($qq) {
+                $qq->whereNull('shared_room_status')->orWhere('shared_room_status', 'pending');
+            }))
+            ->where('passenger_count', 1)
+            ->get();
+
+        if ($targetLines->isEmpty()) {
+            return redirect()->back()->with('error', 'Aucune place demi-double en attente sur cette réservation.');
+        }
+
+        $candidateReservationId = 0;
+        foreach ($targetLines as $line) {
+            $candidate = Reservation::query()
+                ->where('id', '!=', $reservation->id)
+                ->where('tour_id', $reservation->tour_id)
+                ->where('departure_id', $reservation->departure_id)
+                ->where('status', Reservation::STATUS_SHARED_ROOM_PENDING)
+                ->whereExists(function ($q) use ($line, $hasSourceRoomId, $hasRoomMode, $hasSharedRoomStatus, $hasDepartureHotelId) {
+                    $q->select(DB::raw(1))
+                        ->from('reservation_rooms as rr')
+                        ->whereColumn('rr.reservation_id', 'reservations.id')
+                        ->where('rr.passenger_count', 1)
+                        ->when($hasRoomMode, fn ($qq) => $qq->where('rr.room_mode', 'shared_double'))
+                        ->when($hasSharedRoomStatus, fn ($qq) => $qq->where(function ($qqq) {
+                            $qqq->whereNull('rr.shared_room_status')->orWhere('rr.shared_room_status', 'pending');
+                        }));
+
+                    if ($hasSourceRoomId) {
+                        $q->where('rr.source_room_id', (int) ($line->source_room_id ?? 0));
+                    } else {
+                        $q->where('rr.room_type_snapshot', (string) ($line->room_type_snapshot ?? ''));
+                    }
+                    if ($hasDepartureHotelId) {
+                        $q->whereRaw('COALESCE(rr.departure_hotel_id, 0) = ?', [(int) ($line->departure_hotel_id ?? 0)]);
+                    }
+                })
+                ->orderBy('created_at')
+                ->value('id');
+
+            if ((int) $candidate > 0) {
+                $candidateReservationId = (int) $candidate;
+                break;
+            }
+        }
+
+        if ($candidateReservationId <= 0) {
+            return redirect()->back()->with('error', 'Aucun dossier demi-double compatible trouvé pour jumelage.');
+        }
+
+        Reservation::query()
+            ->whereIn('id', [$reservation->id, $candidateReservationId])
+            ->update(['status' => Reservation::STATUS_SHARED_ROOM_PAIRED]);
+
+        if ($hasSharedRoomStatus) {
+            DB::table('reservation_rooms')
+                ->whereIn('reservation_id', [$reservation->id, $candidateReservationId])
+                ->when($hasRoomMode, fn ($q) => $q->where('room_mode', 'shared_double'))
+                ->where(function ($q) {
+                    $q->whereNull('shared_room_status')->orWhere('shared_room_status', 'pending');
+                })
+                ->update([
+                    'shared_room_status' => 'paired',
+                    'updated_at' => now(),
+                ]);
+        }
+
+        return redirect()->back()->with('success', 'Demi-double jumelée manuellement avec la réservation #'.$candidateReservationId.'.');
+    }
+
+    /**
      * Servir le fichier reçu (image/PDF) depuis le stockage — évite le 404 si le symlink storage n'existe pas.
      */
     public function showReceipt(Request $request): StreamedResponse|\Illuminate\Http\Response
@@ -1039,6 +1149,8 @@ class ReservationsController extends Controller
         $statusParam = (string) $request->query('status', '');
         if (! in_array($statusParam, [
             Reservation::STATUS_EN_COURS,
+            Reservation::STATUS_SHARED_ROOM_PENDING,
+            Reservation::STATUS_SHARED_ROOM_PAIRED,
             Reservation::STATUS_VALIDEE,
             Reservation::STATUS_ANNULEE,
         ], true)) {
@@ -1101,6 +1213,8 @@ class ReservationsController extends Controller
         $statusParam = (string) $request->query('status', '');
         if (! in_array($statusParam, [
             Reservation::STATUS_EN_COURS,
+            Reservation::STATUS_SHARED_ROOM_PENDING,
+            Reservation::STATUS_SHARED_ROOM_PAIRED,
             Reservation::STATUS_VALIDEE,
             Reservation::STATUS_ANNULEE,
         ], true)) {
@@ -1110,7 +1224,7 @@ class ReservationsController extends Controller
         $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
 
         $reservations = (clone $base)
-            ->with(['passengers', 'client', 'offer', 'branch', 'partner', 'travelDate', 'creator', 'createdBy', 'agent', 'salesManager'])
+            ->with(['passengers', 'client', 'offer', 'branch', 'partner', 'travelDate', 'creator', 'createdBy', 'agent', 'salesManager', 'reservationRooms'])
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString();

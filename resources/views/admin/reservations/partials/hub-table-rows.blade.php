@@ -23,6 +23,8 @@
         $opSrc = $reservation->operationalActorDataSourceLabel();
         $statusClass = match ($reservation->status) {
             Reservation::STATUS_EN_COURS, Reservation::STATUS_PENDING => 'badge bg-warning text-dark',
+            Reservation::STATUS_SHARED_ROOM_PENDING => 'badge bg-warning text-dark',
+            Reservation::STATUS_SHARED_ROOM_PAIRED => 'badge bg-info text-dark',
             Reservation::STATUS_VALIDEE, Reservation::STATUS_CONFIRMED => 'badge bg-success',
             Reservation::STATUS_ANNULEE, Reservation::STATUS_CANCELLED => 'badge bg-danger',
             default => 'badge bg-secondary',
@@ -34,6 +36,19 @@
         $paxCell = $names->isEmpty()
             ? '<span class="text-muted">—</span>'
             : '<span class="text-break small">'.e($names->take(3)->join(', ')).($names->count() > 3 ? '…' : '').'</span>';
+        $pendingSharedSeats = $reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING
+            ? (int) $reservation->reservationRooms
+                ->filter(function ($rr) {
+                    $mode = (string) ($rr->room_mode ?? '');
+                    $state = (string) ($rr->shared_room_status ?? 'pending');
+                    if ($mode === 'shared_double' && $state !== 'paired') {
+                        return true;
+                    }
+
+                    return $mode === '' && (string) ($rr->source_room_type ?? '') === 'double' && (int) ($rr->passenger_count ?? 0) === 1;
+                })
+                ->sum(fn ($rr) => (int) ($rr->passenger_count ?? 0))
+            : 0;
         $depCell = $reservation->travelDate?->date
             ? e($reservation->travelDate->date->format('d/m/Y'))
             : '<span class="text-muted">—</span>';
@@ -54,11 +69,21 @@
         <td class="small">{!! $depCell !!}</td>
         <td>{!! $paxCell !!}</td>
         @if($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
-            <td><span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span></td>
+            <td>
+                <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
+                @if($pendingSharedSeats > 0)
+                    <span class="text-muted d-block" style="font-size:0.72rem;">{{ $pendingSharedSeats }} place(s) demi-double en attente</span>
+                @endif
+            </td>
             <td>{!! $payCell !!}</td>
         @else
             <td>{!! $payCell !!}</td>
-            <td><span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span></td>
+            <td>
+                <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
+                @if($pendingSharedSeats > 0)
+                    <span class="text-muted d-block" style="font-size:0.72rem;">{{ $pendingSharedSeats }} place(s) demi-double en attente</span>
+                @endif
+            </td>
         @endif
         @if($hubTableMode !== ReservationHubTableProfile::MODE_OPERATIONS)
             <td class="small">{{ optional($reservation->created_at)->format('d/m/Y H:i') }}</td>
@@ -111,6 +136,12 @@
                     <form action="{{ route('admin.reservations.validate', $reservation) }}" method="post" class="d-inline ms-1">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-success" title="Valider"><i class="bx bx-check"></i></button>
+                    </form>
+                @endif
+                @if($reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING)
+                    <form action="{{ route('admin.reservations.pair-shared-room', $reservation) }}" method="post" class="d-inline ms-1">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-info" title="Jumeler demi-double"><i class="bx bx-link"></i></button>
                     </form>
                 @endif
             @endcan
