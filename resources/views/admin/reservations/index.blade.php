@@ -31,6 +31,8 @@
          class="d-none"
          data-res-base="{{ rtrim(url('/admin/reservations'), '/') }}"
          data-csrf="{{ csrf_token() }}"
+         data-can-edit="@can('reservations.edit')1@else0@endcan"
+         data-can-update="@can('reservations.update')1@else0@endcan"
          @can('reservations.view')
          data-hub-refresh-url="{{ route('admin.reservations.hub-refresh') }}"
          @endcan
@@ -277,13 +279,24 @@
 
     <div class="modal fade" id="resHubDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
+            <div class="modal-content res-hub-detail-modal">
                 <div class="modal-header">
                     <h5 class="modal-title" id="resHubDetailTitle">Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body small" id="resHubDetailBody">
                     <p class="text-muted mb-0">Chargement...</p>
+                </div>
+                <div class="modal-footer border-0 pt-0" id="resHubDetailFooter" style="display:none;">
+                    <button type="button" class="btn res-hub-btn res-hub-btn--soft" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn res-hub-btn res-hub-btn--soft" id="resHubDetailEditBtn" style="display:none;">
+                        <i class="bx bx-pencil"></i>
+                        <span>Modifier la reservation</span>
+                    </button>
+                    <button type="button" class="btn res-hub-btn res-hub-btn--primary" id="resHubDetailValidateBtn" style="display:none;">
+                        <i class="bx bx-check"></i>
+                        <span>Confirmer la reservation</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -499,6 +512,49 @@
             border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 28px 70px rgba(18, 38, 63, 0.18);
+        }
+        .res-hub-detail-modal {
+            border: 0;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 28px 70px rgba(18, 38, 63, 0.16);
+        }
+        .res-hub-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem 1.25rem;
+        }
+        .res-hub-detail-item {
+            padding: .9rem 1rem;
+            border: 1px solid #e7edf7;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+        }
+        .res-hub-detail-item__label {
+            display: block;
+            margin-bottom: .35rem;
+            color: #7184a0;
+            font-size: .76rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+        .res-hub-detail-item__value {
+            color: #1c375f;
+            font-size: .95rem;
+            font-weight: 600;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+        .res-hub-detail-banner {
+            margin-bottom: 1rem;
+            padding: 1rem 1.05rem;
+            border: 1px solid #d7e7ff;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(26, 122, 240, 0.08), rgba(33, 87, 215, 0.03));
+        }
+        .res-hub-detail-banner strong {
+            color: #16407a;
         }
         .res-hub-confirm-modal__head {
             display: flex;
@@ -726,6 +782,9 @@
             }
         }
         @media (max-width: 767px) {
+            .res-hub-detail-grid {
+                grid-template-columns: 1fr;
+            }
             .res-hub-filter-grid {
                 grid-template-columns: 1fr;
             }
@@ -749,10 +808,13 @@
     var root = document.getElementById('res-hub-root');
     if (!root) return;
     var base = root.getAttribute('data-res-base') || '';
+    var canEdit = root.getAttribute('data-can-edit') === '1';
+    var canUpdate = root.getAttribute('data-can-update') === '1';
     var voyageName = @json($voyage->resolved_name ?? $voyage->name ?? '');
     var allReservationsUrl = @json($allReservationsUrl);
     var hubDebugUrl = root.getAttribute('data-hub-debug-url') || '';
     var hubRefreshUrl = root.getAttribute('data-hub-refresh-url') || '';
+    var isClientChannel = (new URLSearchParams(window.location.search)).get('channel') === 'client';
 
     function applyVoyageHeader() {
         var titleBox = document.querySelector('.page-title-box');
@@ -933,9 +995,17 @@
         return 'Adulte';
     }
 
+    function validateUrl(id) {
+        return base + '/' + encodeURIComponent(id) + '/validate';
+    }
+
     var validateModalEl = document.getElementById('resHubValidateModal');
     var validateModal = validateModalEl ? new bootstrap.Modal(validateModalEl) : null;
     var validateForm = null;
+    var detailFooter = document.getElementById('resHubDetailFooter');
+    var detailEditBtn = document.getElementById('resHubDetailEditBtn');
+    var detailValidateBtn = document.getElementById('resHubDetailValidateBtn');
+    var currentDetailReservation = null;
 
     function setValidateModalField(id, value) {
         var el = document.getElementById(id);
@@ -967,21 +1037,35 @@
                     var el = document.getElementById('resHubDetailBody');
                     if (!d) {
                         el.innerHTML = '<p class="text-danger mb-0">Impossible de charger les details.</p>';
+                        if (detailFooter) detailFooter.style.display = 'none';
                         return;
                     }
-                    var h = '<dl class="row mb-0">';
-                    h += '<dt class="col-sm-4">Statut</dt><dd class="col-sm-8">' + esc(d.status) + '</dd>';
-                    h += '<dt class="col-sm-4">Client</dt><dd class="col-sm-8">' + esc(d.client_label || '-') + (d.client_code ? ' <span class="text-muted">(' + esc(d.client_code) + ')</span>' : '') + '</dd>';
-                    h += '<dt class="col-sm-4">Offre liee</dt><dd class="col-sm-8">' + esc(d.tour_name || '-') + '</dd>';
-                    h += '<dt class="col-sm-4">Creee par</dt><dd class="col-sm-8">' + esc(d.creator_name || '-') + (d.creator_email ? ' <span class="text-muted">(' + esc(d.creator_email) + ')</span>' : '') + '</dd>';
-                    h += '<dt class="col-sm-4">Depart</dt><dd class="col-sm-8">' + esc(d.travel_date_label || '-') + (d.travel_date_id ? ' <code class="small">id ' + esc(String(d.travel_date_id)) + '</code>' : '') + '</dd>';
-                    h += '<dt class="col-sm-4">Type prestation</dt><dd class="col-sm-8">' + esc(d.prestation_type || '-') + '</dd>';
-                    h += '<dt class="col-sm-4">Montants</dt><dd class="col-sm-8">Total : ' + esc(String(d.base_price ?? '-')) + ' - Paye : ' + esc(String(d.paid_amount ?? '-')) + '</dd>';
-                    h += '<dt class="col-sm-4">Paiement</dt><dd class="col-sm-8">' + esc(d.payment_type || '-') + '</dd>';
-                    h += '<dt class="col-sm-4">Creee</dt><dd class="col-sm-8">' + esc(d.created_at || '-') + '</dd>';
-                    if (d.agency || d.branch) h += '<dt class="col-sm-4">Agence</dt><dd class="col-sm-8">' + esc(d.agency || d.branch) + '</dd>';
-                    h += '</dl>';
+                    currentDetailReservation = d;
+                    var isConfirmable = d.status !== 'confirmed' && d.status !== 'cancelled';
+                    var h = '';
+                    if (isClientChannel) {
+                        h += '<div class="res-hub-detail-banner"><strong>Source : Client web</strong><div class="small text-muted mt-1">Reservation creee directement depuis le site Ajinsafro. Vous pouvez verifier, modifier puis confirmer si necessaire.</div></div>';
+                    }
+                    h += '<div class="res-hub-detail-grid">';
+                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Statut</span><div class="res-hub-detail-item__value">' + esc(d.status || '-') + '</div></div>';
+                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Client</span><div class="res-hub-detail-item__value">' + esc(d.client_label || '-') + (d.client_code ? '<div class="small text-muted mt-1">' + esc(d.client_code) + '</div>' : '') + '</div></div>';
+                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Offre liee</span><div class="res-hub-detail-item__value">' + esc(d.tour_name || '-') + '</div></div>';
+                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Depart</span><div class="res-hub-detail-item__value">' + esc(d.travel_date_label || '-') + (d.travel_date_id ? '<div class="small text-muted mt-1">TravelDate #' + esc(String(d.travel_date_id)) + '</div>' : '') + '</div></div>';
+                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Type prestation</span><div class="res-hub-detail-item__value">' + esc(d.prestation_type || '-') + '</div></div>';
+                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Paiement</span><div class="res-hub-detail-item__value">' + esc(d.payment_type || '-') + '</div></div>';
+                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Montants</span><div class="res-hub-detail-item__value">Total : ' + esc(String(d.base_price ?? '-')) + '<br>Paye : ' + esc(String(d.paid_amount ?? '-')) + '</div></div>';
+                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Creee le</span><div class="res-hub-detail-item__value">' + esc(d.created_at || '-') + '</div></div>';
+                    if (!isClientChannel) {
+                        h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Creee par</span><div class="res-hub-detail-item__value">' + esc(d.creator_name || '-') + (d.creator_email ? '<div class="small text-muted mt-1">' + esc(d.creator_email) + '</div>' : '') + '</div></div>';
+                        if (d.agency || d.branch) {
+                            h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Agence</span><div class="res-hub-detail-item__value">' + esc(d.agency || d.branch) + '</div></div>';
+                        }
+                    }
+                    h += '</div>';
                     el.innerHTML = h;
+                    if (detailFooter) detailFooter.style.display = 'flex';
+                    if (detailEditBtn) detailEditBtn.style.display = canEdit ? 'inline-flex' : 'none';
+                    if (detailValidateBtn) detailValidateBtn.style.display = (canUpdate && isConfirmable) ? 'inline-flex' : 'none';
                 });
                 return;
             }
@@ -1030,11 +1114,53 @@
 
     if (validateModalEl) {
         validateModalEl.addEventListener('hidden.bs.modal', function () {
+            if (validateForm && !validateForm.classList.contains('res-hub-validate-form') && validateForm.parentNode) {
+                validateForm.parentNode.removeChild(validateForm);
+            }
             validateForm = null;
             if (validateConfirmBtn) {
                 validateConfirmBtn.disabled = false;
                 validateConfirmBtn.innerHTML = '<i class="bx bx-check"></i><span>Valider la reservation</span>';
             }
+        });
+    }
+
+    if (detailEditBtn) {
+        detailEditBtn.addEventListener('click', function () {
+            if (!currentDetailReservation || !canEdit) return;
+            var id = currentDetailReservation.id;
+            if (frame) frame.src = editUrl(id);
+            var detailModalEl = document.getElementById('resHubDetailModal');
+            var detailModal = detailModalEl ? bootstrap.Modal.getInstance(detailModalEl) : null;
+            if (detailModal) detailModal.hide();
+            var oc = bootstrap.Offcanvas.getOrCreateInstance(offEl);
+            oc.show();
+        });
+    }
+
+    if (detailValidateBtn) {
+        detailValidateBtn.addEventListener('click', function () {
+            if (!currentDetailReservation || !canUpdate) return;
+            var form = document.createElement('form');
+            form.method = 'post';
+            form.action = validateUrl(currentDetailReservation.id);
+            form.style.display = 'none';
+            var csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = root.getAttribute('data-csrf') || '';
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            validateForm = form;
+            setValidateModalField('resHubValidateId', '#' + String(currentDetailReservation.id || '-'));
+            setValidateModalField('resHubValidateClient', currentDetailReservation.client_label || '-');
+            setValidateModalField('resHubValidateOffer', currentDetailReservation.tour_name || '-');
+            setValidateModalField('resHubValidateDate', currentDetailReservation.travel_date_label || '-');
+            setValidateModalField('resHubValidateStatus', currentDetailReservation.status || '-');
+            var detailModalEl = document.getElementById('resHubDetailModal');
+            var detailModal = detailModalEl ? bootstrap.Modal.getInstance(detailModalEl) : null;
+            if (detailModal) detailModal.hide();
+            if (validateModal) validateModal.show();
         });
     }
 
