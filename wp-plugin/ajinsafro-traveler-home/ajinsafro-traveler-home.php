@@ -38,6 +38,7 @@ require_once AJTH_DIR.'includes/class-template-router.php';
 require_once AJTH_DIR.'includes/hebergement-catalog-image.php';
 require_once AJTH_DIR.'includes/catalog-image-helpers.php';
 require_once AJTH_DIR.'includes/hebergement-catalog.php';
+require_once AJTH_DIR.'includes/activity-catalog.php';
 require_once AJTH_DIR.'includes/class-catalog-cache-invalidate.php';
 require_once AJTH_DIR.'includes/class-admin-settings.php';
 require_once AJTH_DIR.'includes/class-ajinsafro-agent.php';
@@ -138,6 +139,36 @@ function ajth_enqueue_front_assets()
             AJTH_VERSION,
             true
         );
+
+        if ( function_exists( 'getAjinsafroHebergements' ) ) {
+            $hebergements = getAjinsafroHebergements(
+                200,
+                array(
+                    'posts_per_page' => 200,
+                    'orderby'        => 'date',
+                    'order'          => 'DESC',
+                )
+            );
+
+            wp_localize_script(
+                'ajth-hebergement-booking-js',
+                'ajthHebergementConfig',
+                array(
+                    'hotels' => array_values( $hebergements ),
+                    'currency' => 'DH',
+                    'strings' => array(
+                        'see_offer'   => 'Voir l\'offre',
+                        'ask_availability' => 'Demander disponibilite',
+                        'available'   => 'Disponible',
+                        'recommended' => 'Recommande',
+                        'support_note'=> 'Confirmation rapide · Support Ajinsafro',
+                        'from_price'  => 'A partir de',
+                        'per_night'   => 'par nuit',
+                        'results'     => 'resultats trouves',
+                    ),
+                )
+            );
+        }
     }
 
     if ( function_exists( 'ajth_is_voyages_context' ) && ajth_is_voyages_context() ) {
@@ -167,11 +198,41 @@ function ajth_enqueue_front_assets()
 
         wp_enqueue_script(
             'ajth-activites-getyourguide-js',
-            AJTH_URL . 'assets/js/activites-getyourguide.js',
+            AJTH_URL . 'assets/js/activites-catalog.js',
             [],
             AJTH_VERSION,
             true
         );
+
+        if ( function_exists( 'ajth_get_activities' ) ) {
+            $activities = ajth_get_activities(
+                200,
+                array(
+                    'posts_per_page' => 200,
+                    'orderby'        => 'date',
+                    'order'          => 'DESC',
+                )
+            );
+
+            wp_localize_script(
+                'ajth-activites-getyourguide-js',
+                'ajthActivitiesConfig',
+                array(
+                    'activities' => array_values( $activities ),
+                    'currency'   => 'DH',
+                    'strings'    => array(
+                        'recommended' => 'Recommande',
+                        'available'   => 'Disponible',
+                        'from_price'  => 'A partir de',
+                        'per_person'  => 'par personne',
+                        'results'     => 'activites trouvees',
+                        'support_note'=> 'Reservation simple · Support Ajinsafro',
+                        'view_offer'  => 'Voir l\'offre',
+                        'activity'    => 'Activite',
+                    ),
+                )
+            );
+        }
     }
 
     if ( function_exists( 'ajth_is_group_deals_context' ) && ajth_is_group_deals_context() ) {
