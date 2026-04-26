@@ -1211,6 +1211,9 @@ class ReservationsController extends Controller
         $travelDateFilter = (int) $request->query('travel_date_id', 0);
         $channel = trim((string) $request->query('channel', ''));
         $hubVoyageFiltered = $tourFilter > 0 || $travelDateFilter > 0;
+        $hubTableMode = $channel === 'client'
+            ? ReservationHubTableProfile::MODE_OPERATIONS
+            : $this->reservationHubTableProfile->mode($request->user());
         $search = (string) $request->query('search', '');
         $statusParam = (string) $request->query('status', '');
         if (! in_array($statusParam, [
@@ -1246,7 +1249,7 @@ class ReservationsController extends Controller
             'filterSearch' => $search !== '' ? $search : null,
             'filterStatus' => $statusParam !== '' ? $statusParam : null,
             'filterChannel' => $channel !== '' ? $channel : null,
-            'hubTableMode' => $this->reservationHubTableProfile->mode($request->user()),
+            'hubTableMode' => $hubTableMode,
             'hubVoyageFiltered' => $hubVoyageFiltered,
         ];
     }
