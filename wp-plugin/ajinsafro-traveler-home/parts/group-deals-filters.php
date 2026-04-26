@@ -1,126 +1,117 @@
 <?php
 /**
- * Part: Group Deals filters — left sidebar (catalog)
- * Calqué sur parts/voyages-filters.php — mêmes classes CSS.
+ * Group Deals filter sidebar / drawer.
+ *
+ * Expects the parent template to provide the current filter variables.
+ *
+ * @package AjinsafroTravelerHome
  */
 if (! defined('ABSPATH')) {
     exit;
 }
 
-$group_deals_url = function_exists('ajth_get_group_deals_url')
-    ? ajth_get_group_deals_url()
-    : home_url('/group-deals/');
-
-$search_text   = isset($_GET['s'])           ? sanitize_text_field(wp_unslash($_GET['s']))           : '';
-$dest          = isset($_GET['dest'])         ? sanitize_text_field(wp_unslash($_GET['dest']))         : '';
-$depart_date   = isset($_GET['depart_date'])  ? sanitize_text_field(wp_unslash($_GET['depart_date']))  : '';
-$price_min     = isset($_GET['price_min'])    ? absint($_GET['price_min'])    : 0;
-$price_max     = isset($_GET['price_max'])    ? absint($_GET['price_max'])    : 0;
-$group_size    = isset($_GET['group_size'])   ? max(2, absint($_GET['group_size'])) : 0;
-$catalog_orderby = isset($_GET['catalog_orderby']) ? sanitize_text_field(wp_unslash($_GET['catalog_orderby'])) : 'date';
-if (! in_array($catalog_orderby, ['date', 'title', 'title_desc'], true)) {
-    $catalog_orderby = 'date';
-}
-
-// Fetch destinations from Laravel voyages table
-global $wpdb;
-$gd_destinations = [];
-foreach (['voyages', $wpdb->prefix . 'voyages'] as $_t) {
-    $exists = $wpdb->get_var($wpdb->prepare(
-        'SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s LIMIT 1',
-        $_t
-    ));
-    if ($exists) {
-        $valid_statuses = ['actif', 'published', 'active', 'publish'];
-        $ph = implode(',', array_fill(0, count($valid_statuses), '%s'));
-        $rows = $wpdb->get_col($wpdb->prepare(
-            "SELECT DISTINCT TRIM(destination) FROM `{$_t}` WHERE status IN ($ph) AND is_group_deal = 1 AND destination IS NOT NULL AND TRIM(destination) <> '' ORDER BY destination ASC LIMIT 300",
-            ...$valid_statuses
-        ));
-        foreach ((array) $rows as $label) {
-            $label = is_string($label) ? trim($label) : '';
-            if ($label !== '') {
-                $gd_destinations[] = $label;
-            }
-        }
-        break;
-    }
-}
+$group_deals_filter_prefix = isset($group_deals_filter_prefix) ? (string) $group_deals_filter_prefix : 'ajgd';
+$group_deals_url = isset($group_deals_url) ? (string) $group_deals_url : home_url('/group-deals/');
+$available_destinations = isset($available_destinations) && is_array($available_destinations) ? $available_destinations : [];
+$available_services = isset($available_services) && is_array($available_services) ? $available_services : [];
 ?>
 
-<form method="get" action="<?php echo esc_url($group_deals_url); ?>" class="aj-voyages-filters-form">
-    <input type="hidden" name="catalog_orderby" value="<?php echo esc_attr($catalog_orderby); ?>">
+<form method="get" action="<?php echo esc_url($group_deals_url); ?>" class="group-filters-form">
+    <input type="hidden" name="catalog_orderby" value="<?php echo esc_attr($sort ?? 'recommended'); ?>">
 
-    <div class="aj-voyages-filters__intro">
-        <h3 class="aj-voyages-filters__heading"><?php esc_html_e('Affiner la recherche', 'ajinsafro-traveler-home'); ?></h3>
-        <p class="aj-voyages-filters__hint"><?php esc_html_e('Trouvez le voyage de groupe idéal.', 'ajinsafro-traveler-home'); ?></p>
-    </div>
+    <details class="accordion" open>
+        <summary>Recherche</summary>
+        <div class="filter-body">
+            <label class="filter-field" for="<?php echo esc_attr($group_deals_filter_prefix . '-search'); ?>">
+                <span>Nom ou mot-cle</span>
+                <input
+                    id="<?php echo esc_attr($group_deals_filter_prefix . '-search'); ?>"
+                    class="filter-search"
+                    type="text"
+                    name="s"
+                    value="<?php echo esc_attr($search_text ?? ''); ?>"
+                    placeholder="Ville, pays, destination..."
+                    autocomplete="off"
+                >
+            </label>
 
-    <div class="aj-voyages-filters__card">
-        <h4 class="aj-voyages-filters__card-title"><?php esc_html_e('Mots-clés', 'ajinsafro-traveler-home'); ?></h4>
-        <label class="aj-voyages-filters__field">
-            <span class="aj-voyages-filters__label"><?php esc_html_e('Recherche', 'ajinsafro-traveler-home'); ?></span>
-            <input type="text" name="s" class="aj-voyages-filters__input"
-                   value="<?php echo esc_attr($search_text); ?>"
-                   placeholder="<?php esc_attr_e('Nom, destination…', 'ajinsafro-traveler-home'); ?>"
-                   autocomplete="off">
-        </label>
-    </div>
-
-    <div class="aj-voyages-filters__card">
-        <h4 class="aj-voyages-filters__card-title"><?php esc_html_e('Destination & dates', 'ajinsafro-traveler-home'); ?></h4>
-        <label class="aj-voyages-filters__field">
-            <span class="aj-voyages-filters__label"><?php esc_html_e('Destination', 'ajinsafro-traveler-home'); ?></span>
-            <span class="aj-voyages-filters__control">
-                <select name="dest" class="aj-voyages-filters__select">
-                    <option value=""><?php esc_html_e('Toutes les destinations', 'ajinsafro-traveler-home'); ?></option>
-                    <?php foreach ($gd_destinations as $d) { ?>
-                        <option value="<?php echo esc_attr($d); ?>" <?php selected($dest, $d); ?>>
-                            <?php echo esc_html($d); ?>
+            <label class="filter-field" for="<?php echo esc_attr($group_deals_filter_prefix . '-dest'); ?>">
+                <span>Destination</span>
+                <select id="<?php echo esc_attr($group_deals_filter_prefix . '-dest'); ?>" name="dest" class="filter-select">
+                    <option value="">Toutes les destinations</option>
+                    <?php foreach ($available_destinations as $destination_option) { ?>
+                        <option value="<?php echo esc_attr($destination_option); ?>" <?php selected(($dest ?? ''), $destination_option); ?>>
+                            <?php echo esc_html($destination_option); ?>
                         </option>
                     <?php } ?>
                 </select>
-            </span>
-        </label>
-        <?php if (empty($gd_destinations)) { ?>
-            <p class="aj-voyages-filters__muted"><?php esc_html_e('Aucune destination disponible.', 'ajinsafro-traveler-home'); ?></p>
-        <?php } ?>
-        <label class="aj-voyages-filters__field">
-            <span class="aj-voyages-filters__label"><?php esc_html_e('Date de départ', 'ajinsafro-traveler-home'); ?></span>
-            <input type="date" name="depart_date" class="aj-voyages-filters__input"
-                   value="<?php echo esc_attr($depart_date); ?>">
-        </label>
-    </div>
-
-    <div class="aj-voyages-filters__card">
-        <h4 class="aj-voyages-filters__card-title"><?php esc_html_e('Groupe & budget', 'ajinsafro-traveler-home'); ?></h4>
-        <label class="aj-voyages-filters__field">
-            <span class="aj-voyages-filters__label"><?php esc_html_e('Taille du groupe (pers.)', 'ajinsafro-traveler-home'); ?></span>
-            <input type="number" min="2" max="200" name="group_size" class="aj-voyages-filters__input"
-                   value="<?php echo $group_size > 0 ? esc_attr($group_size) : ''; ?>"
-                   placeholder="<?php esc_attr_e('ex: 10', 'ajinsafro-traveler-home'); ?>">
-        </label>
-        <div class="aj-voyages-filters__row">
-            <label class="aj-voyages-filters__field aj-voyages-filters__field--half">
-                <span class="aj-voyages-filters__label"><?php esc_html_e('Prix min (DHS)', 'ajinsafro-traveler-home'); ?></span>
-                <input type="number" min="0" name="price_min" class="aj-voyages-filters__input"
-                       value="<?php echo esc_attr($price_min); ?>" placeholder="—">
-            </label>
-            <label class="aj-voyages-filters__field aj-voyages-filters__field--half">
-                <span class="aj-voyages-filters__label"><?php esc_html_e('Prix max (DHS)', 'ajinsafro-traveler-home'); ?></span>
-                <input type="number" min="0" name="price_max" class="aj-voyages-filters__input"
-                       value="<?php echo esc_attr($price_max); ?>" placeholder="—">
             </label>
         </div>
-    </div>
+    </details>
 
-    <div class="aj-voyages-filters__actions">
-        <button type="submit" class="aj-voyages-filters__submit">
-            <i class="fas fa-search" aria-hidden="true"></i>
-            <?php esc_html_e('Appliquer les filtres', 'ajinsafro-traveler-home'); ?>
-        </button>
-        <a class="aj-voyages-filters__reset" href="<?php echo esc_url($group_deals_url); ?>">
-            <?php esc_html_e('Réinitialiser', 'ajinsafro-traveler-home'); ?>
-        </a>
+    <details class="accordion" open>
+        <summary>Budget et groupe</summary>
+        <div class="filter-body">
+            <div class="mini-inputs">
+                <input type="number" min="0" name="price_min" value="<?php echo ! empty($price_min) ? esc_attr((string) $price_min) : ''; ?>" placeholder="Min DH">
+                <input type="number" min="0" name="price_max" value="<?php echo ! empty($price_max) ? esc_attr((string) $price_max) : ''; ?>" placeholder="Max DH">
+            </div>
+            <label class="filter-field" for="<?php echo esc_attr($group_deals_filter_prefix . '-group-size'); ?>">
+                <span>Voyageurs minimum</span>
+                <input
+                    id="<?php echo esc_attr($group_deals_filter_prefix . '-group-size'); ?>"
+                    type="number"
+                    min="0"
+                    name="group_size"
+                    value="<?php echo ! empty($group_size) ? esc_attr((string) $group_size) : ''; ?>"
+                    placeholder="2 voyageurs"
+                >
+            </label>
+        </div>
+    </details>
+
+    <?php if ($has_featured_offers || $has_promo_offers || $has_guaranteed_offers) { ?>
+        <details class="accordion" open>
+            <summary>Offres speciales</summary>
+            <div class="filter-body">
+                <?php if ($has_featured_offers) { ?>
+                    <label class="check-row">
+                        <input type="checkbox" name="featured" value="1" <?php checked(! empty($featured_only)); ?>>
+                        Selection Ajinsafro
+                    </label>
+                <?php } ?>
+                <?php if ($has_promo_offers) { ?>
+                    <label class="check-row">
+                        <input type="checkbox" name="promo" value="1" <?php checked(! empty($promo_only)); ?>>
+                        Promotions actives
+                    </label>
+                <?php } ?>
+                <?php if ($has_guaranteed_offers) { ?>
+                    <label class="check-row">
+                        <input type="checkbox" name="guaranteed" value="1" <?php checked(! empty($guaranteed_only)); ?>>
+                        Departs garantis
+                    </label>
+                <?php } ?>
+            </div>
+        </details>
+    <?php } ?>
+
+    <?php if (! empty($available_services)) { ?>
+        <details class="accordion" open>
+            <summary>Services inclus</summary>
+            <div class="filter-body">
+                <?php foreach ($available_services as $service_key => $service_label) { ?>
+                    <label class="check-row">
+                        <input type="checkbox" name="service[]" value="<?php echo esc_attr($service_key); ?>" <?php checked(in_array($service_key, $selected_services ?? [], true)); ?>>
+                        <?php echo esc_html($service_label); ?>
+                    </label>
+                <?php } ?>
+            </div>
+        </details>
+    <?php } ?>
+
+    <div class="filter-actions">
+        <button type="submit" class="primary-btn">Appliquer les filtres</button>
+        <a class="secondary-btn" href="<?php echo esc_url($group_deals_url); ?>">Reinitialiser</a>
     </div>
 </form>

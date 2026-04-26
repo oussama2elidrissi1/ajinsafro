@@ -13,6 +13,33 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * URL fallback utilisee pour les cartes catalogue quand aucune image valide n'existe.
+ *
+ * @return string
+ */
+function ajth_catalog_default_card_image_url() {
+	return trailingslashit( AJTH_URL ) . 'assets/images/fallback-voyage.svg';
+}
+
+/**
+ * Retourne le premier attachment image valide trouve dans une liste de meta IDs.
+ *
+ * @param int          $post_id   Post catalogue.
+ * @param array<int,string> $meta_keys Meta keys candidates.
+ * @return int
+ */
+function ajth_first_valid_attachment_id_from_meta_keys( $post_id, array $meta_keys ) {
+	foreach ( $meta_keys as $meta_key ) {
+		$attachment_id = (int) get_post_meta( (int) $post_id, (string) $meta_key, true );
+		if ( $attachment_id > 0 && ajth_attachment_image_is_displayable( $attachment_id ) ) {
+			return $attachment_id;
+		}
+	}
+
+	return 0;
+}
+
+/**
  * Vérifie que l’attachment image existe sur le disque (évite img cassées / src vides).
  *
  * @param int $attachment_id ID attachment (wp_posts).
@@ -61,8 +88,9 @@ function ajth_first_valid_gallery_attachment_id( $post_id, $meta_key ) {
  */
 function ajth_render_catalog_card_image( $post_id ) {
 	$post_id = (int) $post_id;
+	$fallback_url = esc_url( ajth_catalog_default_card_image_url() );
 	if ( $post_id <= 0 ) {
-		echo '<div class="aj-voyages-image-fallback aj-voyages-image-fallback--empty" aria-hidden="true"></div>';
+		echo '<img src="' . $fallback_url . '" alt="" loading="lazy" decoding="async" class="aj-catalog-card__img aj-catalog-card__img--fallback">';
 
 		return;
 	}
@@ -77,6 +105,26 @@ function ajth_render_catalog_card_image( $post_id ) {
 				'loading'    => 'lazy',
 				'decoding'   => 'async',
 				'class'      => 'aj-catalog-card__img',
+				'sizes'      => '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
+			)
+		);
+
+		return;
+	}
+
+	$meta_attachment_id = ajth_first_valid_attachment_id_from_meta_keys(
+		$post_id,
+		array( '_tour_hero_image_id', 'image_id', 'st_image_id', 'featured_image_id' )
+	);
+	if ( $meta_attachment_id > 0 ) {
+		echo wp_get_attachment_image(
+			$meta_attachment_id,
+			'large',
+			false,
+			array(
+				'loading'    => 'lazy',
+				'decoding'   => 'async',
+				'class'      => 'aj-catalog-card__img aj-catalog-card__img--meta',
 				'sizes'      => '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
 			)
 		);
@@ -103,5 +151,5 @@ function ajth_render_catalog_card_image( $post_id ) {
 		}
 	}
 
-	echo '<div class="aj-voyages-image-fallback aj-voyages-image-fallback--empty" aria-hidden="true"></div>';
+	echo '<img src="' . $fallback_url . '" alt="" loading="lazy" decoding="async" class="aj-catalog-card__img aj-catalog-card__img--fallback">';
 }

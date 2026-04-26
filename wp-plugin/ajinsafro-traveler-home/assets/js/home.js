@@ -120,9 +120,38 @@
         }
     }
 
+    function initCatalogFilters() {
+        var toggle = document.getElementById('aj-voyages-filters-toggle');
+        if (!toggle) return;
+
+        function syncBodyLock() {
+            if (!document.body) return;
+            document.body.style.overflow = toggle.checked ? 'hidden' : '';
+        }
+
+        toggle.addEventListener('change', syncBodyLock);
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && toggle.checked) {
+                toggle.checked = false;
+                syncBodyLock();
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 992 && toggle.checked) {
+                toggle.checked = false;
+                syncBodyLock();
+            }
+        });
+
+        syncBodyLock();
+    }
+
     function init() {
         initDrawer();
         initSearchTabs();
+        initCatalogFilters();
 
         initSlider('aj-lm-track', '.aj-arrow--prev', '.aj-arrow--next');
         initSlider('aj-accom-track', '.aj-accom-prev', '.aj-accom-next');

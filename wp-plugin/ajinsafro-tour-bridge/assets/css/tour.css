@@ -1884,6 +1884,7 @@ body.ajtb-modal-open {
     align-items: center;
     gap: 10px;
     transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    opacity: 0.72;
 }
 
 .ajtb-v1-recap-step:hover {
@@ -1917,7 +1918,8 @@ body.ajtb-modal-open {
 .ajtb-v1-recap-step.is-active {
     border-color: #94c6ef;
     background: linear-gradient(180deg, #f7fbff, #edf6ff);
-    box-shadow: 0 10px 18px rgba(15, 79, 121, 0.12);
+    box-shadow: 0 12px 20px rgba(15, 79, 121, 0.16);
+    opacity: 1;
 }
 
 .ajtb-v1-recap-step.is-active .ajtb-v1-recap-step-index {
@@ -1941,10 +1943,28 @@ body.ajtb-modal-open {
 }
 
 .ajtb-v1-recap-step-actions {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid #dbe8f6;
+    background: #ffffff;
+}
+
+.ajtb-v1-step-actions-label {
+    color: #587494;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ajtb-v1-step-actions-buttons {
+    display: inline-flex;
+    gap: 10px;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
 }
 
 .ajtb-v1-recap-step-actions--final {
@@ -1970,6 +1990,16 @@ body.ajtb-modal-open {
     gap: 16px;
 }
 
+.ajtb-v1-recap-main [data-ajtb-step-panel] {
+    display: grid;
+    gap: 16px;
+    animation: ajtbV1StepReveal 0.22s ease;
+}
+
+.ajtb-v1-recap-main [data-ajtb-step-panel][hidden] {
+    display: none !important;
+}
+
 .ajtb-v1-recap-sidebar {
     position: sticky;
     top: var(--ajtb-v1-rail-top);
@@ -1978,31 +2008,80 @@ body.ajtb-modal-open {
     align-self: start;
 }
 
+.ajtb-v1-page[data-ajtb-active-step="ajtb-v1-step-price"] .ajtb-v1-recap-sidebar .ajtb-v1-recap-price {
+    border-color: #8abeea;
+    box-shadow: 0 20px 32px rgba(15, 79, 121, 0.2);
+}
+
 .ajtb-v1-recap-tour {
     display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
-    gap: 16px;
-    padding: 0;
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    gap: 18px;
+    padding: 16px;
     overflow: hidden;
+    border: 1px solid #dbe8f6;
+    background: linear-gradient(165deg, #ffffff 0%, #f6fbff 100%);
+    box-shadow: 0 16px 28px rgba(15, 79, 121, 0.1);
+    align-items: stretch;
+}
+
+.ajtb-v1-recap-checkout {
+    padding: 18px;
+}
+
+.ajtb-v1-recap-tour-media {
+    border-radius: 18px;
+    overflow: hidden;
+    min-height: 100%;
+    height: 100%;
+    display: grid;
 }
 
 .ajtb-v1-recap-tour-media img {
     width: 100%;
     height: 100%;
-    min-height: 180px;
     object-fit: cover;
     display: block;
+    min-height: 100%;
 }
 
 .ajtb-v1-recap-tour-body {
-    padding: 18px 18px 20px;
+    padding: 8px 4px 6px;
+    display: grid;
+    gap: 12px;
 }
 
 .ajtb-v1-recap-tour-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 12px;
+}
+
+.ajtb-v1-recap-hero-title {
+    margin: 0;
+    color: #112f4b;
+    font-size: clamp(24px, 2.3vw, 32px);
+    font-weight: 900;
+    line-height: 1.15;
+}
+
+.ajtb-v1-recap-hero-price {
+    margin: 0;
+    color: #56708f;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ajtb-v1-recap-hero-price strong {
+    color: #0f4f79;
+    font-size: 19px;
+    font-weight: 900;
+}
+
+.ajtb-v1-step1-selection-preview {
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px dashed #dbe8f6;
 }
 
 .ajtb-v1-recap-section-title {
@@ -2030,16 +2109,53 @@ body.ajtb-modal-open {
     line-height: 1.7;
 }
 
+.ajtb-v1-recap-hero-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.ajtb-v1-recap-hero-grid div {
+    padding: 12px 13px;
+    border-radius: 12px;
+    border: 1px solid #d8e7f6;
+    background: linear-gradient(180deg, #ffffff, #f9fcff);
+    display: grid;
+    gap: 4px;
+}
+
+.ajtb-v1-recap-hero-grid span {
+    color: #6d7f99;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ajtb-v1-recap-hero-grid strong {
+    color: #16304d;
+    font-size: 13px;
+    font-weight: 800;
+}
+
 .ajtb-v1-recap-selection {
     padding: 18px;
     margin-top: 0;
 }
 
-.ajtb-v1-recap-edit-grid {
+.ajtb-v1-recap-section-note {
+    margin: -2px 0 12px;
+    color: #6f839a;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ajtb-v1-recap-selection-head {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .ajtb-v1-recap-edit-card--full {
@@ -2049,7 +2165,7 @@ body.ajtb-modal-open {
 .ajtb-v1-recap-edit-card {
     background: #fff;
     border-radius: 16px;
-    border: 1px solid rgba(0, 131, 196, 0.16);
+    border: 1px solid #d8e7f6;
     padding: 14px 16px;
     min-height: 88px;
     display: flex;
@@ -2057,6 +2173,106 @@ body.ajtb-modal-open {
     justify-content: center;
     gap: 9px;
     box-shadow: 0 6px 16px rgba(15, 79, 121, 0.08);
+}
+
+.ajtb-v1-recap-people-banner {
+    grid-column: 1 / -1;
+    border: 1px solid #b7d6f1;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #eef7ff, #e4f3ff);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ajtb-v1-recap-people-banner span {
+    color: #0f4f79;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.ajtb-v1-recap-people-banner strong {
+    color: #0d2f4d;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.ajtb-v1-selection-groups {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.ajtb-v1-selection-group {
+    border: 1px solid #dbe8f6;
+    border-radius: 15px;
+    background: #ffffff;
+    padding: 14px;
+    box-shadow: 0 8px 18px rgba(15, 79, 121, 0.07);
+    min-height: 100%;
+}
+
+.ajtb-v1-selection-group h3 {
+    margin: 0 0 10px;
+}
+
+.ajtb-v1-selection-group h3 span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #123150;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.ajtb-v1-selection-group h3 span::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #1681e8;
+    box-shadow: 0 0 0 4px rgba(22, 129, 232, 0.12);
+}
+
+.ajtb-v1-selection-group dl {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.ajtb-v1-selection-group dl > div {
+    border-radius: 10px;
+    background: #f8fbff;
+    border: 1px solid #e5eef9;
+    padding: 10px 11px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+}
+
+.ajtb-v1-selection-group dt {
+    margin: 0;
+    color: #6a7f9a;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ajtb-v1-selection-group dd {
+    margin: 0;
+    color: #153554;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.35;
+    text-align: left;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .ajtb-v1-recap-dl--readonly {
@@ -2153,6 +2369,74 @@ body.ajtb-modal-open {
     color: #60718b;
     font-size: 13px;
     line-height: 1.65;
+}
+
+.ajtb-v1-recap-features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.ajtb-v1-recap-features-grid > div {
+    border: 1px solid #dce7f4;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 14px;
+}
+
+.ajtb-v1-recap-features-grid h3 {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    font-weight: 900;
+    color: #17304d;
+}
+
+.ajtb-v1-recap-list {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    color: #60718b;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.ajtb-v1-recap-policy-timeline {
+    display: grid;
+    gap: 10px;
+}
+
+.ajtb-v1-recap-policy-timeline div {
+    position: relative;
+    padding: 10px 12px 10px 22px;
+    border-radius: 12px;
+    border: 1px solid #dce7f4;
+    background: #ffffff;
+    display: grid;
+    gap: 4px;
+}
+
+.ajtb-v1-recap-policy-timeline div::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 16px;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #0f79bf;
+}
+
+.ajtb-v1-recap-policy-timeline strong {
+    color: #17304d;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.ajtb-v1-recap-policy-timeline span {
+    color: #60718b;
+    font-size: 12px;
+    line-height: 1.55;
 }
 
 .ajtb-v1-recap-muted {
@@ -2382,6 +2666,34 @@ body.ajtb-modal-open {
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+}
+
+.ajtb-v1-recap-mini-btn--prev {
+    min-width: 124px;
+}
+
+.ajtb-v1-recap-mini-btn--next {
+    min-width: 160px;
+    min-height: 42px;
+    color: #ffffff;
+    border-color: #0d68db;
+    background: linear-gradient(180deg, #2f8fff, #0d68db);
+    box-shadow: 0 10px 18px rgba(13, 104, 219, 0.24);
+}
+
+.ajtb-v1-recap-mini-btn:hover {
+    border-color: #a6cdee;
+    background: #e6f3ff;
+}
+
+.ajtb-v1-recap-mini-btn--next:hover {
+    border-color: #0a56b4;
+    background: linear-gradient(180deg, #2b86f0, #0a56b4);
+}
+
+.ajtb-v1-recap-mini-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .ajtb-v1-recap-companions-head h3 {
@@ -2625,6 +2937,17 @@ body.ajtb-modal-open {
     flex-wrap: wrap;
 }
 
+@keyframes ajtbV1StepReveal {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @media (max-width: 767px) {
     .ajtb-v1-choice-item {
         grid-template-columns: 18px 1fr;
@@ -2720,7 +3043,17 @@ body.ajtb-modal-open {
         grid-template-columns: 1fr;
     }
     .ajtb-v1-recap-step-actions {
-        flex-direction: column;
+        align-items: stretch;
+    }
+    .ajtb-v1-step-actions-buttons {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    .ajtb-v1-recap-mini-btn--prev,
+    .ajtb-v1-recap-mini-btn--next {
+        min-width: 0;
+        width: 100%;
     }
     .ajtb-v1-recap-step-actions .ajtb-v1-recap-btn {
         width: 100%;
@@ -2730,11 +3063,40 @@ body.ajtb-modal-open {
     }
     .ajtb-v1-recap-tour {
         grid-template-columns: 1fr;
+        padding: 12px;
+    }
+    .ajtb-v1-recap-tour-media {
+        min-height: 0;
+        aspect-ratio: 16 / 9;
+        height: auto;
+    }
+    .ajtb-v1-recap-hero-title {
+        font-size: 24px;
     }
     .ajtb-v1-recap-dl {
         grid-template-columns: 1fr;
     }
-    .ajtb-v1-recap-edit-grid {
+    .ajtb-v1-recap-selection-head {
+        grid-template-columns: 1fr;
+    }
+    .ajtb-v1-selection-groups {
+        grid-template-columns: 1fr;
+    }
+    .ajtb-v1-selection-group dl > div {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+    .ajtb-v1-selection-group dd {
+        text-align: left;
+    }
+    .ajtb-v1-recap-people-banner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .ajtb-v1-recap-hero-grid {
+        grid-template-columns: 1fr;
+    }
+    .ajtb-v1-recap-features-grid {
         grid-template-columns: 1fr;
     }
     .ajtb-v1-recap-companion-row {

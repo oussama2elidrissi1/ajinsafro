@@ -2,9 +2,8 @@
 /**
  * Group Deals Page Template
  *
- * Clone visuel de voyages.php — mêmes classes CSS, même structure.
- * La seule différence est la source de données : table Laravel `voyages`
- * filtrée sur is_group_deal = 1 (pas de WP_Query).
+ * Premium hybrid layout mixing Ajinsafro booking UI and a modern group-deal grid.
+ * Uses real data from the shared Laravel `voyages` table filtered by `is_group_deal = 1`.
  *
  * @package AjinsafroTravelerHome
  */
@@ -17,8 +16,10 @@ get_header();
 global $wpdb;
 
 $settings = ajth_get_settings();
+$group_deals_url = function_exists('ajth_get_group_deals_url')
+    ? ajth_get_group_deals_url()
+    : home_url('/group-deals/');
 
-/* ── Pagination ─────────────────────────────────────────────────────────────── */
 $paged = max(
     1,
     absint(get_query_var('paged')),
@@ -26,386 +27,708 @@ $paged = max(
     absint($_GET['paged'] ?? 0)
 );
 $per_page = 12;
-$offset   = ($paged - 1) * $per_page;
+$offset = ($paged - 1) * $per_page;
 
-/* ── Filters from GET (miroir voyages-filters.php) ─────────────────────────── */
-$search_text   = isset($_GET['s'])           ? sanitize_text_field(wp_unslash($_GET['s']))           : '';
-$dest          = isset($_GET['dest'])         ? sanitize_text_field(wp_unslash($_GET['dest']))         : '';
-$depart_date   = isset($_GET['depart_date'])  ? sanitize_text_field(wp_unslash($_GET['depart_date']))  : '';
-$price_min     = isset($_GET['price_min'])    ? absint($_GET['price_min'])    : 0;
-$price_max     = isset($_GET['price_max'])    ? absint($_GET['price_max'])    : 0;
-$group_size    = isset($_GET['group_size'])   ? max(2, absint($_GET['group_size'])) : 0;
-$catalog_orderby = isset($_GET['catalog_orderby']) ? sanitize_text_field(wp_unslash($_GET['catalog_orderby'])) : 'date';
-if (! in_array($catalog_orderby, ['date', 'title', 'title_desc'], true)) {
-    $catalog_orderby = 'date';
+$sort = isset($_GET['catalog_orderby']) ? sanitize_text_field(wp_unslash($_GET['catalog_orderby'])) : 'recommended';
+$allowed_sorts = ['recommended', 'price_asc', 'price_desc', 'discount_desc', 'newest'];
+if (! in_array($sort, $allowed_sorts, true)) {
+    $sort = 'recommended';
 }
 
-$is_search = $search_text !== '';
-$has_any_filter = $is_search
-    || $dest !== ''
-    || ($depart_date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $depart_date))
-    || $price_min > 0
-    || $price_max > 0
-    || $group_size > 0;
+$search_text = isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
+$dest = isset($_GET['dest']) ? sanitize_text_field(wp_unslash($_GET['dest'])) : '';
+$price_min = isset($_GET['price_min']) ? absint($_GET['price_min']) : 0;
+$price_max = isset($_GET['price_max']) ? absint($_GET['price_max']) : 0;
+$group_size = isset($_GET['group_size']) ? max(0, absint($_GET['group_size'])) : 0;
+$featured_only = ! empty($_GET['featured']);
+$promo_only = ! empty($_GET['promo']);
+$guaranteed_only = ! empty($_GET['guaranteed']);
+$selected_services = isset($_GET['service']) ? (array) wp_unslash($_GET['service']) : [];
 
-/* ── Detect voyages table (Laravel shares same DB) ──────────────────────────── */
+$service_catalog = [
+    'vol' => [
+        'label' => 'Vol inclus',
+        'keywords' => ['vol', 'flight', 'avion'],
+    ],
+    'hotel' => [
+        'label' => 'Hotel inclus',
+        'keywords' => ['hotel', 'hebergement', 'riad', 'resort', 'appartement'],
+    ],
+    'transfert' => [
+        'label' => 'Transfert',
+        'keywords' => ['transfert', 'transfer', 'navette'],
+    ],
+    'guide' => [
+        'label' => 'Guide',
+        'keywords' => ['guide', 'accompagnateur'],
+    ],
+    'petit_dejeuner' => [
+        'label' => 'Petit-dejeuner',
+        'keywords' => ['petit-dejeuner', 'petit déjeuner', 'breakfast'],
+    ],
+];
+$selected_services = array_values(array_intersect(array_map('sanitize_key', $selected_services), array_keys($service_catalog)));
+
+$is_guaranteed_policy = static function (?string $policy): bool {
+    $value = function_exists('mb_strtolower')
+        ? mb_strtolower((string) $policy, 'UTF-8')
+        : strtolower((string) $policy);
+
+    foreach (['garanti', 'garantie', 'confirme', 'confirm', 'depart assure'] as $needle) {
+        if ($needle !== '' && strpos($value, $needle) !== false) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+$normalize_list = static function ($raw): array {
+    if (is_array($raw)) {
+        $items = $raw;
+    } elseif (is_string($raw)) {
+        $trimmed = trim($raw);
+        $decoded = null;
+        if ($trimmed !== '' && ($trimmed[0] === '[' || $trimmed[0] === '{')) {
+            $decoded = json_decode($trimmed, true);
+        }
+        if (is_array($decoded)) {
+            $items = $decoded;
+        } else {
+            $items = preg_split('/[\r\n,;|]+/', wp_strip_all_tags($trimmed));
+        }
+    } else {
+        $items = [];
+    }
+
+    $items = array_map(static function ($item): string {
+        return trim(wp_strip_all_tags((string) $item));
+    }, $items);
+
+    $items = array_values(array_filter(array_unique($items), static function ($item): bool {
+        return $item !== '';
+    }));
+
+    return $items;
+};
+
+$infer_service_keys = static function ($raw, array $catalog) use ($normalize_list): array {
+    $haystack_parts = $normalize_list($raw);
+    $haystack = function_exists('mb_strtolower')
+        ? mb_strtolower(implode(' | ', $haystack_parts), 'UTF-8')
+        : strtolower(implode(' | ', $haystack_parts));
+
+    $found = [];
+    foreach ($catalog as $service_key => $config) {
+        foreach ((array) ($config['keywords'] ?? []) as $keyword) {
+            $needle = function_exists('mb_strtolower')
+                ? mb_strtolower((string) $keyword, 'UTF-8')
+                : strtolower((string) $keyword);
+            if ($needle !== '' && strpos($haystack, $needle) !== false) {
+                $found[] = $service_key;
+                break;
+            }
+        }
+    }
+
+    return array_values(array_unique($found));
+};
+
+$build_url = static function (array $args) use ($group_deals_url): string {
+    $clean = [];
+    foreach ($args as $key => $value) {
+        if (is_array($value)) {
+            $value = array_values(array_filter($value, static fn ($item) => $item !== '' && $item !== null));
+            if (! empty($value)) {
+                $clean[$key] = $value;
+            }
+            continue;
+        }
+        if ($value !== '' && $value !== null && $value !== false && $value !== 0 && $value !== '0') {
+            $clean[$key] = $value;
+        }
+    }
+
+    return empty($clean) ? $group_deals_url : add_query_arg($clean, $group_deals_url);
+};
+
+$current_args = array_filter([
+    's' => $search_text,
+    'dest' => $dest,
+    'price_min' => $price_min > 0 ? (string) $price_min : '',
+    'price_max' => $price_max > 0 ? (string) $price_max : '',
+    'group_size' => $group_size > 0 ? (string) $group_size : '',
+    'featured' => $featured_only ? '1' : '',
+    'promo' => $promo_only ? '1' : '',
+    'guaranteed' => $guaranteed_only ? '1' : '',
+    'service' => $selected_services,
+    'catalog_orderby' => $sort !== 'recommended' ? $sort : '',
+], static function ($value): bool {
+    if (is_array($value)) {
+        return ! empty($value);
+    }
+
+    return $value !== '' && $value !== null;
+});
+
 $voyages_table = null;
-foreach (['voyages', $wpdb->prefix . 'voyages'] as $_candidate) {
+foreach (['voyages', $wpdb->prefix . 'voyages'] as $candidate) {
     $exists = $wpdb->get_var($wpdb->prepare(
         'SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s LIMIT 1',
-        $_candidate
+        $candidate
     ));
     if ($exists) {
-        $voyages_table = $_candidate;
+        $voyages_table = $candidate;
         break;
     }
 }
 
-/* ── Query group deals ───────────────────────────────────────────────────────── */
-$deals      = [];
+$valid_statuses = ['actif', 'published', 'active', 'publish'];
+$status_placeholders = implode(',', array_fill(0, count($valid_statuses), '%s'));
+
+$available_destinations = [];
+$available_services = [];
+$has_featured_offers = false;
+$has_promo_offers = false;
+$has_guaranteed_offers = false;
+$deals = [];
 $found_posts = 0;
 $max_num_pages = 1;
+$min_price_found = null;
 
 if ($voyages_table !== null) {
-    $valid_statuses  = ['actif', 'published', 'active', 'publish'];
-    $status_ph       = implode(',', array_fill(0, count($valid_statuses), '%s'));
-    $where_parts     = ["status IN ($status_ph)", 'is_group_deal = 1'];
-    $where_values    = $valid_statuses;
+    $meta_rows = (array) $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT destination, tours_include, departure_policy, is_featured, price_from, old_price
+             FROM `{$voyages_table}`
+             WHERE status IN ($status_placeholders) AND is_group_deal = 1
+             ORDER BY updated_at DESC
+             LIMIT 500",
+            ...$valid_statuses
+        )
+    );
 
-    // Search filter
-    if ($search_text !== '') {
-        $like = '%' . $wpdb->esc_like($search_text) . '%';
-        $where_parts[]  = '(name LIKE %s OR destination LIKE %s OR description LIKE %s)';
-        $where_values[] = $like;
-        $where_values[] = $like;
-        $where_values[] = $like;
+    $dest_index = [];
+    $service_counts = array_fill_keys(array_keys($service_catalog), 0);
+    foreach ($meta_rows as $row) {
+        $destination_label = trim((string) ($row->destination ?? ''));
+        if ($destination_label !== '') {
+            $dest_index[$destination_label] = $destination_label;
+        }
+
+        if (! empty($row->is_featured)) {
+            $has_featured_offers = true;
+        }
+        if ((float) ($row->old_price ?? 0) > (float) ($row->price_from ?? 0) && (float) ($row->price_from ?? 0) > 0) {
+            $has_promo_offers = true;
+        }
+        if ($is_guaranteed_policy($row->departure_policy ?? '')) {
+            $has_guaranteed_offers = true;
+        }
+
+        foreach ($infer_service_keys($row->tours_include ?? null, $service_catalog) as $service_key) {
+            $service_counts[$service_key]++;
+        }
     }
 
-    // Destination filter
+    $available_destinations = array_values($dest_index);
+    sort($available_destinations, SORT_NATURAL | SORT_FLAG_CASE);
+
+    foreach ($service_catalog as $service_key => $config) {
+        if (($service_counts[$service_key] ?? 0) > 0) {
+            $available_services[$service_key] = $config['label'];
+        }
+    }
+
+    $where_parts = ["status IN ($status_placeholders)", 'is_group_deal = 1'];
+    $where_values = $valid_statuses;
+
+    if ($search_text !== '') {
+        $like = '%' . $wpdb->esc_like($search_text) . '%';
+        $where_parts[] = '(name LIKE %s OR destination LIKE %s OR description LIKE %s OR accroche LIKE %s)';
+        array_push($where_values, $like, $like, $like, $like);
+    }
+
     if ($dest !== '') {
-        $where_parts[]  = 'destination = %s';
+        $where_parts[] = 'destination = %s';
         $where_values[] = $dest;
     }
 
-    // Price filter
     if ($price_min > 0) {
-        $where_parts[]  = 'price_from >= %f';
-        $where_values[] = (float) $price_min;
+        $where_parts[] = 'price_from >= %d';
+        $where_values[] = $price_min;
     }
     if ($price_max > 0) {
-        $where_parts[]  = 'price_from <= %f';
-        $where_values[] = (float) $price_max;
+        $where_parts[] = 'price_from <= %d';
+        $where_values[] = $price_max;
     }
-
-    // Group size: keep voyages with max_people >= group_size OR max_people = 0
     if ($group_size > 0) {
-        $where_parts[]  = '(max_people = 0 OR max_people IS NULL OR max_people >= %d)';
+        $where_parts[] = '(max_people IS NULL OR max_people = 0 OR max_people >= %d)';
         $where_values[] = $group_size;
+    }
+    if ($featured_only) {
+        $where_parts[] = 'is_featured = 1';
+    }
+    if ($promo_only) {
+        $where_parts[] = '(old_price IS NOT NULL AND old_price > price_from AND price_from > 0)';
+    }
+    if ($guaranteed_only) {
+        $where_parts[] = "(LOWER(COALESCE(departure_policy, '')) LIKE %s OR LOWER(COALESCE(departure_policy, '')) LIKE %s OR LOWER(COALESCE(departure_policy, '')) LIKE %s)";
+        array_push($where_values, '%garanti%', '%confirm%', '%confirme%');
+    }
+    foreach ($selected_services as $service_key) {
+        if (! isset($service_catalog[$service_key])) {
+            continue;
+        }
+        $keyword_parts = [];
+        foreach ((array) $service_catalog[$service_key]['keywords'] as $keyword) {
+            $keyword_parts[] = "LOWER(COALESCE(tours_include, '')) LIKE %s";
+            $where_values[] = '%' . strtolower((string) $keyword) . '%';
+        }
+        if (! empty($keyword_parts)) {
+            $where_parts[] = '(' . implode(' OR ', $keyword_parts) . ')';
+        }
     }
 
     $where_sql = 'WHERE ' . implode(' AND ', $where_parts);
-
-    // Order
-    $order_sql = match ($catalog_orderby) {
-        'title'      => 'ORDER BY name ASC',
-        'title_desc' => 'ORDER BY name DESC',
-        default      => 'ORDER BY updated_at DESC',
+    $order_sql = match ($sort) {
+        'price_asc' => 'ORDER BY CASE WHEN price_from IS NULL OR price_from = 0 THEN 1 ELSE 0 END ASC, price_from ASC, updated_at DESC',
+        'price_desc' => 'ORDER BY CASE WHEN price_from IS NULL OR price_from = 0 THEN 1 ELSE 0 END ASC, price_from DESC, updated_at DESC',
+        'discount_desc' => 'ORDER BY CASE WHEN old_price > price_from AND old_price > 0 THEN ((old_price - price_from) / old_price) ELSE 0 END DESC, updated_at DESC',
+        'newest' => 'ORDER BY updated_at DESC, id DESC',
+        default => 'ORDER BY is_featured DESC, CASE WHEN old_price > price_from AND price_from > 0 THEN 1 ELSE 0 END DESC, updated_at DESC, id DESC',
     };
 
-    // Count
     $found_posts = (int) $wpdb->get_var(
         $wpdb->prepare("SELECT COUNT(*) FROM `{$voyages_table}` {$where_sql}", ...$where_values)
     );
     $max_num_pages = $found_posts > 0 ? (int) ceil($found_posts / $per_page) : 1;
 
-    // Rows
-    $deals = (array) $wpdb->get_results(
+    $rows = (array) $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT id, name, slug, destination, duration_text, price_from, currency,
-                    featured_image, accroche, min_people, max_people, wp_post_id
-             FROM `{$voyages_table}` {$where_sql} {$order_sql} LIMIT %d OFFSET %d",
+            "SELECT id, name, slug, destination, duration_text, price_from, old_price, currency,
+                    featured_image, accroche, description, min_people, max_people, wp_post_id,
+                    is_featured, departure_policy, tours_include, updated_at
+             FROM `{$voyages_table}`
+             {$where_sql}
+             {$order_sql}
+             LIMIT %d OFFSET %d",
             ...array_merge($where_values, [$per_page, $offset])
         )
     );
+
+    $booking_base = rtrim((string) get_option('ajinsafro_booking_url', 'https://booking.ajinsafro.net'), '/');
+    foreach ($rows as $row) {
+        $image_url = '';
+        if (! empty($row->wp_post_id)) {
+            $thumb = get_the_post_thumbnail_url((int) $row->wp_post_id, 'medium_large');
+            if ($thumb) {
+                $image_url = $thumb;
+            }
+        }
+        if ($image_url === '' && ! empty($row->featured_image)) {
+            $featured_image = (string) $row->featured_image;
+            if (preg_match('#^https?://#i', $featured_image) || strpos($featured_image, 'data:') === 0) {
+                $image_url = $featured_image;
+            } else {
+                $image_url = $booking_base . '/storage/' . ltrim($featured_image, '/');
+            }
+        }
+        if ($image_url === '') {
+            $image_url = AJTH_URL . 'assets/images/fallback-voyage.svg';
+        }
+
+        $deal_url = '';
+        if (! empty($row->wp_post_id)) {
+            $deal_url = (string) get_permalink((int) $row->wp_post_id);
+        }
+        if ($deal_url === '' && ! empty($row->slug)) {
+            $deal_url = home_url('/voyages/' . rawurlencode((string) $row->slug) . '/');
+        }
+
+        $price_from = (float) ($row->price_from ?? 0);
+        $old_price = (float) ($row->old_price ?? 0);
+        $discount_percent = ($old_price > $price_from && $price_from > 0)
+            ? (int) round((($old_price - $price_from) / $old_price) * 100)
+            : 0;
+        $service_keys = $infer_service_keys($row->tours_include ?? null, $service_catalog);
+        $services = [];
+        foreach ($service_keys as $service_key) {
+            if (isset($service_catalog[$service_key])) {
+                $services[] = $service_catalog[$service_key]['label'];
+            }
+        }
+        $services = array_slice($services, 0, 4);
+
+        $min_people = (int) ($row->min_people ?? 0);
+        $max_people = (int) ($row->max_people ?? 0);
+        $threshold_ratio = ($min_people > 0 && $max_people > 0 && $max_people >= $min_people)
+            ? min(100, (int) round(($min_people / max(1, $max_people)) * 100))
+            : 0;
+
+        $excerpt_source = trim((string) ($row->accroche ?: $row->description ?: ''));
+        $policy_text = trim(wp_strip_all_tags((string) ($row->departure_policy ?? '')));
+        $is_guaranteed = $is_guaranteed_policy($policy_text);
+
+        $deals[] = [
+            'id' => (int) $row->id,
+            'title' => (string) $row->name,
+            'url' => $deal_url,
+            'image_url' => $image_url,
+            'destination' => trim((string) ($row->destination ?? '')),
+            'duration' => trim((string) ($row->duration_text ?? '')),
+            'excerpt' => $excerpt_source !== '' ? wp_trim_words($excerpt_source, 22, '...') : '',
+            'policy' => $policy_text !== '' ? wp_trim_words($policy_text, 12, '...') : '',
+            'price_from' => $price_from,
+            'price_label' => $price_from > 0 ? number_format($price_from, 0, ',', ' ') : '',
+            'old_price_label' => $old_price > $price_from && $price_from > 0 ? number_format($old_price, 0, ',', ' ') : '',
+            'discount_percent' => $discount_percent,
+            'is_featured' => ! empty($row->is_featured),
+            'is_guaranteed' => $is_guaranteed,
+            'services' => $services,
+            'min_people' => $min_people,
+            'max_people' => $max_people,
+            'threshold_ratio' => $threshold_ratio,
+        ];
+
+        if ($price_from > 0) {
+            $min_price_found = $min_price_found === null ? $price_from : min($min_price_found, $price_from);
+        }
+    }
 }
 
-/* ── Pagination args (preserve all filters) ─────────────────────────────────── */
-$gd_pagination_args = array_filter([
-    's'               => $search_text,
-    'dest'            => $dest,
-    'depart_date'     => $depart_date,
-    'price_min'       => $price_min > 0  ? (string) $price_min  : '',
-    'price_max'       => $price_max > 0  ? (string) $price_max  : '',
-    'group_size'      => $group_size > 0 ? (string) $group_size : '',
-    'catalog_orderby' => $catalog_orderby !== 'date' ? $catalog_orderby : '',
-], static fn ($v) => $v !== '' && $v !== null);
-
-/* ── Page URL ────────────────────────────────────────────────────────────────── */
-$group_deals_url = function_exists('ajth_get_group_deals_url')
-    ? ajth_get_group_deals_url()
-    : home_url('/group-deals/');
-
-/* ── Helpers ─────────────────────────────────────────────────────────────────── */
-$booking_base = rtrim(get_option('ajinsafro_booking_url', 'https://booking.ajinsafro.net'), '/');
-
-$get_deal_image = static function (object $deal) use ($booking_base): string {
-    if (! empty($deal->wp_post_id)) {
-        $thumb = get_the_post_thumbnail_url((int) $deal->wp_post_id, 'medium_large');
-        if ($thumb) return $thumb;
+$visible_featured = 0;
+$visible_promos = 0;
+$visible_guaranteed = 0;
+foreach ($deals as $deal) {
+    if ($deal['is_featured']) {
+        $visible_featured++;
     }
-    if (! empty($deal->featured_image)) {
-        return $booking_base . '/storage/' . ltrim($deal->featured_image, '/');
+    if ($deal['discount_percent'] > 0) {
+        $visible_promos++;
     }
-    return '';
-};
+    if ($deal['is_guaranteed']) {
+        $visible_guaranteed++;
+    }
+}
 
-$get_deal_url = static function (object $deal): string {
-    if (! empty($deal->wp_post_id)) {
-        $url = get_permalink((int) $deal->wp_post_id);
-        if ($url) return $url;
+$active_chips = [];
+if ($search_text !== '') {
+    $args = $current_args;
+    unset($args['s']);
+    $active_chips[] = ['label' => 'Recherche: ' . $search_text, 'url' => $build_url($args)];
+}
+if ($dest !== '') {
+    $args = $current_args;
+    unset($args['dest']);
+    $active_chips[] = ['label' => 'Destination: ' . $dest, 'url' => $build_url($args)];
+}
+if ($price_min > 0) {
+    $args = $current_args;
+    unset($args['price_min']);
+    $active_chips[] = ['label' => 'Min ' . number_format($price_min, 0, ',', ' ') . ' DH', 'url' => $build_url($args)];
+}
+if ($price_max > 0) {
+    $args = $current_args;
+    unset($args['price_max']);
+    $active_chips[] = ['label' => 'Max ' . number_format($price_max, 0, ',', ' ') . ' DH', 'url' => $build_url($args)];
+}
+if ($group_size > 0) {
+    $args = $current_args;
+    unset($args['group_size']);
+    $active_chips[] = ['label' => 'Groupe min: ' . $group_size, 'url' => $build_url($args)];
+}
+if ($featured_only) {
+    $args = $current_args;
+    unset($args['featured']);
+    $active_chips[] = ['label' => 'Selection Ajinsafro', 'url' => $build_url($args)];
+}
+if ($promo_only) {
+    $args = $current_args;
+    unset($args['promo']);
+    $active_chips[] = ['label' => 'Promotions', 'url' => $build_url($args)];
+}
+if ($guaranteed_only) {
+    $args = $current_args;
+    unset($args['guaranteed']);
+    $active_chips[] = ['label' => 'Departs garantis', 'url' => $build_url($args)];
+}
+foreach ($selected_services as $service_key) {
+    if (! isset($service_catalog[$service_key])) {
+        continue;
     }
-    if (! empty($deal->slug)) {
-        return home_url('/voyages/' . $deal->slug . '/');
+    $args = $current_args;
+    $args['service'] = array_values(array_diff($selected_services, [$service_key]));
+    if (empty($args['service'])) {
+        unset($args['service']);
     }
-    return '';
-};
+    $active_chips[] = ['label' => $service_catalog[$service_key]['label'], 'url' => $build_url($args)];
+}
+
+$sort_labels = [
+    'recommended' => 'Recommandees',
+    'price_asc' => 'Prix croissant',
+    'price_desc' => 'Prix decroissant',
+    'discount_desc' => 'Reduction la plus forte',
+    'newest' => 'Plus recentes',
+];
 ?>
 
 <div class="aj-home-wrap">
-    <div id="aj-home" class="aj-home aj-voyages-page">
+    <div id="aj-home" class="aj-home aj-groupdeals-page">
         <?php ajth_render_site_header($settings); ?>
 
-        <section class="aj-voyages-catalog">
-            <div class="aj-container aj-voyages-catalog__container">
-                <input type="checkbox" id="aj-voyages-filters-toggle" class="aj-voyages-filters-toggle" tabindex="-1" aria-hidden="true">
-                <label for="aj-voyages-filters-toggle" class="aj-voyages-filters-backdrop" aria-hidden="true"></label>
+        <div class="aj-groupdeals-fusion" id="aj-groupdeals-fusion">
+            <section class="hero">
+                <div class="container">
+                    <div class="hero-copy">
+                        <span class="hero-eyebrow">Group Deals Ajinsafro</span>
+                        <h1 class="hero-title">Voyagez en groupe, payez moins</h1>
+                        <p class="hero-subtitle">Parcourez nos departs groupes, reperez les meilleures reductions et reservez des sejours penses pour les voyageurs Ajinsafro.</p>
+                    </div>
 
-                <div class="aj-voyages-catalog__grid">
+                    <form class="search-panel" method="get" action="<?php echo esc_url($group_deals_url); ?>">
+                        <?php foreach ($current_args as $key => $value) {
+                            if (in_array($key, ['s', 'dest', 'price_max', 'group_size', 'paged'], true)) {
+                                continue;
+                            }
+                            if (is_array($value)) {
+                                foreach ($value as $item) { ?>
+                                    <input type="hidden" name="<?php echo esc_attr($key); ?>[]" value="<?php echo esc_attr((string) $item); ?>">
+                                <?php }
+                                continue;
+                            } ?>
+                            <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr((string) $value); ?>">
+                        <?php } ?>
+                        <div class="search-field search-field--wide">
+                            <label for="ajgd-search">Recherche</label>
+                            <input id="ajgd-search" name="s" type="text" value="<?php echo esc_attr($search_text); ?>" placeholder="Ville, pays, destination, theme...">
+                        </div>
+                        <div class="search-field">
+                            <label for="ajgd-destination">Destination</label>
+                            <select id="ajgd-destination" name="dest">
+                                <option value="">Toutes les destinations</option>
+                                <?php foreach ($available_destinations as $destination_option) { ?>
+                                    <option value="<?php echo esc_attr($destination_option); ?>" <?php selected($dest, $destination_option); ?>><?php echo esc_html($destination_option); ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                        <div class="search-field">
+                            <label for="ajgd-travelers">Voyageurs</label>
+                            <input id="ajgd-travelers" name="group_size" type="number" min="0" value="<?php echo $group_size > 0 ? esc_attr((string) $group_size) : ''; ?>" placeholder="2 voyageurs">
+                        </div>
+                        <div class="search-field">
+                            <label for="ajgd-budget-max">Budget max</label>
+                            <input id="ajgd-budget-max" name="price_max" type="number" min="0" value="<?php echo $price_max > 0 ? esc_attr((string) $price_max) : ''; ?>" placeholder="Budget max">
+                        </div>
+                        <button class="search-btn" type="submit">Rechercher</button>
+                    </form>
+                </div>
+            </section>
 
-                    <!-- ── Sidebar filters ────────────────────────────────────────── -->
-                    <aside class="aj-voyages-filters-sidebar" id="aj-voyages-filters-panel"
-                           aria-label="<?php esc_attr_e('Filtres Group Deals', 'ajinsafro-traveler-home'); ?>">
-                        <label for="aj-voyages-filters-toggle" class="aj-voyages-filters-close"
-                               aria-label="<?php esc_attr_e('Fermer les filtres', 'ajinsafro-traveler-home'); ?>">
-                            <span aria-hidden="true">&times;</span>
-                        </label>
-                        <?php include AJTH_DIR . 'parts/group-deals-filters.php'; ?>
-                    </aside>
+            <main class="container main-grid">
+                <aside class="filters" id="ajgd-desktop-filters" aria-label="Filtres Group Deals">
+                    <div class="promo-card promo-card--soft">
+                        <span class="promo-card__eyebrow">Conseils groupe</span>
+                        <strong>Plus vous etes nombreux, plus l'offre devient interessante.</strong>
+                        <p>Affinez votre budget, vos services inclus et vos destinations pour trouver le meilleur deal.</p>
+                    </div>
+                    <div class="filter-title">
+                        <h2>Filtrer par</h2>
+                        <a class="clear-link" href="<?php echo esc_url($group_deals_url); ?>">Tout effacer</a>
+                    </div>
+                    <?php
+                    $group_deals_filter_prefix = 'ajgd-desktop';
+                    include AJTH_DIR . 'parts/group-deals-filters.php';
+                    ?>
+                </aside>
 
-                    <!-- ── Main catalog ───────────────────────────────────────────── -->
-                    <main class="aj-voyages-catalog__main">
-
-                        <label for="aj-voyages-filters-toggle" class="aj-voyages-filters-mobile-trigger">
-                            <i class="fas fa-sliders-h" aria-hidden="true"></i>
-                            <?php esc_html_e('Filtres', 'ajinsafro-traveler-home'); ?>
-                        </label>
-
-                        <!-- Toolbar : titre + count + tri — identique à voyages -->
-                        <div class="aj-voyages-toolbar">
-                            <div class="aj-voyages-toolbar__left">
-                                <h2 class="aj-voyages-toolbar__title">
-                                    <?php echo $has_any_filter
-                                        ? esc_html__('Offres correspondantes', 'ajinsafro-traveler-home')
-                                        : esc_html__('Group Deals', 'ajinsafro-traveler-home'); ?>
-                                </h2>
-                                <p class="aj-voyages-toolbar__count">
-                                    <?php printf(
-                                        esc_html(_n('%d résultat', '%d résultats', $found_posts, 'ajinsafro-traveler-home')),
-                                        $found_posts
-                                    ); ?>
-                                </p>
+                <section class="results">
+                    <div class="results-head">
+                        <div class="results-topline">
+                            <div>
+                                <h2><?php echo esc_html(number_format_i18n($found_posts)); ?> group deals trouves</h2>
+                                <div class="result-count">
+                                    <?php echo $min_price_found !== null
+                                        ? esc_html('A partir de ' . number_format_i18n((int) $min_price_found) . ' DH par personne')
+                                        : esc_html('Tarifs disponibles selon l offre'); ?>
+                                </div>
                             </div>
-                            <div class="aj-voyages-toolbar__sort">
-                                <form method="get" class="aj-voyages-sort-form"
-                                      action="<?php echo esc_url($group_deals_url); ?>">
-                                    <?php foreach ($gd_pagination_args as $pk => $pv) {
-                                        if ($pk === 'catalog_orderby') continue; ?>
-                                        <input type="hidden" name="<?php echo esc_attr($pk); ?>"
-                                               value="<?php echo esc_attr($pv); ?>">
+                            <form class="sort-wrap" method="get" action="<?php echo esc_url($group_deals_url); ?>">
+                                <?php foreach ($current_args as $key => $value) {
+                                    if ($key === 'catalog_orderby') {
+                                        continue;
+                                    }
+                                    if (is_array($value)) {
+                                        foreach ($value as $item) { ?>
+                                            <input type="hidden" name="<?php echo esc_attr($key); ?>[]" value="<?php echo esc_attr((string) $item); ?>">
+                                        <?php }
+                                        continue;
+                                    } ?>
+                                    <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr((string) $value); ?>">
+                                <?php } ?>
+                                <span>Trier par</span>
+                                <select name="catalog_orderby" onchange="this.form.submit()">
+                                    <?php foreach ($sort_labels as $sort_key => $sort_label) { ?>
+                                        <option value="<?php echo esc_attr($sort_key); ?>" <?php selected($sort, $sort_key); ?>><?php echo esc_html($sort_label); ?></option>
                                     <?php } ?>
-                                    <label class="aj-voyages-sort-form__label" for="gd-catalog-orderby">
-                                        <?php esc_html_e('Trier par', 'ajinsafro-traveler-home'); ?>
-                                    </label>
-                                    <select name="catalog_orderby" id="gd-catalog-orderby"
-                                            class="aj-voyages-sort-form__select" onchange="this.form.submit()">
-                                        <option value="date"       <?php selected($catalog_orderby, 'date'); ?>><?php esc_html_e('Plus récents',   'ajinsafro-traveler-home'); ?></option>
-                                        <option value="title"      <?php selected($catalog_orderby, 'title'); ?>><?php esc_html_e('Titre (A–Z)',     'ajinsafro-traveler-home'); ?></option>
-                                        <option value="title_desc" <?php selected($catalog_orderby, 'title_desc'); ?>><?php esc_html_e('Titre (Z–A)', 'ajinsafro-traveler-home'); ?></option>
-                                    </select>
-                                </form>
+                                </select>
+                            </form>
+                        </div>
+                        <div class="stat-pills">
+                            <span class="stat-pill"><?php echo esc_html(number_format_i18n(count($deals))); ?> offres visibles</span>
+                            <span class="stat-pill"><?php echo esc_html(number_format_i18n($visible_featured)); ?> selections Ajinsafro</span>
+                            <span class="stat-pill"><?php echo esc_html(number_format_i18n($visible_promos)); ?> reductions actives</span>
+                            <span class="stat-pill"><?php echo esc_html(number_format_i18n($visible_guaranteed)); ?> departs garantis</span>
+                        </div>
+                        <?php if (! empty($active_chips)) { ?>
+                            <div class="chips">
+                                <?php foreach ($active_chips as $chip) { ?>
+                                    <a class="chip" href="<?php echo esc_url($chip['url']); ?>">
+                                        <span><?php echo esc_html($chip['label']); ?></span>
+                                        <span aria-hidden="true">x</span>
+                                    </a>
+                                <?php } ?>
                             </div>
+                        <?php } ?>
+                    </div>
+
+                    <div class="deal-strip">
+                        <div>
+                            <strong>Offres groupe selectionnees pour la communaute Ajinsafro</strong>
+                            <span>Reperez rapidement les voyages mis en avant, les promos en cours et les offres avec services inclus.</span>
+                        </div>
+                        <a href="#ajgd-results">Explorer</a>
+                    </div>
+
+                    <?php if ($voyages_table === null) { ?>
+                        <div class="empty-state empty-state--visible">
+                            <h3>Donnees indisponibles</h3>
+                            <p>La source group deals n'est pas accessible depuis WordPress pour le moment.</p>
+                        </div>
+                    <?php } elseif (empty($deals)) { ?>
+                        <div class="empty-state empty-state--visible">
+                            <h3>Aucun group deal trouve</h3>
+                            <p>Essayez une autre destination, un budget plus large ou supprimez certains filtres.</p>
+                            <a class="primary-btn" href="<?php echo esc_url($group_deals_url); ?>">Reinitialiser les filtres</a>
+                        </div>
+                    <?php } else { ?>
+                        <div class="deals-grid" id="ajgd-results">
+                            <?php foreach ($deals as $deal) { ?>
+                                <article class="group-card<?php echo $deal['url'] === '' ? ' is-disabled' : ''; ?>">
+                                    <div class="group-card__media<?php echo strpos($deal['image_url'], 'fallback-voyage.svg') !== false ? ' is-fallback' : ''; ?>">
+                                        <img src="<?php echo esc_url($deal['image_url']); ?>" alt="<?php echo esc_attr($deal['title']); ?>" loading="lazy">
+                                        <div class="group-card__badges">
+                                            <?php if ($deal['discount_percent'] > 0) { ?><span class="badge badge--discount">-<?php echo esc_html((string) $deal['discount_percent']); ?>%</span><?php } ?>
+                                            <?php if ($deal['is_guaranteed']) { ?><span class="badge badge--success">Garanti</span><?php } ?>
+                                            <?php if ($deal['is_featured']) { ?><span class="badge badge--dark">Ajinsafro selection</span><?php } ?>
+                                        </div>
+                                    </div>
+                                    <div class="group-card__body">
+                                        <div class="group-card__head">
+                                            <div>
+                                                <?php if ($deal['destination'] !== '') { ?><p class="group-card__location"><?php echo esc_html($deal['destination']); ?></p><?php } ?>
+                                                <h3><?php echo esc_html($deal['title']); ?></h3>
+                                            </div>
+                                            <span class="group-card__type">Group deal</span>
+                                        </div>
+
+                                        <div class="group-card__meta">
+                                            <?php if ($deal['duration'] !== '') { ?><span><?php echo esc_html($deal['duration']); ?></span><?php } ?>
+                                            <?php if ($deal['min_people'] > 0 || $deal['max_people'] > 0) { ?>
+                                                <span>
+                                                    <?php
+                                                    if ($deal['min_people'] > 0 && $deal['max_people'] > 0) {
+                                                        echo esc_html($deal['min_people'] . '-' . $deal['max_people'] . ' participants');
+                                                    } elseif ($deal['max_people'] > 0) {
+                                                        echo esc_html('Jusqu a ' . $deal['max_people'] . ' participants');
+                                                    } else {
+                                                        echo esc_html('A partir de ' . $deal['min_people'] . ' participants');
+                                                    }
+                                                    ?>
+                                                </span>
+                                            <?php } ?>
+                                        </div>
+
+                                        <?php if ($deal['excerpt'] !== '') { ?><p class="group-card__description"><?php echo esc_html($deal['excerpt']); ?></p><?php } ?>
+
+                                        <?php if ($deal['policy'] !== '') { ?><p class="group-card__policy"><?php echo esc_html($deal['policy']); ?></p><?php } ?>
+
+                                        <?php if (! empty($deal['services'])) { ?>
+                                            <div class="group-card__tags">
+                                                <?php foreach ($deal['services'] as $service_label) { ?>
+                                                    <span><?php echo esc_html($service_label); ?></span>
+                                                <?php } ?>
+                                            </div>
+                                        <?php } ?>
+
+                                        <?php if ($deal['threshold_ratio'] > 0) { ?>
+                                            <div class="group-card__progress">
+                                                <div class="group-card__progress-top">
+                                                    <span>Seuil de depart</span>
+                                                    <span><?php echo esc_html((string) $deal['min_people']); ?> / <?php echo esc_html((string) $deal['max_people']); ?></span>
+                                                </div>
+                                                <div class="group-card__progress-bar"><span style="width: <?php echo esc_attr((string) $deal['threshold_ratio']); ?>%"></span></div>
+                                            </div>
+                                        <?php } ?>
+
+                                        <div class="group-card__footer">
+                                            <div class="group-card__price-block">
+                                                <?php if ($deal['old_price_label'] !== '') { ?><span class="group-card__old-price"><?php echo esc_html($deal['old_price_label']); ?> DH</span><?php } ?>
+                                                <small>A partir de</small>
+                                                <strong><?php echo $deal['price_label'] !== '' ? esc_html($deal['price_label'] . ' DH') : 'Prix sur demande'; ?></strong>
+                                                <span>par personne</span>
+                                            </div>
+                                            <div class="group-card__actions">
+                                                <?php if ($deal['url'] !== '') { ?>
+                                                    <a class="secondary-btn" href="<?php echo esc_url($deal['url']); ?>">Voir l'offre</a>
+                                                    <a class="primary-btn" href="<?php echo esc_url($deal['url']); ?>">Reserver</a>
+                                                <?php } else { ?>
+                                                    <span class="secondary-btn is-disabled">Lien indisponible</span>
+                                                <?php } ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            <?php } ?>
                         </div>
 
-                        <?php if ($voyages_table === null) { ?>
-                            <!-- DB non disponible -->
-                            <div class="aj-voyages-empty">
-                                <i class="fas fa-database" style="font-size:48px;color:#cbd5e1;margin-bottom:16px;"></i>
-                                <p style="font-size:18px;font-weight:600;margin-bottom:8px;">
-                                    <?php esc_html_e('Données non disponibles', 'ajinsafro-traveler-home'); ?>
-                                </p>
-                                <p style="color:#94a3b8;">
-                                    <?php esc_html_e('La table des voyages est inaccessible depuis WordPress.', 'ajinsafro-traveler-home'); ?>
-                                </p>
-                            </div>
+                        <?php
+                        $pagination = paginate_links([
+                            'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
+                            'format' => '?paged=%#%',
+                            'current' => $paged,
+                            'total' => $max_num_pages,
+                            'type' => 'array',
+                            'prev_text' => '&laquo;',
+                            'next_text' => '&raquo;',
+                            'add_args' => $current_args,
+                        ]);
+                        if (! empty($pagination)) { ?>
+                            <nav class="pagination" aria-label="Pagination Group Deals">
+                                <?php foreach ($pagination as $page_link) {
+                                    echo wp_kses_post($page_link);
+                                } ?>
+                            </nav>
+                        <?php } ?>
+                    <?php } ?>
+                </section>
+            </main>
 
-                        <?php } elseif (empty($deals)) { ?>
-                            <!-- Empty state — identique à voyages -->
-                            <div class="aj-voyages-empty">
-                                <i class="fas fa-users" style="font-size:48px;color:#cbd5e1;margin-bottom:16px;"></i>
-                                <p style="font-size:18px;font-weight:600;margin-bottom:8px;">
-                                    <?php esc_html_e('Aucun Group Deal trouvé', 'ajinsafro-traveler-home'); ?>
-                                </p>
-                                <p style="color:#94a3b8;">
-                                    <?php echo $has_any_filter
-                                        ? esc_html__("Essayez avec d'autres critères.", 'ajinsafro-traveler-home')
-                                        : esc_html__("Aucune offre groupe disponible pour le moment.", 'ajinsafro-traveler-home'); ?>
-                                </p>
-                            </div>
-
-                        <?php } else { ?>
-                            <!-- Grid — structure identique à aj-voyages-grid dans voyages.php -->
-                            <div class="aj-voyages-grid">
-                                <?php foreach ($deals as $deal) {
-                                    $img_url   = $get_deal_image($deal);
-                                    $deal_url  = $get_deal_url($deal);
-                                    $dest_txt  = esc_html(trim($deal->destination ?? ''));
-                                    $duration  = esc_html(trim($deal->duration_text ?? ''));
-                                    $excerpt   = wp_trim_words(strip_tags($deal->accroche ?? ''), 18, '…');
-                                    $price     = (float) ($deal->price_from ?? 0);
-                                    $currency  = esc_html(trim($deal->currency ?: 'DHS'));
-                                    $min_ppl   = (int) ($deal->min_people ?? 0);
-                                    $max_ppl   = (int) ($deal->max_people ?? 0);
-
-                                    $price_display = $price > 0
-                                        ? number_format($price, 0, ',', ' ')
-                                        : '';
-                                    ?>
-                                    <article class="aj-voyages-grid__item">
-                                        <?php if ($deal_url) { ?>
-                                            <a href="<?php echo esc_url($deal_url); ?>" class="aj-card2 aj-hover-glass">
-                                        <?php } else { ?>
-                                            <div class="aj-card2">
-                                        <?php } ?>
-
-                                            <!-- Image — même structure que voyages -->
-                                            <div class="aj-card2__image">
-                                                <?php if ($img_url) { ?>
-                                                    <img src="<?php echo esc_url($img_url); ?>"
-                                                         alt="<?php echo esc_attr($deal->name); ?>"
-                                                         loading="lazy">
-                                                <?php } else { ?>
-                                                    <div class="aj-voyages-image-fallback"></div>
-                                                <?php } ?>
-
-                                                <!-- Durée — badge top-right comme voyages -->
-                                                <?php if ($duration) { ?>
-                                                    <span class="aj-card2__badge aj-card2__badge--info">
-                                                        <i class="far fa-clock" aria-hidden="true"></i>
-                                                        <?php echo $duration; ?>
-                                                    </span>
-                                                <?php } ?>
-                                            </div>
-
-                                            <!-- Body — même structure que voyages -->
-                                            <div class="aj-card2__body">
-                                                <?php if ($dest_txt) { ?>
-                                                    <p class="aj-card2__location" style="font-size:0.75rem;color:#64748b;margin-bottom:4px;display:flex;align-items:center;gap:4px;">
-                                                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-                                                        <?php echo $dest_txt; ?>
-                                                    </p>
-                                                <?php } ?>
-
-                                                <h3 class="aj-card2__title"><?php echo esc_html($deal->name); ?></h3>
-
-                                                <?php if ($excerpt) { ?>
-                                                    <p class="aj-card2__desc"><?php echo esc_html($excerpt); ?></p>
-                                                <?php } ?>
-
-                                                <?php if ($min_ppl > 0) { ?>
-                                                    <p style="font-size:0.75rem;color:#64748b;margin-bottom:6px;display:flex;align-items:center;gap:4px;">
-                                                        <i class="fas fa-users" aria-hidden="true"></i>
-                                                        <?php
-                                                        if ($max_ppl > 0) {
-                                                            printf(
-                                                                esc_html__('%d–%d personnes', 'ajinsafro-traveler-home'),
-                                                                $min_ppl, $max_ppl
-                                                            );
-                                                        } else {
-                                                            printf(
-                                                                esc_html__('%d+ personnes', 'ajinsafro-traveler-home'),
-                                                                $min_ppl
-                                                            );
-                                                        }
-                                                        ?>
-                                                    </p>
-                                                <?php } ?>
-
-                                                <!-- Footer prix + CTA — identique à voyages -->
-                                                <div class="aj-card2__footer">
-                                                    <div>
-                                                        <?php if ($price_display) { ?>
-                                                            <span class="aj-card2__price-label">
-                                                                <?php esc_html_e('à partir de', 'ajinsafro-traveler-home'); ?>
-                                                            </span>
-                                                            <div class="aj-card2__price">
-                                                                <?php echo esc_html($price_display); ?>
-                                                                <span class="aj-card2__price-currency"><?php echo $currency; ?></span>
-                                                            </div>
-                                                            <span class="aj-card2__price-note">
-                                                                <?php esc_html_e('prix par personne', 'ajinsafro-traveler-home'); ?>
-                                                            </span>
-                                                        <?php } else { ?>
-                                                            <span class="aj-card2__price-label">
-                                                                <?php esc_html_e('Devis sur demande', 'ajinsafro-traveler-home'); ?>
-                                                            </span>
-                                                        <?php } ?>
-                                                    </div>
-                                                    <?php if ($deal_url) { ?>
-                                                        <span class="aj-card2__cta">
-                                                            <?php esc_html_e("VOIR L'OFFRE", 'ajinsafro-traveler-home'); ?>
-                                                        </span>
-                                                    <?php } ?>
-                                                </div>
-                                            </div>
-
-                                        <?php if ($deal_url) { ?>
-                                            </a>
-                                        <?php } else { ?>
-                                            </div>
-                                        <?php } ?>
-                                    </article>
-                                <?php } /* end foreach */ ?>
-                            </div>
-
-                            <!-- Pagination — identique à voyages -->
-                            <?php
-                            $pagination = paginate_links([
-                                'base'      => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
-                                'format'    => '?paged=%#%',
-                                'current'   => $paged,
-                                'total'     => $max_num_pages,
-                                'type'      => 'array',
-                                'prev_text' => '«',
-                                'next_text' => '»',
-                                'add_args'  => $gd_pagination_args,
-                            ]);
-                            if (! empty($pagination)) { ?>
-                                <nav class="aj-voyages-pagination"
-                                     aria-label="<?php esc_attr_e('Pagination Group Deals', 'ajinsafro-traveler-home'); ?>">
-                                    <?php foreach ($pagination as $page_link) {
-                                        echo wp_kses_post($page_link);
-                                    } ?>
-                                </nav>
-                            <?php } ?>
-
-                        <?php } /* end if deals */ ?>
-
-                    </main><!-- /.aj-voyages-catalog__main -->
-                </div><!-- /.aj-voyages-catalog__grid -->
-            </div><!-- /.aj-container -->
-        </section><!-- /.aj-voyages-catalog -->
-
-    </div><!-- /#aj-home -->
-</div><!-- /.aj-home-wrap -->
+            <button class="mobile-filter-btn" type="button" id="ajgd-open-filters">Filtres & tri</button>
+            <div class="drawer-backdrop" id="ajgd-drawer-backdrop"></div>
+            <aside class="mobile-drawer" id="ajgd-mobile-drawer" aria-label="Filtres mobile">
+                <div class="drawer-head">
+                    <h3>Filtres</h3>
+                    <button type="button" id="ajgd-close-filters">x</button>
+                </div>
+                <?php
+                $group_deals_filter_prefix = 'ajgd-mobile';
+                include AJTH_DIR . 'parts/group-deals-filters.php';
+                ?>
+            </aside>
+        </div>
+    </div>
+</div>
 
 <?php get_footer(); ?>

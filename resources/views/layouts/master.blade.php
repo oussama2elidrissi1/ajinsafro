@@ -11,9 +11,10 @@
     <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
 
     @include('layouts.head-css')
+    <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet" type="text/css" />
 </head>
 
-<body class="internal-v2-topbar-hidden" data-layout="detached" data-topbar="colored">
+<body class="admin-premium-ui internal-v2-topbar-hidden" data-layout="detached" data-topbar="colored">
     <!-- Begin page -->
     <div class="container-fluid">
         <div id="layout-wrapper">

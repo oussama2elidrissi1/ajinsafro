@@ -1,281 +1,125 @@
 <?php
-if (! defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
 get_header();
 
 $settings = ajth_get_settings();
-
-$paged = max(1, absint(get_query_var('paged')), absint(get_query_var('page')));
-$search = isset($_GET['search']) ? sanitize_text_field(wp_unslash($_GET['search'])) : '';
-if ($search === '' && isset($_GET['location_name'])) {
-    $search = sanitize_text_field(wp_unslash($_GET['location_name']));
-}
-if ($search === '' && isset($_GET['s'])) {
-    $search = sanitize_text_field(wp_unslash($_GET['s']));
-}
-
-$address = isset($_GET['address']) ? sanitize_text_field(wp_unslash($_GET['address'])) : '';
-$hotel_type = isset($_GET['hotel_type']) ? sanitize_text_field(wp_unslash($_GET['hotel_type'])) : '';
-$stars = isset($_GET['stars']) ? absint($_GET['stars']) : 0;
-$featured = isset($_GET['featured']) && (string) $_GET['featured'] === '1';
-$price_min = isset($_GET['price_min']) ? absint($_GET['price_min']) : 0;
-$price_max = isset($_GET['price_max']) ? absint($_GET['price_max']) : 0;
-$catalog_orderby = isset($_GET['catalog_orderby']) ? sanitize_text_field(wp_unslash($_GET['catalog_orderby'])) : 'date';
-
-global $wpdb;
-$posts_table = $wpdb->posts;
-$hotel_table = $wpdb->prefix . 'st_hotel';
-
-$sql = "SELECT DISTINCT p.ID
-        FROM {$posts_table} p
-        INNER JOIN {$hotel_table} h ON h.post_id = p.ID
-        WHERE p.post_type = 'st_hotel' AND p.post_status = 'publish'";
-$params = [];
-
-if ($search !== '') {
-    $like = '%' . $wpdb->esc_like($search) . '%';
-    $sql .= " AND (p.post_title LIKE %s OR p.post_name LIKE %s OR h.address LIKE %s)";
-    array_push($params, $like, $like, $like);
-}
-if ($address !== '') {
-    $sql .= " AND h.address = %s";
-    $params[] = $address;
-}
-if ($stars > 0) {
-    $sql .= " AND CAST(h.hotel_star AS UNSIGNED) = %d";
-    $params[] = $stars;
-}
-if ($price_min > 0) {
-    $sql .= " AND CAST(COALESCE(NULLIF(h.min_price, ''), '0') AS DECIMAL(10,2)) >= %d";
-    $params[] = $price_min;
-}
-if ($price_max > 0) {
-    $sql .= " AND CAST(COALESCE(NULLIF(h.min_price, ''), '0') AS DECIMAL(10,2)) <= %d";
-    $params[] = $price_max;
-}
-if ($featured) {
-    $sql .= " AND h.is_featured = 'on'";
-}
-if ($hotel_type !== '' && taxonomy_exists('hotel_type')) {
-    $ids = get_posts([
-        'post_type' => 'st_hotel',
-        'fields' => 'ids',
-        'posts_per_page' => -1,
-        'tax_query' => [[
-            'taxonomy' => 'hotel_type',
-            'field' => 'slug',
-            'terms' => [$hotel_type],
-        ]],
-    ]);
-    $ids = array_values(array_filter(array_map('absint', (array) $ids)));
-    $sql .= ' AND p.ID IN (' . (! empty($ids) ? implode(',', $ids) : '0') . ')';
-}
-
-$sql .= ' ORDER BY p.post_date DESC';
-$matching_ids = array_values(array_filter(array_map(
-    'absint',
-    $params ? $wpdb->get_col($wpdb->prepare($sql, $params)) : $wpdb->get_col($sql)
-)));
-
-$query_args = [
-    'post_type' => 'st_hotel',
-    'post_status' => 'publish',
-    'posts_per_page' => 12,
-    'paged' => $paged,
-    'post__in' => ! empty($matching_ids) ? $matching_ids : [0],
-];
-
-if ($catalog_orderby === 'title') {
-    $query_args['orderby'] = 'title';
-    $query_args['order'] = 'ASC';
-} else {
-    $query_args['orderby'] = 'date';
-    $query_args['order'] = 'DESC';
-}
-
-$q = new WP_Query($query_args);
-$current_ids = array_values(array_filter(array_map('absint', wp_list_pluck((array) $q->posts, 'ID'))));
-$hotel_rows = [];
-if (! empty($current_ids)) {
-    $detail_sql = "SELECT * FROM {$hotel_table} WHERE post_id IN (" . implode(',', $current_ids) . ')';
-    foreach ((array) $wpdb->get_results($detail_sql, ARRAY_A) as $row) {
-        $hotel_rows[(int) $row['post_id']] = $row;
-    }
-}
-
-$page_url = function_exists('ajth_get_hebergement_page_url') ? ajth_get_hebergement_page_url() : home_url('/hebergement/');
-$pagination_args = array_filter([
-    'search' => $search,
-    'address' => $address,
-    'hotel_type' => $hotel_type,
-    'stars' => $stars ? (string) $stars : '',
-    'featured' => $featured ? '1' : '',
-    'price_min' => $price_min ? (string) $price_min : '',
-    'price_max' => $price_max ? (string) $price_max : '',
-    'catalog_orderby' => $catalog_orderby,
-]);
 ?>
 
 <div class="aj-home-wrap">
-    <div id="aj-home" class="aj-home aj-voyages-page">
-        <?php ajth_render_site_header($settings); ?>
+    <div id="aj-home" class="aj-home aj-hebergement-booking-page">
+        <?php ajth_render_site_header( $settings ); ?>
 
-        <section class="aj-voyages-catalog">
-            <div class="aj-container aj-voyages-catalog__container">
-                <input type="checkbox" id="aj-voyages-filters-toggle" class="aj-voyages-filters-toggle" tabindex="-1" aria-hidden="true">
-                <label for="aj-voyages-filters-toggle" class="aj-voyages-filters-backdrop" aria-hidden="true"></label>
+        <div class="aj-hebergement-booking" id="aj-hebergement-booking">
+            <section class="hero">
+                <div class="container">
+                    <h1 class="hero-title">Trouvez l'hebergement ideal</h1>
+                    <p class="hero-subtitle">Comparez les hotels, riads, appartements et villas disponibles avec des filtres avances et des prix clairs.</p>
 
-                <div class="aj-voyages-catalog__grid">
-                    <aside class="aj-voyages-filters-sidebar" id="aj-voyages-filters-panel">
-                        <label for="aj-voyages-filters-toggle" class="aj-voyages-filters-close"><span aria-hidden="true">&times;</span></label>
-                        <?php include AJTH_DIR . 'parts/hebergement-filters.php'; ?>
-                    </aside>
-
-                    <main class="aj-voyages-catalog__main">
-                        <label for="aj-voyages-filters-toggle" class="aj-voyages-filters-mobile-trigger">
-                            <i class="fas fa-sliders-h" aria-hidden="true"></i>
-                            <?php esc_html_e('Filtres', 'ajinsafro-traveler-home'); ?>
-                        </label>
-
-                        <div class="aj-voyages-toolbar">
-                            <div class="aj-voyages-toolbar__left">
-                                <h2 class="aj-voyages-toolbar__title"><?php esc_html_e('Catalogue hebergement', 'ajinsafro-traveler-home'); ?></h2>
-                                <p class="aj-voyages-toolbar__count"><?php echo esc_html(sprintf(_n('%d resultat', '%d resultats', intval($q->found_posts), 'ajinsafro-traveler-home'), intval($q->found_posts))); ?></p>
-                            </div>
-                            <div class="aj-voyages-toolbar__sort">
-                                <form method="get" class="aj-voyages-sort-form" action="<?php echo esc_url($page_url); ?>">
-                                    <?php foreach ($pagination_args as $key => $value) { if ($key === 'catalog_orderby') { continue; } ?>
-                                        <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
-                                    <?php } ?>
-                                    <label class="aj-voyages-sort-form__label" for="aj-hebergement-orderby"><?php esc_html_e('Trier par', 'ajinsafro-traveler-home'); ?></label>
-                                    <select name="catalog_orderby" id="aj-hebergement-orderby" class="aj-voyages-sort-form__select" onchange="this.form.submit()">
-                                        <option value="date" <?php selected($catalog_orderby, 'date'); ?>><?php esc_html_e('Plus recents', 'ajinsafro-traveler-home'); ?></option>
-                                        <option value="title" <?php selected($catalog_orderby, 'title'); ?>><?php esc_html_e('Titre (A-Z)', 'ajinsafro-traveler-home'); ?></option>
-                                    </select>
-                                </form>
-                            </div>
+                    <form class="search-panel" id="ajhb-search-form">
+                        <div class="search-field">
+                            <label for="ajhb-destination">Destination</label>
+                            <input id="ajhb-destination" name="destination" type="text" placeholder="Ville, hotel, quartier...">
                         </div>
-
-                        <?php if ($q->have_posts()) { ?>
-                            <div class="aj-voyages-grid">
-                                <?php while ($q->have_posts()) { $q->the_post();
-                                    $detail = $hotel_rows[get_the_ID()] ?? [];
-                                    $hotel_address = $detail['address'] ?? '';
-                                    $hotel_star = isset($detail['hotel_star']) ? (int) $detail['hotel_star'] : 0;
-                                    $min_price_value = $detail['min_price'] ?? '';
-                                    $excerpt = get_the_excerpt() ? wp_trim_words(get_the_excerpt(), 18, '...') : wp_trim_words(get_the_content(), 18, '...');
-                                    $terms = get_the_terms(get_the_ID(), 'hotel_type');
-                                    $type_label = (! empty($terms) && ! is_wp_error($terms)) ? $terms[0]->name : __('Hotel', 'ajinsafro-traveler-home');
-
-                                    $ajth_debug_images = isset($_GET['ajth_debug_image']) && (string) $_GET['ajth_debug_image'] === '1' && function_exists('current_user_can') && current_user_can('manage_options');
-                                    $thumb_id = (int) get_post_thumbnail_id(get_the_ID());
-
-                                    ?>
-                                    <article class="aj-voyages-grid__item">
-                                        <a href="<?php the_permalink(); ?>" class="aj-card2 aj-hover-glass">
-                                            <div class="aj-card2__image">
-                                                <?php if (has_post_thumbnail()) { ?>
-                                                    <?php the_post_thumbnail('medium_large', ['loading' => 'lazy']); ?>
-                                                <?php } else { ?>
-                                                    <div class="aj-voyages-image-fallback"></div>
-                                                <?php } ?>
-                                            </div>
-                                            <div class="aj-card2__body">
-                                                <h3 class="aj-card2__title"><?php the_title(); ?></h3>
-                                                <div class="aj-card2__location"><i class="fas fa-map-marker-alt"></i> <?php echo esc_html($hotel_address ?: __('Localisation non renseignee', 'ajinsafro-traveler-home')); ?></div>
-                                                <div class="aj-card2__meta">
-                                                    <span class="aj-card2__category"><?php echo esc_html($type_label); ?></span>
-                                                    <?php if ($hotel_star > 0) { ?>
-                                                        <span class="aj-card2__category"><?php echo esc_html($hotel_star); ?> *</span>
-                                                    <?php } ?>
-                                                </div>
-                                                <p class="aj-voyages-excerpt"><?php echo esc_html($excerpt); ?></p>
-                                                <div class="aj-card2__footer">
-                                                    <div>
-                                                        <?php if ($min_price_value !== '') { ?>
-                                                            <span class="aj-card2__price-label"><?php esc_html_e('A partir de', 'ajinsafro-traveler-home'); ?></span>
-                                                            <div class="aj-card2__price"><?php echo esc_html(number_format((float) $min_price_value, 0, ',', ' ')); ?> <span class="aj-card2__price-currency">MAD</span></div>
-                                                        <?php } ?>
-                                                    </div>
-                                                    <span class="aj-card2__cta"><?php esc_html_e("Voir l'offre", 'ajinsafro-traveler-home'); ?></span>
-                                                </div>
-                                            </div>
-                                        </a>
-
-                                        <?php if ($ajth_debug_images) {
-                                            $full_url = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'full') : '';
-                                            $ml_url = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'medium_large') : '';
-                                            $attached_file = $thumb_id ? (string) get_post_meta($thumb_id, '_wp_attached_file', true) : '';
-                                            $thumb_meta_raw = (string) get_post_meta(get_the_ID(), '_thumbnail_id', true);
-                                            $bad_keys = ['st_gallery', 'gallery', '_gallery', 'st_featured_image', 'featured_image', '_featured_image', 'thumbnail', 'thumb', 'image', 'img', 'photo'];
-                                            $suspicious = [];
-                                            foreach ($bad_keys as $mk) {
-                                                $v = get_post_meta(get_the_ID(), $mk, true);
-                                                if ($v !== '' && $v !== null) {
-                                                    $suspicious[$mk] = is_scalar($v) ? (string) $v : wp_json_encode($v);
-                                                }
-                                            }
-
-                                            $bad_patterns = ['2026/04', '/wp-content/uploads/'];
-                                            foreach ($suspicious as $mk => $v) {
-                                                foreach ($bad_patterns as $pat) {
-                                                    if (is_string($v) && strpos($v, $pat) !== false) {
-                                                        // keep
-                                                        continue 3;
-                                                    }
-                                                }
-                                                unset($suspicious[$mk]);
-                                            }
-
-                                            $db_hits = [];
-                                            if (isset($wpdb) && $wpdb instanceof wpdb) {
-                                                $db_hits = (array) $wpdb->get_results(
-                                                    $wpdb->prepare(
-                                                        "SELECT meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_value LIKE %s LIMIT 30",
-                                                        (int) get_the_ID(),
-                                                        '%2026/04%'
-                                                    ),
-                                                    ARRAY_A
-                                                );
-                                            }
-                                            ?>
-                                            <pre class="aj-debug aj-debug--catalog-image" style="white-space:pre-wrap;max-width:100%;overflow:auto;padding:8px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#111;margin:10px 0;">
-post_id: <?php echo esc_html((string) get_the_ID()); ?>
-thumb_id: <?php echo esc_html((string) $thumb_id); ?>
-_thumbnail_id (raw): <?php echo esc_html($thumb_meta_raw); ?>
-thumb full: <?php echo esc_html((string) $full_url); ?>
-thumb medium_large: <?php echo esc_html((string) $ml_url); ?>
-_wp_attached_file: <?php echo esc_html($attached_file); ?>
-post meta hits (2026/04): <?php echo esc_html(wp_json_encode($db_hits)); ?>
-suspicious post metas: <?php echo esc_html(wp_json_encode($suspicious)); ?>
-                                            </pre>
-                                        <?php } ?>
-                                    </article>
-                                <?php } ?>
-                            </div>
-
-                            <div class="aj-voyages-pagination">
-                                <?php
-                                echo paginate_links([
-                                    'total' => (int) $q->max_num_pages,
-                                    'current' => $paged,
-                                    'type' => 'list',
-                                    'add_args' => $pagination_args,
-                                ]);
-                                ?>
-                            </div>
-                        <?php } else { ?>
-                            <div class="aj-voyages-empty">
-                                <h3><?php esc_html_e('Aucun hebergement trouve', 'ajinsafro-traveler-home'); ?></h3>
-                                <p><?php esc_html_e('Essayez un autre filtre ou elargissez votre recherche.', 'ajinsafro-traveler-home'); ?></p>
-                            </div>
-                        <?php } wp_reset_postdata(); ?>
-                    </main>
+                        <div class="search-field">
+                            <label for="ajhb-checkin">Arrivee</label>
+                            <input id="ajhb-checkin" name="checkin" type="date">
+                        </div>
+                        <div class="search-field">
+                            <label for="ajhb-checkout">Depart</label>
+                            <input id="ajhb-checkout" name="checkout" type="date">
+                        </div>
+                        <div class="search-field">
+                            <label for="ajhb-travelers">Voyageurs</label>
+                            <select id="ajhb-travelers" name="travelers">
+                                <option value="1">1 adulte, 1 chambre</option>
+                                <option value="2">2 adultes, 1 chambre</option>
+                                <option value="3">2 adultes, 1 enfant</option>
+                                <option value="4">4 voyageurs, 2 chambres</option>
+                            </select>
+                        </div>
+                        <button class="search-btn" type="submit">Rechercher</button>
+                    </form>
                 </div>
-            </div>
-        </section>
+            </section>
+
+            <main class="container main-grid">
+                <aside class="filters" id="ajhb-desktop-filters" aria-label="Filtres">
+                    <div class="map-card">
+                        <button type="button">Voir sur la carte</button>
+                    </div>
+                    <div class="filter-title">
+                        <h2>Filtrer par</h2>
+                        <button class="clear-link" type="button" data-ajhb-action="reset">Tout effacer</button>
+                    </div>
+
+                    <div id="ajhb-filters-content"></div>
+                </aside>
+
+                <section class="results">
+                    <div class="results-head">
+                        <div class="results-topline">
+                            <div>
+                                <h2>Hebergements disponibles</h2>
+                                <div class="result-count"><span id="ajhb-count">0</span> resultats trouves</div>
+                            </div>
+                            <label class="sort-wrap">Trier par
+                                <select id="ajhb-sort-select">
+                                    <option value="recommended">Recommandes</option>
+                                    <option value="price-asc">Prix croissant</option>
+                                    <option value="price-desc">Prix decroissant</option>
+                                    <option value="rating-desc">Meilleures notes</option>
+                                    <option value="stars-desc">Etoiles decroissantes</option>
+                                    <option value="discount-desc">Promotions d'abord</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="chips" id="ajhb-active-chips"></div>
+                    </div>
+
+                    <div class="deal-strip">
+                        <div>
+                            <strong>Connectez-vous pour voir les prix membres</strong>
+                            <span>Profitez des reductions, favoris et offres Ajinsafro.</span>
+                        </div>
+                        <button type="button">Se connecter</button>
+                    </div>
+
+                    <div class="hotel-list" id="ajhb-hotel-list"></div>
+
+                    <div class="empty-state" id="ajhb-empty-state">
+                        <h3>Aucun hebergement trouve</h3>
+                        <p>Essayez de modifier votre budget, votre destination ou vos equipements.</p>
+                        <button class="primary-btn" type="button" data-ajhb-action="reset">Reinitialiser les filtres</button>
+                    </div>
+                </section>
+
+                <aside class="ad-col" aria-label="Promotions">
+                    <div class="ad-box">
+                        <strong>Evasion premium au bord de mer</strong>
+                        <button type="button">Decouvrir</button>
+                    </div>
+                    <div class="ad-box">
+                        <strong>Sejours selectionnes par Ajinsafro</strong>
+                        <button type="button">Reserver</button>
+                    </div>
+                </aside>
+            </main>
+
+            <button class="mobile-filter-btn" type="button" id="ajhb-open-filters">Filtres & tri</button>
+            <div class="drawer-backdrop" id="ajhb-drawer-backdrop"></div>
+            <aside class="mobile-drawer" id="ajhb-mobile-drawer" aria-label="Filtres mobile">
+                <div class="drawer-head">
+                    <h3>Filtres</h3>
+                    <button type="button" id="ajhb-close-filters">x</button>
+                </div>
+                <div id="ajhb-mobile-filters-content"></div>
+                <button class="primary-btn" type="button" id="ajhb-apply-mobile-filters" style="margin-top:14px;">Appliquer les filtres</button>
+                <button class="secondary-btn" type="button" data-ajhb-action="reset" style="margin-top:8px;">Reinitialiser</button>
+            </aside>
+        </div>
     </div>
 </div>
 

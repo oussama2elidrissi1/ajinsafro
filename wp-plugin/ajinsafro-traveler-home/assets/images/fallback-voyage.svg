@@ -1,0 +1,33 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="152" y1="89" x2="1029" y2="694" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D9EAF6"/>
+      <stop offset="0.58" stop-color="#A8C9DC"/>
+      <stop offset="1" stop-color="#F5D6B8"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="600" y1="172" x2="600" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="164" y1="571" x2="1038" y2="571" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EBC49F"/>
+      <stop offset="1" stop-color="#D89A6B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" rx="32" fill="url(#sky)"/>
+  <circle cx="955" cy="158" r="72" fill="#FFF5DD"/>
+  <path d="M0 540C177 473 320 459 449 486C547 507 614 560 711 572C833 587 962 539 1200 454V800H0V540Z" fill="url(#sand)"/>
+  <path d="M103 531L263 365L386 483L525 290L662 455L742 389L914 558H103V531Z" fill="#4A6C7F" fill-opacity="0.42"/>
+  <path d="M182 559L357 430L470 511L606 356L748 541L825 489L977 604H182V559Z" fill="#2E4B5C" fill-opacity="0.34"/>
+  <rect x="250" y="150" width="700" height="460" rx="34" fill="url(#overlay)" stroke="#FFFFFF" stroke-opacity="0.4"/>
+  <rect x="305" y="205" width="274" height="350" rx="24" fill="#FFFFFF" fill-opacity="0.28"/>
+  <path d="M337 468L402 396L468 442L520 361L551 400V503H337V468Z" fill="#FFFFFF" fill-opacity="0.88"/>
+  <circle cx="505" cy="289" r="31" fill="#FFE1A6"/>
+  <rect x="621" y="226" width="228" height="24" rx="12" fill="#FFFFFF" fill-opacity="0.9"/>
+  <rect x="621" y="274" width="268" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.58"/>
+  <rect x="621" y="314" width="244" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.58"/>
+  <rect x="621" y="354" width="186" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.58"/>
+  <rect x="621" y="424" width="168" height="54" rx="18" fill="#0E3A5A" fill-opacity="0.84"/>
+  <rect x="803" y="424" width="108" height="54" rx="18" fill="#FFFFFF" fill-opacity="0.25"/>
+  <text x="705" y="458" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="22" font-weight="700">Ajinsafro Travel</text>
+</svg>

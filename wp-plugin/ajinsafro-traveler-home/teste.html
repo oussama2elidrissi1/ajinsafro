@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catalogue Hébergement - Style Booking</title>
+  <style>
+    :root {
+      --navy: #07104a;
+      --navy-2: #101b5f;
+      --blue: #0071c2;
+      --orange: #ff6b1a;
+      --green: #168a38;
+      --red: #d93025;
+      --text: #172033;
+      --muted: #64748b;
+      --line: #dfe7f2;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    select {
+      font-family: inherit;
+    }
+
+    .topbar {
+      background: var(--navy);
+      color: #fff;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      background: var(--orange);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+
+    .navlinks {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0.95;
+    }
+
+    .navlinks a:hover {
+      color: #cfe7ff;
+    }
+
+    .hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 78%, transparent 78%);
+      color: #fff;
+      padding: 26px 0 18px;
+    }
+
+    .hero-title {
+      margin: 0 0 16px;
+      font-size: clamp(24px, 3vw, 38px);
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+
+    .hero-subtitle {
+      margin: 0 0 24px;
+      color: #dbeafe;
+      max-width: 680px;
+      font-size: 15px;
+    }
+
+    .search-panel {
+      background: #fff;
+      border: 4px solid #f5c542;
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+      gap: 0;
+      overflow: hidden;
+      color: var(--text);
+    }
+
+    .search-field {
+      padding: 12px 14px;
+      border-right: 1px solid #f0d37b;
+      background: #fff;
+    }
+
+    .search-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 900;
+      color: #475569;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .search-field input,
+    .search-field select {
+      border: 0;
+      outline: none;
+      width: 100%;
+      font-size: 15px;
+      font-weight: 750;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .search-btn {
+      border: 0;
+      background: var(--blue);
+      color: #fff;
+      padding: 0 28px;
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+      min-height: 72px;
+    }
+
+    .search-btn:hover {
+      background: #005ea3;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr) 160px;
+      gap: 18px;
+      align-items: start;
+      padding: 18px 0 50px;
+    }
+
+    .filters {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      position: sticky;
+      top: 76px;
+      max-height: calc(100vh - 94px);
+      overflow: auto;
+    }
+
+    .map-card {
+      height: 128px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.75), transparent 30%),
+        linear-gradient(135deg, #a7d8ff, #d8efff 40%, #bce3c8);
+      display: flex;
+      align-items: end;
+      padding: 12px;
+      margin-bottom: 14px;
+      border: 1px solid #cbe3f8;
+    }
+
+    .map-card button {
+      width: 100%;
+      border: 0;
+      background: #fff;
+      color: var(--blue);
+      font-weight: 900;
+      border-radius: 999px;
+      padding: 10px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+      cursor: pointer;
+    }
+
+    .filter-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0 10px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 10px;
+    }
+
+    .filter-title h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
+    .clear-link {
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .accordion {
+      border-bottom: 1px solid #edf2f7;
+      padding: 9px 0;
+    }
+
+    .accordion summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 900;
+      color: #24324b;
+    }
+
+    .accordion summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .accordion summary::after {
+      content: "+";
+      color: var(--blue);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .accordion[open] summary::after {
+      content: "−";
+    }
+
+    .filter-body {
+      padding: 12px 0 2px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .check-row,
+    .radio-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.25;
+      cursor: pointer;
+    }
+
+    .check-row input,
+    .radio-row input {
+      margin-top: 1px;
+      accent-color: var(--blue);
+    }
+
+    .mini-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mini-inputs input,
+    .filter-search {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 11px;
+      outline: none;
+      font-weight: 700;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .price-histogram {
+      height: 86px;
+      display: flex;
+      align-items: end;
+      gap: 3px;
+      padding-top: 10px;
+    }
+
+    .price-histogram span {
+      flex: 1;
+      min-width: 4px;
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, #66aef0, #0a6fb6);
+      opacity: 0.72;
+    }
+
+    .results-head {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .results-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .results-topline h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+    }
+
+    .result-count {
+      color: var(--muted);
+      font-weight: 750;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .sort-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      font-weight: 800;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .sort-wrap select {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 850;
+      outline: none;
+      background: #fff;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      background: #eef6ff;
+      border: 1px solid #cde6ff;
+      color: #075985;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .chip button {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      color: #075985;
+      font-weight: 900;
+      padding: 0;
+    }
+
+    .deal-strip {
+      background: var(--navy);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 13px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .deal-strip strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .deal-strip span {
+      color: #c7d2fe;
+      font-size: 13px;
+    }
+
+    .deal-strip button {
+      border: 0;
+      background: #fff;
+      color: var(--navy);
+      font-weight: 900;
+      border-radius: 999px;
+      padding: 9px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .hotel-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hotel-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr) 180px;
+      min-height: 210px;
+      transition: 0.2s ease;
+    }
+
+    .hotel-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 42px rgba(15, 23, 42, 0.12);
+      border-color: #b9d7f6;
+    }
+
+    .photo-wrap {
+      position: relative;
+      min-height: 210px;
+      background: #e5e7eb;
+    }
+
+    .photo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .fav {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 0;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+      cursor: pointer;
+      color: #e11d48;
+      font-size: 18px;
+      display: grid;
+      place-items: center;
+    }
+
+    .photo-badge {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background: rgba(7, 16, 74, 0.92);
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .discount {
+      background: var(--red);
+      color: #fff;
+      border-radius: 6px;
+      padding: 5px 7px;
+      font-size: 11px;
+      font-weight: 900;
+      display: inline-flex;
+      width: fit-content;
+    }
+
+    .hotel-main {
+      padding: 15px 16px;
+      min-width: 0;
+    }
+
+    .hotel-main h3 {
+      margin: 0 0 5px;
+      font-size: 21px;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+    }
+
+    .location,
+    .meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 9px;
+    }
+
+    .stars {
+      color: #f59e0b;
+      letter-spacing: 1px;
+      font-size: 12px;
+    }
+
+    .description {
+      font-size: 14px;
+      line-height: 1.45;
+      color: #334155;
+      margin: 9px 0 12px;
+    }
+
+    .amenities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .amenity {
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      background: #f8fafc;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .good-note {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .hotel-side {
+      border-left: 1px solid #edf2f7;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: right;
+    }
+
+    .rating-box {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 9px;
+    }
+
+    .rating-text strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .rating-text span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .rating-score {
+      background: var(--green);
+      color: #fff;
+      font-weight: 950;
+      border-radius: 9px 9px 9px 2px;
+      padding: 8px 9px;
+      min-width: 42px;
+      text-align: center;
+    }
+
+    .price-area small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .old-price {
+      color: #94a3b8;
+      text-decoration: line-through;
+      font-size: 13px;
+      font-weight: 800;
+      margin-right: 4px;
+    }
+
+    .price {
+      color: var(--text);
+      font-size: 27px;
+      font-weight: 950;
+      letter-spacing: -0.05em;
+    }
+
+    .tax {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    .card-actions {
+      width: 100%;
+      display: grid;
+      gap: 8px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      border-radius: 10px;
+      font-weight: 950;
+      padding: 11px 13px;
+      cursor: pointer;
+      border: 0;
+      width: 100%;
+    }
+
+    .primary-btn {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .primary-btn:hover {
+      background: #005ea3;
+    }
+
+    .secondary-btn {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #fed7aa;
+    }
+
+    .ad-col {
+      position: sticky;
+      top: 76px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .ad-box {
+      min-height: 330px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(7, 16, 74, 0.18), rgba(7, 16, 74, 0.45)),
+        url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80') center/cover;
+      color: #fff;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+    }
+
+    .ad-box:nth-child(2) {
+      background:
+        linear-gradient(180deg, rgba(7, 16, 74, 0.18), rgba(7, 16, 74, 0.52)),
+        url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80') center/cover;
+    }
+
+    .ad-box strong {
+      font-size: 18px;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .ad-box button {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--navy);
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .mobile-filter-btn {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      background: var(--navy);
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      padding: 15px 18px;
+      font-weight: 950;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+      z-index: 60;
+      display: none;
+      cursor: pointer;
+    }
+
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      z-index: 80;
+      display: none;
+    }
+
+    .drawer-backdrop.active {
+      display: block;
+    }
+
+    .mobile-drawer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-height: 88vh;
+      transform: translateY(110%);
+      transition: 0.25s ease;
+      background: #fff;
+      border-radius: 24px 24px 0 0;
+      z-index: 90;
+      padding: 16px;
+      overflow: auto;
+      box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.2);
+    }
+
+    .mobile-drawer.active {
+      transform: translateY(0);
+    }
+
+    .drawer-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 12px;
+    }
+
+    .drawer-head h3 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .drawer-head button {
+      border: 0;
+      background: #f1f5f9;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: 950;
+    }
+
+    .empty-state {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+      text-align: center;
+      display: none;
+    }
+
+    .empty-state h3 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .empty-state p {
+      color: var(--muted);
+      margin: 0 0 16px;
+    }
+
+    @media (max-width: 1120px) {
+      .main-grid {
+        grid-template-columns: 270px minmax(0, 1fr);
+      }
+
+      .ad-col {
+        display: none;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .navlinks {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 18px;
+      }
+
+      .search-panel {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .search-field {
+        border-bottom: 1px solid #f0d37b;
+      }
+
+      .search-btn {
+        grid-column: 1 / -1;
+        min-height: 56px;
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filters {
+        display: none;
+      }
+
+      .mobile-filter-btn {
+        display: block;
+      }
+
+      .hotel-card {
+        grid-template-columns: 1fr;
+      }
+
+      .photo-wrap {
+        height: 230px;
+      }
+
+      .hotel-side {
+        border-left: 0;
+        border-top: 1px solid #edf2f7;
+        align-items: stretch;
+        text-align: left;
+      }
+
+      .rating-box {
+        justify-content: flex-start;
+      }
+
+      .price-area {
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .container {
+        width: min(100% - 20px, 1180px);
+      }
+
+      .search-panel {
+        grid-template-columns: 1fr;
+        border-width: 3px;
+      }
+
+      .search-field {
+        border-right: 0;
+      }
+
+      .results-topline {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .sort-wrap {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .sort-wrap select {
+        flex: 1;
+      }
+
+      .deal-strip {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#">
+        <span class="brand-mark">A</span>
+        <span>Ajinsafro Stay</span>
+      </a>
+      <nav class="navlinks" aria-label="Navigation principale">
+        <a href="#">Voyages</a>
+        <a href="#">Hébergement</a>
+        <a href="#">Activités</a>
+        <a href="#">Support</a>
+        <a href="#">Se connecter</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero-title">Trouvez l’hébergement idéal</h1>
+      <p class="hero-subtitle">Comparez les hôtels, riads, appartements et villas disponibles avec des filtres avancés et des prix clairs.</p>
+
+      <form class="search-panel" id="searchForm">
+        <div class="search-field">
+          <label for="destination">Destination</label>
+          <input id="destination" name="destination" type="text" placeholder="Ville, hôtel, quartier..." />
+        </div>
+        <div class="search-field">
+          <label for="checkin">Arrivée</label>
+          <input id="checkin" name="checkin" type="date" />
+        </div>
+        <div class="search-field">
+          <label for="checkout">Départ</label>
+          <input id="checkout" name="checkout" type="date" />
+        </div>
+        <div class="search-field">
+          <label for="travelers">Voyageurs</label>
+          <select id="travelers" name="travelers">
+            <option value="1">1 adulte, 1 chambre</option>
+            <option value="2">2 adultes, 1 chambre</option>
+            <option value="3">2 adultes, 1 enfant</option>
+            <option value="4">4 voyageurs, 2 chambres</option>
+          </select>
+        </div>
+        <button class="search-btn" type="submit">Rechercher</button>
+      </form>
+    </div>
+  </section>
+
+  <main class="container main-grid">
+    <aside class="filters" id="desktopFilters" aria-label="Filtres">
+      <div class="map-card">
+        <button type="button">Voir sur la carte</button>
+      </div>
+      <div class="filter-title">
+        <h2>Filtrer par</h2>
+        <button class="clear-link" type="button" data-action="reset">Tout effacer</button>
+      </div>
+
+      <div id="filtersContent"></div>
+    </aside>
+
+    <section class="results">
+      <div class="results-head">
+        <div class="results-topline">
+          <div>
+            <h2>Hébergements disponibles</h2>
+            <div class="result-count"><span id="count">0</span> résultats trouvés</div>
+          </div>
+          <label class="sort-wrap">Trier par
+            <select id="sortSelect">
+              <option value="recommended">Recommandés</option>
+              <option value="price-asc">Prix croissant</option>
+              <option value="price-desc">Prix décroissant</option>
+              <option value="rating-desc">Meilleures notes</option>
+              <option value="stars-desc">Étoiles décroissantes</option>
+              <option value="discount-desc">Promotions d’abord</option>
+            </select>
+          </label>
+        </div>
+        <div class="chips" id="activeChips"></div>
+      </div>
+
+      <div class="deal-strip">
+        <div>
+          <strong>Connectez-vous pour voir les prix membres</strong>
+          <span>Profitez des réductions, favoris et offres Ajinsafro.</span>
+        </div>
+        <button type="button">Se connecter</button>
+      </div>
+
+      <div class="hotel-list" id="hotelList"></div>
+
+      <div class="empty-state" id="emptyState">
+        <h3>Aucun hébergement trouvé</h3>
+        <p>Essayez de modifier votre budget, votre destination ou vos équipements.</p>
+        <button class="primary-btn" type="button" data-action="reset">Réinitialiser les filtres</button>
+      </div>
+    </section>
+
+    <aside class="ad-col" aria-label="Promotions">
+      <div class="ad-box">
+        <strong>Évasion premium au bord de mer</strong>
+        <button type="button">Découvrir</button>
+      </div>
+      <div class="ad-box">
+        <strong>Séjours sélectionnés par Ajinsafro</strong>
+        <button type="button">Réserver</button>
+      </div>
+    </aside>
+  </main>
+
+  <button class="mobile-filter-btn" type="button" id="openFilters">☰ Filtres & tri</button>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="mobile-drawer" id="mobileDrawer" aria-label="Filtres mobile">
+    <div class="drawer-head">
+      <h3>Filtres</h3>
+      <button type="button" id="closeFilters">×</button>
+    </div>
+    <div id="mobileFiltersContent"></div>
+    <button class="primary-btn" type="button" id="applyMobileFilters" style="margin-top:14px;">Appliquer les filtres</button>
+    <button class="secondary-btn" type="button" data-action="reset" style="margin-top:8px;">Réinitialiser</button>
+  </aside>
+
+  <script>
+    const hotels = [
+      {
+        id: 1,
+        name: 'Travelodge Kowloon',
+        location: 'Jordan, Hong Kong',
+        type: 'hotel',
+        stars: 4,
+        rating: 8.0,
+        reviews: 1008,
+        price: 71,
+        oldPrice: 118,
+        discount: 40,
+        image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'breakfast', 'parking'],
+        board: 'breakfast',
+        description: 'Hôtel moderne proche du métro, idéal pour un séjour pratique et confortable.',
+        popular: true,
+        available: true
+      },
+      {
+        id: 2,
+        name: 'Eaton HK',
+        location: 'Jordan, Hong Kong',
+        type: 'hotel',
+        stars: 4,
+        rating: 8.6,
+        reviews: 936,
+        price: 143,
+        oldPrice: null,
+        discount: 0,
+        image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'pool', 'gym', 'restaurant'],
+        board: 'room_only',
+        description: 'Adresse urbaine avec restaurants, espace bien-être et accès rapide aux quartiers centraux.',
+        popular: true,
+        available: true
+      },
+      {
+        id: 3,
+        name: 'Cordis Hong Kong',
+        location: 'Mong Kok, Hong Kong',
+        type: 'resort',
+        stars: 5,
+        rating: 9.2,
+        reviews: 1701,
+        price: 157,
+        oldPrice: null,
+        discount: 0,
+        image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'pool', 'spa', 'gym', 'restaurant'],
+        board: 'breakfast',
+        description: 'Grand établissement premium avec piscine, spa et excellente note client.',
+        popular: true,
+        available: true
+      },
+      {
+        id: 4,
+        name: 'InterContinental Grand Stanford',
+        location: 'Tsim Sha Tsui, Hong Kong',
+        type: 'hotel',
+        stars: 5,
+        rating: 8.8,
+        reviews: 1521,
+        price: 152,
+        oldPrice: 211,
+        discount: 28,
+        image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'pool', 'sea_view', 'restaurant'],
+        board: 'half_board',
+        description: 'Vue imprenable, emplacement central et services adaptés aux voyages premium.',
+        popular: false,
+        available: true
+      },
+      {
+        id: 5,
+        name: 'Marco Polo Hongkong Hotel',
+        location: 'Tsim Sha Tsui, Hong Kong',
+        type: 'hotel',
+        stars: 5,
+        rating: 8.4,
+        reviews: 1337,
+        price: 134,
+        oldPrice: null,
+        discount: 0,
+        image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'family', 'restaurant', 'parking'],
+        board: 'breakfast',
+        description: 'Hébergement familial proche des centres commerciaux et attractions principales.',
+        popular: false,
+        available: true
+      },
+      {
+        id: 6,
+        name: 'The Peninsula Hong Kong',
+        location: 'Tsim Sha Tsui, Hong Kong',
+        type: 'hotel',
+        stars: 5,
+        rating: 9.6,
+        reviews: 912,
+        price: 753,
+        oldPrice: null,
+        discount: 0,
+        image: 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'pool', 'spa', 'sea_view', 'gym'],
+        board: 'full_board',
+        description: 'Expérience luxe iconique avec service haut de gamme et équipements premium.',
+        popular: true,
+        available: true
+      },
+      {
+        id: 7,
+        name: 'Harbour Plaza 8 Degrees',
+        location: 'Kowloon City, Hong Kong',
+        type: 'apartment',
+        stars: 4,
+        rating: 8.4,
+        reviews: 1117,
+        price: 94,
+        oldPrice: null,
+        discount: 0,
+        image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'pool', 'family', 'parking'],
+        board: 'room_only',
+        description: 'Bon rapport qualité-prix avec piscine et chambres familiales disponibles.',
+        popular: false,
+        available: true
+      },
+      {
+        id: 8,
+        name: 'Nathan Hotel',
+        location: 'Jordan, Hong Kong',
+        type: 'hotel',
+        stars: 4,
+        rating: 8.8,
+        reviews: 1609,
+        price: 134,
+        oldPrice: 179,
+        discount: 25,
+        image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'restaurant', 'gym'],
+        board: 'breakfast',
+        description: 'Chambres confortables, emplacement pratique et promotion disponible.',
+        popular: true,
+        available: true
+      },
+      {
+        id: 9,
+        name: 'B P International',
+        location: 'Tsim Sha Tsui, Hong Kong',
+        type: 'hotel',
+        stars: 3,
+        rating: 8.4,
+        reviews: 1918,
+        price: 136,
+        oldPrice: null,
+        discount: 0,
+        image: 'https://images.unsplash.com/photo-1561501900-3701fa6a0864?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'restaurant'],
+        board: 'room_only',
+        description: 'Solution pratique pour les voyageurs qui cherchent un séjour central.',
+        popular: false,
+        available: true
+      },
+      {
+        id: 10,
+        name: 'Holiday Inn Express Mong Kok',
+        location: 'Mong Kok, Hong Kong',
+        type: 'hotel',
+        stars: 3,
+        rating: 8.6,
+        reviews: 824,
+        price: 104,
+        oldPrice: null,
+        discount: 0,
+        image: 'https://images.unsplash.com/photo-1568495248636-6432b97bd949?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'breakfast', 'family'],
+        board: 'breakfast',
+        description: 'Petit-déjeuner inclus et accès simple aux transports publics.',
+        popular: false,
+        available: true
+      },
+      {
+        id: 11,
+        name: 'Soravit on Granville',
+        location: 'Tsim Sha Tsui, Hong Kong',
+        type: 'riad',
+        stars: 4,
+        rating: 8.4,
+        reviews: 796,
+        price: 86,
+        oldPrice: 107,
+        discount: 20,
+        image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'air_conditioning'],
+        board: 'room_only',
+        description: 'Design moderne, prix attractif et réduction disponible pour dates sélectionnées.',
+        popular: false,
+        available: true
+      },
+      {
+        id: 12,
+        name: 'The Langham Hong Kong',
+        location: 'Tsim Sha Tsui, Hong Kong',
+        type: 'hotel',
+        stars: 5,
+        rating: 9.0,
+        reviews: 1300,
+        price: 223,
+        oldPrice: null,
+        discount: 0,
+        image: 'https://images.unsplash.com/photo-1590073242678-70ee3fc28e8e?auto=format&fit=crop&w=900&q=80',
+        amenities: ['wifi', 'spa', 'pool', 'gym', 'restaurant'],
+        board: 'half_board',
+        description: 'Hôtel haut de gamme avec spa, gastronomie et emplacement premium.',
+        popular: true,
+        available: true
+      }
+    ];
+
+    const amenityLabels = {
+      wifi: 'Wi-Fi gratuit',
+      pool: 'Piscine',
+      parking: 'Parking',
+      air_conditioning: 'Climatisation',
+      breakfast: 'Petit-déjeuner',
+      restaurant: 'Restaurant',
+      spa: 'Spa',
+      gym: 'Salle de sport',
+      sea_view: 'Vue mer',
+      family: 'Chambre familiale'
+    };
+
+    const boardLabels = {
+      room_only: 'Sans repas',
+      breakfast: 'Petit-déjeuner inclus',
+      half_board: 'Demi-pension',
+      full_board: 'Pension complète',
+      all_inclusive: 'All inclusive'
+    };
+
+    const filterHTML = `
+      <details class="accordion" open>
+        <summary>Search by property name</summary>
+        <div class="filter-body">
+          <input class="filter-search" id="nameFilter" type="text" placeholder="ex: Marriott, Riad, Villa...">
+        </div>
+      </details>
+
+      <details class="accordion" open>
+        <summary>Popular filters</summary>
+        <div class="filter-body">
+          <label class="check-row"><input type="checkbox" name="popular" value="true"> À la une uniquement</label>
+          <label class="check-row"><input type="checkbox" name="discount" value="true"> Promotions</label>
+          <label class="check-row"><input type="checkbox" name="available" value="true"> Disponible uniquement</label>
+          <label class="check-row"><input type="checkbox" name="amenity" value="breakfast"> Petit-déjeuner inclus</label>
+          <label class="check-row"><input type="checkbox" name="amenity" value="pool"> Piscine</label>
+        </div>
+      </details>
+
+      <details class="accordion" open>
+        <summary>Nightly price</summary>
+        <div class="filter-body">
+          <div class="mini-inputs">
+            <input id="minPrice" type="number" placeholder="Min $">
+            <input id="maxPrice" type="number" placeholder="Max $">
+          </div>
+          <div class="price-histogram" aria-hidden="true">
+            <span style="height:24%"></span><span style="height:35%"></span><span style="height:48%"></span><span style="height:66%"></span><span style="height:80%"></span><span style="height:62%"></span><span style="height:54%"></span><span style="height:76%"></span><span style="height:88%"></span><span style="height:58%"></span><span style="height:44%"></span><span style="height:35%"></span><span style="height:28%"></span>
+          </div>
+        </div>
+      </details>
+
+      <details class="accordion" open>
+        <summary>Stay options</summary>
+        <div class="filter-body">
+          <label class="radio-row"><input type="radio" name="type" value="" checked> Tous</label>
+          <label class="radio-row"><input type="radio" name="type" value="hotel"> Hôtels</label>
+          <label class="radio-row"><input type="radio" name="type" value="riad"> Riads</label>
+          <label class="radio-row"><input type="radio" name="type" value="apartment"> Appartements</label>
+          <label class="radio-row"><input type="radio" name="type" value="resort"> Resorts</label>
+        </div>
+      </details>
+
+      <details class="accordion" open>
+        <summary>Star rating</summary>
+        <div class="filter-body">
+          <label class="check-row"><input type="checkbox" name="stars" value="5"> 5 stars</label>
+          <label class="check-row"><input type="checkbox" name="stars" value="4"> 4 stars</label>
+          <label class="check-row"><input type="checkbox" name="stars" value="3"> 3 stars</label>
+        </div>
+      </details>
+
+      <details class="accordion" open>
+        <summary>Guest rating</summary>
+        <div class="filter-body">
+          <label class="radio-row"><input type="radio" name="rating" value="" checked> Tous</label>
+          <label class="radio-row"><input type="radio" name="rating" value="9"> Wonderful 9+</label>
+          <label class="radio-row"><input type="radio" name="rating" value="8"> Very good 8+</label>
+          <label class="radio-row"><input type="radio" name="rating" value="7"> Good 7+</label>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Payment type</summary>
+        <div class="filter-body">
+          <label class="check-row"><input type="checkbox"> Reserve now, pay later</label>
+          <label class="check-row"><input type="checkbox"> Paiement sur place</label>
+          <label class="check-row"><input type="checkbox"> Annulation gratuite</label>
+        </div>
+      </details>
+
+      <details class="accordion" open>
+        <summary>Property amenities</summary>
+        <div class="filter-body">
+          ${Object.entries(amenityLabels).map(([key, label]) => `<label class="check-row"><input type="checkbox" name="amenity" value="${key}"> ${label}</label>`).join('')}
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Meal plans available</summary>
+        <div class="filter-body">
+          ${Object.entries(boardLabels).map(([key, label]) => `<label class="check-row"><input type="checkbox" name="board" value="${key}"> ${label}</label>`).join('')}
+        </div>
+      </details>
+    `;
+
+    const desktopFilters = document.getElementById('filtersContent');
+    const mobileFilters = document.getElementById('mobileFiltersContent');
+    desktopFilters.innerHTML = filterHTML;
+    mobileFilters.innerHTML = filterHTML;
+
+    const hotelList = document.getElementById('hotelList');
+    const countEl = document.getElementById('count');
+    const emptyState = document.getElementById('emptyState');
+    const chipsEl = document.getElementById('activeChips');
+    const sortSelect = document.getElementById('sortSelect');
+    const destinationInput = document.getElementById('destination');
+
+    function getActiveContainer() {
+      return window.innerWidth <= 860 && document.getElementById('mobileDrawer').classList.contains('active')
+        ? mobileFilters
+        : desktopFilters;
+    }
+
+    function readFilters(container = desktopFilters) {
+      const name = container.querySelector('#nameFilter')?.value.trim().toLowerCase() || '';
+      const minPrice = Number(container.querySelector('#minPrice')?.value || 0);
+      const maxPrice = Number(container.querySelector('#maxPrice')?.value || 0);
+      const type = container.querySelector('input[name="type"]:checked')?.value || '';
+      const minRating = Number(container.querySelector('input[name="rating"]:checked')?.value || 0);
+      const stars = [...container.querySelectorAll('input[name="stars"]:checked')].map(input => Number(input.value));
+      const amenities = [...container.querySelectorAll('input[name="amenity"]:checked')].map(input => input.value);
+      const boards = [...container.querySelectorAll('input[name="board"]:checked')].map(input => input.value);
+      const popular = container.querySelector('input[name="popular"]:checked')?.value === 'true';
+      const discountOnly = container.querySelector('input[name="discount"]:checked')?.value === 'true';
+      const availableOnly = container.querySelector('input[name="available"]:checked')?.value === 'true';
+      const destination = destinationInput.value.trim().toLowerCase();
+
+      return { name, minPrice, maxPrice, type, minRating, stars, amenities, boards, popular, discountOnly, availableOnly, destination };
+    }
+
+    function matchHotel(hotel, filters) {
+      const combinedText = `${hotel.name} ${hotel.location} ${hotel.description}`.toLowerCase();
+      if (filters.destination && !combinedText.includes(filters.destination)) return false;
+      if (filters.name && !combinedText.includes(filters.name)) return false;
+      if (filters.minPrice && hotel.price < filters.minPrice) return false;
+      if (filters.maxPrice && hotel.price > filters.maxPrice) return false;
+      if (filters.type && hotel.type !== filters.type) return false;
+      if (filters.minRating && hotel.rating < filters.minRating) return false;
+      if (filters.stars.length && !filters.stars.includes(hotel.stars)) return false;
+      if (filters.amenities.length && !filters.amenities.every(item => hotel.amenities.includes(item))) return false;
+      if (filters.boards.length && !filters.boards.includes(hotel.board)) return false;
+      if (filters.popular && !hotel.popular) return false;
+      if (filters.discountOnly && !hotel.discount) return false;
+      if (filters.availableOnly && !hotel.available) return false;
+      return true;
+    }
+
+    function sortHotels(list) {
+      const mode = sortSelect.value;
+      const sorted = [...list];
+      if (mode === 'price-asc') sorted.sort((a, b) => a.price - b.price);
+      if (mode === 'price-desc') sorted.sort((a, b) => b.price - a.price);
+      if (mode === 'rating-desc') sorted.sort((a, b) => b.rating - a.rating);
+      if (mode === 'stars-desc') sorted.sort((a, b) => b.stars - a.stars);
+      if (mode === 'discount-desc') sorted.sort((a, b) => b.discount - a.discount);
+      if (mode === 'recommended') sorted.sort((a, b) => (b.popular - a.popular) || (b.rating - a.rating));
+      return sorted;
+    }
+
+    function getRatingLabel(rating) {
+      if (rating >= 9) return 'Wonderful';
+      if (rating >= 8.5) return 'Excellent';
+      if (rating >= 8) return 'Very good';
+      if (rating >= 7) return 'Good';
+      return 'Correct';
+    }
+
+    function renderHotelCard(hotel) {
+      const amenities = hotel.amenities.slice(0, 4).map(key => `<span class="amenity">${amenityLabels[key] || key}</span>`).join('');
+      const stars = '★'.repeat(hotel.stars);
+      return `
+        <article class="hotel-card" data-id="${hotel.id}">
+          <div class="photo-wrap">
+            <img src="${hotel.image}" alt="${hotel.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1563911302283-d2bc129e7570?auto=format&fit=crop&w=900&q=80'">
+            <button class="fav" type="button" aria-label="Ajouter aux favoris">♡</button>
+            ${hotel.popular ? '<span class="photo-badge">Recommandé</span>' : ''}
+          </div>
+          <div class="hotel-main">
+            <h3>${hotel.name}</h3>
+            <div class="location">📍 ${hotel.location}</div>
+            <div class="meta"><span class="stars">${stars}</span><span>${boardLabels[hotel.board] || 'Formule flexible'}</span></div>
+            <p class="description">${hotel.description}</p>
+            <div class="amenities">${amenities}</div>
+            <div class="good-note">✓ Confirmation rapide · Support Ajinsafro</div>
+          </div>
+          <aside class="hotel-side">
+            <div>
+              ${hotel.discount ? `<span class="discount">${hotel.discount}% off</span>` : ''}
+              <div class="rating-box" style="margin-top:8px;">
+                <div class="rating-text"><strong>${getRatingLabel(hotel.rating)}</strong><span>${hotel.reviews.toLocaleString('fr-FR')} avis</span></div>
+                <div class="rating-score">${hotel.rating.toFixed(1)}</div>
+              </div>
+            </div>
+            <div class="price-area">
+              <small>À partir de</small>
+              <div>${hotel.oldPrice ? `<span class="old-price">$${hotel.oldPrice}</span>` : ''}<span class="price">$${hotel.price}</span></div>
+              <div class="tax">par nuit · taxes incluses selon offre</div>
+            </div>
+            <div class="card-actions">
+              <button class="primary-btn" type="button">Voir l’offre</button>
+              <button class="secondary-btn" type="button">Demander disponibilité</button>
+            </div>
+          </aside>
+        </article>
+      `;
+    }
+
+    function renderChips(filters) {
+      const chips = [];
+      if (filters.destination) chips.push(`Destination: ${filters.destination}`);
+      if (filters.name) chips.push(`Recherche: ${filters.name}`);
+      if (filters.minPrice) chips.push(`Min $${filters.minPrice}`);
+      if (filters.maxPrice) chips.push(`Max $${filters.maxPrice}`);
+      if (filters.type) chips.push(`Type: ${filters.type}`);
+      if (filters.minRating) chips.push(`Note ${filters.minRating}+`);
+      filters.stars.forEach(star => chips.push(`${star} étoiles`));
+      filters.amenities.forEach(key => chips.push(amenityLabels[key] || key));
+      filters.boards.forEach(key => chips.push(boardLabels[key] || key));
+      if (filters.popular) chips.push('À la une');
+      if (filters.discountOnly) chips.push('Promotions');
+      if (filters.availableOnly) chips.push('Disponible');
+
+      chipsEl.innerHTML = chips.map(label => `<span class="chip">${label}<button type="button" data-action="reset">×</button></span>`).join('');
+    }
+
+    function applyFilters(container = desktopFilters) {
+      const filters = readFilters(container);
+      const filtered = sortHotels(hotels.filter(hotel => matchHotel(hotel, filters)));
+      hotelList.innerHTML = filtered.map(renderHotelCard).join('');
+      countEl.textContent = filtered.length;
+      emptyState.style.display = filtered.length ? 'none' : 'block';
+      renderChips(filters);
+    }
+
+    function resetFilters() {
+      [desktopFilters, mobileFilters].forEach(container => {
+        container.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => input.value = '');
+        container.querySelectorAll('input[type="checkbox"]').forEach(input => input.checked = false);
+        container.querySelectorAll('input[type="radio"]').forEach(input => input.checked = input.value === '');
+      });
+      destinationInput.value = '';
+      sortSelect.value = 'recommended';
+      applyFilters();
+    }
+
+    document.addEventListener('input', event => {
+      if (event.target.closest('#filtersContent')) applyFilters(desktopFilters);
+    });
+
+    document.addEventListener('change', event => {
+      if (event.target.closest('#filtersContent')) applyFilters(desktopFilters);
+      if (event.target === sortSelect) applyFilters(desktopFilters);
+    });
+
+    document.addEventListener('click', event => {
+      if (event.target.matches('[data-action="reset"]')) resetFilters();
+    });
+
+    document.getElementById('searchForm').addEventListener('submit', event => {
+      event.preventDefault();
+      applyFilters(desktopFilters);
+    });
+
+    const drawer = document.getElementById('mobileDrawer');
+    const backdrop = document.getElementById('drawerBackdrop');
+
+    document.getElementById('openFilters').addEventListener('click', () => {
+      drawer.classList.add('active');
+      backdrop.classList.add('active');
+    });
+
+    function closeDrawer() {
+      drawer.classList.remove('active');
+      backdrop.classList.remove('active');
+    }
+
+    document.getElementById('closeFilters').addEventListener('click', closeDrawer);
+    backdrop.addEventListener('click', closeDrawer);
+    document.getElementById('applyMobileFilters').addEventListener('click', () => {
+      applyFilters(mobileFilters);
+      closeDrawer();
+    });
+
+    applyFilters();
+  </script>
+</body>
+</html>

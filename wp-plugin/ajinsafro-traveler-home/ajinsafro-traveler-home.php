@@ -40,6 +40,7 @@ require_once AJTH_DIR.'includes/catalog-image-helpers.php';
 require_once AJTH_DIR.'includes/hebergement-catalog.php';
 require_once AJTH_DIR.'includes/class-catalog-cache-invalidate.php';
 require_once AJTH_DIR.'includes/class-admin-settings.php';
+require_once AJTH_DIR.'includes/class-ajinsafro-agent.php';
 require_once AJTH_DIR.'includes/tour-category-defaults.php';
 require_once AJTH_DIR.'includes/voyages-routing.php';
 
@@ -52,6 +53,9 @@ function ajth_init()
 {
     // Template routing (front-end)
     new AJTH_Template_Router;
+
+    // Public AI assistant
+    new AJTH_Ajinsafro_Agent;
 
     // Admin settings page
     if (is_admin()) {
@@ -118,6 +122,74 @@ function ajth_enqueue_front_assets()
         AJTH_VERSION,
         true
     );
+
+    if ( function_exists( 'ajth_is_hebergement_context' ) && ajth_is_hebergement_context() ) {
+        wp_enqueue_style(
+            'ajth-hebergement-booking-css',
+            AJTH_URL . 'assets/css/hebergement-booking.css',
+            ['ajth-home-css'],
+            AJTH_VERSION
+        );
+
+        wp_enqueue_script(
+            'ajth-hebergement-booking-js',
+            AJTH_URL . 'assets/js/hebergement-booking.js',
+            [],
+            AJTH_VERSION,
+            true
+        );
+    }
+
+    if ( function_exists( 'ajth_is_voyages_context' ) && ajth_is_voyages_context() ) {
+        wp_enqueue_style(
+            'ajth-voyages-results-css',
+            AJTH_URL . 'assets/css/aj-voyages-results.css',
+            ['ajth-home-css'],
+            AJTH_VERSION
+        );
+
+        wp_enqueue_script(
+            'ajth-voyages-results-js',
+            AJTH_URL . 'assets/js/aj-voyages-results.js',
+            [],
+            AJTH_VERSION,
+            true
+        );
+    }
+
+    if ( function_exists( 'ajth_is_activites_context' ) && ajth_is_activites_context() ) {
+        wp_enqueue_style(
+            'ajth-activites-getyourguide-css',
+            AJTH_URL . 'assets/css/activites-getyourguide.css',
+            ['ajth-home-css'],
+            AJTH_VERSION
+        );
+
+        wp_enqueue_script(
+            'ajth-activites-getyourguide-js',
+            AJTH_URL . 'assets/js/activites-getyourguide.js',
+            [],
+            AJTH_VERSION,
+            true
+        );
+    }
+
+    if ( function_exists( 'ajth_is_group_deals_context' ) && ajth_is_group_deals_context() ) {
+        wp_enqueue_style(
+            'ajth-group-deals-fusion-css',
+            AJTH_URL . 'assets/css/group-deals-fusion.css',
+            ['ajth-home-css'],
+            AJTH_VERSION
+        );
+
+        wp_enqueue_script(
+            'ajth-group-deals-fusion-js',
+            AJTH_URL . 'assets/js/group-deals-fusion.js',
+            [],
+            AJTH_VERSION,
+            true
+        );
+    }
 
     if ($load_home_sections) {
         wp_enqueue_style(

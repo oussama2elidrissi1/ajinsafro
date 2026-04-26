@@ -1,174 +1,277 @@
 @extends('layouts.master-ajinsafro')
-@section('title')
-    Voyages
-@endsection
-@push('css')
-    <link href="{{ URL::asset('css/voyage-index.css') }}" rel="stylesheet" type="text/css" />
+
+@php
+    use Illuminate\Support\Str;
+
+    $pageTitle = 'Catalogue des voyages';
+    $totalTours = $catalogSummary['total'] ?? $tours->total();
+    $publishedTours = $catalogSummary['published'] ?? 0;
+    $draftTours = $catalogSummary['draft'] ?? 0;
+    $withDepartures = $catalogSummary['with_departures'] ?? 0;
+    $activeFilters = [];
+
+    foreach ([
+        'status' => request('status'),
+        'tour_type' => request('tour_type'),
+        'destination' => request('destination'),
+        'price_min' => request('price_min'),
+        'price_max' => request('price_max'),
+        'duration_min' => request('duration_min'),
+        'duration_max' => request('duration_max'),
+        'modified_from' => request('modified_from'),
+        'modified_to' => request('modified_to'),
+        'q' => request('q'),
+        'has_departures' => request('has_departures'),
+        'has_laravel_public' => request('has_laravel_public'),
+    ] as $key => $value) {
+        if ($value !== null && $value !== '') {
+            $activeFilters[] = $key.' : '.$value;
+        }
+    }
+@endphp
+
+@section('title', 'Voyages')
+
+@push('styles')
+    <link href="{{ URL::asset('css/admin-catalog-premium.css') }}" rel="stylesheet" type="text/css" />
 @endpush
+
 @section('content')
-    <div class="voyage-index-page">
-        <div class="vi-page-header">
-            <ul class="vi-breadcrumb">
-                <li><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i> Admin</a></li>
-                <li><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-                <li class="active">Voyages</li>
-            </ul>
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div class="aj-catalog-page">
+        <div class="aj-catalog-shell">
+            <div class="aj-catalog-head">
                 <div>
-                    <h1 class="vi-page-title">Catalogue des voyages</h1>
-                    <p class="vi-page-subtitle">Pilotez vos offres, disponibilités et actions commerciales depuis une vue unique.</p>
+                    <h1 class="aj-catalog-title">{{ $pageTitle }}</h1>
+                    <p class="aj-catalog-subtitle">Pilotez les offres, départs, prix et publications depuis une vue unique, sans changer la logique métier existante.</p>
                 </div>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('admin.circuits.voyages.create') }}" class="btn btn-outline-primary waves-effect waves-light vi-header-cta">
-                        <i class="bx bx-plus me-1"></i> Créer un tour
-                    </a>
-                    <a href="{{ route('admin.circuits.voyages.create-v2') }}" class="btn btn-primary waves-effect waves-light vi-header-cta">
-                        <i class="bx bx-plus me-1"></i> Créer en V2
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if (!empty($wpConnectionFailed))
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <strong>Connexion catalogue indisponible.</strong>
-                Le chargement des voyages est temporairement indisponible. Veuillez réessayer dans quelques instants.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if (!empty($wpCatalogErrorMessage))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Chargement de la liste impossible.</strong> {{ $wpCatalogErrorMessage }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        <div class="card vi-main-card">
-            <div class="card-body">
-                <div class="vi-stats-grid mb-4">
-                    <div class="vi-stat-card">
-                        <span class="vi-stat-label">Voyages trouvés</span>
-                        <strong class="vi-stat-value">{{ $catalogSummary['total'] ?? $tours->total() }}</strong>
+                <div>
+                    <div class="aj-catalog-breadcrumb">
+                        <span>Admin</span>
+                        <span>/</span>
+                        <span>Circuits</span>
+                        <span>/</span>
+                        <strong style="color:#0b1f3a">Voyages</strong>
                     </div>
-                    <div class="vi-stat-card">
-                        <span class="vi-stat-label">Publié</span>
-                        <strong class="vi-stat-value">{{ $catalogSummary['published'] ?? 0 }}</strong>
-                    </div>
-                    <div class="vi-stat-card">
-                        <span class="vi-stat-label">Brouillon</span>
-                        <strong class="vi-stat-value">{{ $catalogSummary['draft'] ?? 0 }}</strong>
-                    </div>
-                    <div class="vi-stat-card">
-                        <span class="vi-stat-label">Avec départs actifs</span>
-                        <strong class="vi-stat-value">{{ $catalogSummary['with_departures'] ?? 0 }}</strong>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('admin.circuits.voyages.create') }}" class="aj-btn aj-btn-soft">
+                            <i class="bx bx-plus"></i>
+                            <span>Créer un tour</span>
+                        </a>
+                        <a href="{{ route('admin.circuits.voyages.create-v2') }}" class="aj-btn aj-btn-primary">
+                            <i class="bx bx-plus"></i>
+                            <span>Créer en V2</span>
+                        </a>
                     </div>
                 </div>
+            </div>
 
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                    <h4 class="card-title mb-0">Liste des voyages</h4>
-                    <span class="vi-count-chip"><i class="bx bx-collection me-1"></i>{{ $tours->total() }} résultat(s) affiché(s)</span>
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+            @endif
 
-                <form method="get" action="{{ route('admin.circuits.voyages.index') }}" class="vi-filters card border mb-4">
-                    <div class="card-body py-3">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-12 col-md-3 col-xl-2">
-                                <label class="form-label small mb-1">Statut</label>
-                                <select name="status" class="form-select form-select-sm">
-                                    <option value="">Tous</option>
-                                    <option value="publish" @selected(request('status') === 'publish')>Publié</option>
-                                    <option value="draft" @selected(request('status') === 'draft')>Brouillon</option>
-                                    <option value="private" @selected(request('status') === 'private')>Archivé</option>
-                                    <option value="pending" @selected(request('status') === 'pending')>En attente</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-3 col-xl-2">
-                                <label class="form-label small mb-1">Type / thème</label>
-                                <select name="tour_type" class="form-select form-select-sm">
-                                    <option value="">Tous</option>
-                                    @foreach($filterTourTypes ?? [] as $tt)
-                                        <option value="{{ $tt['term_id'] }}" @selected((string) request('tour_type') === (string) $tt['term_id'])>{{ $tt['name'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-3 col-xl-2">
-                                <label class="form-label small mb-1">Destination</label>
-                                <input type="text" name="destination" class="form-control form-control-sm" value="{{ request('destination') }}" placeholder="Ville, pays…">
-                            </div>
-                            <div class="col-6 col-md-3 col-xl-1">
-                                <label class="form-label small mb-1">Prix min</label>
-                                <input type="number" step="0.01" name="price_min" class="form-control form-control-sm" value="{{ request('price_min') }}">
-                            </div>
-                            <div class="col-6 col-md-3 col-xl-1">
-                                <label class="form-label small mb-1">Prix max</label>
-                                <input type="number" step="0.01" name="price_max" class="form-control form-control-sm" value="{{ request('price_max') }}">
-                            </div>
-                            <div class="col-6 col-md-3 col-xl-1">
-                                <label class="form-label small mb-1">Durée min</label>
-                                <input type="number" min="1" name="duration_min" class="form-control form-control-sm" value="{{ request('duration_min') }}">
-                            </div>
-                            <div class="col-6 col-md-3 col-xl-1">
-                                <label class="form-label small mb-1">Durée max</label>
-                                <input type="number" min="1" name="duration_max" class="form-control form-control-sm" value="{{ request('duration_max') }}">
-                            </div>
-                            <div class="col-12 col-md-3 col-xl-2">
-                                <label class="form-label small mb-1">Modifié du</label>
-                                <input type="date" name="modified_from" class="form-control form-control-sm" value="{{ request('modified_from') }}">
-                            </div>
-                            <div class="col-12 col-md-3 col-xl-2">
-                                <label class="form-label small mb-1">au</label>
-                                <input type="date" name="modified_to" class="form-control form-control-sm" value="{{ request('modified_to') }}">
-                            </div>
-                            <div class="col-12 col-md-4 col-xl-3">
-                                <label class="form-label small mb-1">Recherche</label>
-                                <input type="search" name="q" class="form-control form-control-sm" value="{{ request('q') }}" placeholder="Titre, slug…">
-                            </div>
-                            <div class="col-6 col-md-4 col-xl-2">
-                                <label class="form-label small mb-1">Départs actifs</label>
-                                <select name="has_departures" class="form-select form-select-sm">
-                                    <option value="">Indifférent</option>
-                                    <option value="1" @selected(request('has_departures') === '1')>Oui</option>
-                                    <option value="0" @selected(request('has_departures') === '0')>Non</option>
-                                </select>
-                            </div>
-                            <div class="col-6 col-md-4 col-xl-2">
-                                <label class="form-label small mb-1">Page Laravel publique</label>
-                                <select name="has_laravel_public" class="form-select form-select-sm">
-                                    <option value="">Indifférent</option>
-                                    <option value="1" @selected(request('has_laravel_public') === '1')>Oui</option>
-                                    <option value="0" @selected(request('has_laravel_public') === '0')>Non</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-4 col-xl-3">
-                                <div class="d-flex gap-2 vi-filter-actions">
-                                    <button type="submit" class="btn btn-sm btn-primary flex-grow-1">Filtrer</button>
-                                    <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-sm btn-outline-secondary flex-grow-1">Réinitialiser</a>
-                                </div>
-                            </div>
+            @if (!empty($wpConnectionFailed))
+                <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+                    <strong>Connexion catalogue indisponible.</strong>
+                    Le chargement des voyages est temporairement indisponible. Veuillez réessayer dans quelques instants.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if (!empty($wpCatalogErrorMessage))
+                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                    <strong>Chargement de la liste impossible.</strong> {{ $wpCatalogErrorMessage }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            <section class="aj-kpis">
+                <article class="aj-kpi">
+                    <div class="aj-kpi-head">
+                        <div class="aj-kpi-icon -blue"><i class="bx bx-map-alt"></i></div>
+                        <div>
+                            <span class="aj-kpi-label">Voyages trouvés</span>
+                            <strong class="aj-kpi-value">{{ number_format($totalTours, 0, ',', ' ') }}</strong>
+                            <span class="aj-kpi-note">Catalogue courant</span>
+                        </div>
+                    </div>
+                </article>
+                <article class="aj-kpi">
+                    <div class="aj-kpi-head">
+                        <div class="aj-kpi-icon -green"><i class="bx bx-badge-check"></i></div>
+                        <div>
+                            <span class="aj-kpi-label">Publiés</span>
+                            <strong class="aj-kpi-value">{{ $publishedTours }}</strong>
+                            <span class="aj-kpi-note">Visibles dans le catalogue</span>
+                        </div>
+                    </div>
+                </article>
+                <article class="aj-kpi">
+                    <div class="aj-kpi-head">
+                        <div class="aj-kpi-icon -orange"><i class="bx bx-edit-alt"></i></div>
+                        <div>
+                            <span class="aj-kpi-label">Brouillons</span>
+                            <strong class="aj-kpi-value">{{ $draftTours }}</strong>
+                            <span class="aj-kpi-note">À finaliser</span>
+                        </div>
+                    </div>
+                </article>
+                <article class="aj-kpi">
+                    <div class="aj-kpi-head">
+                        <div class="aj-kpi-icon -violet"><i class="bx bx-calendar-check"></i></div>
+                        <div>
+                            <span class="aj-kpi-label">Avec départs actifs</span>
+                            <strong class="aj-kpi-value">{{ $withDepartures }}</strong>
+                            <span class="aj-kpi-note">Basé sur les données catalogue</span>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="aj-panel">
+                <form method="get" action="{{ route('admin.circuits.voyages.index') }}">
+                    <div class="aj-filter-grid">
+                        <div class="aj-field aj-search-wrap aj-col-3">
+                            <label for="q">Recherche</label>
+                            <span class="aj-search-icon"><i class="bx bx-search"></i></span>
+                            <input id="q" type="search" name="q" class="aj-control" value="{{ request('q') }}" placeholder="Titre, slug...">
+                        </div>
+                        <div class="aj-field aj-col-2">
+                            <label for="status">Statut</label>
+                            <select id="status" name="status" class="aj-control">
+                                <option value="">Tous</option>
+                                <option value="publish" @selected(request('status') === 'publish')>Publié</option>
+                                <option value="draft" @selected(request('status') === 'draft')>Brouillon</option>
+                                <option value="private" @selected(request('status') === 'private')>Archivé</option>
+                                <option value="pending" @selected(request('status') === 'pending')>En attente</option>
+                            </select>
+                        </div>
+                        <div class="aj-field aj-col-2">
+                            <label for="tour_type">Type / thème</label>
+                            <select id="tour_type" name="tour_type" class="aj-control">
+                                <option value="">Tous</option>
+                                @foreach($filterTourTypes ?? [] as $tt)
+                                    <option value="{{ $tt['term_id'] }}" @selected((string) request('tour_type') === (string) $tt['term_id'])>{{ $tt['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="aj-field aj-col-2">
+                            <label for="destination">Destination</label>
+                            <input id="destination" type="text" name="destination" class="aj-control" value="{{ request('destination') }}" placeholder="Ville, pays...">
+                        </div>
+                        <div class="aj-field aj-col-1">
+                            <label for="price_min">Prix min</label>
+                            <input id="price_min" type="number" step="0.01" name="price_min" class="aj-control" value="{{ request('price_min') }}">
+                        </div>
+                        <div class="aj-field aj-col-1">
+                            <label for="price_max">Prix max</label>
+                            <input id="price_max" type="number" step="0.01" name="price_max" class="aj-control" value="{{ request('price_max') }}">
+                        </div>
+                        <div class="aj-field aj-col-1">
+                            <label for="duration_min">Durée min</label>
+                            <input id="duration_min" type="number" min="1" name="duration_min" class="aj-control" value="{{ request('duration_min') }}">
+                        </div>
+                        <div class="aj-field aj-col-1">
+                            <label for="duration_max">Durée max</label>
+                            <input id="duration_max" type="number" min="1" name="duration_max" class="aj-control" value="{{ request('duration_max') }}">
+                        </div>
+                        <div class="aj-field aj-col-2">
+                            <label for="modified_from">Modifié du</label>
+                            <input id="modified_from" type="date" name="modified_from" class="aj-control" value="{{ request('modified_from') }}">
+                        </div>
+                        <div class="aj-field aj-col-2">
+                            <label for="modified_to">au</label>
+                            <input id="modified_to" type="date" name="modified_to" class="aj-control" value="{{ request('modified_to') }}">
+                        </div>
+                        <div class="aj-field aj-col-2">
+                            <label for="has_departures">Départs actifs</label>
+                            <select id="has_departures" name="has_departures" class="aj-control">
+                                <option value="">Indifférent</option>
+                                <option value="1" @selected(request('has_departures') === '1')>Oui</option>
+                                <option value="0" @selected(request('has_departures') === '0')>Non</option>
+                            </select>
+                        </div>
+                        <div class="aj-field aj-col-2">
+                            <label for="has_laravel_public">Page Laravel publique</label>
+                            <select id="has_laravel_public" name="has_laravel_public" class="aj-control">
+                                <option value="">Indifférent</option>
+                                <option value="1" @selected(request('has_laravel_public') === '1')>Oui</option>
+                                <option value="0" @selected(request('has_laravel_public') === '0')>Non</option>
+                            </select>
+                        </div>
+                        <div class="aj-col-2 d-flex flex-wrap gap-2">
+                            <button type="submit" class="aj-btn aj-btn-primary w-100">
+                                <i class="bx bx-filter-alt"></i>
+                                <span>Filtrer</span>
+                            </button>
+                        </div>
+                        <div class="aj-col-2 d-flex flex-wrap gap-2">
+                            <a href="{{ route('admin.circuits.voyages.index') }}" class="aj-btn aj-btn-soft w-100">
+                                <i class="bx bx-reset"></i>
+                                <span>Réinitialiser</span>
+                            </a>
                         </div>
                     </div>
                 </form>
 
+                <div class="aj-filter-chips">
+                    <span>Filtres actifs :</span>
+                    @forelse($activeFilters as $filterLabel)
+                        <span class="aj-chip">{{ $filterLabel }}</span>
+                    @empty
+                        <span class="text-muted">Aucun filtre actif.</span>
+                    @endforelse
+                </div>
+            </section>
+
+            <section class="aj-panel">
+                <div class="aj-toolbar">
+                    <div class="aj-result-meta">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="voyageSortSelect" class="mb-0">Trier par :</label>
+                            <select id="voyageSortSelect" class="aj-mini-select">
+                                <option value="recent">Plus récents</option>
+                                <option value="price_asc">Prix croissant</option>
+                                <option value="price_desc">Prix décroissant</option>
+                                <option value="title_asc">Titre A-Z</option>
+                            </select>
+                        </div>
+                        <button type="button" class="aj-mini-btn" id="voyageExportBtn">
+                            <i class="bx bx-export"></i>
+                            <span>Exporter la vue</span>
+                        </button>
+                        <span>{{ $tours->firstItem() ?? 0 }} - {{ $tours->lastItem() ?? 0 }} sur {{ $tours->total() }} voyages</span>
+                    </div>
+                    <div class="aj-result-meta">
+                        <span>Vue :</span>
+                        <div class="aj-view-toggle">
+                            <button type="button" class="is-active" data-view="table" aria-pressed="true"><i class="bx bx-list-ul"></i></button>
+                            <button type="button" data-view="grid" aria-pressed="false"><i class="bx bx-grid-alt"></i></button>
+                        </div>
+                    </div>
+                </div>
+
                 @if($tours->isEmpty())
-                    <p class="text-muted mb-0">Aucun tour trouvé. <a href="{{ route('admin.circuits.voyages.create') }}">Créer un tour</a> pour commencer.</p>
+                    <div class="aj-empty">
+                        <h5 class="mb-2">Aucun voyage trouvé</h5>
+                        <p class="text-muted mb-3">Ajustez vos filtres ou créez un nouveau voyage.</p>
+                        <a href="{{ route('admin.circuits.voyages.create') }}" class="aj-btn aj-btn-primary">
+                            <i class="bx bx-plus"></i>
+                            <span>Créer un voyage</span>
+                        </a>
+                    </div>
                 @else
-                    <div class="table-responsive vi-table-wrap">
-                        <table class="table table-hover table-centered mb-0 vi-table">
+                    <div class="aj-table-wrap" data-catalog-view="table">
+                        <table class="aj-table">
                             <thead>
                                 <tr>
-                                    <th width="70">ID</th>
-                                    <th>Titre</th>
+                                    <th>ID</th>
+                                    <th>Voyage</th>
                                     <th>Destination</th>
                                     <th>Durée</th>
-                                    <th>Prix Adulte</th>
+                                    <th>Prix adulte</th>
                                     <th>Statut</th>
                                     <th>Modifié le</th>
                                     <th class="text-end">Actions</th>
@@ -176,49 +279,60 @@
                             </thead>
                             <tbody>
                                 @foreach($tours as $tour)
-                                    <tr>
+                                    @php
+                                        $price = is_numeric($tour->adult_price ?? null) ? (float) $tour->adult_price : 0;
+                                        $modifiedTimestamp = $tour->post_modified ? optional($tour->post_modified)->timestamp ?? strtotime((string) $tour->post_modified) : 0;
+                                    @endphp
+                                    <tr data-title="{{ Str::lower($tour->post_title) }}" data-price="{{ $price }}" data-modified="{{ $modifiedTimestamp }}">
                                         <td><strong>#{{ $tour->ID }}</strong></td>
                                         <td>
-                                            <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="text-body fw-medium">{{ $tour->post_title }}</a>
-                                            <br><small class="text-muted">{{ $tour->post_name }}</small>
+                                            <div class="aj-item-title">
+                                                <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}">{{ $tour->post_title }}</a>
+                                                @if(!empty($tour->laravel_slug))
+                                                    <span class="aj-badge -info">Laravel</span>
+                                                @endif
+                                            </div>
+                                            <div class="aj-meta-text">{{ $tour->post_name }}</div>
                                         </td>
                                         <td>{{ $tour->address ?? '-' }}</td>
                                         <td>{{ $tour->duration_day ?? '-' }}</td>
-                                        <td>
-                                            @if($tour->adult_price)
-                                                <strong>{{ number_format($tour->adult_price, 0, ',', ' ') }} MAD</strong>
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
+                                        <td><span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '—' }}</span></td>
                                         <td>
                                             @if($tour->post_status === 'publish')
-                                                <span class="badge vi-status vi-status-publish">Publié</span>
+                                                <span class="aj-badge -success">Publié</span>
                                             @elseif($tour->post_status === 'draft')
-                                                <span class="badge vi-status vi-status-draft">Brouillon</span>
+                                                <span class="aj-badge -warning">Brouillon</span>
                                             @elseif($tour->post_status === 'private')
-                                                <span class="badge bg-secondary">Archivé</span>
+                                                <span class="aj-badge -neutral">Archivé</span>
                                             @else
-                                                <span class="badge vi-status vi-status-pending">{{ $tour->post_status }}</span>
+                                                <span class="aj-badge -info">{{ $tour->post_status }}</span>
                                             @endif
                                         </td>
                                         <td>{{ optional($tour->post_modified)->format('d/m/Y H:i') ?? '-' }}</td>
-                                        <td class="text-end vi-actions">
-                                            <a href="https://ajinsafro.net/tours/{{ $tour->post_name }}" target="_blank" class="btn btn-sm btn-soft-info waves-effect waves-light me-1" title="Voir la fiche publique">
-                                                <i class="bx bx-show"></i>
-                                            </a>
-                                            @if(!empty($tour->laravel_slug))
-                                                <a href="{{ url('/voyages/'.$tour->laravel_slug) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-soft-success waves-effect waves-light me-1" title="Voir la page commerciale">
-                                                    <i class="bx bx-link-external"></i>
+                                        <td class="text-end">
+                                            <div class="aj-actions">
+                                                <a href="https://ajinsafro.net/tours/{{ $tour->post_name }}" target="_blank" class="aj-icon-btn" title="Voir la fiche publique">
+                                                    <i class="bx bx-show"></i>
                                                 </a>
-                                            @endif
-                                            <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="btn btn-sm btn-soft-primary waves-effect waves-light me-1">Modifier</a>
-                                            <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="btn btn-sm btn-soft-secondary waves-effect waves-light me-1" title="Ouvrir dans l'éditeur V2">V2</a>
-                                            <form action="{{ route('admin.circuits.voyages.destroy', $tour->ID) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce tour de WordPress ?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-soft-danger waves-effect waves-light">Supprimer</button>
-                                            </form>
+                                                @if(!empty($tour->laravel_slug))
+                                                    <a href="{{ url('/voyages/'.$tour->laravel_slug) }}" target="_blank" rel="noopener noreferrer" class="aj-icon-btn" title="Voir la page commerciale">
+                                                        <i class="bx bx-link-external"></i>
+                                                    </a>
+                                                @endif
+                                                <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="aj-icon-btn" title="Modifier">
+                                                    <i class="bx bx-pencil"></i>
+                                                </a>
+                                                <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Éditeur V2">
+                                                    <i class="bx bx-layer"></i>
+                                                </a>
+                                                <form action="{{ route('admin.circuits.voyages.destroy', $tour->ID) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce tour de WordPress ?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="aj-icon-btn -danger" title="Supprimer">
+                                                        <i class="bx bx-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -226,15 +340,125 @@
                         </table>
                     </div>
 
-                    <div class="d-flex justify-content-center mt-4">
-                        {{ $tours->onEachSide(1)->links('pagination::bootstrap-5') }}
+                    <div class="aj-grid" data-catalog-view="grid">
+                        @foreach($tours as $tour)
+                            @php
+                                $price = is_numeric($tour->adult_price ?? null) ? (float) $tour->adult_price : 0;
+                                $modifiedTimestamp = $tour->post_modified ? optional($tour->post_modified)->timestamp ?? strtotime((string) $tour->post_modified) : 0;
+                            @endphp
+                            <article class="aj-card" data-title="{{ Str::lower($tour->post_title) }}" data-price="{{ $price }}" data-modified="{{ $modifiedTimestamp }}">
+                                <div class="aj-card-cover d-flex align-items-end p-3">
+                                    <span class="aj-badge -info">#{{ $tour->ID }}</span>
+                                </div>
+                                <div class="aj-card-body">
+                                    <h4 class="aj-card-title"><a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}">{{ $tour->post_title }}</a></h4>
+                                    <div class="aj-meta-text mb-2">{{ $tour->post_name }}</div>
+                                    <div class="aj-meta-text mb-2">{{ $tour->address ?? 'Destination non renseignée' }}</div>
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                                        <span class="aj-badge -neutral">{{ $tour->duration_day ?? '-' }} jours</span>
+                                        @if($tour->post_status === 'publish')
+                                            <span class="aj-badge -success">Publié</span>
+                                        @elseif($tour->post_status === 'draft')
+                                            <span class="aj-badge -warning">Brouillon</span>
+                                        @else
+                                            <span class="aj-badge -info">{{ $tour->post_status }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="aj-card-actions">
+                                        <span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '—' }}</span>
+                                        <div class="aj-actions">
+                                            <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="aj-icon-btn" title="Modifier"><i class="bx bx-pencil"></i></a>
+                                            <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="V2"><i class="bx bx-layer"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+
+                    <div class="aj-footer">
+                        <div>Affichage de {{ $tours->firstItem() ?? 0 }} à {{ $tours->lastItem() ?? 0 }} sur {{ $tours->total() }} résultats</div>
+                        <div>{{ $tours->onEachSide(1)->links('pagination::bootstrap-5') }}</div>
                     </div>
                 @endif
-                </div>
-            </div>
+            </section>
         </div>
     </div>
 @endsection
-@push('script')
+
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tableView = document.querySelector('[data-catalog-view="table"]');
+            const gridView = document.querySelector('[data-catalog-view="grid"]');
+            const toggleButtons = document.querySelectorAll('.aj-view-toggle button');
+            const sortSelect = document.getElementById('voyageSortSelect');
+            const exportBtn = document.getElementById('voyageExportBtn');
+
+            function setView(mode) {
+                toggleButtons.forEach((button) => {
+                    const active = button.dataset.view === mode;
+                    button.classList.toggle('is-active', active);
+                    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+
+                if (tableView) {
+                    tableView.style.display = mode === 'table' ? 'block' : 'none';
+                }
+
+                if (gridView) {
+                    gridView.classList.toggle('is-active', mode === 'grid');
+                }
+            }
+
+            function compareNodes(mode) {
+                return function (a, b) {
+                    const titleA = a.dataset.title || '';
+                    const titleB = b.dataset.title || '';
+                    const priceA = Number(a.dataset.price || 0);
+                    const priceB = Number(b.dataset.price || 0);
+                    const modifiedA = Number(a.dataset.modified || 0);
+                    const modifiedB = Number(b.dataset.modified || 0);
+
+                    if (mode === 'price_asc') return priceA - priceB;
+                    if (mode === 'price_desc') return priceB - priceA;
+                    if (mode === 'title_asc') return titleA.localeCompare(titleB, 'fr');
+                    return modifiedB - modifiedA;
+                };
+            }
+
+            function sortCurrentView(mode) {
+                const rowContainer = tableView ? tableView.querySelector('tbody') : null;
+                if (rowContainer) {
+                    [...rowContainer.querySelectorAll('tr')].sort(compareNodes(mode)).forEach((row) => rowContainer.appendChild(row));
+                }
+
+                if (gridView) {
+                    [...gridView.querySelectorAll('.aj-card')].sort(compareNodes(mode)).forEach((card) => gridView.appendChild(card));
+                }
+            }
+
+            toggleButtons.forEach((button) => {
+                button.addEventListener('click', function () {
+                    setView(this.dataset.view || 'table');
+                });
+            });
+
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function () {
+                    sortCurrentView(this.value || 'recent');
+                });
+            }
+
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function () {
+                    window.print();
+                });
+            }
+
+            setView('table');
+            sortCurrentView(sortSelect ? sortSelect.value : 'recent');
+        });
+    </script>
 @endpush

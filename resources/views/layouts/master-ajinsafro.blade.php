@@ -32,10 +32,11 @@
     <link href="{{ URL::asset('css/admin-branding.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('css/agent-portal-bootstrap-bridge.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('css/internal-v2-layout.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet" type="text/css" />
 
     @stack('styles')
 </head>
-<body class="partner-v2 text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
+<body class="partner-v2 admin-premium-ui text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
     @if($hideInternalV2Topbar)
         @include('layouts.partials.internal-v2-topbar')
     @else
@@ -80,7 +81,7 @@
     @stack('styles')
 </head>
 
-<body class="{{ $voyageLayoutPage ? 'voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}" data-layout="detached" data-topbar="colored">
+<body class="admin-premium-ui{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}" data-layout="detached" data-topbar="colored">
     <!-- Begin page -->
     <div class="container-fluid">
         <div id="layout-wrapper">

@@ -442,23 +442,23 @@
 
         function getSelectedDepartureLabel() {
             if (!fromSelect) {
-                return priceCard.getAttribute("data-default-departure") || "—";
+                return priceCard.getAttribute("data-default-departure") || "-";
             }
             var selectedOption = fromSelect.options[fromSelect.selectedIndex];
             if (!selectedOption) {
-                return priceCard.getAttribute("data-default-departure") || "—";
+                return priceCard.getAttribute("data-default-departure") || "-";
             }
             var label = (selectedOption.getAttribute("data-place-name") || selectedOption.textContent || "").trim();
-            return label || priceCard.getAttribute("data-default-departure") || "—";
+            return label || priceCard.getAttribute("data-default-departure") || "-";
         }
 
         function getSelectedDateLabel() {
             if (!dateSelect) {
-                return priceCard.getAttribute("data-default-date") || "—";
+                return priceCard.getAttribute("data-default-date") || "-";
             }
             var selectedOption = dateSelect.options[dateSelect.selectedIndex];
             var selectedLabel = selectedOption ? (selectedOption.textContent || "") : "";
-            return dateDisplayMap[dateSelect.value] || selectedLabel || priceCard.getAttribute("data-default-date") || "—";
+            return dateDisplayMap[dateSelect.value] || selectedLabel || priceCard.getAttribute("data-default-date") || "-";
         }
 
         function getGuestsLabel(adults, children) {
@@ -470,7 +470,7 @@
         }
 
         function getAvailabilityLabel(total, dateAdultPrice) {
-            var baseLabel = priceCard.getAttribute("data-availability-label") || "Sous réserve de disponibilité";
+            var baseLabel = priceCard.getAttribute("data-availability-label") || "Sous reserve de disponibilite";
             if (dateAdultPrice !== null && total > 0) {
                 return "Disponible";
             }
@@ -502,7 +502,7 @@
                     html += "<li>" + escapeHtml(label + price) + "</li>";
                 });
                 if (activityTotal > 0) {
-                    html += '<li class="ajtb-v1-summary-chip-total">Activites ajoutees: +' + escapeHtml(formatAmount(activityTotal) + " " + currency) + "</li>";
+                    html += '<li class="ajtb-v1-summary-chip-total">Activités ajoutées : +' + escapeHtml(formatAmount(activityTotal) + " " + currency) + "</li>";
                 }
             }
             if (!html) {
@@ -669,12 +669,12 @@
                 availabilityEl.textContent = availabilityLabel;
             }
             if (availabilityBadgeEl) {
-                availabilityBadgeEl.textContent = availabilityLabel === "Disponible" ? "Disponible" : "À confirmer";
+                availabilityBadgeEl.textContent = availabilityLabel === "Disponible" ? "Disponible" : "A confirmer";
             }
             if (noteEl) {
                 noteEl.textContent = activityTotal > 0
-                    ? "Prix total mis a jour avec les activites ajoutees."
-                    : (priceCard.getAttribute("data-default-date") ? "Prix adapte selon la selection" : noteEl.textContent);
+                    ? "Prix total mis à jour avec les activités ajoutées."
+                    : (priceCard.getAttribute("data-default-date") ? "Prix adapté selon la sélection" : noteEl.textContent);
             }
             if (actionEl) {
                 actionEl.textContent = "Continuer";
@@ -996,7 +996,7 @@
             });
 
             if (cards.length === 0) {
-                modalBody.innerHTML = '<p class="ajtb-act-modal-empty">Aucune activite optionnelle disponible pour ce jour.</p>';
+                modalBody.innerHTML = '<p class="ajtb-act-modal-empty">Aucune activité optionnelle disponible pour ce jour.</p>';
             } else {
                 modalBody.innerHTML = '<div class="ajtb-act-modal-grid">' + cards.join("") + '</div>';
             }
@@ -1345,7 +1345,7 @@
         if (!isFinite(adults) || adults < 1) { adults = 1; }
         if (!isFinite(children) || children < 0) { children = 0; }
 
-        var departureLabel = priceCard.getAttribute("data-default-departure") || "—";
+        var departureLabel = priceCard.getAttribute("data-default-departure") || "-";
         var departurePlaceId = 0;
         if (fromSelect && fromSelect.options && fromSelect.selectedIndex >= 0) {
             var opt = fromSelect.options[fromSelect.selectedIndex];
@@ -1354,7 +1354,7 @@
         }
 
         var dateValue = "";
-        var dateLabel = priceCard.getAttribute("data-default-date") || "—";
+        var dateLabel = priceCard.getAttribute("data-default-date") || "-";
         if (dateSelect && dateSelect.options && dateSelect.selectedIndex >= 0) {
             var dateOpt = dateSelect.options[dateSelect.selectedIndex];
             dateValue = String(dateSelect.value || "");
@@ -1371,7 +1371,7 @@
             .map(function (row) {
                 return {
                     activity_id: parseInt(row.getAttribute("data-activity-id") || "0", 10) || 0,
-                    title: String(row.getAttribute("data-activity-title") || "").trim() || (row.querySelector("h4") ? row.querySelector("h4").textContent.trim() : "Activité"),
+                    title: String(row.getAttribute("data-activity-title") || "").trim() || (row.querySelector("h4") ? row.querySelector("h4").textContent.trim() : "Activite"),
                     price: row.getAttribute("data-activity-price") || "",
                     assigned: [],
                 };
@@ -1395,11 +1395,11 @@
             tourId: tourId,
             departure: {
                 id: departurePlaceId,
-                label: departureLabel || "—",
+                label: departureLabel || "-",
             },
             date: {
                 value: dateValue,
-                label: dateLabel || "—",
+                label: dateLabel || "-",
             },
             guests: {
                 adults: adults,
@@ -1413,7 +1413,7 @@
                 label: (document.getElementById("ajtb-v1-summary-flight") ? document.getElementById("ajtb-v1-summary-flight").textContent : "") || "",
             },
             transfers: {
-                label: "—",
+                label: "-",
             },
             activities: activities,
             options: options,
@@ -1515,23 +1515,60 @@
             return;
         }
         var stepLinks = Array.prototype.slice.call(document.querySelectorAll(".ajtb-v1-recap-step"));
-        var stepTargets = stepLinks.map(function (link) {
-            var href = link.getAttribute("href") || "";
-            if (!href || href.charAt(0) !== "#") {
-                return null;
-            }
-            var target = document.querySelector(href);
-            if (!target) {
-                return null;
-            }
-            return { link: link, target: target };
-        }).filter(Boolean);
+        var stepPrevBtn = document.querySelector("[data-ajtb-step-action='prev']");
+        var stepNextBtn = document.querySelector("[data-ajtb-step-action='next']");
+        var stepPanels = Array.prototype.slice.call(document.querySelectorAll("[data-ajtb-step-panel]"));
+        var stepOrder = [
+            "ajtb-v1-step-tour",
+            "ajtb-v1-step-selection",
+            "ajtb-v1-step-confirmation",
+            "ajtb-v1-step-price",
+        ];
+        var currentStepIndex = 0;
 
         function setActiveStep(targetId) {
             stepLinks.forEach(function (link) {
                 var href = link.getAttribute("href") || "";
                 link.classList.toggle("is-active", href === ("#" + targetId));
             });
+            stepPanels.forEach(function (panel) {
+                var panelStep = panel.getAttribute("data-ajtb-step-panel") || "";
+                var isActive = panelStep === targetId;
+                panel.hidden = !isActive;
+                panel.classList.toggle("is-active", isActive);
+                panel.setAttribute("aria-hidden", isActive ? "false" : "true");
+            });
+            root.setAttribute("data-ajtb-active-step", String(targetId || ""));
+            if (stepPrevBtn) {
+                stepPrevBtn.disabled = currentStepIndex <= 0;
+            }
+            if (stepNextBtn) {
+                stepNextBtn.disabled = currentStepIndex >= (stepOrder.length - 1);
+            }
+        }
+
+        function goToStepById(targetId, scroll) {
+            var idx = stepOrder.indexOf(String(targetId || ""));
+            if (idx >= 0) {
+                currentStepIndex = idx;
+            }
+            setActiveStep(String(targetId || stepOrder[0]));
+            if (scroll !== false) {
+                var target = document.getElementById(String(targetId || ""));
+                if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            }
+        }
+
+        function goToStepByIndex(nextIndex, scroll) {
+            var idx = parseInt(nextIndex, 10);
+            if (!isFinite(idx)) {
+                idx = 0;
+            }
+            idx = Math.max(0, Math.min(stepOrder.length - 1, idx));
+            currentStepIndex = idx;
+            goToStepById(stepOrder[idx], scroll);
         }
 
         stepLinks.forEach(function (link) {
@@ -1545,28 +1582,28 @@
                     return;
                 }
                 event.preventDefault();
-                setActiveStep(String(target.id || ""));
-                target.scrollIntoView({ behavior: "smooth", block: "start" });
+                goToStepById(String(target.id || ""), true);
             });
         });
 
-        if (stepTargets.length) {
-            var onScroll = function () {
-                var viewportOffset = 170;
-                var current = stepTargets[0];
-                stepTargets.forEach(function (entry) {
-                    var top = entry.target.getBoundingClientRect().top;
-                    if (top <= viewportOffset) {
-                        current = entry;
-                    }
-                });
-                if (current && current.target && current.target.id) {
-                    setActiveStep(String(current.target.id));
-                }
-            };
-            window.addEventListener("scroll", onScroll, { passive: true });
-            window.addEventListener("resize", onScroll, { passive: true });
-            onScroll();
+        if (stepPrevBtn) {
+            stepPrevBtn.addEventListener("click", function () {
+                goToStepByIndex(currentStepIndex - 1, true);
+            });
+        }
+        if (stepNextBtn) {
+            stepNextBtn.addEventListener("click", function () {
+                goToStepByIndex(currentStepIndex + 1, true);
+            });
+        }
+
+        // Always force start on step 1 at initial load.
+        if (window.location && window.location.hash && window.history && window.history.replaceState) {
+            window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+        }
+        goToStepByIndex(0, false);
+        if (window.scrollY > 0) {
+            window.scrollTo({ top: 0, behavior: "auto" });
         }
 
         var tourId = parseInt(root.getAttribute("data-tour-id") || "0", 10) || 0;
@@ -1584,12 +1621,12 @@
                 version: 1,
                 capturedAt: Date.now(),
                 tourId: tourId,
-                departure: { id: 0, label: "—" },
-                date: { value: "", label: "—" },
+                departure: { id: 0, label: "-" },
+                date: { value: "", label: "-" },
                 guests: { adults: 2, children: 0, label: "" },
                 hotel: { label: "" },
                 flight: { label: "" },
-                transfers: { label: "—" },
+                transfers: { label: "-" },
                 activities: [],
                 options: [],
                 price: { total: 0, currency: "MAD" },
@@ -1605,9 +1642,26 @@
         }
 
         function setField(name, value) {
-            var el = document.querySelector("[data-ajtb-recap-field='" + name + "']");
-            if (!el) { return; }
-            el.textContent = (value === null || value === undefined || String(value).trim() === "") ? "—" : String(value);
+            var nodes = Array.prototype.slice.call(
+                document.querySelectorAll("[data-ajtb-recap-field='" + name + "']"),
+            );
+            if (!nodes.length) { return; }
+            var text = (value === null || value === undefined || String(value).trim() === "") ? "-" : String(value);
+            nodes.forEach(function (el) {
+                el.textContent = text;
+            });
+        }
+
+        function formatPeopleBreakdown(adults, children) {
+            var a = parseInt(adults || "1", 10) || 1;
+            var c = parseInt(children || "0", 10) || 0;
+            if (a < 1) { a = 1; }
+            if (c < 0) { c = 0; }
+            var label = a + (a > 1 ? " adultes" : " adulte");
+            if (c > 0) {
+                label += " · " + c + (c > 1 ? " enfants" : " enfant");
+            }
+            return label;
         }
 
         function setRowVisibility(name, visible) {
@@ -1967,14 +2021,14 @@
                 var opt = fromSelect.options[fromSelect.selectedIndex];
                 next.departure = {
                     id: parseInt(fromSelect.value || "0", 10) || 0,
-                    label: (opt.getAttribute("data-place-name") || opt.textContent || "—").trim(),
+                    label: (opt.getAttribute("data-place-name") || opt.textContent || "-").trim(),
                 };
             }
             if (dateSelect && dateSelect.options && dateSelect.selectedIndex >= 0) {
                 var dopt = dateSelect.options[dateSelect.selectedIndex];
                 next.date = {
                     value: String(dateSelect.value || ""),
-                    label: String(dopt.textContent || dateSelect.value || "—").trim(),
+                    label: String(dopt.textContent || dateSelect.value || "-").trim(),
                 };
             }
             next.guests = next.guests || { adults: 2, children: 0, label: "" };
@@ -1987,27 +2041,29 @@
             state = state || payload;
             var calc = computeTotalFromState(state);
 
-            setField("hotel", state.hotel && state.hotel.label ? state.hotel.label : "—");
+            setField("hotel", state.hotel && state.hotel.label ? state.hotel.label : "-");
             setField("flight", state.flight && state.flight.label ? state.flight.label : "Non indiqué");
-            setField("transfers", state.transfers && state.transfers.label ? state.transfers.label : "—");
+            setField("transfers", state.transfers && state.transfers.label ? state.transfers.label : "-");
 
-            var activitiesLabel = "—";
+            var activitiesLabel = "-";
             if (state.activities && state.activities.length) {
                 activitiesLabel = state.activities.map(function (a) { return a.title; }).filter(Boolean).join(", ");
             }
             setField("activities", activitiesLabel);
 
-            var optionsLabel = "—";
+            var optionsLabel = "-";
             if (state.options && state.options.length) {
                 optionsLabel = state.options.join(", ");
             }
             setField("options", optionsLabel);
 
-            var guestsLabel = (state.guests ? (state.guests.adults + " adulte(s)" + (state.guests.children > 0 ? (", " + state.guests.children + " enfant(s)") : "")) : "—");
+            var guestsLabel = (state.guests ? (state.guests.adults + " adulte(s)" + (state.guests.children > 0 ? (", " + state.guests.children + " enfant(s)") : "")) : "-");
+            var peopleLabel = state.guests ? formatPeopleBreakdown(state.guests.adults, state.guests.children) : "-";
             setField("guests", guestsLabel);
-            setField("guestBreakdown", (state.guests ? (state.guests.adults + " adulte(s)" + (state.guests.children > 0 ? (" • " + state.guests.children + " enfant(s)") : "")) : "—"));
-            setField("departure", state.departure && state.departure.label ? state.departure.label : "—");
-            setField("date", state.date && state.date.label ? state.date.label : "—");
+            setField("people", peopleLabel);
+            setField("guestBreakdown", (state.guests ? (state.guests.adults + " adulte(s)" + (state.guests.children > 0 ? (" · " + state.guests.children + " enfant(s)") : "")) : "-"));
+            setField("departure", state.departure && state.departure.label ? state.departure.label : "-");
+            setField("date", state.date && state.date.label ? state.date.label : "-");
 
             setField("total", formatMoney(calc.total));
             setField("totalLine", formatMoney(calc.total));
@@ -2018,7 +2074,13 @@
             setField("priceActivities", formatMoney(calc.activitiesTotal) + " " + calc.currency);
             setField("priceExtras", formatMoney(calc.extrasTotal) + " " + calc.currency);
             setField("priceRoom", formatMoney(calc.roomTotal) + " " + calc.currency);
-            setField("demiDoubleStatus", calc.halfDoublePending ? "En attente de jumelage" : "—");
+            setField("demiDoubleStatus", calc.halfDoublePending ? "En attente de jumelage" : "-");
+            setField(
+                "pendingNote",
+                calc.halfDoublePending
+                    ? "Demi-double active : la réservation sera créée en attente de jumelage."
+                    : "Réservation créée en statut pending jusqu'à validation finale.",
+            );
             setRowVisibility("children", calc.children > 0);
             setRowVisibility("room", calc.roomTotal > 0);
             setRowVisibility("demiDouble", calc.halfDoublePending);
@@ -2101,9 +2163,14 @@
                 var need = summary.need;
                 var got = summary.assigned;
                 var ok = summary.isComplete;
+                var adults = payload && payload.guests ? parseInt(payload.guests.adults || "1", 10) : 1;
+                var children = payload && payload.guests ? parseInt(payload.guests.children || "0", 10) : 0;
+                if (!isFinite(adults) || adults < 1) { adults = 1; }
+                if (!isFinite(children) || children < 0) { children = 0; }
+                var peopleLabel = formatPeopleBreakdown(adults, children);
                 box.innerHTML =
                     '<div class="ajtb-v1-room-alloc-summary">' +
-                    '<div><strong>Voyageurs à répartir :</strong> ' + escapeHtml(String(need)) + ' adulte(s)' +
+                    '<div><strong>Voyageurs à répartir :</strong> ' + escapeHtml(peopleLabel) +
                     '<br><strong>Voyageurs affectés :</strong> ' + escapeHtml(String(got)) + ' / ' + escapeHtml(String(need)) +
                     '<br><strong>Reste à affecter :</strong> ' + escapeHtml(String(summary.remaining)) + '</div>' +
                     '<div class="ajtb-v1-room-alloc-badge">' + (ok ? 'OK' : 'À compléter') + '</div>' +
@@ -2196,7 +2263,7 @@
                 var priceParts = [];
                 if (ex.price_adult && parseFloat(ex.price_adult) > 0) priceParts.push("Adulte " + formatMoney(ex.price_adult));
                 if (ex.price_child && parseFloat(ex.price_child) > 0) priceParts.push("Enfant " + formatMoney(ex.price_child));
-                var price = priceParts.length ? (priceParts.join(" / ") + " " + (window.ajtbRecapBase && window.ajtbRecapBase.pricing ? window.ajtbRecapBase.pricing.currency : "MAD")) : "—";
+                var price = priceParts.length ? (priceParts.join(" / ") + " " + (window.ajtbRecapBase && window.ajtbRecapBase.pricing ? window.ajtbRecapBase.pricing.currency : "MAD")) : "-";
                 return '' +
                     '<div class="ajtb-v1-choice-item">' +
                     '<span></span>' +
@@ -2393,14 +2460,48 @@
         // (Activities are managed per traveller in "Client & voyageurs")
 
         (function bindFinalize() {
-            var finalize = document.getElementById("ajtb-v1-recap-finalize");
+            var finalize = document.getElementById("ajtb-v1-recap-finalize") || document.getElementById("ajtb-v1-step-confirmation");
             if (!finalize) return;
 
             var list = document.getElementById("ajtb-recap-companions-list");
             var addAdultBtn = document.querySelector("[data-ajtb-recap-action='add-adult']");
             var addChildBtn = document.querySelector("[data-ajtb-recap-action='add-child']");
             var submitBtn = document.querySelector("[data-ajtb-recap-action='final-submit']");
+            var firstInput = document.getElementById("ajtb-client-first");
+            var lastInput = document.getElementById("ajtb-client-last");
+            var fromInput = document.getElementById("ajtb-v1-search-from");
+            var dateInput = document.getElementById("ajtb-v1-search-date");
             if (!list || !submitBtn) return;
+
+            function getSubmitValidationState() {
+                payload = readPayloadFromForm(payload);
+                var fn = firstInput ? String(firstInput.value || "").trim() : "";
+                var ln = lastInput ? String(lastInput.value || "").trim() : "";
+                var depOk = payload && payload.departure && parseInt(payload.departure.id || "0", 10) > 0;
+                var dateOk = payload && payload.date && String(payload.date.value || "").trim() !== "";
+                var roomSummary = getRoomAllocationSummary(payload);
+                var roomsOk = roomSummary.isComplete && !roomSummary.isOverAssigned;
+
+                if (!fn || !ln) {
+                    return { ok: false, message: "Veuillez saisir le prenom et le nom du client." };
+                }
+                if (!depOk) {
+                    return { ok: false, message: "Veuillez choisir la ville de départ." };
+                }
+                if (!dateOk) {
+                    return { ok: false, message: "Veuillez choisir la date de voyage." };
+                }
+                if (!roomsOk) {
+                    return { ok: false, message: "Veuillez affecter exactement tous les voyageurs aux chambres avant confirmation." };
+                }
+                return { ok: true, message: "" };
+            }
+
+            function refreshSubmitButtonState() {
+                var state = getSubmitValidationState();
+                submitBtn.disabled = !state.ok;
+                submitBtn.title = state.ok ? "" : state.message;
+            }
 
             function companionRowHtml(idx, type) {
                 type = type === "child" ? "child" : "adult";
@@ -2412,7 +2513,7 @@
                     '</select>' +
                     '<input type="text" placeholder="Prénom" data-companion-first>' +
                     '<input type="text" placeholder="Nom" data-companion-last>' +
-                    '<button type="button" data-companion-remove>✕</button>' +
+                    '<button type="button" data-companion-remove>×</button>' +
                     '<div class="ajtb-v1-recap-companion-activities" data-companion-activities></div>' +
                     '</div>';
             }
@@ -2528,7 +2629,7 @@
                         return '' +
                             '<label class="ajtb-v1-recap-activity-toggle">' +
                             '<input type="checkbox" data-ajtb-activity-toggle data-slot="' + slot + '" data-activity-idx="' + aIdx + '"' + (checked ? ' checked' : '') + '>' +
-                            '<span>' + escapeHtml(String((a && a.title) ? a.title : 'Activité')) + '</span>' +
+                            '<span>' + escapeHtml(String((a && a.title) ? a.title : 'Activite')) + '</span>' +
                             '</label>';
                     }).join("");
                 }
@@ -2574,12 +2675,14 @@
                 addAdultBtn.addEventListener("click", function () {
                     adjustCounts(1, 0);
                     renderActivityToggles();
+                    refreshSubmitButtonState();
                 });
             }
             if (addChildBtn) {
                 addChildBtn.addEventListener("click", function () {
                     adjustCounts(0, 1);
                     renderActivityToggles();
+                    refreshSubmitButtonState();
                 });
             }
 
@@ -2595,6 +2698,7 @@
                     if (type === "child") adjustCounts(0, -1);
                     else adjustCounts(-1, 0);
                     renderActivityToggles();
+                    refreshSubmitButtonState();
                 }
             });
 
@@ -2604,6 +2708,7 @@
                     // When user changes a row type (adult/enfant), sync the travellers widget.
                     syncCountsFromCompanionRows();
                     renderActivityToggles();
+                    refreshSubmitButtonState();
                     return;
                 }
 
@@ -2621,6 +2726,7 @@
                 }
                 renderRecap(payload);
                 try { localStorage.setItem("ajtb:v1:recap:" + String(tourId), JSON.stringify(payload)); } catch (e) {}
+                refreshSubmitButtonState();
             });
 
 
@@ -2650,16 +2756,39 @@
             document.addEventListener("ajtb:v1:travellers-changed", function () {
                 // Rows may change; rerender toggles
                 renderActivityToggles();
+                refreshSubmitButtonState();
             });
 
+            if (firstInput) {
+                firstInput.addEventListener("input", refreshSubmitButtonState);
+            }
+            if (lastInput) {
+                lastInput.addEventListener("input", refreshSubmitButtonState);
+            }
+            if (fromInput) {
+                fromInput.addEventListener("change", refreshSubmitButtonState);
+            }
+            if (dateInput) {
+                dateInput.addEventListener("change", refreshSubmitButtonState);
+            }
+
+            var roomPickerBox = document.getElementById("ajtb-v1-room-picker");
+            if (roomPickerBox) {
+                roomPickerBox.addEventListener("click", function () {
+                    setTimeout(refreshSubmitButtonState, 0);
+                });
+            }
+
             submitBtn.addEventListener("click", function () {
-                var first = document.getElementById("ajtb-client-first");
-                var last = document.getElementById("ajtb-client-last");
-                if (!first || !last) return;
-                var fn = String(first.value || "").trim();
-                var ln = String(last.value || "").trim();
+                var validationState = getSubmitValidationState();
+                if (!validationState.ok) {
+                    alert(validationState.message);
+                    return;
+                }
+                var fn = firstInput ? String(firstInput.value || "").trim() : "";
+                var ln = lastInput ? String(lastInput.value || "").trim() : "";
                 if (!fn || !ln) {
-                    alert("Veuillez saisir le prénom et le nom du client.");
+                    alert("Veuillez saisir le prenom et le nom du client.");
                     return;
                 }
 
@@ -2750,7 +2879,7 @@
                 formData.append("extras_json", JSON.stringify(extrasPayload));
 
                 submitBtn.disabled = true;
-                submitBtn.textContent = "En cours…";
+                submitBtn.textContent = "En cours...";
 
                 fetch((window.ajtbData && window.ajtbData.ajaxUrl) ? window.ajtbData.ajaxUrl : "/wp-admin/admin-ajax.php", {
                     method: "POST",
@@ -2777,8 +2906,8 @@
                                     ? ("Votre compte client a été créé. Réservation #" + String(rid) + ".")
                                     : ("Réservation #" + String(rid) + " créée. Utilisez votre email pour vous connecter.");
                             }
-                            if (loginEl) loginEl.textContent = login || "—";
-                            if (passEl) passEl.textContent = password || "—";
+                            if (loginEl) loginEl.textContent = login || "-";
+                            if (passEl) passEl.textContent = password || "-";
                             try {
                                 var m = window.bootstrap.Modal.getOrCreateInstance(modalEl);
                                 m.show();
@@ -2793,10 +2922,12 @@
                         alert(e && e.message ? e.message : "Erreur lors de la réservation.");
                     })
                     .finally(function () {
-                        submitBtn.disabled = false;
                         submitBtn.textContent = "Confirmer la réservation";
+                        refreshSubmitButtonState();
                     });
             });
+
+            refreshSubmitButtonState();
 
             // Copy helpers for modal credentials
             document.addEventListener("click", function (e) {
@@ -2805,7 +2936,7 @@
                 var sel = btn.getAttribute("data-ajtb-copy") || "";
                 var el = sel ? document.querySelector(sel) : null;
                 var text = el ? String(el.textContent || "").trim() : "";
-                if (!text || text === "—") return;
+                if (!text || text === "-") return;
                 if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(text).catch(function () {});
                     return;
@@ -2841,3 +2972,7 @@
         initRecapPage();
     });
 })();
+
+
+
+

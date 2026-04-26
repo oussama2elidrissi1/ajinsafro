@@ -1,0 +1,231 @@
+.ajth-agent-root {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 2147483647;
+    isolation: isolate;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    pointer-events: none;
+}
+
+.ajth-agent-root > *,
+.ajth-agent-root * {
+    pointer-events: auto;
+}
+
+.ajth-agent-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #0083c4, #0e3a5a);
+    color: #fff;
+    padding: 14px 18px;
+    box-shadow: 0 16px 36px rgba(14, 58, 90, 0.3);
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.ajth-agent-toggle__icon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.ajth-agent-panel {
+    position: absolute;
+    right: 0;
+    bottom: 72px;
+    z-index: 2147483647;
+    width: min(380px, calc(100vw - 24px));
+    height: min(620px, calc(100vh - 120px));
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    background: #fff;
+    border: 1px solid #dbe7f2;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 28px 64px rgba(15, 23, 42, 0.18);
+}
+
+.ajth-agent-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 18px 14px;
+    background: linear-gradient(135deg, #0e3a5a, #0083c4);
+    color: #fff;
+}
+
+.ajth-agent-panel__header h3 {
+    margin: 0 0 4px;
+    font-size: 18px;
+}
+
+.ajth-agent-panel__header p {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.84);
+}
+
+.ajth-agent-panel__close {
+    border: 0;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ajth-agent-messages {
+    padding: 16px;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+}
+
+.ajth-agent-message {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.ajth-agent-message--user {
+    align-items: flex-end;
+}
+
+.ajth-agent-message--agent {
+    align-items: flex-start;
+}
+
+.ajth-agent-message__bubble {
+    max-width: 88%;
+    border-radius: 18px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: normal;
+}
+
+.ajth-agent-message--user .ajth-agent-message__bubble {
+    background: #0083c4;
+    color: #fff;
+    border-bottom-right-radius: 6px;
+}
+
+.ajth-agent-message--agent .ajth-agent-message__bubble {
+    background: #fff;
+    color: #172033;
+    border: 1px solid #dbe7f2;
+    border-bottom-left-radius: 6px;
+}
+
+.ajth-agent-message__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.ajth-agent-action,
+.ajth-agent-action:visited {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #eef7ff;
+    color: #005a8f;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.ajth-agent-quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 16px 12px;
+    background: #fff;
+}
+
+.ajth-agent-chip {
+    border: 1px solid #cde0ef;
+    background: #fff;
+    color: #0e3a5a;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ajth-agent-typing {
+    padding: 0 16px 12px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fff;
+}
+
+.ajth-agent-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 14px 16px 16px;
+    border-top: 1px solid #e5edf5;
+    background: #fff;
+}
+
+.ajth-agent-form input {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #cfe0ec;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 14px;
+    outline: none;
+}
+
+.ajth-agent-form button {
+    border: 0;
+    border-radius: 14px;
+    background: #ff7a1a;
+    color: #fff;
+    padding: 0 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+@media (max-width: 767px) {
+    .ajth-agent-root {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+    }
+
+    .ajth-agent-toggle {
+        margin-left: auto;
+    }
+
+    .ajth-agent-panel {
+        position: fixed;
+        inset: 10px;
+        width: auto;
+        height: auto;
+        max-height: none;
+        border-radius: 20px;
+        bottom: auto;
+    }
+
+    .ajth-agent-message__bubble {
+        max-width: 94%;
+    }
+}
