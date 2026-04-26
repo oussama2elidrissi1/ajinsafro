@@ -31,8 +31,8 @@
          class="d-none"
          data-res-base="{{ rtrim(url('/admin/reservations'), '/') }}"
          data-csrf="{{ csrf_token() }}"
-         data-can-edit="@can('reservations.edit')1@else0@endcan"
-         data-can-update="@can('reservations.update')1@else0@endcan"
+         data-can-edit="{{ auth()->user()->can('reservations.edit') ? '1' : '0' }}"
+         data-can-update="{{ auth()->user()->can('reservations.update') ? '1' : '0' }}"
          @can('reservations.view')
          data-hub-refresh-url="{{ route('admin.reservations.hub-refresh') }}"
          @endcan
