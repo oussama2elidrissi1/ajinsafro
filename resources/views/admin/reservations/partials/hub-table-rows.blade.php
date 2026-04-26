@@ -223,9 +223,18 @@
                 @endcan
                 @can('reservations.update')
                     @if($reservation->status !== Reservation::STATUS_VALIDEE && $reservation->status !== Reservation::STATUS_CONFIRMED)
-                        <form action="{{ route('admin.reservations.validate', $reservation) }}" method="post" class="d-inline" onsubmit="return confirm('Confirmer la validation de cette reservation ?');">
+                        <form action="{{ route('admin.reservations.validate', $reservation) }}" method="post" class="d-inline res-hub-validate-form">
                             @csrf
-                            <button type="submit" class="btn btn-sm btn-success" title="Valider">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-success btn-res-hub-validate"
+                                title="Valider"
+                                data-res-id="{{ $reservation->id }}"
+                                data-res-client="{{ $clientName }}"
+                                data-res-offer="{{ $offerName }}"
+                                data-res-status="{{ $reservation->statusLabelFr() }}"
+                                data-res-date="{{ $depDate }}"
+                            >
                                 <i class="bx bx-check"></i>
                             </button>
                         </form>

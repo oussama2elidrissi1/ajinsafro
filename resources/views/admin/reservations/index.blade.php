@@ -289,6 +289,59 @@
         </div>
     </div>
 
+    <div class="modal fade" id="resHubValidateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content res-hub-confirm-modal">
+                <div class="modal-header border-0 pb-0">
+                    <div class="res-hub-confirm-modal__head">
+                        <span class="res-hub-confirm-modal__icon">
+                            <i class="bx bx-check-shield"></i>
+                        </span>
+                        <div>
+                            <h5 class="modal-title mb-1">Confirmer la validation</h5>
+                            <p class="text-muted small mb-0">Cette action mettra la reservation au statut confirme.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <div class="res-hub-confirm-modal__card">
+                        <div class="res-hub-confirm-modal__row">
+                            <span>Reservation</span>
+                            <strong id="resHubValidateId">-</strong>
+                        </div>
+                        <div class="res-hub-confirm-modal__row">
+                            <span>Client</span>
+                            <strong id="resHubValidateClient">-</strong>
+                        </div>
+                        <div class="res-hub-confirm-modal__row">
+                            <span>Offre</span>
+                            <strong id="resHubValidateOffer">-</strong>
+                        </div>
+                        <div class="res-hub-confirm-modal__row">
+                            <span>Date depart</span>
+                            <strong id="resHubValidateDate">-</strong>
+                        </div>
+                        <div class="res-hub-confirm-modal__row">
+                            <span>Statut actuel</span>
+                            <strong id="resHubValidateStatus">-</strong>
+                        </div>
+                    </div>
+                    <div class="alert alert-light border mt-3 mb-0 small">
+                        Verifiez les informations avant validation. Cette operation utilise la logique de confirmation existante.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn res-hub-btn res-hub-btn--soft" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn res-hub-btn res-hub-btn--primary" id="resHubValidateConfirmBtn">
+                        <i class="bx bx-check"></i>
+                        <span>Valider la reservation</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if(config('app.debug') && auth()->user()->can('reservations.view'))
         <div class="modal fade" id="resHubDebugModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -440,6 +493,55 @@
         }
         .res-hub-alert--success {
             border-color: #bfe5ce;
+        }
+        .res-hub-confirm-modal {
+            border: 0;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 28px 70px rgba(18, 38, 63, 0.18);
+        }
+        .res-hub-confirm-modal__head {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .res-hub-confirm-modal__icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #1a7af0, #2157d7);
+            color: #fff;
+            font-size: 1.5rem;
+            box-shadow: 0 16px 28px rgba(33, 87, 215, 0.28);
+        }
+        .res-hub-confirm-modal__card {
+            border: 1px solid #e6edf8;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
+            padding: 1rem 1.1rem;
+        }
+        .res-hub-confirm-modal__row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .65rem 0;
+            border-bottom: 1px solid #e9eef7;
+            color: #506887;
+            font-size: .92rem;
+        }
+        .res-hub-confirm-modal__row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+        .res-hub-confirm-modal__row:first-child {
+            padding-top: 0;
+        }
+        .res-hub-confirm-modal__row strong {
+            color: #18345f;
+            text-align: right;
         }
         .res-hub-filter-card,
         .res-hub-table-card {
@@ -831,9 +933,29 @@
         return 'Adulte';
     }
 
+    var validateModalEl = document.getElementById('resHubValidateModal');
+    var validateModal = validateModalEl ? new bootstrap.Modal(validateModalEl) : null;
+    var validateForm = null;
+
+    function setValidateModalField(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value || '-';
+    }
+
     var hubTable = document.querySelector('table.reservations-table');
     if (hubTable) {
         hubTable.addEventListener('click', function (e) {
+            var validateBtn = e.target.closest('.btn-res-hub-validate');
+            if (validateBtn) {
+                validateForm = validateBtn.closest('form');
+                setValidateModalField('resHubValidateId', '#' + (validateBtn.getAttribute('data-res-id') || '-'));
+                setValidateModalField('resHubValidateClient', validateBtn.getAttribute('data-res-client') || '-');
+                setValidateModalField('resHubValidateOffer', validateBtn.getAttribute('data-res-offer') || '-');
+                setValidateModalField('resHubValidateDate', validateBtn.getAttribute('data-res-date') || '-');
+                setValidateModalField('resHubValidateStatus', validateBtn.getAttribute('data-res-status') || '-');
+                if (validateModal) validateModal.show();
+                return;
+            }
             var detailBtn = e.target.closest('.btn-res-hub-detail');
             if (detailBtn) {
                 var id = detailBtn.getAttribute('data-res-id');
@@ -892,6 +1014,26 @@
                 if (frame) frame.src = editUrl(idE);
                 var oc = bootstrap.Offcanvas.getOrCreateInstance(offEl);
                 oc.show();
+            }
+        });
+    }
+
+    var validateConfirmBtn = document.getElementById('resHubValidateConfirmBtn');
+    if (validateConfirmBtn) {
+        validateConfirmBtn.addEventListener('click', function () {
+            if (!validateForm) return;
+            validateConfirmBtn.disabled = true;
+            validateConfirmBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i><span>Validation...</span>';
+            validateForm.submit();
+        });
+    }
+
+    if (validateModalEl) {
+        validateModalEl.addEventListener('hidden.bs.modal', function () {
+            validateForm = null;
+            if (validateConfirmBtn) {
+                validateConfirmBtn.disabled = false;
+                validateConfirmBtn.innerHTML = '<i class="bx bx-check"></i><span>Valider la reservation</span>';
             }
         });
     }
