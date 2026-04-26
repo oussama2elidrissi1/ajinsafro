@@ -136,6 +136,8 @@ class VoyageController extends Controller
                     $tour->address = '-';
                 }
                 $tour->child_price = $tour->getMeta('child_price');
+                $thumbnailId = (int) $tour->getMeta('_thumbnail_id');
+                $tour->image_url = $thumbnailId > 0 ? WpHeroImageService::getAttachmentUrl($thumbnailId) : null;
                 return $tour;
             });
 

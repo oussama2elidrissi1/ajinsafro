@@ -268,6 +268,7 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
+                                    <th>Image</th>
                                     <th>Voyage</th>
                                     <th>Destination</th>
                                     <th>Durée</th>
@@ -282,9 +283,19 @@
                                     @php
                                         $price = is_numeric($tour->adult_price ?? null) ? (float) $tour->adult_price : 0;
                                         $modifiedTimestamp = $tour->post_modified ? optional($tour->post_modified)->timestamp ?? strtotime((string) $tour->post_modified) : 0;
+                                        $imageUrl = trim((string) ($tour->image_url ?? ''));
                                     @endphp
                                     <tr data-title="{{ Str::lower($tour->post_title) }}" data-price="{{ $price }}" data-modified="{{ $modifiedTimestamp }}">
                                         <td><strong>#{{ $tour->ID }}</strong></td>
+                                        <td>
+                                            <div class="aj-thumb --tour">
+                                                @if($imageUrl !== '')
+                                                    <img src="{{ $imageUrl }}" alt="{{ $tour->post_title }}">
+                                                @else
+                                                    <div class="aj-thumb-placeholder">Ajinsafro</div>
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="aj-item-title">
                                                 <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}">{{ $tour->post_title }}</a>
@@ -345,9 +356,10 @@
                             @php
                                 $price = is_numeric($tour->adult_price ?? null) ? (float) $tour->adult_price : 0;
                                 $modifiedTimestamp = $tour->post_modified ? optional($tour->post_modified)->timestamp ?? strtotime((string) $tour->post_modified) : 0;
+                                $imageUrl = trim((string) ($tour->image_url ?? ''));
                             @endphp
                             <article class="aj-card" data-title="{{ Str::lower($tour->post_title) }}" data-price="{{ $price }}" data-modified="{{ $modifiedTimestamp }}">
-                                <div class="aj-card-cover d-flex align-items-end p-3">
+                                <div class="aj-card-cover d-flex align-items-end p-3" @if($imageUrl !== '') style="background-image:linear-gradient(180deg, rgba(9,32,63,0.06), rgba(9,32,63,0.42)), url('{{ $imageUrl }}'); background-size:cover; background-position:center;" @endif>
                                     <span class="aj-badge -info">#{{ $tour->ID }}</span>
                                 </div>
                                 <div class="aj-card-body">
