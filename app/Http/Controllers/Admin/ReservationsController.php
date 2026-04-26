@@ -134,6 +134,7 @@ class ReservationsController extends Controller
                 'highlightReservationId' => $highlightReservationId,
                 'hubTableMode' => $data['hubTableMode'],
                 'hubVoyageFiltered' => $data['hubVoyageFiltered'],
+                'filterChannel' => $data['filterChannel'] ?? null,
             ])->render(),
             'pagination_html' => $data['reservations']->links()->render(),
         ]);
@@ -1197,7 +1198,7 @@ class ReservationsController extends Controller
     /**
      * Données hub (stats + page courante) : même logique pour la vue HTML et {@see hubRefresh()}.
      *
-     * @return array{hubStats: array, reservations: \Illuminate\Contracts\Pagination\LengthAwarePaginator, filterTourId: int|null, filterTravelDateId: int|null, filterSearch: string|null, filterStatus: string|null, hubTableMode: string, hubVoyageFiltered: bool}
+     * @return array{hubStats: array, reservations: \Illuminate\Contracts\Pagination\LengthAwarePaginator, filterTourId: int|null, filterTravelDateId: int|null, filterSearch: string|null, filterStatus: string|null, filterChannel: string|null, hubTableMode: string, hubVoyageFiltered: bool}
      */
     protected function hubListData(Request $request): array
     {
@@ -1208,6 +1209,7 @@ class ReservationsController extends Controller
             $tourFilter = (int) $request->query('tour_id', 0);
         }
         $travelDateFilter = (int) $request->query('travel_date_id', 0);
+        $channel = trim((string) $request->query('channel', ''));
         $hubVoyageFiltered = $tourFilter > 0 || $travelDateFilter > 0;
         $search = (string) $request->query('search', '');
         $statusParam = (string) $request->query('status', '');
@@ -1243,6 +1245,7 @@ class ReservationsController extends Controller
             'filterTravelDateId' => $travelDateFilter > 0 ? $travelDateFilter : null,
             'filterSearch' => $search !== '' ? $search : null,
             'filterStatus' => $statusParam !== '' ? $statusParam : null,
+            'filterChannel' => $channel !== '' ? $channel : null,
             'hubTableMode' => $this->reservationHubTableProfile->mode($request->user()),
             'hubVoyageFiltered' => $hubVoyageFiltered,
         ];

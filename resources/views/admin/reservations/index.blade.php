@@ -14,6 +14,8 @@
     $filterTravelDateId = $filterTravelDateId ?? null;
     $filterSearch = $filterSearch ?? null;
     $filterStatus = $filterStatus ?? null;
+    $filterChannel = $filterChannel ?? null;
+    $isClientChannel = $filterChannel === 'client';
     $highlightReservationId = $highlightReservationId ?? 0;
     $voyage = $voyage ?? null;
     $voyageOptions = $voyageOptions ?? collect();
@@ -21,6 +23,7 @@
         ? $reservationCreated
         : (session('reservation_created') ?: null);
     $allReservationsUrl = route('admin.reservations.index');
+    $resetUrl = $isClientChannel ? route('admin.reservations.index', ['channel' => 'client']) : $allReservationsUrl;
 @endphp
 
 @section('content')
@@ -107,6 +110,9 @@
         <div class="card res-hub-filter-card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <form method="get" action="{{ route('admin.reservations.index') }}" class="res-hub-filter-grid">
+                    @if($filterChannel)
+                        <input type="hidden" name="channel" value="{{ $filterChannel }}">
+                    @endif
                     <div class="res-hub-field">
                         <label class="form-label">Offre</label>
                         <select name="voyage_id" class="form-select">
@@ -142,7 +148,7 @@
                         </button>
                     </div>
                     <div class="res-hub-field res-hub-field--actions">
-                        <a href="{{ route('admin.reservations.index') }}" class="btn res-hub-btn res-hub-btn--soft w-100">
+                        <a href="{{ $resetUrl }}" class="btn res-hub-btn res-hub-btn--soft w-100">
                             <i class="bx bx-refresh"></i>
                             <span>Reinitialiser</span>
                         </a>
@@ -217,27 +223,36 @@
                                 <th class="ps-3">#</th>
                                 <th>Client</th>
                                 <th>Offre / voyage</th>
-                                @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
-                                    <th>Agence</th>
-                                @elseif($showCrossAgencyBranchCol)
-                                    <th>Agence</th>
+                                @if(!$isClientChannel)
+                                    @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
+                                        <th>Agence</th>
+                                    @elseif($showCrossAgencyBranchCol)
+                                        <th>Agence</th>
+                                    @endif
                                 @endif
                                 <th>Date depart</th>
                                 <th>Passagers</th>
-                                @if($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
-                                    <th>Statut</th>
-                                    <th>Paiement</th>
-                                @else
+                                @if($isClientChannel)
                                     <th>Paiement</th>
                                     <th>Statut</th>
-                                @endif
-                                @if($hubTableMode !== ReservationHubTableProfile::MODE_OPERATIONS)
                                     <th>Creee le</th>
-                                @endif
-                                @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
-                                    <th>Creee par</th>
-                                    <th>Reservation effectuee par</th>
                                     <th>Chef commercial</th>
+                                @else
+                                    @if($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
+                                        <th>Statut</th>
+                                        <th>Paiement</th>
+                                    @else
+                                        <th>Paiement</th>
+                                        <th>Statut</th>
+                                    @endif
+                                    @if($hubTableMode !== ReservationHubTableProfile::MODE_OPERATIONS)
+                                        <th>Creee le</th>
+                                    @endif
+                                    @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
+                                        <th>Creee par</th>
+                                        <th>Reservation effectuee par</th>
+                                        <th>Chef commercial</th>
+                                    @endif
                                 @endif
                                 <th class="text-end pe-3" style="min-width:220px;">Actions</th>
                             </tr>
@@ -248,6 +263,7 @@
                                 'highlightReservationId' => $highlightReservationId,
                                 'hubTableMode' => $hubTableMode,
                                 'hubVoyageFiltered' => $hubVoyageFiltered,
+                                'filterChannel' => $filterChannel,
                             ])
                         </tbody>
                     </table>
@@ -543,6 +559,30 @@
             padding: .5rem .72rem;
             font-weight: 700;
             font-size: .72rem;
+        }
+        .res-status-badge--pending {
+            background: #fff0d6;
+            color: #b86a07;
+        }
+        .res-status-badge--pairing {
+            background: #ffe4bf;
+            color: #a94e00;
+        }
+        .res-status-badge--paired {
+            background: #dff6ff;
+            color: #0c6d8f;
+        }
+        .res-status-badge--confirmed {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .res-status-badge--cancelled {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .res-status-badge--neutral {
+            background: #eef2f7;
+            color: #55657f;
         }
         .res-hub-row-highlight {
             --res-hub-highlight-rgb: 25, 135, 84;

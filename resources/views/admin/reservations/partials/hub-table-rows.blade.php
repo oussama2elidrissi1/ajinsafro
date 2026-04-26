@@ -4,8 +4,10 @@
 
     $hubTableMode = $hubTableMode ?? ReservationHubTableProfile::MODE_OPERATIONS;
     $hubVoyageFiltered = $hubVoyageFiltered ?? false;
+    $filterChannel = $filterChannel ?? null;
+    $isClientChannel = $filterChannel === 'client';
     $showCrossAgencyBranchCol = $hubVoyageFiltered && ($hubTableMode === ReservationHubTableProfile::MODE_AGENCY || $hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS);
-    $hubColCount = app(ReservationHubTableProfile::class)->tableColumnCount($hubTableMode, $hubVoyageFiltered);
+    $hubColCount = $isClientChannel ? 10 : app(ReservationHubTableProfile::class)->tableColumnCount($hubTableMode, $hubVoyageFiltered);
 
     $sourceLabelFr = static function (string $src): string {
         return match ($src) {
@@ -24,18 +26,19 @@
         $opUser = $reservation->resolveOperationalActorUser();
         $opSrc = $reservation->operationalActorDataSourceLabel();
         $statusClass = match ($reservation->status) {
-            Reservation::STATUS_EN_COURS, Reservation::STATUS_PENDING => 'badge bg-warning text-dark',
-            Reservation::STATUS_SHARED_ROOM_PENDING => 'badge bg-warning text-dark',
-            Reservation::STATUS_SHARED_ROOM_PAIRED => 'badge bg-info text-dark',
-            Reservation::STATUS_VALIDEE, Reservation::STATUS_CONFIRMED => 'badge bg-success',
-            Reservation::STATUS_ANNULEE, Reservation::STATUS_CANCELLED => 'badge bg-danger',
-            default => 'badge bg-secondary',
+            Reservation::STATUS_EN_COURS, Reservation::STATUS_PENDING => 'badge res-status-badge res-status-badge--pending',
+            Reservation::STATUS_SHARED_ROOM_PENDING => 'badge res-status-badge res-status-badge--pairing',
+            Reservation::STATUS_SHARED_ROOM_PAIRED => 'badge res-status-badge res-status-badge--paired',
+            Reservation::STATUS_VALIDEE, Reservation::STATUS_CONFIRMED => 'badge res-status-badge res-status-badge--confirmed',
+            Reservation::STATUS_ANNULEE, Reservation::STATUS_CANCELLED => 'badge res-status-badge res-status-badge--cancelled',
+            default => 'badge res-status-badge res-status-badge--neutral',
         };
 
         $clientName = $reservation->client
             ? ($reservation->client->full_name ?: '-')
             : (trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '-');
         $clientCode = $reservation->client?->client_code ?: null;
+        $reservationCode = $reservation->catalog_source_code ?: ('RES-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT));
         $offerName = $reservation->offer?->name ?? '-';
         $agencyLabel = $reservation->agency_label ?? '-';
         $names = $reservation->passengers->map(fn ($p) => trim(($p->first_name ?? '') . ' ' . ($p->last_name ?? '')))->filter()->values();
@@ -55,6 +58,7 @@
         $depDate = $reservation->travelDate?->date ? $reservation->travelDate->date->format('d/m/Y') : '-';
         $createdAt = optional($reservation->created_at)->format('d/m/Y H:i');
         $paymentType = $reservation->payment_type ?: null;
+        $salesManagerName = $reservation->salesManager?->name ?: null;
     @endphp
     <tr @class(['res-hub-row-highlight' => $highlightReservationId && (int) $reservation->id === (int) $highlightReservationId])
         @if($highlightReservationId && (int) $reservation->id === (int) $highlightReservationId) id="res-hub-highlight-row" @endif>
@@ -62,8 +66,17 @@
 
         <td>
             <div class="fw-semibold text-dark">{{ $clientName }}</div>
-            @if($clientCode)
-                <div class="small text-muted">{{ $clientCode }}</div>
+            <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
+                @if($clientCode)
+                    <span>{{ $clientCode }}</span>
+                @endif
+                @if($isClientChannel)
+                    <span>{{ $reservationCode }}</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Client web</span>
+                @endif
+            </div>
+            @if(!$clientCode && !$isClientChannel)
+                <div class="small text-muted">-</div>
             @endif
         </td>
 
@@ -72,14 +85,16 @@
             <div class="small text-muted">Reservation #{{ $reservation->id }}</div>
         </td>
 
-        @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
-            <td>
-                <div class="small fw-semibold text-dark">{{ $agencyLabel }}</div>
-            </td>
-        @elseif($showCrossAgencyBranchCol)
-            <td>
-                <div class="small fw-semibold text-dark">{{ $agencyLabel }}</div>
-            </td>
+        @if(!$isClientChannel)
+            @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
+                <td>
+                    <div class="small fw-semibold text-dark">{{ $agencyLabel }}</div>
+                </td>
+            @elseif($showCrossAgencyBranchCol)
+                <td>
+                    <div class="small fw-semibold text-dark">{{ $agencyLabel }}</div>
+                </td>
+            @endif
         @endif
 
         <td>
@@ -98,21 +113,7 @@
             @endif
         </td>
 
-        @if($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
-            <td>
-                <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
-                @if($pendingSharedSeats > 0)
-                    <div class="small text-muted mt-1">{{ $pendingSharedSeats }} place(s) demi-double en attente</div>
-                @endif
-            </td>
-            <td>
-                @if($paymentType)
-                    <span class="badge bg-light text-dark">{{ $paymentType }}</span>
-                @else
-                    <span class="text-muted small">-</span>
-                @endif
-            </td>
-        @else
+        @if($isClientChannel)
             <td>
                 @if($paymentType)
                     <span class="badge bg-light text-dark">{{ $paymentType }}</span>
@@ -126,43 +127,83 @@
                     <div class="small text-muted mt-1">{{ $pendingSharedSeats }} place(s) demi-double en attente</div>
                 @endif
             </td>
-        @endif
-
-        @if($hubTableMode !== ReservationHubTableProfile::MODE_OPERATIONS)
             <td>
                 <div class="small text-dark">{{ $createdAt ?: '-' }}</div>
             </td>
-        @endif
+            <td>
+                @if($salesManagerName)
+                    <div class="fw-semibold text-dark">{{ $salesManagerName }}</div>
+                @else
+                    <span class="badge bg-light text-secondary border">Non assigne</span>
+                @endif
+            </td>
+        @else
+            @if($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
+                <td>
+                    <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
+                    @if($pendingSharedSeats > 0)
+                        <div class="small text-muted mt-1">{{ $pendingSharedSeats }} place(s) demi-double en attente</div>
+                    @endif
+                </td>
+                <td>
+                    @if($paymentType)
+                        <span class="badge bg-light text-dark">{{ $paymentType }}</span>
+                    @else
+                        <span class="text-muted small">-</span>
+                    @endif
+                </td>
+            @else
+                <td>
+                    @if($paymentType)
+                        <span class="badge bg-light text-dark">{{ $paymentType }}</span>
+                    @else
+                        <span class="text-muted small">-</span>
+                    @endif
+                </td>
+                <td>
+                    <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
+                    @if($pendingSharedSeats > 0)
+                        <div class="small text-muted mt-1">{{ $pendingSharedSeats }} place(s) demi-double en attente</div>
+                    @endif
+                </td>
+            @endif
 
-        @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
-            <td class="small">
-                @if($auditUser)
-                    <div class="fw-semibold text-dark">{{ $auditUser->name }}</div>
-                    @if($auditUser->email)
-                        <div class="text-muted">{{ $auditUser->email }}</div>
+            @if($hubTableMode !== ReservationHubTableProfile::MODE_OPERATIONS)
+                <td>
+                    <div class="small text-dark">{{ $createdAt ?: '-' }}</div>
+                </td>
+            @endif
+
+            @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
+                <td class="small">
+                    @if($auditUser)
+                        <div class="fw-semibold text-dark">{{ $auditUser->name }}</div>
+                        @if($auditUser->email)
+                            <div class="text-muted">{{ $auditUser->email }}</div>
+                        @endif
+                    @else
+                        <span class="text-muted">-</span>
                     @endif
-                @else
-                    <span class="text-muted">-</span>
-                @endif
-            </td>
-            <td class="small">
-                @if($opUser)
-                    <div class="fw-semibold text-dark">{{ $opUser->name }}</div>
-                    @if($opSrc !== '')
-                        <div class="text-muted">{{ $sourceLabelFr($opSrc) }}</div>
+                </td>
+                <td class="small">
+                    @if($opUser)
+                        <div class="fw-semibold text-dark">{{ $opUser->name }}</div>
+                        @if($opSrc !== '')
+                            <div class="text-muted">{{ $sourceLabelFr($opSrc) }}</div>
+                        @endif
+                    @else
+                        <span class="text-muted">-</span>
                     @endif
-                @else
-                    <span class="text-muted">-</span>
-                @endif
-            </td>
-            <td class="small">
-                @if($reservation->salesManager)
-                    <div class="fw-semibold text-dark">{{ $reservation->salesManager->name }}</div>
-                    <div class="text-muted">Chef commercial</div>
-                @else
-                    <span class="text-muted">-</span>
-                @endif
-            </td>
+                </td>
+                <td class="small">
+                    @if($reservation->salesManager)
+                        <div class="fw-semibold text-dark">{{ $reservation->salesManager->name }}</div>
+                        <div class="text-muted">Chef commercial</div>
+                    @else
+                        <span class="text-muted">-</span>
+                    @endif
+                </td>
+            @endif
         @endif
 
         <td class="text-end pe-3">
@@ -182,7 +223,7 @@
                 @endcan
                 @can('reservations.update')
                     @if($reservation->status !== Reservation::STATUS_VALIDEE && $reservation->status !== Reservation::STATUS_CONFIRMED)
-                        <form action="{{ route('admin.reservations.validate', $reservation) }}" method="post" class="d-inline">
+                        <form action="{{ route('admin.reservations.validate', $reservation) }}" method="post" class="d-inline" onsubmit="return confirm('Confirmer la validation de cette reservation ?');">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-success" title="Valider">
                                 <i class="bx bx-check"></i>
