@@ -79,10 +79,36 @@ function ajth_catalog_invalidate_posts_rest($request)
     ], 200);
 }
 
+/**
+ * @param WP_REST_Request $request
+ * @return WP_REST_Response|WP_Error
+ */
+function ajth_catalog_invalidate_cache_rest($request)
+{
+    $key = $request->get_param('key');
+    if (! is_string($key) || $key === '') {
+        return new WP_Error('bad_request', 'key must be a non-empty string.', ['status' => 400]);
+    }
+
+    $deleted = delete_transient($key);
+
+    return new WP_REST_Response([
+        'ok' => true,
+        'deleted' => $deleted,
+        'key' => $key,
+    ], 200);
+}
+
 add_action('rest_api_init', function () {
     register_rest_route('ajth/v1', '/invalidate-posts', [
         'methods' => 'POST',
         'callback' => 'ajth_catalog_invalidate_posts_rest',
+        'permission_callback' => 'ajth_catalog_invalidate_permission',
+    ]);
+
+    register_rest_route('ajth/v1', '/invalidate-cache', [
+        'methods' => 'POST',
+        'callback' => 'ajth_catalog_invalidate_cache_rest',
         'permission_callback' => 'ajth_catalog_invalidate_permission',
     ]);
 });

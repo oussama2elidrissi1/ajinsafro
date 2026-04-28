@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\AccommodationPackageController;
+use App\Http\Controllers\Admin\ActivityOfferController;
 use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\BusinessReferenceController;
@@ -283,6 +285,20 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('accommodations/chambres', [AccommodationsController::class, 'page'])->name('accommodations.chambres')->defaults('submenu', 'chambres');
     Route::get('accommodations/tarifs-saisonniers', [AccommodationsController::class, 'page'])->name('accommodations.tarifs-saisonniers')->defaults('submenu', 'tarifs-saisonniers');
     Route::get('accommodations/disponibilites', [AccommodationsController::class, 'page'])->name('accommodations.disponibilites')->defaults('submenu', 'disponibilites');
+
+    Route::get('accommodation-packages', [AccommodationPackageController::class, 'index'])->name('accommodation-packages.index');
+    Route::get('accommodation-packages/create', [AccommodationPackageController::class, 'create'])->name('accommodation-packages.create');
+    Route::post('accommodation-packages', [AccommodationPackageController::class, 'store'])->name('accommodation-packages.store');
+    Route::get('accommodation-packages/{accommodationPackage}/edit', [AccommodationPackageController::class, 'edit'])->name('accommodation-packages.edit');
+    Route::match(['put', 'patch'], 'accommodation-packages/{accommodationPackage}', [AccommodationPackageController::class, 'update'])->name('accommodation-packages.update');
+    Route::delete('accommodation-packages/{accommodationPackage}', [AccommodationPackageController::class, 'destroy'])->name('accommodation-packages.destroy');
+
+    Route::get('activity-offers', [ActivityOfferController::class, 'index'])->name('activity-offers.index');
+    Route::get('activity-offers/create', [ActivityOfferController::class, 'create'])->name('activity-offers.create');
+    Route::post('activity-offers', [ActivityOfferController::class, 'store'])->name('activity-offers.store');
+    Route::get('activity-offers/{activityOffer}/edit', [ActivityOfferController::class, 'edit'])->name('activity-offers.edit');
+    Route::match(['put', 'patch'], 'activity-offers/{activityOffer}', [ActivityOfferController::class, 'update'])->name('activity-offers.update');
+    Route::delete('activity-offers/{activityOffer}', [ActivityOfferController::class, 'destroy'])->name('activity-offers.destroy');
 
     Route::resource('hotels', HotelBackofficeController::class)->names('hotels');
 

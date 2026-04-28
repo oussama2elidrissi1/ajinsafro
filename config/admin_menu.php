@@ -85,10 +85,20 @@ return [
             'icon' => 'bx bx-hotel',
             'permission' => 'accommodations.view',
             'children' => [
+                ['label' => 'Packs hébergement', 'route' => 'admin.accommodation-packages.index', 'permission' => 'accommodations.view'],
                 ['label' => 'Hôtels (circuit)', 'route' => 'admin.circuits.tour-hotels.index', 'permission' => 'circuits.tour-hotels.view'],
                 ['label' => 'Chambres', 'route' => 'admin.accommodations.chambres', 'permission' => 'accommodations.rooms.view'],
                 ['label' => 'Tarifs saisonniers', 'route' => 'admin.accommodations.tarifs-saisonniers', 'permission' => 'accommodations.seasonal-pricing.view'],
                 ['label' => 'Disponibilités', 'route' => 'admin.accommodations.disponibilites', 'permission' => 'accommodations.availability.view'],
+            ],
+        ],
+        [
+            'key' => 'activities',
+            'label' => 'Activités',
+            'icon' => 'bx bx-camera',
+            'permission' => 'accommodations.view',
+            'children' => [
+                ['label' => 'Offres activités', 'route' => 'admin.activity-offers.index', 'permission' => 'accommodations.view'],
             ],
         ],
         [
@@ -217,6 +227,8 @@ return [
         'admin.products-services.' => 'circuits.view',
         'admin.circuits.' => 'circuits.view',
         'admin.accommodations.' => 'accommodations.view',
+        'admin.accommodation-packages.' => 'accommodations.view',
+        'admin.activity-offers.' => 'accommodations.view',
         'admin.operations.' => 'operations.view',
         'admin.visa.' => 'visa.view',
         'admin.finance.' => 'finance.view',
