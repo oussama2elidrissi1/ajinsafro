@@ -25,23 +25,27 @@
     heroDate: root.querySelector('#aj-hero-date'),
     heroCategory: root.querySelector('#aj-hero-category'),
     heroBudget: root.querySelector('#aj-hero-budget'),
+    filterName: root.querySelector('#aj-filter-name'),
+    filterCategories: root.querySelector('#aj-filter-categories'),
     filterCountry: root.querySelector('#aj-filter-country'),
     filterCity: root.querySelector('#aj-filter-city'),
-    filterCategory: root.querySelector('#aj-filter-category'),
     filterPriceMin: root.querySelector('#aj-filter-price-min'),
     filterPriceMax: root.querySelector('#aj-filter-price-max'),
     filterDuration: root.querySelector('#aj-filter-duration'),
+    filterPromo: root.querySelector('#aj-filter-promo'),
     filterAvailableToday: root.querySelector('#aj-filter-available-today'),
     filterInstantBooking: root.querySelector('#aj-filter-instant-booking'),
     filterWithGuide: root.querySelector('#aj-filter-with-guide'),
     filterTransport: root.querySelector('#aj-filter-transport'),
     resetFilters: root.querySelector('#aj-reset-filters'),
+    mobileName: root.querySelector('#aj-mobile-name'),
+    mobileCategories: root.querySelector('#aj-mobile-categories'),
     mobileCountry: root.querySelector('#aj-mobile-country'),
     mobileCity: root.querySelector('#aj-mobile-city'),
-    mobileCategory: root.querySelector('#aj-mobile-category'),
     mobilePriceMin: root.querySelector('#aj-mobile-price-min'),
     mobilePriceMax: root.querySelector('#aj-mobile-price-max'),
     mobileDuration: root.querySelector('#aj-mobile-duration'),
+    mobilePromo: root.querySelector('#aj-mobile-promo'),
     mobileAvailableToday: root.querySelector('#aj-mobile-available-today'),
     mobileInstantBooking: root.querySelector('#aj-mobile-instant-booking'),
     mobileWithGuide: root.querySelector('#aj-mobile-with-guide'),
@@ -75,11 +79,13 @@
     country: '',
     city: '',
     date: '',
-    category: '',
+    categories: [],
     budget: '',
     minPrice: '',
     maxPrice: '',
     duration: '',
+    nameQuery: '',
+    promoOnly: false,
     availableToday: false,
     instantBooking: false,
     withGuide: false,
@@ -109,6 +115,7 @@
       featured: Boolean(item.featured),
       rating: Number(item.rating || 0),
       reviews: Number(item.reviews || 0),
+      shortDescription: String(item.short_description || ''),
       includes,
       availability: String(item.availability || 'Disponible'),
       availableToday: Boolean(item.available_today),
@@ -152,8 +159,8 @@
     fillSelect(els.mobileCountry, countries, 'Tous les pays');
 
     fillSelect(els.heroCategory, categories, 'Toutes les categories');
-    fillSelect(els.filterCategory, categories, 'Toutes les categories');
-    fillSelect(els.mobileCategory, categories, 'Toutes les categories');
+    renderCategoryCheckboxes(els.filterCategories, 'aj-filter-cat');
+    renderCategoryCheckboxes(els.mobileCategories, 'aj-mobile-cat');
 
     updateCityOptions('hero', state.country, state.city);
     updateCityOptions('desktop', state.country, state.city);
@@ -169,6 +176,19 @@
       .concat(values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`));
 
     select.innerHTML = options.join('');
+  }
+
+  function renderCategoryCheckboxes(container, inputName) {
+    if (!container) {
+      return;
+    }
+    const markup = categories.map((cat) => `
+      <label class="aj-check">
+        <input type="checkbox" name="${inputName}" value="${escapeHtml(cat)}">
+        ${escapeHtml(cat)}
+      </label>
+    `).join('');
+    container.innerHTML = markup;
   }
 
   function updateCityOptions(scope, country, selectedCity) {
@@ -190,16 +210,22 @@
 
   function syncAllControlsFromState() {
     els.heroCountry.value = state.country;
-    els.heroCategory.value = state.category;
+    els.heroCategory.value = state.categories[0] || '';
     els.heroDate.value = state.date;
     els.heroBudget.value = state.budget;
     updateCityOptions('hero', state.country, state.city);
 
+    if (els.filterName) els.filterName.value = state.nameQuery;
+    if (els.filterCategories) {
+      els.filterCategories.querySelectorAll('input').forEach((input) => {
+        input.checked = state.categories.includes(input.value);
+      });
+    }
     els.filterCountry.value = state.country;
-    els.filterCategory.value = state.category;
     els.filterPriceMin.value = state.minPrice;
     els.filterPriceMax.value = state.maxPrice;
     els.filterDuration.value = state.duration;
+    if (els.filterPromo) els.filterPromo.checked = state.promoOnly;
     els.filterAvailableToday.checked = state.availableToday;
     els.filterInstantBooking.checked = state.instantBooking;
     els.filterWithGuide.checked = state.withGuide;
@@ -211,11 +237,17 @@
   }
 
   function syncMobileControls() {
+    if (els.mobileName) els.mobileName.value = state.nameQuery;
+    if (els.mobileCategories) {
+      els.mobileCategories.querySelectorAll('input').forEach((input) => {
+        input.checked = state.categories.includes(input.value);
+      });
+    }
     els.mobileCountry.value = state.country;
-    els.mobileCategory.value = state.category;
     els.mobilePriceMin.value = state.minPrice;
     els.mobilePriceMax.value = state.maxPrice;
     els.mobileDuration.value = state.duration;
+    if (els.mobilePromo) els.mobilePromo.checked = state.promoOnly;
     els.mobileAvailableToday.checked = state.availableToday;
     els.mobileInstantBooking.checked = state.instantBooking;
     els.mobileWithGuide.checked = state.withGuide;
@@ -229,7 +261,7 @@
       state.country = els.heroCountry.value;
       state.city = els.heroCity.value;
       state.date = els.heroDate.value;
-      state.category = els.heroCategory.value;
+      state.categories = els.heroCategory.value ? [els.heroCategory.value] : [];
       state.budget = els.heroBudget.value;
       applyBudgetToState(state.budget);
       syncAllControlsFromState();
@@ -255,11 +287,21 @@
       renderCatalog();
     });
 
-    els.filterCategory.addEventListener('change', function () {
-      state.category = els.filterCategory.value;
-      syncAllControlsFromState();
-      renderCatalog();
-    });
+    if (els.filterCategories) {
+      els.filterCategories.addEventListener('change', function () {
+        state.categories = Array.from(els.filterCategories.querySelectorAll('input:checked')).map((i) => i.value);
+        syncAllControlsFromState();
+        renderCatalog();
+      });
+    }
+
+    if (els.filterName) {
+      els.filterName.addEventListener('input', function () {
+        state.nameQuery = els.filterName.value;
+        syncAllControlsFromState();
+        renderCatalog();
+      });
+    }
 
     els.filterPriceMin.addEventListener('input', function () {
       state.minPrice = els.filterPriceMin.value;
@@ -280,6 +322,14 @@
       syncAllControlsFromState();
       renderCatalog();
     });
+
+    if (els.filterPromo) {
+      els.filterPromo.addEventListener('change', function () {
+        state.promoOnly = els.filterPromo.checked;
+        syncAllControlsFromState();
+        renderCatalog();
+      });
+    }
 
     els.filterAvailableToday.addEventListener('change', function () {
       state.availableToday = els.filterAvailableToday.checked;
@@ -322,12 +372,16 @@
     });
 
     els.applyMobileFilters.addEventListener('click', function () {
+      state.nameQuery = els.mobileName ? els.mobileName.value : '';
+      state.categories = els.mobileCategories
+        ? Array.from(els.mobileCategories.querySelectorAll('input:checked')).map((i) => i.value)
+        : [];
       state.country = els.mobileCountry.value;
       state.city = els.mobileCity.value;
-      state.category = els.mobileCategory.value;
       state.minPrice = els.mobilePriceMin.value;
       state.maxPrice = els.mobilePriceMax.value;
       state.duration = els.mobileDuration.value;
+      state.promoOnly = els.mobilePromo ? els.mobilePromo.checked : false;
       state.availableToday = els.mobileAvailableToday.checked;
       state.instantBooking = els.mobileInstantBooking.checked;
       state.withGuide = els.mobileWithGuide.checked;
@@ -360,11 +414,13 @@
     state.country = '';
     state.city = '';
     state.date = '';
-    state.category = '';
+    state.categories = [];
     state.budget = '';
     state.minPrice = '';
     state.maxPrice = '';
     state.duration = '';
+    state.nameQuery = '';
+    state.promoOnly = false;
     state.availableToday = false;
     state.instantBooking = false;
     state.withGuide = false;
@@ -411,7 +467,7 @@
       return false;
     }
 
-    if (state.category && activity.category !== state.category) {
+    if (state.categories.length && !state.categories.includes(activity.category)) {
       return false;
     }
 
@@ -424,6 +480,17 @@
     }
 
     if (state.duration && !matchesDurationBucket(activity.durationHours, state.duration)) {
+      return false;
+    }
+
+    if (state.nameQuery) {
+      const text = `${activity.title} ${activity.city} ${activity.country} ${activity.shortDescription}`.toLowerCase();
+      if (!text.includes(state.nameQuery.toLowerCase())) {
+        return false;
+      }
+    }
+
+    if (state.promoOnly && !activity.badge) {
       return false;
     }
 
@@ -549,13 +616,15 @@
   function renderActiveFilterChips() {
     const chips = [];
 
+    if (state.nameQuery) chips.push(`Recherche: ${state.nameQuery}`);
     if (state.country) chips.push(state.country);
     if (state.city) chips.push(state.city);
-    if (state.category) chips.push(state.category);
+    state.categories.forEach((c) => chips.push(c));
     if (state.date) chips.push(formatDateChip(state.date));
     if (state.minPrice) chips.push(`Min ${state.minPrice} DH`);
     if (state.maxPrice) chips.push(`Max ${state.maxPrice} DH`);
     if (state.duration) chips.push(durationLabel(state.duration));
+    if (state.promoOnly) chips.push('Promotions');
     if (state.availableToday) chips.push('Disponible aujourd hui');
     if (state.instantBooking) chips.push('Reservation instantanee');
     if (state.withGuide) chips.push('Avec guide');

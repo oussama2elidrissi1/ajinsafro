@@ -108,6 +108,11 @@ $settings = ajth_get_settings();
 									</div>
 
 									<div class="aj-filter-group">
+										<label class="aj-filter-label" for="aj-filter-name">Rechercher par nom</label>
+										<input id="aj-filter-name" type="text" placeholder="ex: quad, desert, Fes...">
+									</div>
+
+									<div class="aj-filter-group">
 										<label class="aj-filter-label" for="aj-filter-country">Pays</label>
 										<select id="aj-filter-country">
 											<option value="">Tous les pays</option>
@@ -122,10 +127,8 @@ $settings = ajth_get_settings();
 									</div>
 
 									<div class="aj-filter-group">
-										<label class="aj-filter-label" for="aj-filter-category">Categorie</label>
-										<select id="aj-filter-category">
-											<option value="">Toutes les categories</option>
-										</select>
+										<span class="aj-filter-label">Categorie</span>
+										<div id="aj-filter-categories"></div>
 									</div>
 
 									<div class="aj-filter-grid">
@@ -151,7 +154,8 @@ $settings = ajth_get_settings();
 									</div>
 
 									<div class="aj-filter-group">
-										<span class="aj-filter-label">Disponibilite</span>
+										<span class="aj-filter-label">Options</span>
+										<label class="aj-check"><input id="aj-filter-promo" type="checkbox"> Promotions uniquement</label>
 										<label class="aj-check"><input id="aj-filter-available-today" type="checkbox"> Disponible aujourd hui</label>
 										<label class="aj-check"><input id="aj-filter-instant-booking" type="checkbox"> Reservation instantanee</label>
 										<label class="aj-check"><input id="aj-filter-with-guide" type="checkbox"> Avec guide</label>
@@ -185,6 +189,11 @@ $settings = ajth_get_settings();
 
 				<div class="aj-mobile-panel-body">
 					<div class="aj-filter-group">
+						<label class="aj-filter-label" for="aj-mobile-name">Rechercher par nom</label>
+						<input id="aj-mobile-name" type="text" placeholder="ex: quad, desert, Fes...">
+					</div>
+
+					<div class="aj-filter-group">
 						<label class="aj-filter-label" for="aj-mobile-country">Pays</label>
 						<select id="aj-mobile-country">
 							<option value="">Tous les pays</option>
@@ -199,10 +208,8 @@ $settings = ajth_get_settings();
 					</div>
 
 					<div class="aj-filter-group">
-						<label class="aj-filter-label" for="aj-mobile-category">Categorie</label>
-						<select id="aj-mobile-category">
-							<option value="">Toutes les categories</option>
-						</select>
+						<span class="aj-filter-label">Categorie</span>
+						<div id="aj-mobile-categories"></div>
 					</div>
 
 					<div class="aj-filter-grid">
@@ -228,7 +235,8 @@ $settings = ajth_get_settings();
 					</div>
 
 					<div class="aj-filter-group">
-						<span class="aj-filter-label">Disponibilite</span>
+						<span class="aj-filter-label">Options</span>
+						<label class="aj-check"><input id="aj-mobile-promo" type="checkbox"> Promotions uniquement</label>
 						<label class="aj-check"><input id="aj-mobile-available-today" type="checkbox"> Disponible aujourd hui</label>
 						<label class="aj-check"><input id="aj-mobile-instant-booking" type="checkbox"> Reservation instantanee</label>
 						<label class="aj-check"><input id="aj-mobile-with-guide" type="checkbox"> Avec guide</label>

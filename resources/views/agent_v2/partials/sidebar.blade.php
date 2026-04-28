@@ -38,7 +38,7 @@
         return str_starts_with($current, $prefix.'.');
     };
 
-    $allowedSections = ['reservations', 'customers', 'products_services', 'operations', 'visa', 'messagerie'];
+    $allowedSections = ['reservations', 'customers', 'products_services', 'accommodations', 'activities', 'operations', 'visa', 'messagerie'];
     $menuSections = collect(config('admin_menu.items', []))
         ->filter(fn ($section) => in_array($section['key'] ?? '', $allowedSections, true))
         ->values();
