@@ -157,6 +157,8 @@ function ajth_enqueue_front_assets()
                 array(
                     'hotels' => array_values( $hebergements ),
                     'packs' => array_values( $packages ),
+                    'isAdmin' => current_user_can( 'manage_options' ),
+                    'adminEmptyMessage' => 'API Laravel connectee mais aucun pack hebergement trouve. Verifiez les seeders.',
                     'currency' => 'DH',
                     'strings' => array(
                         'see_offer'   => 'Voir l\'offre',
@@ -219,6 +221,8 @@ function ajth_enqueue_front_assets()
                 'ajthActivitiesConfig',
                 array(
                     'activities' => array_values( $activities ),
+                    'isAdmin' => current_user_can( 'manage_options' ),
+                    'adminEmptyMessage' => 'API Laravel connectee mais aucune activite trouvee. Verifiez les seeders.',
                     'currency'   => 'DH',
                     'strings'    => array(
                         'recommended' => 'Recommande',
@@ -1683,7 +1687,6 @@ function ajth_debug_dump_home_settings_footer()
     echo '</pre>';
     echo '</div>';
 }
-add_action('wp_footer', 'ajth_debug_dump_home_settings_footer', 9999);
 
 /* ──────────────────────────────────────────────
  * Activation: set default options if not present

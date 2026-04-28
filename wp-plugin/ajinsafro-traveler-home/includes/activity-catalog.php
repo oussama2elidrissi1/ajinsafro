@@ -69,7 +69,7 @@ if ( ! function_exists( 'ajth_get_activities' ) ) {
 	 */
 	function ajth_get_activities( $limit = 12, array $args = array() ) {
 		$payload = function_exists( 'ajth_fetch_laravel_catalog_json' )
-			? ajth_fetch_laravel_catalog_json( '/api/activity-offers', 'ajth_activity_offers_v1' )
+			? ajth_fetch_laravel_catalog_json( '/activity-offers', 'ajth_activity_offers_v1' )
 			: array();
 
 		$rows = isset( $payload['data'] ) && is_array( $payload['data'] ) ? $payload['data'] : array();

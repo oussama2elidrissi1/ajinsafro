@@ -11,10 +11,6 @@
     : {};
 
   const rawActivities = Array.isArray(config.activities) ? config.activities : [];
-  if (!rawActivities.length) {
-    return;
-  }
-
   const els = {
     featuredGrid: root.querySelector('#aj-featured-grid'),
     activitiesGrid: root.querySelector('#aj-activities-grid'),
@@ -57,6 +53,18 @@
     mobilePanel: root.querySelector('#aj-mobile-panel'),
     mobileBackdrop: root.querySelector('#aj-mobile-backdrop')
   };
+
+  if (!rawActivities.length) {
+    if (config.isAdmin && els.emptyState && els.activitiesGrid) {
+      els.activitiesGrid.innerHTML = '';
+      els.emptyState.hidden = false;
+      els.emptyState.innerHTML = `
+        <h3>Aucune activite disponible</h3>
+        <p>${escapeHtml(config.adminEmptyMessage || 'API Laravel connectee mais aucune activite trouvee. Verifiez les seeders.')}</p>
+      `;
+    }
+    return;
+  }
 
   const activities = rawActivities.map(normalizeActivity);
   const countries = Array.from(new Set(activities.map((item) => item.country))).sort(collatorCompare);

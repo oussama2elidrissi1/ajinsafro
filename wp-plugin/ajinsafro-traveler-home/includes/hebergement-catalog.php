@@ -13,6 +13,9 @@ if ( ! function_exists( 'ajth_laravel_api_base_url' ) ) {
 	/**
 	 * Returns the Laravel API base URL used by catalog pages.
 	 *
+	 * Accepts either a root URL like http://127.0.0.1:8000
+	 * or an API URL like http://127.0.0.1:8000/api.
+	 *
 	 * @return string
 	 */
 	function ajth_laravel_api_base_url() {
@@ -22,9 +25,26 @@ if ( ! function_exists( 'ajth_laravel_api_base_url' ) ) {
 			$url = AJTH_LARAVEL_API_URL;
 		} elseif ( defined( 'AJTB_LARAVEL_API_URL' ) && is_string( AJTB_LARAVEL_API_URL ) && AJTB_LARAVEL_API_URL !== '' ) {
 			$url = AJTB_LARAVEL_API_URL;
+		} else {
+			$home_host = wp_parse_url( home_url( '/' ), PHP_URL_HOST );
+			$home_host = is_string( $home_host ) ? strtolower( $home_host ) : '';
+
+			if ( '' !== $home_host ) {
+				if ( false !== strpos( $home_host, 'ajinsafro.net' ) ) {
+					$url = 'https://booking.ajinsafro.net/api';
+				} elseif ( in_array( $home_host, array( '127.0.0.1', 'localhost' ), true ) ) {
+					$url = 'http://127.0.0.1:8000/api';
+				}
+			}
 		}
 
-		return untrailingslashit( (string) apply_filters( 'ajth_laravel_api_base_url', $url ) );
+		$url = untrailingslashit( (string) apply_filters( 'ajth_laravel_api_base_url', $url ) );
+
+		if ( '' === $url ) {
+			return '';
+		}
+
+		return preg_match( '#/api$#', $url ) ? $url : $url . '/api';
 	}
 }
 
@@ -47,6 +67,8 @@ if ( ! function_exists( 'ajth_fetch_laravel_catalog_json' ) ) {
 		if ( '' === $base_url ) {
 			return array();
 		}
+
+		$path = '/' . ltrim( (string) $path, '/' );
 
 		$response = wp_remote_get(
 			$base_url . $path,
@@ -328,7 +350,7 @@ if ( ! function_exists( 'ajth_get_accommodation_packages' ) ) {
 	 * @return array<int, array<string, mixed>>
 	 */
 	function ajth_get_accommodation_packages() {
-		$payload = ajth_fetch_laravel_catalog_json( '/api/accommodation-packages', 'ajth_accommodation_packages_v1' );
+		$payload = ajth_fetch_laravel_catalog_json( '/accommodation-packages', 'ajth_accommodation_packages_v1' );
 		$rows    = isset( $payload['data'] ) && is_array( $payload['data'] ) ? $payload['data'] : array();
 
 		return array_values(
