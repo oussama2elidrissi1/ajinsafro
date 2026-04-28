@@ -59,8 +59,7 @@
   };
 
   const activities = rawActivities.map(normalizeActivity);
-  const countries = ['Maroc', 'Espagne', 'Turquie', 'France', 'Emirats Arabes Unis', 'Italie']
-    .filter((country, index, array) => array.indexOf(country) === index);
+  const countries = Array.from(new Set(activities.map((item) => item.country))).sort(collatorCompare);
   const categories = Array.from(new Set(activities.map((item) => item.category))).sort(collatorCompare);
   const cityMap = buildCityMap(activities);
 
@@ -116,13 +115,7 @@
 
   function buildCityMap(items) {
     const map = {
-      '': [],
-      'Maroc': ['Marrakech', 'Dakhla', 'Tanger', 'Casablanca', 'Agadir', 'Fes', 'Chefchaouen'],
-      'Turquie': ['Istanbul', 'Antalya', 'Cappadoce'],
-      'Espagne': ['Barcelone', 'Madrid', 'Seville'],
-      'France': ['Paris', 'Nice', 'Lyon'],
-      'Emirats Arabes Unis': ['Dubai', 'Abu Dhabi'],
-      'Italie': ['Rome', 'Milan', 'Venise']
+      '': []
     };
 
     items.forEach((item) => {

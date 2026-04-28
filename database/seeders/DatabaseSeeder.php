@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             DubaiTravelSeeder::class,
             ClientSeeder::class,
             ReservationDemoSeeder::class,
+            AccommodationPackageSeeder::class,
+            ActivityOfferSeeder::class,
         ]);
     }
 }

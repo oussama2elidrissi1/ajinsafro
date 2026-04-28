@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\PublicPackageController;
 use App\Http\Controllers\Api\PublicToursListController;
+use App\Http\Controllers\Api\AccommodationPackageController;
+use App\Http\Controllers\Api\ActivityOfferController;
 use App\Http\Controllers\Api\TourFlightsController;
 use App\Http\Controllers\Api\WpSyncWebhookController;
 use App\Http\Controllers\Sync\PingController;
@@ -24,6 +26,15 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/accommodation-packages', [AccommodationPackageController::class, 'index'])
+    ->name('api.accommodation-packages.index');
+
+Route::get('/activity-offers', [ActivityOfferController::class, 'index'])
+    ->name('api.activity-offers.index');
+
+Route::get('/activity-offers/filters', [ActivityOfferController::class, 'filters'])
+    ->name('api.activity-offers.filters');
 
 /*
 |--------------------------------------------------------------------------

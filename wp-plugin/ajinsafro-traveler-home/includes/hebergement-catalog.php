@@ -9,6 +9,77 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! function_exists( 'ajth_laravel_api_base_url' ) ) {
+	/**
+	 * Returns the Laravel API base URL used by catalog pages.
+	 *
+	 * @return string
+	 */
+	function ajth_laravel_api_base_url() {
+		$url = '';
+
+		if ( defined( 'AJTH_LARAVEL_API_URL' ) && is_string( AJTH_LARAVEL_API_URL ) && AJTH_LARAVEL_API_URL !== '' ) {
+			$url = AJTH_LARAVEL_API_URL;
+		} elseif ( defined( 'AJTB_LARAVEL_API_URL' ) && is_string( AJTB_LARAVEL_API_URL ) && AJTB_LARAVEL_API_URL !== '' ) {
+			$url = AJTB_LARAVEL_API_URL;
+		}
+
+		return untrailingslashit( (string) apply_filters( 'ajth_laravel_api_base_url', $url ) );
+	}
+}
+
+if ( ! function_exists( 'ajth_fetch_laravel_catalog_json' ) ) {
+	/**
+	 * Fetches a JSON payload from Laravel and caches it briefly.
+	 *
+	 * @param string $path      API path beginning with a slash.
+	 * @param string $cache_key Unique transient key.
+	 * @param int    $ttl       Cache TTL in seconds.
+	 * @return array<string, mixed>
+	 */
+	function ajth_fetch_laravel_catalog_json( $path, $cache_key, $ttl = 300 ) {
+		$cached = get_transient( $cache_key );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$base_url = ajth_laravel_api_base_url();
+		if ( '' === $base_url ) {
+			return array();
+		}
+
+		$response = wp_remote_get(
+			$base_url . $path,
+			array(
+				'timeout' => 10,
+				'headers' => array(
+					'Accept' => 'application/json',
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return array();
+		}
+
+		$status = (int) wp_remote_retrieve_response_code( $response );
+		if ( $status < 200 || $status >= 300 ) {
+			return array();
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		$data = json_decode( (string) $body, true );
+
+		if ( ! is_array( $data ) ) {
+			return array();
+		}
+
+		set_transient( $cache_key, $data, $ttl );
+
+		return $data;
+	}
+}
+
 if ( ! function_exists( 'ajth_hebergement_normalize_meta_list' ) ) {
 	/**
 	 * Normalise une meta texte / serialisée vers une liste simple.
@@ -156,5 +227,155 @@ if ( ! function_exists( 'getAjinsafroHebergements' ) ) {
 if ( ! function_exists( 'ajth_get_hebergements' ) ) {
 	function ajth_get_hebergements( $limit = 4, array $args = array() ) {
 		return getAjinsafroHebergements( $limit, $args );
+	}
+}
+
+if ( ! function_exists( 'ajth_hebergement_slugify' ) ) {
+	/**
+	 * Lightweight slugifier for JS-facing payloads.
+	 *
+	 * @param string $value Raw label.
+	 * @return string
+	 */
+	function ajth_hebergement_slugify( $value ) {
+		$value = remove_accents( strtolower( trim( (string) $value ) ) );
+		$value = preg_replace( '/[^a-z0-9]+/', '-', $value );
+
+		return trim( (string) $value, '-' );
+	}
+}
+
+if ( ! function_exists( 'ajth_map_pension_to_key' ) ) {
+	/**
+	 * Maps a pension label to the JS filter key.
+	 *
+	 * @param string $label Pension label.
+	 * @return string
+	 */
+	function ajth_map_pension_to_key( $label ) {
+		$normalized = ajth_hebergement_slugify( $label );
+
+		$map = array(
+			'petit-dejeuner-inclus' => 'breakfast',
+			'petit-dejeuner'        => 'breakfast',
+			'demi-pension'          => 'half_board',
+			'pension-complete'      => 'full_board',
+			'sans-repas'            => 'room_only',
+		);
+
+		return $map[ $normalized ] ?? 'room_only';
+	}
+}
+
+if ( ! function_exists( 'ajth_map_accommodation_type_to_key' ) ) {
+	/**
+	 * Maps accommodation types to JS filter keys.
+	 *
+	 * @param string $label Type label.
+	 * @return string
+	 */
+	function ajth_map_accommodation_type_to_key( $label ) {
+		$normalized = ajth_hebergement_slugify( $label );
+
+		$map = array(
+			'hotel'           => 'hotel',
+			'riad'            => 'riad',
+			'appartement'     => 'apartment',
+			'villa'           => 'villa',
+			'maison-d-hotes'  => 'guest-house',
+			'maison-dhotes'   => 'guest-house',
+			'maison-d-hotes-' => 'guest-house',
+		);
+
+		return $map[ $normalized ] ?? 'hotel';
+	}
+}
+
+if ( ! function_exists( 'ajth_map_package_include_to_key' ) ) {
+	/**
+	 * Maps include labels to existing front-end amenity keys.
+	 *
+	 * @param string $label Include label.
+	 * @return string
+	 */
+	function ajth_map_package_include_to_key( $label ) {
+		$normalized = ajth_hebergement_slugify( $label );
+
+		$map = array(
+			'hebergement'            => 'hebergement',
+			'petit-dejeuner'         => 'breakfast',
+			'petit-dejeuner-inclus'  => 'breakfast',
+			'demi-pension'           => 'half_board',
+			'pension-complete'       => 'full_board',
+			'transfert'              => 'transfer',
+			'transfert-optionnel'    => 'transfer',
+			'activite-optionnelle'   => 'activity',
+			'offre-famille'          => 'family',
+			'conseils-locaux'        => 'assistance',
+			'guide-optionnel'        => 'assistance',
+			'assistance-ajinsafro'   => 'assistance',
+			'support-reservation'    => 'assistance',
+		);
+
+		return $map[ $normalized ] ?? $normalized;
+	}
+}
+
+if ( ! function_exists( 'ajth_get_accommodation_packages' ) ) {
+	/**
+	 * Returns accommodation packages from Laravel.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	function ajth_get_accommodation_packages() {
+		$payload = ajth_fetch_laravel_catalog_json( '/api/accommodation-packages', 'ajth_accommodation_packages_v1' );
+		$rows    = isset( $payload['data'] ) && is_array( $payload['data'] ) ? $payload['data'] : array();
+
+		return array_values(
+			array_map(
+				static function ( $row ) {
+					$row = is_array( $row ) ? $row : array();
+
+					$pension_label = (string) ( $row['pension_type'] ?? 'Sans repas' );
+					$type_label    = (string) ( $row['accommodation_type'] ?? 'Hôtel' );
+					$badge         = trim( (string) ( $row['badge'] ?? '' ) );
+					$includes      = isset( $row['includes'] ) && is_array( $row['includes'] ) ? array_values( $row['includes'] ) : array();
+
+					return array(
+						'kind'         => 'pack',
+						'id'           => (string) ( $row['slug'] ?? $row['id'] ?? '' ),
+						'title'        => (string) ( $row['title'] ?? '' ),
+						'city'         => (string) ( $row['city'] ?? '' ),
+						'country'      => (string) ( $row['country'] ?? 'Maroc' ),
+						'duration'     => sprintf( '%d jours / %d nuits', (int) ( $row['duration_days'] ?? 0 ), (int) ( $row['nights'] ?? 0 ) ),
+						'days'         => (int) ( $row['duration_days'] ?? 0 ),
+						'nights'       => (int) ( $row['nights'] ?? 0 ),
+						'pension'      => ajth_map_pension_to_key( $pension_label ),
+						'pensionLabel' => $pension_label,
+						'type'         => ajth_map_accommodation_type_to_key( $type_label ),
+						'typeLabel'    => $type_label,
+						'price'        => isset( $row['price_from'] ) ? (float) $row['price_from'] : null,
+						'oldPrice'     => null,
+						'image'        => (string) ( $row['image_url'] ?? '' ),
+						'badges'       => array_values( array_filter( array( $badge ) ) ),
+						'includes'     => array_map( 'ajth_map_package_include_to_key', $includes ),
+						'highlights'   => array_values(
+							array_filter(
+								array(
+									( $row['nights'] ?? null ) ? ( (int) $row['nights'] . ' nuits' ) : '',
+									$pension_label,
+									(string) ( $row['country'] ?? '' ),
+								)
+							)
+						),
+						'description'  => (string) ( $row['short_description'] ?? '' ),
+						'popular'      => ! empty( $row['is_featured'] ),
+						'available'    => ! isset( $row['is_active'] ) || ! empty( $row['is_active'] ),
+						'url'          => '#',
+					);
+				},
+				$rows
+			)
+		);
 	}
 }

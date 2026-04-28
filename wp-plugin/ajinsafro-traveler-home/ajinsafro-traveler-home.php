@@ -149,12 +149,14 @@ function ajth_enqueue_front_assets()
                     'order'          => 'DESC',
                 )
             );
+            $packages = function_exists( 'ajth_get_accommodation_packages' ) ? ajth_get_accommodation_packages() : array();
 
             wp_localize_script(
                 'ajth-hebergement-booking-js',
                 'ajthHebergementConfig',
                 array(
                     'hotels' => array_values( $hebergements ),
+                    'packs' => array_values( $packages ),
                     'currency' => 'DH',
                     'strings' => array(
                         'see_offer'   => 'Voir l\'offre',
@@ -208,9 +210,7 @@ function ajth_enqueue_front_assets()
             $activities = ajth_get_activities(
                 200,
                 array(
-                    'posts_per_page' => 200,
-                    'orderby'        => 'date',
-                    'order'          => 'DESC',
+                    'limit' => 200,
                 )
             );
 
