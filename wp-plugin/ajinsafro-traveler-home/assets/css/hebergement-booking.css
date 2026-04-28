@@ -64,7 +64,7 @@
     border-radius: 18px;
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+    grid-template-columns: 1.45fr 1fr 1fr 1fr 1fr auto;
     gap: 0;
     overflow: hidden;
     color: var(--text);
@@ -113,10 +113,10 @@
 
 .aj-hebergement-booking .main-grid {
     display: grid;
-    grid-template-columns: 290px minmax(0, 1fr) 160px;
-    gap: 18px;
+    grid-template-columns: 280px minmax(0, 1fr) 180px;
+    gap: 22px;
     align-items: start;
-    padding: 18px 0 50px;
+    padding: 22px 0 56px;
 }
 
 .aj-hebergement-booking .filters {
@@ -124,7 +124,7 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 14px;
+    padding: 12px;
     position: sticky;
     top: 76px;
     max-height: calc(100vh - 94px);
@@ -132,12 +132,10 @@
 }
 
 .aj-hebergement-booking .map-card {
-    height: 128px;
+    min-height: 96px;
     border-radius: 14px;
-    background:
-        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.75), transparent 30%),
-        linear-gradient(135deg, #a7d8ff, #d8efff 40%, #bce3c8);
-    display: flex;
+    background: linear-gradient(135deg, #e7f2ff, #d7ebff 48%, #f8fcff);
+    display: grid;
     align-items: end;
     padding: 12px;
     margin-bottom: 14px;
@@ -149,10 +147,10 @@
     border: 0;
     background: #fff;
     color: var(--blue);
-    font-weight: 900;
+    font-weight: 850;
     border-radius: 999px;
-    padding: 10px;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+    padding: 9px 12px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
     cursor: pointer;
 }
 
@@ -168,7 +166,7 @@
 
 .aj-hebergement-booking .filter-title h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 17px;
     letter-spacing: -0.03em;
 }
 
@@ -183,7 +181,7 @@
 
 .aj-hebergement-booking .accordion {
     border-bottom: 1px solid #edf2f7;
-    padding: 9px 0;
+    padding: 7px 0;
 }
 
 .aj-hebergement-booking .accordion summary {
@@ -192,7 +190,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 900;
     color: #24324b;
 }
@@ -213,9 +211,9 @@
 }
 
 .aj-hebergement-booking .filter-body {
-    padding: 12px 0 2px;
+    padding: 10px 0 2px;
     display: grid;
-    gap: 9px;
+    gap: 8px;
 }
 
 .aj-hebergement-booking .check-row,
@@ -223,7 +221,7 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    font-size: 13px;
+    font-size: 12px;
     color: #334155;
     line-height: 1.25;
     cursor: pointer;
@@ -246,7 +244,7 @@
     width: 100%;
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 10px 11px;
+    padding: 9px 10px;
     outline: none;
     font-weight: 700;
     color: var(--text);
@@ -274,8 +272,8 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 14px;
-    margin-bottom: 14px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
 }
 
 .aj-hebergement-booking .results-topline {
@@ -351,7 +349,7 @@
     color: #fff;
     border-radius: var(--radius);
     padding: 13px 16px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -380,20 +378,61 @@
     white-space: nowrap;
 }
 
+.aj-hebergement-booking .catalog-section {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.aj-hebergement-booking .catalog-section__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.aj-hebergement-booking .catalog-section__head h3 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    letter-spacing: -0.04em;
+}
+
+.aj-hebergement-booking .catalog-section__head p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+    max-width: 720px;
+}
+
+.aj-hebergement-booking .catalog-section__count {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eef6ff;
+    border: 1px solid #cde6ff;
+    color: #075985;
+    font-size: 12px;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
 .aj-hebergement-booking .hotel-list {
     display: grid;
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
 }
 
 .aj-hebergement-booking .hotel-card {
     background: #fff;
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: 18px;
     box-shadow: var(--shadow);
     overflow: hidden;
-    display: grid;
-    grid-template-columns: 250px minmax(0, 1fr) 180px;
-    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
     transition: 0.2s ease;
 }
 
@@ -405,8 +444,17 @@
 
 .aj-hebergement-booking .photo-wrap {
     position: relative;
-    min-height: 210px;
+    min-height: 0;
+    aspect-ratio: 16 / 10;
     background: #e5e7eb;
+    border-radius: 18px 18px 0 0;
+    overflow: hidden;
+}
+
+.aj-hebergement-booking .photo-link {
+    position: absolute;
+    inset: 0;
+    display: block;
 }
 
 .aj-hebergement-booking .photo-wrap img {
@@ -416,27 +464,69 @@
     display: block;
 }
 
+.aj-hebergement-booking .photo-wrap--placeholder {
+    background: linear-gradient(135deg, #edf4fb, #f8fbff);
+}
+
+.aj-hebergement-booking .photo-wrap--placeholder::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(7, 16, 74, 0.02), rgba(7, 16, 74, 0.08));
+}
+
+.aj-hebergement-booking .photo-placeholder {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #475569;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
 .aj-hebergement-booking .fav {
     position: absolute;
-    right: 10px;
-    top: 10px;
-    width: 34px;
-    height: 34px;
+    right: 12px;
+    top: 12px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: 0;
     background: rgba(255, 255, 255, 0.96);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
     cursor: pointer;
-    color: #e11d48;
-    font-size: 18px;
+    color: transparent;
+    font-size: 0;
     display: grid;
     place-items: center;
+    z-index: 4;
+}
+
+.aj-hebergement-booking .fav::before {
+    content: "\2661";
+    color: #e11d48;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.aj-hebergement-booking .photo-badges {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    max-width: calc(100% - 64px);
 }
 
 .aj-hebergement-booking .photo-badge {
-    position: absolute;
-    left: 10px;
-    top: 10px;
     background: rgba(7, 16, 74, 0.92);
     color: #fff;
     border-radius: 999px;
@@ -445,27 +535,32 @@
     font-weight: 900;
 }
 
-.aj-hebergement-booking .discount {
-    background: var(--red);
-    color: #fff;
-    border-radius: 6px;
-    padding: 5px 7px;
-    font-size: 11px;
-    font-weight: 900;
-    display: inline-flex;
-    width: fit-content;
+.aj-hebergement-booking .photo-badge--type {
+    background: rgba(0, 113, 194, 0.92);
+}
+
+.aj-hebergement-booking .photo-badge--promo {
+    background: rgba(217, 48, 37, 0.92);
 }
 
 .aj-hebergement-booking .hotel-main {
-    padding: 15px 16px;
+    padding: 16px 16px 12px;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1 1 auto;
 }
 
 .aj-hebergement-booking .hotel-main h3 {
-    margin: 0 0 5px;
+    margin: 0;
     font-size: 21px;
     letter-spacing: -0.04em;
-    line-height: 1.15;
+    line-height: 1.2;
+}
+
+.aj-hebergement-booking .hotel-main h3 a {
+    color: inherit;
 }
 
 .aj-hebergement-booking .location,
@@ -473,31 +568,86 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 7px;
+    gap: 7px 10px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
-    margin-bottom: 9px;
+    margin-bottom: 7px;
 }
 
-.aj-hebergement-booking .stars {
-    color: #f59e0b;
-    letter-spacing: 1px;
-    font-size: 12px;
+.aj-hebergement-booking .location--primary {
+    margin-bottom: 0;
+    gap: 8px;
+}
+
+.aj-hebergement-booking .location--primary span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.aj-hebergement-booking .meta--caps {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #075985;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.aj-hebergement-booking .meta--compact {
+    margin-bottom: 0;
+}
+
+.aj-hebergement-booking .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.aj-hebergement-booking .meta-item {
+    display: grid;
+    gap: 3px;
+    padding: 10px 11px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    min-width: 0;
+}
+
+.aj-hebergement-booking .meta-item__label {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.aj-hebergement-booking .meta-item strong {
+    color: #172033;
+    font-size: 13px;
+    line-height: 1.3;
 }
 
 .aj-hebergement-booking .description {
-    font-size: 14px;
-    line-height: 1.45;
+    font-size: 13px;
+    line-height: 1.42;
     color: #334155;
-    margin: 9px 0 12px;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .aj-hebergement-booking .amenities {
     display: flex;
     flex-wrap: wrap;
     gap: 7px;
-    margin-bottom: 12px;
+    margin-bottom: 0;
 }
 
 .aj-hebergement-booking .amenity {
@@ -510,27 +660,60 @@
     font-weight: 800;
 }
 
+.aj-hebergement-booking .amenity--subtle {
+    background: #eef6ff;
+    border-color: #d6ebff;
+    color: #075985;
+}
+
+.aj-hebergement-booking .amenity--with-icon {
+    gap: 6px;
+}
+
+.aj-hebergement-booking .amenity__icon {
+    font-size: 12px;
+    line-height: 1;
+}
+
+.aj-hebergement-booking .pack-includes {
+    display: grid;
+    gap: 8px;
+}
+
+.aj-hebergement-booking .pack-includes strong {
+    font-size: 13px;
+    letter-spacing: -0.01em;
+}
+
 .aj-hebergement-booking .good-note {
     color: var(--green);
-    font-size: 13px;
+    font-size: 0;
     font-weight: 900;
+    padding-top: 10px;
+    margin-top: auto;
+    border-top: 1px solid #dcfce7;
+}
+
+.aj-hebergement-booking .good-note::before {
+    content: "Disponibilites verifiees \00B7 Reservation rapide";
+    font-size: 12px;
 }
 
 .aj-hebergement-booking .hotel-side {
-    border-left: 1px solid #edf2f7;
-    padding: 15px;
+    border-top: 1px solid #edf2f7;
+    padding: 14px 16px 16px;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: stretch;
     justify-content: space-between;
-    gap: 12px;
-    text-align: right;
+    gap: 14px;
+    text-align: left;
 }
 
 .aj-hebergement-booking .rating-box {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: 9px;
 }
 
@@ -564,6 +747,11 @@
     margin-bottom: 4px;
 }
 
+.aj-hebergement-booking .price-area {
+    display: grid;
+    gap: 2px;
+}
+
 .aj-hebergement-booking .old-price {
     color: #94a3b8;
     text-decoration: line-through;
@@ -589,12 +777,13 @@
 .aj-hebergement-booking .card-actions {
     width: 100%;
     display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
 }
 
 .aj-hebergement-booking .primary-btn,
 .aj-hebergement-booking .secondary-btn {
-    border-radius: 10px;
+    border-radius: 12px;
     font-weight: 950;
     padding: 11px 13px;
     cursor: pointer;
@@ -765,6 +954,12 @@
     }
 }
 
+@media (max-width: 980px) {
+    .aj-hebergement-booking .hotel-list {
+        gap: 16px;
+    }
+}
+
 @media (max-width: 860px) {
     .aj-hebergement-booking .hero {
         padding-top: 18px;
@@ -795,17 +990,11 @@
         display: block;
     }
 
-    .aj-hebergement-booking .hotel-card {
-        grid-template-columns: 1fr;
-    }
-
     .aj-hebergement-booking .photo-wrap {
-        height: 230px;
+        aspect-ratio: 16 / 10;
     }
 
     .aj-hebergement-booking .hotel-side {
-        border-left: 0;
-        border-top: 1px solid #edf2f7;
         align-items: stretch;
         text-align: left;
     }
@@ -817,11 +1006,19 @@
     .aj-hebergement-booking .price-area {
         text-align: left;
     }
+
+    .aj-hebergement-booking .catalog-section__head {
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 540px) {
     .aj-hebergement-booking .container {
         width: min(100% - 20px, 1180px);
+    }
+
+    .aj-hebergement-booking .hotel-list {
+        grid-template-columns: 1fr;
     }
 
     .aj-hebergement-booking .search-panel {
@@ -850,5 +1047,10 @@
     .aj-hebergement-booking .deal-strip {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .aj-hebergement-booking .meta-grid,
+    .aj-hebergement-booking .card-actions {
+        grid-template-columns: 1fr;
     }
 }

@@ -40,6 +40,10 @@ $settings = ajth_get_settings();
                                 <option value="4">4 voyageurs, 2 chambres</option>
                             </select>
                         </div>
+                        <div class="search-field">
+                            <label for="ajhb-budget">Budget max</label>
+                            <input id="ajhb-budget" name="budget_max" type="number" min="0" placeholder="3500">
+                        </div>
                         <button class="search-btn" type="submit">Rechercher</button>
                     </form>
                 </div>
@@ -87,11 +91,31 @@ $settings = ajth_get_settings();
                         <button type="button">Se connecter</button>
                     </div>
 
-                    <div class="hotel-list" id="ajhb-hotel-list"></div>
+                    <section class="catalog-section" id="ajhb-pack-section">
+                        <div class="catalog-section__head">
+                            <div>
+                                <h3>Offres d'hebergement packagees</h3>
+                                <p>Des sejours prets a reserver avec pension, services inclus et assistance Ajinsafro.</p>
+                            </div>
+                            <span class="catalog-section__count" id="ajhb-pack-count">0 packs</span>
+                        </div>
+                        <div class="hotel-list" id="ajhb-pack-list"></div>
+                    </section>
+
+                    <section class="catalog-section" id="ajhb-stay-section">
+                        <div class="catalog-section__head">
+                            <div>
+                                <h3>Hebergements a la carte</h3>
+                                <p>Hotels, riads, appartements et villas a reserver librement selon vos preferences.</p>
+                            </div>
+                            <span class="catalog-section__count" id="ajhb-stay-count">0 hebergements</span>
+                        </div>
+                        <div class="hotel-list" id="ajhb-hotel-list"></div>
+                    </section>
 
                     <div class="empty-state" id="ajhb-empty-state">
-                        <h3>Aucun hebergement trouve</h3>
-                        <p>Essayez de modifier votre budget, votre destination ou vos equipements.</p>
+                        <h3>Aucune offre trouvee</h3>
+                        <p>Essayez de modifier votre budget, votre destination ou le type d'offre recherche.</p>
                         <button class="primary-btn" type="button" data-ajhb-action="reset">Reinitialiser les filtres</button>
                     </div>
                 </section>

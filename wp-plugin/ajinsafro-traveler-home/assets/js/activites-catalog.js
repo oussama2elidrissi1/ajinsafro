@@ -10,146 +10,577 @@
     ? window.ajthActivitiesConfig
     : {};
 
-  const strings = config.strings || {};
-  const activities = Array.isArray(config.activities) ? config.activities.map(normalizeActivity) : [];
-
-  const baseLabels = {
-    pickup: 'Prise en charge incluse',
-    free_cancel: 'Annulation gratuite',
-    instant: 'Confirmation instantanee',
-    fr: 'Francais',
-    en: 'Anglais',
-    ar: 'Arabe',
-    es: 'Espagnol'
-  };
-
-  const desktopFilters = root.querySelector('#ajas-filters-desktop');
-  const mobileFilters = root.querySelector('#ajas-filters-mobile');
-  const activityList = root.querySelector('#ajas-activity-list');
-  const resultCount = root.querySelector('#ajas-result-count');
-  const sortSelect = root.querySelector('#ajas-sort-select');
-  const activeChips = root.querySelector('#ajas-active-chips');
-  const emptyState = root.querySelector('#ajas-empty-state');
-  const destinationInput = root.querySelector('#ajas-destination-input');
-  const categoryTop = root.querySelector('#ajas-category-top');
-  const searchForm = root.querySelector('#ajas-main-search-form');
-  const drawer = root.querySelector('#ajas-drawer');
-  const drawerBg = root.querySelector('#ajas-drawer-bg');
-  const openDrawerButton = root.querySelector('#ajas-open-drawer');
-  const closeDrawerButton = root.querySelector('#ajas-close-drawer');
-  const applyMobileButton = root.querySelector('#ajas-apply-mobile');
-
-  if (!desktopFilters || !mobileFilters || !activityList || !resultCount || !sortSelect || !activeChips || !emptyState || !destinationInput || !categoryTop || !searchForm || !drawer || !drawerBg || !openDrawerButton || !closeDrawerButton || !applyMobileButton) {
+  const rawActivities = Array.isArray(config.activities) ? config.activities : [];
+  if (!rawActivities.length) {
     return;
   }
 
-  const categoryOptions = Array.from(new Set(activities.map((activity) => activity.category).filter(Boolean)));
-  const languageOptions = Array.from(new Set(activities.flatMap((activity) => activity.languages).filter(Boolean)));
-  const featureOptions = Array.from(new Set(activities.flatMap((activity) => activity.features).filter(Boolean)));
+  const els = {
+    featuredGrid: root.querySelector('#aj-featured-grid'),
+    activitiesGrid: root.querySelector('#aj-activities-grid'),
+    resultsCount: root.querySelector('#aj-results-count'),
+    activeFilters: root.querySelector('#aj-active-filters'),
+    emptyState: root.querySelector('#aj-empty-state'),
+    emptyReset: root.querySelector('#aj-empty-reset'),
+    sortSelect: root.querySelector('#aj-sort-select'),
+    searchForm: root.querySelector('#aj-activity-search-form'),
+    heroCountry: root.querySelector('#aj-hero-country'),
+    heroCity: root.querySelector('#aj-hero-city'),
+    heroDate: root.querySelector('#aj-hero-date'),
+    heroCategory: root.querySelector('#aj-hero-category'),
+    heroBudget: root.querySelector('#aj-hero-budget'),
+    filterCountry: root.querySelector('#aj-filter-country'),
+    filterCity: root.querySelector('#aj-filter-city'),
+    filterCategory: root.querySelector('#aj-filter-category'),
+    filterPriceMin: root.querySelector('#aj-filter-price-min'),
+    filterPriceMax: root.querySelector('#aj-filter-price-max'),
+    filterDuration: root.querySelector('#aj-filter-duration'),
+    filterAvailableToday: root.querySelector('#aj-filter-available-today'),
+    filterInstantBooking: root.querySelector('#aj-filter-instant-booking'),
+    filterWithGuide: root.querySelector('#aj-filter-with-guide'),
+    filterTransport: root.querySelector('#aj-filter-transport'),
+    resetFilters: root.querySelector('#aj-reset-filters'),
+    mobileCountry: root.querySelector('#aj-mobile-country'),
+    mobileCity: root.querySelector('#aj-mobile-city'),
+    mobileCategory: root.querySelector('#aj-mobile-category'),
+    mobilePriceMin: root.querySelector('#aj-mobile-price-min'),
+    mobilePriceMax: root.querySelector('#aj-mobile-price-max'),
+    mobileDuration: root.querySelector('#aj-mobile-duration'),
+    mobileAvailableToday: root.querySelector('#aj-mobile-available-today'),
+    mobileInstantBooking: root.querySelector('#aj-mobile-instant-booking'),
+    mobileWithGuide: root.querySelector('#aj-mobile-with-guide'),
+    mobileTransport: root.querySelector('#aj-mobile-transport'),
+    openMobileFilters: root.querySelector('#aj-open-mobile-filters'),
+    closeMobileFilters: root.querySelector('#aj-close-mobile-filters'),
+    applyMobileFilters: root.querySelector('#aj-apply-mobile-filters'),
+    resetMobileFilters: root.querySelector('#aj-reset-mobile-filters'),
+    mobilePanel: root.querySelector('#aj-mobile-panel'),
+    mobileBackdrop: root.querySelector('#aj-mobile-backdrop')
+  };
 
-  categoryTop.innerHTML = `<option value="">Toutes</option>${categoryOptions.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(labelForCategory(value))}</option>`).join('')}`;
+  const activities = rawActivities.map(normalizeActivity);
+  const countries = ['Maroc', 'Espagne', 'Turquie', 'France', 'Emirats Arabes Unis', 'Italie']
+    .filter((country, index, array) => array.indexOf(country) === index);
+  const categories = Array.from(new Set(activities.map((item) => item.category))).sort(collatorCompare);
+  const cityMap = buildCityMap(activities);
 
-  const filterMarkup = buildFilterMarkup();
-  desktopFilters.innerHTML = filterMarkup;
-  mobileFilters.innerHTML = filterMarkup;
+  const state = {
+    country: '',
+    city: '',
+    date: '',
+    category: '',
+    budget: '',
+    minPrice: '',
+    maxPrice: '',
+    duration: '',
+    availableToday: false,
+    instantBooking: false,
+    withGuide: false,
+    transportIncluded: false,
+    sort: 'featured'
+  };
+
+  hydrateStaticOptions();
+  syncAllControlsFromState();
+  renderFeaturedCards(activities.filter((item) => item.featured).slice(0, 4));
+  renderCatalog();
+  bindEvents();
 
   function normalizeActivity(item) {
-    const activity = item && typeof item === 'object' ? item : {};
+    const includes = Array.isArray(item.includes) ? item.includes : [];
+
     return {
-      id: Number(activity.id || 0),
-      title: String(activity.title || activity.name || ''),
-      city: String(activity.city || activity.location || ''),
-      location: String(activity.location || activity.city || ''),
-      category: String(activity.category || 'activite'),
-      categoryLabel: String(activity.category_label || activity.category || strings.activity || 'Activite'),
-      image: String(activity.image || activity.image_url || ''),
-      rating: activity.rating !== null && activity.rating !== undefined && activity.rating !== '' ? Number(activity.rating) : null,
-      reviews: Number(activity.reviews || 0),
-      duration: Number(activity.duration || 0),
-      durationLabel: String(activity.duration_label || ''),
-      price: activity.price !== null && activity.price !== undefined && activity.price !== '' ? Number(activity.price) : null,
-      oldPrice: activity.oldPrice !== null && activity.oldPrice !== undefined && activity.oldPrice !== '' ? Number(activity.oldPrice) : null,
-      discount: Number(activity.discount || 0),
-      badges: Array.isArray(activity.badges) ? activity.badges : [],
-      languages: Array.isArray(activity.languages) ? activity.languages : [],
-      features: Array.isArray(activity.features) ? activity.features : [],
-      description: String(activity.description || ''),
-      url: String(activity.url || '#'),
-      popular: !!activity.popular
+      id: Number(item.id || 0),
+      title: String(item.title || ''),
+      country: String(item.country || ''),
+      city: String(item.city || ''),
+      category: String(item.category || ''),
+      durationHours: Number(item.duration_hours || 0),
+      durationLabel: String(item.duration_label || ''),
+      price: Number(item.price || 0),
+      image: String(item.image || ''),
+      featured: Boolean(item.featured),
+      rating: Number(item.rating || 0),
+      reviews: Number(item.reviews || 0),
+      includes,
+      availability: String(item.availability || 'Disponible'),
+      availableToday: Boolean(item.available_today),
+      instantBooking: Boolean(item.instant_booking),
+      withGuide: Boolean(item.with_guide),
+      transportIncluded: Boolean(item.transport_included),
+      badge: String(item.badge || ''),
+      url: String(item.url || '#'),
+      bookingUrl: String(item.booking_url || item.url || '#')
     };
   }
 
-  function buildFilterMarkup() {
+  function buildCityMap(items) {
+    const map = {
+      '': [],
+      'Maroc': ['Marrakech', 'Dakhla', 'Tanger', 'Casablanca', 'Agadir', 'Fes', 'Chefchaouen'],
+      'Turquie': ['Istanbul', 'Antalya', 'Cappadoce'],
+      'Espagne': ['Barcelone', 'Madrid', 'Seville'],
+      'France': ['Paris', 'Nice', 'Lyon'],
+      'Emirats Arabes Unis': ['Dubai', 'Abu Dhabi'],
+      'Italie': ['Rome', 'Milan', 'Venise']
+    };
+
+    items.forEach((item) => {
+      if (!map[item.country]) {
+        map[item.country] = [];
+      }
+      if (!map[item.country].includes(item.city)) {
+        map[item.country].push(item.city);
+      }
+    });
+
+    Object.keys(map).forEach((key) => {
+      map[key] = map[key].sort(collatorCompare);
+    });
+
+    return map;
+  }
+
+  function collatorCompare(a, b) {
+    return String(a).localeCompare(String(b), 'fr', { sensitivity: 'base' });
+  }
+
+  function hydrateStaticOptions() {
+    fillSelect(els.heroCountry, countries, 'Tous les pays');
+    fillSelect(els.filterCountry, countries, 'Tous les pays');
+    fillSelect(els.mobileCountry, countries, 'Tous les pays');
+
+    fillSelect(els.heroCategory, categories, 'Toutes les categories');
+    fillSelect(els.filterCategory, categories, 'Toutes les categories');
+    fillSelect(els.mobileCategory, categories, 'Toutes les categories');
+
+    updateCityOptions('hero', state.country, state.city);
+    updateCityOptions('desktop', state.country, state.city);
+    updateCityOptions('mobile', state.country, state.city);
+  }
+
+  function fillSelect(select, values, placeholder) {
+    if (!select) {
+      return;
+    }
+
+    const options = [`<option value="">${escapeHtml(placeholder)}</option>`]
+      .concat(values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`));
+
+    select.innerHTML = options.join('');
+  }
+
+  function updateCityOptions(scope, country, selectedCity) {
+    const select = scope === 'hero'
+      ? els.heroCity
+      : scope === 'desktop'
+        ? els.filterCity
+        : els.mobileCity;
+
+    if (!select) {
+      return;
+    }
+
+    const values = country && cityMap[country] ? cityMap[country] : [];
+    const label = country ? 'Toutes les villes' : 'Toutes les villes';
+    fillSelect(select, values, label);
+    select.value = values.includes(selectedCity) ? selectedCity : '';
+  }
+
+  function syncAllControlsFromState() {
+    els.heroCountry.value = state.country;
+    els.heroCategory.value = state.category;
+    els.heroDate.value = state.date;
+    els.heroBudget.value = state.budget;
+    updateCityOptions('hero', state.country, state.city);
+
+    els.filterCountry.value = state.country;
+    els.filterCategory.value = state.category;
+    els.filterPriceMin.value = state.minPrice;
+    els.filterPriceMax.value = state.maxPrice;
+    els.filterDuration.value = state.duration;
+    els.filterAvailableToday.checked = state.availableToday;
+    els.filterInstantBooking.checked = state.instantBooking;
+    els.filterWithGuide.checked = state.withGuide;
+    els.filterTransport.checked = state.transportIncluded;
+    els.sortSelect.value = state.sort;
+    updateCityOptions('desktop', state.country, state.city);
+
+    syncMobileControls();
+  }
+
+  function syncMobileControls() {
+    els.mobileCountry.value = state.country;
+    els.mobileCategory.value = state.category;
+    els.mobilePriceMin.value = state.minPrice;
+    els.mobilePriceMax.value = state.maxPrice;
+    els.mobileDuration.value = state.duration;
+    els.mobileAvailableToday.checked = state.availableToday;
+    els.mobileInstantBooking.checked = state.instantBooking;
+    els.mobileWithGuide.checked = state.withGuide;
+    els.mobileTransport.checked = state.transportIncluded;
+    updateCityOptions('mobile', state.country, state.city);
+  }
+
+  function bindEvents() {
+    els.searchForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      state.country = els.heroCountry.value;
+      state.city = els.heroCity.value;
+      state.date = els.heroDate.value;
+      state.category = els.heroCategory.value;
+      state.budget = els.heroBudget.value;
+      applyBudgetToState(state.budget);
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.heroCountry.addEventListener('change', function () {
+      state.country = els.heroCountry.value;
+      state.city = '';
+      updateCityOptions('hero', state.country, state.city);
+    });
+
+    els.filterCountry.addEventListener('change', function () {
+      state.country = els.filterCountry.value;
+      state.city = '';
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterCity.addEventListener('change', function () {
+      state.city = els.filterCity.value;
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterCategory.addEventListener('change', function () {
+      state.category = els.filterCategory.value;
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterPriceMin.addEventListener('input', function () {
+      state.minPrice = els.filterPriceMin.value;
+      state.budget = '';
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterPriceMax.addEventListener('input', function () {
+      state.maxPrice = els.filterPriceMax.value;
+      state.budget = '';
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterDuration.addEventListener('change', function () {
+      state.duration = els.filterDuration.value;
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterAvailableToday.addEventListener('change', function () {
+      state.availableToday = els.filterAvailableToday.checked;
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterInstantBooking.addEventListener('change', function () {
+      state.instantBooking = els.filterInstantBooking.checked;
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterWithGuide.addEventListener('change', function () {
+      state.withGuide = els.filterWithGuide.checked;
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.filterTransport.addEventListener('change', function () {
+      state.transportIncluded = els.filterTransport.checked;
+      syncAllControlsFromState();
+      renderCatalog();
+    });
+
+    els.sortSelect.addEventListener('change', function () {
+      state.sort = els.sortSelect.value;
+      renderCatalog();
+    });
+
+    els.resetFilters.addEventListener('click', resetState);
+    els.emptyReset.addEventListener('click', resetState);
+
+    els.openMobileFilters.addEventListener('click', openMobileFilters);
+    els.closeMobileFilters.addEventListener('click', closeMobileFilters);
+    els.mobileBackdrop.addEventListener('click', closeMobileFilters);
+
+    els.mobileCountry.addEventListener('change', function () {
+      updateCityOptions('mobile', els.mobileCountry.value, '');
+    });
+
+    els.applyMobileFilters.addEventListener('click', function () {
+      state.country = els.mobileCountry.value;
+      state.city = els.mobileCity.value;
+      state.category = els.mobileCategory.value;
+      state.minPrice = els.mobilePriceMin.value;
+      state.maxPrice = els.mobilePriceMax.value;
+      state.duration = els.mobileDuration.value;
+      state.availableToday = els.mobileAvailableToday.checked;
+      state.instantBooking = els.mobileInstantBooking.checked;
+      state.withGuide = els.mobileWithGuide.checked;
+      state.transportIncluded = els.mobileTransport.checked;
+      state.budget = '';
+      syncAllControlsFromState();
+      renderCatalog();
+      closeMobileFilters();
+    });
+
+    els.resetMobileFilters.addEventListener('click', function () {
+      resetState();
+      closeMobileFilters();
+    });
+  }
+
+  function applyBudgetToState(budget) {
+    if (!budget) {
+      state.minPrice = '';
+      state.maxPrice = '';
+      return;
+    }
+
+    const parts = budget.split('-');
+    state.minPrice = parts[0] || '';
+    state.maxPrice = parts[1] || '';
+  }
+
+  function resetState() {
+    state.country = '';
+    state.city = '';
+    state.date = '';
+    state.category = '';
+    state.budget = '';
+    state.minPrice = '';
+    state.maxPrice = '';
+    state.duration = '';
+    state.availableToday = false;
+    state.instantBooking = false;
+    state.withGuide = false;
+    state.transportIncluded = false;
+    state.sort = 'featured';
+    syncAllControlsFromState();
+    renderCatalog();
+  }
+
+  function openMobileFilters() {
+    syncMobileControls();
+    els.mobilePanel.classList.add('is-active');
+    els.mobileBackdrop.classList.add('is-active');
+    document.body.classList.add('aj-mobile-filters-open');
+  }
+
+  function closeMobileFilters() {
+    els.mobilePanel.classList.remove('is-active');
+    els.mobileBackdrop.classList.remove('is-active');
+    document.body.classList.remove('aj-mobile-filters-open');
+  }
+
+  function renderFeaturedCards(items) {
+    const markup = items.map(renderFeaturedCard).join('');
+    els.featuredGrid.innerHTML = markup;
+  }
+
+  function renderCatalog() {
+    const filtered = activities.filter(matchesFilters);
+    const sorted = sortActivities(filtered);
+
+    els.resultsCount.textContent = String(sorted.length);
+    els.activeFilters.innerHTML = renderActiveFilterChips();
+    els.activitiesGrid.innerHTML = sorted.map(renderActivityCard).join('');
+    els.emptyState.hidden = sorted.length > 0;
+  }
+
+  function matchesFilters(activity) {
+    if (state.country && activity.country !== state.country) {
+      return false;
+    }
+
+    if (state.city && activity.city !== state.city) {
+      return false;
+    }
+
+    if (state.category && activity.category !== state.category) {
+      return false;
+    }
+
+    if (state.minPrice && activity.price < Number(state.minPrice)) {
+      return false;
+    }
+
+    if (state.maxPrice && activity.price > Number(state.maxPrice)) {
+      return false;
+    }
+
+    if (state.duration && !matchesDurationBucket(activity.durationHours, state.duration)) {
+      return false;
+    }
+
+    if (state.availableToday && !activity.availableToday) {
+      return false;
+    }
+
+    if (state.instantBooking && !activity.instantBooking) {
+      return false;
+    }
+
+    if (state.withGuide && !activity.withGuide) {
+      return false;
+    }
+
+    if (state.transportIncluded && !activity.transportIncluded) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function matchesDurationBucket(hours, bucket) {
+    if (bucket === 'lt2') {
+      return hours <= 2;
+    }
+    if (bucket === 'half') {
+      return hours > 2 && hours <= 6;
+    }
+    if (bucket === 'full') {
+      return hours > 6 && hours < 24;
+    }
+    if (bucket === 'multi') {
+      return hours >= 24;
+    }
+    return true;
+  }
+
+  function sortActivities(items) {
+    const sorted = items.slice();
+
+    if (state.sort === 'featured') {
+      sorted.sort((a, b) => Number(b.featured) - Number(a.featured) || b.rating - a.rating || a.price - b.price);
+    }
+    if (state.sort === 'price-asc') {
+      sorted.sort((a, b) => a.price - b.price);
+    }
+    if (state.sort === 'price-desc') {
+      sorted.sort((a, b) => b.price - a.price);
+    }
+    if (state.sort === 'rating-desc') {
+      sorted.sort((a, b) => b.rating - a.rating);
+    }
+    if (state.sort === 'duration-asc') {
+      sorted.sort((a, b) => a.durationHours - b.durationHours);
+    }
+
+    return sorted;
+  }
+
+  function renderFeaturedCard(activity) {
     return `
-      <div class="filter-group">
-        <h3>Rechercher par nom</h3>
-        <input class="side-search" id="ajas-name-filter" type="text" placeholder="ex: desert, quad, Marrakech...">
-      </div>
-
-      <div class="filter-group">
-        <h3>Categorie</h3>
-        <div class="filter-list">
-          ${categoryOptions.map((value) => `<label class="filter-row"><input type="checkbox" name="category" value="${escapeHtml(value)}"> ${escapeHtml(labelForCategory(value))}</label>`).join('')}
+      <article class="aj-featured-card">
+        <div class="aj-featured-visual">
+          <img src="${escapeHtml(activity.image)}" alt="${escapeHtml(activity.title)}" loading="lazy">
+          <span class="aj-badge">${escapeHtml(activity.badge || 'A la une')}</span>
+          <div class="aj-featured-price">
+            <small>A partir de</small>
+            ${escapeHtml(formatPrice(activity.price))}
+          </div>
         </div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Prix</h3>
-        <div class="price-grid">
-          <input id="ajas-min-price" type="number" placeholder="Min DH">
-          <input id="ajas-max-price" type="number" placeholder="Max DH">
+        <div class="aj-featured-content">
+          <div class="aj-inline-meta">
+            <span>${escapeHtml(activity.city)}</span>
+            <span>${escapeHtml(activity.durationLabel)}</span>
+          </div>
+          <h3>${escapeHtml(activity.title)}</h3>
+          <div class="aj-rating">
+            <strong>${activity.rating.toFixed(1)}</strong>
+            <span>${escapeHtml(activity.reviews.toLocaleString('fr-FR'))} avis</span>
+          </div>
+          <a class="aj-featured-link" href="${escapeHtml(activity.url)}">Voir l activite</a>
         </div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Duree</h3>
-        <div class="filter-list">
-          <label class="filter-row"><input type="radio" name="duration" value="" checked> Toutes</label>
-          <label class="filter-row"><input type="radio" name="duration" value="3"> Jusqu'a 3 heures</label>
-          <label class="filter-row"><input type="radio" name="duration" value="6"> Jusqu'a 6 heures</label>
-          <label class="filter-row"><input type="radio" name="duration" value="8"> Journee complete</label>
-          <label class="filter-row"><input type="radio" name="duration" value="24"> 1 jour et plus</label>
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Note client</h3>
-        <div class="filter-list">
-          <label class="filter-row"><input type="radio" name="rating" value="" checked> Toutes les notes</label>
-          <label class="filter-row"><input type="radio" name="rating" value="4.5"> 4.5 et plus</label>
-          <label class="filter-row"><input type="radio" name="rating" value="4.7"> 4.7 et plus</label>
-          <label class="filter-row"><input type="radio" name="rating" value="4.9"> 4.9 et plus</label>
-        </div>
-      </div>
-
-      ${featureOptions.length ? `
-      <div class="filter-group">
-        <h3>Options</h3>
-        <div class="filter-list">
-          ${featureOptions.map((value) => `<label class="filter-row"><input type="checkbox" name="feature" value="${escapeHtml(value)}"> ${escapeHtml(baseLabels[value] || value)}</label>`).join('')}
-          <label class="filter-row"><input type="checkbox" id="ajas-discount-only"> Promotions uniquement</label>
-        </div>
-      </div>` : `
-      <div class="filter-group">
-        <h3>Options</h3>
-        <div class="filter-list">
-          <label class="filter-row"><input type="checkbox" id="ajas-discount-only"> Promotions uniquement</label>
-        </div>
-      </div>`}
-
-      ${languageOptions.length ? `
-      <div class="filter-group">
-        <h3>Langue du guide</h3>
-        <div class="filter-list">
-          ${languageOptions.map((value) => `<label class="filter-row"><input type="checkbox" name="language" value="${escapeHtml(value)}"> ${escapeHtml(baseLabels[value] || value)}</label>`).join('')}
-        </div>
-      </div>` : ''}
+      </article>
     `;
   }
 
-  function labelForCategory(key) {
-    const match = activities.find((activity) => activity.category === key && activity.categoryLabel);
-    return match ? match.categoryLabel : (strings.activity || 'Activite');
+  function renderActivityCard(activity) {
+    return `
+      <article class="aj-activity-card">
+        <div class="aj-card-media">
+          <img src="${escapeHtml(activity.image)}" alt="${escapeHtml(activity.title)}" loading="lazy">
+          <div class="aj-card-badges">
+            <span class="aj-category-badge">${escapeHtml(activity.category)}</span>
+            <span class="aj-status-badge">${escapeHtml(activity.availability)}</span>
+          </div>
+        </div>
+        <div class="aj-card-body">
+          <div class="aj-card-meta">
+            <span class="aj-card-location">${escapeHtml(activity.country)} · ${escapeHtml(activity.city)}</span>
+            <span>${escapeHtml(activity.durationLabel)}</span>
+            <span>${activity.rating.toFixed(1)} / 5</span>
+          </div>
+          <h3>${escapeHtml(activity.title)}</h3>
+          <div class="aj-card-facts">
+            ${activity.includes.slice(0, 4).map((item) => `<span class="aj-card-fact">${escapeHtml(item)}</span>`).join('')}
+          </div>
+          <div class="aj-card-footer">
+            <div class="aj-card-price">
+              <small>A partir de</small>
+              <strong>${escapeHtml(formatPrice(activity.price))}</strong>
+            </div>
+            <div class="aj-card-actions">
+              <a class="aj-card-primary" href="${escapeHtml(activity.url)}">Voir l activite</a>
+              <a class="aj-card-secondary" href="${escapeHtml(activity.bookingUrl)}">Reserver</a>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderActiveFilterChips() {
+    const chips = [];
+
+    if (state.country) chips.push(state.country);
+    if (state.city) chips.push(state.city);
+    if (state.category) chips.push(state.category);
+    if (state.date) chips.push(formatDateChip(state.date));
+    if (state.minPrice) chips.push(`Min ${state.minPrice} DH`);
+    if (state.maxPrice) chips.push(`Max ${state.maxPrice} DH`);
+    if (state.duration) chips.push(durationLabel(state.duration));
+    if (state.availableToday) chips.push('Disponible aujourd hui');
+    if (state.instantBooking) chips.push('Reservation instantanee');
+    if (state.withGuide) chips.push('Avec guide');
+    if (state.transportIncluded) chips.push('Transport inclus');
+
+    return chips.map((chip) => `<span class="aj-filter-chip">${escapeHtml(chip)}</span>`).join('');
+  }
+
+  function durationLabel(bucket) {
+    if (bucket === 'lt2') return 'Moins de 2h';
+    if (bucket === 'half') return 'Demi-journee';
+    if (bucket === 'full') return 'Journee complete';
+    if (bucket === 'multi') return '2 jours et plus';
+    return '';
+  }
+
+  function formatDateChip(value) {
+    const parts = value.split('-');
+    if (parts.length !== 3) {
+      return value;
+    }
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+  function formatPrice(value) {
+    return `${Number(value).toLocaleString('fr-FR')} DH`;
   }
 
   function escapeHtml(value) {
@@ -160,211 +591,4 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
-
-  function formatPrice(value) {
-    if (value === null || value === undefined || value === '' || Number.isNaN(Number(value))) {
-      return 'Sur demande';
-    }
-    return `${Number(value).toLocaleString('fr-FR')} ${config.currency || 'DH'}`;
-  }
-
-  function durationText(hours) {
-    if (!hours) return 'Duree sur demande';
-    if (hours < 24) return `${hours} h`;
-    if (hours === 24) return '1 jour';
-    return `${Math.round(hours / 24)} jours`;
-  }
-
-  function readFilters(container) {
-    return {
-      q: (container.querySelector('#ajas-name-filter')?.value || '').trim().toLowerCase(),
-      destination: (destinationInput.value || '').trim().toLowerCase(),
-      categoryTop: categoryTop.value,
-      categories: Array.from(container.querySelectorAll('input[name="category"]:checked')).map((input) => input.value),
-      minPrice: Number(container.querySelector('#ajas-min-price')?.value || 0),
-      maxPrice: Number(container.querySelector('#ajas-max-price')?.value || 0),
-      duration: Number(container.querySelector('input[name="duration"]:checked')?.value || 0),
-      rating: Number(container.querySelector('input[name="rating"]:checked')?.value || 0),
-      features: Array.from(container.querySelectorAll('input[name="feature"]:checked')).map((input) => input.value),
-      languages: Array.from(container.querySelectorAll('input[name="language"]:checked')).map((input) => input.value),
-      discountOnly: Boolean(container.querySelector('#ajas-discount-only')?.checked)
-    };
-  }
-
-  function matches(activity, filters) {
-    const haystack = `${activity.title} ${activity.city} ${activity.location} ${activity.description} ${activity.categoryLabel}`.toLowerCase();
-
-    if (filters.destination && !haystack.includes(filters.destination)) return false;
-    if (filters.q && !haystack.includes(filters.q)) return false;
-    if (filters.categoryTop && activity.category !== filters.categoryTop) return false;
-    if (filters.categories.length && !filters.categories.includes(activity.category)) return false;
-    if (filters.minPrice && (activity.price === null || activity.price < filters.minPrice)) return false;
-    if (filters.maxPrice && (activity.price === null || activity.price > filters.maxPrice)) return false;
-    if (filters.duration) {
-      if (filters.duration < 24 && activity.duration > filters.duration) return false;
-      if (filters.duration >= 24 && activity.duration < 24) return false;
-    }
-    if (filters.rating && (activity.rating === null || activity.rating < filters.rating)) return false;
-    if (filters.features.length && !filters.features.every((item) => activity.features.includes(item))) return false;
-    if (filters.languages.length && !filters.languages.every((item) => activity.languages.includes(item))) return false;
-    if (filters.discountOnly && !activity.discount) return false;
-
-    return true;
-  }
-
-  function sortItems(items) {
-    const mode = sortSelect.value;
-    const sorted = [...items];
-
-    if (mode === 'recommended') sorted.sort((a, b) => (Number(!!b.popular) - Number(!!a.popular)) || ((b.rating || 0) - (a.rating || 0)) || ((a.price || 0) - (b.price || 0)));
-    if (mode === 'price-asc') sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
-    if (mode === 'price-desc') sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
-    if (mode === 'rating-desc') sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    if (mode === 'duration-asc') sorted.sort((a, b) => (a.duration || 0) - (b.duration || 0));
-    if (mode === 'discount-desc') sorted.sort((a, b) => b.discount - a.discount);
-
-    return sorted;
-  }
-
-  function renderCard(activity, index) {
-    const featureText = activity.features.map((key) => baseLabels[key] || key).filter(Boolean).slice(0, 3).join(' · ');
-    const languageText = activity.languages.map((key) => baseLabels[key] || key).filter(Boolean).join(', ');
-    const badgeMarkup = activity.badges[0] ? `<span class="activity-badge">${escapeHtml(activity.badges[0])}</span>` : (activity.popular ? `<span class="activity-badge">${strings.recommended || 'Recommande'}</span>` : '');
-    const oldPriceMarkup = activity.oldPrice ? `<span class="old-price">${formatPrice(activity.oldPrice)}</span>` : '';
-    const availabilityMarkup = activity.discount
-      ? `<span class="availability">-${activity.discount}% aujourd'hui</span>`
-      : `<span class="availability">${strings.available || 'Disponible'}</span>`;
-    const promoMarkup = index > 0 && index % 4 === 0
-      ? '<div class="promo-strip">OFFRES AJINSAFRO · Reservez votre prochaine activite</div>'
-      : '';
-    const ratingMarkup = activity.rating !== null
-      ? `<span class="score">${activity.rating.toFixed(1)}</span><span class="reviews">${activity.reviews > 0 ? `(${activity.reviews.toLocaleString('fr-FR')} avis)` : `(${escapeHtml(activity.categoryLabel)})`}</span>`
-      : `<span class="score">Ajinsafro</span><span class="reviews">(${escapeHtml(activity.categoryLabel)})</span>`;
-
-    return `${promoMarkup}
-      <article class="activity-card">
-        <div class="activity-image">
-          <img src="${activity.image}" alt="${escapeHtml(activity.title)}" loading="lazy">
-          <button class="heart" type="button" aria-label="Ajouter aux favoris">?</button>
-          ${badgeMarkup}
-        </div>
-        <div class="activity-content">
-          <div class="activity-kind">${escapeHtml(activity.city || 'Maroc')} · ${escapeHtml(activity.categoryLabel || strings.activity || 'Activite')}</div>
-          <h3>${escapeHtml(activity.title)}</h3>
-          <div class="rating-line">
-            <span class="stars">?????</span>
-            ${ratingMarkup}
-          </div>
-          <div class="details">
-            <span>Duree : ${escapeHtml(activity.durationLabel || durationText(activity.duration))}</span>
-            <span>Guide : ${escapeHtml(languageText || 'Sur demande')}</span>
-            <span>${escapeHtml(featureText || activity.location || 'Information disponible sur la fiche')}</span>
-          </div>
-          <div class="green-note">${strings.support_note || 'Reservation simple · Support Ajinsafro'}</div>
-        </div>
-        <aside class="activity-side">
-          ${availabilityMarkup}
-          <div class="price-block">
-            <small>${strings.from_price || 'A partir de'}</small>
-            <div>${oldPriceMarkup}<span class="price">${formatPrice(activity.price)}</span></div>
-            <div class="price-sub">${strings.per_person || 'par personne'}</div>
-          </div>
-          <a class="book-btn" href="${activity.url}">${strings.view_offer || "Voir l'offre"}</a>
-        </aside>
-      </article>`;
-  }
-
-  function renderChips(filters) {
-    const chips = [];
-    if (filters.destination) chips.push(`Recherche: ${filters.destination}`);
-    if (filters.q) chips.push(`Nom: ${filters.q}`);
-    if (filters.categoryTop) chips.push(labelForCategory(filters.categoryTop));
-    filters.categories.forEach((value) => chips.push(labelForCategory(value)));
-    if (filters.minPrice) chips.push(`Min ${filters.minPrice} ${config.currency || 'DH'}`);
-    if (filters.maxPrice) chips.push(`Max ${filters.maxPrice} ${config.currency || 'DH'}`);
-    if (filters.duration) chips.push(filters.duration >= 24 ? '1 jour et plus' : `= ${filters.duration}h`);
-    if (filters.rating) chips.push(`Note ${filters.rating}+`);
-    filters.features.forEach((value) => chips.push(baseLabels[value] || value));
-    filters.languages.forEach((value) => chips.push(baseLabels[value] || value));
-    if (filters.discountOnly) chips.push('Promotions');
-
-    activeChips.innerHTML = chips.map((chip) => `<span class="chip">${escapeHtml(chip)}<button type="button" data-ajas-reset>x</button></span>`).join('');
-  }
-
-  function applyFilters(container) {
-    const filters = readFilters(container);
-    const items = sortItems(activities.filter((activity) => matches(activity, filters)));
-
-    activityList.innerHTML = items.map(renderCard).join('');
-    resultCount.textContent = String(items.length);
-    emptyState.style.display = items.length ? 'none' : 'block';
-    renderChips(filters);
-  }
-
-  function syncFilters(source, target) {
-    target.innerHTML = source.innerHTML;
-  }
-
-  function resetAll() {
-    destinationInput.value = '';
-    categoryTop.value = '';
-    sortSelect.value = 'recommended';
-    desktopFilters.innerHTML = filterMarkup;
-    mobileFilters.innerHTML = filterMarkup;
-    bindDesktopAutoApply();
-    applyFilters(desktopFilters);
-  }
-
-  function bindDesktopAutoApply() {
-    desktopFilters.querySelectorAll('input, select').forEach((element) => {
-      const eventName = element.type === 'text' || element.type === 'number' ? 'input' : 'change';
-      element.addEventListener(eventName, () => applyFilters(desktopFilters));
-    });
-  }
-
-  function openMobileDrawer() {
-    syncFilters(desktopFilters, mobileFilters);
-    drawer.classList.add('active');
-    drawerBg.classList.add('active');
-    document.body.classList.add('aj-activities-static-drawer-open');
-  }
-
-  function closeMobileDrawer() {
-    drawer.classList.remove('active');
-    drawerBg.classList.remove('active');
-    document.body.classList.remove('aj-activities-static-drawer-open');
-  }
-
-  root.addEventListener('click', (event) => {
-    if (event.target.matches('[data-ajas-reset]')) {
-      resetAll();
-    }
-  });
-
-  searchForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    applyFilters(desktopFilters);
-  });
-
-  categoryTop.addEventListener('change', () => applyFilters(desktopFilters));
-  sortSelect.addEventListener('change', () => applyFilters(desktopFilters));
-  openDrawerButton.addEventListener('click', openMobileDrawer);
-  closeDrawerButton.addEventListener('click', closeMobileDrawer);
-  drawerBg.addEventListener('click', closeMobileDrawer);
-
-  applyMobileButton.addEventListener('click', () => {
-    syncFilters(mobileFilters, desktopFilters);
-    bindDesktopAutoApply();
-    applyFilters(desktopFilters);
-    closeMobileDrawer();
-  });
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && drawer.classList.contains('active')) {
-      closeMobileDrawer();
-    }
-  });
-
-  bindDesktopAutoApply();
-  applyFilters(desktopFilters);
 })();

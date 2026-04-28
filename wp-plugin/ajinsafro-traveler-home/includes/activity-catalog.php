@@ -1,6 +1,6 @@
 <?php
 /**
- * Normalized activites catalog helpers.
+ * Static activities catalog helpers.
  *
  * @package AjinsafroTravelerHome
  */
@@ -9,213 +9,610 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! function_exists( 'ajth_activity_parse_duration_hours' ) ) {
+if ( ! function_exists( 'ajth_get_static_activities_catalog' ) ) {
 	/**
-	 * Convertit une duree brute en heures approximatives.
+	 * Returns the temporary static catalog for the activities landing page.
 	 *
-	 * @param mixed $raw Valeur brute.
-	 * @return int
+	 * The array shape is intentionally close to the future CRUD payload so the
+	 * front-end can be reused with minimal changes later.
+	 *
+	 * @return array<int, array<string, mixed>>
 	 */
-	function ajth_activity_parse_duration_hours( $raw ) {
-		if ( is_numeric( $raw ) ) {
-			$value = (float) $raw;
-			return $value > 0 ? (int) round( $value ) : 0;
-		}
+	function ajth_get_static_activities_catalog() {
+		$activities = array(
+			array(
+				'id'                 => 101,
+				'title'              => 'Quad dans la Palmeraie de Marrakech',
+				'country'            => 'Maroc',
+				'city'               => 'Marrakech',
+				'category'           => 'Aventure',
+				'duration_hours'     => 2,
+				'duration_label'     => '2 heures',
+				'price'              => 250,
+				'image'              => 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => true,
+				'rating'             => 4.8,
+				'reviews'            => 189,
+				'includes'           => array( 'Guide', 'Casque', 'Transport' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => 'A la une',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 102,
+				'title'              => 'Excursion bateau a Dakhla',
+				'country'            => 'Maroc',
+				'city'               => 'Dakhla',
+				'category'           => 'Mer & bateau',
+				'duration_hours'     => 5,
+				'duration_label'     => 'Demi-journee',
+				'price'              => 400,
+				'image'              => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => true,
+				'rating'             => 4.9,
+				'reviews'            => 142,
+				'includes'           => array( 'Guide', 'Transport', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => false,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => 'A la une',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 103,
+				'title'              => 'Tour culturel a Istanbul',
+				'country'            => 'Turquie',
+				'city'               => 'Istanbul',
+				'category'           => 'Culture',
+				'duration_hours'     => 8,
+				'duration_label'     => 'Journee complete',
+				'price'              => 520,
+				'image'              => 'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => true,
+				'rating'             => 4.7,
+				'reviews'            => 211,
+				'includes'           => array( 'Guide', 'Billet', 'Transport' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => 'A la une',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 104,
+				'title'              => 'Safari desert a Dubai',
+				'country'            => 'Emirats Arabes Unis',
+				'city'               => 'Dubai',
+				'category'           => 'Aventure',
+				'duration_hours'     => 7,
+				'duration_label'     => 'Demi-journee',
+				'price'              => 690,
+				'image'              => 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => true,
+				'rating'             => 4.9,
+				'reviews'            => 276,
+				'includes'           => array( 'Guide', 'Transport', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => 'A la une',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 105,
+				'title'              => 'Visite guidee de la medina de Fes',
+				'country'            => 'Maroc',
+				'city'               => 'Fes',
+				'category'           => 'Culture',
+				'duration_hours'     => 3,
+				'duration_label'     => '3 heures',
+				'price'              => 180,
+				'image'              => 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f56?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.6,
+				'reviews'            => 83,
+				'includes'           => array( 'Guide', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => false,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 106,
+				'title'              => 'Kayak lagon et flamants a Dakhla',
+				'country'            => 'Maroc',
+				'city'               => 'Dakhla',
+				'category'           => 'Nature',
+				'duration_hours'     => 4,
+				'duration_label'     => 'Demi-journee',
+				'price'              => 320,
+				'image'              => 'https://images.unsplash.com/photo-1515238152791-8216bfdf89a7?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.8,
+				'reviews'            => 67,
+				'includes'           => array( 'Guide', 'Assurance', 'Transport' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 107,
+				'title'              => 'Balade gourmande au port de Tanger',
+				'country'            => 'Maroc',
+				'city'               => 'Tanger',
+				'category'           => 'Gastronomie',
+				'duration_hours'     => 3,
+				'duration_label'     => '3 heures',
+				'price'              => 210,
+				'image'              => 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.5,
+				'reviews'            => 54,
+				'includes'           => array( 'Guide', 'Billet' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => false,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 108,
+				'title'              => 'Croisiere sunset sur la corniche de Casablanca',
+				'country'            => 'Maroc',
+				'city'               => 'Casablanca',
+				'category'           => 'Mer & bateau',
+				'duration_hours'     => 2,
+				'duration_label'     => '2 heures',
+				'price'              => 290,
+				'image'              => 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.4,
+				'reviews'            => 49,
+				'includes'           => array( 'Guide', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 109,
+				'title'              => 'Surf coaching a Taghazout Agadir',
+				'country'            => 'Maroc',
+				'city'               => 'Agadir',
+				'category'           => 'Sport',
+				'duration_hours'     => 6,
+				'duration_label'     => 'Demi-journee',
+				'price'              => 350,
+				'image'              => 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.8,
+				'reviews'            => 101,
+				'includes'           => array( 'Guide', 'Transport', 'Assurance' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 110,
+				'title'              => 'Journee bleue a Chefchaouen',
+				'country'            => 'Maroc',
+				'city'               => 'Chefchaouen',
+				'category'           => 'Famille',
+				'duration_hours'     => 8,
+				'duration_label'     => 'Journee complete',
+				'price'              => 260,
+				'image'              => 'https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.7,
+				'reviews'            => 72,
+				'includes'           => array( 'Guide', 'Transport', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => false,
+				'instant_booking'    => false,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 111,
+				'title'              => 'Vol en montgolfiere a Cappadoce',
+				'country'            => 'Turquie',
+				'city'               => 'Cappadoce',
+				'category'           => 'Nature',
+				'duration_hours'     => 3,
+				'duration_label'     => '3 heures',
+				'price'              => 980,
+				'image'              => 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.9,
+				'reviews'            => 193,
+				'includes'           => array( 'Guide', 'Transport', 'Assurance' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => 'Populaire',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 112,
+				'title'              => 'Croisiere cote turquoise a Antalya',
+				'country'            => 'Turquie',
+				'city'               => 'Antalya',
+				'category'           => 'Mer & bateau',
+				'duration_hours'     => 8,
+				'duration_label'     => 'Journee complete',
+				'price'              => 560,
+				'image'              => 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.7,
+				'reviews'            => 118,
+				'includes'           => array( 'Guide', 'Transport', 'Billet' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 113,
+				'title'              => 'Bike architecture a Barcelone',
+				'country'            => 'Espagne',
+				'city'               => 'Barcelone',
+				'category'           => 'Culture',
+				'duration_hours'     => 4,
+				'duration_label'     => 'Demi-journee',
+				'price'              => 430,
+				'image'              => 'https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.6,
+				'reviews'            => 86,
+				'includes'           => array( 'Guide', 'Billet' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 114,
+				'title'              => 'Tapas et rooftops a Madrid',
+				'country'            => 'Espagne',
+				'city'               => 'Madrid',
+				'category'           => 'Gastronomie',
+				'duration_hours'     => 3,
+				'duration_label'     => '3 heures',
+				'price'              => 370,
+				'image'              => 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.5,
+				'reviews'            => 74,
+				'includes'           => array( 'Guide', 'Billet' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 115,
+				'title'              => 'Flamenco experience a Seville',
+				'country'            => 'Espagne',
+				'city'               => 'Seville',
+				'category'           => 'Culture',
+				'duration_hours'     => 2,
+				'duration_label'     => '2 heures',
+				'price'              => 310,
+				'image'              => 'https://images.unsplash.com/photo-1515442261605-65987783cb6a?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.8,
+				'reviews'            => 92,
+				'includes'           => array( 'Guide', 'Billet' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => false,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 116,
+				'title'              => 'Croisiere privee sur la Seine',
+				'country'            => 'France',
+				'city'               => 'Paris',
+				'category'           => 'Famille',
+				'duration_hours'     => 2,
+				'duration_label'     => '2 heures',
+				'price'              => 720,
+				'image'              => 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.7,
+				'reviews'            => 164,
+				'includes'           => array( 'Guide', 'Billet', 'Assurance' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 117,
+				'title'              => 'Evasion cote d Azur en bateau',
+				'country'            => 'France',
+				'city'               => 'Nice',
+				'category'           => 'Mer & bateau',
+				'duration_hours'     => 6,
+				'duration_label'     => 'Demi-journee',
+				'price'              => 610,
+				'image'              => 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.8,
+				'reviews'            => 105,
+				'includes'           => array( 'Guide', 'Transport', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => false,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 118,
+				'title'              => 'Jet ski au large de Dubai Marina',
+				'country'            => 'Emirats Arabes Unis',
+				'city'               => 'Dubai',
+				'category'           => 'Sport',
+				'duration_hours'     => 2,
+				'duration_label'     => '2 heures',
+				'price'              => 540,
+				'image'              => 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.8,
+				'reviews'            => 97,
+				'includes'           => array( 'Guide', 'Assurance', 'Billet' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 119,
+				'title'              => 'Musee et grande mosquee a Abu Dhabi',
+				'country'            => 'Emirats Arabes Unis',
+				'city'               => 'Abu Dhabi',
+				'category'           => 'Culture',
+				'duration_hours'     => 8,
+				'duration_label'     => 'Journee complete',
+				'price'              => 580,
+				'image'              => 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.7,
+				'reviews'            => 133,
+				'includes'           => array( 'Guide', 'Transport', 'Billet' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 120,
+				'title'              => 'Cours de cuisine marocaine a Marrakech',
+				'country'            => 'Maroc',
+				'city'               => 'Marrakech',
+				'category'           => 'Gastronomie',
+				'duration_hours'     => 4,
+				'duration_label'     => 'Demi-journee',
+				'price'              => 230,
+				'image'              => 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.9,
+				'reviews'            => 88,
+				'includes'           => array( 'Guide', 'Billet', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 121,
+				'title'              => 'Yoga et plage au lever du soleil a Agadir',
+				'country'            => 'Maroc',
+				'city'               => 'Agadir',
+				'category'           => 'Nature',
+				'duration_hours'     => 2,
+				'duration_label'     => 'Moins de 2 heures',
+				'price'              => 160,
+				'image'              => 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.6,
+				'reviews'            => 43,
+				'includes'           => array( 'Guide', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => false,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 122,
+				'title'              => 'Photo walk imperial a Paris',
+				'country'            => 'France',
+				'city'               => 'Paris',
+				'category'           => 'Culture',
+				'duration_hours'     => 3,
+				'duration_label'     => '3 heures',
+				'price'              => 410,
+				'image'              => 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.5,
+				'reviews'            => 58,
+				'includes'           => array( 'Guide', 'Billet' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => true,
+				'with_guide'         => true,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 123,
+				'title'              => 'Spa hammam signature a Casablanca',
+				'country'            => 'Maroc',
+				'city'               => 'Casablanca',
+				'category'           => 'Famille',
+				'duration_hours'     => 2,
+				'duration_label'     => '2 heures',
+				'price'              => 340,
+				'image'              => 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.4,
+				'reviews'            => 37,
+				'includes'           => array( 'Guide', 'Assurance' ),
+				'availability'       => 'Disponible',
+				'available_today'    => true,
+				'instant_booking'    => true,
+				'with_guide'         => false,
+				'transport_included' => false,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 124,
+				'title'              => 'Randonnee panoramique a Chefchaouen',
+				'country'            => 'Maroc',
+				'city'               => 'Chefchaouen',
+				'category'           => 'Aventure',
+				'duration_hours'     => 9,
+				'duration_label'     => 'Journee complete',
+				'price'              => 280,
+				'image'              => 'https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.8,
+				'reviews'            => 64,
+				'includes'           => array( 'Guide', 'Transport', 'Assurance' ),
+				'availability'       => 'Confirme',
+				'available_today'    => false,
+				'instant_booking'    => false,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+			array(
+				'id'                 => 125,
+				'title'              => 'Escapade golf premium a Abu Dhabi',
+				'country'            => 'Emirats Arabes Unis',
+				'city'               => 'Abu Dhabi',
+				'category'           => 'Sport',
+				'duration_hours'     => 6,
+				'duration_label'     => 'Demi-journee',
+				'price'              => 890,
+				'image'              => 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?auto=format&fit=crop&w=1200&q=80',
+				'featured'           => false,
+				'rating'             => 4.6,
+				'reviews'            => 29,
+				'includes'           => array( 'Guide', 'Transport', 'Billet' ),
+				'availability'       => 'Disponible',
+				'available_today'    => false,
+				'instant_booking'    => false,
+				'with_guide'         => true,
+				'transport_included' => true,
+				'badge'              => '',
+				'url'                => '#',
+				'booking_url'        => '#',
+			),
+		);
 
-		$text = strtolower( trim( (string) $raw ) );
-		if ( '' === $text ) {
-			return 0;
-		}
-
-		if ( preg_match( '/(\d+(?:[.,]\d+)?)\s*(jour|jours|day|days)/u', $text, $matches ) ) {
-			return max( 1, (int) round( (float) str_replace( ',', '.', $matches[1] ) * 24 ) );
-		}
-
-		if ( preg_match( '/(\d+(?:[.,]\d+)?)\s*(heure|heures|hour|hours|hr|hrs|h)\b/u', $text, $matches ) ) {
-			return max( 1, (int) round( (float) str_replace( ',', '.', $matches[1] ) ) );
-		}
-
-		if ( preg_match( '/(\d+(?:[.,]\d+)?)/', $text, $matches ) ) {
-			return max( 1, (int) round( (float) str_replace( ',', '.', $matches[1] ) ) );
-		}
-
-		return 0;
+		return apply_filters( 'ajth_static_activities_catalog', $activities );
 	}
 }
 
 if ( ! function_exists( 'ajth_get_activities' ) ) {
 	/**
-	 * Returns a normalized list of activity cards for the Ajinsafro catalog.
+	 * Returns a limited list of activities for the front-end.
 	 *
 	 * @param int   $limit Number of items to return.
-	 * @param array $args  Optional WP_Query overrides.
+	 * @param array $args  Optional future overrides. Kept for CRUD compatibility.
 	 * @return array<int, array<string, mixed>>
 	 */
 	function ajth_get_activities( $limit = 12, array $args = array() ) {
-		$limit = max( 1, (int) $limit );
+		$items = ajth_get_static_activities_catalog();
+		$items = apply_filters( 'ajth_activities_items', $items, $args );
 
-		$query_args = wp_parse_args(
-			$args,
-			array(
-				'post_type'           => 'st_activity',
-				'post_status'         => 'publish',
-				'posts_per_page'      => $limit,
-				'orderby'             => 'date',
-				'order'               => 'DESC',
-				'no_found_rows'       => true,
-				'ignore_sticky_posts' => true,
-			)
-		);
-
-		if ( ! isset( $args['posts_per_page'] ) ) {
-			$query_args['posts_per_page'] = $limit;
-		}
-
-		$query_args = apply_filters( 'ajth_activities_query_args', $query_args, $limit, $args );
-
-		$query = new WP_Query( $query_args );
-		if ( ! $query->have_posts() ) {
-			return array();
-		}
-
-		global $wpdb;
-
-		$items = array();
-		while ( $query->have_posts() ) {
-			$query->the_post();
-
-			$post_id       = (int) get_the_ID();
-			$title         = get_the_title();
-			$price         = get_post_meta( $post_id, 'min_price', true );
-			$location      = get_post_meta( $post_id, 'address', true );
-			$duration      = get_post_meta( $post_id, 'duration', true );
-			$rating        = get_post_meta( $post_id, 'rate_review', true );
-			$max_people    = get_post_meta( $post_id, 'max_people', true );
-			$category      = (string) get_post_meta( $post_id, 'aj_activity_category', true );
-			$place_text    = (string) get_post_meta( $post_id, 'aj_activity_place_text', true );
-			$min_age       = get_post_meta( $post_id, 'aj_activity_min_age', true );
-			$adult_price   = '';
-			$sale_price    = '';
-			$discount      = '';
-			$type_activity = '';
-			$is_featured   = '';
-
-			if ( '' === $price || false === $price ) {
-				$price = get_post_meta( $post_id, 'price', true );
-			}
-
-			if ( isset( $wpdb ) ) {
-				$row = $wpdb->get_row(
-					$wpdb->prepare(
-						"SELECT address, adult_price, min_price, sale_price, type_activity, duration, max_people, rate_review, is_featured, discount
-						 FROM {$wpdb->prefix}st_activity
-						 WHERE post_id = %d",
-						$post_id
-					)
-				);
-
-				if ( is_object( $row ) ) {
-					if ( ( '' === $location || false === $location ) && ! empty( $row->address ) ) {
-						$location = $row->address;
-					}
-					if ( ( '' === $price || false === $price ) && isset( $row->min_price ) && '' !== $row->min_price ) {
-						$price = $row->min_price;
-					}
-					if ( ( '' === $duration || false === $duration ) && isset( $row->duration ) && '' !== $row->duration ) {
-						$duration = $row->duration;
-					}
-					if ( ( '' === $rating || false === $rating ) && isset( $row->rate_review ) && '' !== $row->rate_review ) {
-						$rating = $row->rate_review;
-					}
-					if ( ( '' === $max_people || false === $max_people ) && isset( $row->max_people ) && '' !== $row->max_people ) {
-						$max_people = $row->max_people;
-					}
-
-					$adult_price   = $row->adult_price ?? '';
-					$sale_price    = $row->sale_price ?? '';
-					$type_activity = $row->type_activity ?? '';
-					$is_featured   = $row->is_featured ?? '';
-					$discount      = $row->discount ?? '';
-				}
-			}
-
-			if ( '' === $location && '' !== $place_text ) {
-				$location = $place_text;
-			}
-			if ( '' === $category ) {
-				$category = '' !== $type_activity ? $type_activity : 'Activite';
-			}
-
-			$excerpt = trim( (string) get_post_field( 'post_excerpt', $post_id ) );
-			if ( '' === $excerpt ) {
-				$excerpt = wp_trim_words( wp_strip_all_tags( (string) get_post_field( 'post_content', $post_id ) ), 20, '...' );
-			} else {
-				$excerpt = wp_trim_words( wp_strip_all_tags( $excerpt ), 20, '...' );
-			}
-
-			$resolved_price = null;
-			if ( is_numeric( $sale_price ) && (float) $sale_price > 0 ) {
-				$resolved_price = (float) $sale_price;
-			} elseif ( is_numeric( $adult_price ) && (float) $adult_price > 0 ) {
-				$resolved_price = (float) $adult_price;
-			} elseif ( is_numeric( $price ) ) {
-				$resolved_price = (float) $price;
-			}
-
-			$old_price = null;
-			if ( is_numeric( $adult_price ) && null !== $resolved_price && (float) $adult_price > (float) $resolved_price ) {
-				$old_price = (float) $adult_price;
-			}
-
-			$discount_value = 0;
-			if ( is_numeric( $discount ) && (float) $discount > 0 ) {
-				$discount_value = (int) round( (float) $discount );
-			} elseif ( null !== $old_price && null !== $resolved_price && $old_price > 0 && $old_price > $resolved_price ) {
-				$discount_value = (int) round( ( ( $old_price - $resolved_price ) / $old_price ) * 100 );
-			}
-
-			$image_url  = function_exists( 'ajth_hebergement_catalog_card_image_url' ) ? ajth_hebergement_catalog_card_image_url( $post_id ) : '';
-			$is_popular = '1' === (string) $is_featured || 'on' === (string) get_post_meta( $post_id, 'is_featured', true );
-			$badges     = array();
-
-			if ( $is_popular ) {
-				$badges[] = 'A la une';
-			} elseif ( $discount_value > 0 ) {
-				$badges[] = 'Promotion';
-			}
-
-			$items[] = array(
-				'id'             => $post_id,
-				'title'          => $title,
-				'name'           => $title,
-				'url'            => get_permalink(),
-				'image_url'      => $image_url,
-				'image'          => $image_url,
-				'city'           => is_string( $location ) ? trim( $location ) : '',
-				'location'       => is_string( $location ) ? trim( $location ) : '',
-				'category'       => sanitize_title( $category ) !== '' ? sanitize_title( $category ) : 'activite',
-				'category_label' => $category !== '' ? $category : 'Activite',
-				'type'           => $type_activity !== '' ? sanitize_title( $type_activity ) : '',
-				'rating'         => is_numeric( $rating ) ? (float) $rating : null,
-				'reviews'        => 0,
-				'duration'       => ajth_activity_parse_duration_hours( $duration ),
-				'duration_label' => is_scalar( $duration ) ? trim( (string) $duration ) : '',
-				'price'          => $resolved_price,
-				'oldPrice'       => $old_price,
-				'discount'       => $discount_value,
-				'badges'         => $badges,
-				'languages'      => array(),
-				'features'       => array(),
-				'description'    => $excerpt,
-				'popular'        => (bool) $is_popular,
-				'available'      => true,
-				'max_people'     => is_numeric( $max_people ) ? (int) $max_people : 0,
-				'min_age'        => is_numeric( $min_age ) ? (int) $min_age : 0,
-			);
-		}
-
-		wp_reset_postdata();
-
-		return apply_filters( 'ajth_activities_items', $items, $query_args );
+		return array_slice( array_values( $items ), 0, max( 1, (int) $limit ) );
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit;
 }
 
 get_header();
@@ -9,129 +9,240 @@ $settings = ajth_get_settings();
 ?>
 
 <div class="aj-home-wrap">
-    <div id="aj-home" class="aj-home aj-activities-static-page">
-        <?php ajth_render_site_header( $settings ); ?>
+	<div id="aj-home" class="aj-home aj-activities-static-page">
+		<?php ajth_render_site_header( $settings ); ?>
 
-        <div class="aj-activities-static" id="aj-activities-static">
-            <main class="container">
-                <div class="breadcrumb">Accueil / Activites / Maroc</div>
+		<div class="aj-activities-static" id="aj-activities-static">
+			<main class="aj-activities-shell">
+				<div class="aj-activities-container">
+					<nav class="aj-activities-breadcrumb" aria-label="Fil d Ariane">
+						<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
+						<span>/</span>
+						<span>Activites</span>
+					</nav>
 
-                <section class="hero-row">
-                    <div>
-                        <h1 class="page-title">Activites en plein air au Maroc</h1>
-                    </div>
-                    <div class="hero-actions">
-                        <button class="light-btn" type="button">Favoris</button>
-                        <button class="dark-btn" type="button">Voir la carte</button>
-                    </div>
-                </section>
+					<section class="aj-hero">
+						<div class="aj-hero-copy">
+							<span class="aj-eyebrow">Marketplace d experiences Ajinsafro</span>
+							<h1>Activites et experiences dans le monde</h1>
+							<p>Decouvrez les meilleures activites selectionnees par Ajinsafro au Maroc et a l international.</p>
+						</div>
 
-                <form class="search-box" id="ajas-main-search-form">
-                    <div class="search-input">
-                        <label for="ajas-destination-input">Destination</label>
-                        <input id="ajas-destination-input" type="text" placeholder="Marrakech, Agafay, Fes...">
-                    </div>
-                    <div class="search-input">
-                        <label for="ajas-date-input">Date</label>
-                        <input id="ajas-date-input" type="date">
-                    </div>
-                    <div class="search-input">
-                        <label for="ajas-travelers-select">Voyageurs</label>
-                        <select id="ajas-travelers-select">
-                            <option>2 adultes</option>
-                            <option>1 adulte</option>
-                            <option>Famille</option>
-                            <option>Groupe</option>
-                        </select>
-                    </div>
-                    <div class="search-input">
-                        <label for="ajas-category-top">Categorie</label>
-                        <select id="ajas-category-top">
-                            <option value="">Toutes</option>
-                            <option value="desert">Desert</option>
-                            <option value="quad">Quad</option>
-                            <option value="balloon">Montgolfiere</option>
-                            <option value="cultural">Culture</option>
-                            <option value="water">Mer & bateau</option>
-                            <option value="nature">Nature & Atlas</option>
-                        </select>
-                    </div>
-                    <button class="search-submit" type="submit">Rechercher</button>
-                </form>
+						<form class="aj-hero-search" id="aj-activity-search-form">
+							<label class="aj-field">
+								<span>Pays</span>
+								<select id="aj-hero-country" name="country">
+									<option value="">Tous les pays</option>
+								</select>
+							</label>
 
-                <div class="layout">
-                    <aside class="filters" id="ajas-desktop-filters-shell" aria-label="Filtres activites">
-                        <div class="filter-head">
-                            <h2>Filtres</h2>
-                            <button class="reset-btn" type="button" data-ajas-reset>Effacer</button>
-                        </div>
-                        <div id="ajas-filters-desktop"></div>
-                        <div class="ad-vertical">
-                            <strong>Explorez le Maroc autrement</strong>
-                            <button type="button">Voir les offres</button>
-                        </div>
-                    </aside>
+							<label class="aj-field">
+								<span>Ville</span>
+								<select id="aj-hero-city" name="city">
+									<option value="">Toutes les villes</option>
+								</select>
+							</label>
 
-                    <section class="results-column">
-                        <div class="results-head">
-                            <div class="results-title">
-                                <strong>Nos meilleures experiences selectionnees</strong>
-                                <span><span id="ajas-result-count">0</span> activites trouvees</span>
-                            </div>
-                            <select class="sort-select" id="ajas-sort-select">
-                                <option value="recommended">Trier par recommande</option>
-                                <option value="price-asc">Prix croissant</option>
-                                <option value="price-desc">Prix decroissant</option>
-                                <option value="rating-desc">Meilleures notes</option>
-                                <option value="duration-asc">Duree courte</option>
-                                <option value="discount-desc">Promotions d'abord</option>
-                            </select>
-                        </div>
+							<label class="aj-field">
+								<span>Date</span>
+								<input id="aj-hero-date" type="date" name="date">
+							</label>
 
-                        <div class="chips" id="ajas-active-chips"></div>
-                        <div class="activities-list" id="ajas-activity-list"></div>
-                        <div class="empty" id="ajas-empty-state">
-                            <h3>Aucune activite trouvee</h3>
-                            <p>Modifiez les filtres ou reinitialisez la recherche.</p>
-                            <button class="dark-btn" type="button" data-ajas-reset>Reinitialiser</button>
-                        </div>
+							<label class="aj-field">
+								<span>Categorie</span>
+								<select id="aj-hero-category" name="category">
+									<option value="">Toutes les categories</option>
+								</select>
+							</label>
 
-                        <section class="reviews-section">
-                            <h2>Des experiences tres appreciees</h2>
-                            <div class="review-grid">
-                                <article class="review-card">
-                                    <strong>5/5 Excellent</strong>
-                                    <p>Organisation fluide, guide professionnel et experience tres complete pour decouvrir Marrakech.</p>
-                                </article>
-                                <article class="review-card">
-                                    <strong>5/5 Inoubliable</strong>
-                                    <p>Le coucher de soleil dans le desert d'Agafay etait magnifique. Tres bon rapport qualite-prix.</p>
-                                </article>
-                                <article class="review-card">
-                                    <strong>4/5 Tres bien</strong>
-                                    <p>Reservation simple, transport a l'heure et equipe agreable. Recommande pour les familles.</p>
-                                </article>
-                            </div>
-                        </section>
-                    </section>
-                </div>
-            </main>
+							<label class="aj-field">
+								<span>Budget</span>
+								<select id="aj-hero-budget" name="budget">
+									<option value="">Tous les budgets</option>
+									<option value="0-250">Jusqu a 250 DH</option>
+									<option value="251-500">251 a 500 DH</option>
+									<option value="501-800">501 a 800 DH</option>
+									<option value="801-99999">800 DH et plus</option>
+								</select>
+							</label>
 
-            <button class="mobile-filter-button" id="ajas-open-drawer" type="button">Filtres & tri</button>
-            <div class="drawer-bg" id="ajas-drawer-bg"></div>
-            <aside class="drawer" id="ajas-drawer" aria-label="Filtres mobile">
-                <div class="drawer-title">
-                    <h3>Filtres</h3>
-                    <button class="close-btn" id="ajas-close-drawer" type="button">x</button>
-                </div>
-                <div id="ajas-filters-mobile"></div>
-                <div class="drawer-actions">
-                    <button class="apply-btn" id="ajas-apply-mobile" type="button">Appliquer les filtres</button>
-                    <button class="drawer-reset" type="button" data-ajas-reset>Reinitialiser</button>
-                </div>
-            </aside>
-        </div>
-    </div>
+							<button class="aj-search-button" type="submit">Rechercher</button>
+						</form>
+					</section>
+
+					<section class="aj-featured" aria-labelledby="aj-featured-title">
+						<div class="aj-section-head">
+							<div>
+								<span class="aj-section-kicker">Selection Ajinsafro</span>
+								<h2 id="aj-featured-title">Activites a la une</h2>
+							</div>
+							<p>Des experiences premium mises en avant pour inspirer le prochain depart.</p>
+						</div>
+						<div class="aj-featured-grid" id="aj-featured-grid"></div>
+					</section>
+
+					<section class="aj-catalog" aria-labelledby="aj-catalog-title">
+						<div class="aj-section-head aj-section-head--catalog">
+							<div>
+								<span class="aj-section-kicker">Catalogue mondial</span>
+								<h2 id="aj-catalog-title">Toutes les activites</h2>
+							</div>
+							<div class="aj-results-meta">
+								<strong><span id="aj-results-count">0</span> activites</strong>
+								<select id="aj-sort-select" class="aj-sort-select" aria-label="Trier les activites">
+									<option value="featured">A la une</option>
+									<option value="price-asc">Prix croissant</option>
+									<option value="price-desc">Prix decroissant</option>
+									<option value="rating-desc">Meilleure note</option>
+									<option value="duration-asc">Duree la plus courte</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="aj-catalog-layout">
+							<aside class="aj-filters" aria-label="Filtres activites">
+								<div class="aj-filter-card">
+									<div class="aj-filter-head">
+										<h3>Filtrer</h3>
+										<button id="aj-reset-filters" type="button">Reinitialiser</button>
+									</div>
+
+									<div class="aj-filter-group">
+										<label class="aj-filter-label" for="aj-filter-country">Pays</label>
+										<select id="aj-filter-country">
+											<option value="">Tous les pays</option>
+										</select>
+									</div>
+
+									<div class="aj-filter-group">
+										<label class="aj-filter-label" for="aj-filter-city">Ville</label>
+										<select id="aj-filter-city">
+											<option value="">Toutes les villes</option>
+										</select>
+									</div>
+
+									<div class="aj-filter-group">
+										<label class="aj-filter-label" for="aj-filter-category">Categorie</label>
+										<select id="aj-filter-category">
+											<option value="">Toutes les categories</option>
+										</select>
+									</div>
+
+									<div class="aj-filter-grid">
+										<div class="aj-filter-group">
+											<label class="aj-filter-label" for="aj-filter-price-min">Prix min</label>
+											<input id="aj-filter-price-min" type="number" min="0" placeholder="0">
+										</div>
+										<div class="aj-filter-group">
+											<label class="aj-filter-label" for="aj-filter-price-max">Prix max</label>
+											<input id="aj-filter-price-max" type="number" min="0" placeholder="2000">
+										</div>
+									</div>
+
+									<div class="aj-filter-group">
+										<label class="aj-filter-label" for="aj-filter-duration">Duree</label>
+										<select id="aj-filter-duration">
+											<option value="">Toutes les durees</option>
+											<option value="lt2">Moins de 2h</option>
+											<option value="half">Demi-journee</option>
+											<option value="full">Journee complete</option>
+											<option value="multi">2 jours et plus</option>
+										</select>
+									</div>
+
+									<div class="aj-filter-group">
+										<span class="aj-filter-label">Disponibilite</span>
+										<label class="aj-check"><input id="aj-filter-available-today" type="checkbox"> Disponible aujourd hui</label>
+										<label class="aj-check"><input id="aj-filter-instant-booking" type="checkbox"> Reservation instantanee</label>
+										<label class="aj-check"><input id="aj-filter-with-guide" type="checkbox"> Avec guide</label>
+										<label class="aj-check"><input id="aj-filter-transport" type="checkbox"> Transport inclus</label>
+									</div>
+								</div>
+							</aside>
+
+							<div class="aj-results">
+								<div class="aj-active-filters" id="aj-active-filters"></div>
+								<div class="aj-activities-grid" id="aj-activities-grid"></div>
+								<div class="aj-empty-state" id="aj-empty-state" hidden>
+									<h3>Aucune activite ne correspond a votre recherche</h3>
+									<p>Essayez un autre pays, une autre ville ou elargissez votre budget.</p>
+									<button id="aj-empty-reset" type="button">Voir toutes les activites</button>
+								</div>
+							</div>
+						</div>
+					</section>
+				</div>
+			</main>
+
+			<button class="aj-mobile-filter-trigger" id="aj-open-mobile-filters" type="button">Filtres</button>
+
+			<div class="aj-mobile-backdrop" id="aj-mobile-backdrop"></div>
+			<aside class="aj-mobile-panel" id="aj-mobile-panel" aria-label="Filtres mobile">
+				<div class="aj-mobile-panel-head">
+					<h3>Filtres des activites</h3>
+					<button id="aj-close-mobile-filters" type="button" aria-label="Fermer">x</button>
+				</div>
+
+				<div class="aj-mobile-panel-body">
+					<div class="aj-filter-group">
+						<label class="aj-filter-label" for="aj-mobile-country">Pays</label>
+						<select id="aj-mobile-country">
+							<option value="">Tous les pays</option>
+						</select>
+					</div>
+
+					<div class="aj-filter-group">
+						<label class="aj-filter-label" for="aj-mobile-city">Ville</label>
+						<select id="aj-mobile-city">
+							<option value="">Toutes les villes</option>
+						</select>
+					</div>
+
+					<div class="aj-filter-group">
+						<label class="aj-filter-label" for="aj-mobile-category">Categorie</label>
+						<select id="aj-mobile-category">
+							<option value="">Toutes les categories</option>
+						</select>
+					</div>
+
+					<div class="aj-filter-grid">
+						<div class="aj-filter-group">
+							<label class="aj-filter-label" for="aj-mobile-price-min">Prix min</label>
+							<input id="aj-mobile-price-min" type="number" min="0" placeholder="0">
+						</div>
+						<div class="aj-filter-group">
+							<label class="aj-filter-label" for="aj-mobile-price-max">Prix max</label>
+							<input id="aj-mobile-price-max" type="number" min="0" placeholder="2000">
+						</div>
+					</div>
+
+					<div class="aj-filter-group">
+						<label class="aj-filter-label" for="aj-mobile-duration">Duree</label>
+						<select id="aj-mobile-duration">
+							<option value="">Toutes les durees</option>
+							<option value="lt2">Moins de 2h</option>
+							<option value="half">Demi-journee</option>
+							<option value="full">Journee complete</option>
+							<option value="multi">2 jours et plus</option>
+						</select>
+					</div>
+
+					<div class="aj-filter-group">
+						<span class="aj-filter-label">Disponibilite</span>
+						<label class="aj-check"><input id="aj-mobile-available-today" type="checkbox"> Disponible aujourd hui</label>
+						<label class="aj-check"><input id="aj-mobile-instant-booking" type="checkbox"> Reservation instantanee</label>
+						<label class="aj-check"><input id="aj-mobile-with-guide" type="checkbox"> Avec guide</label>
+						<label class="aj-check"><input id="aj-mobile-transport" type="checkbox"> Transport inclus</label>
+					</div>
+				</div>
+
+				<div class="aj-mobile-panel-actions">
+					<button id="aj-apply-mobile-filters" type="button">Appliquer</button>
+					<button id="aj-reset-mobile-filters" type="button">Reinitialiser</button>
+				</div>
+			</aside>
+		</div>
+	</div>
 </div>
 
 <?php get_footer(); ?>

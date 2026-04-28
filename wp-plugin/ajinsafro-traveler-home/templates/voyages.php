@@ -975,14 +975,29 @@ foreach ($post_ids as $post_id) {
 
     $stock_source = $selected_departure ?? $next_departure;
     $stock_badge = ajinsafro_get_tour_availability($post_id, $stock_source, $today);
+    $image_html = ajinsafro_get_tour_image($post_id);
+    $image_is_fallback = strpos($image_html, 'aj-catalog-card__img--fallback') !== false;
+    $card_badge = '';
+    if (! empty($tour_type_names)) {
+        $card_badge = (string) $tour_type_names[0];
+    } elseif (! empty($theme_names)) {
+        $card_badge = (string) $theme_names[0];
+    } elseif (! empty($tag_names)) {
+        $card_badge = (string) $tag_names[0];
+    } elseif (strtolower($meta_value($meta, 'is_featured')) === 'on') {
+        $card_badge = 'Selection Ajinsafro';
+    }
 
     $cards[] = [
         'id' => $post_id,
         'title' => $title,
         'permalink' => get_permalink($post_id),
+        'image_html' => $image_html,
+        'image_is_fallback' => $image_is_fallback,
         'excerpt' => get_the_excerpt($post_id) !== ''
             ? wp_trim_words(get_the_excerpt($post_id), 22, '...')
             : wp_trim_words(wp_strip_all_tags(get_post_field('post_content', $post_id)), 22, '...'),
+        'card_badge' => $card_badge,
         'destination' => $destination_label,
         'duration_days' => $duration_days,
         'duration_label' => $build_duration_label($duration_days, $duration_text),
@@ -1276,12 +1291,20 @@ $rating_label = static function (float $rating): string {
                         <div class="hotel-list">
                             <?php foreach ($cards_page as $card) { ?>
                                 <article class="hotel-card aj-voyage-card">
-                                    <a href="<?php echo esc_url($card['permalink']); ?>" class="photo-wrap" aria-label="<?php echo esc_attr($card['title']); ?>">
-                                        <?php echo ajinsafro_get_tour_image((int) $card['id']); ?>
+                                    <div class="photo-wrap<?php echo ! empty($card['image_is_fallback']) ? ' photo-wrap--placeholder' : ''; ?>">
+                                        <a href="<?php echo esc_url($card['permalink']); ?>" class="photo-link" aria-label="<?php echo esc_attr($card['title']); ?>">
+                                            <?php echo $card['image_html']; ?>
+                                            <?php if (! empty($card['image_is_fallback'])) { ?>
+                                                <span class="photo-placeholder">Aucune photo</span>
+                                            <?php } ?>
+                                        </a>
                                         <button class="fav" type="button" aria-label="Ajouter aux favoris">♡</button>
                                         <div class="photo-badges">
                                             <?php if ($card['is_featured']) { ?>
                                                 <span class="photo-badge">Selection Ajinsafro</span>
+                                            <?php } ?>
+                                            <?php if (! empty($card['card_badge']) && strtolower((string) $card['card_badge']) !== 'selection ajinsafro') { ?>
+                                                <span class="photo-badge photo-badge--type"><?php echo esc_html($card['card_badge']); ?></span>
                                             <?php } ?>
                                             <?php if ($card['is_promo']) { ?>
                                                 <span class="photo-badge photo-badge--promo">Promo</span>
@@ -1290,21 +1313,43 @@ $rating_label = static function (float $rating): string {
                                                 <span class="photo-badge photo-badge--stock"><?php echo esc_html($card['stock_badge']['label']); ?></span>
                                             <?php } ?>
                                         </div>
-                                    </a>
+                                    </div>
 
                                     <div class="hotel-main">
-                                        <div class="meta meta--caps">
-                                            <span><?php echo esc_html(! empty($card['tour_types']) ? implode(' / ', $card['tour_types']) : (! empty($card['themes']) ? implode(' / ', $card['themes']) : 'Selection Ajinsafro')); ?></span>
+                                        <div class="meta meta--caps meta--compact">
+                                            <?php if (! empty($card['tour_types'])) { ?><span><?php echo esc_html(implode(' / ', $card['tour_types'])); ?></span><?php } ?>
+                                            <?php if (empty($card['tour_types']) && ! empty($card['themes'])) { ?><span><?php echo esc_html(implode(' / ', $card['themes'])); ?></span><?php } ?>
                                         </div>
                                         <h3><a href="<?php echo esc_url($card['permalink']); ?>"><?php echo esc_html($card['title']); ?></a></h3>
-                                        <div class="location">
-                                            <?php if ($card['destination'] !== '') { ?><span>Destination: <?php echo esc_html($card['destination']); ?></span><?php } ?>
-                                            <?php if ($card['duration_days'] > 0 || $card['duration_label'] !== '') { ?><span><?php echo esc_html($card['duration_label']); ?></span><?php } ?>
+                                        <div class="location location--primary">
+                                            <?php if ($card['destination'] !== '') { ?><span><?php echo esc_html($card['destination']); ?></span><?php } ?>
+                                            <?php if ($card['next_departure_label'] !== '') { ?><span><?php echo esc_html($card['next_departure_label']); ?></span><?php } ?>
                                         </div>
-                                        <div class="meta">
-                                            <?php if ($card['departure_city'] !== '') { ?><span>Depart: <?php echo esc_html($card['departure_city']); ?></span><?php } ?>
-                                            <?php if ($card['next_departure_label'] !== '') { ?><span>Date: <?php echo esc_html($card['next_departure_label']); ?></span><?php } ?>
-                                            <?php if ($card['max_people'] > 0) { ?><span><?php echo esc_html((string) $card['max_people']); ?> voyageurs max</span><?php } ?>
+                                        <div class="meta-grid">
+                                            <?php if ($card['destination'] !== '') { ?>
+                                                <div class="meta-item">
+                                                    <span class="meta-item__label">Destination</span>
+                                                    <strong><?php echo esc_html($card['destination']); ?></strong>
+                                                </div>
+                                            <?php } ?>
+                                            <?php if ($card['next_departure_label'] !== '') { ?>
+                                                <div class="meta-item">
+                                                    <span class="meta-item__label">Depart</span>
+                                                    <strong><?php echo esc_html($card['next_departure_label']); ?></strong>
+                                                </div>
+                                            <?php } ?>
+                                            <?php if ($card['duration_days'] > 0 || $card['duration_label'] !== '') { ?>
+                                                <div class="meta-item">
+                                                    <span class="meta-item__label">Duree</span>
+                                                    <strong><?php echo esc_html($card['duration_days'] > 0 ? $card['duration_days'] . ' jours' : $card['duration_label']); ?></strong>
+                                                </div>
+                                            <?php } ?>
+                                            <?php if ($card['max_people'] > 0) { ?>
+                                                <div class="meta-item">
+                                                    <span class="meta-item__label">Voyageurs</span>
+                                                    <strong><?php echo esc_html((string) $card['max_people']); ?> max</strong>
+                                                </div>
+                                            <?php } ?>
                                         </div>
                                         <p class="description"><?php echo esc_html($card['excerpt']); ?></p>
                                         <div class="amenities">
