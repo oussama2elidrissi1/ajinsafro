@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -203,6 +204,11 @@ class Client extends Model
     public function reservations(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Reservation::class, 'client_external_id');
+    }
+
+    public function groupDealParticipants(): HasMany
+    {
+        return $this->hasMany(GroupDealParticipant::class);
     }
 
     public function getBudgetDisplayAttribute(): ?string

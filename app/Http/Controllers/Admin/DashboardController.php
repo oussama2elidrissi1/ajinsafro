@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Client;
 use App\Models\Departure;
+use App\Models\GroupDeal;
 use App\Models\GroupDealParticipant;
 use App\Models\Reservation;
 use App\Models\ReservationMessage;
@@ -41,9 +42,9 @@ class DashboardController extends Controller
         $stats['can_see_all_branches'] = $this->branchScope->canSeeAllBranches($user);
 
         $groupDealStats = [
-            'voyages'    => Voyage::where('is_group_deal', true)->count(),
-            'open'       => Departure::where('group_deal_enabled', true)->whereIn('status', ['open', 'limited'])->count(),
-            'guaranteed' => Departure::where('group_deal_enabled', true)->where('is_guaranteed', true)->count(),
+            'voyages'    => GroupDeal::count(),
+            'open'       => GroupDeal::whereIn('status', [GroupDeal::STATUS_PUBLISHED, GroupDeal::STATUS_GUARANTEED])->count(),
+            'guaranteed' => GroupDeal::where('status', GroupDeal::STATUS_GUARANTEED)->count(),
         ];
 
         return view('admin.dashboard.index', compact('stats', 'groupDealStats'));

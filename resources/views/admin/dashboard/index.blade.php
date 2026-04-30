@@ -97,21 +97,21 @@
                     <h6 class="mb-0">
                         <i class="bx bx-group me-2 text-primary"></i>Group Deals
                     </h6>
-                    <a href="{{ route('admin.group-deals.trips.index') }}" class="btn btn-outline-primary btn-sm">Gérer</a>
+                    <a href="{{ route('admin.group-deals.index') }}" class="btn btn-outline-primary btn-sm">Gérer</a>
                 </div>
                 <div class="card-body py-3">
                     <div class="row g-3 text-center">
                         <div class="col-4">
                             <h4 class="mb-0 text-primary">{{ $groupDealStats['voyages'] ?? 0 }}</h4>
-                            <small class="text-muted">Voyage(s) GD</small>
+                            <small class="text-muted">Offres</small>
                         </div>
                         <div class="col-4">
                             <h4 class="mb-0 text-info">{{ $groupDealStats['open'] ?? 0 }}</h4>
-                            <small class="text-muted">Départs ouverts</small>
+                            <small class="text-muted">Offres actives</small>
                         </div>
                         <div class="col-4">
                             <h4 class="mb-0 text-success">{{ $groupDealStats['guaranteed'] ?? 0 }}</h4>
-                            <small class="text-muted">Départs garantis</small>
+                            <small class="text-muted">Offres garanties</small>
                         </div>
                     </div>
                 </div>

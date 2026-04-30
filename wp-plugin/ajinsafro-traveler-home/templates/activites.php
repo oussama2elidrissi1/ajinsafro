@@ -3,6 +3,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+add_filter('body_class', function ($classes) {
+    $classes[] = 'page-activites-ajinsafro';
+    return $classes;
+});
+
 get_header();
 
 $settings = ajth_get_settings();

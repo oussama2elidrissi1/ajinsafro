@@ -150,6 +150,27 @@
         white-space: nowrap;
     }
     .aj-res-actions { margin-left: auto; flex-shrink: 0; }
+    .aj-note-item {
+        display: flex;
+        gap: 0.85rem;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #F2EFE9;
+    }
+    .aj-note-item:last-child { border-bottom: none; }
+    .aj-note-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-top: 0.45rem;
+        flex-shrink: 0;
+        background: var(--aj-gold);
+    }
+    .aj-mini-link {
+        color: var(--aj-navy);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .aj-mini-link:hover { color: var(--aj-gold); }
 
     @media (max-width: 576px) {
         .aj-hero-card { padding: 1.75rem 1.25rem 1.5rem; }
@@ -243,6 +264,67 @@
 </div>
 
 {{-- ── Recent reservations ── --}}
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="aj-card h-100">
+            <div class="aj-card-header" style="padding: 1.5rem 1.75rem 1rem;">
+                <div><h2 class="aj-card-title">Mes Group Deals</h2></div>
+            </div>
+            @if(($recentGroupDeals ?? collect())->isEmpty())
+                <div class="aj-empty">
+                    <div class="aj-empty-icon"><i class="ri-group-line"></i></div>
+                    <p>Aucune participation Group Deal pour le moment.</p>
+                </div>
+            @else
+                @foreach($recentGroupDeals as $item)
+                    <div class="aj-note-item">
+                        <span class="aj-note-dot"></span>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold text-dark">{{ $item->groupDeal?->title ?: 'Group Deal' }}</div>
+                            <div class="small text-muted">
+                                {{ $item->participants_count }} personne(s) • {{ $item->status_label }}
+                                @if($item->groupDeal?->current_price)
+                                    • {{ number_format((float) $item->groupDeal->current_price, 0, ',', ' ') }} DH
+                                @endif
+                            </div>
+                            @if($item->groupDeal?->slug)
+                                <a class="aj-mini-link small" href="{{ route('front.group-deals.show', $item->groupDeal->slug) }}">Voir l'offre</a>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="aj-card h-100">
+            <div class="aj-card-header" style="padding: 1.5rem 1.75rem 1rem;">
+                <div><h2 class="aj-card-title">Notifications</h2></div>
+            </div>
+            @if(($notifications ?? collect())->isEmpty())
+                <div class="aj-empty">
+                    <div class="aj-empty-icon"><i class="ri-notification-3-line"></i></div>
+                    <p>Aucune notification récente.</p>
+                </div>
+            @else
+                @foreach($notifications as $notification)
+                    <div class="aj-note-item">
+                        <span class="aj-note-dot" style="background: {{ $notification->is_read ? '#d1d5db' : 'var(--aj-gold)' }};"></span>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold text-dark">{{ $notification->title }}</div>
+                            <div class="small text-muted">{{ $notification->message }}</div>
+                            <div class="small text-muted mt-1">{{ $notification->created_at?->diffForHumans() }}</div>
+                            @if($notification->link)
+                                <a href="{{ $notification->link }}" class="aj-mini-link small">Ouvrir</a>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+        </div>
+    </div>
+</div>
+
 <div class="aj-card">
     <div class="aj-card-header" style="padding: 1.5rem 1.75rem 1rem;">
         <div>

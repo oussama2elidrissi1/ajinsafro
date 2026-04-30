@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
-use App\Models\Voyage;
-use App\Services\GroupDealParticipationService;
+use App\Models\Client;
+use App\Models\GroupDeal;
+use App\Models\GroupDealParticipant;
+use App\Services\GroupDeals\GroupDealService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class GroupDealsController extends Controller
 {
-    private const VISIBLE_STATUSES = ['actif', 'published', 'active', 'publish'];
-
-    public function __construct(private GroupDealParticipationService $participationService)
+    public function __construct(private GroupDealService $service)
     {
     }
 
@@ -20,92 +21,43 @@ class GroupDealsController extends Controller
     {
         $search = trim((string) $request->input('q', ''));
         $destination = trim((string) $request->input('destination', ''));
-        $groupSize = max(2, (int) $request->input('group_size', 6));
+        $status = trim((string) $request->input('status', ''));
 
-        $dealsQuery = Voyage::query()
-            ->whereIn('status', self::VISIBLE_STATUSES)
-            ->where('is_group_deal', true)
-            ->with(['departures' => function ($q) {
-                // Eager load tous les départs pertinents pour éviter N+1
-                // Le service choisira le meilleur
-                $q->whereIn('status', ['open', 'full'])
-                    ->where('group_deal_enabled', true)
-                    ->with(['reservations' => function ($rq) {
-                        // Eager load les réservations confirmées avec leurs passagers
-                        $rq->whereIn('status', ['confirmed', 'partially_paid', 'paid'])
-                            ->with('passengers');
-                    }]);
-            }]);
+        $query = GroupDeal::query()
+            ->with('pricingTiers')
+            ->whereIn('status', [
+                GroupDeal::STATUS_PUBLISHED,
+                GroupDeal::STATUS_GUARANTEED,
+            ])
+            ->orderBy('start_date')
+            ->orderByDesc('updated_at');
 
         if ($search !== '') {
-            $like = '%'.$search.'%';
-            $dealsQuery->where(function ($w) use ($like) {
-                $w->where('name', 'like', $like)
-                    ->orWhere('destination', 'like', $like)
-                    ->orWhere('description', 'like', $like);
+            $query->where(function ($builder) use ($search) {
+                $builder->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('destination', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%');
             });
         }
 
         if ($destination !== '') {
-            $dealsQuery->where('destination', $destination);
+            $query->where('destination', $destination);
         }
 
-        $deals = $dealsQuery
-            ->orderByDesc('updated_at')
-            ->select([
-                'id',
-                'name',
-                'slug',
-                'destination',
-                'duration_text',
-                'price_from',
-                'currency',
-                'featured_image',
-                'accroche',
-                'min_people',
-                'max_people',
-            ])
-            ->paginate(9)
-            ->withQueryString();
+        if ($status !== '') {
+            $query->where('status', $status);
+        }
 
-        // Enrichir chaque deal avec les métriques de participation
-        // Utiliser le service pour sélectionner le meilleur départ et calculer les métriques
-        $deals->getCollection()->transform(function (Voyage $voyage) {
-            $metrics = $this->participationService->getMetricsForVoyage($voyage);
+        $deals = $query->paginate(9)->withQueryString();
+        $deals->getCollection()->transform(fn (GroupDeal $deal) => $this->service->syncOfferMetrics($deal));
 
-            if ($metrics) {
-                // Métriques trouvées depuis un vrai départ
-                $voyage->groupDealMetrics = $metrics;
-            } else {
-                // Fallback : voyage sans départ ou sans groupe disponible
-                // Afficher 0 capacité = bloc ne s'affiche pas
-                $voyage->groupDealMetrics = [
-                    'total_capacity'        => 0,
-                    'confirmed_count'       => 0,
-                    'remaining_capacity'    => 0,
-                    'minimum_to_guarantee'  => 0,
-                    'missing_to_guarantee'  => 0,
-                    'progress_percent'      => 0,
-                    'is_guaranteed'         => false,
-                    'is_full'               => false,
-                    'is_almost_full'        => false,
-                    'remaining_places'      => 0,
-                    'status_label'          => 'Non disponible',
-                ];
-            }
-
-            return $voyage;
-        });
-
-        $destinations = Voyage::query()
-            ->whereIn('status', self::VISIBLE_STATUSES)
-            ->where('is_group_deal', true)
+        $destinations = GroupDeal::query()
+            ->whereIn('status', [GroupDeal::STATUS_PUBLISHED, GroupDeal::STATUS_GUARANTEED])
             ->whereNotNull('destination')
             ->where('destination', '!=', '')
-            ->distinct()
             ->orderBy('destination')
-            ->pluck('destination')
-            ->values();
+            ->distinct()
+            ->pluck('destination');
 
         return view('group-deals.index', [
             'deals' => $deals,
@@ -113,8 +65,80 @@ class GroupDealsController extends Controller
             'filters' => [
                 'q' => $search,
                 'destination' => $destination,
-                'group_size' => $groupSize,
+                'status' => $status,
             ],
         ]);
+    }
+
+    public function show(Request $request, string $slug): View
+    {
+        $groupDeal = GroupDeal::query()
+            ->with([
+                'pricingTiers',
+                'participants' => fn ($query) => $query
+                    ->whereIn('status', [
+                        GroupDealParticipant::STATUS_PENDING,
+                        GroupDealParticipant::STATUS_CONFIRMED,
+                        GroupDealParticipant::STATUS_PAID,
+                    ])
+                    ->orderByDesc('created_at'),
+            ])
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        $client = null;
+        if ($request->user()) {
+            $client = Client::query()->where('user_id', $request->user()->id)->first();
+        }
+
+        $groupDeal = $this->service->syncOfferMetrics($groupDeal);
+        $stats = $this->service->offerStats($groupDeal);
+        $shareUrl = $this->service->shareUrlForDeal(
+            $groupDeal,
+            $client?->user_id ?: ($request->query('ref') ? (int) $request->query('ref') : null)
+        );
+
+        return view('group-deals.show', [
+            'groupDeal' => $groupDeal,
+            'stats' => $stats,
+            'shareUrl' => $shareUrl,
+            'client' => $client,
+            'shareRef' => (int) $request->query('ref', 0),
+        ]);
+    }
+
+    public function participate(Request $request, string $slug): RedirectResponse
+    {
+        $groupDeal = GroupDeal::query()->where('slug', $slug)->firstOrFail();
+
+        $data = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:60',
+            'email' => 'required|email|max:255',
+            'participants_count' => 'required|integer|min:1|max:10000',
+        ]);
+
+        $client = null;
+        $user = $request->user();
+        if ($user) {
+            $client = Client::query()->where('user_id', $user->id)->first();
+        }
+
+        $payload = array_merge($data, [
+            'client_id' => $client?->id,
+            'user_id' => $user?->id,
+            'status' => $user ? GroupDealParticipant::STATUS_CONFIRMED : GroupDealParticipant::STATUS_PENDING,
+            'payment_status' => GroupDealParticipant::PAYMENT_PENDING,
+        ]);
+
+        try {
+            $participant = $this->service->registerPublicParticipant($groupDeal, $payload);
+        } catch (\RuntimeException $exception) {
+            return back()->withInput()->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('front.group-deals.show', $groupDeal->slug)
+            ->with('success', sprintf('Participation enregistrée pour %s.', $participant->full_name ?: $groupDeal->title));
     }
 }

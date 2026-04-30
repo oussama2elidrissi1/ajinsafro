@@ -19,7 +19,7 @@ if (! defined('ABSPATH')) {
 /* ──────────────────────────────────────────────
  * Constants
  * ────────────────────────────────────────────── */
-define('AJTH_VERSION', '1.1.4');
+define('AJTH_VERSION', '1.2.0');
 define('AJTH_FILE', __FILE__);
 define('AJTH_DIR', plugin_dir_path(__FILE__));
 define('AJTH_URL', plugin_dir_url(__FILE__));

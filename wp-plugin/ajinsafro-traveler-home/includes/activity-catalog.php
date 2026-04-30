@@ -59,6 +59,45 @@ if ( ! function_exists( 'ajth_activity_slugify_label' ) ) {
 	}
 }
 
+if ( ! function_exists( 'ajth_get_activity_public_url' ) ) {
+	/**
+	 * Resolve a navigable public URL for an activity.
+	 *
+	 * Prefer the real WordPress permalink for `st_activity`, then fall back to
+	 * the activities catalogue with a query parameter.
+	 *
+	 * @param array<string, mixed> $row Source row.
+	 * @return string
+	 */
+	function ajth_get_activity_public_url( array $row ) {
+		foreach ( array( 'url', 'booking_url', 'detail_url', 'permalink', 'link' ) as $key ) {
+			$value = trim( (string) ( $row[ $key ] ?? '' ) );
+			if ( '' !== $value && '#' !== $value ) {
+				return $value;
+			}
+		}
+
+		$slug = trim( (string) ( $row['slug'] ?? '' ) );
+		if ( '' !== $slug ) {
+			$post = get_page_by_path( $slug, OBJECT, 'st_activity' );
+			if ( $post instanceof WP_Post ) {
+				$url = get_permalink( $post );
+				if ( is_string( $url ) && '' !== $url ) {
+					return $url;
+				}
+			}
+		}
+
+		$base = function_exists( 'ajth_get_activites_page_url' )
+			? ajth_get_activites_page_url()
+			: home_url( '/activites/' );
+
+		$fallback_key = '' !== $slug ? $slug : (string) ( $row['id'] ?? '' );
+
+		return '' !== $fallback_key ? add_query_arg( array( 'activity' => $fallback_key ), $base ) : $base;
+	}
+}
+
 if ( ! function_exists( 'ajth_get_activities' ) ) {
 	/**
 	 * Returns activity offers from Laravel, normalized for the WordPress front.
@@ -82,6 +121,8 @@ if ( ! function_exists( 'ajth_get_activities' ) ) {
 				$badge        = trim( (string) ( $row['badge'] ?? '' ) );
 				$duration     = (string) ( $row['duration_label'] ?? '' );
 
+				$url = ajth_get_activity_public_url( $row );
+
 				return array(
 					'id'                 => (int) ( $row['id'] ?? 0 ),
 					'title'              => (string) ( $row['title'] ?? '' ),
@@ -103,8 +144,8 @@ if ( ! function_exists( 'ajth_get_activities' ) ) {
 					'with_guide'         => false !== strpos( $includesText, 'guide' ),
 					'transport_included' => false !== strpos( $includesText, 'transport' ),
 					'badge'              => $badge,
-					'url'                => '#',
-					'booking_url'        => '#',
+					'url'                => $url,
+					'booking_url'        => $url,
 					'short_description'  => (string) ( $row['short_description'] ?? '' ),
 				);
 			},

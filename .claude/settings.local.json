@@ -17,7 +17,18 @@
       "Read(//c/Users/oussa/Desktop/themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template/Qovex_Laravel_v3.0.0/**)",
       "Bash(curl -s http://127.0.0.1:8000/api/accommodation-packages)",
       "Bash(curl -s http://127.0.0.1:8000/api/activity-offers)",
-      "Bash(curl -s http://127.0.0.1:8000/api/activity-offers/filters)"
+      "Bash(curl -s http://127.0.0.1:8000/api/activity-offers/filters)",
+      "Bash(sed -i '434s/^[[:space:]]*/    /' hebergement-booking.js)",
+      "Bash(sed -i '435s/^[[:space:]]*/    /' hebergement-booking.js)",
+      "Bash(sed -i '436s/^[[:space:]]*/    /' hebergement-booking.js)",
+      "Bash(sed -n '433,441p' hebergement-booking.js)",
+      "Bash(sed -i '433s/^.*$/  function renderFeaturedCards\\(\\) {/' hebergement-booking.js)",
+      "Bash(sed -i '434s/^.*$/    var featured = allItems.filter\\(function \\(item\\) { return item.isPack \\\\&\\\\& item.popular; }\\);/' hebergement-booking.js)",
+      "Bash(sed -i '435s/^.*$/    featured.sort\\(function \\(a, b\\) { return \\(a.order || 99\\) - \\(b.order || 99\\); }\\);/' hebergement-booking.js)",
+      "Bash(sed -i '436s/^.*$/    if \\(!featured.length\\) {/' hebergement-booking.js)",
+      "Bash(sed -i '437s/^.*$/      els.featuredGrid.innerHTML = '\\\\'''\\\\'';/' hebergement-booking.js)",
+      "Bash(sed -i '442d' hebergement-booking.js)",
+      "Bash(sed -n '433,445p' hebergement-booking.js)"
     ]
   }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\CustomersController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\GroupDeals\OfferController as GroupDealOfferController;
 use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\HomePageSettingsController;
 use App\Http\Controllers\Admin\OperationsController;
@@ -70,6 +71,8 @@ if (is_string(config('app.admin_domain')) && config('app.admin_domain') !== '') 
     Route::get('/voyages', [FrontVoyageController::class, 'index']);
     Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show']);
     Route::get('/group-deals', [FrontGroupDealsController::class, 'index']);
+    Route::get('/group-deals/{slug}', [FrontGroupDealsController::class, 'show']);
+    Route::post('/group-deals/{slug}/participate', [FrontGroupDealsController::class, 'participate']);
 }
 
 // Public entrypoint from WordPress UI (ajinsafro.net/login form)
@@ -455,6 +458,22 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
             // Participants (gestion admin)
             Route::post('departures/{departure}/participants', [GroupDealController::class, 'participantStore'])->name('departures.participants.store')->whereNumber('departure');
             Route::patch('departures/{departure}/participants/{participant}', [GroupDealController::class, 'participantUpdate'])->name('departures.participants.update')->whereNumber(['departure', 'participant']);
+        });
+
+        Route::prefix('group-deals')->name('group-deals.')->group(function () {
+            Route::get('/', [GroupDealOfferController::class, 'index'])->name('index');
+            Route::get('create', [GroupDealOfferController::class, 'create'])->name('create');
+            Route::post('/', [GroupDealOfferController::class, 'store'])->name('store');
+            Route::get('{groupDeal}', [GroupDealOfferController::class, 'show'])->name('show')->whereNumber('groupDeal');
+            Route::get('{groupDeal}/edit', [GroupDealOfferController::class, 'edit'])->name('edit')->whereNumber('groupDeal');
+            Route::match(['put', 'patch'], '{groupDeal}', [GroupDealOfferController::class, 'update'])->name('update')->whereNumber('groupDeal');
+            Route::delete('{groupDeal}', [GroupDealOfferController::class, 'destroy'])->name('destroy')->whereNumber('groupDeal');
+            Route::post('{groupDeal}/recalculate', [GroupDealOfferController::class, 'recalculate'])->name('recalculate')->whereNumber('groupDeal');
+            Route::post('{groupDeal}/tiers', [GroupDealOfferController::class, 'tierStore'])->name('tiers.store')->whereNumber('groupDeal');
+            Route::put('{groupDeal}/tiers/{tier}', [GroupDealOfferController::class, 'tierUpdate'])->name('tiers.update')->whereNumber(['groupDeal', 'tier']);
+            Route::delete('{groupDeal}/tiers/{tier}', [GroupDealOfferController::class, 'tierDestroy'])->name('tiers.destroy')->whereNumber(['groupDeal', 'tier']);
+            Route::post('{groupDeal}/participants', [GroupDealOfferController::class, 'participantStore'])->name('participants.store')->whereNumber('groupDeal');
+            Route::patch('{groupDeal}/participants/{participant}', [GroupDealOfferController::class, 'participantUpdate'])->name('participants.update')->whereNumber(['groupDeal', 'participant']);
         });
     });
 

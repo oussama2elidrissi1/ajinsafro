@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ajinsafro.ma | Group Deals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --aj-blue: #0d5ea8;
+      --aj-blue-2: #077fc7;
+      --aj-blue-dark: #06356f;
+      --aj-blue-deep: #06224b;
+      --aj-blue-soft: #eaf4ff;
+      --aj-orange: #f7941d;
+      --aj-orange-dark: #e67800;
+      --aj-orange-soft: #fff3e3;
+      --aj-green: #20a86b;
+      --aj-green-dark: #128553;
+      --aj-green-soft: #eaf8f1;
+      --aj-text: #12304a;
+      --aj-muted: #6b7c93;
+      --aj-border: #d9e4f0;
+      --aj-bg: #f5f9fd;
+      --white: #ffffff;
+      --shadow: 0 16px 40px rgba(13, 94, 168, .13);
+      --shadow-soft: 0 10px 28px rgba(18, 48, 74, .08);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      color: var(--aj-text);
+      background: #fff;
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      background: var(--aj-blue-deep);
+      color: #dceeff;
+      font-size: 13px;
+    }
+
+    .topbar .container {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .topbar-left,
+    .topbar-right,
+    .topbar-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .topbar-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .12);
+      font-size: 11px;
+    }
+
+    .topbar-btn {
+      color: white;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .topbar-btn.blue-pill {
+      background: var(--aj-blue-2);
+      padding: 6px 16px;
+      border-radius: 999px;
+    }
+
+    .main-header {
+      background: #fff;
+      border-bottom: 1px solid rgba(13, 94, 168, .12);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .04);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .main-header .container {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 26px;
+      letter-spacing: -.8px;
+      color: var(--aj-blue);
+      white-space: nowrap;
+    }
+
+    .logo-mark {
+      width: 46px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--aj-blue), var(--aj-blue-2));
+      position: relative;
+      box-shadow: inset 0 -5px 0 rgba(255, 255, 255, .18);
+    }
+
+    .logo-mark::before,
+    .logo-mark::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 26px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .92);
+      top: 4px;
+      transform: rotate(-12deg);
+    }
+
+    .logo-mark::before { left: 12px; }
+    .logo-mark::after { left: 26px; }
+
+    .logo small {
+      color: var(--aj-orange);
+      font-size: 20px;
+      margin-left: -4px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #33475b;
+      text-transform: uppercase;
+    }
+
+    .nav a {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: .25s;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      color: var(--aj-orange);
+    }
+
+    .nav a.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -24px;
+      height: 3px;
+      background: var(--aj-orange);
+      border-radius: 999px;
+    }
+
+    .header-cta {
+      background: linear-gradient(135deg, var(--aj-orange), #ff6b2b);
+      color: white;
+      padding: 13px 22px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 13px;
+      box-shadow: 0 10px 22px rgba(247, 148, 29, .32);
+      white-space: nowrap;
+    }
+
+    .hero {
+      background:
+        radial-gradient(circle at 85% 20%, rgba(255, 255, 255, .18) 0 0, transparent 160px),
+        radial-gradient(circle at 12% 80%, rgba(247, 148, 29, .18) 0 0, transparent 210px),
+        linear-gradient(135deg, #06356f 0%, #0d5ea8 55%, #0884cf 100%);
+      color: white;
+      position: relative;
+      overflow: hidden;
+      padding: 74px 0 88px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+      background-size: 58px 58px;
+      opacity: .15;
+    }
+
+    .hero::after {
+      content: "✈";
+      position: absolute;
+      right: 39%;
+      top: 75px;
+      color: rgba(255, 255, 255, .78);
+      font-size: 42px;
+      transform: rotate(18deg);
+    }
+
+    .hero-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 42px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--aj-orange);
+      color: white;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 6vw, 68px);
+      line-height: .98;
+      letter-spacing: -2.8px;
+      font-weight: 900;
+      max-width: 720px;
+    }
+
+    .hero h1 span {
+      color: var(--aj-orange);
+      display: block;
+    }
+
+    .hero p {
+      color: #e9f5ff;
+      font-size: 19px;
+      max-width: 610px;
+      margin: 24px 0 30px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 900;
+      transition: .25s;
+    }
+
+    .btn-orange {
+      background: var(--aj-orange);
+      color: white;
+      padding: 16px 28px;
+      box-shadow: 0 14px 30px rgba(247, 148, 29, .28);
+    }
+
+    .btn-orange:hover {
+      background: var(--aj-orange-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline-white {
+      color: white;
+      border: 2px solid rgba(255, 255, 255, .55);
+      padding: 14px 28px;
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .btn-outline-white:hover {
+      background: white;
+      color: var(--aj-blue);
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 330px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .travel-photo {
+      width: min(390px, 100%);
+      height: 330px;
+      border-radius: 46px 46px 46px 8px;
+      background:
+        linear-gradient(180deg, rgba(6, 34, 75, .05), rgba(6, 34, 75, .55)),
+        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80") center/cover;
+      border: 8px solid rgba(255, 255, 255, .16);
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .22);
+    }
+
+    .floating-card {
+      position: absolute;
+      left: 20px;
+      min-width: 210px;
+      background: white;
+      color: var(--aj-text);
+      padding: 16px 18px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .floating-card:nth-child(2) { top: 22px; }
+    .floating-card:nth-child(3) { top: 128px; left: auto; right: 0; }
+    .floating-card:nth-child(4) { bottom: 24px; }
+
+    .float-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      flex: 0 0 auto;
+    }
+
+    .float-icon.green { background: var(--aj-green); }
+    .float-icon.blue { background: var(--aj-blue); }
+
+    .floating-card strong {
+      display: block;
+      font-size: 18px;
+      color: var(--aj-blue-dark);
+    }
+
+    .floating-card small {
+      font-size: 12px;
+      color: var(--aj-muted);
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .search-panel {
+      position: relative;
+      z-index: 5;
+      margin-top: -42px;
+    }
+
+    .search-box {
+      background: white;
+      border: 2px solid rgba(247, 148, 29, .55);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr 1fr 1fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+
+    .field label {
+      display: block;
+      color: var(--aj-blue-dark);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .field-box {
+      height: 54px;
+      border: 1px solid var(--aj-border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 15px;
+      color: var(--aj-muted);
+      font-weight: 600;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .search-btn {
+      height: 54px;
+      padding: 0 28px;
+      background: linear-gradient(135deg, var(--aj-orange), #ff7b00);
+      color: white;
+      border-radius: 13px;
+      font-weight: 900;
+      border: none;
+      box-shadow: 0 12px 26px rgba(247, 148, 29, .26);
+    }
+
+    section {
+      padding: 54px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .section-header h2 {
+      color: var(--aj-blue-dark);
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .section-header h2::after {
+      content: "";
+      display: block;
+      width: 70px;
+      height: 4px;
+      background: var(--aj-orange);
+      border-radius: 999px;
+      margin: 14px auto 0;
+    }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .how-card {
+      background: white;
+      border: 1px solid var(--aj-border);
+      border-radius: 18px;
+      padding: 30px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      box-shadow: var(--shadow-soft);
+      transition: .25s;
+    }
+
+    .how-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(247, 148, 29, .45);
+      box-shadow: var(--shadow);
+    }
+
+    .how-icon,
+    .benefit-icon,
+    .stat-icon {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--aj-blue), #0b8bd8);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 27px;
+      flex: 0 0 auto;
+    }
+
+    .how-card h3 {
+      color: var(--aj-blue-dark);
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .how-card p,
+    .benefit p {
+      color: var(--aj-muted);
+      font-size: 14px;
+    }
+
+    .offers {
+      background: linear-gradient(180deg, #fff, var(--aj-bg));
+    }
+
+    .offers-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+    }
+
+    .offer-card {
+      position: relative;
+      background: white;
+      border: 1px solid rgba(13, 94, 168, .14);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+      transition: .25s;
+    }
+
+    .offer-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(247, 148, 29, .45);
+      box-shadow: var(--shadow);
+    }
+
+    .offer-img {
+      height: 172px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    .img-marrakech { background-image: url("https://images.unsplash.com/photo-1597212720414-2a538ca1fe2f?auto=format&fit=crop&w=900&q=80"); }
+    .img-chefchaouen { background-image: url("https://images.unsplash.com/photo-1548018560-c7196548e84d?auto=format&fit=crop&w=900&q=80"); }
+    .img-istanbul { background-image: url("https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=900&q=80"); }
+    .img-zanzibar { background-image: url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80"); }
+
+    .badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      box-shadow: 0 6px 16px rgba(0,0,0,.12);
+    }
+
+    .badge.green {
+      background: var(--aj-green);
+      color: white;
+    }
+
+    .badge.orange {
+      background: var(--aj-orange);
+      color: white;
+    }
+
+    .offer-body {
+      padding: 18px;
+    }
+
+    .offer-body h3 {
+      color: var(--aj-blue-dark);
+      font-size: 18px;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      min-height: 45px;
+    }
+
+    .meta-list {
+      display: grid;
+      gap: 7px;
+      color: #45627c;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .progress-row {
+      margin: 12px 0 14px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--aj-muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    .progress {
+      height: 7px;
+      background: #dce7f2;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--aj-green), #68d391);
+    }
+
+    .price {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      margin: 14px 0;
+    }
+
+    .price strong {
+      color: var(--aj-orange-dark);
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .price del {
+      color: #9aa9b7;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .offer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-small {
+      padding: 10px 12px;
+      font-size: 13px;
+      border-radius: 9px;
+    }
+
+    .btn-outline-blue {
+      border: 1px solid var(--aj-blue);
+      color: var(--aj-blue);
+      background: #fff;
+    }
+
+    .btn-outline-blue:hover {
+      background: var(--aj-blue-soft);
+    }
+
+    .btn-blue {
+      background: var(--aj-blue);
+      color: white;
+    }
+
+    .btn-blue:hover {
+      background: var(--aj-blue-dark);
+    }
+
+    .center-action {
+      display: flex;
+      justify-content: center;
+      margin-top: 26px;
+    }
+
+    .benefits {
+      padding-top: 28px;
+      padding-bottom: 48px;
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 26px;
+    }
+
+    .benefit {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      padding: 14px;
+    }
+
+    .benefit-icon {
+      background: white;
+      color: var(--aj-blue);
+      border: 1px solid var(--aj-border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .benefit h3 {
+      color: var(--aj-blue-dark);
+      font-size: 17px;
+      margin-bottom: 5px;
+    }
+
+    .stats {
+      padding: 40px 0;
+      color: white;
+      background:
+        radial-gradient(circle at 15% 50%, rgba(247, 148, 29, .18), transparent 260px),
+        linear-gradient(135deg, var(--aj-blue-dark), var(--aj-blue));
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stats::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
+      background-size: 54px 54px;
+      opacity: .18;
+    }
+
+    .stats .container {
+      position: relative;
+      z-index: 2;
+    }
+
+    .stats h2 {
+      text-align: center;
+      font-size: 30px;
+      margin-bottom: 28px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 26px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-icon {
+      background: white;
+      color: var(--aj-blue);
+      margin-bottom: 12px;
+    }
+
+    .stat strong {
+      display: block;
+      color: #ffd84f;
+      font-size: 34px;
+      font-weight: 900;
+    }
+
+    .stat span {
+      font-weight: 600;
+      color: #eaf4ff;
+    }
+
+    .final-cta {
+      padding: 44px 0;
+      background:
+        radial-gradient(circle at 8% 50%, rgba(13, 94, 168, .12), transparent 180px),
+        radial-gradient(circle at 92% 50%, rgba(247, 148, 29, .14), transparent 190px),
+        #f7fbff;
+    }
+
+    .cta-box {
+      display: grid;
+      grid-template-columns: .85fr 1.3fr .85fr;
+      align-items: center;
+      gap: 26px;
+    }
+
+    .luggage {
+      height: 130px;
+      border-radius: 24px;
+      background:
+        url("https://images.unsplash.com/photo-1581553680321-4fffae59fccd?auto=format&fit=crop&w=600&q=80") center/cover;
+      box-shadow: var(--shadow-soft);
+      transform: rotate(-2deg);
+    }
+
+    .cta-content h2 {
+      font-size: 33px;
+      line-height: 1.15;
+      color: var(--aj-blue-dark);
+      margin-bottom: 10px;
+    }
+
+    .cta-content p {
+      color: var(--aj-muted);
+      font-size: 17px;
+    }
+
+    .footer {
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+      border-top: 1px solid rgba(13, 94, 168, .08);
+    }
+
+    .footer::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 220px;
+      background:
+        linear-gradient(to top, rgba(234, 244, 255, .9), rgba(234,244,255,0)),
+        repeating-linear-gradient(90deg, rgba(13,94,168,.13) 0 3px, transparent 3px 32px);
+      clip-path: polygon(0 55%, 7% 45%, 11% 62%, 15% 35%, 21% 58%, 25% 44%, 30% 67%, 35% 39%, 41% 58%, 48% 44%, 55% 65%, 62% 38%, 68% 56%, 75% 42%, 84% 61%, 91% 40%, 100% 55%, 100% 100%, 0 100%);
+      opacity: .5;
+    }
+
+    .footer-main {
+      position: relative;
+      z-index: 1;
+      padding: 58px 0 28px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.35fr .75fr .75fr .85fr 1.25fr;
+      gap: 36px;
+    }
+
+    .footer-logo {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--aj-blue);
+      margin-bottom: 14px;
+    }
+
+    .footer-logo span {
+      color: var(--aj-orange);
+    }
+
+    .footer p,
+    .footer li {
+      color: #516a83;
+      font-size: 14px;
+    }
+
+    .footer h4 {
+      color: var(--aj-blue-dark);
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    .footer ul {
+      list-style: none;
+      display: grid;
+      gap: 9px;
+    }
+
+    .newsletter {
+      display: flex;
+      margin-top: 12px;
+      border: 1px solid var(--aj-border);
+      border-radius: 11px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .newsletter input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      padding: 13px 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .newsletter button {
+      border: 0;
+      background: var(--aj-blue);
+      color: white;
+      padding: 0 17px;
+      font-weight: 800;
+    }
+
+    .socials {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .socials a {
+      width: 33px;
+      height: 33px;
+      border-radius: 50%;
+      background: var(--aj-blue-soft);
+      color: var(--aj-blue);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+
+    .footer-bottom {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid rgba(13, 94, 168, .13);
+      padding: 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--aj-muted);
+      font-size: 13px;
+    }
+
+    .payments {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      color: var(--aj-blue-dark);
+    }
+
+    .pay-pill {
+      padding: 5px 9px;
+      border-radius: 7px;
+      background: white;
+      border: 1px solid var(--aj-border);
+    }
+
+    @media (max-width: 1100px) {
+      .nav {
+        gap: 14px;
+        font-size: 12px;
+      }
+
+      .search-box {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .search-btn {
+        grid-column: span 3;
+      }
+
+      .offers-grid,
+      .benefits-grid,
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .topbar-left,
+      .nav,
+      .header-cta {
+        display: none;
+      }
+
+      .main-header .container {
+        justify-content: center;
+      }
+
+      .hero {
+        padding-top: 52px;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-visual {
+        min-height: 260px;
+      }
+
+      .travel-photo {
+        height: 260px;
+      }
+
+      .floating-card {
+        position: relative;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+        margin: 10px;
+      }
+
+      .hero-visual {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .search-box,
+      .how-grid,
+      .offers-grid,
+      .benefits-grid,
+      .stats-grid,
+      .cta-box,
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .search-btn {
+        grid-column: auto;
+      }
+
+      .how-card,
+      .benefit {
+        align-items: flex-start;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .container {
+        width: min(100% - 22px, 1180px);
+      }
+
+      .logo {
+        font-size: 22px;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+        letter-spacing: -1.8px;
+      }
+
+      .hero p {
+        font-size: 16px;
+      }
+
+      .hero-actions,
+      .offer-actions {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .btn-orange,
+      .btn-outline-white {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-left">
+        <span class="topbar-icon">◎</span>
+        <span class="topbar-icon">f</span>
+        <span>✉ contact@ajinsafro.ma</span>
+        <span>☎ +212 539 323 874</span>
+      </div>
+      <div class="topbar-right">
+        <a href="#" class="topbar-btn">Se connecter</a>
+        <a href="#" class="topbar-btn blue-pill">S’inscrire</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="main-header">
+    <div class="container">
+      <a href="#" class="logo" aria-label="Ajinsafro">
+        <span class="logo-mark"></span>
+        <span>AjiNsafro<small>.ma</small></span>
+      </a>
+
+      <nav class="nav">
+        <a href="#">▣ Voyages</a>
+        <a href="#">▥ Hébergement</a>
+        <a href="#">▣ Activités</a>
+        <a href="#" class="active">♣ Group Deals</a>
+        <a href="#">◈ Hajj & Omra</a>
+      </nav>
+
+      <a href="#" class="header-cta">● Formule low cost</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <span class="eyebrow">Group Deals</span>
+          <h1>Plus on est nombreux, <span>plus on voyage malin !</span></h1>
+          <p>Rejoignez des voyageurs comme vous et économisez jusqu’à 50%. Plus le groupe grandit, plus le prix baisse pour tout le monde.</p>
+          <div class="hero-actions">
+            <a href="#offres" class="btn btn-orange">Découvrir les offres</a>
+            <a href="#comment" class="btn btn-outline-white">Comment ça marche ?</a>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="travel-photo"></div>
+          <div class="floating-card">
+            <span class="float-icon green">♻</span>
+            <div><small>Économies</small><strong>Jusqu’à 50%</strong></div>
+          </div>
+          <div class="floating-card">
+            <span class="float-icon blue">♚</span>
+            <div><small>Voyageurs déjà rejoints</small><strong>2 458</strong></div>
+          </div>
+          <div class="floating-card">
+            <span class="float-icon green">✓</span>
+            <div><small>Départ garanti</small><strong>à partir de 10 pers.</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="search-panel">
+      <div class="container">
+        <form class="search-box">
+          <div class="field">
+            <label>Destination</label>
+            <div class="field-box">⌖ Où voulez-vous aller ?</div>
+          </div>
+          <div class="field">
+            <label>Type de groupe</label>
+            <div class="field-box">Tous les types⌄</div>
+          </div>
+          <div class="field">
+            <label>Participants</label>
+            <div class="field-box">♙ Indifférent⌄</div>
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <div class="field-box">▣ Date flexible⌄</div>
+          </div>
+          <div class="field">
+            <label>Budget (par pers.)</label>
+            <div class="field-box">Tous budgets⌄</div>
+          </div>
+          <button type="button" class="search-btn">Voir les offres</button>
+        </form>
+      </div>
+    </div>
+
+    <section id="comment">
+      <div class="container">
+        <div class="section-header">
+          <h2>Comment ça marche ?</h2>
+        </div>
+        <div class="how-grid">
+          <article class="how-card">
+            <div class="how-icon">⌄</div>
+            <div>
+              <h3>Le prix baisse</h3>
+              <p>Plus vous êtes nombreux à rejoindre le groupe, plus le prix par personne baisse. Tout le monde y gagne !</p>
+            </div>
+          </article>
+          <article class="how-card">
+            <div class="how-icon">盾</div>
+            <div>
+              <h3>Départ garanti</h3>
+              <p>Dès que le nombre minimum de participants est atteint, le départ est garanti et vous êtes informés.</p>
+            </div>
+          </article>
+          <article class="how-card">
+            <div class="how-icon">◔</div>
+            <div>
+              <h3>Économies transparentes</h3>
+              <p>Vous voyez en temps réel les économies réalisées et le prix final pour chaque participant.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="offers" id="offres">
+      <div class="container">
+        <div class="section-header">
+          <h2>Offres groupe populaires</h2>
+        </div>
+
+        <div class="offers-grid">
+          <article class="offer-card">
+            <div class="offer-img img-marrakech"><span class="badge green">Garanti</span></div>
+            <div class="offer-body">
+              <h3>Marrakech & Atlas</h3>
+              <div class="meta-list">
+                <span>⌖ Maroc</span>
+                <span>◷ 4 jours / 3 nuits</span>
+              </div>
+              <div class="progress-row">
+                <div class="progress-label"><span>12 / 20 participants</span><span>60%</span></div>
+                <div class="progress"><span style="width: 60%"></span></div>
+              </div>
+              <div class="price"><strong>1 290 DH</strong><del>1 690 DH</del></div>
+              <div class="offer-actions">
+                <a href="#" class="btn btn-small btn-outline-blue">Voir l’offre</a>
+                <a href="#" class="btn btn-small btn-blue">Réserver</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="offer-card">
+            <div class="offer-img img-chefchaouen"><span class="badge orange">-25%</span></div>
+            <div class="offer-body">
+              <h3>Chefchaouen & Tétouan</h3>
+              <div class="meta-list">
+                <span>⌖ Maroc</span>
+                <span>◷ 5 jours / 4 nuits</span>
+              </div>
+              <div class="progress-row">
+                <div class="progress-label"><span>8 / 16 participants</span><span>50%</span></div>
+                <div class="progress"><span style="width: 50%"></span></div>
+              </div>
+              <div class="price"><strong>1 490 DH</strong><del>1 990 DH</del></div>
+              <div class="offer-actions">
+                <a href="#" class="btn btn-small btn-outline-blue">Voir l’offre</a>
+                <a href="#" class="btn btn-small btn-blue">Réserver</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="offer-card">
+            <div class="offer-img img-istanbul"><span class="badge green">Garanti</span></div>
+            <div class="offer-body">
+              <h3>Istanbul City Break</h3>
+              <div class="meta-list">
+                <span>⌖ Turquie</span>
+                <span>◷ 4 jours / 3 nuits</span>
+              </div>
+              <div class="progress-row">
+                <div class="progress-label"><span>15 / 20 participants</span><span>75%</span></div>
+                <div class="progress"><span style="width: 75%"></span></div>
+              </div>
+              <div class="price"><strong>2 890 DH</strong><del>3 790 DH</del></div>
+              <div class="offer-actions">
+                <a href="#" class="btn btn-small btn-outline-blue">Voir l’offre</a>
+                <a href="#" class="btn btn-small btn-blue">Réserver</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="offer-card">
+            <div class="offer-img img-zanzibar"><span class="badge orange">-30%</span></div>
+            <div class="offer-body">
+              <h3>Zanzibar Évasion</h3>
+              <div class="meta-list">
+                <span>⌖ Tanzanie</span>
+                <span>◷ 6 jours / 5 nuits</span>
+              </div>
+              <div class="progress-row">
+                <div class="progress-label"><span>10 / 14 participants</span><span>71%</span></div>
+                <div class="progress"><span style="width: 71%"></span></div>
+              </div>
+              <div class="price"><strong>4 590 DH</strong><del>6 590 DH</del></div>
+              <div class="offer-actions">
+                <a href="#" class="btn btn-small btn-outline-blue">Voir l’offre</a>
+                <a href="#" class="btn btn-small btn-blue">Réserver</a>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="center-action">
+          <a href="#" class="btn btn-small btn-outline-blue">Voir toutes les offres groupe →</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="benefits">
+      <div class="container">
+        <div class="section-header">
+          <h2>Pourquoi choisir Ajinsafro Group Deals ?</h2>
+        </div>
+        <div class="benefits-grid">
+          <div class="benefit">
+            <span class="benefit-icon">◆</span>
+            <div><h3>Tarifs négociés</h3><p>Des prix exclusifs obtenus grâce au pouvoir du groupe.</p></div>
+          </div>
+          <div class="benefit">
+            <span class="benefit-icon">☊</span>
+            <div><h3>Accompagnement Ajinsafro</h3><p>Une équipe dédiée vous accompagne avant, pendant et après le voyage.</p></div>
+          </div>
+          <div class="benefit">
+            <span class="benefit-icon">♚</span>
+            <div><h3>Groupes privés</h3><p>Partez entre amis, famille, collègues ou communauté selon vos envies.</p></div>
+          </div>
+          <div class="benefit">
+            <span class="benefit-icon">▣</span>
+            <div><h3>Paiement flexible</h3><p>Réservez avec un acompte et payez en plusieurs fois.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="container">
+        <h2>Ajinsafro Group Deals en chiffres</h2>
+        <div class="stats-grid">
+          <div class="stat"><span class="stat-icon">☺</span><strong>5 000+</strong><span>Voyageurs satisfaits</span></div>
+          <div class="stat"><span class="stat-icon">◌</span><strong>38%</strong><span>Économies moyennes</span></div>
+          <div class="stat"><span class="stat-icon">♣</span><strong>320+</strong><span>Groupes confirmés</span></div>
+          <div class="stat"><span class="stat-icon">◎</span><strong>45+</strong><span>Destinations disponibles</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="container cta-box">
+        <div class="luggage" aria-hidden="true"></div>
+        <div class="cta-content">
+          <h2>Prêt à voyager en groupe ?</h2>
+          <p>Demandez un devis personnalisé et profitez du meilleur tarif.</p>
+        </div>
+        <a href="#" class="btn btn-orange">Demander un devis groupe →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-main">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-logo">AjiNsafro<span>.ma</span></div>
+          <p>Votre partenaire voyage de confiance pour des expériences inoubliables au Maroc et partout dans le monde.</p>
+          <br>
+          <p>☎ +212 539 323 874</p>
+          <p>✉ contact@ajinsafro.ma</p>
+          <p>⌖ Casablanca, Maroc</p>
+        </div>
+        <div>
+          <h4>En savoir plus</h4>
+          <ul>
+            <li><a href="#">À propos</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Conditions d’utilisation</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Nos services</h4>
+          <ul>
+            <li><a href="#">Voyages</a></li>
+            <li><a href="#">Hébergement</a></li>
+            <li><a href="#">Activités</a></li>
+            <li><a href="#">Group Deals</a></li>
+            <li><a href="#">Hajj & Omra</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Aide & support</h4>
+          <ul>
+            <li><a href="#">Centre d’aide</a></li>
+            <li><a href="#">Comment ça marche</a></li>
+            <li><a href="#">Conditions générales</a></li>
+            <li><a href="#">Politique de confidentialité</a></li>
+            <li><a href="#">Nous contacter</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Recevez nos offres exclusives</h4>
+          <p>Inscrivez-vous à notre newsletter</p>
+          <form class="newsletter">
+            <input type="email" placeholder="Saisissez votre email" />
+            <button type="button">S’inscrire</button>
+          </form>
+          <div class="socials">
+            <a href="#">ig</a>
+            <a href="#">f</a>
+            <a href="#">▶</a>
+            <a href="#">♪</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© 2024 Ajinsafro.ma – Tous droits réservés.</span>
+      <div class="payments">
+        <span>Moyens de paiement acceptés</span>
+        <span class="pay-pill">VISA</span>
+        <span class="pay-pill">Mastercard</span>
+        <span class="pay-pill">PayPal</span>
+        <span class="pay-pill">CMI</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

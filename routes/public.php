@@ -25,6 +25,8 @@ Route::get('/', [FrontHomeController::class, 'index'])->name('front.home');
 Route::get('/search', [FrontSearchController::class, 'index'])->name('front.search');
 Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voyages.index');
 Route::get('/group-deals', [FrontGroupDealsController::class, 'index'])->name('front.group-deals.index');
+Route::get('/group-deals/{slug}', [FrontGroupDealsController::class, 'show'])->name('front.group-deals.show');
+Route::post('/group-deals/{slug}/participate', [FrontGroupDealsController::class, 'participate'])->name('front.group-deals.participate');
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
 
 Route::get('/ratehawk/hotels', [RatehawkHotelController::class, 'index'])->name('ratehawk.hotels.index');

@@ -14,6 +14,37 @@
             .replace(/"/g, "&quot;");
     }
 
+    function initExpandableText(root) {
+        var scope = root && root.querySelectorAll ? root : document;
+        Array.prototype.slice.call(
+            scope.querySelectorAll("[data-ajtb-expandable-text]"),
+        ).forEach(function (textEl) {
+            var toggle = textEl.parentElement
+                ? textEl.parentElement.querySelector("[data-ajtb-expand-toggle]")
+                : null;
+            if (!toggle || textEl.getAttribute("data-ajtb-expand-ready") === "1") {
+                return;
+            }
+
+            textEl.classList.add("is-collapsed");
+            requestAnimationFrame(function () {
+                var needsToggle = textEl.scrollHeight > textEl.clientHeight + 8;
+                textEl.setAttribute("data-ajtb-expand-ready", "1");
+                if (!needsToggle) {
+                    textEl.classList.remove("is-collapsed");
+                    toggle.hidden = true;
+                    return;
+                }
+
+                toggle.hidden = false;
+                toggle.addEventListener("click", function () {
+                    var expanded = textEl.classList.toggle("is-collapsed") === false;
+                    toggle.textContent = expanded ? "Voir moins" : "Voir plus";
+                });
+            });
+        });
+    }
+
     function initTabs() {
         var tabButtons = Array.prototype.slice.call(
             document.querySelectorAll(".ajtb-v1-tab-btn"),
@@ -470,7 +501,7 @@
         }
 
         function getAvailabilityLabel(total, dateAdultPrice) {
-            var baseLabel = priceCard.getAttribute("data-availability-label") || "Sous reserve de disponibilite";
+            var baseLabel = priceCard.getAttribute("data-availability-label") || "Sous réserve de disponibilité";
             if (dateAdultPrice !== null && total > 0) {
                 return "Disponible";
             }
@@ -495,7 +526,7 @@
             }
             if (selectedActivities.length) {
                 selectedActivities.forEach(function (activity) {
-                    var label = activity.title || "Activite";
+                    var label = activity.title || "Activité";
                     var price = isFinite(activity.price) && activity.price > 0
                         ? " +" + formatAmount(activity.price) + " " + currency
                         : "";
@@ -506,7 +537,7 @@
                 }
             }
             if (!html) {
-                html = "<li>Aucune option supplementaire renseignee</li>";
+                html = "<li>Aucune option supplémentaire renseignée</li>";
             }
             optionsEl.innerHTML = html;
         }
@@ -520,7 +551,7 @@
 
             return {
                 activity_id: parseInt(String(activity.activity_id || activity.id || "0"), 10) || 0,
-                title: String(activity.title || "Activite"),
+                title: String(activity.title || "Activité"),
                 price: price,
             };
         }
@@ -531,7 +562,7 @@
                     var titleEl = row.querySelector("h4");
                     return normalizeSelectedActivity({
                         activity_id: row.getAttribute("data-activity-id") || "0",
-                        title: row.getAttribute("data-activity-title") || (titleEl ? titleEl.textContent : "Activite"),
+                        title: row.getAttribute("data-activity-title") || (titleEl ? titleEl.textContent : "Activité"),
                         price: row.getAttribute("data-activity-price") || "0",
                     });
                 })
@@ -639,7 +670,7 @@
                 suffixEl.textContent = "/ total";
             }
             if (perPersonEl) {
-                perPersonEl.textContent = formatAmount(pricePerPerson) + " " + currency + " / pers.";
+                perPersonEl.textContent = formatAmount(pricePerPerson) + " " + currency;
             }
             if (departureEl) {
                 departureEl.textContent = departureLabel;
@@ -659,7 +690,7 @@
             if (activitiesEl) {
                 var baseActivityLabel = priceCard.getAttribute("data-activity-label") || activitiesEl.textContent;
                 activitiesEl.textContent = selectedActivities.length
-                    ? baseActivityLabel + " + " + selectedActivities.length + " option" + (selectedActivities.length > 1 ? "s" : "") + " (+" + formatAmount(activityTotal) + " " + currency + ")"
+                    ? "A confirmer +" + " " + selectedActivities.length + " option" + (selectedActivities.length > 1 ? "s" : "") + " (+" + formatAmount(activityTotal) + " " + currency + ")"
                     : baseActivityLabel;
             }
             if (flightEl) {
@@ -669,7 +700,7 @@
                 availabilityEl.textContent = availabilityLabel;
             }
             if (availabilityBadgeEl) {
-                availabilityBadgeEl.textContent = availabilityLabel === "Disponible" ? "Disponible" : "A confirmer";
+                availabilityBadgeEl.textContent = availabilityLabel === "Disponible" ? "Disponible" : "À confirmer";
             }
             if (noteEl) {
                 noteEl.textContent = activityTotal > 0
@@ -897,7 +928,7 @@
                 '<p class="ajtb-act-card-desc">' + escHtml(act.description) + '</p>' +
                 '<div class="ajtb-act-card-footer">' +
                 '<div class="ajtb-act-progress" data-ajtb-add-progress hidden>' +
-                '<div class="ajtb-act-progress-top"><span data-ajtb-progress-state>Preparation</span><strong data-ajtb-progress-percent>0%</strong></div>' +
+                '<div class="ajtb-act-progress-top"><span data-ajtb-progress-state>Préparation</span><strong data-ajtb-progress-percent>0%</strong></div>' +
                 '<div class="ajtb-act-progress-track"><span data-ajtb-progress-fill style="width: 0%"></span></div>' +
                 '</div>' +
                 '</div></div></article>';
@@ -923,8 +954,8 @@
 
             return {
                 activity_id: parseInt(String(activity.activity_id || activity.id || "0"), 10) || 0,
-                title: String(activity.title || "Activity"),
-                description: String(activity.description || "Activite ajoutee au programme."),
+                title: String(activity.title || "Activité"),
+                description: String(activity.description || "Activité ajoutée au programme."),
                 image_url: activity.image_url || "",
                 price: price === null || price === undefined || price === "" ? null : Number(price),
             };
@@ -933,25 +964,26 @@
         function buildProgramActivityCard(activity) {
             var act = normalizeActivityForProgram(activity);
             var img = act.image_url
-                ? '<img src="' + escHtml(act.image_url) + '" alt="Activity visual" loading="lazy">'
-                : '<div class="ajtb-act-card-img-placeholder"></div>';
+                ? '<span class="ajtb-v1-media-thumb"><img src="' + escHtml(act.image_url) + '" alt="Visuel de l\'activite" loading="lazy"></span>'
+                : '<span class="ajtb-v1-media-thumb"><div class="ajtb-act-card-img-placeholder"></div></span>';
             var price = act.price === null || Number.isNaN(act.price)
                 ? ""
                 : '<span>' + escHtml(formatPrice(act.price)) + '</span>';
 
             return '<div class="activity-card ajtb-v1-service-card" data-activity-id="' + act.activity_id + '" data-activity-title="' + escHtml(act.title) + '" data-activity-price="' + escHtml(act.price === null || Number.isNaN(act.price) ? "" : String(act.price)) + '" data-client-added="1">' +
-                '<div class="ajtb-v1-service-head"><span>Activity - Program</span>' +
+                '<div class="ajtb-v1-service-head"><span>Activité du programme</span>' +
                 '<button type="button" class="ajtb-v1-service-remove" data-ajtb-v1-action="remove-program-activity" data-day-id="" data-day-number="" data-activity-id="' + act.activity_id + '">Retirer</button></div>' +
                 '<div class="ajtb-v1-service-body ajtb-v1-media-row">' +
                 img +
                 '<div>' +
                 '<h4>' + escHtml(act.title) + '</h4>' +
-                '<p>' + escHtml(act.description) + '</p>' +
+                '<p data-ajtb-expandable-text>' + escHtml(act.description) + '</p>' +
+                '<button type="button" class="ajtb-v1-expand-toggle" data-ajtb-expand-toggle hidden>Voir plus</button>' +
                 '<div class="ajtb-v1-meta-line">' + price + '</div>' +
                 '</div></div>' +
                 '<div class="ajtb-v1-service-progress">' +
                 '<div class="ajtb-act-progress" data-ajtb-remove-progress hidden>' +
-                '<div class="ajtb-act-progress-top"><span data-ajtb-progress-state>Preparation</span><strong data-ajtb-progress-percent>0%</strong></div>' +
+                '<div class="ajtb-act-progress-top"><span data-ajtb-progress-state>Préparation</span><strong data-ajtb-progress-percent>0%</strong></div>' +
                 '<div class="ajtb-act-progress-track"><span data-ajtb-progress-fill style="width: 0%"></span></div>' +
                 '</div>' +
                 '</div></div>';
@@ -976,6 +1008,7 @@
                 removeBtn.setAttribute("data-day-id", String(dayId || ""));
                 removeBtn.setAttribute("data-day-number", String(dayNumber || ""));
             }
+            initExpandableText(list);
             document.dispatchEvent(new CustomEvent("ajtb:v1:activities-changed"));
         }
 
@@ -1031,9 +1064,9 @@
 
             function stateFor(nextValue) {
                 if (nextValue >= 92) { return "Confirmation"; }
-                if (nextValue >= 64) { return "Mise a jour du programme"; }
+                if (nextValue >= 64) { return "Mise à jour du programme"; }
                 if (nextValue >= 35) { return "Enregistrement"; }
-                return "Preparation";
+                return "Préparation";
             }
 
             function apply(nextValue, label) {
@@ -1060,7 +1093,7 @@
                 card.classList.add(busyClass);
             }
 
-            apply(8, "Preparation");
+            apply(8, "Préparation");
             timer = window.setInterval(function () {
                 if (value >= 88) {
                     return;
@@ -1371,7 +1404,7 @@
             .map(function (row) {
                 return {
                     activity_id: parseInt(row.getAttribute("data-activity-id") || "0", 10) || 0,
-                    title: String(row.getAttribute("data-activity-title") || "").trim() || (row.querySelector("h4") ? row.querySelector("h4").textContent.trim() : "Activite"),
+                    title: String(row.getAttribute("data-activity-title") || "").trim() || (row.querySelector("h4") ? row.querySelector("h4").textContent.trim() : "Activité"),
                     price: row.getAttribute("data-activity-price") || "",
                     assigned: [],
                 };
@@ -2079,7 +2112,7 @@
                 "pendingNote",
                 calc.halfDoublePending
                     ? "Demi-double active : la réservation sera créée en attente de jumelage."
-                    : "Réservation créée en statut pending jusqu'à validation finale.",
+                    : "Réservation créée en statut en attente jusqu'à validation finale.",
             );
             setRowVisibility("children", calc.children > 0);
             setRowVisibility("room", calc.roomTotal > 0);
@@ -2173,7 +2206,7 @@
                     '<div><strong>Voyageurs à répartir :</strong> ' + escapeHtml(peopleLabel) +
                     '<br><strong>Voyageurs affectés :</strong> ' + escapeHtml(String(got)) + ' / ' + escapeHtml(String(need)) +
                     '<br><strong>Reste à affecter :</strong> ' + escapeHtml(String(summary.remaining)) + '</div>' +
-                    '<div class="ajtb-v1-room-alloc-badge">' + (ok ? 'OK' : 'À compléter') + '</div>' +
+                    '<div class="ajtb-v1-room-alloc-badge">' + (ok ? 'Valide' : 'À compléter') + '</div>' +
                     '</div>' +
                     (payload.availableRoomsCurrent || []).map(function (r) {
                         var id = String(r.alloc_key || r.id || "");
@@ -2267,7 +2300,7 @@
                 return '' +
                     '<div class="ajtb-v1-choice-item">' +
                     '<span></span>' +
-                    '<span><strong>' + escapeHtml(String(ex.name || "Extra")) + '</strong>' + (ex.description ? ('<small>' + escapeHtml(String(ex.description)) + '</small>') : '') + '</span>' +
+                    '<span><strong>' + escapeHtml(String(ex.name || "Supplément")) + '</strong>' + (ex.description ? ('<small>' + escapeHtml(String(ex.description)) + '</small>') : '') + '</span>' +
                     '<span class="ajtb-v1-choice-price">' + escapeHtml(price) + '</span>' +
                     '</div>';
             }).join("");
@@ -2342,7 +2375,7 @@
                         var t = types[slot] === "child" ? "child" : "adult";
                         var p = t === "child" ? parseFloat(ex.price_child || "0") : parseFloat(ex.price_adult || "0");
                         if (!isFinite(p) || p < 0) p = 0;
-                        var label = String(ex.name || "Extra") + (p > 0 ? (" · " + formatMoney(p) + " " + ((window.ajtbRecapBase && window.ajtbRecapBase.pricing) ? window.ajtbRecapBase.pricing.currency : "MAD")) : "");
+                        var label = String(ex.name || "Supplément") + (p > 0 ? (" · " + formatMoney(p) + " " + ((window.ajtbRecapBase && window.ajtbRecapBase.pricing) ? window.ajtbRecapBase.pricing.currency : "MAD")) : "");
                         return '' +
                             '<label class="ajtb-v1-recap-activity-toggle">' +
                             '<input type="checkbox" data-ajtb-extra-toggle data-slot="' + slot + '" data-extra-idx="' + exIdx + '"' + (checked ? ' checked' : '') + '>' +
@@ -2629,7 +2662,7 @@
                         return '' +
                             '<label class="ajtb-v1-recap-activity-toggle">' +
                             '<input type="checkbox" data-ajtb-activity-toggle data-slot="' + slot + '" data-activity-idx="' + aIdx + '"' + (checked ? ' checked' : '') + '>' +
-                            '<span>' + escapeHtml(String((a && a.title) ? a.title : 'Activite')) + '</span>' +
+                            '<span>' + escapeHtml(String((a && a.title) ? a.title : 'Activité')) + '</span>' +
                             '</label>';
                     }).join("");
                 }
@@ -2912,7 +2945,7 @@
                                 var m = window.bootstrap.Modal.getOrCreateInstance(modalEl);
                                 m.show();
                             } catch (eModal) {
-                                alert("Réservation créée (ID " + rid + "). Login: " + login + (password ? (" / MDP: " + password) : ""));
+                                alert("Réservation créée (ID " + rid + "). Identifiant: " + login + (password ? (" / MDP: " + password) : ""));
                             }
                         } else {
                             alert("Réservation créée (ID " + rid + "). Login: " + login + (password ? (" / MDP: " + password) : ""));
@@ -2958,6 +2991,22 @@
         document.dispatchEvent(new CustomEvent("ajtb:v1:travellers-changed"));
     }
 
+    function initRequestType() {
+        var typeSelect = document.getElementById("ajtb-v1-request-type");
+        var customMsg = document.getElementById("ajtb-v1-custom-message");
+        if (!typeSelect) {
+            return;
+        }
+        function renderRequestType() {
+            var isCustom = typeSelect.value === "custom";
+            if (customMsg) {
+                customMsg.hidden = !isCustom;
+            }
+        }
+        typeSelect.addEventListener("change", renderRequestType);
+        renderRequestType();
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         initTabs();
         initProgramFilters();
@@ -2970,9 +3019,8 @@
         initContinueToRecap();
         initRestoreSelectionFromRecap();
         initRecapPage();
+        initRequestType();
+        initExpandableText(document);
     });
 })();
-
-
-
 

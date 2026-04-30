@@ -134,6 +134,92 @@ if ( ! function_exists( 'ajth_hebergement_normalize_meta_list' ) ) {
 	}
 }
 
+if ( ! function_exists( 'ajth_hebergement_extract_first_location_id' ) ) {
+	/**
+	 * Extract the first Traveler location id from a scalar / multi_location value.
+	 *
+	 * @param mixed $value Raw meta value.
+	 * @return int
+	 */
+	function ajth_hebergement_extract_first_location_id( $value ) {
+		if ( is_numeric( $value ) ) {
+			return max( 0, (int) $value );
+		}
+
+		if ( ! is_string( $value ) ) {
+			return 0;
+		}
+
+		$value = trim( $value );
+		if ( '' === $value ) {
+			return 0;
+		}
+
+		if ( preg_match( '/_(\d+)_/', $value, $matches ) ) {
+			return (int) ( $matches[1] ?? 0 );
+		}
+
+		if ( preg_match( '/\d+/', $value, $matches ) ) {
+			return (int) ( $matches[0] ?? 0 );
+		}
+
+		return 0;
+	}
+}
+
+if ( ! function_exists( 'ajth_hebergement_resolve_location_context' ) ) {
+	/**
+	 * Resolve Traveler city / country labels from hotel meta / location posts.
+	 *
+	 * @param int   $post_id Hotel post id.
+	 * @param array $detail  Optional st_hotel row as array.
+	 * @return array<string, string>
+	 */
+	function ajth_hebergement_resolve_location_context( $post_id, array $detail = array() ) {
+		$post_id      = (int) $post_id;
+		$location_id  = ajth_hebergement_extract_first_location_id( $detail['id_location'] ?? get_post_meta( $post_id, 'location_id', true ) );
+		$multi_id     = ajth_hebergement_extract_first_location_id( $detail['multi_location'] ?? get_post_meta( $post_id, 'multi_location', true ) );
+		$location_id  = $location_id > 0 ? $location_id : $multi_id;
+		$city         = '';
+		$country      = '';
+		$destination  = '';
+
+		if ( $location_id > 0 ) {
+			$location = get_post( $location_id );
+			if ( $location instanceof WP_Post && 'location' === $location->post_type ) {
+				$destination = trim( (string) $location->post_title );
+				if ( $location->post_parent > 0 ) {
+					$parent = get_post( (int) $location->post_parent );
+					if ( $parent instanceof WP_Post && 'location' === $parent->post_type ) {
+						$country = trim( (string) $parent->post_title );
+					}
+				}
+			}
+		}
+
+		$city = trim(
+			(string) (
+				get_post_meta( $post_id, 'city', true )
+				?: get_post_meta( $post_id, 'location', true )
+				?: $destination
+			)
+		);
+
+		$country = trim(
+			(string) (
+				get_post_meta( $post_id, 'country', true )
+				?: $country
+			)
+		);
+
+		return array(
+			'city'        => $city,
+			'destination' => $destination !== '' ? $destination : $city,
+			'country'     => $country,
+		);
+	}
+}
+
 if ( ! function_exists( 'getAjinsafroHebergements' ) ) {
 	/**
 	 * Returns a normalized list of hotel cards for the Ajinsafro catalog.
@@ -181,22 +267,37 @@ if ( ! function_exists( 'getAjinsafroHebergements' ) ) {
 				$price = get_post_meta( $post_id, 'price', true );
 			}
 
-			$location = get_post_meta( $post_id, 'address', true );
+			$address  = get_post_meta( $post_id, 'address', true );
 			$stars    = get_post_meta( $post_id, 'hotel_star', true );
+			$detail   = array();
 
-			if ( ( '' === $location || false === $location || '' === $price || false === $price || '' === $stars || false === $stars ) && isset( $wpdb ) ) {
-				$row = $wpdb->get_row( $wpdb->prepare( "SELECT address, min_price, hotel_star, is_featured FROM {$wpdb->prefix}st_hotel WHERE post_id = %d", $post_id ) );
-				if ( is_object( $row ) ) {
-					if ( ( '' === $location || false === $location ) && ! empty( $row->address ) ) {
-						$location = $row->address;
+			if ( ( '' === $address || false === $address || '' === $price || false === $price || '' === $stars || false === $stars ) && isset( $wpdb ) ) {
+				$row = $wpdb->get_row( $wpdb->prepare( "SELECT address, min_price, hotel_star, is_featured, id_location, multi_location FROM {$wpdb->prefix}st_hotel WHERE post_id = %d", $post_id ), ARRAY_A );
+				if ( is_array( $row ) ) {
+					$detail = $row;
+					if ( ( '' === $address || false === $address ) && ! empty( $row['address'] ) ) {
+						$address = $row['address'];
 					}
-					if ( ( '' === $price || false === $price ) && isset( $row->min_price ) && '' !== $row->min_price ) {
-						$price = $row->min_price;
+					if ( ( '' === $price || false === $price ) && isset( $row['min_price'] ) && '' !== $row['min_price'] ) {
+						$price = $row['min_price'];
 					}
-					if ( ( '' === $stars || false === $stars ) && isset( $row->hotel_star ) && '' !== $row->hotel_star ) {
-						$stars = $row->hotel_star;
+					if ( ( '' === $stars || false === $stars ) && isset( $row['hotel_star'] ) && '' !== $row['hotel_star'] ) {
+						$stars = $row['hotel_star'];
 					}
 				}
+			}
+
+			$location_context = ajth_hebergement_resolve_location_context( $post_id, $detail );
+			$city             = trim( (string) ( $location_context['city'] ?? '' ) );
+			$destination      = trim( (string) ( $location_context['destination'] ?? '' ) );
+			$country          = trim( (string) ( $location_context['country'] ?? '' ) );
+			$location_parts   = array_values( array_filter( array( $city, $destination, $country ) ) );
+			$location_label   = '';
+			if ( ! empty( $location_parts ) ) {
+				$location_parts = array_values( array_unique( $location_parts ) );
+				$location_label = implode( ', ', $location_parts );
+			} elseif ( is_string( $address ) ) {
+				$location_label = trim( $address );
 			}
 
 			$terms    = get_the_terms( $post_id, 'hotel_type' );
@@ -217,13 +318,19 @@ if ( ! function_exists( 'getAjinsafroHebergements' ) ) {
 
 			$items[] = array(
 				'id'          => $post_id,
+				'kind'        => 'hotel',
 				'title'       => get_the_title(),
 				'name'        => get_the_title(),
 				'url'         => get_permalink(),
 				'image_url'   => $image_url,
 				'image'       => $image_url,
-				'location'    => is_string( $location ) ? trim( $location ) : '',
+				'location'    => $location_label,
+				'city'        => $city,
+				'destination' => $destination,
+				'country'     => $country,
+				'address'     => is_string( $address ) ? trim( $address ) : '',
 				'category'    => $category,
+				'type_label'  => $category,
 				'type'        => $type !== '' ? $type : 'hotel',
 				'stars'       => is_numeric( $stars ) ? (int) $stars : 0,
 				'price'       => is_numeric( $price ) ? (float) $price : null,
@@ -232,6 +339,7 @@ if ( ! function_exists( 'getAjinsafroHebergements' ) ) {
 				'amenities'   => $amenities,
 				'popular'     => (bool) $is_popular,
 				'available'   => true,
+				'availability_label' => 'Disponible',
 				'discount'    => 0,
 				'oldPrice'    => null,
 				'rating'      => null,
@@ -343,6 +451,37 @@ if ( ! function_exists( 'ajth_map_package_include_to_key' ) ) {
 	}
 }
 
+if ( ! function_exists( 'ajth_get_accommodation_package_public_url' ) ) {
+	/**
+	 * Resolve a public URL for an accommodation package.
+	 *
+	 * If no dedicated detail page exists yet, fall back to the hebergement page
+	 * with a stable `pack` query parameter rather than `#`.
+	 *
+	 * @param array<string, mixed> $row Package payload.
+	 * @return string
+	 */
+	function ajth_get_accommodation_package_public_url( array $row ) {
+		foreach ( array( 'url', 'detail_url', 'permalink', 'link' ) as $key ) {
+			$value = trim( (string) ( $row[ $key ] ?? '' ) );
+			if ( '' !== $value && '#' !== $value ) {
+				return $value;
+			}
+		}
+
+		$base = function_exists( 'ajth_get_hebergement_page_url' )
+			? ajth_get_hebergement_page_url()
+			: home_url( '/hebergement/' );
+
+		$pack_key = trim( (string) ( $row['slug'] ?? '' ) );
+		if ( '' === $pack_key ) {
+			$pack_key = trim( (string) ( $row['id'] ?? '' ) );
+		}
+
+		return '' !== $pack_key ? add_query_arg( array( 'pack' => $pack_key ), $base ) : $base;
+	}
+}
+
 if ( ! function_exists( 'ajth_get_accommodation_packages' ) ) {
 	/**
 	 * Returns accommodation packages from Laravel.
@@ -362,6 +501,8 @@ if ( ! function_exists( 'ajth_get_accommodation_packages' ) ) {
 					$type_label    = (string) ( $row['accommodation_type'] ?? 'Hôtel' );
 					$badge         = trim( (string) ( $row['badge'] ?? '' ) );
 					$includes      = isset( $row['includes'] ) && is_array( $row['includes'] ) ? array_values( $row['includes'] ) : array();
+
+					$url = ajth_get_accommodation_package_public_url( $row );
 
 					return array(
 						'kind'         => 'pack',
@@ -393,7 +534,8 @@ if ( ! function_exists( 'ajth_get_accommodation_packages' ) ) {
 						'description'  => (string) ( $row['short_description'] ?? '' ),
 						'popular'      => ! empty( $row['is_featured'] ),
 						'available'    => ! isset( $row['is_active'] ) || ! empty( $row['is_active'] ),
-						'url'          => '#',
+						'order'        => (int) ( $row['order'] ?? 0 ),
+						'url'          => $url,
 					);
 				},
 				$rows

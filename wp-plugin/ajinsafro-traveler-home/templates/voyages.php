@@ -204,6 +204,11 @@ if (! function_exists('ajinsafro_get_tour_availability')) {
     }
 }
 
+add_filter('body_class', function ($classes) {
+    $classes[] = 'page-voyages-ajinsafro';
+    return $classes;
+});
+
 get_header();
 
 $settings = ajth_get_settings();
@@ -1298,7 +1303,6 @@ $rating_label = static function (float $rating): string {
                                                 <span class="photo-placeholder">Aucune photo</span>
                                             <?php } ?>
                                         </a>
-                                        <button class="fav" type="button" aria-label="Ajouter aux favoris">♡</button>
                                         <div class="photo-badges">
                                             <?php if ($card['is_featured']) { ?>
                                                 <span class="photo-badge">Selection Ajinsafro</span>
@@ -1321,61 +1325,35 @@ $rating_label = static function (float $rating): string {
                                             <?php if (empty($card['tour_types']) && ! empty($card['themes'])) { ?><span><?php echo esc_html(implode(' / ', $card['themes'])); ?></span><?php } ?>
                                         </div>
                                         <h3><a href="<?php echo esc_url($card['permalink']); ?>"><?php echo esc_html($card['title']); ?></a></h3>
-                                        <div class="location location--primary">
-                                            <?php if ($card['destination'] !== '') { ?><span><?php echo esc_html($card['destination']); ?></span><?php } ?>
-                                            <?php if ($card['next_departure_label'] !== '') { ?><span><?php echo esc_html($card['next_departure_label']); ?></span><?php } ?>
-                                        </div>
-                                        <div class="meta-grid">
-                                            <?php if ($card['destination'] !== '') { ?>
-                                                <div class="meta-item">
-                                                    <span class="meta-item__label">Destination</span>
-                                                    <strong><?php echo esc_html($card['destination']); ?></strong>
-                                                </div>
-                                            <?php } ?>
-                                            <?php if ($card['next_departure_label'] !== '') { ?>
-                                                <div class="meta-item">
-                                                    <span class="meta-item__label">Depart</span>
-                                                    <strong><?php echo esc_html($card['next_departure_label']); ?></strong>
-                                                </div>
-                                            <?php } ?>
+                                        <div class="hotel-facts">
                                             <?php if ($card['duration_days'] > 0 || $card['duration_label'] !== '') { ?>
-                                                <div class="meta-item">
-                                                    <span class="meta-item__label">Duree</span>
-                                                    <strong><?php echo esc_html($card['duration_days'] > 0 ? $card['duration_days'] . ' jours' : $card['duration_label']); ?></strong>
-                                                </div>
+                                                <span class="hotel-fact"><?php echo esc_html($card['duration_days'] > 0 ? $card['duration_days'] . ' jours' : $card['duration_label']); ?></span>
                                             <?php } ?>
                                             <?php if ($card['max_people'] > 0) { ?>
-                                                <div class="meta-item">
-                                                    <span class="meta-item__label">Voyageurs</span>
-                                                    <strong><?php echo esc_html((string) $card['max_people']); ?> max</strong>
-                                                </div>
+                                                <span class="hotel-fact"><?php echo esc_html((string) $card['max_people']); ?> voyageurs max</span>
                                             <?php } ?>
+                                        </div>
+                                        <div class="location location--plain">
+                                            <?php if ($card['destination'] !== '') { ?><span><?php echo esc_html($card['destination']); ?></span><?php } ?>
                                         </div>
                                         <p class="description"><?php echo esc_html($card['excerpt']); ?></p>
-                                        <div class="amenities">
-                                            <?php foreach ($card['service_chips'] as $service_chip) { ?>
-                                                <span class="amenity"><?php echo esc_html($service_chip); ?></span>
-                                            <?php } ?>
-                                            <?php foreach ($card['tags'] as $tag_name) { ?>
-                                                <span class="amenity amenity--subtle"><?php echo esc_html($tag_name); ?></span>
+                                        <div class="hotel-highlights">
+                                            <?php foreach (array_slice($card['service_chips'], 0, 2) as $service_chip) { ?>
+                                                <span class="hotel-highlight"><?php echo esc_html($service_chip); ?></span>
                                             <?php } ?>
                                         </div>
-                                        <div class="good-note">Support Ajinsafro · Disponibilites verifiees · Reservation rapide</div>
                                     </div>
 
                                     <aside class="hotel-side">
-                                        <div class="rating-box">
-                                            <div class="rating-text">
-                                                <?php if ($card['rating'] > 0) { ?>
+                                        <?php if ($card['rating'] > 0) { ?>
+                                            <div class="rating-box">
+                                                <div class="rating-text">
                                                     <strong><?php echo esc_html($rating_label((float) $card['rating'])); ?></strong>
                                                     <span><?php echo esc_html($card['reviews'] > 0 ? sprintf('%d avis', $card['reviews']) : 'Sans avis'); ?></span>
-                                                <?php } else { ?>
-                                                    <strong>Avis clients</strong>
-                                                    <span>En cours de collecte</span>
-                                                <?php } ?>
+                                                </div>
+                                                <div class="rating-score"><?php echo esc_html(number_format((float) $card['rating'], 1, '.', '')); ?></div>
                                             </div>
-                                            <div class="rating-score"><?php echo esc_html($card['rating'] > 0 ? number_format((float) $card['rating'], 1, '.', '') : '--'); ?></div>
-                                        </div>
+                                        <?php } ?>
 
                                         <div class="price-area">
                                             <small>A partir de</small>
@@ -1388,9 +1366,8 @@ $rating_label = static function (float $rating): string {
                                             <div class="tax"><?php echo esc_html($card['price_from_label'] !== '' ? 'par personne' : 'selon disponibilite'); ?></div>
                                         </div>
 
-                                        <div class="card-actions">
-                                            <a class="secondary-btn" href="<?php echo esc_url($card['permalink']); ?>">Voir le voyage</a>
-                                            <a class="primary-btn" href="<?php echo esc_url($card['permalink']); ?>#ajtb-v1-summary-card">Reserver</a>
+                                        <div class="card-actions card-actions--single">
+                                            <a class="primary-btn" href="<?php echo esc_url($card['permalink']); ?>">Voir le voyage</a>
                                         </div>
 
                                         <?php if ($debug_voyages) { ?>
@@ -1439,16 +1416,6 @@ $rating_label = static function (float $rating): string {
                     <?php } ?>
                 </section>
 
-                <aside class="ad-col" aria-label="Promotions voyages">
-                    <div class="ad-box">
-                        <strong>Departs verifies sur nos sejours phares</strong>
-                        <button type="button">Voir les offres</button>
-                    </div>
-                    <div class="ad-box">
-                        <strong>Circuits, omra et escapades selectionnes par Ajinsafro</strong>
-                        <button type="button">Reserver</button>
-                    </div>
-                </aside>
             </main>
 
             <button class="mobile-filter-btn" type="button" id="ajvb-open-filters">Filtres</button>

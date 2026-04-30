@@ -156,6 +156,10 @@ class Voyage extends Model
     {
         return $this->pricingTiers()
             ->where('min_participants', '<=', $count)
+            ->where(function ($query) use ($count) {
+                $query->whereNull('max_people')
+                    ->orWhere('max_people', '>=', $count);
+            })
             ->orderBy('min_participants', 'desc')
             ->first();
     }

@@ -101,10 +101,13 @@
 
   function normalizeActivity(item) {
     const includes = Array.isArray(item.includes) ? item.includes : [];
+    const safeUrl = resolveNavUrl(item.url, item.slug, 'activity');
+    const safeBookingUrl = resolveNavUrl(item.booking_url || item.bookingUrl || item.url, item.slug, 'activity');
 
     return {
       id: Number(item.id || 0),
       title: String(item.title || ''),
+      slug: String(item.slug || ''),
       country: String(item.country || ''),
       city: String(item.city || ''),
       category: String(item.category || ''),
@@ -123,9 +126,24 @@
       withGuide: Boolean(item.with_guide),
       transportIncluded: Boolean(item.transport_included),
       badge: String(item.badge || ''),
-      url: String(item.url || '#'),
-      bookingUrl: String(item.booking_url || item.url || '#')
+      url: safeUrl,
+      bookingUrl: safeBookingUrl
     };
+  }
+
+  function resolveNavUrl(value, slug, kind) {
+    const raw = String(value || '').trim();
+    if (raw && raw !== '#' && raw.toLowerCase() !== 'javascript:void(0)') {
+      return raw;
+    }
+
+    const base = kind === 'activity' ? '/activites/' : '/';
+    const key = String(slug || '').trim();
+    if (key) {
+      return `${base}?activity=${encodeURIComponent(key)}`;
+    }
+
+    return base;
   }
 
   function buildCityMap(items) {
