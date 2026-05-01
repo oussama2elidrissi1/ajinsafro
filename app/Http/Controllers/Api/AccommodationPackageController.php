@@ -16,10 +16,13 @@ class AccommodationPackageController extends Controller
             ->orderBy('id')
             ->get()
             ->map(function (AccommodationPackage $package) {
+                $publicBase = rtrim((string) config('app.public_url', config('app.url', 'https://ajinsafro.net')), '/');
+
                 return [
                     'id' => $package->id,
                     'title' => $package->title,
                     'slug' => $package->slug,
+                    'detail_url' => $publicBase . '/hebergement/pack/' . $package->slug,
                     'country' => $package->country,
                     'city' => $package->city,
                     'duration_days' => $package->duration_days,

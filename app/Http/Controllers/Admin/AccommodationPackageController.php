@@ -78,7 +78,7 @@ class AccommodationPackageController extends Controller
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:accommodation_packages,slug' . ($ignoreId ? ',' . $ignoreId : '')],
+            'slug' => ['nullable', 'string', 'max:255', 'unique:accommodation_packages,slug' . ($ignoreId ? ',' . $ignoreId : '')],
             'country' => ['required', 'string', 'max:100'],
             'city' => ['required', 'string', 'max:100'],
             'duration_days' => ['required', 'integer', 'min:1'],

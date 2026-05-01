@@ -78,7 +78,7 @@ class ActivityOfferController extends Controller
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:activity_offers,slug' . ($ignoreId ? ',' . $ignoreId : '')],
+            'slug' => ['nullable', 'string', 'max:255', 'unique:activity_offers,slug' . ($ignoreId ? ',' . $ignoreId : '')],
             'country' => ['required', 'string', 'max:100'],
             'city' => ['required', 'string', 'max:100'],
             'category' => ['required', 'string', 'max:100'],

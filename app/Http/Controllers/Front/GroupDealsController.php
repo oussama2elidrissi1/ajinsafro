@@ -22,21 +22,23 @@ class GroupDealsController extends Controller
         $search = trim((string) $request->input('q', ''));
         $destination = trim((string) $request->input('destination', ''));
         $status = trim((string) $request->input('status', ''));
+        $category = trim((string) $request->input('category', ''));
 
         $query = GroupDeal::query()
-            ->with('pricingTiers')
-            ->whereIn('status', [
-                GroupDeal::STATUS_PUBLISHED,
-                GroupDeal::STATUS_GUARANTEED,
-            ])
-            ->orderBy('start_date')
-            ->orderByDesc('updated_at');
+            ->with(['priceTiers', 'services', 'categories'])
+            ->where('is_active', true)
+            ->orderByDesc('is_featured')
+            ->orderBy('sort_order')
+            ->orderBy('departure_date');
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                $builder->where('title', 'like', '%'.$search.'%')
-                    ->orWhere('destination', 'like', '%'.$search.'%')
-                    ->orWhere('description', 'like', '%'.$search.'%');
+                $builder->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('destination', 'like', '%' . $search . '%')
+                    ->orWhere('country', 'like', '%' . $search . '%')
+                    ->orWhere('city', 'like', '%' . $search . '%')
+                    ->orWhere('short_description', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%');
             });
         }
 
@@ -48,24 +50,36 @@ class GroupDealsController extends Controller
             $query->where('status', $status);
         }
 
+        if ($category !== '') {
+            $query->whereHas('categories', fn ($builder) => $builder->where('slug', $category));
+        }
+
         $deals = $query->paginate(9)->withQueryString();
         $deals->getCollection()->transform(fn (GroupDeal $deal) => $this->service->syncOfferMetrics($deal));
 
         $destinations = GroupDeal::query()
-            ->whereIn('status', [GroupDeal::STATUS_PUBLISHED, GroupDeal::STATUS_GUARANTEED])
+            ->where('is_active', true)
             ->whereNotNull('destination')
             ->where('destination', '!=', '')
             ->orderBy('destination')
             ->distinct()
             ->pluck('destination');
 
+        $categories = \App\Models\GroupDealCategory::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['name', 'slug']);
+
         return view('group-deals.index', [
             'deals' => $deals,
             'destinations' => $destinations,
+            'categories' => $categories,
             'filters' => [
                 'q' => $search,
                 'destination' => $destination,
                 'status' => $status,
+                'category' => $category,
             ],
         ]);
     }
@@ -74,7 +88,9 @@ class GroupDealsController extends Controller
     {
         $groupDeal = GroupDeal::query()
             ->with([
-                'pricingTiers',
+                'priceTiers',
+                'services',
+                'categories',
                 'participants' => fn ($query) => $query
                     ->whereIn('status', [
                         GroupDealParticipant::STATUS_PENDING,
@@ -84,6 +100,7 @@ class GroupDealsController extends Controller
                     ->orderByDesc('created_at'),
             ])
             ->where('slug', $slug)
+            ->where('is_active', true)
             ->firstOrFail();
 
         $client = null;
@@ -109,7 +126,7 @@ class GroupDealsController extends Controller
 
     public function participate(Request $request, string $slug): RedirectResponse
     {
-        $groupDeal = GroupDeal::query()->where('slug', $slug)->firstOrFail();
+        $groupDeal = GroupDeal::query()->where('slug', $slug)->where('is_active', true)->firstOrFail();
 
         $data = $request->validate([
             'full_name' => 'required|string|max:255',
@@ -139,6 +156,6 @@ class GroupDealsController extends Controller
 
         return redirect()
             ->route('front.group-deals.show', $groupDeal->slug)
-            ->with('success', sprintf('Participation enregistrée pour %s.', $participant->full_name ?: $groupDeal->title));
+            ->with('success', sprintf('Participation enregistree pour %s.', $participant->full_name ?: $groupDeal->title));
     }
 }

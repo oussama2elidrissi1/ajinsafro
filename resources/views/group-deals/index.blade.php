@@ -46,6 +46,17 @@
                             @endforeach
                         </select>
                     </div>
+                    @if(($categories ?? collect())->isNotEmpty())
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Type de groupe</label>
+                            <select name="category" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm bg-white">
+                                <option value="">Tous les types</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->slug }}" @selected(($f['category'] ?? '') === $category->slug)>{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Statut</label>
                         <select name="status" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm bg-white">
@@ -99,7 +110,7 @@
                                         <div class="text-lg font-bold text-[#f28c28]">{{ $deal->current_price ? number_format((float) $deal->current_price, 0, ',', ' ') . ' DH' : 'N/A' }}</div>
                                     </div>
                                 </div>
-                                <p class="mt-3 text-sm leading-6 text-slate-600">{{ \Illuminate\Support\Str::limit(strip_tags((string) $deal->description), 130) }}</p>
+                                <p class="mt-3 text-sm leading-6 text-slate-600">{{ \Illuminate\Support\Str::limit(strip_tags((string) ($deal->short_description ?: $deal->description)), 130) }}</p>
 
                                 <div class="mt-4 rounded-2xl bg-slate-50 p-4">
                                     <div class="flex items-center justify-between text-sm text-slate-700">
@@ -119,7 +130,7 @@
                                 </div>
 
                                 @if($nextTier)
-                                    <p class="mt-4 text-sm text-slate-600">Si le groupe atteint {{ $nextTier->min_participants }} personnes, le prix passera à <span class="font-semibold text-[#123b69]">{{ number_format((float) $nextTier->price_per_person, 0, ',', ' ') }} DH</span>.</p>
+                                    <p class="mt-4 text-sm text-slate-600">Si le groupe atteint {{ $nextTier->min_people }} personnes, le prix passera à <span class="font-semibold text-[#123b69]">{{ number_format((float) $nextTier->price_per_person, 0, ',', ' ') }} DH</span>.</p>
                                 @elseif($bestTier)
                                     <p class="mt-4 text-sm text-slate-600">Meilleur prix possible: <span class="font-semibold text-[#123b69]">{{ number_format((float) $bestTier->price_per_person, 0, ',', ' ') }} DH</span>.</p>
                                 @endif

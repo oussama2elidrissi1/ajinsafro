@@ -453,32 +453,61 @@ if ( ! function_exists( 'ajth_map_package_include_to_key' ) ) {
 
 if ( ! function_exists( 'ajth_get_accommodation_package_public_url' ) ) {
 	/**
-	 * Resolve a public URL for an accommodation package.
+	 * Build the canonical detail URL for a package on the Hebergement page.
 	 *
-	 * If no dedicated detail page exists yet, fall back to the hebergement page
-	 * with a stable `pack` query parameter rather than `#`.
+	 * @param string $slug Package slug.
+	 * @return string
+	 */
+	function ajth_get_accommodation_package_detail_url( $slug ) {
+		$slug = sanitize_title( (string) $slug );
+		$base = function_exists( 'ajth_get_hebergement_page_url' )
+			? ajth_get_hebergement_page_url()
+			: home_url( '/hebergement/' );
+
+		if ( '' === $slug ) {
+			return $base;
+		}
+
+		return trailingslashit( trailingslashit( $base ) . 'pack/' . rawurlencode( $slug ) );
+	}
+
+	/**
+	 * Resolve a public URL for an accommodation package.
 	 *
 	 * @param array<string, mixed> $row Package payload.
 	 * @return string
 	 */
 	function ajth_get_accommodation_package_public_url( array $row ) {
-		foreach ( array( 'url', 'detail_url', 'permalink', 'link' ) as $key ) {
-			$value = trim( (string) ( $row[ $key ] ?? '' ) );
-			if ( '' !== $value && '#' !== $value ) {
-				return $value;
-			}
+		$pack_key = trim( (string) ( $row['slug'] ?? '' ) );
+		if ( '' === $pack_key ) {
+			$pack_key = trim( (string) ( $row['id'] ?? '' ) );
+		}
+
+		if ( '' !== $pack_key ) {
+			return ajth_get_accommodation_package_detail_url( $pack_key );
 		}
 
 		$base = function_exists( 'ajth_get_hebergement_page_url' )
 			? ajth_get_hebergement_page_url()
 			: home_url( '/hebergement/' );
 
-		$pack_key = trim( (string) ( $row['slug'] ?? '' ) );
-		if ( '' === $pack_key ) {
-			$pack_key = trim( (string) ( $row['id'] ?? '' ) );
+		return $base;
+	}
+}
+
+if ( ! function_exists( 'ajth_get_current_accommodation_pack_slug' ) ) {
+	/**
+	 * Resolve the current pack slug from rewrite var or query string.
+	 *
+	 * @return string
+	 */
+	function ajth_get_current_accommodation_pack_slug() {
+		$slug = get_query_var( 'ajth_hebergement_pack', '' );
+		if ( '' === $slug && isset( $_GET['pack'] ) ) {
+			$slug = wp_unslash( $_GET['pack'] );
 		}
 
-		return '' !== $pack_key ? add_query_arg( array( 'pack' => $pack_key ), $base ) : $base;
+		return sanitize_title( (string) $slug );
 	}
 }
 
@@ -541,5 +570,45 @@ if ( ! function_exists( 'ajth_get_accommodation_packages' ) ) {
 				$rows
 			)
 		);
+	}
+}
+
+if ( ! function_exists( 'ajth_get_accommodation_package_by_slug' ) ) {
+	/**
+	 * Find one accommodation package by slug or fallback id.
+	 *
+	 * @param string $slug Requested slug.
+	 * @return array<string, mixed>|null
+	 */
+	function ajth_get_accommodation_package_by_slug( $slug ) {
+		$slug = sanitize_title( (string) $slug );
+		if ( '' === $slug ) {
+			return null;
+		}
+
+		foreach ( ajth_get_accommodation_packages() as $row ) {
+			$row_slug = sanitize_title( (string) ( $row['slug'] ?? $row['id'] ?? '' ) );
+			if ( $row_slug === $slug ) {
+				return $row;
+			}
+		}
+
+		return null;
+	}
+}
+
+if ( ! function_exists( 'ajth_get_accommodation_package_reservation_url' ) ) {
+	/**
+	 * Temporary booking CTA for accommodation packs.
+	 *
+	 * @param array<string, mixed> $row Package payload.
+	 * @return string
+	 */
+	function ajth_get_accommodation_package_reservation_url( array $row ) {
+		$title = trim( (string) ( $row['title'] ?? 'Pack hébergement Ajinsafro' ) );
+		$url   = trim( (string) ( $row['url'] ?? ajth_get_accommodation_package_public_url( $row ) ) );
+		$text  = rawurlencode( sprintf( 'Bonjour Ajinsafro, je souhaite réserver le pack "%s". Voici le lien: %s', $title, $url ) );
+
+		return 'https://wa.me/212660683464?text=' . $text;
 	}
 }

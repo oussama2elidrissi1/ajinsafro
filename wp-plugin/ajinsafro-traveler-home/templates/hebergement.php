@@ -16,7 +16,6 @@ $page_url = function_exists('ajth_get_hebergement_page_url')
     ? ajth_get_hebergement_page_url()
     : home_url('/hebergement/');
 
-// Build unique lists for hero dropdowns from all items
 $all_items = array();
 if (function_exists('getAjinsafroHebergements')) {
     $all_items = getAjinsafroHebergements(200, array('posts_per_page' => 200));
@@ -36,6 +35,247 @@ $destinations = array_values(array_unique($destinations));
 $types = array_values(array_unique($types));
 sort($destinations);
 sort($types);
+
+$current_pack_slug = function_exists('ajth_get_current_accommodation_pack_slug')
+    ? ajth_get_current_accommodation_pack_slug()
+    : '';
+$current_pack = ($current_pack_slug && function_exists('ajth_get_accommodation_package_by_slug'))
+    ? ajth_get_accommodation_package_by_slug($current_pack_slug)
+    : null;
+
+if ($current_pack) {
+    $pack_title = (string) ($current_pack['title'] ?? 'Pack hébergement Ajinsafro');
+    $pack_city = trim((string) ($current_pack['city'] ?? ''));
+    $pack_country = trim((string) ($current_pack['country'] ?? 'Maroc'));
+    $pack_location = trim(implode(', ', array_filter(array($pack_city, $pack_country))));
+    $pack_type = (string) ($current_pack['accommodation_type'] ?? $current_pack['typeLabel'] ?? 'Hébergement');
+    $pack_duration = (string) ($current_pack['duration_label'] ?? $current_pack['duration'] ?? '');
+    $pack_board = (string) ($current_pack['pension_type'] ?? $current_pack['pensionLabel'] ?? '');
+    $pack_price = isset($current_pack['price_from']) ? (float) $current_pack['price_from'] : (isset($current_pack['price']) ? (float) $current_pack['price'] : null);
+    $pack_currency = (string) ($current_pack['currency'] ?? 'DH');
+    $pack_description = trim((string) ($current_pack['short_description'] ?? $current_pack['description'] ?? ''));
+    $pack_image = trim((string) ($current_pack['image_url'] ?? $current_pack['image'] ?? ''));
+    $pack_includes = isset($current_pack['includes']) && is_array($current_pack['includes']) ? $current_pack['includes'] : array();
+    $pack_url = function_exists('ajth_get_accommodation_package_public_url') ? ajth_get_accommodation_package_public_url($current_pack) : $page_url;
+    $reservation_url = function_exists('ajth_get_accommodation_package_reservation_url') ? ajth_get_accommodation_package_reservation_url($current_pack) : $pack_url;
+    $advice_url = 'https://wa.me/212660683464?text=' . rawurlencode(sprintf('Bonjour Ajinsafro, j’aimerais être conseillé sur le pack "%s". %s', $pack_title, $pack_url));
+    $price_label = $pack_price !== null ? number_format($pack_price, 0, ',', ' ') . ' ' . $pack_currency : 'Sur demande';
+
+    $similar_packs = array();
+    if (function_exists('ajth_get_accommodation_packages')) {
+        $all_packs = ajth_get_accommodation_packages();
+        foreach ($all_packs as $pack_row) {
+            $row_slug = sanitize_title((string) ($pack_row['slug'] ?? $pack_row['id'] ?? ''));
+            if ($row_slug === $current_pack_slug) {
+                continue;
+            }
+
+            if ($pack_city !== '' && strtolower((string) ($pack_row['city'] ?? '')) !== strtolower($pack_city)) {
+                continue;
+            }
+
+            $similar_packs[] = $pack_row;
+            if (count($similar_packs) >= 3) {
+                break;
+            }
+        }
+
+        if (count($similar_packs) < 3) {
+            foreach ($all_packs as $pack_row) {
+                $row_slug = sanitize_title((string) ($pack_row['slug'] ?? $pack_row['id'] ?? ''));
+                if ($row_slug === $current_pack_slug) {
+                    continue;
+                }
+                $already = false;
+                foreach ($similar_packs as $existing) {
+                    $existing_slug = sanitize_title((string) ($existing['slug'] ?? $existing['id'] ?? ''));
+                    if ($existing_slug === $row_slug) {
+                        $already = true;
+                        break;
+                    }
+                }
+                if ($already) {
+                    continue;
+                }
+                $similar_packs[] = $pack_row;
+                if (count($similar_packs) >= 3) {
+                    break;
+                }
+            }
+        }
+    }
+    ?>
+    <div class="aj-home-wrap">
+        <div class="aj-home aj-hebergement-booking-page">
+            <?php ajth_render_site_header($settings); ?>
+
+            <main class="aj-hebergement-shell aj-pack-page-shell">
+                <div class="aj-hebergement-container aj-pack-page-container">
+                    <nav class="aj-hebergement-breadcrumb" aria-label="Fil d'Ariane">
+                        <a href="<?php echo esc_url(home_url('/')); ?>">Accueil</a>
+                        <span>/</span>
+                        <a href="<?php echo esc_url($page_url); ?>">Hébergement</a>
+                        <span>/</span>
+                        <span><?php echo esc_html($pack_title); ?></span>
+                    </nav>
+
+                    <section class="aj-pack-hero">
+                        <div class="aj-pack-hero-media">
+                            <?php if ($pack_image !== '') { ?>
+                                <img src="<?php echo esc_url($pack_image); ?>" alt="<?php echo esc_attr($pack_title); ?>">
+                            <?php } else { ?>
+                                <div class="aj-pack-hero-fallback">Ajinsafro</div>
+                            <?php } ?>
+                        </div>
+                        <div class="aj-pack-hero-copy">
+                            <a class="aj-pack-back" href="<?php echo esc_url($page_url); ?>">← Retour aux packs hébergement</a>
+                            <div class="aj-pack-topline">
+                                <span class="aj-category-badge"><?php echo esc_html($pack_type); ?></span>
+                                <span class="aj-status-badge"><?php echo !empty($current_pack['is_active']) ? 'Disponible' : 'À confirmer'; ?></span>
+                                <?php if ($pack_board !== '') { ?>
+                                    <span class="aj-category-badge"><?php echo esc_html($pack_board); ?></span>
+                                <?php } ?>
+                            </div>
+                            <h1><?php echo esc_html($pack_title); ?></h1>
+                            <p class="aj-pack-hero-meta">
+                                <?php echo esc_html($pack_location !== '' ? $pack_location : 'Maroc'); ?>
+                                <?php if ($pack_duration !== '') { ?>
+                                    <span>•</span>
+                                    <?php echo esc_html($pack_duration); ?>
+                                <?php } ?>
+                            </p>
+                            <p class="aj-pack-hero-summary">
+                                <?php echo esc_html($pack_description !== '' ? $pack_description : 'Pack hébergement Ajinsafro prêt à réserver avec services inclus et accompagnement personnalisé.'); ?>
+                            </p>
+                            <div class="aj-pack-hero-actions">
+                                <a class="aj-pack-reserve" href="<?php echo esc_url($reservation_url); ?>" target="_blank" rel="noopener">Réserver ce pack</a>
+                                <a class="aj-pack-secondary" href="<?php echo esc_url($advice_url); ?>" target="_blank" rel="noopener">Demander conseil</a>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="aj-pack-layout">
+                        <div class="aj-pack-main">
+                            <article class="aj-pack-block">
+                                <div class="aj-pack-block-head">
+                                    <span class="aj-section-kicker">Informations principales</span>
+                                    <h2>Résumé du pack</h2>
+                                </div>
+                                <div class="aj-pack-specs">
+                                    <div class="aj-pack-spec">
+                                        <strong>Destination</strong>
+                                        <span><?php echo esc_html($pack_location !== '' ? $pack_location : 'Maroc'); ?></span>
+                                    </div>
+                                    <div class="aj-pack-spec">
+                                        <strong>Type d'hébergement</strong>
+                                        <span><?php echo esc_html($pack_type); ?></span>
+                                    </div>
+                                    <div class="aj-pack-spec">
+                                        <strong>Durée</strong>
+                                        <span><?php echo esc_html($pack_duration !== '' ? $pack_duration : 'À confirmer'); ?></span>
+                                    </div>
+                                    <div class="aj-pack-spec">
+                                        <strong>Pension</strong>
+                                        <span><?php echo esc_html($pack_board !== '' ? $pack_board : 'Non précisée'); ?></span>
+                                    </div>
+                                </div>
+                            </article>
+
+                            <article class="aj-pack-block">
+                                <div class="aj-pack-block-head">
+                                    <span class="aj-section-kicker">Services inclus</span>
+                                    <h2>Ce que comprend le pack</h2>
+                                </div>
+                                <?php if (!empty($pack_includes)) { ?>
+                                    <ul class="aj-pack-detail-list aj-pack-services-grid">
+                                        <?php foreach ($pack_includes as $line) { ?>
+                                            <li><?php echo esc_html((string) $line); ?></li>
+                                        <?php } ?>
+                                    </ul>
+                                <?php } else { ?>
+                                    <p class="aj-pack-empty-copy">Les services inclus seront confirmés avec votre conseiller Ajinsafro.</p>
+                                <?php } ?>
+                            </article>
+
+                            <article class="aj-pack-block">
+                                <div class="aj-pack-block-head">
+                                    <span class="aj-section-kicker">Description</span>
+                                    <h2>Détails du séjour</h2>
+                                </div>
+                                <div class="aj-pack-description">
+                                    <?php echo wpautop(esc_html($pack_description !== '' ? $pack_description : 'Ce pack hébergement a été créé depuis l’administration Ajinsafro. Contactez-nous pour recevoir le programme détaillé, les options de chambre et les conseils personnalisés.')); ?>
+                                </div>
+                            </article>
+
+                            <?php if (!empty($similar_packs)) { ?>
+                                <section class="aj-pack-block">
+                                    <div class="aj-pack-block-head">
+                                        <span class="aj-section-kicker">Suggestions Ajinsafro</span>
+                                        <h2>Packs similaires</h2>
+                                    </div>
+                                    <div class="aj-pack-similar-grid">
+                                        <?php foreach ($similar_packs as $pack_row) {
+                                            $row_title = (string) ($pack_row['title'] ?? '');
+                                            $row_url = function_exists('ajth_get_accommodation_package_public_url') ? ajth_get_accommodation_package_public_url($pack_row) : $page_url;
+                                            $row_image = trim((string) ($pack_row['image_url'] ?? $pack_row['image'] ?? ''));
+                                            $row_location = trim(implode(', ', array_filter(array((string) ($pack_row['city'] ?? ''), (string) ($pack_row['country'] ?? '')))));
+                                            $row_price = isset($pack_row['price_from']) ? (float) $pack_row['price_from'] : (isset($pack_row['price']) ? (float) $pack_row['price'] : null);
+                                            ?>
+                                            <article class="aj-featured-card">
+                                                <a class="aj-featured-visual aj-featured-visual-link" href="<?php echo esc_url($row_url); ?>">
+                                                    <?php if ($row_image !== '') { ?>
+                                                        <img src="<?php echo esc_url($row_image); ?>" alt="<?php echo esc_attr($row_title); ?>" loading="lazy">
+                                                    <?php } else { ?>
+                                                        <div class="aj-pack-hero-fallback">Ajinsafro</div>
+                                                    <?php } ?>
+                                                    <span class="aj-badge">Pack</span>
+                                                    <?php if ($row_price !== null) { ?>
+                                                        <div class="aj-featured-price"><small>À partir de</small><?php echo esc_html(number_format($row_price, 0, ',', ' ') . ' DH'); ?></div>
+                                                    <?php } ?>
+                                                </a>
+                                                <div class="aj-featured-content">
+                                                    <div class="aj-inline-meta">
+                                                        <span><?php echo esc_html($row_location !== '' ? $row_location : 'Maroc'); ?></span>
+                                                        <span><?php echo esc_html((string) ($pack_row['accommodation_type'] ?? $pack_row['typeLabel'] ?? 'Hébergement')); ?></span>
+                                                    </div>
+                                                    <h3><a class="aj-featured-title-link" href="<?php echo esc_url($row_url); ?>"><?php echo esc_html($row_title); ?></a></h3>
+                                                    <p style="margin:0;color:var(--aj-muted);font-size:13px;line-height:1.5;"><?php echo esc_html((string) ($pack_row['short_description'] ?? $pack_row['description'] ?? '')); ?></p>
+                                                    <a class="aj-featured-link" href="<?php echo esc_url($row_url); ?>">Voir le pack</a>
+                                                </div>
+                                            </article>
+                                        <?php } ?>
+                                    </div>
+                                </section>
+                            <?php } ?>
+                        </div>
+
+                        <aside class="aj-pack-sidebar">
+                            <div class="aj-pack-summary-card">
+                                <span class="aj-section-kicker">Récapitulatif prix</span>
+                                <h3><?php echo esc_html($pack_title); ?></h3>
+                                <div class="aj-pack-summary-price"><?php echo esc_html($price_label); ?></div>
+                                <ul class="aj-pack-summary-list">
+                                    <li><strong>Ville</strong><span><?php echo esc_html($pack_city !== '' ? $pack_city : 'N/A'); ?></span></li>
+                                    <li><strong>Pays</strong><span><?php echo esc_html($pack_country !== '' ? $pack_country : 'Maroc'); ?></span></li>
+                                    <li><strong>Durée</strong><span><?php echo esc_html($pack_duration !== '' ? $pack_duration : 'N/A'); ?></span></li>
+                                    <li><strong>Pension</strong><span><?php echo esc_html($pack_board !== '' ? $pack_board : 'N/A'); ?></span></li>
+                                    <li><strong>Disponibilité</strong><span class="aj-pack-summary-availability"><?php echo !empty($current_pack['is_active']) ? 'Active' : 'À confirmer'; ?></span></li>
+                                </ul>
+                                <div class="aj-pack-summary-actions">
+                                    <a class="aj-pack-reserve" href="<?php echo esc_url($reservation_url); ?>" target="_blank" rel="noopener">Réserver ce pack</a>
+                                    <a class="aj-pack-secondary" href="<?php echo esc_url($advice_url); ?>" target="_blank" rel="noopener">Demander conseil</a>
+                                </div>
+                            </div>
+                        </aside>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+    <?php
+    get_footer();
+    return;
+}
 ?>
 
 <div class="aj-home-wrap">

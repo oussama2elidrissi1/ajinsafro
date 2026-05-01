@@ -20,8 +20,8 @@
                     <h1 class="mt-5 text-4xl md:text-5xl font-bold leading-tight">{{ $groupDeal->title }}</h1>
                     <p class="mt-4 max-w-2xl text-lg text-white/85">{{ $groupDeal->description }}</p>
                     <div class="mt-6 flex flex-wrap gap-5 text-sm text-white/85">
-                        <span>Départ: {{ optional($groupDeal->start_date)->format('d/m/Y') ?: 'N/A' }}</span>
-                        <span>Retour: {{ optional($groupDeal->end_date)->format('d/m/Y') ?: 'N/A' }}</span>
+                        <span>Départ: {{ optional($groupDeal->departure_date ?: $groupDeal->start_date)->format('d/m/Y') ?: 'N/A' }}</span>
+                        <span>Retour: {{ optional($groupDeal->return_date ?: $groupDeal->end_date)->format('d/m/Y') ?: 'N/A' }}</span>
                         <span>Inscription jusqu'au {{ optional($groupDeal->registration_deadline)->format('d/m/Y') ?: 'N/A' }}</span>
                     </div>
                 </div>
@@ -94,7 +94,7 @@
                     <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
                         <h3 class="text-xl font-semibold text-[#123b69]">Services inclus</h3>
                         <ul class="mt-4 space-y-3 text-slate-700">
-                            @forelse($groupDeal->services_included ?? [] as $line)
+                            @forelse($groupDeal->included_services as $line)
                                 <li class="flex gap-3"><span class="mt-2 h-2 w-2 rounded-full bg-emerald-500"></span><span>{{ $line }}</span></li>
                             @empty
                                 <li class="text-slate-500">À compléter.</li>
@@ -104,7 +104,7 @@
                     <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
                         <h3 class="text-xl font-semibold text-[#123b69]">Non inclus</h3>
                         <ul class="mt-4 space-y-3 text-slate-700">
-                            @forelse($groupDeal->services_excluded ?? [] as $line)
+                            @forelse($groupDeal->excluded_services as $line)
                                 <li class="flex gap-3"><span class="mt-2 h-2 w-2 rounded-full bg-[#f28c28]"></span><span>{{ $line }}</span></li>
                             @empty
                                 <li class="text-slate-500">À compléter.</li>
@@ -122,7 +122,7 @@
                             <div class="rounded-3xl border px-4 py-4 {{ optional($stats['active_tier'])->id === $tier->id ? 'border-[#f28c28] bg-[#fff5ea]' : 'border-slate-200 bg-slate-50' }}">
                                 <div class="flex items-center justify-between gap-3">
                                     <div>
-                                        <div class="text-sm font-semibold text-slate-900">{{ $tier->min_participants }} à {{ $tier->max_people ?: '∞' }} personnes</div>
+                                        <div class="text-sm font-semibold text-slate-900">{{ $tier->min_people }} à {{ $tier->max_people ?: '∞' }} personnes</div>
                                         <div class="text-sm text-slate-500">{{ $tier->label ?: 'Palier de groupe' }}</div>
                                     </div>
                                     <div class="text-right">
@@ -138,7 +138,7 @@
                     @if($stats['best_tier'])
                         <p class="mt-5 rounded-2xl bg-[#123b69]/5 px-4 py-3 text-sm text-slate-700">
                             Meilleur prix possible: <strong>{{ number_format((float) $stats['best_tier']->price_per_person, 0, ',', ' ') }} DH</strong>
-                            si le groupe atteint {{ $stats['best_tier']->min_participants }} personnes.
+                            si le groupe atteint {{ $stats['best_tier']->min_people }} personnes.
                         </p>
                     @endif
                 </div>

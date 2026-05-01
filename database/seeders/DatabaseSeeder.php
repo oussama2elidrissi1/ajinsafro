@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             ReservationDemoSeeder::class,
             AccommodationPackageSeeder::class,
             ActivityOfferSeeder::class,
+            GroupDealsSeeder::class,
         ]);
     }
 }

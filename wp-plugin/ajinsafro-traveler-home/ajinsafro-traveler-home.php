@@ -1140,12 +1140,18 @@ function ajth_is_voyages_context()
 
 function ajth_is_hebergement_context()
 {
-    return is_page('hebergement') || is_post_type_archive('st_hotel') || (is_search() && get_query_var('post_type') === 'st_hotel');
+    return is_page('hebergement')
+        || get_query_var('ajth_hebergement_pack')
+        || is_post_type_archive('st_hotel')
+        || (is_search() && get_query_var('post_type') === 'st_hotel');
 }
 
 function ajth_is_activites_context()
 {
-    return is_page('activites') || is_post_type_archive('st_activity') || (is_search() && get_query_var('post_type') === 'st_activity');
+    return is_page('activites')
+        || get_query_var('ajth_activite_offer')
+        || is_post_type_archive('st_activity')
+        || (is_search() && get_query_var('post_type') === 'st_activity');
 }
 
 function ajth_is_transfert_context()
@@ -1234,6 +1240,58 @@ function ajth_maybe_flush_rewrite_rules_group_deals(): void
 add_action('init', 'ajth_ensure_voyages_page', 10);
 add_action('init', 'ajth_maybe_flush_rewrite_rules_once', 99);
 add_action('init', 'ajth_maybe_flush_rewrite_rules_group_deals', 99);
+
+function ajth_register_activites_offer_routes(): void
+{
+    add_rewrite_tag('%ajth_activite_offer%', '([^&]+)');
+    add_rewrite_rule('^activites/activite/([^/]+)/?$', 'index.php?pagename=activites&ajth_activite_offer=$matches[1]', 'top');
+}
+add_action('init', 'ajth_register_activites_offer_routes', 31);
+
+function ajth_query_vars_activites_offer(array $vars): array
+{
+    $vars[] = 'ajth_activite_offer';
+
+    return $vars;
+}
+add_filter('query_vars', 'ajth_query_vars_activites_offer');
+
+function ajth_maybe_flush_rewrite_rules_activites_offer(): void
+{
+    if (get_option('ajth_activites_offer_routing_flush_v1')) {
+        return;
+    }
+
+    flush_rewrite_rules(false);
+    update_option('ajth_activites_offer_routing_flush_v1', '1', true);
+}
+add_action('init', 'ajth_maybe_flush_rewrite_rules_activites_offer', 99);
+
+function ajth_register_hebergement_pack_routes(): void
+{
+    add_rewrite_tag('%ajth_hebergement_pack%', '([^&]+)');
+    add_rewrite_rule('^hebergement/pack/([^/]+)/?$', 'index.php?pagename=hebergement&ajth_hebergement_pack=$matches[1]', 'top');
+}
+add_action('init', 'ajth_register_hebergement_pack_routes', 30);
+
+function ajth_query_vars_hebergement_pack(array $vars): array
+{
+    $vars[] = 'ajth_hebergement_pack';
+
+    return $vars;
+}
+add_filter('query_vars', 'ajth_query_vars_hebergement_pack');
+
+function ajth_maybe_flush_rewrite_rules_hebergement_pack(): void
+{
+    if (get_option('ajth_hebergement_pack_routing_flush_v1')) {
+        return;
+    }
+
+    flush_rewrite_rules(false);
+    update_option('ajth_hebergement_pack_routing_flush_v1', '1', true);
+}
+add_action('init', 'ajth_maybe_flush_rewrite_rules_hebergement_pack', 99);
 
 /* ──────────────────────────────────────────────
  * Ensure "Vols" page exists (slug: vols)

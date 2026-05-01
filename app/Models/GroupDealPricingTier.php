@@ -11,6 +11,7 @@ class GroupDealPricingTier extends Model
         'group_deal_id',
         'voyage_id',
         'min_participants',
+        'min_people',
         'max_people',
         'price_per_person',
         'label',
@@ -21,10 +22,20 @@ class GroupDealPricingTier extends Model
         'group_deal_id' => 'integer',
         'voyage_id' => 'integer',
         'min_participants' => 'integer',
+        'min_people' => 'integer',
         'max_people' => 'integer',
         'price_per_person' => 'decimal:2',
-        'sort_order'       => 'integer',
+        'sort_order' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (GroupDealPricingTier $tier): void {
+            $value = $tier->min_people ?? $tier->min_participants;
+            $tier->min_people = $value;
+            $tier->min_participants = $value;
+        });
+    }
 
     public function groupDeal(): BelongsTo
     {

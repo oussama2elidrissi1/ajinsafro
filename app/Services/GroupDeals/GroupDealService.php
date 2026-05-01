@@ -167,10 +167,15 @@ class GroupDealService
 
         $activeTier = $deal->activePricingTier($currentParticipants);
         if (! $activeTier) {
-            $activeTier = $deal->pricingTiers()->orderBy('min_participants')->first();
+            $activeTier = $deal->priceTiers()->orderBy('min_people')->first();
         }
 
         $isGuaranteed = $currentParticipants >= max(1, (int) $deal->min_participants);
+        $startingPrice = (float) ($deal->priceTiers()->orderBy('min_people')->value('price_per_person') ?? 0);
+        $currentPrice = (float) ($activeTier?->price_per_person ?? 0);
+        $discountPercent = $startingPrice > 0 && $currentPrice > 0 && $currentPrice < $startingPrice
+            ? (int) round((($startingPrice - $currentPrice) / $startingPrice) * 100)
+            : 0;
 
         $status = $deal->status;
         if (! in_array($status, [GroupDeal::STATUS_DRAFT, GroupDeal::STATUS_CLOSED, GroupDeal::STATUS_CANCELLED], true)) {
@@ -179,7 +184,9 @@ class GroupDealService
 
         $deal->forceFill([
             'current_participants' => $currentParticipants,
-            'current_price' => $activeTier?->price_per_person,
+            'starting_price' => $startingPrice > 0 ? $startingPrice : $deal->starting_price,
+            'current_price' => $currentPrice > 0 ? $currentPrice : $deal->current_price,
+            'discount_percent' => $discountPercent,
             'status' => $status,
             'guaranteed_at' => $isGuaranteed
                 ? ($deal->guaranteed_at ?: now())
@@ -274,9 +281,9 @@ class GroupDealService
         $progression = min(100, (int) round(($confirmed / $threshold) * 100));
 
         $voyage     = $departure->voyage;
-        $tiers      = $voyage?->pricingTiers()->orderBy('min_participants')->get() ?? collect();
+        $tiers      = $voyage?->pricingTiers()->orderBy('min_people')->get() ?? collect();
         $activeTier = $voyage?->activePricingTier($confirmed);
-        $nextTier   = $tiers->first(fn ($t) => $t->min_participants > $confirmed);
+        $nextTier   = $tiers->first(fn ($t) => $t->min_people > $confirmed);
 
         return [
             'confirmed_count' => $confirmed,

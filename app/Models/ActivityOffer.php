@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class ActivityOffer extends Model
 {
@@ -32,4 +33,27 @@ class ActivityOffer extends Model
         'price_from' => 'decimal:2',
         'sort_order' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (ActivityOffer $offer): void {
+            $baseSlug = Str::slug((string) ($offer->slug ?: $offer->title));
+            if ($baseSlug === '') {
+                $baseSlug = 'activite-ajinsafro';
+            }
+
+            $slug = $baseSlug;
+            $suffix = 2;
+
+            while (static::query()
+                ->where('slug', $slug)
+                ->when($offer->exists, fn ($query) => $query->whereKeyNot($offer->getKey()))
+                ->exists()) {
+                $slug = $baseSlug . '-' . $suffix;
+                $suffix++;
+            }
+
+            $offer->slug = $slug;
+        });
+    }
 }

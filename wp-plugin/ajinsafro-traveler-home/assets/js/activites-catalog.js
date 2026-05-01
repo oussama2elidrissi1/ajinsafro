@@ -102,7 +102,7 @@
   function normalizeActivity(item) {
     const includes = Array.isArray(item.includes) ? item.includes : [];
     const safeUrl = resolveNavUrl(item.url, item.slug, 'activity');
-    const safeBookingUrl = resolveNavUrl(item.booking_url || item.bookingUrl || item.url, item.slug, 'activity');
+    const safeBookingUrl = resolveBookingUrl(item.booking_url || item.bookingUrl, safeUrl);
 
     return {
       id: Number(item.id || 0),
@@ -140,10 +140,21 @@
     const base = kind === 'activity' ? '/activites/' : '/';
     const key = String(slug || '').trim();
     if (key) {
-      return `${base}?activity=${encodeURIComponent(key)}`;
+      return kind === 'activity'
+        ? `${base.replace(/\/?$/, '/')}activite/${encodeURIComponent(key)}/`
+        : `${base}?activity=${encodeURIComponent(key)}`;
     }
 
     return base;
+  }
+
+  function resolveBookingUrl(value, fallbackUrl) {
+    const raw = String(value || '').trim();
+    if (raw && raw !== '#' && raw.toLowerCase() !== 'javascript:void(0)') {
+      return raw;
+    }
+
+    return fallbackUrl;
   }
 
   function buildCityMap(items) {
@@ -572,20 +583,20 @@
   function renderFeaturedCard(activity) {
     return `
       <article class="aj-featured-card">
-        <div class="aj-featured-visual">
+        <a class="aj-featured-visual aj-activity-visual-link" href="${escapeHtml(activity.url)}">
           <img src="${escapeHtml(activity.image)}" alt="${escapeHtml(activity.title)}" loading="lazy">
           <span class="aj-badge">${escapeHtml(activity.badge || 'A la une')}</span>
           <div class="aj-featured-price">
             <small>A partir de</small>
             ${escapeHtml(formatPrice(activity.price))}
           </div>
-        </div>
+        </a>
         <div class="aj-featured-content">
           <div class="aj-inline-meta">
             <span>${escapeHtml(activity.city)}</span>
             <span>${escapeHtml(activity.durationLabel)}</span>
           </div>
-          <h3>${escapeHtml(activity.title)}</h3>
+          <h3><a class="aj-featured-title-link" href="${escapeHtml(activity.url)}">${escapeHtml(activity.title)}</a></h3>
           <div class="aj-rating">
             <strong>${activity.rating.toFixed(1)}</strong>
             <span>${escapeHtml(activity.reviews.toLocaleString('fr-FR'))} avis</span>
@@ -599,20 +610,20 @@
   function renderActivityCard(activity) {
     return `
       <article class="aj-activity-card">
-        <div class="aj-card-media">
+        <a class="aj-card-media aj-activity-visual-link" href="${escapeHtml(activity.url)}">
           <img src="${escapeHtml(activity.image)}" alt="${escapeHtml(activity.title)}" loading="lazy">
           <div class="aj-card-badges">
             <span class="aj-category-badge">${escapeHtml(activity.category)}</span>
             <span class="aj-status-badge">${escapeHtml(activity.availability)}</span>
           </div>
-        </div>
+        </a>
         <div class="aj-card-body">
           <div class="aj-card-meta">
             <span class="aj-card-location">${escapeHtml(activity.country)} · ${escapeHtml(activity.city)}</span>
             <span>${escapeHtml(activity.durationLabel)}</span>
             <span>${activity.rating.toFixed(1)} / 5</span>
           </div>
-          <h3>${escapeHtml(activity.title)}</h3>
+          <h3><a class="aj-featured-title-link" href="${escapeHtml(activity.url)}">${escapeHtml(activity.title)}</a></h3>
           <div class="aj-card-facts">
             ${activity.includes.slice(0, 4).map((item) => `<span class="aj-card-fact">${escapeHtml(item)}</span>`).join('')}
           </div>

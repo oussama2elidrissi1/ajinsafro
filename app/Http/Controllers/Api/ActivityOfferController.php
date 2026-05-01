@@ -16,10 +16,13 @@ class ActivityOfferController extends Controller
             ->orderBy('id')
             ->get()
             ->map(function (ActivityOffer $offer) {
+                $publicBase = rtrim((string) config('app.public_url', config('app.url', 'https://ajinsafro.net')), '/');
+
                 return [
                     'id' => $offer->id,
                     'title' => $offer->title,
                     'slug' => $offer->slug,
+                    'detail_url' => $publicBase . '/activites/activite/' . $offer->slug,
                     'country' => $offer->country,
                     'city' => $offer->city,
                     'category' => $offer->category,

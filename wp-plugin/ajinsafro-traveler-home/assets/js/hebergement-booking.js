@@ -549,19 +549,19 @@
 
     return '' +
       '<article class="aj-featured-card' + (isSelected ? ' is-selected is-highlighted' : '') + '" data-pack-slug="' + escapeHtml(item.slug) + '">' +
-        '<div class="aj-featured-visual">' +
+        '<a class="aj-featured-visual aj-featured-visual-link" href="' + escapeHtml(item.url) + '">' +
           image +
           '<span class="aj-badge">Pack</span>' +
           priceHtml +
-        '</div>' +
+        '</a>' +
         '<div class="aj-featured-content">' +
           '<div class="aj-inline-meta">' +
             '<span>' + escapeHtml(item.location || 'Maroc') + '</span>' +
             '<span>' + escapeHtml(item.category || 'Hebergement') + '</span>' +
           '</div>' +
-          '<h3>' + escapeHtml(item.title) + '</h3>' +
+          '<h3><a class="aj-featured-title-link" href="' + escapeHtml(item.url) + '">' + escapeHtml(item.title) + '</a></h3>' +
           '<p style="margin:0;color:var(--aj-muted);font-size:13px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + escapeHtml(truncateText(item.description, 90)) + '</p>' +
-          '<button type="button" class="aj-featured-link" data-open-pack data-pack-slug="' + escapeHtml(item.slug) + '">Voir le pack</button>' +
+          '<a class="aj-featured-link" href="' + escapeHtml(item.url) + '">Voir le pack</a>' +
         '</div>' +
       '</article>';
   }

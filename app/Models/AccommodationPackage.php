@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class AccommodationPackage extends Model
 {
@@ -35,4 +36,27 @@ class AccommodationPackage extends Model
         'nights' => 'integer',
         'sort_order' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (AccommodationPackage $package): void {
+            $baseSlug = Str::slug((string) ($package->slug ?: $package->title));
+            if ($baseSlug === '') {
+                $baseSlug = 'pack-hebergement';
+            }
+
+            $slug = $baseSlug;
+            $suffix = 2;
+
+            while (static::query()
+                ->where('slug', $slug)
+                ->when($package->exists, fn ($query) => $query->whereKeyNot($package->getKey()))
+                ->exists()) {
+                $slug = $baseSlug . '-' . $suffix;
+                $suffix++;
+            }
+
+            $package->slug = $slug;
+        });
+    }
 }

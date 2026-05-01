@@ -145,7 +145,7 @@ class Voyage extends Model
     /** Paliers de prix pour le Group Deal. */
     public function pricingTiers()
     {
-        return $this->hasMany(GroupDealPricingTier::class)->orderBy('min_participants');
+        return $this->hasMany(GroupDealPricingTier::class)->orderBy('min_people');
     }
 
     /**
@@ -155,12 +155,12 @@ class Voyage extends Model
     public function activePricingTier(int $count): ?GroupDealPricingTier
     {
         return $this->pricingTiers()
-            ->where('min_participants', '<=', $count)
+            ->where('min_people', '<=', $count)
             ->where(function ($query) use ($count) {
                 $query->whereNull('max_people')
                     ->orWhere('max_people', '>=', $count);
             })
-            ->orderBy('min_participants', 'desc')
+            ->orderBy('min_people', 'desc')
             ->first();
     }
 

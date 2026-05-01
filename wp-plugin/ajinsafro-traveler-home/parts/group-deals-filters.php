@@ -14,6 +14,7 @@ $group_deals_filter_prefix = isset($group_deals_filter_prefix) ? (string) $group
 $group_deals_url = isset($group_deals_url) ? (string) $group_deals_url : home_url('/group-deals/');
 $available_destinations = isset($available_destinations) && is_array($available_destinations) ? $available_destinations : [];
 $available_services = isset($available_services) && is_array($available_services) ? $available_services : [];
+$available_categories = isset($available_categories) && is_array($available_categories) ? $available_categories : [];
 ?>
 
 <form method="get" action="<?php echo esc_url($group_deals_url); ?>" class="group-filters-form">
@@ -46,6 +47,20 @@ $available_services = isset($available_services) && is_array($available_services
                     <?php } ?>
                 </select>
             </label>
+
+            <?php if (! empty($available_categories)) { ?>
+                <label class="filter-field" for="<?php echo esc_attr($group_deals_filter_prefix . '-category'); ?>">
+                    <span>Type de groupe</span>
+                    <select id="<?php echo esc_attr($group_deals_filter_prefix . '-category'); ?>" name="category" class="filter-select">
+                        <option value="">Tous les types</option>
+                        <?php foreach ($available_categories as $category_slug => $category_name) { ?>
+                            <option value="<?php echo esc_attr((string) $category_slug); ?>" <?php selected(($selected_category ?? ''), $category_slug); ?>>
+                                <?php echo esc_html((string) $category_name); ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </label>
+            <?php } ?>
         </div>
     </details>
 

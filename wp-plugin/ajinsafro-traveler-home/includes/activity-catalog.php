@@ -61,40 +61,58 @@ if ( ! function_exists( 'ajth_activity_slugify_label' ) ) {
 
 if ( ! function_exists( 'ajth_get_activity_public_url' ) ) {
 	/**
-	 * Resolve a navigable public URL for an activity.
+	 * Canonical detail URL for an activity offer.
 	 *
-	 * Prefer the real WordPress permalink for `st_activity`, then fall back to
-	 * the activities catalogue with a query parameter.
+	 * @param string $slug Activity slug.
+	 * @return string
+	 */
+	function ajth_get_activity_detail_url( $slug ) {
+		$slug = sanitize_title( (string) $slug );
+		$base = function_exists( 'ajth_get_activites_page_url' )
+			? ajth_get_activites_page_url()
+			: home_url( '/activites/' );
+
+		if ( '' === $slug ) {
+			return $base;
+		}
+
+		return trailingslashit( trailingslashit( $base ) . 'activite/' . rawurlencode( $slug ) );
+	}
+
+	/**
+	 * Resolve a navigable public URL for an activity.
 	 *
 	 * @param array<string, mixed> $row Source row.
 	 * @return string
 	 */
 	function ajth_get_activity_public_url( array $row ) {
-		foreach ( array( 'url', 'booking_url', 'detail_url', 'permalink', 'link' ) as $key ) {
-			$value = trim( (string) ( $row[ $key ] ?? '' ) );
-			if ( '' !== $value && '#' !== $value ) {
-				return $value;
-			}
-		}
-
 		$slug = trim( (string) ( $row['slug'] ?? '' ) );
 		if ( '' !== $slug ) {
-			$post = get_page_by_path( $slug, OBJECT, 'st_activity' );
-			if ( $post instanceof WP_Post ) {
-				$url = get_permalink( $post );
-				if ( is_string( $url ) && '' !== $url ) {
-					return $url;
-				}
-			}
+			return ajth_get_activity_detail_url( $slug );
 		}
 
 		$base = function_exists( 'ajth_get_activites_page_url' )
 			? ajth_get_activites_page_url()
 			: home_url( '/activites/' );
-
-		$fallback_key = '' !== $slug ? $slug : (string) ( $row['id'] ?? '' );
+		$fallback_key = (string) ( $row['id'] ?? '' );
 
 		return '' !== $fallback_key ? add_query_arg( array( 'activity' => $fallback_key ), $base ) : $base;
+	}
+}
+
+if ( ! function_exists( 'ajth_get_current_activity_offer_slug' ) ) {
+	/**
+	 * Resolve current activity offer slug from rewrite or query.
+	 *
+	 * @return string
+	 */
+	function ajth_get_current_activity_offer_slug() {
+		$slug = get_query_var( 'ajth_activite_offer', '' );
+		if ( '' === $slug && isset( $_GET['activity'] ) ) {
+			$slug = wp_unslash( $_GET['activity'] );
+		}
+
+		return sanitize_title( (string) $slug );
 	}
 }
 
@@ -155,5 +173,45 @@ if ( ! function_exists( 'ajth_get_activities' ) ) {
 		$items = array_values( array_filter( $items, static fn ( $item ) => ! empty( $item['title'] ) ) );
 
 		return array_slice( $items, 0, max( 1, (int) $limit ) );
+	}
+}
+
+if ( ! function_exists( 'ajth_get_activity_offer_by_slug' ) ) {
+	/**
+	 * Find one activity offer by slug.
+	 *
+	 * @param string $slug Requested slug.
+	 * @return array<string, mixed>|null
+	 */
+	function ajth_get_activity_offer_by_slug( $slug ) {
+		$slug = sanitize_title( (string) $slug );
+		if ( '' === $slug ) {
+			return null;
+		}
+
+		foreach ( ajth_get_activities( 250 ) as $row ) {
+			$row_slug = sanitize_title( (string) ( $row['slug'] ?? $row['id'] ?? '' ) );
+			if ( $row_slug === $slug ) {
+				return $row;
+			}
+		}
+
+		return null;
+	}
+}
+
+if ( ! function_exists( 'ajth_get_activity_offer_reservation_url' ) ) {
+	/**
+	 * Temporary reservation CTA for activity offers.
+	 *
+	 * @param array<string, mixed> $row Activity payload.
+	 * @return string
+	 */
+	function ajth_get_activity_offer_reservation_url( array $row ) {
+		$title = trim( (string) ( $row['title'] ?? 'Activité Ajinsafro' ) );
+		$url   = trim( (string) ( $row['url'] ?? ajth_get_activity_public_url( $row ) ) );
+		$text  = rawurlencode( sprintf( 'Bonjour Ajinsafro, je souhaite réserver l’activité "%s". Voici le lien: %s', $title, $url ) );
+
+		return 'https://wa.me/212660683464?text=' . $text;
 	}
 }
