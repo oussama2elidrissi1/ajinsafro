@@ -1161,7 +1161,7 @@ function ajth_is_transfert_context()
 
 function ajth_is_group_deals_context()
 {
-    return is_page('group-deals');
+    return is_page('group-deals') || get_query_var('ajth_group_deal_offer');
 }
 
 function ajth_is_catalog_context()
@@ -1240,6 +1240,39 @@ function ajth_maybe_flush_rewrite_rules_group_deals(): void
 add_action('init', 'ajth_ensure_voyages_page', 10);
 add_action('init', 'ajth_maybe_flush_rewrite_rules_once', 99);
 add_action('init', 'ajth_maybe_flush_rewrite_rules_group_deals', 99);
+
+function ajth_register_group_deals_offer_routes(): void
+{
+    add_rewrite_tag('%ajth_group_deal_offer%', '([^&]+)');
+    add_rewrite_rule('^group-deals/([^/]+)/?$', 'index.php?pagename=group-deals&ajth_group_deal_offer=$matches[1]', 'top');
+}
+add_action('init', 'ajth_register_group_deals_offer_routes', 32);
+
+function ajth_query_vars_group_deals_offer(array $vars): array
+{
+    $vars[] = 'ajth_group_deal_offer';
+
+    return $vars;
+}
+add_filter('query_vars', 'ajth_query_vars_group_deals_offer');
+
+function ajth_maybe_flush_rewrite_rules_group_deals_offer(): void
+{
+    if (get_option('ajth_group_deals_offer_routing_flush_v1')) {
+        return;
+    }
+
+    flush_rewrite_rules(false);
+    update_option('ajth_group_deals_offer_routing_flush_v1', '1', true);
+}
+add_action('init', 'ajth_maybe_flush_rewrite_rules_group_deals_offer', 99);
+
+function ajth_get_current_group_deal_slug(): string
+{
+    $slug = get_query_var('ajth_group_deal_offer');
+
+    return is_string($slug) ? sanitize_title($slug) : '';
+}
 
 function ajth_register_activites_offer_routes(): void
 {

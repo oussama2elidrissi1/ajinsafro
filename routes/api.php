@@ -36,6 +36,9 @@ Route::get('/activity-offers', [ActivityOfferController::class, 'index'])
 Route::get('/activity-offers/filters', [ActivityOfferController::class, 'filters'])
     ->name('api.activity-offers.filters');
 
+Route::post('/group-deals/{slug}/participate', [\App\Http\Controllers\Front\GroupDealsController::class, 'participate'])
+    ->name('api.group-deals.participate');
+
 /*
 |--------------------------------------------------------------------------
 | Public Package Builder API

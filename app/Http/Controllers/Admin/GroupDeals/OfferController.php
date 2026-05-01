@@ -236,21 +236,32 @@ class OfferController extends Controller
             'title' => 'required|string|max:255',
             'slug' => ['nullable', 'string', 'max:255', $uniqueSlug],
             'destination' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'short_description' => 'nullable|string|max:500',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'duration_days' => 'nullable|integer|min:0|max:365',
+            'duration_nights' => 'nullable|integer|min:0|max:365',
             'min_participants' => 'required|integer|min:1|max:100000',
             'max_participants' => 'required|integer|min:1|max:100000|gte:min_participants',
             'status' => 'required|in:draft,published,closed,guaranteed,cancelled',
+            'badge_label' => 'nullable|string|max:120',
             'registration_deadline' => 'nullable|date',
             'image' => 'nullable|string|max:2048',
             'image_file' => 'nullable|image|max:4096',
             'program' => 'nullable|string',
+            'conditions' => 'nullable|string',
             'share_enabled' => 'nullable|boolean',
+            'is_featured' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $data['slug'] = filled($data['slug'] ?? null) ? Str::slug((string) $data['slug']) : Str::slug((string) $data['title']);
         $data['share_enabled'] = (bool) $request->boolean('share_enabled', true);
+        $data['is_featured'] = (bool) $request->boolean('is_featured', false);
+        $data['is_active'] = (bool) $request->boolean('is_active', true);
 
         return $data;
     }

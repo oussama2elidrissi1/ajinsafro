@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\GroupDeal;
 use App\Models\GroupDealParticipant;
 use App\Services\GroupDeals\GroupDealService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -124,7 +125,7 @@ class GroupDealsController extends Controller
         ]);
     }
 
-    public function participate(Request $request, string $slug): RedirectResponse
+    public function participate(Request $request, string $slug): RedirectResponse|JsonResponse
     {
         $groupDeal = GroupDeal::query()->where('slug', $slug)->where('is_active', true)->firstOrFail();
 
@@ -133,6 +134,8 @@ class GroupDealsController extends Controller
             'phone' => 'nullable|string|max:60',
             'email' => 'required|email|max:255',
             'participants_count' => 'required|integer|min:1|max:10000',
+            'city' => 'nullable|string|max:120',
+            'remark' => 'nullable|string|max:1000',
         ]);
 
         $client = null;
@@ -151,7 +154,27 @@ class GroupDealsController extends Controller
         try {
             $participant = $this->service->registerPublicParticipant($groupDeal, $payload);
         } catch (\RuntimeException $exception) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $exception->getMessage()], 422);
+            }
             return back()->withInput()->with('error', $exception->getMessage());
+        }
+
+        $groupDeal = $this->service->syncOfferMetrics($groupDeal->fresh());
+        $stats = $this->service->offerStats($groupDeal);
+
+        if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => sprintf('Participation enregistree pour %s.', $participant->full_name ?: $groupDeal->title),
+                'participant' => [
+                    'id' => $participant->id,
+                    'full_name' => $participant->full_name,
+                    'participants_count' => $participant->participants_count,
+                    'status' => $participant->status,
+                ],
+                'stats' => $stats,
+            ]);
         }
 
         return redirect()

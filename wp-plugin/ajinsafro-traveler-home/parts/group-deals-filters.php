@@ -20,7 +20,7 @@ $available_categories = isset($available_categories) && is_array($available_cate
 <form method="get" action="<?php echo esc_url($group_deals_url); ?>" class="group-filters-form">
     <input type="hidden" name="catalog_orderby" value="<?php echo esc_attr($sort ?? 'recommended'); ?>">
 
-    <details class="accordion" open>
+    <details class="accordion">
         <summary>Recherche</summary>
         <div class="filter-body">
             <label class="filter-field" for="<?php echo esc_attr($group_deals_filter_prefix . '-search'); ?>">
@@ -64,7 +64,7 @@ $available_categories = isset($available_categories) && is_array($available_cate
         </div>
     </details>
 
-    <details class="accordion" open>
+    <details class="accordion">
         <summary>Budget et groupe</summary>
         <div class="filter-body">
             <div class="mini-inputs">
@@ -86,7 +86,7 @@ $available_categories = isset($available_categories) && is_array($available_cate
     </details>
 
     <?php if ($has_featured_offers || $has_promo_offers || $has_guaranteed_offers) { ?>
-        <details class="accordion" open>
+        <details class="accordion">
             <summary>Offres speciales</summary>
             <div class="filter-body">
                 <?php if ($has_featured_offers) { ?>
@@ -112,7 +112,7 @@ $available_categories = isset($available_categories) && is_array($available_cate
     <?php } ?>
 
     <?php if (! empty($available_services)) { ?>
-        <details class="accordion" open>
+        <details class="accordion">
             <summary>Services inclus</summary>
             <div class="filter-body">
                 <?php foreach ($available_services as $service_key => $service_label) { ?>

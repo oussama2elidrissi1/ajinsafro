@@ -53,6 +53,7 @@ class GroupDeal extends Model
         'image',
         'images',
         'program',
+        'conditions',
         'services_included',
         'services_excluded',
         'share_enabled',

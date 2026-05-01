@@ -40,12 +40,32 @@
                         <input type="text" name="destination" class="form-control" value="{{ old('destination', $groupDeal->destination) }}">
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label">Pays</label>
+                        <input type="text" name="country" class="form-control" value="{{ old('country', $groupDeal->country) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ville</label>
+                        <input type="text" name="city" class="form-control" value="{{ old('city', $groupDeal->city) }}">
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Date de départ</label>
                         <input type="date" name="start_date" class="form-control" value="{{ old('start_date', optional($groupDeal->start_date)->format('Y-m-d')) }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Date de retour</label>
                         <input type="date" name="end_date" class="form-control" value="{{ old('end_date', optional($groupDeal->end_date)->format('Y-m-d')) }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Jours</label>
+                        <input type="number" min="0" name="duration_days" class="form-control" value="{{ old('duration_days', $groupDeal->duration_days) }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Nuits</label>
+                        <input type="number" min="0" name="duration_nights" class="form-control" value="{{ old('duration_nights', $groupDeal->duration_nights) }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Description courte</label>
+                        <textarea name="short_description" rows="2" class="form-control">{{ old('short_description', $groupDeal->short_description) }}</textarea>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Description</label>
@@ -54,6 +74,10 @@
                     <div class="col-12">
                         <label class="form-label">Programme</label>
                         <textarea name="program" rows="6" class="form-control">{{ old('program', $groupDeal->program) }}</textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Conditions</label>
+                        <textarea name="conditions" rows="4" class="form-control">{{ old('conditions', $groupDeal->conditions) }}</textarea>
                     </div>
                 </div>
             </div>
@@ -104,6 +128,10 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Badge personnalisé</label>
+                    <input type="text" name="badge_label" class="form-control" value="{{ old('badge_label', $groupDeal->badge_label) }}" placeholder="ex: Promo été">
+                </div>
                 <div class="row g-3">
                     <div class="col-sm-6">
                         <label class="form-label">Minimum garanti</label>
@@ -118,9 +146,25 @@
                         <input type="date" name="registration_deadline" class="form-control" value="{{ old('registration_deadline', optional($groupDeal->registration_deadline)->format('Y-m-d')) }}">
                     </div>
                 </div>
-                <div class="form-check form-switch mt-3">
-                    <input class="form-check-input" type="checkbox" id="share_enabled" name="share_enabled" value="1" @checked(old('share_enabled', $groupDeal->share_enabled ?? true))>
-                    <label class="form-check-label" for="share_enabled">Activer le partage client</label>
+                <div class="row g-3 mt-2">
+                    <div class="col-sm-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" @checked(old('is_featured', $groupDeal->is_featured ?? false))>
+                            <label class="form-check-label" for="is_featured">Selection Ajinsafro</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" @checked(old('is_active', $groupDeal->is_active ?? true))>
+                            <label class="form-check-label" for="is_active">Publiée (active)</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="share_enabled" name="share_enabled" value="1" @checked(old('share_enabled', $groupDeal->share_enabled ?? true))>
+                            <label class="form-check-label" for="share_enabled">Partage client</label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

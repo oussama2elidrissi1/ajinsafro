@@ -221,17 +221,48 @@ if ($source_available) {
                 : $booking_base . '/storage/' . ltrim($image, '/');
         }
 
-        $services = $services_by_deal[$deal_id] ?? [];
-        $included_services = [];
-        $service_keys = [];
-        foreach ($services as $service) {
-            if (($service['type'] ?? '') !== 'included' || $service['name'] === '') {
+        $images = [];
+        $raw_images = $row->images ?? '';
+        if (is_string($raw_images) && $raw_images !== '') {
+            $decoded = json_decode($raw_images, true);
+            if (is_array($decoded)) {
+                $images = $decoded;
+            } else {
+                $images = array_values(array_filter(array_map('trim', explode("\n", $raw_images))));
+            }
+        } elseif (is_array($raw_images)) {
+            $images = $raw_images;
+        }
+        $gallery = [];
+        foreach ($images as $img) {
+            $img = trim((string) $img);
+            if ($img === '') {
                 continue;
             }
-            $included_services[] = $service['name'];
-            $key = $service_key($service['name']);
-            $service_keys[] = $key;
-            $available_services[$key] = $service['name'];
+            $gallery[] = preg_match('#^https?://#i', $img) || strpos($img, 'data:') === 0
+                ? $img
+                : $booking_base . '/storage/' . ltrim($img, '/');
+        }
+        if (empty($gallery) && $image_url !== AJTH_URL . 'assets/images/fallback-voyage.svg') {
+            $gallery[] = $image_url;
+        }
+
+        $services = $services_by_deal[$deal_id] ?? [];
+        $included_services = [];
+        $excluded_services = [];
+        $service_keys = [];
+        foreach ($services as $service) {
+            if ($service['name'] === '') {
+                continue;
+            }
+            if (($service['type'] ?? '') === 'included') {
+                $included_services[] = $service['name'];
+                $key = $service_key($service['name']);
+                $service_keys[] = $key;
+                $available_services[$key] = $service['name'];
+            } elseif (($service['type'] ?? '') === 'not_included') {
+                $excluded_services[] = $service['name'];
+            }
         }
 
         $categories = $categories_by_deal[$deal_id] ?? [];
@@ -287,13 +318,16 @@ if ($source_available) {
             'id' => $deal_id,
             'title' => (string) $row->title,
             'slug' => (string) $row->slug,
-            'url' => $booking_base . '/group-deals/' . rawurlencode((string) $row->slug),
+            'url' => home_url('/group-deals/' . rawurlencode((string) $row->slug) . '/'),
             'image_url' => $image_url,
+            'gallery' => $gallery,
             'destination' => $destination_label,
             'country' => trim((string) ($row->country ?? '')),
             'city' => trim((string) ($row->city ?? '')),
             'duration' => $duration,
             'excerpt' => wp_trim_words(wp_strip_all_tags((string) ($row->short_description ?: $row->description ?: '')), 22, '...'),
+            'program' => trim((string) ($row->program ?? '')),
+            'conditions' => trim((string) ($row->conditions ?? '')),
             'price_from' => $current_price,
             'price_label' => $current_price > 0 ? number_format($current_price, 0, ',', ' ') : '',
             'old_price_label' => $starting_price > $current_price && $current_price > 0 ? number_format($starting_price, 0, ',', ' ') : '',
@@ -301,6 +335,8 @@ if ($source_available) {
             'is_featured' => ! empty($row->is_featured),
             'is_guaranteed' => $is_guaranteed,
             'services' => array_slice($included_services, 0, 4),
+            'included_services' => $included_services,
+            'excluded_services' => $excluded_services,
             'service_keys' => array_values(array_unique($service_keys)),
             'category_slugs' => array_values(array_unique($category_slugs)),
             'category_names' => array_values(array_unique($category_names)),
@@ -490,6 +526,20 @@ if ($cta_devis_url === '') {
     $cta_devis_url = $_cp ? (string) get_permalink($_cp) : 'https://wa.me/212539323874';
 }
 $cta_is_external = strpos($cta_devis_url, 'wa.me') !== false || strpos($cta_devis_url, 'whatsapp') !== false;
+
+$current_group_deal_slug = function_exists('ajth_get_current_group_deal_slug')
+    ? ajth_get_current_group_deal_slug()
+    : '';
+$current_group_deal = null;
+
+if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
+    foreach ($all_deals as $deal_row) {
+        if (($deal_row['slug'] ?? '') === $current_group_deal_slug) {
+            $current_group_deal = $deal_row;
+            break;
+        }
+    }
+}
 ?>
 
 <div class="aj-home-wrap">
@@ -497,6 +547,192 @@ $cta_is_external = strpos($cta_devis_url, 'wa.me') !== false || strpos($cta_devi
         <?php ajth_render_site_header($settings); ?>
 
         <div class="aj-groupdeals-fusion" id="aj-groupdeals-fusion">
+            <?php if ($current_group_deal) {
+                $cd = $current_group_deal;
+                $cd_slug = $cd['slug'];
+                $cd_gallery = $cd['gallery'] ?? [];
+                $cd_tiers = $tiers_by_deal[$cd['id']] ?? [];
+                $cd_active_tier = $cd['active_tier'] ?? null;
+                $cd_remaining_guarantee = max(0, (int) $cd['min_people'] - (int) $cd['current_people']);
+                $cd_remaining_places = max(0, (int) $cd['max_people'] - (int) $cd['current_people']);
+                $cd_is_full = (int) $cd['max_people'] > 0 && (int) $cd['current_people'] >= (int) $cd['max_people'];
+                $cd_can_participate = ! $cd_is_full && ! in_array($cd['status'], ['closed', 'cancelled'], true);
+            ?>
+                <main class="ajgd-container" style="padding-top:2rem;padding-bottom:4rem;">
+                    <nav class="aj-activities-breadcrumb" aria-label="Fil d Ariane" style="margin-bottom:1.5rem;">
+                        <a href="<?php echo esc_url(home_url('/')); ?>">Accueil</a>
+                        <span>/</span>
+                        <a href="<?php echo esc_url($group_deals_url); ?>">Group Deals</a>
+                        <span>/</span>
+                        <span><?php echo esc_html($cd['title']); ?></span>
+                    </nav>
+
+                    <div id="ajgd-notifications" style="margin-bottom:1.5rem;"></div>
+
+                    <section class="ajgd-card ajgd-single-layout">
+                        <div>
+                            <?php if (! empty($cd_gallery)) { ?>
+                                <div class="ajgd-gallery" style="margin-bottom:1.5rem;">
+                                    <?php if (count($cd_gallery) === 1) { ?>
+                                        <div class="ajgd-gallery__hero">
+                                            <img src="<?php echo esc_url($cd_gallery[0]); ?>" alt="<?php echo esc_attr($cd['title']); ?>" loading="lazy">
+                                        </div>
+                                    <?php } else { ?>
+                                        <div class="ajgd-gallery__grid">
+                                            <div class="ajgd-gallery__main">
+                                                <img src="<?php echo esc_url($cd_gallery[0]); ?>" alt="<?php echo esc_attr($cd['title']); ?>" loading="lazy">
+                                            </div>
+                                            <div class="ajgd-gallery__side">
+                                                <?php for ($gi = 1; $gi < min(count($cd_gallery), 4); $gi++) { ?>
+                                                    <div class="ajgd-gallery__thumb">
+                                                        <img src="<?php echo esc_url($cd_gallery[$gi]); ?>" alt="" loading="lazy">
+                                                    </div>
+                                                <?php } ?>
+                                                <?php if (count($cd_gallery) > 4) { ?>
+                                                    <div class="ajgd-gallery__more">
+                                                        <span>+<?php echo esc_html((string) (count($cd_gallery) - 4)); ?> photos</span>
+                                                    </div>
+                                                <?php } ?>
+                                            </div>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                            <?php } else { ?>
+                                <div class="ajgd-card__media is-fallback" style="height:320px;border-radius:24px;overflow:hidden;margin-bottom:1.5rem;">
+                                    <img src="<?php echo esc_url($cd['image_url']); ?>" alt="<?php echo esc_attr($cd['title']); ?>" loading="lazy">
+                                </div>
+                            <?php } ?>
+
+                            <div class="ajgd-card__badges" style="margin-bottom:1rem;">
+                                <span class="ajgd-badge ajgd-badge--<?php echo esc_attr($cd['status_class']); ?>"><?php echo esc_html($cd['status_label']); ?></span>
+                                <?php if (! empty($cd['is_featured'])) { ?><span class="ajgd-badge ajgd-badge--blue">Selection Ajinsafro</span><?php } ?>
+                                <?php if ((int) $cd['discount_percent'] > 0) { ?><span class="ajgd-badge ajgd-badge--orange">-<?php echo esc_html((string) $cd['discount_percent']); ?>%</span><?php } ?>
+                            </div>
+                            <h1 style="font-size:clamp(2rem,4vw,3.2rem);line-height:1.05;margin:0 0 1rem;color:#123b69;"><?php echo esc_html($cd['title']); ?></h1>
+                            <p style="margin:0 0 1rem;color:#475569;font-size:1rem;line-height:1.8;"><?php echo esc_html($cd['excerpt']); ?></p>
+                            <div class="aj-inline-meta" style="margin-bottom:1rem;">
+                                <?php if ($cd['destination'] !== '') { ?><span><?php echo esc_html($cd['destination']); ?></span><?php } ?>
+                                <?php if ($cd['country'] !== '') { ?><span><?php echo esc_html($cd['country']); ?></span><?php } ?>
+                                <?php if ($cd['duration'] !== '') { ?><span><?php echo esc_html($cd['duration']); ?></span><?php } ?>
+                            </div>
+                            <?php if (! empty($cd['services'])) { ?>
+                                <div class="ajgd-card__tags" style="margin-bottom:1.5rem;">
+                                    <?php foreach ($cd['services'] as $service_name) { ?><span><?php echo esc_html($service_name); ?></span><?php } ?>
+                                </div>
+                            <?php } ?>
+
+                            <?php if ($cd['program'] !== '') { ?>
+                                <div style="margin-bottom:1.5rem;">
+                                    <h2 style="font-size:1.4rem;font-weight:900;color:#123b69;margin:0 0 .75rem;">Programme du voyage</h2>
+                                    <div style="color:#475569;font-size:.98rem;line-height:1.8;white-space:pre-line;"><?php echo nl2br(esc_html($cd['program'])); ?></div>
+                                </div>
+                            <?php } ?>
+
+                            <div style="display:grid;gap:1.5rem;grid-template-columns:repeat(2,1fr);margin-bottom:1.5rem;">
+                                <?php if (! empty($cd['included_services'])) { ?>
+                                    <div>
+                                        <h3 style="font-size:1.1rem;font-weight:900;color:#123b69;margin:0 0 .5rem;">Services inclus</h3>
+                                        <ul style="margin:0;padding:0;list-style:none;">
+                                            <?php foreach ($cd['included_services'] as $s) { ?>
+                                                <li style="display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.35rem;color:#475569;font-size:.95rem;">
+                                                    <span style="width:18px;height:18px;border-radius:50%;background:#20A86B;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;">&#10003;</span>
+                                                    <?php echo esc_html($s); ?>
+                                                </li>
+                                            <?php } ?>
+                                        </ul>
+                                    </div>
+                                <?php } ?>
+                                <?php if (! empty($cd['excluded_services'])) { ?>
+                                    <div>
+                                        <h3 style="font-size:1.1rem;font-weight:900;color:#123b69;margin:0 0 .5rem;">Non inclus</h3>
+                                        <ul style="margin:0;padding:0;list-style:none;">
+                                            <?php foreach ($cd['excluded_services'] as $s) { ?>
+                                                <li style="display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.35rem;color:#475569;font-size:.95rem;">
+                                                    <span style="width:18px;height:18px;border-radius:50%;background:#F7941D;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;">&#10007;</span>
+                                                    <?php echo esc_html($s); ?>
+                                                </li>
+                                            <?php } ?>
+                                        </ul>
+                                    </div>
+                                <?php } ?>
+                            </div>
+
+                            <?php if ($cd['conditions'] !== '') { ?>
+                                <div style="margin-bottom:1.5rem;">
+                                    <h2 style="font-size:1.2rem;font-weight:900;color:#123b69;margin:0 0 .5rem;">Conditions</h2>
+                                    <div style="color:#475569;font-size:.95rem;line-height:1.7;white-space:pre-line;"><?php echo nl2br(esc_html($cd['conditions'])); ?></div>
+                                </div>
+                            <?php } ?>
+
+                            <a class="ajgd-btn ajgd-btn--outline-blue" href="<?php echo esc_url($group_deals_url); ?>">&#8592; Retour aux offres</a>
+                        </div>
+
+                        <aside>
+                            <div class="ajgd-card" style="padding:1.5rem;position:sticky;top:88px;">
+                                <div class="ajgd-card__price" style="margin-bottom:1rem;">
+                                    <?php if ($cd['old_price_label'] !== '') { ?><del><?php echo esc_html($cd['old_price_label']); ?> DH</del><?php } ?>
+                                    <small>Prix actuel</small>
+                                    <strong><?php echo $cd['price_label'] !== '' ? esc_html($cd['price_label'] . ' DH') : 'Prix sur demande'; ?></strong>
+                                    <span>par personne</span>
+                                </div>
+
+                                <?php if (! empty($cd_tiers)) { ?>
+                                    <div style="margin-bottom:1.25rem;">
+                                        <div style="font-size:12px;font-weight:900;color:#123b69;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Paliers de prix</div>
+                                        <div style="display:grid;gap:.4rem;">
+                                            <?php foreach ($cd_tiers as $tier) {
+                                                $is_active = $cd_active_tier && (float) ($tier['price_per_person'] ?? 0) === (float) ($cd_active_tier['price_per_person'] ?? -1) && (int) $tier['min_people'] === (int) ($cd_active_tier['min_people'] ?? -1);
+                                            ?>
+                                                <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.55rem .7rem;border-radius:10px;font-size:.92rem;"
+                                                    class="<?php echo $is_active ? 'ajgd-tier--active' : 'ajgd-tier'; ?>"
+                                                >
+                                                    <span><?php echo esc_html((string) $tier['min_people'] . ' - ' . ($tier['max_people'] ?? '∞') . ' pers.'); ?></span>
+                                                    <span style="font-weight:900;"><?php echo esc_html(number_format_i18n((int) $tier['price_per_person']) . ' DH'); ?></span>
+                                                </div>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+
+                                <div class="ajgd-card__progress" style="margin-bottom:1.25rem;">
+                                    <div class="ajgd-card__progress-top">
+                                        <span><?php echo esc_html($cd['status_label']); ?></span>
+                                        <span><?php echo esc_html((string) $cd['current_people']); ?> / <?php echo esc_html((string) $cd['max_people']); ?></span>
+                                    </div>
+                                    <div class="ajgd-card__progress-bar"><span style="width:<?php echo esc_attr((string) $cd['progress_percent']); ?>%"></span></div>
+                                </div>
+                                <div style="display:grid;gap:.6rem;margin-bottom:1.25rem;color:#475569;font-size:.95rem;">
+                                    <div><strong style="color:#0f172a;">Participants:</strong> <?php echo esc_html((string) $cd['current_people']); ?> / <?php echo esc_html((string) $cd['max_people']); ?></div>
+                                    <div><strong style="color:#0f172a;">Minimum garanti:</strong> <?php echo esc_html((string) $cd['min_people']); ?> personnes</div>
+                                    <div><strong style="color:#0f172a;">Places restantes:</strong> <?php echo esc_html((string) $cd_remaining_places); ?></div>
+                                    <div><strong style="color:#0f172a;">Statut:</strong> <?php echo esc_html($cd['status_label']); ?></div>
+                                </div>
+
+                                <div style="margin-bottom:1.25rem;padding:.75rem 1rem;border-radius:12px;font-size:.92rem;font-weight:700;"
+                                    class="<?php echo $cd['is_guaranteed'] ? 'ajgd-msg--success' : 'ajgd-msg--info'; ?>"
+                                >
+                                    <?php if ($cd['is_guaranteed']) { ?>
+                                        Bonne nouvelle, ce voyage est maintenant garanti.
+                                    <?php } elseif ($cd_remaining_guarantee > 0) { ?>
+                                        Il reste <?php echo esc_html((string) $cd_remaining_guarantee); ?> personne(s) pour garantir ce voyage.
+                                    <?php } else { ?>
+                                        Le voyage n'est pas encore garanti. Invitez votre groupe pour atteindre le seuil.
+                                    <?php } ?>
+                                </div>
+
+                                <div class="ajgd-card__actions" style="display:flex;flex-direction:column;gap:.75rem;">
+                                    <?php if ($cd_can_participate) { ?>
+                                        <button type="button" class="ajgd-btn ajgd-btn--orange" data-open-participation data-deal-slug="<?php echo esc_attr($cd_slug); ?>" data-deal-title="<?php echo esc_attr($cd['title']); ?>">Je participe</button>
+                                    <?php } else { ?>
+                                        <span class="ajgd-btn ajgd-btn--orange is-disabled"><?php echo $cd_is_full ? 'Complet' : 'Inscriptions fermées'; ?></span>
+                                    <?php } ?>
+                                    <button type="button" class="ajgd-btn ajgd-btn--outline-blue" data-share-deal data-share-url="<?php echo esc_attr($cd['url']); ?>" data-share-title="<?php echo esc_attr($cd['title']); ?>">Partager l'offre</button>
+                                </div>
+                            </div>
+                        </aside>
+                    </section>
+                </main>
+            <?php } else { ?>
             <section class="ajgd-hero">
                 <div class="ajgd-container">
                     <div class="ajgd-hero-grid">
@@ -662,7 +898,7 @@ $cta_is_external = strpos($cta_devis_url, 'wa.me') !== false || strpos($cta_devi
                     <?php } else { ?>
                         <div class="ajgd-deals-grid">
                             <?php foreach ($deals as $deal) { ?>
-                                <article class="ajgd-card">
+                                <article class="ajgd-card" data-url="<?php echo esc_url($deal['url']); ?>">
                                     <div class="ajgd-card__media<?php echo strpos($deal['image_url'], 'fallback-voyage.svg') !== false ? ' is-fallback' : ''; ?>">
                                         <img src="<?php echo esc_url($deal['image_url']); ?>" alt="<?php echo esc_attr($deal['title']); ?>" loading="lazy">
                                         <div class="ajgd-card__badges">
@@ -702,12 +938,17 @@ $cta_is_external = strpos($cta_devis_url, 'wa.me') !== false || strpos($cta_devi
                                                 <span class="ajgd-card__group-hint">Prix calcule selon le palier actif.</span>
                                             </div>
                                             <div class="ajgd-card__actions">
-                                                <a class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--sm" href="<?php echo esc_url($deal['url']); ?>">Voir l'offre</a>
-                                                <?php if (($deal['status'] ?? '') === 'closed' || $deal['status_label'] === 'Complet') { ?>
-                                                    <span class="ajgd-btn ajgd-btn--orange ajgd-btn--sm is-disabled">Complet</span>
+                                                <a class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--sm" href="<?php echo esc_url($deal['url']); ?>">Voir detail</a>
+                                                <?php
+                                                    $deal_is_full = (int) $deal['max_people'] > 0 && (int) $deal['current_people'] >= (int) $deal['max_people'];
+                                                    $deal_can_participate = ! $deal_is_full && ! in_array($deal['status'] ?? '', ['closed', 'cancelled'], true);
+                                                ?>
+                                                <?php if ($deal_can_participate) { ?>
+                                                    <button type="button" class="ajgd-btn ajgd-btn--orange ajgd-btn--sm" data-open-participation data-deal-slug="<?php echo esc_attr($deal['slug']); ?>" data-deal-title="<?php echo esc_attr($deal['title']); ?>">Je participe</button>
                                                 <?php } else { ?>
-                                                    <a class="ajgd-btn ajgd-btn--orange ajgd-btn--sm" href="<?php echo esc_url($deal['url']); ?>">Reserver</a>
+                                                    <span class="ajgd-btn ajgd-btn--orange ajgd-btn--sm is-disabled"><?php echo $deal_is_full ? 'Complet' : 'Ferme'; ?></span>
                                                 <?php } ?>
+                                                <button type="button" class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--sm" data-share-deal data-share-url="<?php echo esc_attr($deal['url']); ?>" data-share-title="<?php echo esc_attr($deal['title']); ?>">Partager</button>
                                             </div>
                                         </div>
                                     </div>
@@ -770,7 +1011,7 @@ $cta_is_external = strpos($cta_devis_url, 'wa.me') !== false || strpos($cta_devi
                 </div>
             </section>
 
-            <button class="ajgd-mobile-filter-btn" type="button" id="ajgd-open-filters">&#9776; Filtres &amp; tri</button>
+            <button class="ajgd-mobile-filter-btn" type="button" id="ajgd-open-filters">&#9776; Filtrer les offres</button>
             <div class="drawer-backdrop" id="ajgd-drawer-backdrop"></div>
             <aside class="ajgd-mobile-drawer" id="ajgd-mobile-drawer" aria-label="Filtres mobile">
                 <div class="ajgd-drawer-head">
@@ -782,8 +1023,64 @@ $cta_is_external = strpos($cta_devis_url, 'wa.me') !== false || strpos($cta_devi
                 include AJTH_DIR . 'parts/group-deals-filters.php';
                 ?>
             </aside>
+            <?php } ?>
         </div>
     </div>
 </div>
+
+<?php if ($current_group_deal) { ?>
+<!-- Modal: Je participe -->
+<div class="ajgd-modal-overlay" id="ajgd-modal-overlay" aria-hidden="true">
+    <div class="ajgd-modal" role="dialog" aria-modal="true" aria-labelledby="ajgd-modal-title">
+        <div class="ajgd-modal__head">
+            <h3 id="ajgd-modal-title">Rejoindre ce Group Deal</h3>
+            <button type="button" class="ajgd-modal__close" id="ajgd-modal-close" aria-label="Fermer">&#215;</button>
+        </div>
+        <form class="ajgd-modal__body" id="ajgd-participation-form">
+            <input type="hidden" name="deal_slug" id="ajgd-modal-slug" value="<?php echo esc_attr($cd_slug); ?>">
+            <div class="ajgd-field">
+                <label for="ajgd-p-name">Nom complet <span aria-label="obligatoire">*</span></label>
+                <input type="text" id="ajgd-p-name" name="full_name" required placeholder="Votre nom et prenom">
+            </div>
+            <div class="ajgd-field">
+                <label for="ajgd-p-phone">Telephone <span aria-label="obligatoire">*</span></label>
+                <input type="tel" id="ajgd-p-phone" name="phone" required placeholder="Ex: 06 12 34 56 78">
+            </div>
+            <div class="ajgd-field">
+                <label for="ajgd-p-email">Email</label>
+                <input type="email" id="ajgd-p-email" name="email" placeholder="votre@email.com">
+            </div>
+            <div class="ajgd-field">
+                <label for="ajgd-p-count">Nombre de personnes <span aria-label="obligatoire">*</span></label>
+                <input type="number" id="ajgd-p-count" name="participants_count" required min="1" max="10000" value="1">
+            </div>
+            <div class="ajgd-field">
+                <label for="ajgd-p-city">Ville</label>
+                <input type="text" id="ajgd-p-city" name="city" placeholder="Votre ville">
+            </div>
+            <div class="ajgd-field">
+                <label for="ajgd-p-remark">Remarque / Question</label>
+                <textarea id="ajgd-p-remark" name="remark" rows="3" placeholder="Une remarque ou une question ?"></textarea>
+            </div>
+            <label class="ajgd-check">
+                <input type="checkbox" name="accept_conditions" required>
+                J'accepte les conditions de participation.
+            </label>
+            <div class="ajgd-modal__error" id="ajgd-modal-error" role="alert"></div>
+            <div class="ajgd-modal__foot">
+                <button type="button" class="ajgd-btn ajgd-btn--outline-blue" id="ajgd-modal-cancel">Annuler</button>
+                <button type="submit" class="ajgd-btn ajgd-btn--orange" id="ajgd-modal-submit">Envoyer ma participation</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+window.ajgdConfig = {
+    apiBase: <?php echo wp_json_encode($booking_base . '/api'); ?>,
+    homeUrl: <?php echo wp_json_encode(home_url('/group-deals/')); ?>,
+    currentSlug: <?php echo wp_json_encode($cd_slug); ?>
+};
+</script>
+<?php } ?>
 
 <?php get_footer(); ?>
