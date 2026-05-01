@@ -5,6 +5,17 @@
 @section('content')
 <x-front.navbar />
 
+@php
+    $heroStatus = $groupDeal->status_label;
+    $heroStatusClass = match ($groupDeal->status) {
+        \App\Models\GroupDeal::STATUS_GUARANTEED => 'bg-emerald-500',
+        \App\Models\GroupDeal::STATUS_CLOSED => 'bg-slate-700',
+        \App\Models\GroupDeal::STATUS_CANCELLED => 'bg-rose-600',
+        default => 'bg-[#f28c28]',
+    };
+    $summaryText = $groupDeal->short_description ?: $groupDeal->description;
+@endphp
+
 <main class="bg-slate-50 min-h-screen">
     <section class="relative overflow-hidden bg-[#0f2f52] text-white">
         <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at top right, #f28c28 0, transparent 32%), radial-gradient(circle at bottom left, #2db783 0, transparent 30%);"></div>
@@ -12,17 +23,26 @@
             <div class="grid gap-8 lg:grid-cols-[1.25fr,0.95fr] items-center">
                 <div>
                     <div class="flex flex-wrap items-center gap-3">
-                        <span class="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold">{{ $groupDeal->destination ?: 'Destination à confirmer' }}</span>
-                        <span class="rounded-full {{ $stats['is_guaranteed'] ? 'bg-emerald-500' : 'bg-[#f28c28]' }} px-4 py-2 text-sm font-semibold">
-                            {{ $stats['is_guaranteed'] ? 'Voyage garanti' : 'Voyage bientôt garanti' }}
+                        <span class="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold">{{ $groupDeal->destination ?: 'Destination a confirmer' }}</span>
+                        <span class="rounded-full {{ $heroStatusClass }} px-4 py-2 text-sm font-semibold">
+                            {{ $heroStatus }}
                         </span>
+                        @if($groupDeal->is_featured)
+                            <span class="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold">Selection Ajinsafro</span>
+                        @endif
                     </div>
                     <h1 class="mt-5 text-4xl md:text-5xl font-bold leading-tight">{{ $groupDeal->title }}</h1>
-                    <p class="mt-4 max-w-2xl text-lg text-white/85">{{ $groupDeal->description }}</p>
+                    <p class="mt-4 max-w-2xl text-lg text-white/85">{{ $summaryText }}</p>
                     <div class="mt-6 flex flex-wrap gap-5 text-sm text-white/85">
-                        <span>Départ: {{ optional($groupDeal->departure_date ?: $groupDeal->start_date)->format('d/m/Y') ?: 'N/A' }}</span>
+                        @if($groupDeal->duration_label)
+                            <span>Duree: {{ $groupDeal->duration_label }}</span>
+                        @endif
+                        <span>Depart: {{ optional($groupDeal->departure_date ?: $groupDeal->start_date)->format('d/m/Y') ?: 'N/A' }}</span>
                         <span>Retour: {{ optional($groupDeal->return_date ?: $groupDeal->end_date)->format('d/m/Y') ?: 'N/A' }}</span>
                         <span>Inscription jusqu'au {{ optional($groupDeal->registration_deadline)->format('d/m/Y') ?: 'N/A' }}</span>
+                        @if($groupDeal->country || $groupDeal->city)
+                            <span>{{ collect([$groupDeal->city, $groupDeal->country])->filter()->implode(', ') }}</span>
+                        @endif
                     </div>
                 </div>
 
@@ -32,6 +52,9 @@
                             <div class="text-sm font-medium text-slate-500">Prix actuel</div>
                             <div class="mt-2 text-4xl font-bold text-[#f28c28]">{{ $stats['current_price'] ? number_format($stats['current_price'], 0, ',', ' ') . ' DH' : 'N/A' }}</div>
                             <div class="mt-2 text-sm text-slate-500">par personne</div>
+                            @if($groupDeal->starting_price && (float) $groupDeal->starting_price > (float) $stats['current_price'])
+                                <div class="mt-2 text-sm text-slate-400 line-through">{{ number_format((float) $groupDeal->starting_price, 0, ',', ' ') }} DH</div>
+                            @endif
                         </div>
                         <div class="rounded-3xl bg-[#123b69]/5 px-4 py-3 text-right">
                             <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Progression</div>
@@ -43,7 +66,7 @@
                         <div class="h-full rounded-full {{ $stats['is_guaranteed'] ? 'bg-emerald-500' : 'bg-[#f28c28]' }}" style="width: {{ $stats['progress_percent'] }}%"></div>
                     </div>
                     <div class="mt-4 space-y-2 text-sm text-slate-600">
-                        <p>{{ $groupDeal->current_participants }} personne(s) sont déjà inscrites.</p>
+                        <p>{{ $groupDeal->current_participants }} personne(s) sont deja inscrites.</p>
                         <p>Minimum requis pour garantir: {{ $groupDeal->min_participants }}.</p>
                         <p>Places restantes: {{ $stats['remaining_places'] }}.</p>
                         <p>
@@ -62,7 +85,7 @@
                             <input type="email" name="email" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm" placeholder="Email" value="{{ old('email', $client?->email ?: '') }}" required>
                         </div>
                         <div class="grid gap-3 md:grid-cols-2">
-                            <input type="text" name="phone" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm" placeholder="Téléphone" value="{{ old('phone', $client?->phone ?: '') }}">
+                            <input type="text" name="phone" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm" placeholder="Telephone" value="{{ old('phone', $client?->phone ?: '') }}">
                             <input type="number" min="1" name="participants_count" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm" value="{{ old('participants_count', 1) }}">
                         </div>
                         <div class="flex flex-col gap-3 sm:flex-row">
@@ -86,7 +109,7 @@
                     @endif
                     <div class="p-6">
                         <h2 class="text-2xl font-semibold text-[#123b69]">Programme du voyage</h2>
-                        <div class="mt-4 whitespace-pre-line leading-7 text-slate-700">{{ $groupDeal->program ?: 'Programme détaillé à venir.' }}</div>
+                        <div class="mt-4 whitespace-pre-line leading-7 text-slate-700">{{ $groupDeal->program ?: 'Programme detaille a venir.' }}</div>
                     </div>
                 </div>
 
@@ -97,7 +120,7 @@
                             @forelse($groupDeal->included_services as $line)
                                 <li class="flex gap-3"><span class="mt-2 h-2 w-2 rounded-full bg-emerald-500"></span><span>{{ $line }}</span></li>
                             @empty
-                                <li class="text-slate-500">À compléter.</li>
+                                <li class="text-slate-500">A completer.</li>
                             @endforelse
                         </ul>
                     </div>
@@ -107,7 +130,7 @@
                             @forelse($groupDeal->excluded_services as $line)
                                 <li class="flex gap-3"><span class="mt-2 h-2 w-2 rounded-full bg-[#f28c28]"></span><span>{{ $line }}</span></li>
                             @empty
-                                <li class="text-slate-500">À compléter.</li>
+                                <li class="text-slate-500">A completer.</li>
                             @endforelse
                         </ul>
                     </div>
@@ -122,7 +145,7 @@
                             <div class="rounded-3xl border px-4 py-4 {{ optional($stats['active_tier'])->id === $tier->id ? 'border-[#f28c28] bg-[#fff5ea]' : 'border-slate-200 bg-slate-50' }}">
                                 <div class="flex items-center justify-between gap-3">
                                     <div>
-                                        <div class="text-sm font-semibold text-slate-900">{{ $tier->min_people }} à {{ $tier->max_people ?: '∞' }} personnes</div>
+                                        <div class="text-sm font-semibold text-slate-900">{{ $tier->min_people }} a {{ $tier->max_people ?: '∞' }} personnes</div>
                                         <div class="text-sm text-slate-500">{{ $tier->label ?: 'Palier de groupe' }}</div>
                                     </div>
                                     <div class="text-right">
@@ -147,7 +170,7 @@
                     <h2 class="text-2xl font-semibold text-[#123b69]">Progression du groupe</h2>
                     <div class="mt-5 grid gap-4 sm:grid-cols-2">
                         <div class="rounded-3xl bg-slate-50 p-4">
-                            <div class="text-sm text-slate-500">Participants confirmés</div>
+                            <div class="text-sm text-slate-500">Participants confirmes</div>
                             <div class="mt-2 text-3xl font-bold text-[#123b69]">{{ $stats['current_participants'] }}</div>
                         </div>
                         <div class="rounded-3xl bg-slate-50 p-4">
@@ -156,7 +179,7 @@
                         </div>
                     </div>
                     <div class="mt-5 rounded-3xl bg-emerald-50 px-4 py-4 text-sm text-emerald-700">
-                        {{ $stats['is_guaranteed'] ? 'Bonne nouvelle, ce voyage est désormais garanti.' : 'Le voyage n’est pas encore garanti. Invitez votre groupe pour atteindre le seuil plus vite.' }}
+                        {{ $stats['is_guaranteed'] ? 'Bonne nouvelle, ce voyage est desormais garanti.' : 'Le voyage n est pas encore garanti. Invitez votre groupe pour atteindre le seuil plus vite.' }}
                     </div>
                 </div>
             </div>
