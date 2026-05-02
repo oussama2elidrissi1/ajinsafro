@@ -94,6 +94,142 @@
         }
     }
     .ws-catalog-grid .ws-room-badge { max-width: 100%; }
+    .ws-catalog-grid--compact { align-items: stretch; }
+    .ws-offer-card--compact { height: 100%; }
+    .ws-offer-card__body--compact {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        height: 100%;
+    }
+    .ws-offer-card__refs {
+        margin: -0.2rem 0 0;
+        font-size: 0.76rem;
+        color: #64748b;
+        font-weight: 700;
+    }
+    .ws-offer-card__section-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #0e3a5a;
+        margin-bottom: 0.45rem;
+    }
+    .ws-offer-card__departures {
+        padding: 0.85rem 0.95rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: #f8fafc;
+    }
+    .ws-offer-card__departure-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.45rem;
+    }
+    .ws-offer-card__departure-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+    .ws-offer-card__departure-item--solo { justify-content: flex-start; }
+    .ws-offer-card__departure-date {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.35;
+    }
+    .ws-offer-card__departure-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    .ws-offer-card__departure-status--ok { background: #dcfce7; color: #166534; }
+    .ws-offer-card__departure-status--warn { background: #fef3c7; color: #92400e; }
+    .ws-offer-card__departure-status--full,
+    .ws-offer-card__departure-status--muted { background: #e2e8f0; color: #475569; }
+    .ws-offer-card__more {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        margin-top: 0.6rem;
+        color: #0083c4;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+    }
+    .ws-offer-card__actions--compact { margin-top: auto; }
+    .ws-md-selector-list {
+        display: grid;
+        gap: 0.9rem;
+    }
+    .ws-md-selector-card {
+        border: 1px solid #dbe4ee;
+        border-radius: 14px;
+        padding: 1rem;
+        background: #fff;
+    }
+    .ws-md-selector-card-head,
+    .ws-md-selector-meta,
+    .ws-md-selector-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .ws-md-selector-date {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .ws-md-selector-meta { margin-top: 0.8rem; }
+    .ws-md-selector-kpi {
+        min-width: 112px;
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 0.7rem 0.8rem;
+    }
+    .ws-md-selector-kpi span {
+        display: block;
+        font-size: 0.68rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+    }
+    .ws-md-selector-kpi strong {
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.95rem;
+        color: #0f172a;
+    }
+    .ws-md-selector-actions { margin-top: 0.9rem; }
+    .ws-md-selector-actions .ws-md-btn { margin: 0; }
+    .ws-md-inline-note {
+        margin: 0.35rem 0 0;
+        font-size: 0.78rem;
+        color: #64748b;
+    }
+    @media (max-width: 640px) {
+        .ws-offer-card__departure-item,
+        .ws-md-selector-card-head,
+        .ws-md-selector-meta,
+        .ws-md-selector-actions {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        .ws-md-selector-kpi { width: 100%; }
+    }
 
     /* —— Modal détail voyage (workspace) — racine en fin de <body>, hors layout — */
     #ws-modal-root {
@@ -671,9 +807,6 @@
             </div>
         </div>
         <div class="ws-hero__actions">
-            <a href="{{ route('admin.circuits.voyages.index') }}" class="ws-hero__btn ws-hero__btn--outline">
-                <i class="fas fa-route" aria-hidden="true"></i> Circuits / voyages
-            </a>
             <a href="{{ route('admin.reservations.index') }}" class="ws-hero__btn ws-hero__btn--primary">
                 <i class="fas fa-list-ul" aria-hidden="true"></i> Liste des réservations
             </a>
@@ -719,9 +852,9 @@
                 <div class="ws-toolbar__views">
                     <span class="ws-toolbar__count"><strong id="ws-row-visible-count">{{ $catalogRows->count() }}</strong> / {{ $catalogFullCount }} offres</span>
                     <div class="ws-seg ws-seg--triple" role="group" aria-label="Mode d'affichage">
-                        <button type="button" id="btn-view-list" class="ws-seg__btn is-active" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
+                        <button type="button" id="btn-view-catalog" class="ws-seg__btn is-active" title="Catalogue"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
+                        <button type="button" id="btn-view-list" class="ws-seg__btn" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
                         <button type="button" id="btn-view-calendar" class="ws-seg__btn" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Calendrier</span></button>
-                        <button type="button" id="btn-view-catalog" class="ws-seg__btn" title="Présentation catalogue (cartes)"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
                     </div>
                 </div>
             </div>
@@ -790,7 +923,7 @@
         </div>
 
         {{-- Vue liste (tableau) — défaut --}}
-        <div id="ws-view-table" class="ws-table-card">
+        <div id="ws-view-table" class="ws-table-card hidden">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
                 <p class="ws-table-card__sub">Référence, voyage, départ, prix, capacité et actions. Tri serveur : futurs → sans date → passés.</p>
@@ -834,7 +967,7 @@
         </div>
 
         {{-- Présentation catalogue (cartes) --}}
-        <div id="ws-view-catalog" class="ws-table-card hidden">
+        <div id="ws-view-catalog" class="ws-table-card">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Présentation catalogue</h2>
                 <p class="ws-table-card__sub">Même jeu de données et même ordre que la liste (tri serveur, filtre période optionnel).</p>
@@ -1426,6 +1559,253 @@ document.addEventListener('DOMContentLoaded', function () {
 
     applyWsFiltersAndSort();
 
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var detailMapEl = document.getElementById('ws-modal-detail-json');
+    var modalEl = document.getElementById('ws-voyage-detail-modal');
+    var titleEl = document.getElementById('ws-md-title');
+    var subEl = document.getElementById('ws-md-sub');
+    var bodyEl = document.getElementById('ws-md-body');
+    var footerEl = document.getElementById('ws-md-footer');
+    var btnCatalog = document.getElementById('btn-view-catalog');
+    var btnList = document.getElementById('btn-view-list');
+    var btnCalendar = document.getElementById('btn-view-calendar');
+    var viewCatalog = document.getElementById('ws-view-catalog');
+    var viewList = document.getElementById('ws-view-table');
+    var viewCalendar = document.getElementById('reservations-calendar-view');
+
+    function parseDetails() {
+        if (!detailMapEl) return {};
+        try { return JSON.parse(detailMapEl.textContent || '{}'); } catch (error) { return {}; }
+    }
+
+    var details = parseDetails();
+
+    function escapeHtml(value) {
+        if (value == null || value === '') return '';
+        var div = document.createElement('div');
+        div.textContent = String(value);
+        return div.innerHTML;
+    }
+
+    function normalizeWorkspaceButtons() {
+        document.querySelectorAll('.btn-ws-open-detail').forEach(function (button) {
+            button.classList.remove('btn-ws-open-detail');
+            button.setAttribute('data-ws-detail-trigger', '1');
+        });
+        document.querySelectorAll('.btn-ws-open-reserve').forEach(function (button) {
+            button.classList.remove('btn-ws-open-reserve');
+            button.setAttribute('data-ws-reserve-trigger', '1');
+        });
+    }
+
+    function setWorkspaceView(mode) {
+        if (btnCatalog) btnCatalog.classList.toggle('is-active', mode === 'catalog');
+        if (btnList) btnList.classList.toggle('is-active', mode === 'list');
+        if (btnCalendar) btnCalendar.classList.toggle('is-active', mode === 'calendar');
+        if (viewCatalog) viewCatalog.classList.toggle('hidden', mode !== 'catalog');
+        if (viewList) viewList.classList.toggle('hidden', mode !== 'list');
+        if (viewCalendar) viewCalendar.classList.toggle('hidden', mode !== 'calendar');
+    }
+
+    function openModal(title, subHtml, bodyHtml, footerHtml) {
+        if (!modalEl) return;
+        if (titleEl) titleEl.textContent = title || '—';
+        if (subEl) subEl.innerHTML = subHtml || '<span style="color:#94a3b8">—</span>';
+        if (bodyEl) bodyEl.innerHTML = bodyHtml || '';
+        if (footerEl) footerEl.innerHTML = footerHtml || '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i> Fermer</button>';
+        modalEl.classList.remove('hidden');
+        modalEl.classList.add('ws-md-visible');
+        modalEl.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('ws-md-open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        if (!modalEl) return;
+        modalEl.classList.remove('ws-md-visible');
+        modalEl.classList.add('hidden');
+        modalEl.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('ws-md-open');
+        document.body.style.overflow = 'auto';
+    }
+
+    function getDetail(code) {
+        details = parseDetails();
+        return details[code] || null;
+    }
+
+    function getDeparture(detail, travelDateId) {
+        var departures = Array.isArray(detail && detail.departures) ? detail.departures : [];
+        return departures.find(function (departure) {
+            return String(departure.travel_date_id || '') === String(travelDateId || '');
+        }) || null;
+    }
+
+    function modalSub(detail, departure) {
+        var bits = [];
+        if (detail.post_status_label) bits.push(detail.post_status_label);
+        if (detail.wp_post_id) bits.push('WP #' + detail.wp_post_id);
+        if (detail.laravel_voyage_id) bits.push('Laravel #' + detail.laravel_voyage_id);
+        if (departure && departure.date_label) bits.push(departure.date_label);
+        return '<span style="color:#475569;font-weight:600">' + escapeHtml(bits.join(' · ')) + '</span>';
+    }
+
+    function availabilityBadge(departure) {
+        var statusKey = departure.status_key || 'unknown';
+        var cls = 'ws-md-avail-badge ws-md-avail-badge--unknown';
+        if (statusKey === 'available') cls = 'ws-md-avail-badge ws-md-avail-badge--ok';
+        else if (statusKey === 'almost_full') cls = 'ws-md-avail-badge ws-md-avail-badge--warn';
+        else if (statusKey === 'full') cls = 'ws-md-avail-badge ws-md-avail-badge--full';
+        var label = departure.is_past ? 'Passé' : (departure.status_label || 'Disponible');
+        return '<span class="' + cls + '">' + escapeHtml(label) + '</span>';
+    }
+
+    function selectorBody(code, detail) {
+        var departures = Array.isArray(detail.departures) ? detail.departures : [];
+        if (!departures.length) {
+            return '<div class="ws-md-body-inner"><section class="ws-md-card"><p style="margin:0;color:#64748b">Aucun départ disponible pour ce voyage.</p></section></div>';
+        }
+        var priceLabel = detail.prices && detail.prices.adult_label ? detail.prices.adult_label : 'Prix non renseigné';
+        var html = '<div class="ws-md-body-inner"><section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-calendar-check"></i> Choisir une date de départ</div><div class="ws-md-selector-list">';
+        departures.forEach(function (departure) {
+            html += '<article class="ws-md-selector-card">';
+            html += '<div class="ws-md-selector-card-head"><div><div class="ws-md-selector-date">' + escapeHtml(departure.date_label || '—') + '</div><p class="ws-md-inline-note">' + (departure.is_past ? 'Départ passé' : 'Départ à venir') + '</p></div>' + availabilityBadge(departure) + '</div>';
+            html += '<div class="ws-md-selector-meta">';
+            html += '<div class="ws-md-selector-kpi"><span>Capacité</span><strong>' + escapeHtml(departure.capacity != null ? departure.capacity : '—') + '</strong></div>';
+            html += '<div class="ws-md-selector-kpi"><span>Restantes</span><strong>' + escapeHtml(departure.remaining != null ? departure.remaining : '—') + '</strong></div>';
+            html += '<div class="ws-md-selector-kpi"><span>Prix départ</span><strong>' + escapeHtml(priceLabel) + '</strong></div>';
+            html += '<div class="ws-md-selector-kpi"><span>Dossiers</span><strong>' + escapeHtml(departure.reservations && departure.reservations.total != null ? departure.reservations.total : 0) + '</strong></div>';
+            html += '</div>';
+            if (departure.capacity_note) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
+            html += '<div class="ws-md-selector-actions">';
+            html += '<button type="button" class="ws-md-btn ws-md-btn-outline" data-ws-view-departure="1" data-row-code="' + escapeHtml(code) + '" data-travel-date-id="' + escapeHtml(departure.travel_date_id) + '"><i class="fas fa-eye"></i> Voir détails</button>';
+            if (departure.routes && departure.routes.reserve) {
+                html += '<button type="button" class="ws-md-btn ws-md-btn-success" data-ws-reserve-departure="1" data-row-code="' + escapeHtml(code) + '" data-travel-date-id="' + escapeHtml(departure.travel_date_id) + '"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
+            }
+            html += '</div></article>';
+        });
+        html += '</div></section></div>';
+        return html;
+    }
+
+    function selectorFooter(detail) {
+        var html = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i> Fermer</button><div class="ws-md-footer-actions">';
+        if (detail.routes && detail.routes.reservations) html += '<a href="' + detail.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        if (detail.routes && detail.routes.edit_voyage) html += '<a href="' + detail.routes.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
+        html += '</div>';
+        return html;
+    }
+
+    function departureBody(detail, departure) {
+        var reservations = departure.reservations || {};
+        var fillPct = departure.fill_pct != null ? departure.fill_pct : 0;
+        var html = '<div class="ws-md-body-inner">';
+        html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-info-circle"></i> Informations générales du voyage</div><dl class="ws-md-dl">';
+        if (detail.destination) html += '<div><dt>Destination</dt><dd>' + escapeHtml(detail.destination) + '</dd></div>';
+        if (detail.duration) html += '<div><dt>Durée</dt><dd>' + escapeHtml(detail.duration) + '</dd></div>';
+        if (detail.prices && detail.prices.adult_label) html += '<div><dt>Prix à partir de</dt><dd>' + escapeHtml(detail.prices.adult_label) + '</dd></div>';
+        html += '<div><dt>Date sélectionnée</dt><dd>' + escapeHtml(departure.date_label || '—') + '</dd></div></dl></section>';
+        html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-route"></i> Détail du départ</div><div class="ws-md-selector-meta">';
+        html += '<div class="ws-md-selector-kpi"><span>Capacité</span><strong>' + escapeHtml(departure.capacity != null ? departure.capacity : '—') + '</strong></div>';
+        html += '<div class="ws-md-selector-kpi"><span>Confirmées</span><strong>' + escapeHtml(reservations.validee != null ? reservations.validee : 0) + '</strong></div>';
+        html += '<div class="ws-md-selector-kpi"><span>En attente</span><strong>' + escapeHtml(reservations.en_cours != null ? reservations.en_cours : 0) + '</strong></div>';
+        html += '<div class="ws-md-selector-kpi"><span>Annulées</span><strong>' + escapeHtml(reservations.annulee != null ? reservations.annulee : 0) + '</strong></div>';
+        html += '<div class="ws-md-selector-kpi"><span>Restantes</span><strong>' + escapeHtml(departure.remaining != null ? departure.remaining : '—') + '</strong></div>';
+        html += '<div class="ws-md-selector-kpi"><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
+        html += '</div>';
+        if (departure.capacity_note) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
+        html += '<div class="ws-md-progress ws-md-progress--dep" role="progressbar" aria-valuenow="' + fillPct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + fillPct + '%"></div></div>';
+        html += '</section>';
+        if (detail.rooms && detail.rooms.length) {
+            html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-bed"></i> Chambres configurées</div><div class="ws-md-room-pills">';
+            detail.rooms.forEach(function (room) {
+                html += '<span class="ws-md-room-pill">' + escapeHtml(room.room_type || 'Chambre') + ' <span style="color:#94a3b8;font-weight:800">' + escapeHtml(room.product || 0) + '</span></span>';
+            });
+            html += '</div></section>';
+        }
+        html += '</div>';
+        return html;
+    }
+
+    function departureFooter(code, detail, departure) {
+        var html = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-back-to-selector="1" data-row-code="' + escapeHtml(code) + '"><i class="fas fa-arrow-left"></i> Dates de départ</button><div class="ws-md-footer-actions">';
+        if (departure.routes && departure.routes.reservations) html += '<a href="' + departure.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        if (departure.routes && departure.routes.reserve) html += '<a href="' + departure.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
+        if (detail.routes && detail.routes.edit_voyage) html += '<a href="' + detail.routes.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
+        html += '</div>';
+        return html;
+    }
+
+    function openSelector(code) {
+        var detail = getDetail(code);
+        if (!detail) return;
+        openModal(detail.title || '—', modalSub(detail), selectorBody(code, detail), selectorFooter(detail));
+    }
+
+    function openDepartureDetail(code, travelDateId) {
+        var detail = getDetail(code);
+        if (!detail) return;
+        var departure = getDeparture(detail, travelDateId);
+        if (!departure) {
+            openSelector(code);
+            return;
+        }
+        openModal(detail.title || '—', modalSub(detail, departure), departureBody(detail, departure), departureFooter(code, detail, departure));
+    }
+
+    function handleReserve(code) {
+        var detail = getDetail(code);
+        if (!detail) return;
+        var departures = Array.isArray(detail.departures) ? detail.departures : [];
+        if (detail.kind === 'package' && departures.length > 1) {
+            openSelector(code);
+            return;
+        }
+        if (detail.kind === 'package' && departures.length === 1 && departures[0].routes && departures[0].routes.reserve) {
+            window.location.href = departures[0].routes.reserve;
+            return;
+        }
+        if (detail.route_reserver) window.location.href = detail.route_reserver;
+    }
+
+    if (btnCatalog) btnCatalog.addEventListener('click', function () { setWorkspaceView('catalog'); });
+    if (btnList) btnList.addEventListener('click', function () { setWorkspaceView('list'); });
+    if (btnCalendar) btnCalendar.addEventListener('click', function () { setWorkspaceView('calendar'); });
+    setWorkspaceView('catalog');
+    normalizeWorkspaceButtons();
+
+    document.addEventListener('click', function (event) {
+        var target = event.target.closest('[data-ws-detail-trigger],[data-ws-reserve-trigger],[data-ws-view-departure],[data-ws-reserve-departure],[data-ws-back-to-selector],[data-ws-md-close],[data-ws-md-backdrop]');
+        if (!target) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (target.hasAttribute('data-ws-detail-trigger')) {
+            openSelector(target.getAttribute('data-row-code') || '');
+            return;
+        }
+        if (target.hasAttribute('data-ws-reserve-trigger')) {
+            handleReserve(target.getAttribute('data-row-code') || '');
+            return;
+        }
+        if (target.hasAttribute('data-ws-view-departure')) {
+            openDepartureDetail(target.getAttribute('data-row-code') || '', target.getAttribute('data-travel-date-id') || '');
+            return;
+        }
+        if (target.hasAttribute('data-ws-reserve-departure')) {
+            var detail = getDetail(target.getAttribute('data-row-code') || '');
+            var departure = detail ? getDeparture(detail, target.getAttribute('data-travel-date-id') || '') : null;
+            if (departure && departure.routes && departure.routes.reserve) window.location.href = departure.routes.reserve;
+            return;
+        }
+        if (target.hasAttribute('data-ws-back-to-selector')) {
+            openSelector(target.getAttribute('data-row-code') || '');
+            return;
+        }
+        closeModal();
+    }, true);
 });
 </script>
 @endpush

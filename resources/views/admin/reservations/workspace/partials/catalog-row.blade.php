@@ -53,6 +53,10 @@
     $pkgDepCanceled = $typeKey === 'package' && ! empty($row['departure_is_canceled']);
     $reserveLabel = $typeKey === 'vol' ? 'Réserver vol' : 'Réserver';
     $modalDetail = $row['modal_detail'] ?? null;
+    $departures = collect($modalDetail['departures'] ?? [])->values();
+    $visibleDepartures = $departures->take(3);
+    $extraDepartureCount = max(0, $departures->count() - $visibleDepartures->count());
+    $singleDepartureReserveUrl = $departures->count() === 1 ? data_get($departures->first(), 'routes.reserve') : null;
     $wsAvail = $row['ws_avail'] ?? 'na';
     $wsUpcoming = ! empty($row['ws_has_future']);
     $imageUrl = ! empty($row['image_url']) ? (string) $row['image_url'] : null;
@@ -76,14 +80,19 @@
 
     $rowTitle = trim(($row['name'] ?? '').($hasLaravel && $typeKey === 'package' ? ' · #'.$row['voyage_id'] : ''));
 
-    $capText = '—';
-    if ($typeKey === 'package' && $hasLaravel) {
-        if (($placesState ?? '') === 'ok' && $placesTotal !== null) {
-            $capText = number_format((int) $placesTotal, 0, ',', ' ');
-        } elseif (in_array($placesState ?? '', ['no_hotels', 'no_valid_rooms'], true)) {
-            $capText = 'n/r';
-        }
+    $capText = 'À configurer';
+    if ($typeKey === 'package' && $hasLaravel && ($placesState ?? '') === 'ok' && $placesTotal !== null) {
+        $capText = number_format((int) $placesTotal, 0, ',', ' ');
     }
+
+    if ($singleDepartureReserveUrl) {
+        $reserveUrl = $singleDepartureReserveUrl;
+    }
+
+    $referenceBits = array_values(array_filter([
+        $wpPostId ? 'WP #'.$wpPostId : null,
+        $hasLaravel ? 'Laravel #'.$row['voyage_id'] : null,
+    ]));
 
     $isNearFuture = false;
     if ($hasDepDate) {
@@ -145,7 +154,9 @@
         @endif
     </td>
     <td class="ws-td ws-td--cap" data-label="Capacité">
-        <span class="ws-td__cap-cell">{{ $capText }}</span>
+        <span class="ws-td__cap-cell" title="Capacité basée sur la répartition des chambres">
+            {{ is_numeric(str_replace(' ', '', $capText)) ? $capText.' places' : $capText }}
+        </span>
     </td>
     <td class="ws-td ws-td--actions" data-label="Actions">
         <div class="ws-td__actions">
@@ -159,8 +170,9 @@
             @endif
             @can('reservations.view')
                 @if($hasLaravel)
-                    <a href="{{ $reserveUrl }}"
-                        class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish"
+                    <button type="button"
+                        class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish btn-ws-open-reserve"
+                        data-row-code="{{ e($row['code']) }}"
                         title="{{ $reserveLabel }}">
                         @if($typeKey === 'vol')
                             <i class="fas fa-plane-departure" aria-hidden="true"></i>
@@ -168,7 +180,7 @@
                             <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
                         @endif
                         <span>{{ $reserveLabel }}</span>
-                    </a>
+                    </button>
                 @else
                     <a href="{{ $editTourUrl ?: '#' }}"
                         class="ws-btn ws-btn--sm ws-btn--iconish {{ $editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled' }}"
@@ -231,22 +243,12 @@
             @endif
         </div>
         <h3 class="ws-offer-card__title ws-offer-card__title--compact">{{ $row['name'] }}</h3>
-        <div class="ws-offer-card__meta-list" role="group" aria-label="Départ, tarif, capacité">
-            <div class="ws-offer-card__meta-item">
-                <span class="ws-offer-card__meta-label"><i class="far fa-calendar-alt" aria-hidden="true"></i>Départ</span>
-                <span class="ws-offer-card__meta-value">
-                    @if($hasDepDate)
-                        {{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}
-                        @if($pkgDepCanceled)
-                            <span class="ws-offer-card__meta-inline-note">annulé</span>
-                        @endif
-                    @else
-                        <span class="ws-offer-card__meta-muted">Non renseigné</span>
-                    @endif
-                </span>
-            </div>
+        @if($referenceBits !== [])
+            <p class="ws-offer-card__refs">{{ implode(' · ', $referenceBits) }}</p>
+        @endif
+        <div class="ws-offer-card__meta-list" role="group" aria-label="Tarif et capacité">
             <div class="ws-offer-card__meta-item ws-offer-card__meta-item--price">
-                <span class="ws-offer-card__meta-label"><i class="fas fa-coins" aria-hidden="true"></i>Prix</span>
+                <span class="ws-offer-card__meta-label"><i class="fas fa-coins" aria-hidden="true"></i>Prix à partir de</span>
                 <span class="ws-offer-card__meta-value ws-offer-card__meta-value--price">
                     @if(! empty($row['price_label']))
                         {{ $row['price_label'] }}
@@ -257,15 +259,54 @@
             </div>
             <div class="ws-offer-card__meta-item ws-offer-card__meta-item--cap">
                 <span class="ws-offer-card__meta-label"><i class="fas fa-users" aria-hidden="true"></i>Capacité</span>
-                <span class="ws-offer-card__meta-value">
+                <span class="ws-offer-card__meta-value" title="Capacité basée sur la répartition des chambres">
                     @if($typeKey === 'package' && $hasLaravel)
-                        {{ $capText === '—' || $capText === 'n/r' ? $capText : $capText.' places' }}
+                        {{ is_numeric(str_replace(' ', '', $capText)) ? $capText.' places' : $capText }}
                     @else
-                        <span class="ws-offer-card__meta-muted">—</span>
+                        <span class="ws-offer-card__meta-muted">Non applicable</span>
                     @endif
                 </span>
             </div>
         </div>
+        @if($typeKey === 'package' && $departures->isNotEmpty())
+            <div class="ws-offer-card__departures">
+                <div class="ws-offer-card__section-label">Départs disponibles</div>
+                <ul class="ws-offer-card__departure-list" aria-label="Départs disponibles">
+                    @foreach($visibleDepartures as $departure)
+                        @php
+                            $statusClass = match ($departure['status_key'] ?? 'unknown') {
+                                'available' => 'ws-offer-card__departure-status--ok',
+                                'almost_full' => 'ws-offer-card__departure-status--warn',
+                                'full' => 'ws-offer-card__departure-status--full',
+                                default => 'ws-offer-card__departure-status--muted',
+                            };
+                            $statusLabel = !empty($departure['is_past'])
+                                ? 'Passé'
+                                : (($departure['status_label'] ?? '') === 'Disponible' ? 'À venir' : ($departure['status_label'] ?? 'À venir'));
+                        @endphp
+                        <li class="ws-offer-card__departure-item">
+                            <span class="ws-offer-card__departure-date">{{ $departure['date_label'] ?? 'Date non renseignée' }}</span>
+                            <span class="ws-offer-card__departure-status {{ $statusClass }}">{{ $statusLabel }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+                @if($extraDepartureCount > 0)
+                    <button type="button" class="ws-offer-card__more btn-ws-open-detail" data-row-code="{{ e($row['code']) }}">
+                        + {{ $extraDepartureCount }} autre(s) départ(s)
+                    </button>
+                @endif
+            </div>
+        @elseif($hasDepDate)
+            <div class="ws-offer-card__departures">
+                <div class="ws-offer-card__section-label">Départ</div>
+                <div class="ws-offer-card__departure-item ws-offer-card__departure-item--solo">
+                    <span class="ws-offer-card__departure-date">{{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}</span>
+                    @if($pkgDepCanceled)
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--muted">Annulé</span>
+                    @endif
+                </div>
+            </div>
+        @endif
         <div class="ws-offer-card__actions ws-offer-card__actions--compact" role="group" aria-label="Actions">
             @if(!empty($modalDetail))
                 <button type="button"
@@ -277,8 +318,9 @@
             @endif
             @can('reservations.view')
                 @if($hasLaravel)
-                    <a href="{{ $reserveUrl }}"
-                        class="ws-btn ws-btn--primary ws-btn--sm"
+                    <button type="button"
+                        class="ws-btn ws-btn--primary ws-btn--sm btn-ws-open-reserve"
+                        data-row-code="{{ e($row['code']) }}"
                         title="{{ $reserveLabel }}">
                         @if($typeKey === 'vol')
                             <i class="fas fa-plane-departure" aria-hidden="true"></i>
@@ -286,7 +328,7 @@
                             <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
                         @endif
                         <span>{{ $reserveLabel }}</span>
-                    </a>
+                    </button>
                 @else
                     <a href="{{ $editTourUrl ?: '#' }}"
                         class="ws-btn ws-btn--sm {{ $editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled' }}"
