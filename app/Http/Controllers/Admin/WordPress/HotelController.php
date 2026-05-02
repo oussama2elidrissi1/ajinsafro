@@ -53,7 +53,7 @@ class HotelController extends Controller
             ->when(in_array($status, ['publish', 'draft'], true), fn ($query) => $query->where($postsTable.'.post_status', $status))
             ->when($featured === '1', fn ($query) => $query->where($hotelsTable.'.is_featured', 'on'))
             ->when($star !== '' && ctype_digit($star), fn ($query) => $query->where($hotelsTable.'.hotel_star', $star))
-            ->when($destination !== '', fn ($query) use ($destination, $hotelsTable) => $query->where($hotelsTable.'.address', 'like', '%'.$destination.'%'))
+            ->when($destination !== '', fn ($query) => $query->where($hotelsTable.'.address', 'like', '%'.$destination.'%'))
             ->orderByDesc($postsTable.'.post_modified')
             ->paginate(15);
 
