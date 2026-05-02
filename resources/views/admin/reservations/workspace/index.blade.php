@@ -167,10 +167,86 @@
         text-align: left;
         cursor: pointer;
     }
-    .ws-offer-card__actions--compact { margin-top: auto; }
+    .ws-offer-card__actions--compact {
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+    .ws-offer-card__actions--compact > * {
+        min-width: 0;
+    }
+    .ws-offer-card__actions--compact .ws-btn {
+        width: 100%;
+        min-height: 44px;
+        height: 44px;
+        max-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
     .ws-md-selector-list {
         display: grid;
         gap: 0.9rem;
+    }
+    .ws-md-departure-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-bottom: 1rem;
+    }
+    .ws-md-departure-tab {
+        border: 1px solid #dbe4ee;
+        background: #fff;
+        border-radius: 14px;
+        padding: 0.75rem 0.9rem;
+        min-width: 180px;
+        cursor: pointer;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+        text-align: left;
+    }
+    .ws-md-departure-tab:hover {
+        border-color: #94c8e7;
+        box-shadow: 0 8px 24px rgba(14, 58, 90, 0.08);
+        transform: translateY(-1px);
+    }
+    .ws-md-departure-tab.is-active {
+        border-color: #0083c4;
+        background: #f0f9ff;
+        box-shadow: 0 0 0 1px rgba(0, 131, 196, 0.12);
+    }
+    .ws-md-departure-tab-date {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .ws-md-departure-tab-status {
+        display: inline-flex;
+        margin-top: 0.35rem;
+    }
+    .ws-md-detail-panel {
+        display: grid;
+        gap: 1rem;
+    }
+    .ws-md-footer {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        z-index: 2;
+    }
+    .ws-md-footer .ws-md-btn,
+    .ws-md-footer-actions .ws-md-btn {
+        min-height: 42px;
+        max-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
     }
     .ws-md-selector-card {
         border: 1px solid #dbe4ee;
@@ -229,6 +305,13 @@
             flex-direction: column;
         }
         .ws-md-selector-kpi { width: 100%; }
+        .ws-offer-card__actions--compact {
+            grid-template-columns: 1fr;
+        }
+        .ws-md-departure-tab {
+            width: 100%;
+            min-width: 0;
+        }
     }
 
     /* —— Modal détail voyage (workspace) — racine en fin de <body>, hors layout — */
@@ -1663,47 +1746,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return '<span class="' + cls + '">' + escapeHtml(label) + '</span>';
     }
 
-    function selectorBody(code, detail) {
-        var departures = Array.isArray(detail.departures) ? detail.departures : [];
-        if (!departures.length) {
-            return '<div class="ws-md-body-inner"><section class="ws-md-card"><p style="margin:0;color:#64748b">Aucun départ disponible pour ce voyage.</p></section></div>';
-        }
-        var priceLabel = detail.prices && detail.prices.adult_label ? detail.prices.adult_label : 'Prix non renseigné';
-        var html = '<div class="ws-md-body-inner"><section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-calendar-check"></i> Choisir une date de départ</div><div class="ws-md-selector-list">';
-        departures.forEach(function (departure) {
-            html += '<article class="ws-md-selector-card">';
-            html += '<div class="ws-md-selector-card-head"><div><div class="ws-md-selector-date">' + escapeHtml(departure.date_label || '—') + '</div><p class="ws-md-inline-note">' + (departure.is_past ? 'Départ passé' : 'Départ à venir') + '</p></div>' + availabilityBadge(departure) + '</div>';
-            html += '<div class="ws-md-selector-meta">';
-            html += '<div class="ws-md-selector-kpi"><span>Capacité</span><strong>' + escapeHtml(departure.capacity != null ? departure.capacity : '—') + '</strong></div>';
-            html += '<div class="ws-md-selector-kpi"><span>Restantes</span><strong>' + escapeHtml(departure.remaining != null ? departure.remaining : '—') + '</strong></div>';
-            html += '<div class="ws-md-selector-kpi"><span>Prix départ</span><strong>' + escapeHtml(priceLabel) + '</strong></div>';
-            html += '<div class="ws-md-selector-kpi"><span>Dossiers</span><strong>' + escapeHtml(departure.reservations && departure.reservations.total != null ? departure.reservations.total : 0) + '</strong></div>';
-            html += '</div>';
-            if (departure.capacity_note) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
-            html += '<div class="ws-md-selector-actions">';
-            html += '<button type="button" class="ws-md-btn ws-md-btn-outline" data-ws-view-departure="1" data-row-code="' + escapeHtml(code) + '" data-travel-date-id="' + escapeHtml(departure.travel_date_id) + '"><i class="fas fa-eye"></i> Voir détails</button>';
-            if (departure.routes && departure.routes.reserve) {
-                html += '<button type="button" class="ws-md-btn ws-md-btn-success" data-ws-reserve-departure="1" data-row-code="' + escapeHtml(code) + '" data-travel-date-id="' + escapeHtml(departure.travel_date_id) + '"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
-            }
-            html += '</div></article>';
-        });
-        html += '</div></section></div>';
-        return html;
-    }
-
-    function selectorFooter(detail) {
-        var html = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i> Fermer</button><div class="ws-md-footer-actions">';
-        if (detail.routes && detail.routes.reservations) html += '<a href="' + detail.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
-        if (detail.routes && detail.routes.edit_voyage) html += '<a href="' + detail.routes.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
-        html += '</div>';
-        return html;
-    }
-
     function departureBody(detail, departure) {
         var reservations = departure.reservations || {};
         var fillPct = departure.fill_pct != null ? departure.fill_pct : 0;
-        var html = '<div class="ws-md-body-inner">';
-        html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-info-circle"></i> Informations générales du voyage</div><dl class="ws-md-dl">';
+        var html = '<div class="ws-md-detail-panel">';
+        html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-info-circle"></i> Détails du départ sélectionné</div><dl class="ws-md-dl">';
         if (detail.destination) html += '<div><dt>Destination</dt><dd>' + escapeHtml(detail.destination) + '</dd></div>';
         if (detail.duration) html += '<div><dt>Durée</dt><dd>' + escapeHtml(detail.duration) + '</dd></div>';
         if (detail.prices && detail.prices.adult_label) html += '<div><dt>Prix à partir de</dt><dd>' + escapeHtml(detail.prices.adult_label) + '</dd></div>';
@@ -1730,8 +1777,57 @@ document.addEventListener('DOMContentLoaded', function () {
         return html;
     }
 
+    function resolveSelectedDeparture(detail, preferredTravelDateId) {
+        var departures = Array.isArray(detail && detail.departures) ? detail.departures.slice() : [];
+        if (!departures.length) return null;
+        if (preferredTravelDateId) {
+            var explicit = getDeparture(detail, preferredTravelDateId);
+            if (explicit) return explicit;
+        }
+        var upcoming = departures.find(function (departure) {
+            return !departure.is_past;
+        });
+        if (upcoming) return upcoming;
+        return departures[departures.length - 1];
+    }
+
+    function selectorBody(code, detail, selectedDeparture) {
+        var departures = Array.isArray(detail.departures) ? detail.departures : [];
+        if (!departures.length || !selectedDeparture) {
+            return '<div class="ws-md-body-inner"><section class="ws-md-card"><p style="margin:0;color:#64748b">Aucun départ disponible pour ce voyage.</p></section></div>';
+        }
+        var html = '<div class="ws-md-body-inner"><section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-calendar-check"></i> Choisir une date de départ</div>';
+        html += '<div class="ws-md-departure-tabs" role="tablist" aria-label="Dates de départ">';
+        departures.forEach(function (departure) {
+            var isActive = String(selectedDeparture.travel_date_id || '') === String(departure.travel_date_id || '');
+            html += '<button type="button" class="ws-md-departure-tab' + (isActive ? ' is-active' : '') + '" role="tab" aria-selected="' + (isActive ? 'true' : 'false') + '" data-ws-select-departure="1" data-row-code="' + escapeHtml(code) + '" data-travel-date-id="' + escapeHtml(departure.travel_date_id) + '">';
+            html += '<span class="ws-md-departure-tab-date">' + escapeHtml(departure.date_label || '—') + '</span>';
+            html += '<span class="ws-md-departure-tab-status">' + availabilityBadge(departure) + '</span>';
+            html += '</button>';
+        });
+        html += '</div>';
+        html += departureBody(detail, selectedDeparture);
+        html += '</section></div>';
+        return html;
+    }
+
+    function selectorFooter(detail, selectedDeparture) {
+        var html = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i> Fermer</button><div class="ws-md-footer-actions">';
+        if (selectedDeparture && selectedDeparture.routes && selectedDeparture.routes.reservations) {
+            html += '<a href="' + selectedDeparture.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        } else if (detail.routes && detail.routes.reservations) {
+            html += '<a href="' + detail.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        }
+        if (selectedDeparture && selectedDeparture.routes && selectedDeparture.routes.reserve) {
+            html += '<a href="' + selectedDeparture.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
+        }
+        if (detail.routes && detail.routes.edit_voyage) html += '<a href="' + detail.routes.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
+        html += '</div>';
+        return html;
+    }
+
     function departureFooter(code, detail, departure) {
-        var html = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-back-to-selector="1" data-row-code="' + escapeHtml(code) + '"><i class="fas fa-arrow-left"></i> Dates de départ</button><div class="ws-md-footer-actions">';
+        var html = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i> Fermer</button><div class="ws-md-footer-actions">';
         if (departure.routes && departure.routes.reservations) html += '<a href="' + departure.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
         if (departure.routes && departure.routes.reserve) html += '<a href="' + departure.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
         if (detail.routes && detail.routes.edit_voyage) html += '<a href="' + detail.routes.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
@@ -1739,21 +1835,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return html;
     }
 
-    function openSelector(code) {
+    function openSelector(code, preferredTravelDateId) {
         var detail = getDetail(code);
         if (!detail) return;
-        openModal(detail.title || '—', modalSub(detail), selectorBody(code, detail), selectorFooter(detail));
+        var selectedDeparture = resolveSelectedDeparture(detail, preferredTravelDateId);
+        openModal(detail.title || '—', modalSub(detail, selectedDeparture), selectorBody(code, detail, selectedDeparture), selectorFooter(detail, selectedDeparture));
     }
 
     function openDepartureDetail(code, travelDateId) {
-        var detail = getDetail(code);
-        if (!detail) return;
-        var departure = getDeparture(detail, travelDateId);
-        if (!departure) {
-            openSelector(code);
-            return;
-        }
-        openModal(detail.title || '—', modalSub(detail, departure), departureBody(detail, departure), departureFooter(code, detail, departure));
+        openSelector(code, travelDateId);
     }
 
     function handleReserve(code) {
@@ -1778,7 +1868,7 @@ document.addEventListener('DOMContentLoaded', function () {
     normalizeWorkspaceButtons();
 
     document.addEventListener('click', function (event) {
-        var target = event.target.closest('[data-ws-detail-trigger],[data-ws-reserve-trigger],[data-ws-view-departure],[data-ws-reserve-departure],[data-ws-back-to-selector],[data-ws-md-close],[data-ws-md-backdrop]');
+        var target = event.target.closest('[data-ws-detail-trigger],[data-ws-reserve-trigger],[data-ws-select-departure],[data-ws-reserve-departure],[data-ws-md-close],[data-ws-md-backdrop]');
         if (!target) return;
         event.preventDefault();
         event.stopPropagation();
@@ -1790,7 +1880,7 @@ document.addEventListener('DOMContentLoaded', function () {
             handleReserve(target.getAttribute('data-row-code') || '');
             return;
         }
-        if (target.hasAttribute('data-ws-view-departure')) {
+        if (target.hasAttribute('data-ws-select-departure')) {
             openDepartureDetail(target.getAttribute('data-row-code') || '', target.getAttribute('data-travel-date-id') || '');
             return;
         }
@@ -1798,10 +1888,6 @@ document.addEventListener('DOMContentLoaded', function () {
             var detail = getDetail(target.getAttribute('data-row-code') || '');
             var departure = detail ? getDeparture(detail, target.getAttribute('data-travel-date-id') || '') : null;
             if (departure && departure.routes && departure.routes.reserve) window.location.href = departure.routes.reserve;
-            return;
-        }
-        if (target.hasAttribute('data-ws-back-to-selector')) {
-            openSelector(target.getAttribute('data-row-code') || '');
             return;
         }
         closeModal();

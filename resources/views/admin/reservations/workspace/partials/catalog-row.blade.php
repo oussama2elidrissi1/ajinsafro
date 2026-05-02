@@ -286,7 +286,7 @@
                         @endphp
                         <li class="ws-offer-card__departure-item">
                             <span class="ws-offer-card__departure-date">{{ $departure['date_label'] ?? 'Date non renseignée' }}</span>
-                            <span class="ws-offer-card__departure-status {{ $statusClass }}">{{ $statusLabel }}</span>
+                            <span class="ws-offer-card__departure-status {{ $statusClass }}">— {{ $statusLabel }}</span>
                         </li>
                     @endforeach
                 </ul>
