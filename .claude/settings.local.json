@@ -31,7 +31,8 @@
       "Bash(sed -n '433,445p' hebergement-booking.js)",
       "Bash(Get-ChildItem -Recurse -Path \"resources/views/admin\" -File)",
       "Bash(Select-Object FullName)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "PowerShell($css = Get-Content 'public/css/admin-premium.css' -Raw; $open = \\($css | Select-String '{' -AllMatches\\).Matches.Count; $close = \\($css | Select-String '}' -AllMatches\\).Matches.Count; Write-Host \"Open: $open, Close: $close\")"
     ]
   }
 }

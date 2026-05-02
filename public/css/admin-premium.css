@@ -12,6 +12,11 @@
     --ajp-shadow-sm: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
+/* Override topbar height variable for new 56px admin topbar */
+.admin-premium-ui.internal-v2-topbar-hidden {
+    --internal-v2-topbar-height: 56px;
+}
+
 .admin-premium-ui body,
 body.admin-premium-ui {
     background:
@@ -20,13 +25,28 @@ body.admin-premium-ui {
 }
 
 .admin-premium-ui .page-content {
-    padding: 18px 0 30px;
     background: transparent;
+}
+
+/* Only reduce page-content padding for non-detached layouts */
+.admin-premium-ui:not([data-layout="detached"]) .page-content {
+    padding: 18px 0 30px;
 }
 
 .admin-premium-ui .container-fluid,
 .admin-premium-ui .w-full.px-0.mt-0.mb-16.fade-in {
     position: relative;
+}
+
+/* Detached layout: prevent gradient pseudo-elements from intercepting clicks */
+.admin-premium-ui[data-layout="detached"] #layout-wrapper:before,
+.admin-premium-ui[data-layout="detached"] #layout-wrapper:after {
+    pointer-events: none;
+}
+
+/* Detached layout: reset vertical-menu top offset from internal-v2-layout.css */
+.admin-premium-ui[data-layout="detached"] .vertical-menu {
+    top: auto;
 }
 
 .admin-premium-ui .page-title-box {
@@ -214,6 +234,8 @@ body.admin-premium-ui {
 
 .admin-premium-ui .vertical-menu {
     width: 290px;
+    min-width: 290px;
+    max-width: 290px;
     background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(16px);
     border-right: 1px solid var(--ajp-line);
@@ -321,6 +343,10 @@ body.admin-premium-ui {
 }
 
 .admin-premium-ui .main-content {
+    /* margin-left applied only for non-detached layouts */
+}
+
+.admin-premium-ui:not([data-layout="detached"]) .main-content {
     margin-left: 290px;
 }
 
@@ -434,6 +460,8 @@ body.admin-premium-ui {
 @media (max-width: 991.98px) {
     .admin-premium-ui .vertical-menu {
         width: 100%;
+        min-width: 100%;
+        max-width: 100%;
     }
 
     .admin-premium-ui .main-content {
@@ -455,6 +483,7 @@ body.admin-premium-ui {
 
 /* ─── Sidebar Ajinsafro 3-level ─── */
 #sidebar-menu .metismenu > li > a {
+    position: relative;
     padding: 0.75rem 1.25rem;
     font-weight: 600;
     font-size: 14px;
@@ -477,6 +506,7 @@ body.admin-premium-ui {
 
 /* Level 1 sub-menu (under Produit & Service) */
 #sidebar-menu .metismenu > li > ul.sub-menu > li > a {
+    position: relative;
     padding: 0.55rem 1.25rem 0.55rem 2.5rem;
     font-size: 13.5px;
     font-weight: 500;
@@ -571,8 +601,11 @@ body.admin-premium-ui {
 
 /* ─── Admin Topbar ─── */
 .admin-topbar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     z-index: 1045;
     background: linear-gradient(135deg, #0e3a5a 0%, #0a4f80 45%, #0083c4 100%);
     backdrop-filter: blur(18px);
