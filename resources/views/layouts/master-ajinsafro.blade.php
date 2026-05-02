@@ -85,17 +85,8 @@
     <!-- Begin page -->
     <div class="container-fluid">
         <div id="layout-wrapper">
-            @if($hideInternalV2Topbar)
-                @include('layouts.partials.internal-v2-topbar')
-            @else
-                @include('layouts.partials.topbar-ajinsafro')
-            @endif
+            @include('layouts.partials.admin-topbar')
             @include('layouts.partials.sidebar-ajinsafro')
-            @if($hideInternalV2Topbar)
-                <button type="button" class="btn btn-primary d-lg-none internal-v2-menu-toggle" id="vertical-menu-btn" aria-label="Ouvrir le menu">
-                    <i class="fa fa-fw fa-bars"></i>
-                </button>
-            @endif
             <div class="main-content">
                 <div class="page-content">
                     @yield('content')

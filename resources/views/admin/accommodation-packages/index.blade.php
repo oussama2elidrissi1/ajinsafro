@@ -1,115 +1,102 @@
 @extends('layouts.master-ajinsafro')
-@section('title')
-    Packs hébergement
-@endsection
+
+@section('title', 'Packs hébergement')
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Packs hébergement</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item active">Packs hébergement</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-12 text-end">
-            <a href="{{ route('admin.accommodation-packages.create') }}" class="btn btn-success">
-                <i class="bx bx-plus"></i> Nouveau pack
+    <x-admin.page-header
+        title="Packs hébergement"
+        subtitle="Gérez les packs d'hébergement affichés sur le site."
+        :breadcrumbs="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Packs hébergement'],
+        ]"
+    >
+        <x-slot name="actions">
+            <a href="{{ route('admin.accommodation-packages.create') }}" class="aj-btn aj-btn-primary">
+                <i class="bx bx-plus"></i>
+                <span>Nouveau pack</span>
             </a>
-        </div>
-    </div>
+        </x-slot>
+    </x-admin.page-header>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-                    @if(session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show">{{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
+    <x-admin.flash-messages />
 
-                    <div class="table-responsive">
-                        <table class="table table-striped align-middle">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Titre</th>
-                                    <th>Pays</th>
-                                    <th>Ville</th>
-                                    <th>Durée</th>
-                                    <th>Pension</th>
-                                    <th>Type</th>
-                                    <th>Prix</th>
-                                    <th>En vedette</th>
-                                    <th>Actif</th>
-                                    <th>Ordre</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($packages as $package)
-                                    <tr>
-                                        <td>{{ $package->id }}</td>
-                                        <td>{{ $package->title }}</td>
-                                        <td>{{ $package->country }}</td>
-                                        <td>{{ $package->city }}</td>
-                                        <td>{{ $package->duration_days }}j / {{ $package->nights }}n</td>
-                                        <td>{{ $package->pension_type ?? '-' }}</td>
-                                        <td>{{ $package->accommodation_type ?? '-' }}</td>
-                                        <td>{{ number_format($package->price_from, 2) }} {{ $package->currency }}</td>
-                                        <td>
-                                            @if($package->is_featured)
-                                                <span class="badge bg-warning">Oui</span>
-                                            @else
-                                                <span class="badge bg-secondary">Non</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($package->is_active)
-                                                <span class="badge bg-success">Oui</span>
-                                            @else
-                                                <span class="badge bg-secondary">Non</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $package->sort_order }}</td>
-                                        <td class="d-flex gap-1">
-                                            <a href="{{ route('admin.accommodation-packages.edit', $package) }}" class="btn btn-sm btn-primary">Modifier</a>
-                                            <form method="POST" action="{{ route('admin.accommodation-packages.destroy', $package) }}" onsubmit="return confirm('Supprimer ce pack ?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="12" class="text-center text-muted">Aucun pack hébergement.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+    <x-admin.kpi-cards
+        :kpis="[
+            ['label' => 'Total packs', 'value' => number_format($packages->total(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Base complète'],
+            ['label' => 'Actifs', 'value' => number_format($packages->where('is_active', true)->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Visibles sur le site'],
+            ['label' => 'En vedette', 'value' => number_format($packages->where('is_featured', true)->count(), 0, ',', ' '), 'icon' => 'bx bx-star', 'color' => '-orange', 'note' => 'Mis en avant'],
+            ['label' => 'Prix moyen', 'value' => number_format($packages->avg('price_from') ?? 0, 0, ',', ' ') . ' DH', 'icon' => 'bx bx-wallet', 'color' => '-violet', 'note' => 'Moyenne base'],
+        ]"
+    />
 
-                    @if($packages->hasPages())
-                        <div class="d-flex justify-content-end mt-2">
-                            {{ $packages->links() }}
-                        </div>
-                    @endif
-                </div>
+    <section class="aj-panel">
+        @if($packages->isEmpty())
+            <x-admin.empty-state
+                title="Aucun pack hébergement"
+                message="Créez votre premier pack pour l'afficher sur le site."
+                :action-url="route('admin.accommodation-packages.create')"
+                action-label="Nouveau pack"
+            />
+        @else
+            <div class="table-responsive" style="overflow-x:auto;">
+                <table class="aj-table" style="width:100%;border-collapse:separate;border-spacing:0;">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Titre</th>
+                            <th>Destination</th>
+                            <th>Durée</th>
+                            <th>Pension</th>
+                            <th>Type</th>
+                            <th>Prix</th>
+                            <th>Vedette</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($packages as $package)
+                            <tr>
+                                <td>
+                                    <x-admin.image-thumb :src="$package->image_url" :alt="$package->title" size="sm" />
+                                </td>
+                                <td>
+                                    <div style="font-weight:800;color:#102340;">{{ $package->title }}</div>
+                                    <div style="font-size:12px;font-weight:700;color:#7a879a;">#{{ $package->id }}</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight:700;color:#253754;font-size:13px;">{{ $package->city ?? 'Ville non renseignée' }}</div>
+                                    <div style="font-size:12px;font-weight:600;color:#7a879a;">{{ $package->country ?? '' }}</div>
+                                </td>
+                                <td>{{ $package->duration_days }}j / {{ $package->nights }}n</td>
+                                <td>{{ $package->pension_type ?? '—' }}</td>
+                                <td>{{ $package->accommodation_type ?? '—' }}</td>
+                                <td>
+                                    <span style="color:var(--ajp-ink);font-size:15px;font-weight:900;white-space:nowrap;">
+                                        {{ number_format($package->price_from, 0, ',', ' ') }} {{ $package->currency }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <x-admin.badge :type="$package->is_featured ? 'warning' : 'neutral'" :label="$package->is_featured ? 'Oui' : 'Non'" />
+                                </td>
+                                <td>
+                                    <x-admin.badge :type="$package->is_active ? 'success' : 'neutral'" :label="$package->is_active ? 'Actif' : 'Inactif'" />
+                                </td>
+                                <td class="text-end">
+                                    <x-admin.action-buttons
+                                        :edit-url="route('admin.accommodation-packages.edit', $package)"
+                                        :delete-url="route('admin.accommodation-packages.destroy', $package)"
+                                        delete-confirm="Supprimer ce pack ?"
+                                    />
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </div>
+
+            <x-admin.pagination-footer :paginator="$packages" />
+        @endif
+    </section>
 @endsection

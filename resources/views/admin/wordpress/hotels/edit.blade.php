@@ -3,42 +3,24 @@
     Modifier l'hébergement
 @endsection
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Modifier l'hébergement</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.wordpress.hotels.index') }}">Catalogue Hébergements</a></li>
-                        <li class="breadcrumb-item active">{{ $hotel->post_title }}</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
+    <x-admin.page-header
+        title="Modifier l'hébergement"
+        subtitle="{{ $hotel->post_title }}"
+        :breadcrumbs="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Catalogue Hébergements', 'url' => route('admin.wordpress.hotels.index')],
+            ['label' => $hotel->post_title],
+        ]"
+    >
+        <x-slot name="actions">
+            <a href="{{ route('admin.wordpress.hotels.index') }}" class="aj-btn aj-btn-soft">
+                <i class="bx bx-arrow-back"></i>
+                <span>Retour à la liste</span>
+            </a>
+        </x-slot>
+    </x-admin.page-header>
 
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <div class="mb-3">
-        <a href="{{ route('admin.wordpress.hotels.index') }}" class="btn btn-secondary waves-effect">Retour à la liste</a>
-    </div>
+    <x-admin.flash-messages />
 
     <form action="{{ route('admin.wordpress.hotels.update', $hotel) }}" method="POST" enctype="multipart/form-data" id="hotel-edit-form">
         @csrf
@@ -94,7 +76,7 @@
                                 @include('admin.wordpress.hotels._tab_contact', ['meta' => $meta ?? []])
                             </div>
                             <div class="tab-pane fade" id="pane-price" role="tabpanel">
-                                <p class="text-muted mb-0">Prix minimum est géré dans l’onglet Location. Cet onglet peut être étendu plus tard.</p>
+                                <p class="text-muted mb-0">Prix minimum est géré dans l'onglet Location. Cet onglet peut être étendu plus tard.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-checkinout" role="tabpanel">
                                 <p class="text-muted mb-0">Check in / Check out — à configurer si nécessaire.</p>

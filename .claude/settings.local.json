@@ -28,7 +28,10 @@
       "Bash(sed -i '436s/^.*$/    if \\(!featured.length\\) {/' hebergement-booking.js)",
       "Bash(sed -i '437s/^.*$/      els.featuredGrid.innerHTML = '\\\\'''\\\\'';/' hebergement-booking.js)",
       "Bash(sed -i '442d' hebergement-booking.js)",
-      "Bash(sed -n '433,445p' hebergement-booking.js)"
+      "Bash(sed -n '433,445p' hebergement-booking.js)",
+      "Bash(Get-ChildItem -Recurse -Path \"resources/views/admin\" -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)"
     ]
   }
 }

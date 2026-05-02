@@ -1,23 +1,20 @@
 {{-- Partial: page placeholder AjinsAfro - titre du sous-menu + card "Page en cours de construction" --}}
+<x-admin.page-header
+    :title="$title"
+    :breadcrumbs="[
+        ['label' => 'Admin', 'url' => route('admin.dashboard')],
+        ['label' => $title],
+    ]"
+/>
+
 <div class="row">
     <div class="col-12">
-        <div class="page-title-box d-flex align-items-center justify-content-between">
-            <h4 class="page-title mb-0 font-size-18">{{ $title }}</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                    <li class="breadcrumb-item active">{{ $title }}</li>
-                </ol>
+        <div class="aj-empty">
+            <div class="mb-3">
+                <i class="bx bx-layer" style="font-size: 2.5rem; color: var(--ajp-primary);"></i>
             </div>
-        </div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <p class="text-muted mb-0">Page en cours de construction</p>
-            </div>
+            <h5 class="mb-2" style="color: var(--ajp-ink); font-weight: 800;">{{ $title }}</h5>
+            <p class="text-muted mb-0" style="font-weight: 600;">Cette section est en cours de développement.</p>
         </div>
     </div>
 </div>

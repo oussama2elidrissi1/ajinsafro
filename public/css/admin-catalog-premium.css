@@ -537,6 +537,35 @@
     text-align: center;
 }
 
+/* Thumb size modifiers (higher specificity for component use inside catalog) */
+.aj-catalog-page .aj-thumb.--sm { width: 48px; height: 48px; border-radius: 12px; }
+.aj-catalog-page .aj-thumb.--md { width: 64px; height: 52px; border-radius: 14px; }
+.aj-catalog-page .aj-thumb.--lg { width: 72px; height: 72px; border-radius: 16px; }
+.aj-catalog-page .aj-thumb.--tour { width: 82px; height: 60px; border-radius: 14px; }
+.aj-catalog-page .aj-thumb.--card-cover { width: 100%; height: 160px; border-radius: 22px 22px 0 0; border: 0; }
+
+/* Compact filter grid variant (no col-span classes needed) */
+.aj-catalog-page .aj-filter-grid.-compact {
+    grid-template-columns: minmax(200px, 1.4fr) repeat(4, minmax(0, .8fr)) minmax(160px, auto) auto;
+}
+
+/* Location / date helpers used on hotels page */
+.aj-catalog-page .aj-location strong,
+.aj-catalog-page .aj-date {
+    display: block;
+    color: #253754;
+    font-size: 13px;
+    font-weight: 700;
+}
+.aj-catalog-page .aj-location span,
+.aj-catalog-page .aj-date small {
+    display: block;
+    margin-top: 3px;
+    color: #7a879a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
 @media (max-width: 1399.98px) {
     .aj-catalog-page .aj-kpis {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -565,7 +594,8 @@
 
     .aj-catalog-page .aj-kpis,
     .aj-catalog-page .aj-grid,
-    .aj-catalog-page .aj-filter-grid {
+    .aj-catalog-page .aj-filter-grid,
+    .aj-catalog-page .aj-filter-grid.-compact {
         grid-template-columns: 1fr;
     }
 

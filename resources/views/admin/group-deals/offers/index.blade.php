@@ -3,101 +3,122 @@
 @section('title', 'Group Deals')
 
 @section('content')
-<div class="container-fluid">
-    <div class="page-title-box d-flex align-items-center justify-content-between">
-        <div>
-            <h4 class="mb-1">Offres de voyage de groupe</h4>
-            <p class="text-muted mb-0">Créez des offres autonomes avec progression, garantie et prix par paliers.</p>
-        </div>
-        <a href="{{ route('admin.group-deals.create') }}" class="btn btn-primary">Nouvelle offre</a>
-    </div>
+    <x-admin.page-header
+        title="Offres de voyage de groupe"
+        subtitle="Créez des offres autonomes avec progression, garantie et prix par paliers."
+        :breadcrumbs="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Group Deals'],
+        ]"
+    >
+        <x-slot name="actions">
+            <a href="{{ route('admin.group-deals.create') }}" class="aj-btn aj-btn-primary">
+                <i class="bx bx-plus"></i>
+                <span>Nouvelle offre</span>
+            </a>
+        </x-slot>
+    </x-admin.page-header>
 
-    <div class="card">
-        <div class="card-body">
-            <form method="get" class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <input type="text" name="q" class="form-control" value="{{ $filters['q'] ?? '' }}" placeholder="Titre ou destination">
-                </div>
-                <div class="col-md-3">
-                    <select name="status" class="form-select">
-                        <option value="">Tous les statuts</option>
-                        @foreach($statuses as $status)
-                            <option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ ucfirst($status) }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button class="btn btn-outline-primary flex-fill">Filtrer</button>
-                    <a href="{{ route('admin.group-deals.index') }}" class="btn btn-light">Réinitialiser</a>
-                </div>
-            </form>
+    <x-admin.flash-messages />
 
-            <div class="table-responsive">
-                <table class="table align-middle">
+    <x-admin.kpi-cards
+        :kpis="[
+            ['label' => 'Total offres', 'value' => number_format($groupDeals->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complète'],
+            ['label' => 'Actives', 'value' => number_format($groupDeals->where('status', 'active')->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'En cours'],
+            ['label' => 'Complètes', 'value' => number_format($groupDeals->where('status', 'completed')->count(), 0, ',', ' '), 'icon' => 'bx bx-check-double', 'color' => '-orange', 'note' => 'Garanties'],
+            ['label' => 'En cours', 'value' => number_format($groupDeals->where('status', 'in_progress')->count(), 0, ',', ' '), 'icon' => 'bx bx-time', 'color' => '-violet', 'note' => 'Recrutement'],
+        ]"
+    />
+
+    <x-admin.filter-panel :reset-url="route('admin.group-deals.index')">
+        <x-slot name="fields">
+            <div class="aj-field aj-search-wrap">
+                <span class="aj-search-icon"><i class="bx bx-search"></i></span>
+                <input type="text" name="q" class="aj-control" value="{{ $filters['q'] ?? '' }}" placeholder="Titre ou destination">
+            </div>
+            <div class="aj-field">
+                <select name="status" class="aj-control">
+                    <option value="">Tous les statuts</option>
+                    @foreach($statuses as $status)
+                        <option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ ucfirst($status) }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </x-slot>
+    </x-admin.filter-panel>
+
+    <section class="aj-panel">
+        @if($groupDeals->isEmpty())
+            <x-admin.empty-state
+                title="Aucune offre Group Deal"
+                message="Créez votre première offre pour lancer un voyage de groupe."
+                :action-url="route('admin.group-deals.create')"
+                action-label="Nouvelle offre"
+            />
+        @else
+            <div class="table-responsive" style="overflow-x:auto;">
+                <table class="aj-table" style="width:100%;border-collapse:separate;border-spacing:0;">
                     <thead>
-                    <tr>
-                        <th>Visuel</th>
-                        <th>Offre</th>
-                        <th>Dates</th>
-                        <th>Progression</th>
-                        <th>Prix actuel</th>
-                        <th>Statut</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
+                        <tr>
+                            <th>Visuel</th>
+                            <th>Offre</th>
+                            <th>Dates</th>
+                            <th>Progression</th>
+                            <th>Prix actuel</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    @forelse($groupDeals as $deal)
-                        <tr>
-                            <td>
-                                <div class="aj-thumb">
-                                    @if($deal->image_url)
-                                        <img src="{{ $deal->image_url }}" alt="{{ $deal->title }}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;">
-                                    @else
-                                        <div class="aj-thumb-placeholder" style="width:48px;height:48px;border-radius:6px;">Ajinsafro</div>
+                        @foreach($groupDeals as $deal)
+                            <tr>
+                                <td>
+                                    <x-admin.image-thumb :src="$deal->image_url" :alt="$deal->title" size="sm" />
+                                </td>
+                                <td>
+                                    <div style="font-weight:800;color:#102340;">{{ $deal->title }}</div>
+                                    <div style="font-size:12px;font-weight:700;color:#7a879a;">{{ $deal->destination ?: 'Destination non renseignée' }}</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight:700;color:#253754;font-size:13px;">{{ optional($deal->start_date)->format('d/m/Y') ?: 'N/A' }}</div>
+                                    @if($deal->end_date)
+                                        <div style="font-size:12px;font-weight:600;color:#7a879a;">→ {{ $deal->end_date->format('d/m/Y') }}</div>
                                     @endif
-                                </div>
-                            </td>
-                            <td>
-                                <div class="fw-semibold">{{ $deal->title }}</div>
-                                <div class="text-muted small">{{ $deal->destination ?: 'Destination non renseignée' }}</div>
-                            </td>
-                            <td class="small text-muted">
-                                {{ optional($deal->start_date)->format('d/m/Y') ?: 'N/A' }}
-                                @if($deal->end_date)
-                                    → {{ $deal->end_date->format('d/m/Y') }}
-                                @endif
-                            </td>
-                            <td>
-                                <div class="small">{{ $deal->current_participants }}/{{ $deal->max_participants }} inscrits</div>
-                                <div class="progress mt-2" style="height:8px;">
-                                    <div class="progress-bar bg-success" style="width: {{ $deal->progress_percent }}%"></div>
-                                </div>
-                                <div class="small text-muted mt-1">
-                                    @if($deal->remaining_to_guarantee > 0)
-                                        Il reste {{ $deal->remaining_to_guarantee }} personne(s) pour garantir
-                                    @else
-                                        Voyage garanti
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="fw-semibold">{{ $deal->current_price ? number_format((float) $deal->current_price, 0, ',', ' ') . ' DH' : 'N/A' }}</td>
-                            <td><span class="badge bg-light text-dark">{{ $deal->status_label }}</span></td>
-                            <td class="text-end">
-                                <a href="{{ route('admin.group-deals.show', $deal) }}" class="btn btn-sm btn-primary">Ouvrir</a>
-                                <a href="{{ route('admin.group-deals.edit', $deal) }}" class="btn btn-sm btn-light">Éditer</a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">Aucune offre Group Deal trouvée.</td>
-                        </tr>
-                    @endforelse
+                                </td>
+                                <td>
+                                    <div style="font-size:13px;font-weight:700;color:#31435c;">{{ $deal->current_participants }}/{{ $deal->max_participants }} inscrits</div>
+                                    <div class="progress mt-2" style="height:8px;">
+                                        <div class="progress-bar bg-success" style="width: {{ $deal->progress_percent }}%"></div>
+                                    </div>
+                                    <div style="font-size:12px;font-weight:600;color:#7a879a;margin-top:4px;">
+                                        @if($deal->remaining_to_guarantee > 0)
+                                            Il reste {{ $deal->remaining_to_guarantee }} personne(s) pour garantir
+                                        @else
+                                            Voyage garanti
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="color:var(--ajp-ink);font-size:15px;font-weight:900;white-space:nowrap;">
+                                        {{ $deal->current_price ? number_format((float) $deal->current_price, 0, ',', ' ') . ' DH' : 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <x-admin.badge type="neutral" :label="$deal->status_label" />
+                                </td>
+                                <td class="text-end">
+                                    <x-admin.action-buttons
+                                        :view-url="route('admin.group-deals.show', $deal)"
+                                        :edit-url="route('admin.group-deals.edit', $deal)"
+                                    />
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
 
-            {{ $groupDeals->links() }}
-        </div>
-    </div>
-</div>
+            <x-admin.pagination-footer :paginator="$groupDeals" />
+        @endif
+    </section>
 @endsection
