@@ -14,6 +14,7 @@
         filled($filters['status'] ?? null),
         filled($filters['star'] ?? null),
         filled($filters['featured'] ?? null),
+        filled($filters['destination'] ?? null),
     ])->filter()->count();
 
     $activeFilters = [];
@@ -31,6 +32,10 @@
     if (($filters['featured'] ?? '') === '1') {
         $activeFilters[] = 'Sélection : À la une';
     }
+    if (filled($filters['destination'] ?? null)) {
+        $activeFilters[] = 'Destination : '.Str::limit($filters['destination'], 28);
+    }
+    $activeFilterCount = count($activeFilters);
 @endphp
 
 @section('title', $pageTitle)
@@ -276,7 +281,7 @@
 
         .hotel-catalog-page .aj-filter-grid {
             display: grid;
-            grid-template-columns: minmax(240px, 1.65fr) repeat(3, minmax(0, .8fr)) minmax(180px, auto) auto;
+            grid-template-columns: minmax(200px, 1.4fr) repeat(4, minmax(0, .8fr)) minmax(160px, auto) auto;
             gap: 12px;
             align-items: end;
         }
@@ -792,6 +797,10 @@
                                 <option value="1" @selected(($filters['featured'] ?? '') === '1')>À la une</option>
                             </select>
                         </div>
+                        <div class="aj-field">
+                            <label for="destination">Destination</label>
+                            <input id="destination" type="text" name="destination" class="aj-control" value="{{ $filters['destination'] ?? '' }}" placeholder="Ville ou adresse">
+                        </div>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="submit" class="aj-btn aj-btn-primary w-100">
                                 <i class="bx bx-filter-alt"></i>
@@ -890,9 +899,15 @@
                                         <td>
                                             <div class="aj-thumb">
                                                 @if($thumbUrl)
-                                                    <img src="{{ $thumbUrl }}" alt="{{ $hotel->post_title }}" onerror="this.remove(); this.parentElement.querySelector('.aj-thumb-placeholder').style.display='grid';">
+                                                    <img src="{{ $thumbUrl }}" alt="{{ $hotel->post_title }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+                                                    <div class="aj-thumb-placeholder" style="display:none;">
+                                                        <img src="{{ asset('images/hotel-placeholder.svg') }}" alt="Ajinsafro" style="width:100%;height:100%;object-fit:cover;">
+                                                    </div>
+                                                @else
+                                                    <div class="aj-thumb-placeholder" style="display:grid;">
+                                                        <img src="{{ asset('images/hotel-placeholder.svg') }}" alt="Ajinsafro" style="width:100%;height:100%;object-fit:cover;">
+                                                    </div>
                                                 @endif
-                                                <div class="aj-thumb-placeholder" style="{{ $thumbUrl ? 'display:none;' : '' }}">Ajinsafro</div>
                                             </div>
                                         </td>
                                         <td>
@@ -940,9 +955,11 @@
                                         </td>
                                         <td class="text-end">
                                             <div class="aj-actions">
-                                                <a href="{{ route('admin.wordpress.hotels.edit', $hotel) }}" class="aj-icon-btn" title="Voir">
-                                                    <i class="bx bx-show"></i>
-                                                </a>
+                                                @if($wpSiteUrl)
+                                                    <a href="{{ $wpSiteUrl }}/?post_type=st_hotel&p={{ $hotel->ID }}" target="_blank" class="aj-icon-btn" title="Voir sur le site">
+                                                        <i class="bx bx-link-external"></i>
+                                                    </a>
+                                                @endif
                                                 <a href="{{ route('admin.wordpress.hotels.edit', $hotel) }}" class="aj-icon-btn" title="Modifier">
                                                     <i class="bx bx-pencil"></i>
                                                 </a>
@@ -982,7 +999,14 @@
                             >
                                 <div class="aj-card-cover">
                                     @if($thumbUrl)
-                                        <img src="{{ $thumbUrl }}" alt="{{ $hotel->post_title }}">
+                                        <img src="{{ $thumbUrl }}" alt="{{ $hotel->post_title }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+                                        <div class="aj-thumb-placeholder" style="display:none; height:100%; border-radius:0;">
+                                            <img src="{{ asset('images/hotel-placeholder.svg') }}" alt="Ajinsafro" style="width:100%;height:100%;object-fit:cover;">
+                                        </div>
+                                    @else
+                                        <div class="aj-thumb-placeholder" style="display:grid; height:100%; border-radius:0;">
+                                            <img src="{{ asset('images/hotel-placeholder.svg') }}" alt="Ajinsafro" style="width:100%;height:100%;object-fit:cover;">
+                                        </div>
                                     @endif
                                 </div>
                                 <div class="aj-card-body">
@@ -1012,9 +1036,11 @@
                                     <div class="aj-card-actions">
                                         <span class="aj-price">{{ is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : '—' }}</span>
                                         <div class="aj-actions">
-                                            <a href="{{ route('admin.wordpress.hotels.edit', $hotel) }}" class="aj-icon-btn" title="Voir">
-                                                <i class="bx bx-show"></i>
-                                            </a>
+                                            @if($wpSiteUrl)
+                                                <a href="{{ $wpSiteUrl }}/?post_type=st_hotel&p={{ $hotel->ID }}" target="_blank" class="aj-icon-btn" title="Voir sur le site">
+                                                    <i class="bx bx-link-external"></i>
+                                                </a>
+                                            @endif
                                             <a href="{{ route('admin.wordpress.hotels.edit', $hotel) }}" class="aj-icon-btn" title="Modifier">
                                                 <i class="bx bx-pencil"></i>
                                             </a>

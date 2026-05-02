@@ -90,8 +90,9 @@ return [
                     'icon' => 'bx bx-hotel',
                     'permission' => 'accommodations.view',
                     'children' => [
+                        ['label' => 'Tous les hébergements', 'route' => 'admin.wordpress.hotels.index', 'permission' => 'accommodations.view'],
+                        ['label' => 'Hôtels WordPress', 'route' => 'admin.wordpress.hotels.index', 'permission' => 'accommodations.view'],
                         ['label' => 'Packs hébergement', 'route' => 'admin.accommodation-packages.index', 'permission' => 'accommodations.view'],
-                        ['label' => 'Hôtels', 'route' => 'admin.accommodations.hotels', 'permission' => 'accommodations.view'],
                         ['label' => 'Chambres', 'route' => 'admin.accommodations.chambres', 'permission' => 'accommodations.rooms.view'],
                         ['label' => 'Tarifs saisonniers', 'route' => 'admin.accommodations.tarifs-saisonniers', 'permission' => 'accommodations.seasonal-pricing.view'],
                         ['label' => 'Disponibilités', 'route' => 'admin.accommodations.disponibilites', 'permission' => 'accommodations.availability.view'],
@@ -209,6 +210,13 @@ return [
         'admin.settings.referentiels-metier.import-legacy' => 'settings.general.manage',
         'admin.settings.home-page.edit' => 'settings.general.manage',
         'admin.settings.home-page.update' => 'settings.general.manage',
+
+        'admin.wordpress.hotels.index' => 'accommodations.view',
+        'admin.wordpress.hotels.create' => 'accommodations.view',
+        'admin.wordpress.hotels.store' => 'accommodations.view',
+        'admin.wordpress.hotels.edit' => 'accommodations.view',
+        'admin.wordpress.hotels.update' => 'accommodations.view',
+        'admin.wordpress.hotels.destroy' => 'accommodations.view',
 
         'admin.profile.edit' => 'dashboard.view',
         'admin.profile.update' => 'dashboard.view',

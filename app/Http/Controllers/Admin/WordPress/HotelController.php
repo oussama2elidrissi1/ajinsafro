@@ -34,6 +34,7 @@ class HotelController extends Controller
         $status = trim((string) $request->query('status', ''));
         $featured = trim((string) $request->query('featured', ''));
         $star = trim((string) $request->query('hotel_star', ''));
+        $destination = trim((string) $request->query('destination', ''));
 
         $hotels = WpPost::query()
             ->leftJoin($hotelsTable, $postsTable.'.ID', '=', $hotelsTable.'.post_id')
@@ -52,15 +53,19 @@ class HotelController extends Controller
             ->when(in_array($status, ['publish', 'draft'], true), fn ($query) => $query->where($postsTable.'.post_status', $status))
             ->when($featured === '1', fn ($query) => $query->where($hotelsTable.'.is_featured', 'on'))
             ->when($star !== '' && ctype_digit($star), fn ($query) => $query->where($hotelsTable.'.hotel_star', $star))
+            ->when($destination !== '', fn ($query) use ($destination, $hotelsTable) => $query->where($hotelsTable.'.address', 'like', '%'.$destination.'%'))
             ->orderByDesc($postsTable.'.post_modified')
             ->paginate(15);
 
         $hotels->appends($request->query());
 
+        $wpSiteUrl = rtrim((string) config('wordpress.site_url', config('wordpress.public_site_url', '')), '/');
+
         return view('admin.wordpress.hotels.index', [
             'hotels' => $hotels,
             'media' => $this->media,
-            'filters' => compact('search', 'status', 'featured', 'star'),
+            'filters' => compact('search', 'status', 'featured', 'star', 'destination'),
+            'wpSiteUrl' => $wpSiteUrl,
         ]);
     }
 
