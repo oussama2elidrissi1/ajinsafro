@@ -19,6 +19,7 @@ return [
             'icon' => 'bx bx-calendar-check',
             'permission' => 'reservations.view',
             'route' => 'admin.reservations.workspace',
+            'active_patterns' => ['admin.reservations.*'],
         ],
         [
             'key' => 'messagerie',
@@ -26,6 +27,7 @@ return [
             'icon' => 'bx bx-envelope',
             'permission' => 'dashboard.view',
             'route' => 'admin.messagerie.index',
+            'active_patterns' => ['admin.messagerie.*'],
         ],
         [
             'key' => 'customers',
@@ -33,10 +35,9 @@ return [
             'icon' => 'bx bx-user',
             'permission' => 'customers.view',
             'children' => [
-                ['label' => 'Clients', 'route' => 'admin.customers.clients', 'permission' => 'customers.clients.view'],
+                ['label' => 'Liste clients', 'route' => 'admin.customers.clients', 'permission' => 'customers.clients.view'],
                 ['label' => 'Voyageurs', 'route' => 'admin.customers.voyageurs', 'permission' => 'customers.travelers.view'],
                 ['label' => 'Historique', 'route' => 'admin.customers.historique', 'permission' => 'customers.history.view'],
-                ['label' => 'Avis clients', 'route' => 'admin.customers.avis-clients', 'permission' => 'customers.reviews.view'],
                 ['label' => 'Fidélité', 'route' => 'admin.customers.fidelite', 'permission' => 'customers.loyalty.view'],
             ],
         ],
@@ -46,10 +47,10 @@ return [
             'icon' => 'bx bx-store',
             'permission' => 'products.view',
             'children' => [
-                ['label' => 'Services', 'route' => 'admin.products.services', 'permission' => 'products.services.view'],
-                ['label' => 'Options', 'route' => 'admin.products.options', 'permission' => 'products.options.view'],
                 ['label' => 'Tarifs', 'route' => 'admin.products.tarifs', 'permission' => 'products.pricing.view'],
+                ['label' => 'Services', 'route' => 'admin.products.services', 'permission' => 'products.services.view'],
                 ['label' => 'Conditions', 'route' => 'admin.products.conditions', 'permission' => 'products.conditions.view'],
+                ['label' => 'Options', 'route' => 'admin.products.options', 'permission' => 'products.options.view'],
             ],
         ],
         [
@@ -77,11 +78,11 @@ return [
                     'icon' => 'bx bx-group',
                     'permission' => 'group-deals.view',
                     'children' => [
-                        ['label' => 'Catalogue Group Deals', 'route' => 'admin.group-deals.index', 'permission' => 'group-deals.offers.view'],
-                        ['label' => 'Voyages GD', 'route' => 'admin.group-deals.trips.index', 'permission' => 'group-deals.trips.view'],
-                        ['label' => 'Départs GD', 'route' => 'admin.group-deals.departures.index', 'permission' => 'group-deals.departures.view'],
-                        ['label' => 'Participants / inscriptions', 'route' => 'admin.group-deals.participants.index', 'permission' => 'group-deals.participants.view'],
-                        ['label' => 'Tarifs par palier', 'route' => 'admin.group-deals.tiers.index', 'permission' => 'group-deals.tiers.view'],
+                        ['label' => 'Catalogue Group Deals', 'route' => 'admin.group-deals.index', 'permission' => 'group-deals.offers.view', 'active_patterns' => ['admin.group-deals.index', 'admin.group-deals.create', 'admin.group-deals.store', 'admin.group-deals.show', 'admin.group-deals.edit', 'admin.group-deals.update', 'admin.group-deals.destroy', 'admin.group-deals.recalculate']],
+                        ['label' => 'Voyages GD', 'route' => 'admin.group-deals.trips.index', 'permission' => 'group-deals.trips.view', 'active_patterns' => ['admin.group-deals.trips.*']],
+                        ['label' => 'Départs GD', 'route' => 'admin.group-deals.departures.index', 'permission' => 'group-deals.departures.view', 'active_patterns' => ['admin.group-deals.departures.index', 'admin.group-deals.departures.show', 'admin.group-deals.departures.recalculate']],
+                        ['label' => 'Participants / inscriptions', 'route' => 'admin.group-deals.participants.index', 'permission' => 'group-deals.participants.view', 'active_patterns' => ['admin.group-deals.participants.*', 'admin.group-deals.departures.participants.*']],
+                        ['label' => 'Tarifs par palier', 'route' => 'admin.group-deals.tiers.index', 'permission' => 'group-deals.tiers.view', 'active_patterns' => ['admin.group-deals.tiers.*', 'admin.group-deals.trips.tiers.*']],
                     ],
                 ],
                 [
@@ -90,7 +91,7 @@ return [
                     'icon' => 'bx bx-hotel',
                     'permission' => 'accommodations.view',
                     'children' => [
-                        ['label' => 'Catalogue hébergements', 'route' => 'admin.accommodations.hotels', 'permission' => 'accommodations.catalog.view'],
+                        ['label' => 'Tous les hébergements', 'route' => 'admin.accommodations.hotels', 'permission' => 'accommodations.catalog.view'],
                         ['label' => 'Hôtels WordPress', 'route' => 'admin.wordpress.hotels.index', 'permission' => 'accommodations.wordpress-hotels.view'],
                         ['label' => 'Packs hébergement', 'route' => 'admin.accommodation-packages.index', 'permission' => 'accommodations.packages.view'],
                         ['label' => 'Chambres', 'route' => 'admin.accommodations.chambres', 'permission' => 'accommodations.rooms.view'],
@@ -131,8 +132,8 @@ return [
             'permission' => 'operations.view',
             'children' => [
                 ['label' => 'Planning', 'route' => 'admin.operations.planning', 'permission' => 'operations.planning.view'],
-                ['label' => 'Guides & Chauffeurs', 'route' => 'admin.operations.guides-chauffeurs', 'permission' => 'operations.guides.view'],
                 ['label' => 'Véhicules', 'route' => 'admin.operations.vehicules', 'permission' => 'operations.vehicles.view'],
+                ['label' => 'Guides & Chauffeurs', 'route' => 'admin.operations.guides-chauffeurs', 'permission' => 'operations.guides.view'],
                 ['label' => 'Logistique', 'route' => 'admin.operations.logistique', 'permission' => 'operations.logistics.view'],
             ],
         ],
@@ -143,8 +144,8 @@ return [
             'permission' => 'visa.view',
             'children' => [
                 ['label' => 'Demandes de visa', 'route' => 'admin.visa.demandes-visa', 'permission' => 'visa.requests.view'],
-                ['label' => 'Statuts', 'route' => 'admin.visa.statuts', 'permission' => 'visa.statuses.view'],
                 ['label' => 'Documents', 'route' => 'admin.visa.documents', 'permission' => 'visa.documents.view'],
+                ['label' => 'Statuts', 'route' => 'admin.visa.statuts', 'permission' => 'visa.statuses.view'],
             ],
         ],
         [

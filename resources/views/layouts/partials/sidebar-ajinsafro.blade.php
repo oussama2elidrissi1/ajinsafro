@@ -1,84 +1,13 @@
 <!-- ========== Left Sidebar Start (AjinsAfro) ========== -->
 @php
     $adminBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
-    $adminBrandLogoSmUrl = \App\Models\Setting::brandLogoUrl('sm');
     $adminBrandLogoDarkUrl = \App\Models\Setting::brandLogoUrl('dark');
     $sidebarUser = Auth::user();
-    $currentRoute = Route::currentRouteName();
-
-    $routeIsActive = function (?string $routeName) use ($currentRoute): bool {
-        if (! $routeName || ! $currentRoute) {
-            return false;
-        }
-        if ($currentRoute === $routeName) {
-            return true;
-        }
-        return str_starts_with($currentRoute, $routeName . '.');
-    };
-
-    $filterItems = function (array $items) use ($sidebarUser, &$filterItems): array {
-        $out = [];
-
-        foreach ($items as $item) {
-            $itemChildren = ! empty($item['children']) ? $filterItems($item['children']) : [];
-            $canUseRoute = empty($item['route']) || Route::has($item['route']);
-            $hasOwnAccess = true;
-
-            if (! empty($item['permission']) && ! $sidebarUser->can($item['permission'])) {
-                $hasOwnAccess = false;
-            }
-
-            if (! empty($item['roles']) && ! $sidebarUser->hasRole($item['roles'])) {
-                $hasOwnAccess = false;
-            }
-
-            if (! $canUseRoute && $itemChildren === []) {
-                continue;
-            }
-
-            if ($itemChildren !== []) {
-                $item['children'] = $itemChildren;
-                if (! $hasOwnAccess && empty($item['route'])) {
-                    $out[] = $item;
-                    continue;
-                }
-            }
-
-            if ($hasOwnAccess) {
-                if (! empty($item['route']) && ! $canUseRoute && $itemChildren === []) {
-                    continue;
-                }
-
-                if ($itemChildren === [] && empty($item['route'])) {
-                    continue;
-                }
-
-                $out[] = $item;
-            }
-        }
-
-        return $out;
-    };
-
-    $menuItems = $filterItems(config('admin_menu.items', []));
-
-    $hasActiveChild = function (array $item) use (&$hasActiveChild, $routeIsActive): bool {
-        if (! empty($item['route']) && $routeIsActive($item['route'])) {
-            return true;
-        }
-        if (! empty($item['children'])) {
-            foreach ($item['children'] as $child) {
-                if ($hasActiveChild($child)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    };
+    $menuItems = $adminSidebarMenu ?? [];
+    $profileActive = request()->routeIs('admin.profile.*');
 @endphp
 
 <div class="vertical-menu">
-
     <div class="h-100">
         <div class="sidebar-brand-box text-center py-4 px-3 border-bottom">
             <a href="{{ route('admin.dashboard') }}" class="d-inline-flex align-items-center justify-content-center w-100">
@@ -92,97 +21,23 @@
             </div>
 
             <div class="mt-3">
-
                 <a href="{{ route('admin.dashboard') }}" class="text-body fw-medium font-size-16">{{ $sidebarUser->name }}</a>
                 <p class="text-muted mt-1 mb-0 font-size-13">{{ $sidebarUser->getRoleNames()->first() ?? 'Admin' }}</p>
-
             </div>
         </div>
 
-        <!--- Sidemenu -->
         <div id="sidebar-menu">
-            <!-- Left Menu Start -->
-            <ul class="metismenu list-unstyled" id="side-menu">
+            <ul class="metismenu list-unstyled" id="side-menu" data-managed-sidebar="1">
                 <li class="menu-title">Menu</li>
 
-                @foreach($menuItems as $section)
-                    @php
-                        $sectionActive = $hasActiveChild($section);
-                        $sectionRoute = !empty($section['route']) && Route::has($section['route']) ? $section['route'] : null;
-                        $sectionChildren = $section['children'] ?? [];
-                        $hasChildren = !empty($sectionChildren);
-                    @endphp
-                    <li>
-                        @if($hasChildren)
-                            <a href="javascript: void(0);" class="has-arrow waves-effect {{ $sectionActive ? 'mm-active' : '' }}">
-                                <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i>
-                                <span>{{ $section['label'] }}</span>
-                            </a>
-                            <ul class="sub-menu mm-collapse {{ $sectionActive ? 'mm-show' : '' }}" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}">
-                                @foreach($sectionChildren as $child)
-                                    @php
-                                        $childActive = $hasActiveChild($child);
-                                        $childRoute = !empty($child['route']) && Route::has($child['route']) ? $child['route'] : null;
-                                        $childChildren = $child['children'] ?? [];
-                                        $childHasChildren = !empty($childChildren);
-                                    @endphp
-                                    <li class="{{ $childActive ? 'mm-active' : '' }}">
-                                        @if($childHasChildren)
-                                            <a href="javascript: void(0);" class="has-arrow {{ $childActive ? 'mm-active' : '' }}">
-                                                @if(!empty($child['icon']))
-                                                    <i class="{{ $child['icon'] }}"></i>
-                                                @endif
-                                                <span>{{ $child['label'] }}</span>
-                                            </a>
-                                            <ul class="sub-menu mm-collapse {{ $childActive ? 'mm-show' : '' }}" aria-expanded="{{ $childActive ? 'true' : 'false' }}">
-                                                @foreach($childChildren as $grandChild)
-                                                    @php
-                                                        $gcRoute = !empty($grandChild['route']) && Route::has($grandChild['route']) ? $grandChild['route'] : null;
-                                                        $gcActive = $routeIsActive($gcRoute);
-                                                        $gcHref = !empty($grandChild['query']) && $gcRoute ? route($gcRoute, $grandChild['query']) : ($gcRoute ? route($gcRoute) : 'javascript:void(0);');
-                                                    @endphp
-                                                    <li>
-                                                        <a href="{{ $gcHref }}" class="{{ $gcActive ? 'active' : '' }}">
-                                                            {{ $grandChild['label'] }}
-                                                        </a>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        @else
-                                            @php
-                                                $childHref = !empty($child['query']) && $childRoute ? route($childRoute, $child['query']) : ($childRoute ? route($childRoute) : 'javascript:void(0);');
-                                                $isActive = $routeIsActive($childRoute);
-                                            @endphp
-                                            <a href="{{ $childHref }}" class="{{ $isActive ? 'active' : '' }}">
-                                                @if(!empty($child['icon']))
-                                                    <i class="{{ $child['icon'] }}"></i>
-                                                @endif
-                                                {{ $child['label'] }}
-                                            </a>
-                                        @endif
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @else
-                            @php
-                                $sectionHref = !empty($section['query']) && $sectionRoute ? route($sectionRoute, $section['query']) : route($sectionRoute);
-                                $isActive = $routeIsActive($sectionRoute);
-                            @endphp
-                            <a href="{{ $sectionHref }}" class="waves-effect {{ $isActive ? 'mm-active active' : '' }}">
-                                <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i>
-                                <span>{{ $section['label'] }}</span>
-                                @if(($section['key'] ?? null) === 'messagerie' && ($unreadCount ?? 0) > 0)
-                                    <span class="badge rounded-pill bg-primary float-end">{{ $unreadCount }}</span>
-                                @endif
-                            </a>
-                        @endif
-                    </li>
+                @foreach($menuItems as $node)
+                    @include('layouts.partials.sidebar-ajinsafro-node', ['node' => $node])
                 @endforeach
 
                 <li class="menu-title mt-3">Compte</li>
                 @can('dashboard.view')
-                    <li>
-                        <a href="{{ route('admin.profile.edit') }}" class="waves-effect">
+                    <li class="{{ $profileActive ? 'mm-active' : '' }}" data-menu-open="{{ $profileActive ? '1' : '0' }}">
+                        <a href="{{ route('admin.profile.edit') }}" class="waves-effect {{ $profileActive ? 'mm-active active' : '' }}" data-menu-active="{{ $profileActive ? '1' : '0' }}">
                             <i class="bx bx-user-circle"></i>
                             <span>Mon profil</span>
                         </a>
@@ -195,10 +50,67 @@
                         <span>Déconnexion</span>
                     </a>
                 </li>
-
             </ul>
         </div>
-        <!-- Sidebar -->
     </div>
 </div>
 <!-- Left Sidebar End -->
+
+@push('body-end')
+    <script>
+        (function () {
+            function applyManagedSidebarState() {
+                const sideMenu = document.getElementById('side-menu');
+                if (!sideMenu || sideMenu.dataset.managedSidebar !== '1' || !window.jQuery) {
+                    return;
+                }
+
+                sideMenu.querySelectorAll('li').forEach((item) => item.classList.remove('mm-active'));
+                sideMenu.querySelectorAll('ul.sub-menu').forEach((submenu) => {
+                    submenu.classList.remove('mm-show');
+                    submenu.classList.add('mm-collapse');
+                });
+                sideMenu.querySelectorAll('a').forEach((link) => {
+                    link.classList.remove('active', 'mm-active');
+                    if (link.classList.contains('has-arrow')) {
+                        link.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                sideMenu.querySelectorAll('[data-menu-open="1"]').forEach((element) => {
+                    if (element.tagName === 'LI') {
+                        element.classList.add('mm-active');
+                        const trigger = element.querySelector(':scope > a.has-arrow');
+                        if (trigger) {
+                            trigger.classList.add('mm-active');
+                            trigger.setAttribute('aria-expanded', 'true');
+                        }
+                    } else if (element.tagName === 'UL') {
+                        element.classList.add('mm-show');
+                    }
+                });
+
+                sideMenu.querySelectorAll('[data-menu-active="1"]').forEach((element) => {
+                    element.classList.add('active');
+                    const parent = element.parentElement;
+                    if (parent && parent.tagName === 'LI') {
+                        parent.classList.add('mm-active');
+                    }
+                });
+
+                const $sideMenu = window.jQuery(sideMenu);
+                const existing = $sideMenu.data('metisMenu');
+                if (existing && typeof existing.dispose === 'function') {
+                    existing.dispose();
+                }
+                $sideMenu.metisMenu({ toggle: true, preventDefault: true });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applyManagedSidebarState);
+            } else {
+                applyManagedSidebarState();
+            }
+        })();
+    </script>
+@endpush

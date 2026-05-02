@@ -6,6 +6,7 @@ use App\Models\AjAirline;
 use App\Models\Message;
 use App\Models\Voyage;
 use App\Observers\VoyageObserver;
+use App\Services\Admin\AdminMenuService;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer(['agent.*', 'layouts.partials.sidebar-agent', 'agent_v2.partials.sidebar', 'layouts.partials.sidebar-ajinsafro'], function ($view): void {
             $unreadCount = 0;
+            $adminMenu = [];
+            $agentPortalMenu = [];
+            $user = auth()->user();
 
             if (auth()->check() && Schema::hasTable('messages')) {
                 $unreadCount = Message::query()
@@ -43,7 +47,19 @@ class AppServiceProvider extends ServiceProvider
                     ->count();
             }
 
-            $view->with('unreadCount', $unreadCount);
+            if ($user) {
+                $menuService = app(AdminMenuService::class);
+                $adminMenu = $menuService->buildForUser($user);
+                $agentPortalMenu = $menuService->buildForUser($user, [
+                    'only_keys' => ['reservations', 'messagerie', 'customers', 'products', 'products_services', 'operations', 'visa', 'finance', 'partners', 'reporting', 'settings'],
+                ]);
+            }
+
+            $view->with([
+                'unreadCount' => $unreadCount,
+                'adminSidebarMenu' => $adminMenu,
+                'agentPortalAdminMenu' => $agentPortalMenu,
+            ]);
         });
     }
 }
