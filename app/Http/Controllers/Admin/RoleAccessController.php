@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\AdminMenuPermissionRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RoleAccessController extends Controller
@@ -24,7 +26,9 @@ class RoleAccessController extends Controller
     {
         return view('admin.settings.roles-permissions.form', [
             'roleModel' => new Role(['guard_name' => 'web']),
-            'permissionGroups' => $this->permissionGroups(),
+            'permissionSections' => AdminMenuPermissionRegistry::rolePermissionSections(
+                Permission::query()->pluck('name')->all()
+            ),
             'selectedPermissions' => [],
             'isEdit' => false,
         ]);
@@ -52,8 +56,12 @@ class RoleAccessController extends Controller
     {
         return view('admin.settings.roles-permissions.form', [
             'roleModel' => $role,
-            'permissionGroups' => $this->permissionGroups(),
-            'selectedPermissions' => $role->permissions->pluck('name')->toArray(),
+            'permissionSections' => AdminMenuPermissionRegistry::rolePermissionSections(
+                Permission::query()->pluck('name')->all()
+            ),
+            'selectedPermissions' => AdminMenuPermissionRegistry::expandLegacySelections(
+                $role->permissions->pluck('name')->toArray()
+            ),
             'isEdit' => true,
         ]);
     }
@@ -83,40 +91,5 @@ class RoleAccessController extends Controller
         $role->delete();
 
         return redirect()->route('admin.settings.roles-permissions')->with('success', 'Rôle supprimé.');
-    }
-
-    private function permissionGroups(): array
-    {
-        $groups = [];
-
-        foreach (config('admin_menu.items', []) as $section) {
-            $permissions = [];
-
-            if (! empty($section['permission'])) {
-                $permissions[] = [
-                    'name' => $section['permission'],
-                    'label' => 'Accès section: ' . $section['label'],
-                ];
-            }
-
-            foreach ($section['children'] ?? [] as $child) {
-                if (! empty($child['permission'])) {
-                    $permissions[] = [
-                        'name' => $child['permission'],
-                        'label' => $child['label'],
-                    ];
-                }
-            }
-
-            if (! empty($permissions)) {
-                $groups[] = [
-                    'key' => $section['key'] ?? str()->slug($section['label']),
-                    'label' => $section['label'],
-                    'permissions' => $permissions,
-                ];
-            }
-        }
-
-        return $groups;
     }
 }

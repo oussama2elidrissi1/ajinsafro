@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Services\BranchScopeService;
+use App\Support\AdminMenuPermissionRegistry;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -23,17 +24,21 @@ class AjinsafroRolesSeeder extends Seeder
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'accommodations.') || str_starts_with($p, 'operations.')
                 || str_starts_with($p, 'visa.') || str_starts_with($p, 'finance.') || str_starts_with($p, 'reporting.')
-                || str_starts_with($p, 'messagerie.') || str_starts_with($p, 'settings.view')
+                || str_starts_with($p, 'messagerie.') || str_starts_with($p, 'products-services.')
+                || str_starts_with($p, 'group-deals.') || str_starts_with($p, 'activities.') || str_starts_with($p, 'transfers.')
+                || str_starts_with($p, 'settings.view')
                 || str_starts_with($p, 'settings.branches.') || str_starts_with($p, 'settings.users.')
                 || str_starts_with($p, 'settings.general.');
         }));
         $commercial = array_values(array_filter($allPermissions, function (string $p): bool {
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
-                || str_starts_with($p, 'circuits.') || str_starts_with($p, 'messagerie.');
+                || str_starts_with($p, 'circuits.') || str_starts_with($p, 'group-deals.')
+                || str_starts_with($p, 'products-services.') || str_starts_with($p, 'messagerie.');
         }));
         $agent = array_values(array_filter($allPermissions, function (string $p): bool {
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
-                || str_starts_with($p, 'circuits.') || str_starts_with($p, 'operations.') || str_starts_with($p, 'visa.')
+                || str_starts_with($p, 'circuits.') || str_starts_with($p, 'group-deals.')
+                || str_starts_with($p, 'products-services.') || str_starts_with($p, 'operations.') || str_starts_with($p, 'visa.')
                 || str_starts_with($p, 'messagerie.');
         }));
 
@@ -50,25 +55,7 @@ class AjinsafroRolesSeeder extends Seeder
 
     private function ensurePermissionsExist(): void
     {
-        $permissions = [];
-        foreach (config('admin_menu.items', []) as $section) {
-            if (! empty($section['permission'])) {
-                $permissions[] = $section['permission'];
-            }
-            foreach ($section['children'] ?? [] as $child) {
-                if (! empty($child['permission'])) {
-                    $permissions[] = $child['permission'];
-                }
-            }
-        }
-        $permissions = array_merge($permissions, array_values(config('admin_menu.route_permissions', [])), array_values(config('admin_menu.route_prefix_permissions', [])));
-        $permissions = array_values(array_unique(array_filter(array_merge($permissions, [
-            'reservations.create',
-            'reservations.store',
-            'reservations.edit',
-            'reservations.update',
-            'reservations.destroy',
-        ]))));
+        $permissions = AdminMenuPermissionRegistry::allPermissionNames();
         foreach ($permissions as $name) {
             Permission::findOrCreate($name, 'web');
         }

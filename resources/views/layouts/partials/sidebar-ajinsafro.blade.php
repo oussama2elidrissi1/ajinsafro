@@ -16,56 +16,47 @@
         return str_starts_with($currentRoute, $routeName . '.');
     };
 
-    $filterItems = function (array $items) use ($sidebarUser): array {
+    $filterItems = function (array $items) use ($sidebarUser, &$filterItems): array {
         $out = [];
+
         foreach ($items as $item) {
+            $itemChildren = ! empty($item['children']) ? $filterItems($item['children']) : [];
+            $canUseRoute = empty($item['route']) || Route::has($item['route']);
+            $hasOwnAccess = true;
+
             if (! empty($item['permission']) && ! $sidebarUser->can($item['permission'])) {
-                continue;
+                $hasOwnAccess = false;
             }
+
             if (! empty($item['roles']) && ! $sidebarUser->hasRole($item['roles'])) {
+                $hasOwnAccess = false;
+            }
+
+            if (! $canUseRoute && $itemChildren === []) {
                 continue;
             }
-            if (! empty($item['route']) && ! Route::has($item['route'])) {
-                continue;
-            }
-            $children = [];
-            if (! empty($item['children'])) {
-                foreach ($item['children'] as $child) {
-                    if (! empty($child['permission']) && ! $sidebarUser->can($child['permission'])) {
-                        continue;
-                    }
-                    if (! empty($child['roles']) && ! $sidebarUser->hasRole($child['roles'])) {
-                        continue;
-                    }
-                    if (! empty($child['route']) && ! Route::has($child['route'])) {
-                        continue;
-                    }
-                    if (! empty($child['children'])) {
-                        $deep = [];
-                        foreach ($child['children'] as $c) {
-                            if (! empty($c['permission']) && ! $sidebarUser->can($c['permission'])) {
-                                continue;
-                            }
-                            if (! empty($c['roles']) && ! $sidebarUser->hasRole($c['roles'])) {
-                                continue;
-                            }
-                            if (! empty($c['route']) && ! Route::has($c['route'])) {
-                                continue;
-                            }
-                            $deep[] = $c;
-                        }
-                        $child['children'] = $deep;
-                    }
-                    $children[] = $child;
+
+            if ($itemChildren !== []) {
+                $item['children'] = $itemChildren;
+                if (! $hasOwnAccess && empty($item['route'])) {
+                    $out[] = $item;
+                    continue;
                 }
             }
-            if (! empty($children)) {
-                $item['children'] = $children;
-            } elseif (empty($item['route'])) {
-                continue;
+
+            if ($hasOwnAccess) {
+                if (! empty($item['route']) && ! $canUseRoute && $itemChildren === []) {
+                    continue;
+                }
+
+                if ($itemChildren === [] && empty($item['route'])) {
+                    continue;
+                }
+
+                $out[] = $item;
             }
-            $out[] = $item;
         }
+
         return $out;
     };
 

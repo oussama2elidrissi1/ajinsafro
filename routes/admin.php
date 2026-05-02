@@ -335,26 +335,14 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::delete('activity-offers/{activityOffer}', [ActivityOfferController::class, 'destroy'])->name('activity-offers.destroy');
 
         // Activités placeholders
-        Route::get('activities/categories', static function () {
-            return redirect()->route('admin.circuits.activities.index');
-        })->name('activities.categories');
-        Route::get('activities/gallery', static function () {
-            return redirect()->route('admin.circuits.activities.index');
-        })->name('activities.gallery');
-        Route::get('activities/availability', static function () {
-            return redirect()->route('admin.circuits.activities.index');
-        })->name('activities.availability');
+        Route::get('activities/categories', [ActivityController::class, 'index'])->name('activities.categories');
+        Route::get('activities/gallery', [ActivityController::class, 'index'])->name('activities.gallery');
+        Route::get('activities/availability', [ActivityController::class, 'index'])->name('activities.availability');
 
         // Transferts placeholders
-        Route::get('transfers/vehicles', static function () {
-            return redirect()->route('admin.circuits.tour-transfers.index');
-        })->name('transfers.vehicles');
-        Route::get('transfers/pricing', static function () {
-            return redirect()->route('admin.circuits.tour-transfers.index');
-        })->name('transfers.pricing');
-        Route::get('transfers/availability', static function () {
-            return redirect()->route('admin.circuits.tour-transfers.index');
-        })->name('transfers.availability');
+        Route::get('transfers/vehicles', [TourTransferController::class, 'index'])->name('transfers.vehicles');
+        Route::get('transfers/pricing', [TourTransferController::class, 'index'])->name('transfers.pricing');
+        Route::get('transfers/availability', [TourTransferController::class, 'index'])->name('transfers.availability');
         Route::get('operations/planning', [OperationsController::class, 'page'])->name('operations.planning')->defaults('submenu', 'planning');
         Route::get('operations/guides-chauffeurs', [OperationsController::class, 'page'])->name('operations.guides-chauffeurs')->defaults('submenu', 'guides-chauffeurs');
         Route::get('operations/vehicules', [OperationsController::class, 'page'])->name('operations.vehicules')->defaults('submenu', 'vehicules');

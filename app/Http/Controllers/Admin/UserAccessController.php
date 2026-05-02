@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\BranchScopeService;
+use App\Support\AdminMenuPermissionRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -145,7 +146,9 @@ class UserAccessController extends Controller
     private function buildFormPayload(User $user): array
     {
         $roles = Role::query()->orderBy('name')->get();
-        $permissionGroups = $this->permissionGroups();
+        $permissionGroups = AdminMenuPermissionRegistry::flatPermissionGroups(
+            Permission::query()->pluck('name')->all()
+        );
         $branches = $this->branchScope->branchesForSelect(request()->user());
 
         $rolePermissionsMap = $roles
@@ -157,7 +160,9 @@ class UserAccessController extends Controller
 
         $directPermissions = $user->permissions->pluck('name')->values()->all();
         $rolePermissions = $selectedRole ? ($rolePermissionsMap[$selectedRole] ?? []) : [];
-        $selectedPermissions = $accessMode === 'role' ? $rolePermissions : $directPermissions;
+        $selectedPermissions = AdminMenuPermissionRegistry::expandLegacySelections(
+            $accessMode === 'role' ? $rolePermissions : $directPermissions
+        );
 
         $managersQuery = User::query()->where('is_active', true)->whereNotNull('branch_id');
         $this->branchScope->scopeUsers($managersQuery, request()->user());

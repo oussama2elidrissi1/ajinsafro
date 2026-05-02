@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\AdminMenuPermissionRegistry;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
@@ -15,33 +16,7 @@ class AdminPermissionsSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $permissions = [];
-
-        foreach (config('admin_menu.items', []) as $section) {
-            if (! empty($section['permission'])) {
-                $permissions[] = $section['permission'];
-            }
-
-            foreach ($section['children'] ?? [] as $child) {
-                if (! empty($child['permission'])) {
-                    $permissions[] = $child['permission'];
-                }
-            }
-        }
-
-        $permissions = array_merge(
-            $permissions,
-            array_values(config('admin_menu.route_permissions', [])),
-            array_values(config('admin_menu.route_prefix_permissions', []))
-        );
-
-        $permissions = array_values(array_unique(array_filter(array_merge($permissions, [
-            'reservations.create',
-            'reservations.store',
-            'reservations.edit',
-            'reservations.update',
-            'reservations.destroy',
-        ]))));
+        $permissions = AdminMenuPermissionRegistry::allPermissionNames();
 
         foreach ($permissions as $permissionName) {
             Permission::findOrCreate($permissionName, 'web');
