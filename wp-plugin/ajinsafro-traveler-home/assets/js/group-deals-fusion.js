@@ -41,15 +41,23 @@
     var modalForm = document.getElementById('ajgd-participation-form');
     var modalError = document.getElementById('ajgd-modal-error');
     var modalSlug = document.getElementById('ajgd-modal-slug');
+    var formState = document.getElementById('ajgd-modal-form-state');
+    var successState = document.getElementById('ajgd-modal-success');
+    var successMessage = document.getElementById('ajgd-success-message');
+    var successStats = document.getElementById('ajgd-success-stats');
 
     function openModal(slug, title) {
         if (!modalOverlay) return;
         if (modalSlug) modalSlug.value = slug || '';
         var heading = modalOverlay.querySelector('#ajgd-modal-title');
         if (heading && title) heading.textContent = 'Rejoindre : ' + title;
+        clearFieldErrors();
         if (modalError) modalError.textContent = '';
+        if (formState) formState.style.display = '';
+        if (successState) successState.style.display = 'none';
         modalOverlay.classList.add('is-open');
-        body.classList.add('aj-groupdeals-modal-open');
+        modalOverlay.setAttribute('aria-hidden', 'false');
+        body.classList.add('gd-modal-open');
         var firstInput = modalOverlay.querySelector('input:not([type=hidden])');
         if (firstInput) firstInput.focus();
     }
@@ -57,8 +65,12 @@
     function closeModal() {
         if (!modalOverlay) return;
         modalOverlay.classList.remove('is-open');
-        body.classList.remove('aj-groupdeals-modal-open');
+        modalOverlay.setAttribute('aria-hidden', 'true');
+        body.classList.remove('gd-modal-open');
         if (modalError) modalError.textContent = '';
+        clearFieldErrors();
+        if (formState) formState.style.display = '';
+        if (successState) successState.style.display = 'none';
     }
 
     root.addEventListener('click', function (e) {
@@ -88,18 +100,70 @@
 
     var modalCloseBtn = document.getElementById('ajgd-modal-close');
     var modalCancelBtn = document.getElementById('ajgd-modal-cancel');
+    var modalCloseSuccessBtn = document.getElementById('ajgd-modal-close-success');
+    var modalCloseOkBtn = document.getElementById('ajgd-modal-close-ok');
     if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
     if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeModal);
+    if (modalCloseSuccessBtn) modalCloseSuccessBtn.addEventListener('click', closeModal);
+    if (modalCloseOkBtn) modalCloseOkBtn.addEventListener('click', closeModal);
     if (modalOverlay) {
         modalOverlay.addEventListener('click', function (e) {
             if (e.target === modalOverlay) closeModal();
         });
     }
 
+    // --- Field-level validation ---
+    function clearFieldErrors() {
+        var errors = document.querySelectorAll('.gd-field-error');
+        for (var i = 0; i < errors.length; i++) {
+            errors[i].textContent = '';
+        }
+        var inputs = document.querySelectorAll('.gd-form-group input, .gd-form-group textarea');
+        for (var j = 0; j < inputs.length; j++) {
+            inputs[j].style.borderColor = '';
+        }
+    }
+
+    function showFieldError(id, message) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = message;
+    }
+
+    function validateForm() {
+        clearFieldErrors();
+        var valid = true;
+        var name = document.getElementById('ajgd-p-name');
+        var phone = document.getElementById('ajgd-p-phone');
+        var count = document.getElementById('ajgd-p-count');
+        var accept = document.getElementById('ajgd-p-accept');
+
+        if (!name || !name.value.trim()) {
+            showFieldError('ajgd-error-name', 'Veuillez saisir votre nom complet.');
+            if (name) name.style.borderColor = '#e74c3c';
+            valid = false;
+        }
+        if (!phone || !phone.value.trim()) {
+            showFieldError('ajgd-error-phone', 'Veuillez saisir votre numero de telephone.');
+            if (phone) phone.style.borderColor = '#e74c3c';
+            valid = false;
+        }
+        if (!count || !count.value.trim() || parseInt(count.value, 10) < 1) {
+            showFieldError('ajgd-error-count', 'Veuillez indiquer au moins 1 personne.');
+            if (count) count.style.borderColor = '#e74c3c';
+            valid = false;
+        }
+        if (!accept || !accept.checked) {
+            showFieldError('ajgd-error-accept', 'Vous devez accepter les conditions de participation.');
+            valid = false;
+        }
+        return valid;
+    }
+
     // --- Form submission ---
     if (modalForm) {
         modalForm.addEventListener('submit', function (e) {
             e.preventDefault();
+            if (!validateForm()) return;
             if (modalError) modalError.textContent = '';
             var submitBtn = document.getElementById('ajgd-modal-submit');
             if (submitBtn) {
@@ -136,11 +200,23 @@
                     submitBtn.textContent = 'Envoyer ma participation';
                 }
                 if (data && data.success) {
-                    closeModal();
-                    showNotification(data.message || 'Participation enregistree avec succes !', 'success');
-                    if (window.ajgdConfig && window.ajgdConfig.currentSlug && slug === window.ajgdConfig.currentSlug) {
-                        setTimeout(function () { window.location.reload(); }, 2200);
+                    if (formState) formState.style.display = 'none';
+                    if (successState) successState.style.display = '';
+                    if (successMessage) successMessage.textContent = data.message || 'Merci pour votre inscription.';
+
+                    var statsHtml = '';
+                    if (data.stats) {
+                        var s = data.stats;
+                        if (s.remaining_to_guarantee && parseInt(s.remaining_to_guarantee, 10) > 0) {
+                            statsHtml += '<div>Il reste <strong>' + s.remaining_to_guarantee + '</strong> personne(s) pour garantir ce voyage.</div>';
+                        } else if (s.is_guaranteed) {
+                            statsHtml += '<div>✅ Ce voyage est maintenant <strong>garanti</strong> !</div>';
+                        }
+                        if (s.current_price) {
+                            statsHtml += '<div>Prix actuel : <strong>' + s.current_price + ' DH</strong> par personne.</div>';
+                        }
                     }
+                    if (successStats) successStats.innerHTML = statsHtml;
                 } else {
                     if (modalError) modalError.textContent = (data && data.message) ? data.message : 'Une erreur est survenue.';
                 }

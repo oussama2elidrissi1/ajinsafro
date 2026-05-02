@@ -49,6 +49,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
+                        <th>Visuel</th>
                         <th>Voyage</th>
                         <th>Destination</th>
                         <th class="text-center">Paliers</th>
@@ -65,6 +66,15 @@
                         $guaranteed   = $gdDepartures->where('is_guaranteed', true)->count();
                     @endphp
                     <tr>
+                        <td>
+                            <div class="aj-thumb">
+                                @if($voyage->featured_image_url)
+                                    <img src="{{ $voyage->featured_image_url }}" alt="{{ $voyage->name }}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;">
+                                @else
+                                    <div class="aj-thumb-placeholder" style="width:48px;height:48px;border-radius:6px;">Ajinsafro</div>
+                                @endif
+                            </div>
+                        </td>
                         <td>
                             <strong>{{ $voyage->name }}</strong>
                             @if($voyage->price_from)
@@ -100,7 +110,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             Aucun voyage avec Group Deal activé.
                             <a href="{{ route('admin.circuits.voyages.index') }}">Activer le Group Deal sur un voyage</a>
                         </td>

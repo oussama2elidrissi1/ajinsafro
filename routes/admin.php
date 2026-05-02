@@ -334,7 +334,27 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::match(['put', 'patch'], 'activity-offers/{activityOffer}', [ActivityOfferController::class, 'update'])->name('activity-offers.update');
         Route::delete('activity-offers/{activityOffer}', [ActivityOfferController::class, 'destroy'])->name('activity-offers.destroy');
 
-        Route::get('operations', [OperationsController::class, 'index'])->name('operations.index');
+        // Activités placeholders
+        Route::get('activities/categories', static function () {
+            return redirect()->route('admin.circuits.activities.index');
+        })->name('activities.categories');
+        Route::get('activities/gallery', static function () {
+            return redirect()->route('admin.circuits.activities.index');
+        })->name('activities.gallery');
+        Route::get('activities/availability', static function () {
+            return redirect()->route('admin.circuits.activities.index');
+        })->name('activities.availability');
+
+        // Transferts placeholders
+        Route::get('transfers/vehicles', static function () {
+            return redirect()->route('admin.circuits.tour-transfers.index');
+        })->name('transfers.vehicles');
+        Route::get('transfers/pricing', static function () {
+            return redirect()->route('admin.circuits.tour-transfers.index');
+        })->name('transfers.pricing');
+        Route::get('transfers/availability', static function () {
+            return redirect()->route('admin.circuits.tour-transfers.index');
+        })->name('transfers.availability');
         Route::get('operations/planning', [OperationsController::class, 'page'])->name('operations.planning')->defaults('submenu', 'planning');
         Route::get('operations/guides-chauffeurs', [OperationsController::class, 'page'])->name('operations.guides-chauffeurs')->defaults('submenu', 'guides-chauffeurs');
         Route::get('operations/vehicules', [OperationsController::class, 'page'])->name('operations.vehicules')->defaults('submenu', 'vehicules');
@@ -473,6 +493,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
             Route::post('{groupDeal}/tiers', [GroupDealOfferController::class, 'tierStore'])->name('tiers.store')->whereNumber('groupDeal');
             Route::put('{groupDeal}/tiers/{tier}', [GroupDealOfferController::class, 'tierUpdate'])->name('tiers.update')->whereNumber(['groupDeal', 'tier']);
             Route::delete('{groupDeal}/tiers/{tier}', [GroupDealOfferController::class, 'tierDestroy'])->name('tiers.destroy')->whereNumber(['groupDeal', 'tier']);
+            Route::get('participants', [GroupDealOfferController::class, 'participantsIndex'])->name('participants.index');
+            Route::get('tiers', [GroupDealOfferController::class, 'tiersIndex'])->name('tiers.index');
             Route::post('{groupDeal}/participants', [GroupDealOfferController::class, 'participantStore'])->name('participants.store')->whereNumber('groupDeal');
             Route::patch('{groupDeal}/participants/{participant}', [GroupDealOfferController::class, 'participantUpdate'])->name('participants.update')->whereNumber(['groupDeal', 'participant']);
         });

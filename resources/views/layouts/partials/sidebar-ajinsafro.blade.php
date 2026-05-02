@@ -4,6 +4,86 @@
     $adminBrandLogoSmUrl = \App\Models\Setting::brandLogoUrl('sm');
     $adminBrandLogoDarkUrl = \App\Models\Setting::brandLogoUrl('dark');
     $sidebarUser = Auth::user();
+    $currentRoute = Route::currentRouteName();
+
+    $routeIsActive = function (?string $routeName) use ($currentRoute): bool {
+        if (! $routeName || ! $currentRoute) {
+            return false;
+        }
+        if ($currentRoute === $routeName) {
+            return true;
+        }
+        return str_starts_with($currentRoute, $routeName . '.');
+    };
+
+    $filterItems = function (array $items) use ($sidebarUser): array {
+        $out = [];
+        foreach ($items as $item) {
+            if (! empty($item['permission']) && ! $sidebarUser->can($item['permission'])) {
+                continue;
+            }
+            if (! empty($item['roles']) && ! $sidebarUser->hasRole($item['roles'])) {
+                continue;
+            }
+            if (! empty($item['route']) && ! Route::has($item['route'])) {
+                continue;
+            }
+            $children = [];
+            if (! empty($item['children'])) {
+                foreach ($item['children'] as $child) {
+                    if (! empty($child['permission']) && ! $sidebarUser->can($child['permission'])) {
+                        continue;
+                    }
+                    if (! empty($child['roles']) && ! $sidebarUser->hasRole($child['roles'])) {
+                        continue;
+                    }
+                    if (! empty($child['route']) && ! Route::has($child['route'])) {
+                        continue;
+                    }
+                    if (! empty($child['children'])) {
+                        $deep = [];
+                        foreach ($child['children'] as $c) {
+                            if (! empty($c['permission']) && ! $sidebarUser->can($c['permission'])) {
+                                continue;
+                            }
+                            if (! empty($c['roles']) && ! $sidebarUser->hasRole($c['roles'])) {
+                                continue;
+                            }
+                            if (! empty($c['route']) && ! Route::has($c['route'])) {
+                                continue;
+                            }
+                            $deep[] = $c;
+                        }
+                        $child['children'] = $deep;
+                    }
+                    $children[] = $child;
+                }
+            }
+            if (! empty($children)) {
+                $item['children'] = $children;
+            } elseif (empty($item['route'])) {
+                continue;
+            }
+            $out[] = $item;
+        }
+        return $out;
+    };
+
+    $menuItems = $filterItems(config('admin_menu.items', []));
+
+    $hasActiveChild = function (array $item) use (&$hasActiveChild, $routeIsActive): bool {
+        if (! empty($item['route']) && $routeIsActive($item['route'])) {
+            return true;
+        }
+        if (! empty($item['children'])) {
+            foreach ($item['children'] as $child) {
+                if ($hasActiveChild($child)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
 @endphp
 
 <div class="vertical-menu">
@@ -33,99 +113,79 @@
             <!-- Left Menu Start -->
             <ul class="metismenu list-unstyled" id="side-menu">
                 <li class="menu-title">Menu</li>
-                @php
-                    $menuItems = config('admin_menu.items', []);
-                    $currentRoute = Route::currentRouteName();
-                    $user = Auth::user();
-                    $navActive = function (?string $routeName) use ($currentRoute): bool {
-                        if (! $routeName) {
-                            return false;
-                        }
-                        if ($currentRoute === $routeName) {
-                            return true;
-                        }
-                        $parts = explode('.', $routeName);
-                        if (count($parts) < 2) {
-                            return false;
-                        }
-                        $prefix = $parts[0] . '.' . $parts[1];
-
-                        return $currentRoute === $prefix || str_starts_with($currentRoute, $prefix . '.');
-                    };
-                    /** Une seule entrée active : sous-route du même « menu » (3e segment) sans mélanger Billetterie / Voyage / Activité. */
-                    $childMenuActive = function (?string $childRoute) use ($currentRoute): bool {
-                        if (! $childRoute || ! $currentRoute) {
-                            return false;
-                        }
-                        if ($currentRoute === $childRoute) {
-                            return true;
-                        }
-                        $cr = explode('.', $childRoute);
-                        if (count($cr) < 3) {
-                            return false;
-                        }
-                        $prefix = $cr[0].'.'.$cr[1].'.'.$cr[2];
-
-                        return str_starts_with($currentRoute, $prefix.'.');
-                    };
-                @endphp
 
                 @foreach($menuItems as $section)
                     @php
+                        $sectionActive = $hasActiveChild($section);
                         $sectionRoute = !empty($section['route']) && Route::has($section['route']) ? $section['route'] : null;
-                        $children = collect($section['children'] ?? [])
-                            ->filter(function ($child) use ($user) {
-                                if (! empty($child['route']) && ! Route::has($child['route'])) {
-                                    return false;
-                                }
-                                if (! empty($child['roles']) && ! $user->hasRole($child['roles'])) {
-                                    return false;
-                                }
-                                if (! empty($child['permission']) && ! $user->can($child['permission'])) {
-                                    return false;
-                                }
-                                return true;
-                            })
-                            ->values();
-
-                        $hasSectionPermission = empty($section['permission']) || $user->can($section['permission']);
-                        $showSection = $hasSectionPermission && ($children->isNotEmpty() || $sectionRoute !== null);
-
-                        $sectionActive = $children->contains(function ($child) use ($childMenuActive) {
-                            return $childMenuActive($child['route'] ?? null);
-                        }) || $navActive($sectionRoute);
+                        $sectionChildren = $section['children'] ?? [];
+                        $hasChildren = !empty($sectionChildren);
                     @endphp
-
-                    @if($showSection)
-                        <li>
-                            @if($children->isNotEmpty())
-                                <a href="javascript: void(0);" class="has-arrow waves-effect {{ $sectionActive ? 'mm-active' : '' }}">
-                                    <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i><span>{{ $section['label'] }}</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}">
-                                    @foreach($children as $child)
-                                        <li>
+                    <li>
+                        @if($hasChildren)
+                            <a href="javascript: void(0);" class="has-arrow waves-effect {{ $sectionActive ? 'mm-active' : '' }}">
+                                <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i>
+                                <span>{{ $section['label'] }}</span>
+                            </a>
+                            <ul class="sub-menu mm-collapse {{ $sectionActive ? 'mm-show' : '' }}" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}">
+                                @foreach($sectionChildren as $child)
+                                    @php
+                                        $childActive = $hasActiveChild($child);
+                                        $childRoute = !empty($child['route']) && Route::has($child['route']) ? $child['route'] : null;
+                                        $childChildren = $child['children'] ?? [];
+                                        $childHasChildren = !empty($childChildren);
+                                    @endphp
+                                    <li class="{{ $childActive ? 'mm-active' : '' }}">
+                                        @if($childHasChildren)
+                                            <a href="javascript: void(0);" class="has-arrow {{ $childActive ? 'mm-active' : '' }}">
+                                                @if(!empty($child['icon']))
+                                                    <i class="{{ $child['icon'] }}"></i>
+                                                @endif
+                                                <span>{{ $child['label'] }}</span>
+                                            </a>
+                                            <ul class="sub-menu mm-collapse {{ $childActive ? 'mm-show' : '' }}" aria-expanded="{{ $childActive ? 'true' : 'false' }}">
+                                                @foreach($childChildren as $grandChild)
+                                                    @php
+                                                        $gcRoute = !empty($grandChild['route']) && Route::has($grandChild['route']) ? $grandChild['route'] : null;
+                                                        $gcActive = $routeIsActive($gcRoute);
+                                                        $gcHref = !empty($grandChild['query']) && $gcRoute ? route($gcRoute, $grandChild['query']) : ($gcRoute ? route($gcRoute) : 'javascript:void(0);');
+                                                    @endphp
+                                                    <li>
+                                                        <a href="{{ $gcHref }}" class="{{ $gcActive ? 'active' : '' }}">
+                                                            {{ $grandChild['label'] }}
+                                                        </a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @else
                                             @php
-                                                $childHref = !empty($child['query']) ? route($child['route'], $child['query']) : route($child['route']);
+                                                $childHref = !empty($child['query']) && $childRoute ? route($childRoute, $child['query']) : ($childRoute ? route($childRoute) : 'javascript:void(0);');
+                                                $isActive = $routeIsActive($childRoute);
                                             @endphp
-                                            <a href="{{ $childHref }}" class="{{ $childMenuActive($child['route'] ?? null) ? 'active' : '' }}">{{ $child['label'] }}</a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                @php
-                                    $sectionHref = !empty($section['query']) ? route($sectionRoute, $section['query']) : route($sectionRoute);
-                                @endphp
-                                <a href="{{ $sectionHref }}" class="waves-effect {{ $sectionActive ? 'mm-active active' : '' }}">
-                                    <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i>
-                                    <span>{{ $section['label'] }}</span>
-                                    @if(($section['key'] ?? null) === 'messagerie' && ($unreadCount ?? 0) > 0)
-                                        <span class="badge rounded-pill bg-primary float-end">{{ $unreadCount }}</span>
-                                    @endif
-                                </a>
-                            @endif
-                        </li>
-                    @endif
+                                            <a href="{{ $childHref }}" class="{{ $isActive ? 'active' : '' }}">
+                                                @if(!empty($child['icon']))
+                                                    <i class="{{ $child['icon'] }}"></i>
+                                                @endif
+                                                {{ $child['label'] }}
+                                            </a>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            @php
+                                $sectionHref = !empty($section['query']) && $sectionRoute ? route($sectionRoute, $section['query']) : route($sectionRoute);
+                                $isActive = $routeIsActive($sectionRoute);
+                            @endphp
+                            <a href="{{ $sectionHref }}" class="waves-effect {{ $isActive ? 'mm-active active' : '' }}">
+                                <i class="{{ $section['icon'] ?? 'bx bx-circle' }}"></i>
+                                <span>{{ $section['label'] }}</span>
+                                @if(($section['key'] ?? null) === 'messagerie' && ($unreadCount ?? 0) > 0)
+                                    <span class="badge rounded-pill bg-primary float-end">{{ $unreadCount }}</span>
+                                @endif
+                            </a>
+                        @endif
+                    </li>
                 @endforeach
 
                 <li class="menu-title mt-3">Compte</li>

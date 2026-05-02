@@ -24,7 +24,7 @@ $available_categories = isset($available_categories) && is_array($available_cate
         <summary>Recherche</summary>
         <div class="filter-body">
             <label class="filter-field" for="<?php echo esc_attr($group_deals_filter_prefix . '-search'); ?>">
-                <span>Nom ou mot-cle</span>
+                <span>Recherche</span>
                 <input
                     id="<?php echo esc_attr($group_deals_filter_prefix . '-search'); ?>"
                     class="filter-search"
@@ -72,7 +72,7 @@ $available_categories = isset($available_categories) && is_array($available_cate
                 <input type="number" min="0" name="price_max" value="<?php echo ! empty($price_max) ? esc_attr((string) $price_max) : ''; ?>" placeholder="Max DH">
             </div>
             <label class="filter-field" for="<?php echo esc_attr($group_deals_filter_prefix . '-group-size'); ?>">
-                <span>Voyageurs minimum</span>
+                <span>Nombre de voyageurs minimum</span>
                 <input
                     id="<?php echo esc_attr($group_deals_filter_prefix . '-group-size'); ?>"
                     type="number"

@@ -36,6 +36,7 @@
                 <table class="table align-middle">
                     <thead>
                     <tr>
+                        <th>Visuel</th>
                         <th>Offre</th>
                         <th>Dates</th>
                         <th>Progression</th>
@@ -47,6 +48,15 @@
                     <tbody>
                     @forelse($groupDeals as $deal)
                         <tr>
+                            <td>
+                                <div class="aj-thumb">
+                                    @if($deal->image_url)
+                                        <img src="{{ $deal->image_url }}" alt="{{ $deal->title }}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;">
+                                    @else
+                                        <div class="aj-thumb-placeholder" style="width:48px;height:48px;border-radius:6px;">Ajinsafro</div>
+                                    @endif
+                                </div>
+                            </td>
                             <td>
                                 <div class="fw-semibold">{{ $deal->title }}</div>
                                 <div class="text-muted small">{{ $deal->destination ?: 'Destination non renseignée' }}</div>
@@ -79,7 +89,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Aucune offre Group Deal trouvée.</td>
+                            <td colspan="7" class="text-center text-muted py-4">Aucune offre Group Deal trouvée.</td>
                         </tr>
                     @endforelse
                     </tbody>

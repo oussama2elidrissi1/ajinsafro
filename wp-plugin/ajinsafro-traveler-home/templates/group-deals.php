@@ -737,12 +737,12 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                 <div class="ajgd-container">
                     <div class="ajgd-hero-grid">
                         <div class="ajgd-hero-copy">
-                            <span class="ajgd-eyebrow">&#9992;&#65039; Group Deals Ajinsafro</span>
-                            <h1 class="ajgd-hero-title">Plus on est nombreux,<span> plus on voyage malin&nbsp;!</span></h1>
-                            <p class="ajgd-hero-sub">Offres groupe synchronisees depuis la base Ajinsafro. Les prix, paliers, participants et statuts affiches ici proviennent uniquement de la DB.</p>
+                            <span class="ajgd-eyebrow">Offres de voyage en groupe Ajinsafro</span>
+                            <h1 class="ajgd-hero-title">Voyagez en groupe et profitez de tarifs avantageux</h1>
+                            <p class="ajgd-hero-sub">Decouvrez nos offres de voyages en groupe soigneusement selectionnees. Rejoignez d'autres voyageurs, beneficiez de tarifs degressifs et profitez d'un depart confirme des que le nombre minimum de participants est atteint.</p>
                             <div class="ajgd-hero-actions">
                                 <a class="ajgd-btn ajgd-btn--orange" href="#ajgd-offres">Decouvrir les offres</a>
-                                <a class="ajgd-btn ajgd-btn--ghost" href="#ajgd-comment">Comment ca marche&nbsp;?</a>
+                                <a class="ajgd-btn ajgd-btn--ghost" href="#ajgd-comment">Comment ca fonctionne ?</a>
                             </div>
                         </div>
                         <div class="ajgd-hero-visual" aria-hidden="true">
@@ -757,7 +757,7 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                             </div>
                             <div class="ajgd-float-card ajgd-float-card--bl">
                                 <span class="ajgd-fi ajgd-fi--green">&#10003;</span>
-                                <div><small>Seuil mini</small><strong>dès <?php echo esc_html(number_format_i18n(max(1, $hero_min_threshold))); ?> pers.</strong></div>
+                                <div><small>Seuil minimum</small><strong>dès <?php echo esc_html(number_format_i18n(max(1, $hero_min_threshold))); ?> pers.</strong></div>
                             </div>
                         </div>
                     </div>
@@ -820,9 +820,9 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                         <h2>Comment ca marche&nbsp;?</h2>
                     </div>
                     <div class="ajgd-how-grid">
-                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#8595;</div><div><h3>Le prix baisse</h3><p>Chaque carte affiche le prix actif calcule selon le palier correspondant au nombre de participants.</p></div></article>
-                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#10003;</div><div><h3>Depart garanti</h3><p>Le statut devient garanti automatiquement quand le seuil minimal de participants est atteint.</p></div></article>
-                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#128200;</div><div><h3>Donnees en direct</h3><p>Participants, services, categories, prix et badges sont relus depuis la base de donnees partagee.</p></div></article>
+                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#8595;</div><div><h3>Des tarifs degressifs</h3><p>Le prix par personne evolue en fonction du nombre total de participants. Plus le groupe se remplit, plus le tarif devient avantageux.</p></div></article>
+                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#10003;</div><div><h3>Depart confirme</h3><p>Le voyage est confirme des que le nombre minimum de participants requis est atteint. Vous etes informe a chaque etape.</p></div></article>
+                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#128200;</div><div><h3>Suivi en temps reel</h3><p>Consultez a tout moment le niveau de remplissage du groupe, les places restantes et l'evolution du tarif propose.</p></div></article>
                     </div>
                 </div>
             </section>
@@ -831,12 +831,12 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                 <aside class="ajgd-filters" id="ajgd-desktop-filters" aria-label="Filtres Group Deals">
                     <div class="ajgd-promo-card">
                         <span class="ajgd-promo-eyebrow">Conseils groupe</span>
-                        <strong>Plus vous etes nombreux, plus l'offre devient interessante.</strong>
-                        <p>Filtrez par destination, services, type de groupe et budget pour trouver le meilleur deal.</p>
+                        <strong>Trouvez l'offre de groupe qui vous correspond</strong>
+                        <p>Affinez votre recherche selon la destination, le budget, le type de voyage ou les services inclus.</p>
                     </div>
                     <div class="ajgd-filter-title">
                         <h2>Filtrer par</h2>
-                        <a class="ajgd-clear-link" href="<?php echo esc_url($group_deals_url); ?>">Tout effacer</a>
+                        <a class="ajgd-clear-link" href="<?php echo esc_url($group_deals_url); ?>">Reinitialiser</a>
                     </div>
                     <?php
                     $group_deals_filter_prefix = 'ajgd-desktop';
@@ -892,9 +892,9 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                     </div>
 
                     <?php if (! $source_available) { ?>
-                        <div class="ajgd-empty-state"><div class="ajgd-empty-icon">&#128274;</div><h3>Donnees indisponibles</h3><p>Les tables Group Deals ne sont pas accessibles depuis WordPress pour le moment.</p></div>
+                        <div class="ajgd-empty-state"><div class="ajgd-empty-icon">&#128274;</div><h3>Acces temporairement indisponible</h3><p>Les informations des offres groupe ne sont pas accessibles pour le moment. Veuillez reessayer dans quelques instants.</p></div>
                     <?php } elseif (empty($deals)) { ?>
-                        <div class="ajgd-empty-state"><div class="ajgd-empty-icon">&#128269;</div><h3>Aucun group deal trouve</h3><p>Essayez une autre destination, un budget plus large ou supprimez certains filtres.</p><a class="ajgd-btn ajgd-btn--orange" href="<?php echo esc_url($group_deals_url); ?>">Reinitialiser les filtres</a></div>
+                        <div class="ajgd-empty-state"><div class="ajgd-empty-icon">&#128269;</div><h3>Aucune offre ne correspond a votre recherche</h3><p>Essayez d'elargir vos criteres de recherche, de modifier le budget ou de supprimer certains filtres pour decouvrir plus d'offres.</p><a class="ajgd-btn ajgd-btn--orange" href="<?php echo esc_url($group_deals_url); ?>">Reinitialiser les filtres</a></div>
                     <?php } else { ?>
                         <div class="ajgd-deals-grid">
                             <?php foreach ($deals as $deal) { ?>
@@ -912,7 +912,7 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                                         <h3 class="ajgd-card__title"><?php echo esc_html($deal['title']); ?></h3>
                                         <div class="ajgd-card__meta">
                                             <?php if ($deal['duration'] !== '') { ?><span>&#9201; <?php echo esc_html($deal['duration']); ?></span><?php } ?>
-                                            <?php if ($deal['max_people'] > 0) { ?><span>&#128100; <?php echo esc_html($deal['current_people'] . '/' . $deal['max_people'] . ' participants'); ?></span><?php } ?>
+                                            <?php if ($deal['max_people'] > 0) { ?><span>&#128100; <?php echo esc_html($deal['current_people'] . '/' . $deal['max_people'] . ' participants inscrits'); ?></span><?php } ?>
                                         </div>
                                         <?php if ($deal['excerpt'] !== '') { ?><p class="ajgd-card__excerpt"><?php echo esc_html($deal['excerpt']); ?></p><?php } ?>
                                         <?php if (! empty($deal['services'])) { ?>
@@ -935,10 +935,10 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                                                 <small>A partir de</small>
                                                 <strong><?php echo $deal['price_label'] !== '' ? esc_html($deal['price_label'] . ' DH') : 'Prix sur demande'; ?></strong>
                                                 <span>par personne</span>
-                                                <span class="ajgd-card__group-hint">Prix calcule selon le palier actif.</span>
+                                                <span class="ajgd-card__group-hint">Offre ideale pour voyager en groupe a tarif optimise.</span>
                                             </div>
                                             <div class="ajgd-card__actions">
-                                                <a class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--sm" href="<?php echo esc_url($deal['url']); ?>">Voir detail</a>
+                                                <a class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--sm" href="<?php echo esc_url($deal['url']); ?>">Voir l'offre</a>
                                                 <?php
                                                     $deal_is_full = (int) $deal['max_people'] > 0 && (int) $deal['current_people'] >= (int) $deal['max_people'];
                                                     $deal_can_participate = ! $deal_is_full && ! in_array($deal['status'] ?? '', ['closed', 'cancelled'], true);
@@ -978,10 +978,10 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                 <div class="ajgd-container">
                     <div class="ajgd-section-hd"><h2>Pourquoi choisir Ajinsafro Group Deals&nbsp;?</h2></div>
                     <div class="ajgd-benefits-grid">
-                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128176;</span><div><h3>Tarifs negocies</h3><p>Les paliers permettent d'afficher des prix reellement optimises selon la taille du groupe.</p></div></div>
-                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128736;</span><div><h3>Accompagnement Ajinsafro</h3><p>Chaque offre conserve ses services inclus et non inclus depuis la base metier.</p></div></div>
-                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128100;</span><div><h3>Groupes prives</h3><p>Famille, amis, entreprise, association ou spirituel: les categories sont filtrables publiquement.</p></div></div>
-                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128179;</span><div><h3>Lecture temps reel</h3><p>Le site public n'embarque plus d'offres mockees dans le HTML ou le PHP.</p></div></div>
+                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128176;</span><div><h3>Tarifs negocies</h3><p>Profitez de tarifs avantageux grace a la force du voyage en groupe.</p></div></div>
+                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128736;</span><div><h3>Accompagnement Ajinsafro</h3><p>Notre equipe vous accompagne avant, pendant et apres votre reservation.</p></div></div>
+                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128100;</span><div><h3>Offres adaptees a chaque profil</h3><p>Familles, amis, couples, groupes prives ou voyageurs individuels : chacun trouve l'offre qui lui convient.</p></div></div>
+                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128179;</span><div><h3>Reservation simple et flexible</h3><p>Une experience de reservation claire, rapide et pensee pour faciliter votre inscription.</p></div></div>
                     </div>
                 </div>
             </section>
@@ -992,8 +992,8 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                     <div class="ajgd-stats-grid">
                         <div class="ajgd-stat"><strong><?php echo esc_html(number_format_i18n($hero_total_travelers)); ?></strong><span>Participants inscrits</span></div>
                         <div class="ajgd-stat"><strong><?php echo esc_html(number_format_i18n($stats_average_discount)); ?>&nbsp;%</strong><span>Reduction moyenne</span></div>
-                        <div class="ajgd-stat"><strong><?php echo esc_html(number_format_i18n($stats_total_guaranteed)); ?></strong><span>Groupes garantis</span></div>
-                        <div class="ajgd-stat"><strong><?php echo esc_html(number_format_i18n($stats_destination_count)); ?></strong><span>Destinations actives</span></div>
+                        <div class="ajgd-stat"><strong><?php echo esc_html(number_format_i18n($stats_total_guaranteed)); ?></strong><span>Groupes confirmes</span></div>
+                        <div class="ajgd-stat"><strong><?php echo esc_html(number_format_i18n($stats_destination_count)); ?></strong><span>Destinations disponibles</span></div>
                     </div>
                 </div>
             </section>
@@ -1003,10 +1003,11 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                     <div class="ajgd-cta-box">
                         <div class="ajgd-cta-deco" aria-hidden="true"></div>
                         <div class="ajgd-cta-content">
-                            <h2>Pret a voyager en groupe&nbsp;?</h2>
-                            <p>Demandez un devis personnalise et profitez du meilleur tarif actif.</p>
+                            <h2>Pret a organiser votre prochain voyage en groupe ?</h2>
+                            <p>Decouvrez nos offres disponibles ou demandez un accompagnement personnalise pour votre projet de voyage en groupe.</p>
                         </div>
-                        <a class="ajgd-btn ajgd-btn--orange ajgd-btn--lg" href="<?php echo esc_url($cta_devis_url); ?>" <?php if ($cta_is_external) { echo 'target="_blank" rel="noopener noreferrer"'; } ?>>Demander un devis groupe &#8594;</a>
+                        <a class="ajgd-btn ajgd-btn--orange ajgd-btn--lg" href="#ajgd-offres">Voir les offres</a>
+                        <a class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--lg" href="<?php echo esc_url($cta_devis_url); ?>" <?php if ($cta_is_external) { echo 'target="_blank" rel="noopener noreferrer"'; } ?>>Demander un devis groupe</a>
                     </div>
                 </div>
             </section>
@@ -1030,48 +1031,82 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
 
 <?php if ($current_group_deal) { ?>
 <!-- Modal: Je participe -->
-<div class="ajgd-modal-overlay" id="ajgd-modal-overlay" aria-hidden="true">
-    <div class="ajgd-modal" role="dialog" aria-modal="true" aria-labelledby="ajgd-modal-title">
-        <div class="ajgd-modal__head">
-            <h3 id="ajgd-modal-title">Rejoindre ce Group Deal</h3>
-            <button type="button" class="ajgd-modal__close" id="ajgd-modal-close" aria-label="Fermer">&#215;</button>
+<div class="gd-modal-overlay" id="ajgd-modal-overlay" aria-hidden="true">
+    <div class="gd-modal" role="dialog" aria-modal="true" aria-labelledby="ajgd-modal-title">
+        <!-- Formulaire -->
+        <div id="ajgd-modal-form-state">
+            <div class="gd-modal-header">
+                <div>
+                    <h2 id="ajgd-modal-title">Rejoindre ce Group Deal</h2>
+                    <p>Remplissez vos informations pour participer a cette offre de groupe.</p>
+                </div>
+                <button type="button" class="gd-modal-close" id="ajgd-modal-close" aria-label="Fermer">&times;</button>
+            </div>
+            <form class="gd-join-form" id="ajgd-participation-form">
+                <input type="hidden" name="deal_slug" id="ajgd-modal-slug" value="<?php echo esc_attr($cd_slug); ?>">
+                <div class="gd-form-grid">
+                    <div class="gd-form-group">
+                        <label for="ajgd-p-name">Nom complet <span class="gd-required">*</span></label>
+                        <input type="text" id="ajgd-p-name" name="full_name" placeholder="Votre nom et prenom">
+                        <span class="gd-field-error" id="ajgd-error-name"></span>
+                    </div>
+                    <div class="gd-form-group">
+                        <label for="ajgd-p-phone">Telephone <span class="gd-required">*</span></label>
+                        <input type="tel" id="ajgd-p-phone" name="phone" placeholder="Ex: 06 12 34 56 78">
+                        <span class="gd-field-error" id="ajgd-error-phone"></span>
+                    </div>
+                    <div class="gd-form-group">
+                        <label for="ajgd-p-email">Email</label>
+                        <input type="email" id="ajgd-p-email" name="email" placeholder="votre@email.com">
+                        <span class="gd-field-error" id="ajgd-error-email"></span>
+                    </div>
+                    <div class="gd-form-group">
+                        <label for="ajgd-p-count">Nombre de personnes <span class="gd-required">*</span></label>
+                        <input type="number" id="ajgd-p-count" name="participants_count" min="1" max="10000" value="1">
+                        <span class="gd-field-error" id="ajgd-error-count"></span>
+                    </div>
+                    <div class="gd-form-group full">
+                        <label for="ajgd-p-city">Ville</label>
+                        <input type="text" id="ajgd-p-city" name="city" placeholder="Votre ville">
+                        <span class="gd-field-error" id="ajgd-error-city"></span>
+                    </div>
+                    <div class="gd-form-group full">
+                        <label for="ajgd-p-remark">Remarque / Question</label>
+                        <textarea id="ajgd-p-remark" name="remark" rows="3" placeholder="Une remarque ou une question ?"></textarea>
+                        <span class="gd-field-error" id="ajgd-error-remark"></span>
+                    </div>
+                </div>
+                <label class="gd-checkbox">
+                    <input type="checkbox" id="ajgd-p-accept" name="accept_conditions">
+                    <span>J'accepte les conditions de participation. <span class="gd-required">*</span></span>
+                </label>
+                <span class="gd-field-error" id="ajgd-error-accept"></span>
+                <div class="gd-form-error" id="ajgd-modal-error" role="alert"></div>
+                <div class="gd-modal-actions">
+                    <button type="button" class="gd-btn-secondary" id="ajgd-modal-cancel">Annuler</button>
+                    <button type="submit" class="gd-btn-primary" id="ajgd-modal-submit">Envoyer ma participation</button>
+                </div>
+            </form>
         </div>
-        <form class="ajgd-modal__body" id="ajgd-participation-form">
-            <input type="hidden" name="deal_slug" id="ajgd-modal-slug" value="<?php echo esc_attr($cd_slug); ?>">
-            <div class="ajgd-field">
-                <label for="ajgd-p-name">Nom complet <span aria-label="obligatoire">*</span></label>
-                <input type="text" id="ajgd-p-name" name="full_name" required placeholder="Votre nom et prenom">
+        <!-- Succes -->
+        <div class="gd-modal-success" id="ajgd-modal-success" style="display:none;">
+            <div class="gd-modal-header" style="margin-bottom: 0;">
+                <div>
+                    <h2>Votre participation est bien enregistree !</h2>
+                    <p>Merci pour votre interet. Notre equipe vous contactera dans les plus brefs delais pour confirmer votre place et vous accompagner dans votre inscription.</p>
+                </div>
+                <button type="button" class="gd-modal-close" id="ajgd-modal-close-success" aria-label="Fermer">&times;</button>
             </div>
-            <div class="ajgd-field">
-                <label for="ajgd-p-phone">Telephone <span aria-label="obligatoire">*</span></label>
-                <input type="tel" id="ajgd-p-phone" name="phone" required placeholder="Ex: 06 12 34 56 78">
+            <div class="gd-success-body">
+                <div class="gd-success-icon">&#10003;</div>
+                <div class="gd-success-text" id="ajgd-success-message">Merci pour votre inscription.</div>
+                <div class="gd-success-stats" id="ajgd-success-stats"></div>
             </div>
-            <div class="ajgd-field">
-                <label for="ajgd-p-email">Email</label>
-                <input type="email" id="ajgd-p-email" name="email" placeholder="votre@email.com">
+            <div class="gd-modal-actions" style="margin-top: 0; padding-top: 20px;">
+                <button type="button" class="gd-btn-secondary" id="ajgd-modal-close-ok">Fermer</button>
+                <a class="gd-btn-primary" href="<?php echo esc_url($group_deals_url); ?>">Voir les autres offres</a>
             </div>
-            <div class="ajgd-field">
-                <label for="ajgd-p-count">Nombre de personnes <span aria-label="obligatoire">*</span></label>
-                <input type="number" id="ajgd-p-count" name="participants_count" required min="1" max="10000" value="1">
-            </div>
-            <div class="ajgd-field">
-                <label for="ajgd-p-city">Ville</label>
-                <input type="text" id="ajgd-p-city" name="city" placeholder="Votre ville">
-            </div>
-            <div class="ajgd-field">
-                <label for="ajgd-p-remark">Remarque / Question</label>
-                <textarea id="ajgd-p-remark" name="remark" rows="3" placeholder="Une remarque ou une question ?"></textarea>
-            </div>
-            <label class="ajgd-check">
-                <input type="checkbox" name="accept_conditions" required>
-                J'accepte les conditions de participation.
-            </label>
-            <div class="ajgd-modal__error" id="ajgd-modal-error" role="alert"></div>
-            <div class="ajgd-modal__foot">
-                <button type="button" class="ajgd-btn ajgd-btn--outline-blue" id="ajgd-modal-cancel">Annuler</button>
-                <button type="submit" class="ajgd-btn ajgd-btn--orange" id="ajgd-modal-submit">Envoyer ma participation</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 <script>

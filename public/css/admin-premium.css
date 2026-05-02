@@ -452,3 +452,119 @@ body.admin-premium-ui {
         padding-bottom: 10px;
     }
 }
+
+/* ─── Sidebar Ajinsafro 3-level ─── */
+#sidebar-menu .metismenu > li > a {
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    border-radius: 0;
+}
+
+#sidebar-menu .metismenu > li > a i {
+    font-size: 1.25rem;
+    min-width: 1.75rem;
+    text-align: center;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+#sidebar-menu .metismenu > li > a.has-arrow::after {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+/* Level 1 sub-menu (under Produit & Service) */
+#sidebar-menu .metismenu > li > ul.sub-menu > li > a {
+    padding: 0.55rem 1.25rem 0.55rem 2.5rem;
+    font-size: 13.5px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+#sidebar-menu .metismenu > li > ul.sub-menu > li > a i {
+    font-size: 1.1rem;
+    min-width: 1.25rem;
+    text-align: center;
+}
+
+#sidebar-menu .metismenu > li > ul.sub-menu > li > a.has-arrow::after {
+    font-size: 0.85rem;
+    opacity: 0.6;
+}
+
+/* Level 2 sub-menu (final links) */
+#sidebar-menu .metismenu > li > ul.sub-menu > li > ul.sub-menu > li > a {
+    padding: 0.45rem 1.25rem 0.45rem 3.75rem;
+    font-size: 13px;
+    font-weight: 400;
+    position: relative;
+}
+
+#sidebar-menu .metismenu > li > ul.sub-menu > li > ul.sub-menu > li > a::before {
+    content: '';
+    position: absolute;
+    left: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #a0aec0;
+    opacity: 0.5;
+}
+
+#sidebar-menu .metismenu > li > ul.sub-menu > li > ul.sub-menu > li > a.active::before {
+    background: #0468c8;
+    opacity: 1;
+}
+
+/* Active states */
+#sidebar-menu .metismenu > li > a.mm-active {
+    background: rgba(4, 104, 200, 0.06);
+    color: #0468c8;
+}
+
+#sidebar-menu .metismenu > li > a.mm-active i {
+    color: #0468c8;
+}
+
+#sidebar-menu .sub-menu li.mm-active > a {
+    color: #0468c8;
+    font-weight: 600;
+}
+
+#sidebar-menu .sub-menu li.mm-active > a i {
+    color: #0468c8;
+}
+
+#sidebar-menu .sub-menu li a.active {
+    color: #0468c8;
+    font-weight: 600;
+    background: rgba(4, 104, 200, 0.04);
+}
+
+/* Smooth collapse animation override */
+#sidebar-menu .mm-collapse {
+    transition: height 0.25s ease;
+}
+
+/* Mobile responsive */
+@media (max-width: 992px) {
+    #sidebar-menu .metismenu > li > a {
+        padding: 0.65rem 1rem;
+        font-size: 13.5px;
+    }
+    #sidebar-menu .metismenu > li > ul.sub-menu > li > a {
+        padding-left: 2rem;
+    }
+    #sidebar-menu .metismenu > li > ul.sub-menu > li > ul.sub-menu > li > a {
+        padding-left: 3rem;
+    }
+    #sidebar-menu .metismenu > li > ul.sub-menu > li > ul.sub-menu > li > a::before {
+        left: 2rem;
+    }
+}

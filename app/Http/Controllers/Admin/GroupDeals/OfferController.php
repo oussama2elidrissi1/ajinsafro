@@ -322,4 +322,46 @@ class OfferController extends Controller
 
         return $fallback;
     }
+
+    public function participantsIndex(Request $request): View
+    {
+        $query = GroupDealParticipant::query()
+            ->with(['groupDeal', 'client'])
+            ->orderByDesc('created_at');
+
+        if ($search = trim((string) $request->input('q', ''))) {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('full_name', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%')
+                    ->orWhere('phone', 'like', '%'.$search.'%');
+            });
+        }
+
+        $participants = $query->paginate(25)->withQueryString();
+
+        return view('admin.group-deals.participants.index', [
+            'participants' => $participants,
+            'filters' => $request->only(['q']),
+        ]);
+    }
+
+    public function tiersIndex(Request $request): View
+    {
+        $query = GroupDealPricingTier::query()
+            ->with(['groupDeal', 'voyage'])
+            ->orderByDesc('created_at');
+
+        if ($search = trim((string) $request->input('q', ''))) {
+            $query->whereHas('groupDeal', function ($builder) use ($search) {
+                $builder->where('title', 'like', '%'.$search.'%');
+            });
+        }
+
+        $tiers = $query->paginate(25)->withQueryString();
+
+        return view('admin.group-deals.tiers.index', [
+            'tiers' => $tiers,
+            'filters' => $request->only(['q']),
+        ]);
+    }
 }
