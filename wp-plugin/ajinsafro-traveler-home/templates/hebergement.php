@@ -43,6 +43,601 @@ $current_pack = ($current_pack_slug && function_exists('ajth_get_accommodation_p
     ? ajth_get_accommodation_package_by_slug($current_pack_slug)
     : null;
 
+if (is_singular('st_hotel')) {
+    global $wpdb;
+
+    $hotel_id = (int) get_queried_object_id();
+    if ($hotel_id <= 0) {
+        $hotel_id = (int) get_the_ID();
+    }
+    if ($hotel_id <= 0) {
+        get_template_part('404');
+        get_footer();
+        return;
+    }
+
+    $hotel_post = get_post($hotel_id);
+    if (!($hotel_post instanceof WP_Post)) {
+        get_template_part('404');
+        get_footer();
+        return;
+    }
+
+    $meta_first = static function (int $post_id, array $keys, $default = '') {
+        foreach ($keys as $key) {
+            $value = get_post_meta($post_id, $key, true);
+            if (is_scalar($value)) {
+                $value = trim((string) $value);
+                if ($value !== '') {
+                    return $value;
+                }
+            }
+        }
+
+        return $default;
+    };
+
+    $split_list = static function ($raw): array {
+        if (is_array($raw)) {
+            $values = $raw;
+        } elseif (is_string($raw) && trim($raw) !== '') {
+            $maybe = maybe_unserialize($raw);
+            if (is_array($maybe)) {
+                $values = $maybe;
+            } else {
+                $values = preg_split('/[\r\n,;|]+/', $raw) ?: array();
+            }
+        } else {
+            $values = array();
+        }
+
+        $values = array_map(
+            static function ($value): string {
+                if (!is_scalar($value)) {
+                    return '';
+                }
+
+                return trim(wp_strip_all_tags((string) $value));
+            },
+            $values
+        );
+
+        return array_values(array_filter(array_unique($values)));
+    };
+
+    $beautify_label = static function (string $value): string {
+        $label = trim(str_replace(array('_', '-'), ' ', $value));
+        if ($label === '') {
+            return '';
+        }
+
+        $map = array(
+            'wifi' => 'Wi-Fi',
+            'air conditioning' => 'Climatisation',
+            'air conditioner' => 'Climatisation',
+            'parking' => 'Parking',
+            'spa' => 'Spa',
+            'restaurant' => 'Restaurant',
+            'gym' => 'Salle de sport',
+            'breakfast' => 'Petit-déjeuner',
+            'swimming pool' => 'Piscine',
+            'pool' => 'Piscine',
+            'airport transport' => 'Transfert aéroport',
+            'airport transfer' => 'Transfert aéroport',
+            'family room' => 'Chambre familiale',
+            'sea view' => 'Vue mer',
+        );
+        $lower = strtolower($label);
+
+        return $map[$lower] ?? mb_convert_case($label, MB_CASE_TITLE, 'UTF-8');
+    };
+
+    $format_price = static function ($amount, string $suffix = 'MAD'): string {
+        if (!is_numeric($amount)) {
+            return 'Sur demande';
+        }
+
+        return number_format((float) $amount, 0, ',', ' ') . ' ' . $suffix;
+    };
+
+    $fallback_image = function_exists('ajth_hebergement_default_card_image_url')
+        ? ajth_hebergement_default_card_image_url()
+        : AJTH_URL . 'assets/images/default-hotel.svg';
+    $fallback_image = $fallback_image !== '' ? $fallback_image : AJTH_URL . 'assets/images/default-hotel.svg';
+
+    $hotel_row = array();
+    if (isset($wpdb)) {
+        $table = $wpdb->prefix . 'st_hotel';
+        $hotel_row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT address, min_price, hotel_star, map_lat, map_lng, is_featured, id_location, multi_location FROM {$table} WHERE post_id = %d",
+                $hotel_id
+            ),
+            ARRAY_A
+        ) ?: array();
+    }
+
+    $location_context = function_exists('ajth_hebergement_resolve_location_context')
+        ? ajth_hebergement_resolve_location_context($hotel_id, $hotel_row)
+        : array('city' => '', 'destination' => '', 'country' => '');
+
+    $hotel_title = trim((string) get_the_title($hotel_id));
+    $hotel_destination = trim((string) ($location_context['destination'] ?? ''));
+    $hotel_city = trim((string) ($location_context['city'] ?? ''));
+    $hotel_country = trim((string) ($location_context['country'] ?? ''));
+    $hotel_address = trim((string) ($hotel_row['address'] ?? $meta_first($hotel_id, array('address', 'hotel_address'))));
+    $hotel_location = implode(', ', array_values(array_filter(array_unique(array($hotel_destination, $hotel_city, $hotel_country)))));
+    if ($hotel_location === '') {
+        $hotel_location = $hotel_address !== '' ? $hotel_address : 'Maroc';
+    }
+
+    $hotel_price = $hotel_row['min_price'] ?? $meta_first($hotel_id, array('min_price', 'price', 'adult_price'));
+    $hotel_stars = (int) ($hotel_row['hotel_star'] ?? $meta_first($hotel_id, array('hotel_star'), 0));
+    $hotel_status = get_post_status($hotel_id) === 'publish' ? 'Disponible' : 'Indisponible';
+    $hotel_type = trim((string) $meta_first($hotel_id, array('hotel_type_label', 'hotel_type'), 'Hébergement'));
+    $hotel_excerpt = trim((string) get_post_field('post_excerpt', $hotel_id));
+    $hotel_content = trim((string) get_post_field('post_content', $hotel_id));
+    $hotel_summary = $hotel_excerpt !== '' ? $hotel_excerpt : wp_trim_words(wp_strip_all_tags($hotel_content), 28, '...');
+    $hotel_permalink = get_permalink($hotel_id) ?: $page_url;
+    $external_booking_enabled = $meta_first($hotel_id, array('_external_booking'), '0') === '1';
+    $external_booking_link = trim((string) $meta_first($hotel_id, array('_external_booking_link')));
+    $reserve_url = $external_booking_enabled && $external_booking_link !== '' ? $external_booking_link : $hotel_permalink;
+    $check_in_value = sanitize_text_field((string) ($_GET['check_in'] ?? ''));
+    $check_out_value = sanitize_text_field((string) ($_GET['check_out'] ?? ''));
+    $guest_value = max(1, (int) ($_GET['guests'] ?? 2));
+    $room_value = max(1, (int) ($_GET['rooms'] ?? 1));
+    $hotel_phone = trim((string) $meta_first($hotel_id, array('hotel_phone', 'phone')));
+    $hotel_email = trim((string) $meta_first($hotel_id, array('hotel_email', 'email')));
+    $hotel_lat = trim((string) ($hotel_row['map_lat'] ?? $meta_first($hotel_id, array('map_lat', 'latitude'))));
+    $hotel_lng = trim((string) ($hotel_row['map_lng'] ?? $meta_first($hotel_id, array('map_lng', 'longitude'))));
+
+    $featured_image = function_exists('ajth_hebergement_catalog_card_image_url')
+        ? ajth_hebergement_catalog_card_image_url($hotel_id)
+        : $fallback_image;
+    $featured_image = $featured_image !== '' ? $featured_image : $fallback_image;
+    $gallery_items = array();
+    $gallery_urls = function_exists('get_gallery_urls') ? get_gallery_urls($hotel_id) : array();
+    if ($featured_image !== '') {
+        $gallery_items[] = $featured_image;
+    }
+    foreach ($gallery_urls as $gallery_row) {
+        $gallery_url = trim((string) ($gallery_row['url'] ?? ''));
+        if ($gallery_url !== '') {
+            $gallery_items[] = $gallery_url;
+        }
+    }
+    $gallery_items = array_values(
+        array_filter(
+            array_unique(
+                array_map(
+                    static function ($url) use ($fallback_image) {
+                        $url = trim((string) $url);
+                        return $url !== '' ? $url : $fallback_image;
+                    },
+                    $gallery_items
+                )
+            )
+        )
+    );
+    if (empty($gallery_items)) {
+        $gallery_items = array($fallback_image);
+    }
+    $gallery_count = count($gallery_items);
+    $gallery_side_items = array_slice($gallery_items, 1, 4);
+    $hotel_description_html = '';
+    if ($hotel_content !== '') {
+        $hotel_description_html = apply_filters('the_content', $hotel_content);
+    } else {
+        $hotel_description_html = wpautop(esc_html($hotel_summary !== '' ? $hotel_summary : 'Ajinsafro vous accompagne pour préparer ce séjour avec les meilleures conditions de réservation disponibles.'));
+    }
+    $hotel_description_plain = trim(wp_strip_all_tags($hotel_content !== '' ? $hotel_content : $hotel_summary));
+    $hotel_description_is_long = strlen($hotel_description_plain) > 420;
+
+    $amenities_raw = $meta_first($hotel_id, array('hotel_amenities', 'amenities', 'hotel_facilities'));
+    $amenities = array_map($beautify_label, $split_list($amenities_raw));
+    $amenities = array_values(array_filter(array_unique($amenities)));
+
+    $policies_raw = trim((string) $meta_first($hotel_id, array('hotel_policies', 'policies', 'rules')));
+    $rules = $split_list($policies_raw);
+    $check_in_rule = trim((string) $meta_first($hotel_id, array('check_in', 'hotel_check_in'), 'À partir de 14:00'));
+    $check_out_rule = trim((string) $meta_first($hotel_id, array('check_out', 'hotel_check_out'), 'Jusqu’à 12:00'));
+    $children_rule = trim((string) $meta_first($hotel_id, array('children_policy', 'policy_children'), 'Nous consulter selon la chambre sélectionnée.'));
+    $cancel_rule = trim((string) $meta_first($hotel_id, array('cancellation_policy', 'policy_cancellation'), 'Conditions communiquées au moment du devis.'));
+
+    $review_items = get_comments(array(
+        'post_id' => $hotel_id,
+        'status' => 'approve',
+        'number' => 3,
+    ));
+
+    $room_query = new WP_Query(array(
+        'post_parent' => $hotel_id,
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'orderby' => array(
+            'menu_order' => 'ASC',
+            'date' => 'DESC',
+        ),
+        'post_type' => 'any',
+        'post__not_in' => array($hotel_id),
+    ));
+    $room_cards = array();
+    if ($room_query->have_posts()) {
+        foreach ($room_query->posts as $room_post) {
+            if (!($room_post instanceof WP_Post)) {
+                continue;
+            }
+            if (in_array($room_post->post_type, array('attachment', 'revision', 'nav_menu_item'), true)) {
+                continue;
+            }
+
+            $room_id = (int) $room_post->ID;
+            $room_image = function_exists('ajth_hebergement_catalog_card_image_url')
+                ? ajth_hebergement_catalog_card_image_url($room_id)
+                : $fallback_image;
+            $room_image = $room_image !== '' ? $room_image : $fallback_image;
+
+            $surface = $meta_first($room_id, array('room_footage', 'size', 'square_feet', 'sqm', 'surface'));
+            $beds = $meta_first($room_id, array('bed_number', 'beds', 'bed_type', 'room_beds'));
+            $capacity_adults = (int) $meta_first($room_id, array('adult_number', 'capacity_adults', 'max_adults'), 0);
+            $capacity_children = (int) $meta_first($room_id, array('children_number', 'capacity_children', 'max_children'), 0);
+            $capacity_total = (int) $meta_first($room_id, array('capacity', 'max_people', 'people_number'), 0);
+            if ($capacity_total <= 0) {
+                $capacity_total = max(0, $capacity_adults + $capacity_children);
+            }
+
+            $room_price = $meta_first($room_id, array('price', 'min_price', 'adult_price', 'base_price'));
+            $room_amenities = array_map(
+                $beautify_label,
+                $split_list($meta_first($room_id, array('room_facilities', 'hotel_room_facilities', 'amenities')))
+            );
+            $room_amenities = array_values(array_filter(array_unique($room_amenities)));
+            $room_content = trim((string) $room_post->post_excerpt);
+            if ($room_content === '') {
+                $room_content = wp_trim_words(wp_strip_all_tags((string) $room_post->post_content), 22, '...');
+            }
+
+            $room_cards[] = array(
+                'title' => trim((string) get_the_title($room_id)),
+                'image' => $room_image,
+                'surface' => $surface,
+                'beds' => $beds,
+                'capacity_total' => $capacity_total,
+                'capacity_adults' => $capacity_adults,
+                'capacity_children' => $capacity_children,
+                'price' => $room_price,
+                'excerpt' => $room_content,
+                'amenities' => array_slice($room_amenities, 0, 5),
+            );
+        }
+    }
+    wp_reset_postdata();
+
+    $map_query = $hotel_lat !== '' && $hotel_lng !== ''
+        ? rawurlencode($hotel_lat . ',' . $hotel_lng)
+        : rawurlencode($hotel_address !== '' ? $hotel_address : $hotel_location);
+    $map_embed_url = 'https://www.google.com/maps?q=' . $map_query . '&z=14&output=embed';
+    $map_link_url = 'https://www.google.com/maps/search/?api=1&query=' . $map_query;
+    $whatsapp_url = 'https://wa.me/212660683464?text=' . rawurlencode(sprintf('Bonjour Ajinsafro, je souhaite recevoir un devis pour "%s" (%s).', $hotel_title, $hotel_permalink));
+    ?>
+    <div class="aj-home-wrap">
+        <div class="aj-home aj-hebergement-booking aj-hebergement-single">
+            <?php ajth_render_site_header($settings); ?>
+
+            <main class="aj-hebergement-shell aj-hebergement-single-shell">
+                <div class="aj-hebergement-container">
+                    <nav class="aj-hebergement-breadcrumb" aria-label="Fil d’Ariane">
+                        <a href="<?php echo esc_url(home_url('/')); ?>">Accueil</a>
+                        <span>/</span>
+                        <a href="<?php echo esc_url($page_url); ?>">Hébergement</a>
+                        <span>/</span>
+                        <span><?php echo esc_html($hotel_title); ?></span>
+                    </nav>
+
+                    <section class="aj-hotel-hero-card">
+                        <div class="aj-hotel-hero-copy">
+                            <div class="aj-hotel-topline">
+                                <span class="aj-section-kicker">Ajinsafro Hébergement</span>
+                                <span class="aj-hotel-status aj-hotel-status--available"><?php echo esc_html($hotel_status); ?></span>
+                            </div>
+                            <h1><?php echo esc_html($hotel_title); ?></h1>
+                            <p class="aj-hotel-hero-location">
+                                <span><?php echo esc_html($hotel_location); ?></span>
+                                <?php if ($hotel_stars > 0) { ?>
+                                    <span class="aj-hotel-stars" aria-label="<?php echo esc_attr($hotel_stars); ?> étoiles">
+                                        <?php for ($star = 0; $star < $hotel_stars; $star++) { ?>
+                                            <span aria-hidden="true">★</span>
+                                        <?php } ?>
+                                    </span>
+                                <?php } ?>
+                            </p>
+                            <?php if ($hotel_summary !== '') { ?>
+                                <p class="aj-hotel-hero-summary"><?php echo esc_html($hotel_summary); ?></p>
+                            <?php } ?>
+                        </div>
+                        <div class="aj-hotel-hero-price">
+                            <span>À partir de</span>
+                            <strong><?php echo esc_html($format_price($hotel_price)); ?></strong>
+                            <small>par nuit</small>
+                        </div>
+                    </section>
+
+                    <section class="aj-hotel-gallery<?php echo $gallery_count < 2 ? ' aj-hotel-gallery--single' : ''; ?>" aria-label="Galerie photos">
+                        <div class="aj-hotel-gallery-main">
+                            <img src="<?php echo esc_url($gallery_items[0]); ?>" alt="<?php echo esc_attr($hotel_title); ?>" onerror="this.onerror=null;this.src='<?php echo esc_url($fallback_image); ?>';">
+                        </div>
+                        <?php if ($gallery_count > 1) { ?>
+                        <div class="aj-hotel-gallery-side">
+                            <?php foreach ($gallery_side_items as $index => $image_url) { ?>
+                                <figure class="aj-hotel-gallery-thumb">
+                                    <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($hotel_title . ' photo ' . ($index + 2)); ?>" loading="lazy" onerror="this.onerror=null;this.src='<?php echo esc_url($fallback_image); ?>';">
+                                </figure>
+                            <?php } ?>
+                            <?php for ($placeholder_index = count($gallery_side_items); $placeholder_index < 4; $placeholder_index++) { ?>
+                                <figure class="aj-hotel-gallery-thumb aj-hotel-gallery-thumb--placeholder" aria-hidden="true">
+                                    <span>Ajinsafro</span>
+                                    <small>Photos sur demande</small>
+                                </figure>
+                            <?php } ?>
+                        </div>
+                        <?php } ?>
+                        <?php if ($gallery_count > 1) { ?>
+                        <button type="button" class="aj-hotel-gallery-open" data-aj-gallery-open>Voir toutes les photos</button>
+                        <?php } ?>
+                    </section>
+
+                    <div class="aj-hotel-layout">
+                        <div class="aj-hotel-main">
+                            <section class="aj-hotel-section">
+                                <div class="aj-section-head">
+                                    <div>
+                                        <span class="aj-section-kicker">Présentation</span>
+                                        <h2>À propos de cet hébergement</h2>
+                                    </div>
+                                </div>
+                                <div class="aj-hotel-richtext<?php echo $hotel_description_is_long ? ' aj-hotel-richtext--clamped' : ''; ?>" data-aj-hotel-richtext>
+                                    <?php echo $hotel_description_html; ?>
+                                </div>
+                                <?php if ($hotel_description_is_long) { ?>
+                                <button type="button" class="aj-hotel-more" data-aj-hotel-richtext-toggle aria-expanded="false">Lire plus</button>
+                                <?php } ?>
+                            </section>
+
+                            <?php if (!empty($amenities)) { ?>
+                                <section class="aj-hotel-section">
+                                    <div class="aj-section-head">
+                                        <div>
+                                            <span class="aj-section-kicker">Confort</span>
+                                            <h2>Équipements</h2>
+                                        </div>
+                                    </div>
+                                    <div class="aj-hotel-amenities-grid">
+                                        <?php foreach ($amenities as $amenity) { ?>
+                                            <div class="aj-hotel-amenity">
+                                                <span class="aj-hotel-amenity-icon" aria-hidden="true">✓</span>
+                                                <span><?php echo esc_html($amenity); ?></span>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+                                </section>
+                            <?php } ?>
+
+                            <section class="aj-hotel-section">
+                                <div class="aj-section-head">
+                                    <div>
+                                        <span class="aj-section-kicker">Informations utiles</span>
+                                        <h2>Règles</h2>
+                                    </div>
+                                </div>
+                                <div class="aj-hotel-rules-card">
+                                    <div class="aj-hotel-rule-row"><strong>Check-in</strong><span><?php echo esc_html($check_in_rule); ?></span></div>
+                                    <div class="aj-hotel-rule-row"><strong>Check-out</strong><span><?php echo esc_html($check_out_rule); ?></span></div>
+                                    <div class="aj-hotel-rule-row"><strong>Politique enfants</strong><span><?php echo esc_html($children_rule); ?></span></div>
+                                    <div class="aj-hotel-rule-row"><strong>Annulation</strong><span><?php echo esc_html($cancel_rule); ?></span></div>
+                                    <?php if (!empty($rules)) { ?>
+                                        <ul class="aj-hotel-rules-list">
+                                            <?php foreach ($rules as $rule_line) { ?>
+                                                <li><?php echo esc_html($rule_line); ?></li>
+                                            <?php } ?>
+                                        </ul>
+                                    <?php } ?>
+                                </div>
+                            </section>
+
+                            <section class="aj-hotel-section" id="chambres-disponibles">
+                                <div class="aj-section-head">
+                                    <div>
+                                        <span class="aj-section-kicker">Séjour</span>
+                                        <h2>Chambres disponibles</h2>
+                                    </div>
+                                </div>
+                                <?php if (!empty($room_cards)) { ?>
+                                    <div class="aj-hotel-room-list">
+                                        <?php foreach ($room_cards as $room_card) { ?>
+                                            <article class="aj-hotel-room-card">
+                                                <div class="aj-hotel-room-media">
+                                                    <img src="<?php echo esc_url($room_card['image']); ?>" alt="<?php echo esc_attr($room_card['title']); ?>" loading="lazy" onerror="this.onerror=null;this.src='<?php echo esc_url($fallback_image); ?>';">
+                                                </div>
+                                                <div class="aj-hotel-room-copy">
+                                                    <h3><?php echo esc_html($room_card['title']); ?></h3>
+                                                    <?php if ($room_card['excerpt'] !== '') { ?>
+                                                        <p><?php echo esc_html($room_card['excerpt']); ?></p>
+                                                    <?php } ?>
+                                                    <div class="aj-hotel-room-meta">
+                                                        <?php if ($room_card['surface'] !== '') { ?><span>Surface : <?php echo esc_html($room_card['surface']); ?></span><?php } ?>
+                                                        <?php if ($room_card['beds'] !== '') { ?><span>Lits : <?php echo esc_html($room_card['beds']); ?></span><?php } ?>
+                                                        <?php if ($room_card['capacity_total'] > 0) { ?><span>Capacité : <?php echo esc_html((string) $room_card['capacity_total']); ?> pers.</span><?php } ?>
+                                                    </div>
+                                                    <?php if (!empty($room_card['amenities'])) { ?>
+                                                        <div class="aj-hotel-room-tags">
+                                                            <?php foreach ($room_card['amenities'] as $room_amenity) { ?>
+                                                                <span><?php echo esc_html($room_amenity); ?></span>
+                                                            <?php } ?>
+                                                        </div>
+                                                    <?php } ?>
+                                                </div>
+                                                <div class="aj-hotel-room-actions">
+                                                    <div class="aj-hotel-room-price"><?php echo esc_html($format_price($room_card['price'])); ?></div>
+                                                    <a class="aj-pack-secondary" href="<?php echo esc_url($hotel_permalink . '#chambres-disponibles'); ?>">Voir prix</a>
+                                                    <a class="aj-pack-reserve" href="<?php echo esc_url($reserve_url); ?>"<?php echo $external_booking_enabled && $external_booking_link !== '' ? ' target="_blank" rel="noopener"' : ''; ?>>Réserver</a>
+                                                </div>
+                                            </article>
+                                        <?php } ?>
+                                    </div>
+                                <?php } else { ?>
+                                    <div class="aj-hotel-empty-card">
+                                        <strong>Chambres à confirmer</strong>
+                                        <p>Les chambres seront confirmées par notre conseiller Ajinsafro. Demandez un devis pour recevoir les disponibilités détaillées.</p>
+                                        <a class="aj-pack-reserve aj-pack-reserve--block" href="<?php echo esc_url($whatsapp_url); ?>" target="_blank" rel="noopener">Demander un devis</a>
+                                    </div>
+                                <?php } ?>
+                            </section>
+
+                            <?php if ($hotel_address !== '' || $hotel_lat !== '' || $hotel_lng !== '') { ?>
+                                <section class="aj-hotel-section">
+                                    <div class="aj-section-head">
+                                        <div>
+                                            <span class="aj-section-kicker">Adresse</span>
+                                            <h2>Localisation</h2>
+                                        </div>
+                                        <a class="aj-hotel-map-link" href="<?php echo esc_url($map_link_url); ?>" target="_blank" rel="noopener">Voir sur la carte</a>
+                                    </div>
+                                    <div class="aj-hotel-map-card">
+                                        <?php if ($hotel_address !== '') { ?>
+                                            <p><?php echo esc_html($hotel_address); ?></p>
+                                        <?php } ?>
+                                        <div class="aj-hotel-map-embed">
+                                            <iframe src="<?php echo esc_url($map_embed_url); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Carte <?php echo esc_attr($hotel_title); ?>"></iframe>
+                                        </div>
+                                    </div>
+                                </section>
+                            <?php } ?>
+
+                            <?php if (!empty($review_items)) { ?>
+                                <section class="aj-hotel-section">
+                                    <div class="aj-section-head">
+                                        <div>
+                                            <span class="aj-section-kicker">Retours voyageurs</span>
+                                            <h2>Avis</h2>
+                                        </div>
+                                    </div>
+                                    <div class="aj-hotel-reviews-grid">
+                                        <?php foreach ($review_items as $review) { ?>
+                                            <article class="aj-hotel-review-card">
+                                                <strong><?php echo esc_html((string) $review->comment_author); ?></strong>
+                                                <p><?php echo esc_html(wp_trim_words(wp_strip_all_tags((string) $review->comment_content), 28, '...')); ?></p>
+                                            </article>
+                                        <?php } ?>
+                                    </div>
+                                </section>
+                            <?php } ?>
+                        </div>
+
+                        <aside class="aj-hotel-sidebar">
+                            <div class="aj-hotel-booking-card">
+                                <span class="aj-section-kicker">Réservation</span>
+                                <h3><?php echo esc_html($hotel_title); ?></h3>
+                                <div class="aj-hotel-booking-price">
+                                    <small>À partir de</small>
+                                    <strong><?php echo esc_html($format_price($hotel_price, 'DH')); ?></strong>
+                                    <span>/ nuit</span>
+                                </div>
+                                <form class="aj-hotel-booking-form" action="<?php echo esc_url($hotel_permalink); ?>#chambres-disponibles" method="get">
+                                    <label>
+                                        <span>Check-in</span>
+                                        <input type="date" name="check_in" value="<?php echo esc_attr($check_in_value); ?>">
+                                    </label>
+                                    <label>
+                                        <span>Check-out</span>
+                                        <input type="date" name="check_out" value="<?php echo esc_attr($check_out_value); ?>">
+                                    </label>
+                                    <div class="aj-hotel-booking-grid">
+                                        <label>
+                                            <span>Voyageurs</span>
+                                            <input type="number" min="1" max="12" name="guests" value="<?php echo esc_attr((string) $guest_value); ?>">
+                                        </label>
+                                        <label>
+                                            <span>Chambres</span>
+                                            <input type="number" min="1" max="6" name="rooms" value="<?php echo esc_attr((string) $room_value); ?>">
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="aj-pack-reserve aj-pack-reserve--block">Vérifier disponibilité</button>
+                                </form>
+                                <a class="aj-pack-secondary aj-pack-secondary--block" href="<?php echo esc_url($whatsapp_url); ?>" target="_blank" rel="noopener">Demander un devis</a>
+                                <?php if ($hotel_phone !== '' || $hotel_email !== '') { ?>
+                                    <div class="aj-hotel-contact-quick">
+                                        <?php if ($hotel_phone !== '') { ?><span>Tél. <?php echo esc_html($hotel_phone); ?></span><?php } ?>
+                                        <?php if ($hotel_email !== '') { ?><span><?php echo esc_html($hotel_email); ?></span><?php } ?>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="aj-hotel-gallery-modal" data-aj-gallery-modal hidden>
+        <div class="aj-hotel-gallery-modal__backdrop" data-aj-gallery-close></div>
+        <div class="aj-hotel-gallery-modal__dialog" role="dialog" aria-modal="true" aria-label="Galerie photos">
+            <button type="button" class="aj-hotel-gallery-modal__close" data-aj-gallery-close>×</button>
+            <div class="aj-hotel-gallery-modal__grid">
+                <?php foreach ($gallery_items as $image_index => $image_url) { ?>
+                    <figure>
+                        <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($hotel_title . ' photo ' . ($image_index + 1)); ?>" loading="lazy" onerror="this.onerror=null;this.src='<?php echo esc_url($fallback_image); ?>';">
+                    </figure>
+                <?php } ?>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var modal = document.querySelector('[data-aj-gallery-modal]');
+        var openButton = document.querySelector('[data-aj-gallery-open]');
+        var richtext = document.querySelector('[data-aj-hotel-richtext]');
+        var richtextToggle = document.querySelector('[data-aj-hotel-richtext-toggle]');
+
+        if (modal && openButton) {
+            var closeButtons = modal.querySelectorAll('[data-aj-gallery-close]');
+            var toggle = function (open) {
+                modal.hidden = !open;
+                document.documentElement.classList.toggle('aj-gallery-open', open);
+            };
+
+            openButton.addEventListener('click', function () {
+                toggle(true);
+            });
+
+            closeButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    toggle(false);
+                });
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    toggle(false);
+                }
+            });
+        }
+
+        if (richtext && richtextToggle) {
+            richtextToggle.addEventListener('click', function () {
+                var expanded = richtext.classList.toggle('is-expanded');
+                richtext.classList.toggle('aj-hotel-richtext--clamped', !expanded);
+                richtextToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                richtextToggle.textContent = expanded ? 'Lire moins' : 'Lire plus';
+            });
+        }
+    })();
+    </script>
+    <?php
+    get_footer();
+    return;
+}
+
 if ($current_pack) {
     $pack_title = (string) ($current_pack['title'] ?? 'Pack hébergement Ajinsafro');
     $pack_city = trim((string) ($current_pack['city'] ?? ''));
