@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
-   AJ Dashboard — design system from dashboard.html
+   AJ Dashboard — design system Ajinsafro
    ▸ Tout est scopé à .aj-dash-2026
    ▸ Aucun override du sidebar/topbar/layout Qovex
    ▸ Aucun override de Bootstrap .row / .col
