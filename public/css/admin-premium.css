@@ -350,6 +350,27 @@ body.admin-premium-ui {
     margin-left: 290px;
 }
 
+.admin-premium-ui[data-layout="detached"] .main-content {
+    margin-left: 290px;
+    width: auto !important;
+}
+
+/* FIX: override internal-v2-layout.css constraint on container-fluid for detached layout */
+.admin-premium-ui[data-layout="detached"] .container-fluid {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+/* Ensure sidebar stays fixed and doesn't take flex space */
+.admin-premium-ui[data-layout="detached"] .vertical-menu {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    flex-shrink: 0;
+}
+
 .admin-premium-ui .footer {
     padding: 18px 22px;
     background: rgba(255, 255, 255, 0.72);
