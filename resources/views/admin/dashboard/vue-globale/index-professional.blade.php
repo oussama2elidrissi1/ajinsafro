@@ -251,12 +251,12 @@
         animation: dashFadeIn 0.5s ease forwards;
     }
 
-    @for $i from 1 through 6 {
-        .animate-fade-in.delay-#{$i} {
-            animation-delay: #{$i * 0.08}s;
-            opacity: 0;
-        }
-    }
+    .animate-fade-in.delay-1 { animation-delay: 0.08s; opacity: 0; }
+    .animate-fade-in.delay-2 { animation-delay: 0.16s; opacity: 0; }
+    .animate-fade-in.delay-3 { animation-delay: 0.24s; opacity: 0; }
+    .animate-fade-in.delay-4 { animation-delay: 0.32s; opacity: 0; }
+    .animate-fade-in.delay-5 { animation-delay: 0.40s; opacity: 0; }
+    .animate-fade-in.delay-6 { animation-delay: 0.48s; opacity: 0; }
 
     @keyframes dashFadeIn {
         from {
