@@ -1,74 +1,1596 @@
-.page-hajj-omra-ajinsafro .ajho-shell{font-family:'Poppins','Segoe UI',sans-serif;background:linear-gradient(180deg,#f8fafc 0%,#eef4f9 100%);color:#0f172a}
-.page-hajj-omra-ajinsafro .ajho-container{max-width:1280px;margin:0 auto;padding:0 20px}
-.page-hajj-omra-ajinsafro .ajho-hero{position:relative;background:linear-gradient(135deg,#0b2742,#0f5c86);background-size:cover;background-position:center;padding:72px 0 54px;overflow:hidden}
-.page-hajj-omra-ajinsafro .ajho-hero__overlay{position:absolute;inset:0;background:linear-gradient(120deg,rgba(8,22,40,.84),rgba(14,83,121,.72))}
-.page-hajj-omra-ajinsafro .ajho-hero__content{position:relative;z-index:1}
-.page-hajj-omra-ajinsafro .ajho-hero h1{margin:0 0 14px;color:#fff;font-size:clamp(2rem,4vw,3.6rem);font-weight:800;letter-spacing:-.04em}
-.page-hajj-omra-ajinsafro .ajho-hero p{max-width:760px;margin:0;color:rgba(255,255,255,.88);font-size:1.02rem;line-height:1.75}
-.page-hajj-omra-ajinsafro .ajho-back-link{display:inline-flex;margin-bottom:20px;color:#fff;text-decoration:none;font-weight:700}
-.page-hajj-omra-ajinsafro .ajho-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-top:28px;padding:18px;background:rgba(255,255,255,.12);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);border-radius:24px}
-.page-hajj-omra-ajinsafro .ajho-filters select,.page-hajj-omra-ajinsafro .ajho-filters input,.page-hajj-omra-ajinsafro .ajho-request-form input,.page-hajj-omra-ajinsafro .ajho-request-form select,.page-hajj-omra-ajinsafro .ajho-request-form textarea{width:100%;min-height:52px;padding:0 16px;border:1px solid #d6e1ea;border-radius:16px;background:#fff;color:#102340;font-size:.95rem}
-.page-hajj-omra-ajinsafro .ajho-request-form textarea{padding:14px 16px;min-height:124px}
-.page-hajj-omra-ajinsafro .ajho-filters button,.page-hajj-omra-ajinsafro .ajho-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;border-radius:16px;border:0;font-weight:700;text-decoration:none;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
-.page-hajj-omra-ajinsafro .ajho-btn--primary,.page-hajj-omra-ajinsafro .ajho-filters button{background:linear-gradient(135deg,#f59e0b,#ea580c);color:#fff;box-shadow:0 14px 28px rgba(234,88,12,.2)}
-.page-hajj-omra-ajinsafro .ajho-btn--secondary{background:#fff;color:#0f4c75;border:1px solid #d6e1ea}
-.page-hajj-omra-ajinsafro .ajho-btn:hover,.page-hajj-omra-ajinsafro .ajho-filters button:hover{transform:translateY(-1px)}
-.page-hajj-omra-ajinsafro .ajho-content{padding:34px 20px 72px}
-.page-hajj-omra-ajinsafro .ajho-alert{margin-bottom:18px;padding:16px 18px;border-radius:18px;font-weight:600}
-.page-hajj-omra-ajinsafro .ajho-alert.is-success{background:#eafbf1;color:#137333;border:1px solid #b7e4c7}
-.page-hajj-omra-ajinsafro .ajho-alert.is-error{background:#fff2f0;color:#b42318;border:1px solid #fecdca}
-.page-hajj-omra-ajinsafro .ajho-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:24px}
-.page-hajj-omra-ajinsafro .ajho-stats div,.page-hajj-omra-ajinsafro .ajho-empty,.page-hajj-omra-ajinsafro .ajho-panel,.page-hajj-omra-ajinsafro .ajho-summary-card,.page-hajj-omra-ajinsafro .ajho-card{background:rgba(255,255,255,.96);border:1px solid #deebf4;border-radius:24px;box-shadow:0 18px 45px rgba(15,23,42,.06)}
-.page-hajj-omra-ajinsafro .ajho-stats div{padding:20px 24px}
-.page-hajj-omra-ajinsafro .ajho-stats strong{display:block;font-size:2rem;color:#0f4c75}
-.page-hajj-omra-ajinsafro .ajho-stats span{display:block;margin-top:6px;color:#61758a;font-weight:600}
-.page-hajj-omra-ajinsafro .ajho-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
-.page-hajj-omra-ajinsafro .ajho-card{display:flex;flex-direction:column;overflow:hidden}
-.page-hajj-omra-ajinsafro .ajho-card__media{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#dce8f3,#f3f7fb)}
-.page-hajj-omra-ajinsafro .ajho-card__media img{width:100%;height:100%;object-fit:cover;display:block}
-.page-hajj-omra-ajinsafro .ajho-chip{position:absolute;top:16px;left:16px;display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;font-size:.75rem;font-weight:800}
-.page-hajj-omra-ajinsafro .ajho-chip--type{background:rgba(255,255,255,.92);color:#0f4c75}
-.page-hajj-omra-ajinsafro .ajho-chip.is-available,.page-hajj-omra-ajinsafro .ajho-chip.is-limited,.page-hajj-omra-ajinsafro .ajho-chip.is-full,.page-hajj-omra-ajinsafro .ajho-chip.is-expired{left:auto;right:16px}
-.page-hajj-omra-ajinsafro .ajho-chip.is-available{background:#eafbf1;color:#137333}
-.page-hajj-omra-ajinsafro .ajho-chip.is-limited{background:#fff4db;color:#b45309}
-.page-hajj-omra-ajinsafro .ajho-chip.is-full{background:#fff2f0;color:#b42318}
-.page-hajj-omra-ajinsafro .ajho-chip.is-expired{background:#eceff3;color:#475467}
-.page-hajj-omra-ajinsafro .ajho-card__body{padding:22px 22px 18px}
-.page-hajj-omra-ajinsafro .ajho-card__body h3{margin:0 0 10px;font-size:1.28rem;color:#102340}
-.page-hajj-omra-ajinsafro .ajho-card__body p{margin:0;color:#526477;line-height:1.75}
-.page-hajj-omra-ajinsafro .ajho-card__facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0 0;padding:0;list-style:none}
-.page-hajj-omra-ajinsafro .ajho-card__facts li{padding:10px 12px;border-radius:14px;background:#f5f8fb;color:#344256;font-size:.88rem;font-weight:600}
-.page-hajj-omra-ajinsafro .ajho-card__footer{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:0 22px 22px;margin-top:auto}
-.page-hajj-omra-ajinsafro .ajho-card__footer small,.page-hajj-omra-ajinsafro .ajho-card__footer span{display:block;color:#61758a}
-.page-hajj-omra-ajinsafro .ajho-card__footer strong{display:block;margin:4px 0 2px;font-size:1.4rem;color:#0f4c75}
-.page-hajj-omra-ajinsafro .ajho-card__actions{display:flex;flex-direction:column;gap:10px;min-width:210px}
-.page-hajj-omra-ajinsafro .ajho-empty{padding:38px;text-align:center}
-.page-hajj-omra-ajinsafro .ajho-empty h2{margin:0 0 10px}
-.page-hajj-omra-ajinsafro .ajho-empty p{margin:0 0 20px;color:#61758a}
-.page-hajj-omra-ajinsafro .ajho-detail{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(320px,.8fr);gap:24px}
-.page-hajj-omra-ajinsafro .ajho-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
-.page-hajj-omra-ajinsafro .ajho-gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:20px}
-.page-hajj-omra-ajinsafro .ajho-panels,.page-hajj-omra-ajinsafro .ajho-detail__side{display:flex;flex-direction:column;gap:18px}
-.page-hajj-omra-ajinsafro .ajho-panel,.page-hajj-omra-ajinsafro .ajho-summary-card{padding:24px}
-.page-hajj-omra-ajinsafro .ajho-panel h2,.page-hajj-omra-ajinsafro .ajho-summary-card h2{margin:0 0 14px;color:#102340;font-size:1.25rem}
-.page-hajj-omra-ajinsafro .ajho-panel p{margin:0;color:#475467;line-height:1.85}
-.page-hajj-omra-ajinsafro .ajho-grid-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-.page-hajj-omra-ajinsafro .ajho-list{margin:0;padding-left:18px;color:#475467;line-height:1.8}
-.page-hajj-omra-ajinsafro .ajho-table-wrap{overflow:auto}
-.page-hajj-omra-ajinsafro .ajho-table{width:100%;border-collapse:collapse}
-.page-hajj-omra-ajinsafro .ajho-table th,.page-hajj-omra-ajinsafro .ajho-table td{padding:12px 10px;border-bottom:1px solid #e4edf4;text-align:left;font-size:.92rem}
-.page-hajj-omra-ajinsafro .ajho-program{display:flex;flex-direction:column;gap:14px}
-.page-hajj-omra-ajinsafro .ajho-program__item{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:16px;border-radius:18px;background:#f6fafc}
-.page-hajj-omra-ajinsafro .ajho-program__day{display:flex;align-items:center;justify-content:center;border-radius:14px;background:#0f4c75;color:#fff;font-weight:800}
-.page-hajj-omra-ajinsafro .ajho-program__body h3{margin:0 0 6px}
-.page-hajj-omra-ajinsafro .ajho-program__city{margin:0 0 8px;color:#0f4c75;font-weight:700}
-.page-hajj-omra-ajinsafro .ajho-summary-card__type{display:inline-flex;margin-bottom:12px;padding:7px 12px;border-radius:999px;background:#f3f7fb;color:#0f4c75;font-size:.8rem;font-weight:800}
-.page-hajj-omra-ajinsafro .ajho-summary-card__price{margin-bottom:16px;font-size:2rem;font-weight:900;color:#ea580c}
-.page-hajj-omra-ajinsafro .ajho-summary-card__facts{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
-.page-hajj-omra-ajinsafro .ajho-summary-card__facts li{display:flex;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid #e4edf4}
-.page-hajj-omra-ajinsafro .ajho-summary-card__facts strong{color:#102340}
-.page-hajj-omra-ajinsafro .ajho-summary-card__facts span{color:#526477;text-align:right}
-.page-hajj-omra-ajinsafro .ajho-request-form{display:flex;flex-direction:column;gap:12px}
-.page-hajj-omra-ajinsafro .ajho-request-form__cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-@media (max-width:1100px){.page-hajj-omra-ajinsafro .ajho-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.page-hajj-omra-ajinsafro .ajho-detail{grid-template-columns:1fr}.page-hajj-omra-ajinsafro .ajho-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:767px){.page-hajj-omra-ajinsafro .ajho-filters,.page-hajj-omra-ajinsafro .ajho-stats,.page-hajj-omra-ajinsafro .ajho-grid,.page-hajj-omra-ajinsafro .ajho-grid-two,.page-hajj-omra-ajinsafro .ajho-gallery,.page-hajj-omra-ajinsafro .ajho-request-form__cols,.page-hajj-omra-ajinsafro .ajho-card__facts{grid-template-columns:1fr}.page-hajj-omra-ajinsafro .ajho-card__footer{flex-direction:column;align-items:stretch}.page-hajj-omra-ajinsafro .ajho-card__actions{min-width:0}.page-hajj-omra-ajinsafro .ajho-program__item{grid-template-columns:1fr}.page-hajj-omra-ajinsafro .ajho-hero{padding-top:56px}.page-hajj-omra-ajinsafro .ajho-content{padding-top:24px}}
+.page-hajj-omra-ajinsafro {
+  --ajho-blue-900: #0d3555;
+  --ajho-blue-800: #114f7c;
+  --ajho-blue-700: #0b6aa6;
+  --ajho-orange-600: #f37a1f;
+  --ajho-orange-700: #e86100;
+  --ajho-white: #ffffff;
+  --ajho-ink: #16324a;
+  --ajho-muted: #66788a;
+  --ajho-line: #dbe7f1;
+  --ajho-soft: #f4f8fb;
+  --ajho-shadow: 0 18px 42px rgba(12, 44, 72, 0.09);
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  background: linear-gradient(180deg, #f6f9fc 0%, #edf4f9 100%);
+  color: var(--ajho-ink);
+}
+
+.page-hajj-omra-ajinsafro .ajho-page {
+  min-height: 100vh;
+}
+
+.page-hajj-omra-ajinsafro .ajho-container {
+  width: min(1240px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.page-hajj-omra-ajinsafro .ajho-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+  color: #365773;
+}
+
+.page-hajj-omra-ajinsafro .ajho-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-breadcrumb--light,
+.page-hajj-omra-ajinsafro .ajho-breadcrumb--light a {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.page-hajj-omra-ajinsafro .ajho-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ajho-blue-700);
+}
+
+.page-hajj-omra-ajinsafro .ajho-kicker--light {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 34px 0 54px;
+  background:
+    radial-gradient(circle at top right, rgba(243, 122, 31, 0.2), transparent 30%),
+    radial-gradient(circle at left bottom, rgba(255, 255, 255, 0.12), transparent 28%),
+    linear-gradient(135deg, var(--ajho-blue-900), var(--ajho-blue-800));
+  border-radius: 0 0 34px 34px;
+  box-shadow: var(--ajho-shadow);
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero--compact {
+  padding-bottom: 40px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero--detail {
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  padding: 42px 0 72px;
+  box-shadow: inset 0 -120px 160px rgba(4, 22, 44, 0.16);
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.7fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__inner--detail {
+  align-items: stretch;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__copy h1 {
+  margin: 0 0 14px;
+  color: var(--ajho-white);
+  font-size: clamp(2.4rem, 4.9vw, 3.95rem);
+  line-height: 1.03;
+  letter-spacing: -0.04em;
+  font-weight: 900;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__copy p {
+  max-width: 760px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(1.02rem, 2vw, 1.22rem);
+  line-height: 1.75;
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-back-link {
+  display: inline-flex;
+  margin-bottom: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__badges,
+.page-hajj-omra-ajinsafro .ajho-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 0.77rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.page-hajj-omra-ajinsafro .ajho-chip--type {
+  background: #dff2ff;
+  color: #073d6b;
+  border: 0;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card .ajho-chip--type {
+  background: rgba(17, 79, 124, 0.08);
+  color: var(--ajho-blue-800);
+  border: 0;
+}
+
+.page-hajj-omra-ajinsafro .ajho-chip.is-available {
+  background: #e9f8ef;
+  color: #14753f;
+  box-shadow: 0 8px 18px rgba(24, 169, 87, 0.18);
+}
+
+.page-hajj-omra-ajinsafro .ajho-chip.is-limited {
+  background: #fff2dc;
+  color: #a95507;
+}
+
+.page-hajj-omra-ajinsafro .ajho-chip.is-full {
+  background: #fff0ee;
+  color: #b1372d;
+}
+
+.page-hajj-omra-ajinsafro .ajho-chip.is-expired {
+  background: #e9eef2;
+  color: #536575;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__facts div,
+.page-hajj-omra-ajinsafro .ajho-hero-card,
+.page-hajj-omra-ajinsafro .ajho-search-panel,
+.page-hajj-omra-ajinsafro .ajho-stats div,
+.page-hajj-omra-ajinsafro .ajho-results-head,
+.page-hajj-omra-ajinsafro .ajho-card,
+.page-hajj-omra-ajinsafro .ajho-panel,
+.page-hajj-omra-ajinsafro .ajho-summary-card,
+.page-hajj-omra-ajinsafro .ajho-gallery-card,
+.page-hajj-omra-ajinsafro .ajho-empty {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--ajho-line);
+  border-radius: 26px;
+  box-shadow: var(--ajho-shadow);
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__facts div {
+  position: relative;
+  padding: 18px 20px 18px 68px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__facts div::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, var(--ajho-orange-600), var(--ajho-orange-700));
+  box-shadow: 0 10px 20px rgba(232, 97, 0, 0.18);
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__facts div:nth-child(2)::before {
+  background: linear-gradient(135deg, #21b573, #0f9a5a);
+  box-shadow: 0 10px 20px rgba(15, 154, 90, 0.18);
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__facts div:nth-child(3)::before {
+  background: linear-gradient(135deg, #2673d8, #124f9b);
+  box-shadow: 0 10px 20px rgba(18, 79, 155, 0.18);
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__facts strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ajho-blue-900);
+  font-size: 0.85rem;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__facts span {
+  color: #496173;
+  font-weight: 600;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero-card {
+  padding: 26px 24px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero-card strong {
+  display: block;
+  color: var(--ajho-blue-900);
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero-card span {
+  display: block;
+  margin-top: 10px;
+  color: var(--ajho-blue-800);
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero-card p {
+  margin: 14px 0 0;
+  color: var(--ajho-muted);
+}
+
+.page-hajj-omra-ajinsafro .ajho-search-panel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 30px;
+  padding: 18px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-search-field,
+.page-hajj-omra-ajinsafro .ajho-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-search-field span,
+.page-hajj-omra-ajinsafro .ajho-field span,
+.page-hajj-omra-ajinsafro .ajho-summary-card__label {
+  color: #4e6679;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-search-panel select,
+.page-hajj-omra-ajinsafro .ajho-search-panel input,
+.page-hajj-omra-ajinsafro .ajho-request-form input,
+.page-hajj-omra-ajinsafro .ajho-request-form select,
+.page-hajj-omra-ajinsafro .ajho-request-form textarea {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 16px;
+  border: 1px solid var(--ajho-line);
+  border-radius: 16px;
+  background: var(--ajho-white);
+  color: var(--ajho-ink);
+  font-size: 0.95rem;
+}
+
+.page-hajj-omra-ajinsafro .ajho-request-form textarea {
+  min-height: 128px;
+  padding: 14px 16px;
+  resize: vertical;
+}
+
+.page-hajj-omra-ajinsafro .ajho-search-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 16px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.page-hajj-omra-ajinsafro .ajho-btn:hover {
+  transform: translateY(-1px);
+}
+
+.page-hajj-omra-ajinsafro .ajho-btn--primary {
+  background: linear-gradient(135deg, var(--ajho-orange-600), var(--ajho-orange-700));
+  color: var(--ajho-white);
+  box-shadow: 0 14px 28px rgba(232, 97, 0, 0.22);
+}
+
+.page-hajj-omra-ajinsafro .ajho-btn--secondary {
+  background: rgba(17, 79, 124, 0.08);
+  color: var(--ajho-blue-800);
+  border: 1px solid rgba(17, 79, 124, 0.14);
+}
+
+.page-hajj-omra-ajinsafro .ajho-btn--ghost {
+  background: #eef5fa;
+  color: var(--ajho-blue-800);
+}
+
+.page-hajj-omra-ajinsafro button.ajho-btn {
+  font-family: inherit;
+}
+
+.page-hajj-omra-ajinsafro .ajho-content {
+  padding: 34px 0 72px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-content--detail {
+  padding-top: 26px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-alert {
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-alert.is-success {
+  background: #ecf9f0;
+  color: #157644;
+  border: 1px solid #cbe8d3;
+}
+
+.page-hajj-omra-ajinsafro .ajho-alert.is-error {
+  background: #fff2f0;
+  color: #b1372d;
+  border: 1px solid #f3c6bf;
+}
+
+.page-hajj-omra-ajinsafro .ajho-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-stats div {
+  padding: 22px 24px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-stats strong {
+  display: block;
+  color: var(--ajho-blue-900);
+  font-size: 2rem;
+}
+
+.page-hajj-omra-ajinsafro .ajho-stats span {
+  display: block;
+  margin-top: 7px;
+  color: var(--ajho-muted);
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-results-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 26px 28px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-results-head h2,
+.page-hajj-omra-ajinsafro .ajho-panel h2,
+.page-hajj-omra-ajinsafro .ajho-summary-card h2 {
+  margin: 0;
+  color: var(--ajho-blue-900);
+  font-size: 1.45rem;
+  line-height: 1.2;
+}
+
+.page-hajj-omra-ajinsafro .ajho-results-head p {
+  max-width: 480px;
+  margin: 0;
+  color: var(--ajho-muted);
+  line-height: 1.7;
+}
+
+.page-hajj-omra-ajinsafro .ajho-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 52px rgba(12, 44, 72, 0.14);
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__media {
+  position: relative;
+  background: linear-gradient(135deg, #d4e4f0, #f3f7fa);
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__media-link {
+  display: block;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__media img {
+  display: block;
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__badges {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 0;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__body {
+  padding: 22px 22px 18px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__body h3 {
+  margin: 0 0 10px;
+  font-size: 1.22rem;
+  line-height: 1.3;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__body h3 a {
+  color: var(--ajho-blue-900);
+  text-decoration: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__body p {
+  margin: 0;
+  color: var(--ajho-muted);
+  line-height: 1.72;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__facts li {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 78px;
+  padding: 11px 12px;
+  border-radius: 16px;
+  background: var(--ajho-soft);
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__facts strong {
+  color: var(--ajho-blue-800);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__facts span {
+  color: #456073;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 22px 22px;
+  margin-top: auto;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__price small {
+  display: block;
+  color: var(--ajho-muted);
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__price strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--ajho-orange-700);
+  font-size: 1.55rem;
+  line-height: 1.1;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 220px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-empty {
+  padding: 42px 28px;
+  text-align: center;
+}
+
+.page-hajj-omra-ajinsafro .ajho-empty h2 {
+  margin: 0 0 10px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-empty p {
+  margin: 0 0 22px;
+  color: var(--ajho-muted);
+}
+
+.page-hajj-omra-ajinsafro .ajho-gallery-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  gap: 14px;
+  padding: 14px;
+  margin-bottom: 24px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-gallery-card__main img,
+.page-hajj-omra-ajinsafro .ajho-gallery-card__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.page-hajj-omra-ajinsafro .ajho-gallery-card__main {
+  min-height: 420px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #d4e4f0, #f3f7fa);
+}
+
+.page-hajj-omra-ajinsafro .ajho-gallery-card__side {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-gallery-card__thumb {
+  min-height: 200px;
+  margin: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #d4e4f0, #f3f7fa);
+}
+
+.page-hajj-omra-ajinsafro .ajho-gallery-card__thumb--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ajho-blue-800);
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(330px, 0.8fr);
+  gap: 24px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-detail__main,
+.page-hajj-omra-ajinsafro .ajho-detail__side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-detail__side {
+  position: sticky;
+  top: 112px;
+  align-self: start;
+}
+
+.page-hajj-omra-ajinsafro .ajho-panel,
+.page-hajj-omra-ajinsafro .ajho-summary-card {
+  padding: 24px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-panel__head {
+  margin-bottom: 16px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-richtext,
+.page-hajj-omra-ajinsafro .ajho-panel p {
+  color: #496173;
+  line-height: 1.82;
+}
+
+.page-hajj-omra-ajinsafro .ajho-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-fact-list,
+.page-hajj-omra-ajinsafro .ajho-summary-card__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-fact-list li,
+.page-hajj-omra-ajinsafro .ajho-summary-card__facts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5eef5;
+}
+
+.page-hajj-omra-ajinsafro .ajho-fact-list strong,
+.page-hajj-omra-ajinsafro .ajho-summary-card__facts strong {
+  color: var(--ajho-blue-900);
+}
+
+.page-hajj-omra-ajinsafro .ajho-fact-list span,
+.page-hajj-omra-ajinsafro .ajho-summary-card__facts span {
+  color: #496173;
+  text-align: right;
+}
+
+.page-hajj-omra-ajinsafro .ajho-summary-card__price {
+  margin: 10px 0 18px;
+  color: var(--ajho-orange-700);
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.page-hajj-omra-ajinsafro .ajho-summary-card--hero {
+  height: 100%;
+}
+
+.page-hajj-omra-ajinsafro .ajho-summary-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.page-hajj-omra-ajinsafro .ajho-table th,
+.page-hajj-omra-ajinsafro .ajho-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #e5eef5;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.page-hajj-omra-ajinsafro .ajho-table th {
+  color: var(--ajho-blue-900);
+  background: #f7fbff;
+  font-size: 0.84rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 900;
+}
+
+.page-hajj-omra-ajinsafro .ajho-table td {
+  color: #496173;
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-table__price {
+  color: var(--ajho-orange-700);
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.page-hajj-omra-ajinsafro .ajho-status-pill.is-available {
+  background: #e9f9ef;
+  color: #18a957;
+}
+
+.page-hajj-omra-ajinsafro .ajho-status-pill.is-limited {
+  background: #fff2dc;
+  color: #a95507;
+}
+
+.page-hajj-omra-ajinsafro .ajho-status-pill.is-full {
+  background: #fff0ee;
+  color: #b1372d;
+}
+
+.page-hajj-omra-ajinsafro .ajho-status-pill.is-expired {
+  background: #e9eef2;
+  color: #536575;
+}
+
+.page-hajj-omra-ajinsafro .ajho-program {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__empty {
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: var(--ajho-soft);
+  color: var(--ajho-muted);
+  line-height: 1.7;
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__item {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--ajho-soft);
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--ajho-blue-900), var(--ajho-blue-700));
+  color: var(--ajho-white);
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__top img {
+  flex: 0 0 120px;
+  width: 120px;
+  height: 90px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__body h3 {
+  margin: 0 0 6px;
+  color: var(--ajho-blue-900);
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__city {
+  margin: 0 0 8px;
+  color: var(--ajho-blue-700);
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__body p {
+  margin: 0;
+}
+
+.page-hajj-omra-ajinsafro .ajho-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-list li {
+  position: relative;
+  padding-left: 18px;
+  color: #496173;
+  line-height: 1.75;
+}
+
+.page-hajj-omra-ajinsafro .ajho-list li::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ajho-orange-600);
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 15px;
+  border-radius: 18px;
+  background: var(--ajho-soft);
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-item strong {
+  color: var(--ajho-blue-800);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-item span {
+  color: #456073;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.page-hajj-omra-ajinsafro .ajho-request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-request-form__cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero__inner--source {
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr);
+  align-items: center;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-card {
+  position: relative;
+  align-self: center;
+  padding: 28px;
+  padding-top: 58px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-card__badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--ajho-orange-600), var(--ajho-orange-700));
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-card__label {
+  margin-bottom: 8px;
+  color: var(--ajho-muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-card__value {
+  margin-bottom: 18px;
+  color: var(--ajho-orange-700);
+  font-size: clamp(2.6rem, 3vw, 3.3rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-list {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef3f7;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-list strong {
+  min-width: 110px;
+  color: var(--ajho-blue-900);
+  font-size: 0.9rem;
+}
+
+.page-hajj-omra-ajinsafro .ajho-price-list span {
+  color: #41566f;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.page-hajj-omra-ajinsafro .ajho-small-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.page-hajj-omra-ajinsafro .ajho-small-btn {
+  flex: 1;
+  min-width: 130px;
+  padding: 13px 16px;
+  border: 1px solid var(--ajho-line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ajho-blue-800);
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+}
+
+.page-hajj-omra-ajinsafro .ajho-small-btn--whatsapp {
+  border-color: #bde5c8;
+  background: #f4fff7;
+  color: #1a9d4a;
+}
+
+.page-hajj-omra-ajinsafro .ajho-small-btn--share {
+  background: #f7fbff;
+  color: var(--ajho-blue-800);
+}
+
+.page-hajj-omra-ajinsafro .ajho-gallery-wrap {
+  display: grid;
+  grid-template-columns: 1.35fr 0.8fr;
+  gap: 16px;
+  margin-top: 0;
+  align-items: stretch;
+}
+
+.page-hajj-omra-ajinsafro .ajho-main-gallery,
+.page-hajj-omra-ajinsafro .ajho-thumb {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(219, 231, 241, 0.9);
+  border-radius: 24px;
+  box-shadow: var(--ajho-shadow);
+}
+
+.page-hajj-omra-ajinsafro .ajho-main-gallery {
+  min-height: 385px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-main-gallery::after,
+.page-hajj-omra-ajinsafro .ajho-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+  pointer-events: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-main-gallery img,
+.page-hajj-omra-ajinsafro .ajho-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.page-hajj-omra-ajinsafro .ajho-gallery-count {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(4, 18, 35, 0.75);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-thumb-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-height: 385px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-thumb {
+  min-height: 184px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-thumb--fallback {
+  background: linear-gradient(135deg, #dfeaf3, #f7fbff);
+}
+
+.page-hajj-omra-ajinsafro .ajho-content-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(330px, 0.65fr);
+  gap: 28px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-content-left,
+.page-hajj-omra-ajinsafro .ajho-sidebar {
+  display: grid;
+  gap: 18px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-sidebar {
+  position: sticky;
+  top: 105px;
+  min-width: 330px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card {
+  padding: 24px 26px;
+  border: 1px solid #edf2f8;
+  border-radius: 22px;
+  background: var(--ajho-white);
+  box-shadow: var(--ajho-shadow);
+}
+
+.page-hajj-omra-ajinsafro .ajho-section-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 8px;
+  color: #4e7cae;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.page-hajj-omra-ajinsafro .ajho-section-label::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, var(--ajho-orange-600), var(--ajho-orange-700));
+}
+
+.page-hajj-omra-ajinsafro .ajho-card-title {
+  margin-bottom: 12px;
+  color: var(--ajho-blue-900);
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card-title--small {
+  font-size: 1.25rem;
+}
+
+.page-hajj-omra-ajinsafro .ajho-muted {
+  color: var(--ajho-muted);
+  line-height: 1.7;
+}
+
+.page-hajj-omra-ajinsafro .ajho-info-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-mini-box {
+  padding: 20px;
+  border: 1px solid var(--ajho-line);
+  border-radius: 18px;
+  background: #fbfdff;
+  border-top-width: 5px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-mini-box:nth-child(1) {
+  border-color: rgba(28, 90, 160, 0.18);
+  border-top-color: var(--ajho-blue-800);
+}
+
+.page-hajj-omra-ajinsafro .ajho-mini-box:nth-child(2) {
+  border-color: rgba(15, 154, 90, 0.18);
+  border-top-color: #18a957;
+}
+
+.page-hajj-omra-ajinsafro .ajho-mini-box:nth-child(3) {
+  border-color: rgba(232, 97, 0, 0.18);
+  border-top-color: var(--ajho-orange-700);
+}
+
+.page-hajj-omra-ajinsafro .ajho-mini-box h4 {
+  margin-bottom: 12px;
+  color: var(--ajho-blue-800);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-mini-box:nth-child(2) h4 {
+  color: #18a957;
+}
+
+.page-hajj-omra-ajinsafro .ajho-mini-box:nth-child(3) h4 {
+  color: var(--ajho-orange-700);
+}
+
+.page-hajj-omra-ajinsafro .ajho-kv-list {
+  display: grid;
+  gap: 10px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 0.88rem;
+}
+
+.page-hajj-omra-ajinsafro .ajho-kv strong {
+  color: var(--ajho-ink);
+}
+
+.page-hajj-omra-ajinsafro .ajho-kv span {
+  color: #526678;
+  text-align: right;
+  font-weight: 600;
+}
+
+.page-hajj-omra-ajinsafro .ajho-check-list,
+.page-hajj-omra-ajinsafro .ajho-x-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #43586e;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.page-hajj-omra-ajinsafro .ajho-check-list li::before {
+  content: "✔";
+  margin-right: 10px;
+  color: #2eaf55;
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-x-list li::before {
+  content: "✖";
+  margin-right: 10px;
+  color: #d74c4c;
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-timeline {
+  display: grid;
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-check-list li::before {
+  content: "+";
+}
+
+.page-hajj-omra-ajinsafro .ajho-x-list li::before {
+  content: "-";
+}
+
+.page-hajj-omra-ajinsafro .ajho-timeline-item {
+  display: grid;
+  grid-template-columns: 82px 1fr 42px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--ajho-line);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.page-hajj-omra-ajinsafro .ajho-day-badge {
+  padding: 13px 8px;
+  border-radius: 12px;
+  background: var(--ajho-blue-800);
+  color: #fff;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.page-hajj-omra-ajinsafro .ajho-timeline-content h3 {
+  margin: 0 0 4px;
+  color: var(--ajho-blue-900);
+  font-size: 1.12rem;
+  font-weight: 900;
+}
+
+.page-hajj-omra-ajinsafro .ajho-timeline-content small {
+  display: block;
+  margin-bottom: 6px;
+  color: #54718d;
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-timeline-content p {
+  color: #607385;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.page-hajj-omra-ajinsafro .ajho-program__top--timeline {
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-timeline-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #eaf5ff;
+  color: var(--ajho-blue-800);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(17, 79, 124, 0.12);
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid .ajho-card {
+  box-shadow: 0 10px 24px rgba(9, 47, 83, 0.07);
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid .ajho-card:nth-child(1) {
+  background: #f1f8ff;
+  border-color: #b6ddfb;
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid .ajho-card:nth-child(2) {
+  background: #fff6ed;
+  border-color: #ffd2ad;
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid .ajho-card:nth-child(3) {
+  background: #f0fff5;
+  border-color: #bde7c9;
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid .ajho-card:nth-child(4) {
+  background: #f8fbff;
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid .ajho-card:nth-child(1) .ajho-card-title--small {
+  color: var(--ajho-blue-800);
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid .ajho-card:nth-child(2) .ajho-card-title--small {
+  color: var(--ajho-orange-700);
+}
+
+.page-hajj-omra-ajinsafro .ajho-bottom-grid .ajho-card:nth-child(3) .ajho-card-title--small {
+  color: #18a957;
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-box h3 {
+  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-box h2 {
+  margin-bottom: 8px;
+  color: #fff;
+  font-size: 1.95rem;
+  line-height: 1.1;
+}
+
+.page-hajj-omra-ajinsafro .ajho-sidebar-price {
+  margin-bottom: 16px;
+  color: #ff962f;
+  font-size: 2.55rem;
+  font-weight: 800;
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-box--featured {
+  background:
+    radial-gradient(circle at top right, rgba(243, 122, 31, 0.18), transparent 34%),
+    linear-gradient(180deg, #103f7a 0%, #0a3261 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-box--featured .ajho-kv strong,
+.page-hajj-omra-ajinsafro .ajho-offer-box--featured .ajho-kv span {
+  color: #fff;
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-box .ajho-kv {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.page-hajj-omra-ajinsafro .ajho-offer-box .ajho-kv:last-child {
+  border-bottom: 0;
+}
+
+.page-hajj-omra-ajinsafro .ajho-form-card h3 {
+  margin-bottom: 14px;
+  color: var(--ajho-blue-900);
+  font-size: 2.1rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.page-hajj-omra-ajinsafro .ajho-form-card {
+  border-radius: 24px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #4d6480;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.page-hajj-omra-ajinsafro .ajho-form-card input,
+.page-hajj-omra-ajinsafro .ajho-form-card select,
+.page-hajj-omra-ajinsafro .ajho-form-card textarea {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--ajho-line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.page-hajj-omra-ajinsafro .ajho-form-card textarea {
+  min-height: 128px;
+  padding: 14px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.page-hajj-omra-ajinsafro .ajho-btn--full {
+  width: 100%;
+  min-height: 56px;
+  font-size: 0.98rem;
+  justify-content: center;
+}
+
+.page-hajj-omra-ajinsafro .ajho-submit-note {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  color: #6f7d8b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+@media (max-width: 1180px) {
+  .page-hajj-omra-ajinsafro .ajho-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-detail,
+  .page-hajj-omra-ajinsafro .ajho-hero__inner,
+  .page-hajj-omra-ajinsafro .ajho-gallery-card {
+    grid-template-columns: 1fr;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-search-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-detail__side {
+    position: static;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-content-area {
+    grid-template-columns: 1fr;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-sidebar {
+    position: static;
+    min-width: 0;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-bottom-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 980px) {
+  .page-hajj-omra-ajinsafro .ajho-gallery-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-thumb-grid {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .page-hajj-omra-ajinsafro .ajho-container {
+    width: min(100%, calc(100% - 20px));
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-hero {
+    padding-top: 24px;
+    padding-bottom: 40px;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-search-panel,
+  .page-hajj-omra-ajinsafro .ajho-stats,
+  .page-hajj-omra-ajinsafro .ajho-grid,
+  .page-hajj-omra-ajinsafro .ajho-grid-two,
+  .page-hajj-omra-ajinsafro .ajho-offer-grid,
+  .page-hajj-omra-ajinsafro .ajho-info-grid-3,
+  .page-hajj-omra-ajinsafro .ajho-two-cols,
+  .page-hajj-omra-ajinsafro .ajho-bottom-grid,
+  .page-hajj-omra-ajinsafro .ajho-request-form__cols,
+  .page-hajj-omra-ajinsafro .ajho-card__facts,
+  .page-hajj-omra-ajinsafro .ajho-thumb-grid,
+  .page-hajj-omra-ajinsafro .ajho-hero__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-results-head,
+  .page-hajj-omra-ajinsafro .ajho-card__footer,
+  .page-hajj-omra-ajinsafro .ajho-program__item,
+  .page-hajj-omra-ajinsafro .ajho-program__top,
+  .page-hajj-omra-ajinsafro .ajho-fact-list li,
+  .page-hajj-omra-ajinsafro .ajho-summary-card__facts li {
+    display: block;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-card__actions {
+    min-width: 0;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-gallery-wrap,
+  .page-hajj-omra-ajinsafro .ajho-content-area {
+    grid-template-columns: 1fr;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-hero__actions,
+  .page-hajj-omra-ajinsafro .ajho-small-actions,
+  .page-hajj-omra-ajinsafro .ajho-card__actions {
+    flex-direction: column;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-card__media img {
+    height: 220px;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-main-gallery {
+    min-height: 260px;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-thumb-grid {
+    min-height: 0;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-thumb {
+    min-height: 120px;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-program__top img {
+    width: 100%;
+    height: 180px;
+    margin-top: 12px;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-timeline-item {
+    grid-template-columns: 1fr;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-timeline-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .page-hajj-omra-ajinsafro .ajho-small-btn,
+  .page-hajj-omra-ajinsafro .ajho-hero__actions .ajho-btn,
+  .page-hajj-omra-ajinsafro .ajho-card__actions .ajho-btn {
+    width: 100%;
+  }
+}
+
+.page-hajj-omra-ajinsafro .aj-footer-v2 {
+  margin-top: 28px;
+  padding-top: 28px;
+}

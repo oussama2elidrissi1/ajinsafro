@@ -17,6 +17,8 @@ use App\Http\Controllers\Admin\GroupDeals\GroupDealController;
 use App\Http\Controllers\Admin\GroupDeals\OfferController as GroupDealOfferController;
 use App\Http\Controllers\Admin\HajjOmraBookingRequestController;
 use App\Http\Controllers\Admin\HajjOmraPackageController;
+use App\Http\Controllers\Admin\EconomicOfferController;
+use App\Http\Controllers\Admin\EconomicOfferRequestController;
 use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\HomePageSettingsController;
 use App\Http\Controllers\Admin\OperationsController;
@@ -341,6 +343,19 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
             Route::get('{hajjOmraPackage}/edit', [HajjOmraPackageController::class, 'edit'])->name('edit')->whereNumber('hajjOmraPackage');
             Route::match(['put', 'patch'], '{hajjOmraPackage}', [HajjOmraPackageController::class, 'update'])->name('update')->whereNumber('hajjOmraPackage');
             Route::delete('{hajjOmraPackage}', [HajjOmraPackageController::class, 'destroy'])->name('destroy')->whereNumber('hajjOmraPackage');
+        });
+
+        Route::prefix('products-services/economic-offers')->name('economic-offers.')->group(function () {
+            Route::get('/', [EconomicOfferController::class, 'index'])->name('index');
+            Route::get('create', [EconomicOfferController::class, 'create'])->name('create');
+            Route::post('/', [EconomicOfferController::class, 'store'])->name('store');
+            Route::get('requests', [EconomicOfferRequestController::class, 'index'])->name('requests.index');
+            Route::get('requests/{requestItem}', [EconomicOfferRequestController::class, 'show'])->name('requests.show')->whereNumber('requestItem');
+            Route::match(['put', 'patch'], 'requests/{requestItem}', [EconomicOfferRequestController::class, 'update'])->name('requests.update')->whereNumber('requestItem');
+            Route::get('{economicOffer}', [EconomicOfferController::class, 'show'])->name('show')->whereNumber('economicOffer');
+            Route::get('{economicOffer}/edit', [EconomicOfferController::class, 'edit'])->name('edit')->whereNumber('economicOffer');
+            Route::match(['put', 'patch'], '{economicOffer}', [EconomicOfferController::class, 'update'])->name('update')->whereNumber('economicOffer');
+            Route::delete('{economicOffer}', [EconomicOfferController::class, 'destroy'])->name('destroy')->whereNumber('economicOffer');
         });
 
         Route::get('activity-offers', [ActivityOfferController::class, 'index'])->name('activity-offers.index');

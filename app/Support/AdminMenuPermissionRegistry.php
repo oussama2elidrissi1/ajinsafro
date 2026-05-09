@@ -101,6 +101,8 @@ class AdminMenuPermissionRegistry
             'activities.availability.view' => ['accommodations.view'],
             'hajj-omra.view' => ['products-services.view'],
             'hajj-omra.requests.view' => ['products-services.view'],
+            'economic-offers.view' => ['products-services.view'],
+            'economic-offers.requests.view' => ['products-services.view'],
             'transfers.view' => ['circuits.tour-transfers.view'],
             'transfers.offers.view' => ['circuits.tour-transfers.view'],
             'transfers.vehicles.view' => ['circuits.tour-transfers.view'],

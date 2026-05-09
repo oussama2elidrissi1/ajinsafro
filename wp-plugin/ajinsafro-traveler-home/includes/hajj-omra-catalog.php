@@ -23,6 +23,91 @@ if ( ! function_exists( 'ajth_get_hajj_omra_page_url' ) ) {
 	}
 }
 
+if ( ! function_exists( 'ajth_hajj_omra_default_image_url' ) ) {
+	function ajth_hajj_omra_default_image_url() {
+		return trailingslashit( AJTH_URL ) . 'assets/images/fallback-hajj-omra.svg';
+	}
+}
+
+if ( ! function_exists( 'ajth_hajj_omra_normalize_image_url' ) ) {
+	function ajth_hajj_omra_normalize_image_url( $url ) {
+		$url = trim( (string) $url );
+		if ( '' === $url ) {
+			return '';
+		}
+
+		if ( function_exists( 'ajth_normalize_storage_url' ) ) {
+			$url = ajth_normalize_storage_url( $url );
+		}
+
+		return $url;
+	}
+}
+
+if ( ! function_exists( 'ajth_get_hajj_omra_detail_url' ) ) {
+	function ajth_get_hajj_omra_detail_url( $slug ) {
+		$slug = sanitize_title( (string) $slug );
+		if ( '' === $slug ) {
+			return ajth_get_hajj_omra_page_url();
+		}
+
+		return untrailingslashit( ajth_get_hajj_omra_page_url() ) . '/' . $slug . '/';
+	}
+}
+
+if ( ! function_exists( 'ajth_prepare_hajj_omra_package_payload' ) ) {
+	function ajth_prepare_hajj_omra_package_payload( array $package ) {
+		$slug = sanitize_title( (string) ( $package['slug'] ?? '' ) );
+
+		$main_image = ajth_hajj_omra_normalize_image_url( $package['main_image_url'] ?? '' );
+		$gallery    = array();
+
+		foreach ( (array) ( $package['gallery'] ?? array() ) as $image_url ) {
+			$image_url = ajth_hajj_omra_normalize_image_url( $image_url );
+			if ( '' !== $image_url ) {
+				$gallery[] = $image_url;
+			}
+		}
+
+		if ( '' !== $main_image ) {
+			array_unshift( $gallery, $main_image );
+		}
+
+		$gallery = array_values( array_unique( array_filter( $gallery ) ) );
+
+		if ( '' === $main_image ) {
+			$main_image = ! empty( $gallery[0] ) ? $gallery[0] : ajth_hajj_omra_default_image_url();
+		}
+
+		if ( empty( $gallery ) ) {
+			$gallery = array( $main_image );
+		}
+
+		$package['slug']           = $slug;
+		$package['main_image_url'] = $main_image;
+		$package['gallery']        = $gallery;
+		$package['detail_url']     = ajth_get_hajj_omra_detail_url( $slug );
+		$package['request_url']    = ajth_get_hajj_omra_detail_url( $slug ) . '#reservation-form';
+
+		if ( isset( $package['program_days'] ) && is_array( $package['program_days'] ) ) {
+			$package['program_days'] = array_map(
+				static function ( $day ) {
+					if ( ! is_array( $day ) ) {
+						return $day;
+					}
+
+					$day['image_url'] = ajth_hajj_omra_normalize_image_url( $day['image_url'] ?? '' );
+
+					return $day;
+				},
+				$package['program_days']
+			);
+		}
+
+		return $package;
+	}
+}
+
 if ( ! function_exists( 'ajth_is_hajj_omra_context' ) ) {
 	function ajth_is_hajj_omra_context() {
 		return is_page( 'hajj-omra' ) || (bool) get_query_var( 'ajth_hajj_omra_package' );
@@ -103,7 +188,12 @@ if ( ! function_exists( 'ajth_get_hajj_omra_packages' ) ) {
 		$payload = ajth_fetch_laravel_catalog_json( '/public/hajj-omra/packages', 'ajth_hajj_omra_packages_v1', 300 );
 		$items   = isset( $payload['data'] ) && is_array( $payload['data'] ) ? $payload['data'] : array();
 
-		return array_values( array_filter( $items, 'is_array' ) );
+		return array_values(
+			array_map(
+				'ajth_prepare_hajj_omra_package_payload',
+				array_filter( $items, 'is_array' )
+			)
+		);
 	}
 }
 
@@ -117,7 +207,7 @@ if ( ! function_exists( 'ajth_get_hajj_omra_package_by_slug' ) ) {
 		$payload = ajth_fetch_laravel_catalog_json( '/public/hajj-omra/packages/' . rawurlencode( $slug ), 'ajth_hajj_omra_package_' . $slug . '_v1', 180 );
 		$item    = isset( $payload['data'] ) && is_array( $payload['data'] ) ? $payload['data'] : null;
 
-		return is_array( $item ) ? $item : null;
+		return is_array( $item ) ? ajth_prepare_hajj_omra_package_payload( $item ) : null;
 	}
 }
 

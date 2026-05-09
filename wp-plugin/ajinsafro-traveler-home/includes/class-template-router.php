@@ -91,6 +91,13 @@ class AJTH_Template_Router {
             }
         }
 
+        if ( function_exists( 'ajth_is_economic_offers_context' ) && ajth_is_economic_offers_context() ) {
+            $economic_offers = AJTH_DIR . 'templates/economic-offers.php';
+            if ( file_exists( $economic_offers ) ) {
+                return $economic_offers;
+            }
+        }
+
         if ( function_exists( 'ajth_is_transfert_context' ) && ajth_is_transfert_context() ) {
             $transfert = AJTH_DIR . 'templates/transfert.php';
             if ( file_exists( $transfert ) ) {

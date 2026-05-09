@@ -1,0 +1,19 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" fill="#0D3555"/>
+  <rect y="520" width="1200" height="280" fill="#114F7C"/>
+  <circle cx="1005" cy="122" r="145" fill="#F37A1F" fill-opacity="0.18"/>
+  <circle cx="182" cy="149" r="118" fill="#FFFFFF" fill-opacity="0.08"/>
+  <path d="M253 562C363 473 487 430 620 430C753 430 877 473 987 562V800H253V562Z" fill="#F4F8FB" fill-opacity="0.12"/>
+  <path d="M589 138L634 267H770L660 347L705 476L589 396L473 476L518 347L408 267H544L589 138Z" fill="#F37A1F"/>
+  <path d="M527 273H651V572H527V273Z" fill="#FFFFFF"/>
+  <path d="M475 352H703V395H475V352Z" fill="#DCEAF4"/>
+  <path d="M462 572H716V616H462V572Z" fill="#FFFFFF"/>
+  <path d="M386 616H792V800H386V616Z" fill="#FFFFFF"/>
+  <path d="M548 442H630V520H548V442Z" fill="#DCEAF4"/>
+  <path d="M758 254C758 209.265 794.265 173 839 173H912C956.735 173 993 209.265 993 254V408H758V254Z" fill="#FFFFFF" fill-opacity="0.95"/>
+  <path d="M207 238C207 193.265 243.265 157 288 157H361C405.735 157 442 193.265 442 238V408H207V238Z" fill="#FFFFFF" fill-opacity="0.95"/>
+  <rect x="207" y="408" width="235" height="24" fill="#F37A1F"/>
+  <rect x="758" y="408" width="235" height="24" fill="#F37A1F"/>
+  <text x="600" y="686" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="48" font-weight="700" text-anchor="middle">Hajj &amp; Omra</text>
+  <text x="600" y="738" fill="#DCEAF4" font-family="Arial, sans-serif" font-size="26" font-weight="400" text-anchor="middle">Ajinsafro</text>
+</svg>

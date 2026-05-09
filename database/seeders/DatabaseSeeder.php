@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             ActivityOfferSeeder::class,
             GroupDealsSeeder::class,
             HajjOmraSeeder::class,
+            EconomicOfferSeeder::class,
         ]);
     }
 }

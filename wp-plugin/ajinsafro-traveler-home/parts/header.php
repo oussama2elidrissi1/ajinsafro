@@ -46,10 +46,13 @@ $group_deals_page_url = function_exists( 'ajth_get_group_deals_url' )
 $hajj_omra_page_url = function_exists( 'ajth_get_hajj_omra_page_url' )
     ? ajth_get_hajj_omra_page_url()
     : home_url( '/hajj-omra/' );
+$economic_offers_page_url = function_exists( 'ajth_get_economic_offers_page_url' )
+    ? ajth_get_economic_offers_page_url()
+    : home_url( '/formule-economique/' );
 $public_login_url = home_url( '/login/' );
 $public_signup_url = home_url( '/register/' );
 $maintenance_url = function_exists( 'ajth_get_maintenance_url' ) ? ajth_get_maintenance_url() : home_url( '/maintenance/' );
-$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $voyages_page_url, $hebergement_page_url, $activites_page_url, $transfert_page_url, $group_deals_page_url, $hajj_omra_page_url ) {
+$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $voyages_page_url, $hebergement_page_url, $activites_page_url, $transfert_page_url, $group_deals_page_url, $hajj_omra_page_url, $economic_offers_page_url ) {
     $url_value = trim( (string) $url );
     $label_value = is_string( $label ) ? trim( wp_strip_all_tags( $label ) ) : '';
     if ( $label_value !== '' && function_exists( 'remove_accents' ) ) {
@@ -82,6 +85,9 @@ $resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $vo
         if ( in_array( $label_value, array( 'hajj & omra', 'hajj', 'omra' ), true ) ) {
             return $hajj_omra_page_url;
         }
+        if ( in_array( $label_value, array( 'formule low cost', 'low cost', 'formule economique', 'economique' ), true ) ) {
+            return $economic_offers_page_url;
+        }
     }
     if ( $is_placeholder && function_exists( 'ajth_is_under_construction_label' ) && ajth_is_under_construction_label( $label ) ) {
         return $maintenance_url;
@@ -94,6 +100,7 @@ $is_hebergement_page = function_exists( 'ajth_is_hebergement_context' ) ? ajth_i
 $is_activites_page   = function_exists( 'ajth_is_activites_context' )   ? ajth_is_activites_context()   : false;
 $is_group_deals_page = function_exists( 'ajth_is_group_deals_context' ) ? ajth_is_group_deals_context() : is_page( 'group-deals' );
 $is_hajj_omra_page   = function_exists( 'ajth_is_hajj_omra_context' )   ? ajth_is_hajj_omra_context()   : is_page( 'hajj-omra' );
+$is_economic_offers_page = function_exists( 'ajth_is_economic_offers_context' ) ? ajth_is_economic_offers_context() : ( is_page( 'formule-economique' ) || is_page( 'low-cost' ) );
 
 
 $title_icon_map = array(
@@ -117,6 +124,10 @@ $title_icon_map = array(
     'group deal'   => 'fas fa-users',
     'votre guide'  => 'fas fa-users',
     'guide'        => 'fas fa-users',
+    'formule low cost' => 'fas fa-tags',
+    'low cost'        => 'fas fa-tags',
+    'formule economique' => 'fas fa-tags',
+    'economique'      => 'fas fa-tags',
     'accueil'      => 'fas fa-home',
     'contact'      => 'fas fa-envelope',
     'blog'         => 'fas fa-blog',
@@ -421,9 +432,9 @@ if ( empty( $GLOBALS['ajth_header_hide_transfert_nav_filter'] ) ) {
                 <!-- Low Cost Button (inside drawer for mobile) -->
                 <?php if ( ! empty( $hdr['lowcost_enabled'] ) ) : ?>
                 <div class="aj-drawer__lowcost">
-                    <a href="<?php echo esc_url( $resolve_menu_url( 'Formule low cost', ! empty( $hdr['lowcost_url'] ) ? $hdr['lowcost_url'] : '' ) ); ?>" class="aj-lowcost-btn">
+                    <a href="<?php echo esc_url( $resolve_menu_url( 'Formule low cost', ! empty( $hdr['lowcost_url'] ) ? $hdr['lowcost_url'] : $economic_offers_page_url ) ); ?>" class="aj-lowcost-btn">
                         <i class="fas fa-fire"></i>
-                        <span><?php echo esc_html( ! empty( $hdr['lowcost_text'] ) ? $hdr['lowcost_text'] : 'Formule low cost' ); ?></span>
+                        <span><?php echo esc_html( ! empty( $hdr['lowcost_text'] ) ? $hdr['lowcost_text'] : 'Formule Économique' ); ?></span>
                     </a>
                 </div>
                 <?php endif; ?>
@@ -432,9 +443,9 @@ if ( empty( $GLOBALS['ajth_header_hide_transfert_nav_filter'] ) ) {
             <!-- Low Cost Button (Desktop) -->
             <?php if ( ! empty( $hdr['lowcost_enabled'] ) ) : ?>
             <div class="aj-navbar__lowcost aj-header__lowcost--desktop">
-                <a href="<?php echo esc_url( $resolve_menu_url( 'Formule low cost', ! empty( $hdr['lowcost_url'] ) ? $hdr['lowcost_url'] : '' ) ); ?>" class="aj-lowcost-btn aj-lowcost-btn--animate">
+                <a href="<?php echo esc_url( $resolve_menu_url( 'Formule low cost', ! empty( $hdr['lowcost_url'] ) ? $hdr['lowcost_url'] : $economic_offers_page_url ) ); ?>" class="aj-lowcost-btn aj-lowcost-btn--animate">
                     <i class="fas fa-fire aj-lowcost-btn__icon"></i>
-                    <span><?php echo esc_html( ! empty( $hdr['lowcost_text'] ) ? $hdr['lowcost_text'] : 'Formule low cost' ); ?></span>
+                    <span><?php echo esc_html( ! empty( $hdr['lowcost_text'] ) ? $hdr['lowcost_text'] : 'Formule Économique' ); ?></span>
                 </a>
             </div>
             <?php endif; ?>
