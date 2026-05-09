@@ -64,7 +64,8 @@ class LoginRedirectService
             'Super Admin',
             'Admin Siège',
         ]) || $user->isComptable() || $user->is_admin) {
-            return $adminUrl . '/admin/dashboard';
+            // Default admin dashboard (professional vue-globale page)
+            return $adminUrl . '/admin/dashboard/vue-globale';
         }
 
         // Commercial roles
