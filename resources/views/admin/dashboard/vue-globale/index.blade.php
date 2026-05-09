@@ -463,6 +463,13 @@
     .aj-dashboard-view .stretched-link { position: relative; }
     .aj-dashboard-view .stretched-link::after { content: ''; position: absolute; inset: 0; }
 
+    /* Bootstrap integration */
+    .aj-dashboard-view .table-responsive { overflow-x: auto; }
+    .aj-dashboard-view .btn-outline-primary { border-color: var(--dash-blue); color: var(--dash-blue); }
+    .aj-dashboard-view .btn-outline-primary:hover { background-color: var(--dash-blue-soft); }
+    .aj-dashboard-view .shadow-sm { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+    .aj-dashboard-view .border-0 { border: none; }
+
     /* Responsive Design */
     @media (max-width: 1200px) {
         .aj-dashboard-view .status-grid {
