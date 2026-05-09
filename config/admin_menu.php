@@ -11,6 +11,7 @@ return [
                 ['label' => 'Vue d\'ensemble', 'route' => 'admin.dashboard.vue-globale', 'permission' => 'dashboard.overview.view'],
                 ['label' => 'Statistiques', 'route' => 'admin.dashboard.statistiques', 'permission' => 'dashboard.stats.view'],
                 ['label' => 'Alertes', 'route' => 'admin.dashboard.alertes', 'permission' => 'dashboard.alerts.view'],
+                ['label' => 'Dashboard V2', 'route' => 'admin.dashboard.v2', 'permission' => 'dashboard.overview.view'],
             ],
         ],
         [

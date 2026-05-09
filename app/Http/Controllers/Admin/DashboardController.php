@@ -216,4 +216,17 @@ class DashboardController extends Controller
             'canSeeAllBranches' => $canSeeAllBranches,
         ]);
     }
+
+    /**
+     * Dashboard V2 — page autonome avec design dashboard.html.
+     * Réutilise les mêmes données que vueGlobale() en appelant la sous-réponse.
+     * Ne touche pas à vueGlobale() — capture juste sa data via View::getData().
+     */
+    public function v2(Request $request)
+    {
+        $response = $this->vueGlobale($request);
+        $data = $response->getData();
+
+        return view('admin.dashboard.v2.index', $data);
+    }
 }
