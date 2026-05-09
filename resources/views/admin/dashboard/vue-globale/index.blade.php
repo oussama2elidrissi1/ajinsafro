@@ -778,6 +778,7 @@
 @endpush
 
 @section('content')
+{{-- DIAG_MARKER: DASHBOARD_VIEW_ACTIVE [admin.dashboard.vue-globale.index] rendered at {{ now('Africa/Casablanca')->format('Y-m-d H:i:s T') }} --}}
 @php
     $now      = \Carbon\Carbon::now('Africa/Casablanca')->locale('fr');
     $dateLong = $now->translatedFormat('l d F Y');

@@ -85,6 +85,7 @@
     <!-- Begin page -->
     <div class="container-fluid">
         <div id="layout-wrapper">
+            <!-- DIAG_MARKER: MASTER_LAYOUT_TRADITIONAL_PATH file=resources/views/layouts/master-ajinsafro.blade.php -->
             @include('layouts.partials.admin-topbar')
             @include('layouts.partials.sidebar-ajinsafro')
             <div class="main-content">

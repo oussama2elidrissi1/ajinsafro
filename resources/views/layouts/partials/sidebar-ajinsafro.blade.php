@@ -1,4 +1,5 @@
 <!-- ========== Left Sidebar Start (AjinsAfro) ========== -->
+<!-- DIAG_MARKER: SIDEBAR_AJINSAFRO_RENDER_BEGIN [{{ \Illuminate\Support\Str::random(6) }}] file=resources/views/layouts/partials/sidebar-ajinsafro.blade.php -->
 @php
     $adminBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $adminBrandLogoDarkUrl = \App\Models\Setting::brandLogoUrl('dark');
@@ -54,6 +55,7 @@
         </div>
     </div>
 </div>
+<!-- DIAG_MARKER: SIDEBAR_AJINSAFRO_RENDER_END -->
 <!-- Left Sidebar End -->
 
 @push('body-end')
