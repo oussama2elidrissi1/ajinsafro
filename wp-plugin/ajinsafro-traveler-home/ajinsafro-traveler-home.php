@@ -125,11 +125,12 @@ function ajth_enqueue_front_assets()
     );
 
     if ( function_exists( 'ajth_is_hebergement_context' ) && ajth_is_hebergement_context() ) {
+        $hebergement_css_path = AJTH_DIR . 'assets/css/hebergement-booking.css';
         wp_enqueue_style(
             'ajth-hebergement-booking-css',
             AJTH_URL . 'assets/css/hebergement-booking.css',
             ['ajth-home-css'],
-            AJTH_VERSION
+            file_exists( $hebergement_css_path ) ? filemtime( $hebergement_css_path ) : AJTH_VERSION
         );
 
         wp_enqueue_script(
@@ -1142,6 +1143,7 @@ function ajth_is_hebergement_context()
 {
     return is_page('hebergement')
         || get_query_var('ajth_hebergement_pack')
+        || is_singular('st_hotel')
         || is_post_type_archive('st_hotel')
         || (is_search() && get_query_var('post_type') === 'st_hotel');
 }
