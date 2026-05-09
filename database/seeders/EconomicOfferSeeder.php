@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\EconomicOffer;
+use App\Models\EconomicOfferImage;
 use Illuminate\Database\Seeder;
 
 class EconomicOfferSeeder extends Seeder
@@ -236,11 +237,17 @@ class EconomicOfferSeeder extends Seeder
 
             unset($payload['departures'], $payload['prices']);
 
+            // Set default fallback image if not provided
+            if (empty($payload['fallback_image'])) {
+                $payload['fallback_image'] = 'https://via.placeholder.com/800x600?text=' . urlencode(substr($payload['title'], 0, 20));
+            }
+
             $offer = EconomicOffer::updateOrCreate(
                 ['slug' => $payload['slug']],
                 $payload
             );
 
+            // Create departures
             $offer->departures()->delete();
             foreach ($departures as $index => $departure) {
                 $offer->departures()->create(array_merge($departure, [
@@ -248,12 +255,42 @@ class EconomicOfferSeeder extends Seeder
                 ]));
             }
 
+            // Create prices
             $offer->prices()->delete();
             foreach ($prices as $index => $price) {
                 $offer->prices()->create(array_merge($price, [
                     'sort_order' => $index + 1,
                 ]));
             }
+
+            // Create offer images with fallback
+            $offer->images()->delete();
+            $mainImages = [
+                'omra-economique-12-jours' => 'https://images.unsplash.com/photo-1591539411215-34d9b46f52e1?w=800&h=600&fit=crop',
+                'sejour-marrakech-economique-4-jours' => 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop',
+                'pack-dakhla-economique' => 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop',
+                'activite-quad-marrakech' => 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800&h=600&fit=crop',
+                'voyage-istanbul-economique' => 'https://images.unsplash.com/photo-1524231691633-503fc2b646c7?w=800&h=600&fit=crop',
+                'offre-derniere-minute-agadir' => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop',
+            ];
+
+            // Create main image
+            if (isset($mainImages[$payload['slug']])) {
+                EconomicOfferImage::create([
+                    'offer_id' => $offer->id,
+                    'image_path' => $mainImages[$payload['slug']],
+                    'alt_text' => $payload['title'],
+                    'sort_order' => 1,
+                ]);
+            }
+
+            // Create fallback image
+            EconomicOfferImage::create([
+                'offer_id' => $offer->id,
+                'image_path' => $payload['fallback_image'],
+                'alt_text' => $payload['title'] . ' - Image secondaire',
+                'sort_order' => 2,
+            ]);
 
             $offer->refresh();
             $offer->save();
