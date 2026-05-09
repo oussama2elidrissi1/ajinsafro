@@ -8,4 +8,5 @@
 <link href="{{ URL::asset('css/admin-branding.css') }}" rel="stylesheet" type="text/css" />
 <link href="{{ URL::asset('css/internal-v2-layout.css') }}" rel="stylesheet" type="text/css" />
 <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ URL::asset('css/dashboard-professional.css') }}" rel="stylesheet" type="text/css" />
+<!-- Dashboard Professional CSS DISABLED - use Blade @push('css') instead to avoid global layout conflicts -->
+{{-- <link href="{{ URL::asset('css/dashboard-professional.css') }}" rel="stylesheet" type="text/css" /> --}}

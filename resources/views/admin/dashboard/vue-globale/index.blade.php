@@ -6,21 +6,26 @@
 
 @push('css')
 <style>
-    .dashboard-card {
+    /* Scope all dashboard styles to this container only */
+    .aj-dashboard-view {
+        background: #f6f9fc;
+    }
+
+    .aj-dashboard-view .dashboard-card {
         transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
 
-    .dashboard-card:hover {
+    .aj-dashboard-view .dashboard-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 16px 45px rgba(15, 45, 75, 0.12);
     }
 
-    .dashboard-card .card-body {
+    .aj-dashboard-view .dashboard-card .card-body {
         position: relative;
         overflow: hidden;
     }
 
-    .dashboard-card .card-body::before {
+    .aj-dashboard-view .dashboard-card .card-body::before {
         content: '';
         position: absolute;
         top: 0;
@@ -31,7 +36,7 @@
         opacity: 0.06;
     }
 
-    .page-title-box {
+    .aj-dashboard-view .page-title-box {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -39,49 +44,49 @@
         margin-bottom: 28px;
     }
 
-    .page-title-box > div:first-child {
+    .aj-dashboard-view .page-title-box > div:first-child {
         flex: 1;
     }
 
-    .page-title h4 {
+    .aj-dashboard-view .page-title h4 {
         font-size: 32px;
         font-weight: 900;
         color: #172b4d;
         margin: 0;
     }
 
-    .page-title p {
+    .aj-dashboard-view .page-title p {
         color: #71829a;
         font-weight: 500;
         font-size: 14px;
         margin: 0;
     }
 
-    .g-3 {
+    .aj-dashboard-view .g-3 {
         --bs-gutter-x: 20px;
         --bs-gutter-y: 20px;
     }
 
-    .mb-4 {
+    .aj-dashboard-view .mb-4 {
         margin-bottom: 22px;
     }
 
-    .mb-3 {
+    .aj-dashboard-view .mb-3 {
         margin-bottom: 18px;
     }
 
     /* KPI Cards */
-    .kpi-card-content {
+    .aj-dashboard-view .kpi-card-content {
         display: flex;
         align-items: flex-start;
         gap: 16px;
     }
 
-    .kpi-data {
+    .aj-dashboard-view .kpi-data {
         flex: 1;
     }
 
-    .kpi-label {
+    .aj-dashboard-view .kpi-label {
         color: #61728a;
         font-size: 12px;
         font-weight: 700;
@@ -90,25 +95,25 @@
         margin-bottom: 8px;
     }
 
-    .kpi-value {
+    .aj-dashboard-view .kpi-value {
         font-size: 36px;
         font-weight: 900;
         color: #172b4d;
         margin-bottom: 8px;
     }
 
-    .kpi-footer-text {
+    .aj-dashboard-view .kpi-footer-text {
         font-size: 13px;
         color: #71829a;
         font-weight: 600;
     }
 
     /* Widget styling */
-    .widget-box {
+    .aj-dashboard-view .widget-box {
         padding: 24px;
     }
 
-    .widget-title {
+    .aj-dashboard-view .widget-title {
         font-size: 16px;
         font-weight: 700;
         color: #172b4d;
@@ -118,20 +123,20 @@
     }
 
     /* Progress bars */
-    .stat-progress {
+    .aj-dashboard-view .stat-progress {
         height: 8px;
         border-radius: 999px;
         background: #edf2f7;
         overflow: hidden;
     }
 
-    .stat-progress .progress-bar {
+    .aj-dashboard-view .stat-progress .progress-bar {
         border-radius: inherit;
         transition: width 0.3s ease;
     }
 
     /* Metric rows */
-    .metric-row {
+    .aj-dashboard-view .metric-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -141,28 +146,28 @@
         color: #71829a;
     }
 
-    .metric-row strong {
+    .aj-dashboard-view .metric-row strong {
         color: #172b4d;
         font-weight: 700;
     }
 
-    .metric-row:last-child {
+    .aj-dashboard-view .metric-row:last-child {
         border-bottom: none;
     }
 
     /* Status grid */
-    .status-grid {
+    .aj-dashboard-view .status-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 28px;
     }
 
-    .status-item {
+    .aj-dashboard-view .status-item {
         display: grid;
         gap: 9px;
     }
 
-    .status-line {
+    .aj-dashboard-view .status-line {
         display: flex;
         justify-content: space-between;
         font-weight: 700;
@@ -170,7 +175,7 @@
         font-size: 14px;
     }
 
-    .activity-dot {
+    .aj-dashboard-view .activity-dot {
         display: inline-block;
         width: 9px;
         height: 9px;
@@ -180,25 +185,25 @@
     }
 
     /* Charts */
-    .chart-container {
+    .aj-dashboard-view .chart-container {
         min-height: 320px;
     }
 
-    .apex-charts {
+    .aj-dashboard-view .apex-charts {
         min-height: inherit;
     }
 
     /* Table enhancements */
-    .table-dashboard {
+    .aj-dashboard-view .table-dashboard {
         font-size: 13px;
         margin-bottom: 0;
     }
 
-    .table-dashboard thead {
+    .aj-dashboard-view .table-dashboard thead {
         background: #f7fbff;
     }
 
-    .table-dashboard th {
+    .aj-dashboard-view .table-dashboard th {
         color: #66758a;
         font-size: 11px;
         text-transform: uppercase;
@@ -208,7 +213,7 @@
         border-bottom: 1px solid #e6edf5;
     }
 
-    .table-dashboard td {
+    .aj-dashboard-view .table-dashboard td {
         padding: 14px 16px;
         border-bottom: 1px solid #edf2f7;
         color: #42556d;
@@ -216,26 +221,26 @@
         vertical-align: middle;
     }
 
-    .table-dashboard tbody tr {
+    .aj-dashboard-view .table-dashboard tbody tr {
         transition: background 0.2s ease;
     }
 
-    .table-dashboard tbody tr:hover {
+    .aj-dashboard-view .table-dashboard tbody tr:hover {
         background: rgba(11, 104, 209, 0.04);
     }
 
-    .table-dashboard tbody tr:last-child td {
+    .aj-dashboard-view .table-dashboard tbody tr:last-child td {
         border-bottom: none;
     }
 
-    .client-name {
+    .aj-dashboard-view .client-name {
         font-weight: 700;
         color: #172b4d;
         display: block;
         margin-bottom: 4px;
     }
 
-    .client-email {
+    .aj-dashboard-view .client-email {
         color: #71829a;
         font-size: 12px;
         display: block;
@@ -247,16 +252,16 @@
     }
 
     /* Animations */
-    .animate-fade-in {
+    .aj-dashboard-view .animate-fade-in {
         animation: dashFadeIn 0.5s ease forwards;
     }
 
-    .animate-fade-in.delay-1 { animation-delay: 0.08s; opacity: 0; }
-    .animate-fade-in.delay-2 { animation-delay: 0.16s; opacity: 0; }
-    .animate-fade-in.delay-3 { animation-delay: 0.24s; opacity: 0; }
-    .animate-fade-in.delay-4 { animation-delay: 0.32s; opacity: 0; }
-    .animate-fade-in.delay-5 { animation-delay: 0.40s; opacity: 0; }
-    .animate-fade-in.delay-6 { animation-delay: 0.48s; opacity: 0; }
+    .aj-dashboard-view .animate-fade-in.delay-1 { animation-delay: 0.08s; opacity: 0; }
+    .aj-dashboard-view .animate-fade-in.delay-2 { animation-delay: 0.16s; opacity: 0; }
+    .aj-dashboard-view .animate-fade-in.delay-3 { animation-delay: 0.24s; opacity: 0; }
+    .aj-dashboard-view .animate-fade-in.delay-4 { animation-delay: 0.32s; opacity: 0; }
+    .aj-dashboard-view .animate-fade-in.delay-5 { animation-delay: 0.40s; opacity: 0; }
+    .aj-dashboard-view .animate-fade-in.delay-6 { animation-delay: 0.48s; opacity: 0; }
 
     @keyframes dashFadeIn {
         from {
@@ -271,26 +276,26 @@
 
     /* Responsive */
     @media (max-width: 1200px) {
-        .status-grid {
+        .aj-dashboard-view .status-grid {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 
     @media (max-width: 768px) {
-        .page-title-box {
+        .aj-dashboard-view .page-title-box {
             flex-direction: column;
             align-items: flex-start;
         }
 
-        .page-title h4 {
+        .aj-dashboard-view .page-title h4 {
             font-size: 24px;
         }
 
-        .status-grid {
+        .aj-dashboard-view .status-grid {
             grid-template-columns: 1fr;
         }
 
-        .table-responsive {
+        .aj-dashboard-view .table-responsive {
             font-size: 12px;
         }
     }
@@ -298,6 +303,7 @@
 @endpush
 
 @section('content')
+<div class="aj-dashboard-view">
 <div class="row mb-3">
     <div class="col-12">
         <div class="page-title-box">
@@ -691,7 +697,7 @@
             </div>
         </div>
     </div>
-</div>
+</div><!-- End .aj-dashboard-view -->
 @endsection
 
 @push('script')
