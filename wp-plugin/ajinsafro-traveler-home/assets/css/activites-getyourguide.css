@@ -45,7 +45,7 @@
 .aj-activities-shell { width: 100%; }
 
 .aj-activities-container {
-    width: min(1280px, calc(100% - 32px));
+    width: min(1280px, calc(100% - 48px));
     margin: 0 auto;
 }
 
@@ -1176,7 +1176,7 @@ body.aj-mobile-filters-open { overflow: hidden; }
 
 @media (max-width: 640px) {
     .aj-activities-static { padding: 18px 0 84px; }
-    .aj-activities-container { width: min(100% - 20px, 1280px); }
+    .aj-activities-container { width: calc(100% - 32px); }
     .aj-hero-search,
     .aj-filter-grid,
     .aj-card-actions { grid-template-columns: 1fr; }
@@ -1193,4 +1193,10 @@ body.aj-mobile-filters-open { overflow: hidden; }
     .aj-activity-detail-copy h1 { font-size: 1.9rem; }
     .aj-activity-detail-actions { flex-direction: column; }
     .aj-activity-detail-actions a { width: 100%; }
+}
+
+@media (max-width: 767px) {
+    .aj-mobile-filter-trigger {
+        bottom: 80px;
+    }
 }

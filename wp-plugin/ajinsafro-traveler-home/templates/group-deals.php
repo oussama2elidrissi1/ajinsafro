@@ -546,7 +546,7 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
     <div id="aj-home" class="aj-home aj-groupdeals-page">
         <?php ajth_render_site_header($settings); ?>
 
-        <div class="aj-groupdeals-fusion" id="aj-groupdeals-fusion">
+        <div class="aj-groupdeals-fusion ajinsafro-page-container" id="aj-groupdeals-fusion">
             <?php if ($current_group_deal) {
                 $cd = $current_group_deal;
                 $cd_slug = $cd['slug'];

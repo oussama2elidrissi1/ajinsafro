@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\PublicPackageController;
+use App\Http\Controllers\Api\PublicHajjOmraBookingRequestController;
+use App\Http\Controllers\Api\PublicHajjOmraPackageController;
 use App\Http\Controllers\Api\PublicToursListController;
 use App\Http\Controllers\Api\AccommodationPackageController;
 use App\Http\Controllers\Api\ActivityOfferController;
@@ -45,6 +47,13 @@ Route::post('/group-deals/{slug}/participate', [\App\Http\Controllers\Front\Grou
 |--------------------------------------------------------------------------
 */
 Route::prefix('public')->name('api.public.')->group(function () {
+    Route::get('hajj-omra/packages', [PublicHajjOmraPackageController::class, 'index'])
+        ->name('hajj-omra.packages.index');
+    Route::get('hajj-omra/packages/{slug}', [PublicHajjOmraPackageController::class, 'show'])
+        ->name('hajj-omra.packages.show');
+    Route::post('hajj-omra/packages/{slug}/booking-requests', [PublicHajjOmraBookingRequestController::class, 'store'])
+        ->name('hajj-omra.packages.booking-requests.store');
+
     // List all active tours
     Route::get('tours', [PublicToursListController::class, 'index'])
         ->name('tours.index');

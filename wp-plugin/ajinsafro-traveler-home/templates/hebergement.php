@@ -324,7 +324,7 @@ if (is_singular('st_hotel')) {
         <div class="aj-home aj-hebergement-booking aj-hebergement-single">
             <?php ajth_render_site_header($settings); ?>
 
-            <main class="aj-hebergement-shell aj-hebergement-single-shell">
+            <main class="aj-hebergement-shell aj-hebergement-single-shell ajinsafro-page-container">
                 <div class="aj-hebergement-container">
                     <nav class="aj-hebergement-breadcrumb" aria-label="Fil d’Ariane">
                         <a href="<?php echo esc_url(home_url('/')); ?>">Accueil</a>
@@ -704,7 +704,7 @@ if ($current_pack) {
         <div class="aj-home aj-hebergement-booking-page">
             <?php ajth_render_site_header($settings); ?>
 
-            <main class="aj-hebergement-shell aj-pack-page-shell">
+            <main class="aj-hebergement-shell aj-pack-page-shell ajinsafro-page-container">
                 <div class="aj-hebergement-container aj-pack-page-container">
                     <nav class="aj-hebergement-breadcrumb" aria-label="Fil d'Ariane">
                         <a href="<?php echo esc_url(home_url('/')); ?>">Accueil</a>
@@ -877,7 +877,7 @@ if ($current_pack) {
     <div id="aj-home" class="aj-home aj-hebergement-booking-page">
         <?php ajth_render_site_header($settings); ?>
 
-        <div class="aj-hebergement-booking" id="aj-hebergement-booking">
+        <div class="aj-hebergement-booking ajinsafro-page-container" id="aj-hebergement-booking">
             <main class="aj-hebergement-shell">
                 <div class="aj-hebergement-container">
                     <nav class="aj-hebergement-breadcrumb" aria-label="Fil d'Ariane">

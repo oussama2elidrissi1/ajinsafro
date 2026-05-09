@@ -1,0 +1,74 @@
+.page-hajj-omra-ajinsafro .ajho-shell{font-family:'Poppins','Segoe UI',sans-serif;background:linear-gradient(180deg,#f8fafc 0%,#eef4f9 100%);color:#0f172a}
+.page-hajj-omra-ajinsafro .ajho-container{max-width:1280px;margin:0 auto;padding:0 20px}
+.page-hajj-omra-ajinsafro .ajho-hero{position:relative;background:linear-gradient(135deg,#0b2742,#0f5c86);background-size:cover;background-position:center;padding:72px 0 54px;overflow:hidden}
+.page-hajj-omra-ajinsafro .ajho-hero__overlay{position:absolute;inset:0;background:linear-gradient(120deg,rgba(8,22,40,.84),rgba(14,83,121,.72))}
+.page-hajj-omra-ajinsafro .ajho-hero__content{position:relative;z-index:1}
+.page-hajj-omra-ajinsafro .ajho-hero h1{margin:0 0 14px;color:#fff;font-size:clamp(2rem,4vw,3.6rem);font-weight:800;letter-spacing:-.04em}
+.page-hajj-omra-ajinsafro .ajho-hero p{max-width:760px;margin:0;color:rgba(255,255,255,.88);font-size:1.02rem;line-height:1.75}
+.page-hajj-omra-ajinsafro .ajho-back-link{display:inline-flex;margin-bottom:20px;color:#fff;text-decoration:none;font-weight:700}
+.page-hajj-omra-ajinsafro .ajho-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-top:28px;padding:18px;background:rgba(255,255,255,.12);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);border-radius:24px}
+.page-hajj-omra-ajinsafro .ajho-filters select,.page-hajj-omra-ajinsafro .ajho-filters input,.page-hajj-omra-ajinsafro .ajho-request-form input,.page-hajj-omra-ajinsafro .ajho-request-form select,.page-hajj-omra-ajinsafro .ajho-request-form textarea{width:100%;min-height:52px;padding:0 16px;border:1px solid #d6e1ea;border-radius:16px;background:#fff;color:#102340;font-size:.95rem}
+.page-hajj-omra-ajinsafro .ajho-request-form textarea{padding:14px 16px;min-height:124px}
+.page-hajj-omra-ajinsafro .ajho-filters button,.page-hajj-omra-ajinsafro .ajho-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;border-radius:16px;border:0;font-weight:700;text-decoration:none;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
+.page-hajj-omra-ajinsafro .ajho-btn--primary,.page-hajj-omra-ajinsafro .ajho-filters button{background:linear-gradient(135deg,#f59e0b,#ea580c);color:#fff;box-shadow:0 14px 28px rgba(234,88,12,.2)}
+.page-hajj-omra-ajinsafro .ajho-btn--secondary{background:#fff;color:#0f4c75;border:1px solid #d6e1ea}
+.page-hajj-omra-ajinsafro .ajho-btn:hover,.page-hajj-omra-ajinsafro .ajho-filters button:hover{transform:translateY(-1px)}
+.page-hajj-omra-ajinsafro .ajho-content{padding:34px 20px 72px}
+.page-hajj-omra-ajinsafro .ajho-alert{margin-bottom:18px;padding:16px 18px;border-radius:18px;font-weight:600}
+.page-hajj-omra-ajinsafro .ajho-alert.is-success{background:#eafbf1;color:#137333;border:1px solid #b7e4c7}
+.page-hajj-omra-ajinsafro .ajho-alert.is-error{background:#fff2f0;color:#b42318;border:1px solid #fecdca}
+.page-hajj-omra-ajinsafro .ajho-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:24px}
+.page-hajj-omra-ajinsafro .ajho-stats div,.page-hajj-omra-ajinsafro .ajho-empty,.page-hajj-omra-ajinsafro .ajho-panel,.page-hajj-omra-ajinsafro .ajho-summary-card,.page-hajj-omra-ajinsafro .ajho-card{background:rgba(255,255,255,.96);border:1px solid #deebf4;border-radius:24px;box-shadow:0 18px 45px rgba(15,23,42,.06)}
+.page-hajj-omra-ajinsafro .ajho-stats div{padding:20px 24px}
+.page-hajj-omra-ajinsafro .ajho-stats strong{display:block;font-size:2rem;color:#0f4c75}
+.page-hajj-omra-ajinsafro .ajho-stats span{display:block;margin-top:6px;color:#61758a;font-weight:600}
+.page-hajj-omra-ajinsafro .ajho-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.page-hajj-omra-ajinsafro .ajho-card{display:flex;flex-direction:column;overflow:hidden}
+.page-hajj-omra-ajinsafro .ajho-card__media{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#dce8f3,#f3f7fb)}
+.page-hajj-omra-ajinsafro .ajho-card__media img{width:100%;height:100%;object-fit:cover;display:block}
+.page-hajj-omra-ajinsafro .ajho-chip{position:absolute;top:16px;left:16px;display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;font-size:.75rem;font-weight:800}
+.page-hajj-omra-ajinsafro .ajho-chip--type{background:rgba(255,255,255,.92);color:#0f4c75}
+.page-hajj-omra-ajinsafro .ajho-chip.is-available,.page-hajj-omra-ajinsafro .ajho-chip.is-limited,.page-hajj-omra-ajinsafro .ajho-chip.is-full,.page-hajj-omra-ajinsafro .ajho-chip.is-expired{left:auto;right:16px}
+.page-hajj-omra-ajinsafro .ajho-chip.is-available{background:#eafbf1;color:#137333}
+.page-hajj-omra-ajinsafro .ajho-chip.is-limited{background:#fff4db;color:#b45309}
+.page-hajj-omra-ajinsafro .ajho-chip.is-full{background:#fff2f0;color:#b42318}
+.page-hajj-omra-ajinsafro .ajho-chip.is-expired{background:#eceff3;color:#475467}
+.page-hajj-omra-ajinsafro .ajho-card__body{padding:22px 22px 18px}
+.page-hajj-omra-ajinsafro .ajho-card__body h3{margin:0 0 10px;font-size:1.28rem;color:#102340}
+.page-hajj-omra-ajinsafro .ajho-card__body p{margin:0;color:#526477;line-height:1.75}
+.page-hajj-omra-ajinsafro .ajho-card__facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0 0;padding:0;list-style:none}
+.page-hajj-omra-ajinsafro .ajho-card__facts li{padding:10px 12px;border-radius:14px;background:#f5f8fb;color:#344256;font-size:.88rem;font-weight:600}
+.page-hajj-omra-ajinsafro .ajho-card__footer{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:0 22px 22px;margin-top:auto}
+.page-hajj-omra-ajinsafro .ajho-card__footer small,.page-hajj-omra-ajinsafro .ajho-card__footer span{display:block;color:#61758a}
+.page-hajj-omra-ajinsafro .ajho-card__footer strong{display:block;margin:4px 0 2px;font-size:1.4rem;color:#0f4c75}
+.page-hajj-omra-ajinsafro .ajho-card__actions{display:flex;flex-direction:column;gap:10px;min-width:210px}
+.page-hajj-omra-ajinsafro .ajho-empty{padding:38px;text-align:center}
+.page-hajj-omra-ajinsafro .ajho-empty h2{margin:0 0 10px}
+.page-hajj-omra-ajinsafro .ajho-empty p{margin:0 0 20px;color:#61758a}
+.page-hajj-omra-ajinsafro .ajho-detail{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(320px,.8fr);gap:24px}
+.page-hajj-omra-ajinsafro .ajho-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.page-hajj-omra-ajinsafro .ajho-gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:20px}
+.page-hajj-omra-ajinsafro .ajho-panels,.page-hajj-omra-ajinsafro .ajho-detail__side{display:flex;flex-direction:column;gap:18px}
+.page-hajj-omra-ajinsafro .ajho-panel,.page-hajj-omra-ajinsafro .ajho-summary-card{padding:24px}
+.page-hajj-omra-ajinsafro .ajho-panel h2,.page-hajj-omra-ajinsafro .ajho-summary-card h2{margin:0 0 14px;color:#102340;font-size:1.25rem}
+.page-hajj-omra-ajinsafro .ajho-panel p{margin:0;color:#475467;line-height:1.85}
+.page-hajj-omra-ajinsafro .ajho-grid-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.page-hajj-omra-ajinsafro .ajho-list{margin:0;padding-left:18px;color:#475467;line-height:1.8}
+.page-hajj-omra-ajinsafro .ajho-table-wrap{overflow:auto}
+.page-hajj-omra-ajinsafro .ajho-table{width:100%;border-collapse:collapse}
+.page-hajj-omra-ajinsafro .ajho-table th,.page-hajj-omra-ajinsafro .ajho-table td{padding:12px 10px;border-bottom:1px solid #e4edf4;text-align:left;font-size:.92rem}
+.page-hajj-omra-ajinsafro .ajho-program{display:flex;flex-direction:column;gap:14px}
+.page-hajj-omra-ajinsafro .ajho-program__item{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:16px;border-radius:18px;background:#f6fafc}
+.page-hajj-omra-ajinsafro .ajho-program__day{display:flex;align-items:center;justify-content:center;border-radius:14px;background:#0f4c75;color:#fff;font-weight:800}
+.page-hajj-omra-ajinsafro .ajho-program__body h3{margin:0 0 6px}
+.page-hajj-omra-ajinsafro .ajho-program__city{margin:0 0 8px;color:#0f4c75;font-weight:700}
+.page-hajj-omra-ajinsafro .ajho-summary-card__type{display:inline-flex;margin-bottom:12px;padding:7px 12px;border-radius:999px;background:#f3f7fb;color:#0f4c75;font-size:.8rem;font-weight:800}
+.page-hajj-omra-ajinsafro .ajho-summary-card__price{margin-bottom:16px;font-size:2rem;font-weight:900;color:#ea580c}
+.page-hajj-omra-ajinsafro .ajho-summary-card__facts{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
+.page-hajj-omra-ajinsafro .ajho-summary-card__facts li{display:flex;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid #e4edf4}
+.page-hajj-omra-ajinsafro .ajho-summary-card__facts strong{color:#102340}
+.page-hajj-omra-ajinsafro .ajho-summary-card__facts span{color:#526477;text-align:right}
+.page-hajj-omra-ajinsafro .ajho-request-form{display:flex;flex-direction:column;gap:12px}
+.page-hajj-omra-ajinsafro .ajho-request-form__cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.page-hajj-omra-ajinsafro .ajho-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.page-hajj-omra-ajinsafro .ajho-detail{grid-template-columns:1fr}.page-hajj-omra-ajinsafro .ajho-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:767px){.page-hajj-omra-ajinsafro .ajho-filters,.page-hajj-omra-ajinsafro .ajho-stats,.page-hajj-omra-ajinsafro .ajho-grid,.page-hajj-omra-ajinsafro .ajho-grid-two,.page-hajj-omra-ajinsafro .ajho-gallery,.page-hajj-omra-ajinsafro .ajho-request-form__cols,.page-hajj-omra-ajinsafro .ajho-card__facts{grid-template-columns:1fr}.page-hajj-omra-ajinsafro .ajho-card__footer{flex-direction:column;align-items:stretch}.page-hajj-omra-ajinsafro .ajho-card__actions{min-width:0}.page-hajj-omra-ajinsafro .ajho-program__item{grid-template-columns:1fr}.page-hajj-omra-ajinsafro .ajho-hero{padding-top:56px}.page-hajj-omra-ajinsafro .ajho-content{padding-top:24px}}

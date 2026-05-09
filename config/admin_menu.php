@@ -55,7 +55,7 @@ return [
         ],
         [
             'key' => 'products_services',
-            'label' => 'Produit & Service',
+            'label' => 'Produits & Services',
             'icon' => 'bx bx-layer',
             'permission' => 'products-services.view',
             'children' => [
@@ -97,6 +97,16 @@ return [
                         ['label' => 'Chambres', 'route' => 'admin.accommodations.chambres', 'permission' => 'accommodations.rooms.view'],
                         ['label' => 'Tarifs saisonniers', 'route' => 'admin.accommodations.tarifs-saisonniers', 'permission' => 'accommodations.seasonal-pricing.view'],
                         ['label' => 'Disponibilités', 'route' => 'admin.accommodations.disponibilites', 'permission' => 'accommodations.availability.view'],
+                    ],
+                ],
+                [
+                    'key' => 'hajj_omra',
+                    'label' => 'Hajj & Omra',
+                    'icon' => 'bx bx-building-house',
+                    'permission' => 'hajj-omra.view',
+                    'children' => [
+                        ['label' => 'Toutes les offres', 'route' => 'admin.hajj-omra.index', 'permission' => 'hajj-omra.view', 'active_patterns' => ['admin.hajj-omra.index', 'admin.hajj-omra.create', 'admin.hajj-omra.store', 'admin.hajj-omra.show', 'admin.hajj-omra.edit', 'admin.hajj-omra.update', 'admin.hajj-omra.destroy']],
+                        ['label' => 'Demandes', 'route' => 'admin.hajj-omra.requests.index', 'permission' => 'hajj-omra.requests.view', 'active_patterns' => ['admin.hajj-omra.requests.*']],
                     ],
                 ],
                 [
@@ -235,6 +245,9 @@ return [
         'admin.group-deals.participants.index' => 'group-deals.participants.view',
         'admin.group-deals.participants.store' => 'group-deals.participants.view',
         'admin.group-deals.participants.update' => 'group-deals.participants.view',
+        'admin.hajj-omra.requests.index' => 'hajj-omra.requests.view',
+        'admin.hajj-omra.requests.show' => 'hajj-omra.requests.view',
+        'admin.hajj-omra.requests.update' => 'hajj-omra.requests.view',
         'admin.group-deals.tiers.index' => 'group-deals.tiers.view',
         'admin.group-deals.tiers.store' => 'group-deals.tiers.view',
         'admin.group-deals.tiers.update' => 'group-deals.tiers.view',
@@ -285,6 +298,8 @@ return [
         'admin.circuits.tour-transfers.' => 'transfers.offers.view',
         'admin.accommodations.' => 'accommodations.view',
         'admin.accommodation-packages.' => 'accommodations.packages.view',
+        'admin.hajj-omra.requests.' => 'hajj-omra.requests.view',
+        'admin.hajj-omra.' => 'hajj-omra.view',
         'admin.activity-offers.' => 'activities.offers.view',
         'admin.wordpress.hotels.' => 'accommodations.wordpress-hotels.view',
         'admin.wordpress.tours.' => 'circuits.voyages.view',

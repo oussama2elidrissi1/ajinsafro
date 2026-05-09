@@ -1198,7 +1198,7 @@ $rating_label = static function (float $rating): string {
     <div id="aj-home" class="aj-home aj-voyages-page aj-voyages-booking-page">
         <?php ajth_render_site_header($settings); ?>
 
-        <div class="aj-voyages-booking" id="aj-voyages-booking">
+        <div class="aj-voyages-booking ajinsafro-page-container" id="aj-voyages-booking">
             <section class="hero">
                 <div class="container">
                     <h1 class="hero-title">Voyages, sejours et circuits</h1>

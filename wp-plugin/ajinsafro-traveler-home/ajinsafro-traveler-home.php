@@ -39,6 +39,7 @@ require_once AJTH_DIR.'includes/hebergement-catalog-image.php';
 require_once AJTH_DIR.'includes/catalog-image-helpers.php';
 require_once AJTH_DIR.'includes/hebergement-catalog.php';
 require_once AJTH_DIR.'includes/activity-catalog.php';
+require_once AJTH_DIR.'includes/hajj-omra-catalog.php';
 require_once AJTH_DIR.'includes/class-catalog-cache-invalidate.php';
 require_once AJTH_DIR.'includes/class-admin-settings.php';
 require_once AJTH_DIR.'includes/class-ajinsafro-agent.php';
@@ -254,6 +255,16 @@ function ajth_enqueue_front_assets()
             [],
             AJTH_VERSION,
             true
+        );
+    }
+
+    if ( function_exists( 'ajth_is_hajj_omra_context' ) && ajth_is_hajj_omra_context() ) {
+        $hajj_omra_css_path = AJTH_DIR . 'assets/css/hajj-omra.css';
+        wp_enqueue_style(
+            'ajth-hajj-omra-css',
+            AJTH_URL . 'assets/css/hajj-omra.css',
+            ['ajth-home-css'],
+            file_exists( $hajj_omra_css_path ) ? filemtime( $hajj_omra_css_path ) : AJTH_VERSION
         );
     }
 
@@ -1172,7 +1183,8 @@ function ajth_is_catalog_context()
         || ajth_is_hebergement_context()
         || ajth_is_activites_context()
         || ajth_is_transfert_context()
-        || ajth_is_group_deals_context();
+        || ajth_is_group_deals_context()
+        || (function_exists('ajth_is_hajj_omra_context') && ajth_is_hajj_omra_context());
 }
 
 /* ──────────────────────────────────────────────
@@ -1709,6 +1721,16 @@ class AJTH_Nav_Walker extends Walker_Nav_Menu
         }
         $href = ! empty($item->url) ? (string) $item->url : '';
         $is_group_deals = function_exists('ajth_is_group_deals_label') && ajth_is_group_deals_label($title_raw);
+        $is_hajj_omra = false;
+        if (function_exists('remove_accents')) {
+            $hajj_key = remove_accents($title_raw);
+        } else {
+            $hajj_key = $title_raw;
+        }
+        $hajj_key = mb_strtolower(trim((string) $hajj_key), 'UTF-8');
+        if (in_array($hajj_key, ['hajj & omra', 'hajj', 'omra'], true)) {
+            $is_hajj_omra = true;
+        }
         $is_placeholder = (
             $href === '' ||
             $href === '#' ||
@@ -1718,6 +1740,8 @@ class AJTH_Nav_Walker extends Walker_Nav_Menu
         );
         if ($is_group_deals) {
             $href = function_exists('ajth_get_group_deals_url') ? ajth_get_group_deals_url() : home_url('/group-deals/');
+        } elseif ($is_hajj_omra) {
+            $href = function_exists('ajth_get_hajj_omra_page_url') ? ajth_get_hajj_omra_page_url() : home_url('/hajj-omra/');
         } elseif ($is_placeholder && function_exists('ajth_is_under_construction_label') && ajth_is_under_construction_label($title_raw)) {
             $href = function_exists('ajth_get_maintenance_url') ? ajth_get_maintenance_url() : home_url('/maintenance/');
         }
@@ -1794,6 +1818,9 @@ function ajth_activate()
     ajth_ensure_hebergement_page();
     ajth_ensure_activites_page();
     ajth_ensure_transfert_page();
+    if ( function_exists( 'ajth_ensure_hajj_omra_page' ) ) {
+        ajth_ensure_hajj_omra_page();
+    }
     ajth_ensure_vols_page();
     ajth_ensure_login_page();
     ajth_ensure_maintenance_page();

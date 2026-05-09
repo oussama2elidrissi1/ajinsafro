@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             AccommodationPackageSeeder::class,
             ActivityOfferSeeder::class,
             GroupDealsSeeder::class,
+            HajjOmraSeeder::class,
         ]);
     }
 }

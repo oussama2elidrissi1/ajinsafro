@@ -55,26 +55,47 @@
                     <div class="rap-alert rap-alert--error" role="alert">{{ $error }}</div>
                 @elseif ($detail)
                     @php
-                        $heroSrc = ! empty($detail['hero_image']) ? $detail['hero_image'] : '/images/hotel-placeholder.svg';
+                        $allPhotos    = ! empty($detail['photos']) ? $detail['photos'] : [];
+                        $heroSrc      = ! empty($detail['hero_image']) ? $detail['hero_image'] : (! empty($allPhotos) ? $allPhotos[0] : '/images/hotel-placeholder.svg');
+                        $hasManyPhotos = count($allPhotos) > 1;
+                        $thumbPhotos  = array_slice($allPhotos, 1, 4);
+                        $extraCount   = max(0, count($allPhotos) - 5);
                     @endphp
-                    <div class="rap-detail-cover">
-                        <img
-                            src="{{ $heroSrc }}"
-                            alt=""
-                            loading="eager"
-                            decoding="async"
-                            class="rap-detail-cover__img"
-                            onerror="this.onerror=null;this.src='/images/hotel-placeholder.svg';"
-                        >
-                    </div>
 
-                    @if (! empty($detail['photos']) && count($detail['photos']) > 1)
-                        <div class="rap-detail-gallery">
-                            @foreach (array_slice($detail['photos'], 0, 12) as $src)
-                                <button type="button" class="rap-detail-thumb" tabindex="-1">
-                                    <img src="{{ $src }}" alt="" loading="lazy" onerror="this.onerror=null;this.src='/images/hotel-placeholder.svg';">
-                                </button>
-                            @endforeach
+                    @if ($hasManyPhotos)
+                        <div class="hotel-gallery-grid">
+                            <div class="hotel-gallery-main">
+                                <img src="{{ $heroSrc }}"
+                                     alt="{{ $detail['name'] }}"
+                                     class="hotel-gallery-img"
+                                     loading="eager"
+                                     decoding="async"
+                                     onerror="this.onerror=null;this.src='/images/hotel-placeholder.svg';">
+                            </div>
+                            <div class="hotel-gallery-thumbs">
+                                @foreach ($thumbPhotos as $i => $src)
+                                    @php $isLast = ($i === count($thumbPhotos) - 1); @endphp
+                                    <div class="hotel-gallery-thumb{{ ($isLast && $extraCount > 0) ? ' hotel-gallery-thumb--more' : '' }}">
+                                        <img src="{{ $src }}"
+                                             alt=""
+                                             class="hotel-gallery-img"
+                                             loading="lazy"
+                                             onerror="this.onerror=null;this.src='/images/hotel-placeholder.svg';">
+                                        @if ($isLast && $extraCount > 0)
+                                            <span class="hotel-gallery-more">+{{ $extraCount }}</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <div class="hotel-gallery--single">
+                            <img src="{{ $heroSrc }}"
+                                 alt="{{ $detail['name'] }}"
+                                 class="hotel-gallery-img"
+                                 loading="eager"
+                                 decoding="async"
+                                 onerror="this.onerror=null;this.src='/images/hotel-placeholder.svg';">
                         </div>
                     @endif
 

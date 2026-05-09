@@ -84,6 +84,13 @@ class AJTH_Template_Router {
             }
         }
 
+        if ( function_exists( 'ajth_is_hajj_omra_context' ) && ajth_is_hajj_omra_context() ) {
+            $hajj_omra = AJTH_DIR . 'templates/hajj-omra.php';
+            if ( file_exists( $hajj_omra ) ) {
+                return $hajj_omra;
+            }
+        }
+
         if ( function_exists( 'ajth_is_transfert_context' ) && ajth_is_transfert_context() ) {
             $transfert = AJTH_DIR . 'templates/transfert.php';
             if ( file_exists( $transfert ) ) {

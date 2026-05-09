@@ -410,44 +410,71 @@ a.rap-card--link:focus-visible {
     padding-top: 1.5rem;
 }
 
-.rap-detail-cover {
-    border-radius: 0.5rem;
-    overflow: hidden;
-    margin-bottom: 1rem;
-    background: #e9ecef;
-    aspect-ratio: 21 / 9;
-    max-height: 320px;
-}
-
-.rap-detail-cover__img {
+/* ── Galerie hôtel – image unique ── */
+.hotel-gallery--single {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.rap-detail-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-    gap: 0.5rem;
+    height: 400px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #f3f7fb;
     margin-bottom: 1.5rem;
 }
 
-.rap-detail-thumb {
-    border: 0;
-    padding: 0;
-    border-radius: 0.35rem;
+/* ── Galerie hôtel – plusieurs images ── */
+.hotel-gallery-grid {
+    display: grid;
+    grid-template-columns: 65fr 35fr;
+    gap: 0.5rem;
+    height: 400px;
+    border-radius: 18px;
     overflow: hidden;
-    cursor: default;
-    aspect-ratio: 1;
-    background: #e9ecef;
+    margin-bottom: 1.5rem;
+    background: #f3f7fb;
 }
 
-.rap-detail-thumb img {
+.hotel-gallery-main {
+    overflow: hidden;
+    height: 100%;
+}
+
+.hotel-gallery-thumbs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.5rem;
+    height: 100%;
+}
+
+.hotel-gallery-thumb {
+    overflow: hidden;
+    position: relative;
+    background: #e2eaf3;
+}
+
+/* ── Image commune ── */
+.hotel-gallery-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center top;
     display: block;
+}
+
+/* ── Overlay "+N photos" ── */
+.hotel-gallery-thumb--more .hotel-gallery-img {
+    filter: brightness(0.5);
+}
+
+.hotel-gallery-more {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    pointer-events: none;
 }
 
 .rap-detail-section {

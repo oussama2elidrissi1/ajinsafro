@@ -48,7 +48,7 @@
 
 /* ── Container ── */
 .aj-groupdeals-fusion .ajgd-container {
-    width: min(1220px, calc(100% - 32px));
+    width: min(1220px, calc(100% - 48px));
     margin: 0 auto;
 }
 
@@ -1822,7 +1822,7 @@ body.gd-modal-open { overflow: hidden; }
     }
 
     .aj-groupdeals-fusion .ajgd-container {
-        width: min(100% - 22px, 1220px);
+        width: calc(100% - 32px);
     }
 
     .aj-groupdeals-fusion .ajgd-search-box {
@@ -1884,4 +1884,10 @@ body.gd-modal-open { overflow: hidden; }
     .aj-groupdeals-fusion .ajgd-card__title { font-size: 19px; }
 
     .aj-groupdeals-fusion .ajgd-results-head { padding: 14px; }
+}
+
+@media (max-width: 767px) {
+    .aj-groupdeals-fusion .ajgd-mobile-filter-btn {
+        bottom: 80px;
+    }
 }

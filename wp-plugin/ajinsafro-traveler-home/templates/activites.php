@@ -78,7 +78,7 @@ if ( $offer ) {
 		<div class="aj-home aj-activities-static-page">
 			<?php ajth_render_site_header( $settings ); ?>
 
-			<main class="aj-activities-shell aj-activity-detail-shell">
+			<main class="aj-activities-shell aj-activity-detail-shell ajinsafro-page-container">
 				<div class="aj-activities-container aj-activity-detail-container">
 					<nav class="aj-activities-breadcrumb" aria-label="Fil d Ariane">
 						<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
@@ -246,7 +246,7 @@ if ( $offer ) {
 	<div id="aj-home" class="aj-home aj-activities-static-page">
 		<?php ajth_render_site_header( $settings ); ?>
 
-		<div class="aj-activities-static" id="aj-activities-static">
+		<div class="aj-activities-static ajinsafro-page-container" id="aj-activities-static">
 			<main class="aj-activities-shell">
 				<div class="aj-activities-container">
 					<nav class="aj-activities-breadcrumb" aria-label="Fil d Ariane">

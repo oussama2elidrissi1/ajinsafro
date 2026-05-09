@@ -15,6 +15,8 @@ use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\GroupDeals\GroupDealController;
 use App\Http\Controllers\Admin\GroupDeals\OfferController as GroupDealOfferController;
+use App\Http\Controllers\Admin\HajjOmraBookingRequestController;
+use App\Http\Controllers\Admin\HajjOmraPackageController;
 use App\Http\Controllers\Admin\HeroImageController;
 use App\Http\Controllers\Admin\HomePageSettingsController;
 use App\Http\Controllers\Admin\OperationsController;
@@ -327,6 +329,19 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('accommodation-packages/{accommodationPackage}/edit', [AccommodationPackageController::class, 'edit'])->name('accommodation-packages.edit');
         Route::match(['put', 'patch'], 'accommodation-packages/{accommodationPackage}', [AccommodationPackageController::class, 'update'])->name('accommodation-packages.update');
         Route::delete('accommodation-packages/{accommodationPackage}', [AccommodationPackageController::class, 'destroy'])->name('accommodation-packages.destroy');
+
+        Route::prefix('products-services/hajj-omra')->name('hajj-omra.')->group(function () {
+            Route::get('/', [HajjOmraPackageController::class, 'index'])->name('index');
+            Route::get('create', [HajjOmraPackageController::class, 'create'])->name('create');
+            Route::post('/', [HajjOmraPackageController::class, 'store'])->name('store');
+            Route::get('requests', [HajjOmraBookingRequestController::class, 'index'])->name('requests.index');
+            Route::get('requests/{requestItem}', [HajjOmraBookingRequestController::class, 'show'])->name('requests.show')->whereNumber('requestItem');
+            Route::match(['put', 'patch'], 'requests/{requestItem}', [HajjOmraBookingRequestController::class, 'update'])->name('requests.update')->whereNumber('requestItem');
+            Route::get('{hajjOmraPackage}', [HajjOmraPackageController::class, 'show'])->name('show')->whereNumber('hajjOmraPackage');
+            Route::get('{hajjOmraPackage}/edit', [HajjOmraPackageController::class, 'edit'])->name('edit')->whereNumber('hajjOmraPackage');
+            Route::match(['put', 'patch'], '{hajjOmraPackage}', [HajjOmraPackageController::class, 'update'])->name('update')->whereNumber('hajjOmraPackage');
+            Route::delete('{hajjOmraPackage}', [HajjOmraPackageController::class, 'destroy'])->name('destroy')->whereNumber('hajjOmraPackage');
+        });
 
         Route::get('activity-offers', [ActivityOfferController::class, 'index'])->name('activity-offers.index');
         Route::get('activity-offers/create', [ActivityOfferController::class, 'create'])->name('activity-offers.create');

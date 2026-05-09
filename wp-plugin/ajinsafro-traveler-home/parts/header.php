@@ -43,10 +43,13 @@ $transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
 $group_deals_page_url = function_exists( 'ajth_get_group_deals_url' )
     ? ajth_get_group_deals_url()
     : home_url( '/group-deals/' );
+$hajj_omra_page_url = function_exists( 'ajth_get_hajj_omra_page_url' )
+    ? ajth_get_hajj_omra_page_url()
+    : home_url( '/hajj-omra/' );
 $public_login_url = home_url( '/login/' );
 $public_signup_url = home_url( '/register/' );
 $maintenance_url = function_exists( 'ajth_get_maintenance_url' ) ? ajth_get_maintenance_url() : home_url( '/maintenance/' );
-$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $voyages_page_url, $hebergement_page_url, $activites_page_url, $transfert_page_url, $group_deals_page_url ) {
+$resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $voyages_page_url, $hebergement_page_url, $activites_page_url, $transfert_page_url, $group_deals_page_url, $hajj_omra_page_url ) {
     $url_value = trim( (string) $url );
     $label_value = is_string( $label ) ? trim( wp_strip_all_tags( $label ) ) : '';
     if ( $label_value !== '' && function_exists( 'remove_accents' ) ) {
@@ -76,6 +79,9 @@ $resolve_menu_url = static function ( $label, $url ) use ( $maintenance_url, $vo
         if ( in_array( $label_value, array( 'transfert', 'transferts' ), true ) ) {
             return $transfert_page_url;
         }
+        if ( in_array( $label_value, array( 'hajj & omra', 'hajj', 'omra' ), true ) ) {
+            return $hajj_omra_page_url;
+        }
     }
     if ( $is_placeholder && function_exists( 'ajth_is_under_construction_label' ) && ajth_is_under_construction_label( $label ) ) {
         return $maintenance_url;
@@ -87,6 +93,7 @@ $is_voyages_page     = function_exists( 'ajth_is_voyages_context' )     ? ajth_i
 $is_hebergement_page = function_exists( 'ajth_is_hebergement_context' ) ? ajth_is_hebergement_context() : false;
 $is_activites_page   = function_exists( 'ajth_is_activites_context' )   ? ajth_is_activites_context()   : false;
 $is_group_deals_page = function_exists( 'ajth_is_group_deals_context' ) ? ajth_is_group_deals_context() : is_page( 'group-deals' );
+$is_hajj_omra_page   = function_exists( 'ajth_is_hajj_omra_context' )   ? ajth_is_hajj_omra_context()   : is_page( 'hajj-omra' );
 
 
 $title_icon_map = array(
@@ -139,9 +146,9 @@ $default_menu_items = array(
     ),
     array(
         'label'    => 'Hajj & Omra',
-        'url'      => $maintenance_url,
+        'url'      => $hajj_omra_page_url,
         'icon'     => 'fas fa-kaaba',
-        'active'   => false,
+        'active'   => $is_hajj_omra_page,
         'children' => array(),
     ),
     array(

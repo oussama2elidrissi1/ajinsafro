@@ -5519,3 +5519,58 @@ body.aj-custom-footer [class*="footer"]:not(.aj-footer-v2):not(.aj-footer-v2 *):
         padding: 14px;
     }
 }
+
+/* ── Plugin pages: horizontal scroll guard ── */
+.aj-home-wrap {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* ── Page container: center + constrain on large screens ── */
+.ajinsafro-page-shell {
+    width: 100%;
+}
+
+.ajinsafro-page-container {
+    width: 100%;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 24px;
+    padding-right: 24px;
+    box-sizing: border-box;
+}
+
+@media (min-width: 1600px) {
+    .ajinsafro-page-container {
+        max-width: 1320px;
+    }
+}
+
+@media (max-width: 992px) {
+    .ajinsafro-page-container {
+        max-width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .ajinsafro-page-container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+/* Reset inner containers when inside ajinsafro-page-container to avoid double padding */
+.ajinsafro-page-container .container,
+.ajinsafro-page-container .aj-hebergement-container,
+.ajinsafro-page-container .aj-activities-container,
+.ajinsafro-page-container .ajgd-container {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
