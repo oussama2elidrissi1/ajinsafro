@@ -1,8 +1,6 @@
 @extends('layouts.master-ajinsafro')
 
-@section('title')
-    Tableau de bord
-@endsection
+@section('title', 'Tableau de bord')
 
 @push('css')
 <style>
