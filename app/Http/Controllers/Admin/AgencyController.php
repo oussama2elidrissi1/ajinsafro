@@ -87,12 +87,14 @@ class AgencyController extends Controller
         $agencies = $query
             ->orderByDesc(DB::raw("CASE WHEN status = 'active' THEN 1 ELSE 0 END"))
             ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString();
+            ->paginate(15);
+        $agencies->appends($request->query());
 
         $summaryQuery = clone $query;
         $visibleAgencies = $summaryQuery->get(['id', 'status', 'default_commission_rate']);
-        $totalRevenue = (float) $agencies->getCollection()->sum(fn (Branch $branch) => (float) ($branch->revenue_total ?? 0));
+        $totalRevenue = (float) $visibleAgencies->sum(function (Branch $branch): float {
+            return (float) ($branch->revenue_total ?? 0);
+        });
 
         return view('admin.agencies.index', [
             'agencies' => $agencies,
@@ -414,6 +416,42 @@ class AgencyController extends Controller
         }
 
         $agency->documents = array_values(array_merge($existingDocuments, $newDocuments));
+    }
+
+    public function dashboard(Request $request, Branch $agency): View
+    {
+        $user = $request->user();
+        $this->ensureAgencyInScope($user, $agency);
+
+        $agency->loadCount(['users', 'agencyEmployees', 'reservations']);
+
+        $reservations = Reservation::query()
+            ->with(['agent.roles', 'salesManager.roles', 'tour'])
+            ->where('branch_id', $agency->id)
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        $employees = AgencyEmployee::query()
+            ->with(['user.roles'])
+            ->where('branch_id', $agency->id)
+            ->where('status', AgencyEmployee::STATUS_ACTIVE)
+            ->orderBy('first_name')
+            ->limit(8)
+            ->get();
+
+        $revenueTotal = (float) Reservation::query()
+            ->where('branch_id', $agency->id)
+            ->sum('paid_amount');
+
+        return view('admin.agencies.dashboard', [
+            'agency' => $agency,
+            'reservations' => $reservations,
+            'employees' => $employees,
+            'revenueTotal' => $revenueTotal,
+            'pendingReservationsCount' => Reservation::query()->where('branch_id', $agency->id)->where('status', Reservation::STATUS_PENDING)->count(),
+            'unassignedReservationsCount' => Reservation::query()->where('branch_id', $agency->id)->whereNull('agent_id')->count(),
+        ]);
     }
 
     private function monthlyPerformanceSeries(Branch $agency): array

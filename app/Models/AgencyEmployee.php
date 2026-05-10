@@ -40,9 +40,28 @@ class AgencyEmployee extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function scopeForBranch(Builder $query, ?int $branchId): Builder
+    {
+        if (! $branchId) {
+            return $query;
+        }
+
+        return $query->where('branch_id', $branchId);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_ACTIVE);
+    }
+
+    public function scopeWithLogin(Builder $query): Builder
+    {
+        return $query->where('can_login', true)->whereNotNull('user_id');
+    }
+
+    public function scopeByPosition(Builder $query, string $position): Builder
+    {
+        return $position !== '' ? $query->where('position', $position) : $query;
     }
 
     public function getFullNameAttribute(): string

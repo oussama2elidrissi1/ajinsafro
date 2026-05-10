@@ -88,6 +88,7 @@
         $makeLeaf('reservations_workspace', 'Toutes les réservations', 'admin.reservations.workspace', 'bx bx-calendar-check', ['admin.reservations.workspace*']),
         $makeLeaf('reservations_clients', 'Réservations clients', 'admin.reservations.clients', 'bx bx-user', ['admin.reservations.clients']),
         $makeLeaf('reservations_pending', 'Demandes en attente', 'admin.reservations.en-attente', 'bx bx-time-five', ['admin.reservations.en-attente'], [], $pendingReservationsCount > 0 ? $pendingReservationsCount : null),
+        $makeLeaf('assignments_index', 'Affectations', 'admin.assignments.index', 'bx bx-transfer', ['admin.assignments.*']),
         $makeLeaf('messagerie_index', 'Messagerie', 'admin.messagerie.index', 'bx bx-envelope', ['admin.messagerie.*'], [], $unreadCount > 0 ? $unreadCount : null),
     ]));
 
@@ -111,11 +112,12 @@
     $customersChildren[] = $makeLeaf('customers_travelers', 'Voyageurs', 'admin.customers.voyageurs', 'bx bx-id-card', ['admin.customers.voyageurs']);
     if ($agenciesNode) {
         foreach ($agenciesNode['children'] ?? [] as $child) {
-            if (in_array($child['label'] ?? '', ['Liste des agences', 'Employés des agences'], true)) {
+            if (in_array($child['label'] ?? '', ['Liste des agences', 'Employés des agences', 'Comptes agences', 'Dashboard agence', 'Performance agences'], true)) {
                 $customersChildren[] = $child;
             }
         }
     }
+    $customersChildren[] = $makeLeaf('agency_accounts_index', 'Comptes agences', 'admin.agency-accounts.index', 'bx bx-id-card', ['admin.agency-accounts.*']);
     $customersChildren[] = $makeLeaf('partners_list', 'Partenaires', 'admin.partners.partenaires', 'bx bx-group', ['admin.partners.partenaires']);
     $customersChildren[] = $makeLeaf('partners_suppliers', 'Fournisseurs', 'admin.partners.fournisseurs', 'bx bx-briefcase', ['admin.partners.fournisseurs']);
     $customersChildren = collect($customersChildren)->filter()->unique('key')->values()->all();

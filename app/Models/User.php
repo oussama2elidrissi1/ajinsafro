@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -101,6 +102,37 @@ class User extends Authenticatable
     public function agencyEmployee(): HasOne
     {
         return $this->hasOne(AgencyEmployee::class);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeForBranch(Builder $query, ?int $branchId): Builder
+    {
+        if (! $branchId) {
+            return $query;
+        }
+
+        return $query->where('branch_id', $branchId);
+    }
+
+    public function scopeAgencyStaff(Builder $query): Builder
+    {
+        return $query->where(function (Builder $builder): void {
+            $builder->whereNotNull('branch_id')
+                ->orWhere('user_type', 'agency_employee')
+                ->orWhere('access_mode', 'role');
+        });
+    }
+
+    public function scopeCanLogin(Builder $query): Builder
+    {
+        return $query->active()->where(function (Builder $builder): void {
+            $builder->whereNull('user_type')
+                ->orWhere('user_type', '!=', 'client');
+        });
     }
 
     public function chatChannels(): BelongsToMany

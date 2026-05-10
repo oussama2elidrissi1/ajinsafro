@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class Reservation extends Model
 {
@@ -68,6 +69,8 @@ class Reservation extends Model
         'branch_id',
         'sales_manager_id',
         'agent_id',
+        'assignment_priority',
+        'assignment_note',
         'created_by',
         'created_by_user_id',
         'updated_by',
@@ -113,6 +116,7 @@ class Reservation extends Model
         'branch_id' => 'integer',
         'sales_manager_id' => 'integer',
         'agent_id' => 'integer',
+        'assignment_priority' => 'string',
         'created_by' => 'integer',
         'created_by_user_id' => 'integer',
         'updated_by' => 'integer',
@@ -209,6 +213,74 @@ class Reservation extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function scopeForBranch(Builder $query, ?int $branchId): Builder
+    {
+        if (! $branchId) {
+            return $query;
+        }
+
+        return $query->where('branch_id', $branchId);
+    }
+
+    public function scopeAssignedTo(Builder $query, ?int $userId): Builder
+    {
+        if (! $userId) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $builder) use ($userId): void {
+            $builder->where('agent_id', $userId)
+                ->orWhere('sales_manager_id', $userId)
+                ->orWhere('created_by', $userId)
+                ->orWhere('created_by_user_id', $userId);
+        });
+    }
+
+    public function scopeByCommercial(Builder $query, ?int $userId): Builder
+    {
+        return $this->scopeAssignedTo($query, $userId);
+    }
+
+    public function scopeByAgent(Builder $query, ?int $userId): Builder
+    {
+        if (! $userId) {
+            return $query;
+        }
+
+        return $query->where('agent_id', $userId);
+    }
+
+    public function scopeUnassigned(Builder $query): Builder
+    {
+        return $query->whereNull('branch_id')
+            ->whereNull('agent_id')
+            ->whereNull('sales_manager_id');
+    }
+
+    public function scopeForCurrentUser(Builder $query, User $user): Builder
+    {
+        if ($user->isSuperAdmin() || $user->isSiegeAdmin() || $user->is_admin) {
+            return $query;
+        }
+
+        if ($user->branch_id) {
+            return $query->where(function (Builder $builder) use ($user): void {
+                $builder->where('branch_id', $user->branch_id)
+                    ->orWhere('agent_id', $user->id)
+                    ->orWhere('sales_manager_id', $user->id)
+                    ->orWhere('created_by', $user->id)
+                    ->orWhere('created_by_user_id', $user->id);
+            });
+        }
+
+        return $query->where(function (Builder $builder) use ($user): void {
+            $builder->where('agent_id', $user->id)
+                ->orWhere('sales_manager_id', $user->id)
+                ->orWhere('created_by', $user->id)
+                ->orWhere('created_by_user_id', $user->id);
+        });
     }
 
     public function chatChannels(): HasMany

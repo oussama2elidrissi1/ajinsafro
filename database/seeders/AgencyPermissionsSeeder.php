@@ -23,6 +23,17 @@ class AgencyPermissionsSeeder extends Seeder
             'agencies.create',
             'agencies.edit',
             'agencies.delete',
+            'agency_dashboard.view',
+            'agency_accounts.view',
+            'agency_accounts.create',
+            'agency_accounts.edit',
+            'agency_accounts.disable',
+            'agency_accounts.reset_password',
+            'assignments.view',
+            'assignments.create',
+            'assignments.edit',
+            'assignments.bulk',
+            'assignments.remove',
             'agency_employees.view',
             'agency_employees.create',
             'agency_employees.edit',
@@ -51,6 +62,8 @@ class AgencyPermissionsSeeder extends Seeder
             'CHEF_COMMERCIAL',
             'Commercial',
             'COMMERCIAL',
+            'Dev',
+            'dev',
         ])->where('guard_name', 'web')->get();
 
         // Assigner les permissions aux rôles admin

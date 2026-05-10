@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AccommodationPackageController;
 use App\Http\Controllers\Admin\ActivityOfferController;
 use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\AgencyAccountController;
 use App\Http\Controllers\Admin\AgencyController;
 use App\Http\Controllers\Admin\AgencyEmployeeController;
 use App\Http\Controllers\Admin\AirlineController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Admin\ProgramApiController;
 use App\Http\Controllers\Admin\ReportingController;
 use App\Http\Controllers\Admin\ReservationsController;
 use App\Http\Controllers\Admin\ReservationWorkspaceController;
+use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\RoleAccessController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TaxonomyTermController;
@@ -154,6 +156,12 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/workspace/prestation/participants', [ReservationWorkspaceController::class, 'prestationParticipants'])->name('reservations.workspace.prestation.participants');
         Route::get('reservations/workspace/prestation/pdf', [ReservationWorkspaceController::class, 'prestationPdf'])->name('reservations.workspace.prestation.pdf');
         Route::get('reservations/workspace/reservation/{reservation}/pdf', [ReservationWorkspaceController::class, 'reservationPdf'])->name('reservations.workspace.reservation.pdf');
+
+        Route::get('assignments', [AssignmentController::class, 'index'])->name('assignments.index');
+        Route::post('assignments', [AssignmentController::class, 'store'])->name('assignments.store');
+        Route::patch('assignments/{reservation}', [AssignmentController::class, 'update'])->name('assignments.update');
+        Route::delete('assignments/{reservation}', [AssignmentController::class, 'remove'])->name('assignments.remove');
+        Route::post('assignments/bulk', [AssignmentController::class, 'bulk'])->name('assignments.bulk');
 
         Route::get('reservations/calendrier', [ReservationsController::class, 'calendar'])->name('reservations.calendrier');
         Route::get('reservations/calendrier/events', [ReservationsController::class, 'calendarEvents'])->name('reservations.calendrier.events');
@@ -461,11 +469,21 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('agencies/create', [AgencyController::class, 'create'])->name('agencies.create');
         Route::post('agencies', [AgencyController::class, 'store'])->name('agencies.store');
         Route::get('agencies/performance', [AgencyController::class, 'performance'])->name('agencies.performance');
+        Route::get('agencies/{agency}/dashboard', [AgencyController::class, 'dashboard'])->name('agencies.dashboard');
         Route::get('agencies/{agency}', [AgencyController::class, 'show'])->name('agencies.show');
         Route::get('agencies/{agency}/edit', [AgencyController::class, 'edit'])->name('agencies.edit');
         Route::match(['put', 'patch'], 'agencies/{agency}', [AgencyController::class, 'update'])->name('agencies.update');
         Route::patch('agencies/{agency}/toggle-status', [AgencyController::class, 'toggleStatus'])->name('agencies.toggle-status');
         Route::delete('agencies/{agency}', [AgencyController::class, 'destroy'])->name('agencies.destroy');
+
+        Route::get('agency-accounts', [AgencyAccountController::class, 'index'])->name('agency-accounts.index');
+        Route::get('agency-accounts/create', [AgencyAccountController::class, 'create'])->name('agency-accounts.create');
+        Route::post('agency-accounts', [AgencyAccountController::class, 'store'])->name('agency-accounts.store');
+        Route::get('agency-accounts/{user}', [AgencyAccountController::class, 'show'])->name('agency-accounts.show');
+        Route::get('agency-accounts/{user}/edit', [AgencyAccountController::class, 'edit'])->name('agency-accounts.edit');
+        Route::match(['put', 'patch'], 'agency-accounts/{user}', [AgencyAccountController::class, 'update'])->name('agency-accounts.update');
+        Route::patch('agency-accounts/{user}/disable', [AgencyAccountController::class, 'disable'])->name('agency-accounts.disable');
+        Route::post('agency-accounts/{user}/reset-password', [AgencyAccountController::class, 'resetPassword'])->name('agency-accounts.reset-password');
 
         Route::get('agency-employees', [AgencyEmployeeController::class, 'index'])->name('agency-employees.index');
         Route::get('agency-employees/create', [AgencyEmployeeController::class, 'create'])->name('agency-employees.create');
