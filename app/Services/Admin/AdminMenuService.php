@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Models\User;
+use Illuminate\Routing\Exceptions\UrlGenerationException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -69,8 +70,9 @@ class AdminMenuService
             return null;
         }
 
-        $query = is_array($item['query'] ?? null) ? $item['query'] : null;
-        $href = $hasOwnAccess && $route ? route($route, $query ?? []) : null;
+        $params = is_array($item['params'] ?? null) ? $item['params'] : [];
+        $query = is_array($item['query'] ?? null) ? $item['query'] : [];
+        $href = $hasOwnAccess && $route ? $this->buildHref($route, $params, $query) : null;
         $active = $this->isRouteActive($currentRoute, $item, $route);
 
         foreach ($children as $child) {
@@ -86,6 +88,7 @@ class AdminMenuService
             'icon' => $item['icon'] ?? null,
             'route' => $route,
             'href' => $href,
+            'params' => $params,
             'query' => $query,
             'children' => $children,
             'active' => $active,
@@ -116,6 +119,15 @@ class AdminMenuService
     private function routeExists(mixed $route): bool
     {
         return is_string($route) && $route !== '' && Route::has($route);
+    }
+
+    private function buildHref(string $route, array $params, array $query): ?string
+    {
+        try {
+            return route($route, array_merge($params, $query));
+        } catch (UrlGenerationException) {
+            return null;
+        }
     }
 
     private function isRouteActive(string $currentRoute, array $item, ?string $route): bool

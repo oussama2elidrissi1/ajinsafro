@@ -50,7 +50,7 @@ return [
             'children' => [
                 ['label' => 'Liste des agences', 'route' => 'admin.agencies.index', 'permission' => 'agencies.view', 'active_patterns' => ['admin.agencies.index', 'admin.agencies.show']],
                 ['label' => 'Créer une agence', 'route' => 'admin.agencies.create', 'permission' => 'agencies.create', 'active_patterns' => ['admin.agencies.create', 'admin.agencies.store']],
-                ['label' => 'Dashboard agence', 'route' => 'admin.agencies.dashboard', 'permission' => 'agency_dashboard.view', 'active_patterns' => ['admin.agencies.dashboard']],
+                ['label' => 'Performance agences', 'route' => 'admin.agencies.performance', 'permission' => 'agency_performance.view', 'active_patterns' => ['admin.agencies.performance']],
                 ['label' => 'Modifier les agences', 'route' => 'admin.agencies.index', 'permission' => 'agencies.edit'],
                 ['label' => 'Archiver les agences', 'route' => 'admin.agencies.index', 'permission' => 'agencies.delete'],
                 ['label' => 'Employés des agences', 'route' => 'admin.agency-employees.index', 'permission' => 'agency_employees.view', 'active_patterns' => ['admin.agency-employees.*']],

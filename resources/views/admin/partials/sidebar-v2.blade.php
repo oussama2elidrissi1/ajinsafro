@@ -112,7 +112,7 @@
     $customersChildren[] = $makeLeaf('customers_travelers', 'Voyageurs', 'admin.customers.voyageurs', 'bx bx-id-card', ['admin.customers.voyageurs']);
     if ($agenciesNode) {
         foreach ($agenciesNode['children'] ?? [] as $child) {
-            if (in_array($child['label'] ?? '', ['Liste des agences', 'Employés des agences', 'Comptes agences', 'Dashboard agence', 'Performance agences'], true)) {
+            if (in_array($child['label'] ?? '', ['Liste des agences', 'Employés des agences', 'Comptes agences', 'Performance agences'], true)) {
                 $customersChildren[] = $child;
             }
         }
