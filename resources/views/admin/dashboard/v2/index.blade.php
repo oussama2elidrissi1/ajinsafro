@@ -13,9 +13,74 @@
     $initials  = strtoupper(collect(preg_split('/\s+/', trim($userName)))->filter()->take(2)->map(fn($s) => mb_substr($s, 0, 1))->implode(''));
     if ($initials === '') { $initials = 'AD'; }
     $brandLogoDark = \App\Models\Setting::brandLogoUrl('dark');
-    $brandLogoLight = \App\Models\Setting::brandLogoUrl('light');
     $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $avatarUrl = $user?->avatar_url;
+    $sidebarMenu = $user ? app(\App\Services\Admin\AdminMenuService::class)->buildForUser($user) : [];
+    $unreadCount = 0;
+
+    if ($user && \Illuminate\Support\Facades\Schema::hasTable('messages')) {
+        $unreadCount = \App\Models\Message::query()
+            ->where('recipient_id', $user->id)
+            ->where('folder_recipient', 'inbox')
+            ->where('read', false)
+            ->count();
+    }
+
+    $renderSidebarNodes = function (array $nodes, int $depth = 0) use (&$renderSidebarNodes, $unreadCount): string {
+        if ($nodes === []) {
+            return '';
+        }
+
+        $html = '<ul class="sidebar-nav-list sidebar-depth-' . $depth . '">';
+
+        foreach ($nodes as $node) {
+            $children = is_array($node['children'] ?? null) ? $node['children'] : [];
+            $hasChildren = $children !== [];
+            $isActive = !empty($node['active']);
+            $isOpen = !empty($node['open']);
+            $itemClasses = ['sidebar-nav-item'];
+
+            if ($hasChildren) {
+                $itemClasses[] = 'has-children';
+            }
+            if ($isActive) {
+                $itemClasses[] = 'is-active';
+            }
+            if ($isOpen) {
+                $itemClasses[] = 'is-open';
+            }
+
+            $html .= '<li class="' . e(implode(' ', $itemClasses)) . '">';
+
+            if ($hasChildren) {
+                $html .= '<button type="button" class="sidebar-nav-link sidebar-nav-toggle" data-sidebar-toggle aria-expanded="' . ($isOpen ? 'true' : 'false') . '">';
+                if (!empty($node['icon'])) {
+                    $html .= '<span class="sidebar-nav-icon"><i class="' . e($node['icon']) . '"></i></span>';
+                }
+                $html .= '<span class="sidebar-nav-label">' . e((string) ($node['label'] ?? '')) . '</span>';
+                $html .= '<span class="sidebar-nav-caret"><i class="bx bx-chevron-down"></i></span>';
+                $html .= '</button>';
+                $html .= '<div class="sidebar-submenu-wrap">' . $renderSidebarNodes($children, $depth + 1) . '</div>';
+            } else {
+                $href = (string) ($node['href'] ?? 'javascript:void(0);');
+                $html .= '<a href="' . e($href) . '" class="sidebar-nav-link">';
+                if (!empty($node['icon'])) {
+                    $html .= '<span class="sidebar-nav-icon"><i class="' . e($node['icon']) . '"></i></span>';
+                }
+                $html .= '<span class="sidebar-nav-label">' . e((string) ($node['label'] ?? '')) . '</span>';
+                if (($node['key'] ?? null) === 'messagerie' && $unreadCount > 0) {
+                    $html .= '<span class="sidebar-nav-badge">' . e((string) min($unreadCount, 99)) . '</span>';
+                }
+                $html .= '</a>';
+            }
+
+            $html .= '</li>';
+        }
+
+        $html .= '</ul>';
+
+        return $html;
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="fr">
@@ -76,68 +141,199 @@
             inset: 0 auto 0 0;
             overflow-y: auto;
             z-index: 50;
-            padding: 22px 22px 32px;
+            padding: 22px 18px 28px;
         }
 
         .brand {
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
             gap: 10px;
-            margin-bottom: 30px;
-            padding-bottom: 18px;
+            margin-bottom: 18px;
+            padding: 4px 8px 18px;
             border-bottom: 1px solid #edf2f7;
         }
         .brand-logo-link {
             display: inline-flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             max-width: 100%;
+            width: 100%;
         }
         .brand-logo-img,
         .logo-img {
-            height: 42px;
+            height: 48px;
             width: auto;
             max-width: 100%;
             object-fit: contain;
-            object-position: left center;
+            object-position: center;
             display: block;
         }
-        .brand-subtitle { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 2px; }
+        .brand-subtitle { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 2px; text-align: center; }
 
-        .menu-section { margin-bottom: 22px; }
-        .menu-label {
-            font-size: 11px; color: #8796aa; font-weight: 900;
-            text-transform: uppercase; letter-spacing: 0.06em;
-            margin-bottom: 10px; padding-left: 10px;
+        .sidebar-profile-card {
+            background: #fff;
+            border: 1px solid #e8eef5;
+            border-radius: 20px;
+            box-shadow: 0 14px 28px rgba(14, 46, 77, 0.08);
+            padding: 18px 16px;
+            margin: 0 4px 18px;
+            text-align: center;
         }
-        .menu { display: grid; gap: 4px; }
-        .menu-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 14px; border-radius: 13px;
-            color: #40546d; font-weight: 700;
-            transition: 0.18s ease; font-size: 13px;
+        .sidebar-profile-avatar-wrap {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 12px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 24px rgba(6, 52, 92, 0.14);
         }
-        .menu-item:hover, .menu-item.active {
+        .sidebar-profile-avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            display: block;
+            background: #eff5fb;
+        }
+        .sidebar-profile-fallback {
+            position: absolute;
+            inset: 0;
+            display: none;
+            place-items: center;
+            background: linear-gradient(135deg, var(--blue), #0a72b8);
+            color: #fff;
+            font-size: 24px;
+            font-weight: 900;
+        }
+        .sidebar-profile-name {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--text);
+            line-height: 1.2;
+        }
+        .sidebar-profile-role {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .sidebar-menu-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .sidebar-menu-block {
+            padding: 0 4px;
+        }
+        .sidebar-menu-title {
+            padding: 0 12px 8px;
+            font-size: 11px;
+            color: #8796aa;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .sidebar-nav-list {
+            list-style: none;
+            display: grid;
+            gap: 4px;
+        }
+        .sidebar-nav-item {
+            display: grid;
+            gap: 4px;
+        }
+        .sidebar-nav-link {
+            width: 100%;
+            border: 0;
+            appearance: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 13px;
+            border-radius: 14px;
+            color: #40546d;
+            font-weight: 700;
+            font-size: 13px;
+            line-height: 1.2;
+            text-align: left;
+            transition: 0.18s ease;
+            cursor: pointer;
+        }
+        .sidebar-nav-link:hover {
             background: var(--blue-soft);
             color: var(--blue);
         }
-        .menu-item.danger { color: var(--red); }
-        .menu-item.danger:hover { background: #fff0ef; color: var(--red); }
-        .menu-icon { width: 22px; text-align: center; font-size: 17px; flex-shrink: 0; }
-
-        .help-box {
-            margin-top: 30px;
-            background: linear-gradient(135deg, #eaf4ff, #f7fbff);
-            border: 1px solid #d8ebff;
-            border-radius: 16px;
-            padding: 18px;
+        .sidebar-nav-item.is-active > .sidebar-nav-link,
+        .sidebar-nav-item.is-open > .sidebar-nav-link {
+            background: var(--blue-soft);
+            color: var(--blue);
         }
-        .help-box h4 { color: var(--blue-dark); font-size: 14px; margin-bottom: 6px; font-weight: 900; }
-        .help-box p { color: var(--muted); font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
-        .help-box a {
-            display: inline-block; background: var(--blue); color: #fff;
-            padding: 9px 14px; border-radius: 11px; font-weight: 800; font-size: 12px;
+        .sidebar-nav-icon {
+            width: 22px;
+            flex-shrink: 0;
+            text-align: center;
+            font-size: 17px;
+        }
+        .sidebar-nav-label {
+            flex: 1;
+            min-width: 0;
+        }
+        .sidebar-nav-caret {
+            width: 18px;
+            display: grid;
+            place-items: center;
+            color: #90a0b4;
+            transition: transform 0.18s ease;
+        }
+        .sidebar-nav-item.is-open > .sidebar-nav-link .sidebar-nav-caret {
+            transform: rotate(180deg);
+            color: var(--blue);
+        }
+        .sidebar-nav-badge {
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: var(--orange);
+            color: #fff;
+            display: inline-grid;
+            place-items: center;
+            font-size: 10px;
+            font-weight: 900;
+        }
+        .sidebar-submenu-wrap {
+            display: none;
+            padding-left: 12px;
+            margin-left: 12px;
+            border-left: 1px solid #e6edf5;
+        }
+        .sidebar-nav-item.is-open > .sidebar-submenu-wrap {
+            display: block;
+        }
+        .sidebar-depth-1 .sidebar-nav-link,
+        .sidebar-depth-2 .sidebar-nav-link,
+        .sidebar-depth-3 .sidebar-nav-link {
+            padding-top: 9px;
+            padding-bottom: 9px;
+            font-size: 12.5px;
+        }
+        .sidebar-account-link {
+            color: #40546d;
+        }
+        .sidebar-account-link.is-danger {
+            color: var(--red);
+        }
+        .sidebar-account-link.is-danger:hover {
+            background: #fff0ef;
+            color: var(--red);
+        }
+        .sidebar > .menu-section,
+        .sidebar > .help-box {
+            display: none;
         }
 
         /* ─── MAIN ─── */
@@ -163,18 +359,11 @@
             flex: 1;
             min-width: 0;
         }
-        .topbar-brand-group { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-        .topbar-logo {
-            display: inline-flex;
+        .topbar-brand-group {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            min-width: 140px;
-            padding: 10px 14px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.14);
+            flex-shrink: 0;
         }
-        .topbar-logo-img { height: 38px; }
         .hamburger {
             border: 1px solid rgba(255, 255, 255, 0.18);
             background: rgba(255, 255, 255, 0.12);
@@ -227,6 +416,7 @@
             padding: 8px 10px 8px 8px;
             border: 1px solid rgba(255, 255, 255, 0.16);
             border-radius: 18px;
+            appearance: none;
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
             cursor: pointer;
@@ -553,8 +743,8 @@
             .main { margin-left: 0; width: 100%; }
             .hamburger { display: grid; place-items: center; }
             .topbar { padding: 0 18px; }
-            .topbar-logo { min-width: 122px; padding-inline: 12px; }
-            .topbar-logo-img { height: 34px; }
+            .sidebar-profile-card { margin-inline: 0; }
+            .sidebar-menu-block { padding-inline: 0; }
             .profile-info { display: none; }
             .profile { padding-right: 8px; }
             .content { padding: 22px 18px; }
@@ -589,18 +779,46 @@
             <div class="brand-subtitle">Voyagez en toute confiance</div>
         </div>
 
-        <div class="menu-section">
-            <div class="menu">
-                <a href="{{ route('admin.dashboard.v2') }}" class="menu-item active">
-                    <span class="menu-icon"><i class="bx bx-home-alt"></i></span>
-                    <span>Tableau de bord</span>
-                </a>
-                @if(\Illuminate\Support\Facades\Route::has('admin.dashboard.vue-globale'))
-                    <a href="{{ route('admin.dashboard.vue-globale') }}" class="menu-item">
-                        <span class="menu-icon"><i class="bx bx-arrow-back"></i></span>
-                        <span>Retour Dashboard V1</span>
-                    </a>
-                @endif
+        <div class="sidebar-profile-card">
+            <div class="sidebar-profile-avatar-wrap">
+                <img
+                    src="{{ $avatarUrl }}"
+                    alt="{{ $userName }}"
+                    class="sidebar-profile-avatar"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+                >
+                <span class="sidebar-profile-fallback">{{ $initials }}</span>
+            </div>
+            <div class="sidebar-profile-name">{{ $userName }}</div>
+            <div class="sidebar-profile-role">{{ $userRole }}</div>
+        </div>
+
+        <div class="sidebar-menu-shell">
+            <div class="sidebar-menu-block">
+                <div class="sidebar-menu-title">Navigation</div>
+                {!! $renderSidebarNodes($sidebarMenu) !!}
+            </div>
+
+            <div class="sidebar-menu-block">
+                <div class="sidebar-menu-title">Compte</div>
+                <ul class="sidebar-nav-list">
+                    @if(\Illuminate\Support\Facades\Route::has('admin.profile.edit'))
+                        <li class="sidebar-nav-item {{ request()->routeIs('admin.profile.*') ? 'is-active' : '' }}">
+                            <a href="{{ route('admin.profile.edit') }}" class="sidebar-nav-link sidebar-account-link">
+                                <span class="sidebar-nav-icon"><i class="bx bx-user-circle"></i></span>
+                                <span class="sidebar-nav-label">Mon profil</span>
+                            </a>
+                        </li>
+                    @endif
+                    @if(\Illuminate\Support\Facades\Route::has('logout.get'))
+                        <li class="sidebar-nav-item">
+                            <a href="{{ route('logout.get') }}" class="sidebar-nav-link sidebar-account-link is-danger">
+                                <span class="sidebar-nav-icon"><i class="bx bx-power-off"></i></span>
+                                <span class="sidebar-nav-label">Déconnexion</span>
+                            </a>
+                        </li>
+                    @endif
+                </ul>
             </div>
         </div>
 
@@ -676,10 +894,6 @@
                     <button type="button" class="hamburger" id="dashv2-hamburger" aria-label="Menu">
                         <i class="bx bx-menu"></i>
                     </button>
-
-                    <a href="{{ route('admin.dashboard.v2') }}" class="topbar-logo" aria-label="{{ $brandName }}">
-                        <img src="{{ $brandLogoLight }}" alt="{{ $brandName }}" class="logo-img topbar-logo-img">
-                    </a>
                 </div>
 
                 <div class="search">
@@ -1118,6 +1332,16 @@
             overlay.classList.remove('open');
         });
     }
+
+    document.querySelectorAll('[data-sidebar-toggle]').forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+            var item = toggle.closest('.sidebar-nav-item');
+            if (!item) return;
+
+            item.classList.toggle('is-open');
+            toggle.setAttribute('aria-expanded', item.classList.contains('is-open') ? 'true' : 'false');
+        });
+    });
 
     if (typeof ApexCharts === 'undefined') return;
 
