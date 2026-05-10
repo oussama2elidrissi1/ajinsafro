@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 
 @section('title', 'Reservations')
 
@@ -802,7 +802,7 @@
     </style>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
 (function () {
     var root = document.getElementById('res-hub-root');

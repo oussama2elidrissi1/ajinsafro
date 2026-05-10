@@ -29,7 +29,7 @@
         ];
     })->filter()->values()->all();
 @endphp
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 
 @section('title', 'Espace réservation — Catalogue')
 
@@ -1089,7 +1089,7 @@
 <script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
-@push('body-end')
+@push('scripts')
 {{-- Modal hors layout (évite overflow / stacking) — rendu juste avant </body> --}}
 <div id="ws-modal-root">
     <div id="ws-voyage-detail-modal" class="ws-md-root hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title" aria-hidden="true">
