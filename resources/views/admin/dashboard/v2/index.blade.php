@@ -97,6 +97,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <link href="{{ URL::asset('build/css/icons.min.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ URL::asset('css/admin-sidebar-v2.css') }}" rel="stylesheet" type="text/css">
 
     <style>
         :root {
@@ -332,7 +333,10 @@
             color: var(--red);
         }
         .sidebar > .menu-section,
-        .sidebar > .help-box {
+        .sidebar > .help-box,
+        .sidebar > .brand,
+        .sidebar > .sidebar-profile-card,
+        .sidebar > .sidebar-menu-shell {
             display: none;
         }
 
@@ -772,6 +776,8 @@
 
     {{-- ═════════════ SIDEBAR ═════════════ --}}
     <aside class="sidebar" id="dashv2-sidebar">
+        @include('admin.partials.sidebar-v2', ['sidebarContext' => 'dashboard-v2'])
+
         <div class="brand">
             <a href="{{ route('admin.dashboard.v2') }}" class="brand-logo-link" aria-label="{{ $brandName }}">
                 <img src="{{ $brandLogoDark }}" alt="{{ $brandName }}" class="brand-logo-img">
@@ -1316,6 +1322,7 @@
 {{-- ═════════════ JS ═════════════ --}}
 <script src="{{ URL::asset('build/libs/jquery/jquery.min.js') }}"></script>
 <script src="{{ URL::asset('build/libs/apexcharts/apexcharts.min.js') }}"></script>
+<script src="{{ URL::asset('js/admin-sidebar-v2.js') }}"></script>
 <script>
 (function () {
     // Mobile sidebar toggle

@@ -4,10 +4,13 @@
     {{ $isEdit ? 'Modifier rôle' : 'Créer rôle' }}
 @endsection
 
+@section('topbar-title', 'Rôles & Permissions')
+@section('topbar-subtitle', $isEdit ? 'Modifier le rôle et ses permissions.' : 'Créer un rôle et définir ses permissions.')
+
 @push('css')
     <style>
         .roles-permissions-shell {
-            max-width: 1280px;
+            max-width: 1360px;
             margin: 0 auto;
         }
 
