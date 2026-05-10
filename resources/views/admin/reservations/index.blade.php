@@ -19,6 +19,11 @@
     $highlightReservationId = $highlightReservationId ?? 0;
     $voyage = $voyage ?? null;
     $voyageOptions = $voyageOptions ?? collect();
+    $reservationVisibility = is_array($reservationVisibility ?? null) ? $reservationVisibility : [];
+    $limitedReservationPresentation = (bool) ($reservationVisibility['limited_presentation'] ?? false);
+    $canViewReservationFinancial = (bool) ($reservationVisibility['view_financial'] ?? false);
+    $canViewAssignmentContext = (bool) ($reservationVisibility['view_assignment_context'] ?? false);
+    $canViewClientContact = (bool) ($reservationVisibility['view_client_contact'] ?? false);
     $reservationCreated = isset($reservationCreated) && is_array($reservationCreated)
         ? $reservationCreated
         : (session('reservation_created') ?: null);
@@ -95,8 +100,10 @@
                             <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['departure_label'] ?? '-' }}</dd>
                             <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Personnes</dt>
                             <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['pax_count'] ?? '-' }}</dd>
-                            <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Total</dt>
-                            <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['total_label'] ?? '-' }}</dd>
+                            @if($canViewReservationFinancial)
+                                <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-1">Total</dt>
+                                <dd class="col-sm-8 col-md-9 mb-1">{{ $reservationCreated['total_label'] ?? '-' }}</dd>
+                            @endif
                             <dt class="col-sm-4 col-md-3 text-muted fw-normal mb-0">Statut</dt>
                             <dd class="col-sm-8 col-md-9 mb-0">{{ $reservationCreated['status_label'] ?? '-' }}</dd>
                         </dl>
@@ -141,7 +148,7 @@
                     </div>
                     <div class="res-hub-field">
                         <label class="form-label">Recherche client</label>
-                        <input type="text" name="search" class="form-control" placeholder="Nom, email, telephone..." value="{{ $filterSearch }}">
+                        <input type="text" name="search" class="form-control" placeholder="{{ $canViewClientContact ? 'Nom, email, telephone...' : 'Nom client ou voyage...' }}" value="{{ $filterSearch }}">
                     </div>
                     <div class="res-hub-field res-hub-field--actions">
                         <button type="submit" class="btn res-hub-btn res-hub-btn--primary w-100">
@@ -225,32 +232,42 @@
                                 <th class="ps-3">#</th>
                                 <th>Client</th>
                                 <th>Offre / voyage</th>
-                                @if(!$isClientChannel)
+                                @if(!$isClientChannel && !$limitedReservationPresentation)
                                     @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
-                                        <th>Agence</th>
+                                        <th>Point de vente</th>
                                     @elseif($showCrossAgencyBranchCol)
-                                        <th>Agence</th>
+                                        <th>Point de vente</th>
                                     @endif
                                 @endif
                                 <th>Date depart</th>
                                 <th>Passagers</th>
                                 @if($isClientChannel)
-                                    <th>Paiement</th>
+                                    @if($canViewReservationFinancial)
+                                        <th>Paiement</th>
+                                    @endif
                                     <th>Statut</th>
-                                    <th>Creee le</th>
-                                    <th>Chef commercial</th>
+                                    @if($canViewAssignmentContext)
+                                        <th>Creee le</th>
+                                        <th>Chef commercial</th>
+                                    @endif
                                 @else
-                                    @if($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
+                                    @if($limitedReservationPresentation)
                                         <th>Statut</th>
-                                        <th>Paiement</th>
+                                    @elseif($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
+                                        <th>Statut</th>
+                                        @if($canViewReservationFinancial)
+                                            <th>Paiement</th>
+                                        @endif
                                     @else
-                                        <th>Paiement</th>
+                                        @if($canViewReservationFinancial)
+                                            <th>Paiement</th>
+                                        @endif
                                         <th>Statut</th>
                                     @endif
-                                    @if($hubTableMode !== ReservationHubTableProfile::MODE_OPERATIONS)
+                                    @if(!$limitedReservationPresentation && $hubTableMode !== ReservationHubTableProfile::MODE_OPERATIONS && $canViewAssignmentContext)
                                         <th>Creee le</th>
                                     @endif
-                                    @if($hubTableMode === ReservationHubTableProfile::MODE_NETWORK)
+                                    @if(!$limitedReservationPresentation && $hubTableMode === ReservationHubTableProfile::MODE_NETWORK && $canViewAssignmentContext)
                                         <th>Creee par</th>
                                         <th>Reservation effectuee par</th>
                                         <th>Chef commercial</th>
@@ -1052,19 +1069,27 @@
                     h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Offre liee</span><div class="res-hub-detail-item__value">' + esc(d.tour_name || '-') + '</div></div>';
                     h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Depart</span><div class="res-hub-detail-item__value">' + esc(d.travel_date_label || '-') + (d.travel_date_id ? '<div class="small text-muted mt-1">TravelDate #' + esc(String(d.travel_date_id)) + '</div>' : '') + '</div></div>';
                     h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Type prestation</span><div class="res-hub-detail-item__value">' + esc(d.prestation_type || '-') + '</div></div>';
-                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Paiement</span><div class="res-hub-detail-item__value">' + esc(d.payment_type || '-') + '</div></div>';
-                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Montants</span><div class="res-hub-detail-item__value">Total : ' + esc(String(d.base_price ?? '-')) + '<br>Paye : ' + esc(String(d.paid_amount ?? '-')) + '</div></div>';
-                    h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Creee le</span><div class="res-hub-detail-item__value">' + esc(d.created_at || '-') + '</div></div>';
+                    if (d.payment_type) {
+                        h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Paiement</span><div class="res-hub-detail-item__value">' + esc(d.payment_type) + '</div></div>';
+                    }
+                    if (d.base_price != null || d.paid_amount != null) {
+                        h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Montants</span><div class="res-hub-detail-item__value">Total : ' + esc(String(d.base_price ?? '-')) + '<br>Paye : ' + esc(String(d.paid_amount ?? '-')) + '</div></div>';
+                    }
+                    if (d.created_at) {
+                        h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Creee le</span><div class="res-hub-detail-item__value">' + esc(d.created_at) + '</div></div>';
+                    }
                     if (!isClientChannel) {
-                        h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Creee par</span><div class="res-hub-detail-item__value">' + esc(d.creator_name || '-') + (d.creator_email ? '<div class="small text-muted mt-1">' + esc(d.creator_email) + '</div>' : '') + '</div></div>';
+                        if (d.creator_name || d.creator_email) {
+                            h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Creee par</span><div class="res-hub-detail-item__value">' + esc(d.creator_name || '-') + (d.creator_email ? '<div class="small text-muted mt-1">' + esc(d.creator_email) + '</div>' : '') + '</div></div>';
+                        }
                         if (d.agency || d.branch) {
-                            h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Agence</span><div class="res-hub-detail-item__value">' + esc(d.agency || d.branch) + '</div></div>';
+                            h += '<div class="res-hub-detail-item"><span class="res-hub-detail-item__label">Point de vente</span><div class="res-hub-detail-item__value">' + esc(d.agency || d.branch) + '</div></div>';
                         }
                     }
                     h += '</div>';
                     el.innerHTML = h;
                     if (detailFooter) detailFooter.style.display = 'flex';
-                    if (detailEditBtn) detailEditBtn.style.display = canEdit ? 'inline-flex' : 'none';
+                    if (detailEditBtn) detailEditBtn.style.display = (canEdit && !(d.visibility && d.visibility.limited_presentation)) ? 'inline-flex' : 'none';
                     if (detailValidateBtn) detailValidateBtn.style.display = (canUpdate && isConfirmable) ? 'inline-flex' : 'none';
                 });
                 return;
@@ -1082,10 +1107,11 @@
                         el.innerHTML = '<p class="text-muted p-3 mb-0">Aucun participant enregistre.</p>';
                         return;
                     }
-                    var h = '<table class="table table-sm mb-0"><thead><tr><th>Nom</th><th>Type</th><th>Document</th></tr></thead><tbody>';
+                    var showDocuments = !!(d.visibility && d.visibility.view_sensitive);
+                    var h = '<table class="table table-sm mb-0"><thead><tr><th>Nom</th><th>Type</th>' + (showDocuments ? '<th>Document</th>' : '') + '</tr></thead><tbody>';
                     d.passengers.forEach(function (p) {
                         var name = esc((p.first_name || '') + ' ' + (p.last_name || '')).trim() || '-';
-                        h += '<tr><td>' + name + '</td><td>' + esc(typeLabel(p.type)) + '</td><td class="small">' + esc(p.document_number || '-') + '</td></tr>';
+                        h += '<tr><td>' + name + '</td><td>' + esc(typeLabel(p.type)) + '</td>' + (showDocuments ? '<td class="small">' + esc(p.document_number || '-') + '</td>' : '') + '</tr>';
                     });
                     h += '</tbody></table>';
                     el.innerHTML = h;

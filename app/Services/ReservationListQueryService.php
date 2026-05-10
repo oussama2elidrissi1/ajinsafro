@@ -21,6 +21,7 @@ final class ReservationListQueryService
 
     public function __construct(
         private BranchScopeService $branchScope,
+        private ReservationVisibilityService $reservationVisibility,
     ) {}
 
     public function baseQuery(User $user, array $context = []): Builder
@@ -36,7 +37,7 @@ final class ReservationListQueryService
 
         $q = Reservation::query();
         $this->branchScope->scopeReservations($q, $user, $ctx);
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $user, $ctx);
+        $this->reservationVisibility->applyScope($q, $user);
 
         return $q;
     }
@@ -125,18 +126,23 @@ final class ReservationListQueryService
      * @param  Builder<\App\Models\Reservation>  $q
      * @return Builder<\App\Models\Reservation>
      */
-    public function applyClientSearch(Builder $q, ?string $search): Builder
+    public function applyClientSearch(Builder $q, User $user, ?string $search): Builder
     {
         $s = $search !== null ? trim($search) : '';
         if ($s === '') {
             return $q;
         }
         $like = '%'.addcslashes($s, '%_\\').'%';
-        $q->where(function ($sub) use ($like) {
+        $canViewClientContact = $this->reservationVisibility->canViewClientContact($user);
+
+        $q->where(function ($sub) use ($like, $canViewClientContact) {
             $sub->where('client_first_name', 'like', $like)
-                ->orWhere('client_last_name', 'like', $like)
-                ->orWhere('client_email', 'like', $like)
-                ->orWhere('client_phone', 'like', $like);
+                ->orWhere('client_last_name', 'like', $like);
+
+            if ($canViewClientContact) {
+                $sub->orWhere('client_email', 'like', $like)
+                    ->orWhere('client_phone', 'like', $like);
+            }
         });
 
         return $q;

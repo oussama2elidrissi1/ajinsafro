@@ -18,6 +18,7 @@ use App\Services\BranchScopeService;
 use App\Services\ReservationHubTableProfile;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
+use App\Services\ReservationVisibilityService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
 use App\Support\AdminReservationFlash;
@@ -45,6 +46,7 @@ class ReservationsController extends Controller
         protected BranchScopeService $branchScope,
         protected ReservationListQueryService $reservationListQuery,
         protected ReservationHubTableProfile $reservationHubTableProfile,
+        protected ReservationVisibilityService $reservationVisibility,
     ) {}
 
     /**
@@ -63,6 +65,7 @@ class ReservationsController extends Controller
     {
         abort_unless(config('app.debug'), 404);
         abort_unless($request->user()->can('reservations.view'), 403);
+        $visibility = $this->reservationVisibility->flagsFor($request->user());
 
         $base = $this->hubFilteredReservationBuilder($request);
         $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
@@ -80,7 +83,7 @@ class ReservationsController extends Controller
             ->limit(500)
             ->get();
 
-        $items = $rows->map(function (Reservation $r) {
+        $items = $rows->map(function (Reservation $r) use ($visibility) {
             return [
                 'id' => $r->id,
                 'tour_id' => $r->tour_id,
@@ -94,9 +97,9 @@ class ReservationsController extends Controller
                 'travel_date_id' => $r->travel_date_id,
                 'travel_date' => $r->travelDate?->date?->format('Y-m-d'),
                 'status' => $r->status,
-                'created_at' => $r->created_at?->toIso8601String(),
-                'creator_name' => $r->creator?->name,
-                'agency_name' => $r->agency_label,
+                'created_at' => $visibility['view_assignment_context'] ? $r->created_at?->toIso8601String() : null,
+                'creator_name' => $visibility['view_assignment_context'] ? $r->creator?->name : null,
+                'agency_name' => $visibility['view_assignment_context'] ? $r->agency_label : null,
                 'client_snapshot' => trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')),
                 'passengers_count' => $r->passengers->count(),
                 'passengers_preview' => $r->passengers->take(6)->map(fn ($p) => trim(($p->first_name ?? '').' '.($p->last_name ?? '')))->filter()->values()->all(),
@@ -113,6 +116,7 @@ class ReservationsController extends Controller
                 'status' => $request->query('status'),
                 'search' => $request->query('search'),
             ],
+            'visibility' => $visibility,
             'reservations' => $items,
         ]);
     }
@@ -135,6 +139,7 @@ class ReservationsController extends Controller
                 'hubTableMode' => $data['hubTableMode'],
                 'hubVoyageFiltered' => $data['hubVoyageFiltered'],
                 'filterChannel' => $data['filterChannel'] ?? null,
+                'reservationVisibility' => $data['reservationVisibility'],
             ])->render(),
             'pagination_html' => $data['reservations']->links()->render(),
         ]);
@@ -171,8 +176,9 @@ class ReservationsController extends Controller
     public function panel(Request $request, Reservation $reservation): JsonResponse
     {
         $user = $request->user();
-        $fullAccess = $this->branchScope->userCanAccessReservation($user, $reservation);
-        $operationalRead = ! $fullAccess && $this->branchScope->userCanViewReservationSharedOperational($user, $reservation);
+        $visibility = $this->reservationVisibility->flagsFor($user);
+        $fullAccess = $this->reservationVisibility->canAccessReservation($user, $reservation);
+        $operationalRead = false;
         abort_unless($fullAccess || $operationalRead, 403, 'Accès non autorisé à cette réservation.');
 
         $reservation->load([
@@ -208,12 +214,12 @@ class ReservationsController extends Controller
         ])->values()->all();
 
         $payload = [
-            'view_mode' => $fullAccess ? 'full' : 'operational_read_only',
+            'view_mode' => $visibility['limited_presentation'] ? 'limited' : 'full',
             'id' => $reservation->id,
             'status' => $reservation->status,
             'created_at' => $reservation->created_at?->format('d/m/Y H:i'),
             'client_label' => $clientLabel !== '' ? $clientLabel : null,
-            'client_code' => $reservation->client?->client_code,
+            'client_code' => $visibility['view_sensitive'] ? $reservation->client?->client_code : null,
             'tour_name' => $reservation->offer?->name,
             'tour_id' => $reservation->tour_id,
             'travel_date_id' => $reservation->travel_date_id,
@@ -257,27 +263,27 @@ class ReservationsController extends Controller
                     ->sum(fn ($rr) => (int) ($rr->passenger_count ?? 0))
                 : 0,
             'prestation_type' => $reservation->prestation_type,
-            'base_price' => $reservation->base_price,
-            'paid_amount' => $reservation->paid_amount,
-            'payment_type' => $reservation->payment_type,
-            'branch' => $reservation->branch?->name,
-            'agency' => $reservation->agency_label,
-            'creator_name' => ($reservation->creator ?? $reservation->createdBy)?->name,
-            'creator_email' => ($reservation->creator ?? $reservation->createdBy)?->email,
-            'passengers' => $passengersFull,
+            'base_price' => $visibility['view_financial'] ? $reservation->base_price : null,
+            'paid_amount' => $visibility['view_financial'] ? $reservation->paid_amount : null,
+            'payment_type' => $visibility['view_financial'] ? $reservation->payment_type : null,
+            'branch' => $visibility['view_assignment_context'] ? $reservation->branch?->name : null,
+            'agency' => $visibility['view_assignment_context'] ? $reservation->agency_label : null,
+            'creator_name' => $visibility['view_assignment_context'] ? ($reservation->creator ?? $reservation->createdBy)?->name : null,
+            'creator_email' => ($visibility['view_assignment_context'] && $visibility['view_client_contact']) ? ($reservation->creator ?? $reservation->createdBy)?->email : null,
+            'passengers' => $visibility['view_sensitive'] ? $passengersFull : $passengersOperational,
+            'visibility' => $visibility,
         ];
 
-        if (! $fullAccess) {
-            $payload['client_code'] = null;
+        if (! $visibility['view_sensitive']) {
             $payload['hotel_room_lines'] = [];
-            $payload['prestation_type'] = $reservation->prestation_type;
-            $payload['base_price'] = null;
-            $payload['paid_amount'] = null;
-            $payload['payment_type'] = null;
+        }
+
+        if ($visibility['limited_presentation']) {
+            $payload['created_at'] = null;
+            $payload['branch'] = null;
+            $payload['agency'] = null;
             $payload['creator_name'] = null;
             $payload['creator_email'] = null;
-            $payload['created_at'] = null;
-            $payload['passengers'] = $passengersOperational;
         }
 
         return response()->json($payload);
@@ -708,7 +714,7 @@ class ReservationsController extends Controller
      */
     public function show(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
 
         return redirect()->route('admin.reservations.edit', $reservation);
     }
@@ -718,7 +724,7 @@ class ReservationsController extends Controller
      */
     public function edit(Request $request, Reservation $reservation): View
     {
-        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $reservation->load(['passengers', 'client', 'offer', 'reservationRooms.departureHotelRoom', 'departure', 'branch', 'partner', 'creator', 'createdBy']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
@@ -751,7 +757,7 @@ class ReservationsController extends Controller
      */
     public function update(Request $request, Reservation $reservation): RedirectResponse|HttpResponse
     {
-        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $this->mergeDepartureFromLegacyRequest($request, $reservation);
 
         $data = $request->validate([
@@ -978,7 +984,7 @@ class ReservationsController extends Controller
      */
     public function destroy(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $this->reservationService->delete($reservation);
 
         return redirect()
@@ -991,7 +997,7 @@ class ReservationsController extends Controller
      */
     public function validateReservation(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $this->reservationService->validateReservation($reservation);
 
         return redirect()
@@ -1004,7 +1010,7 @@ class ReservationsController extends Controller
      */
     public function pairSharedRoom(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->branchScope->userCanAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
 
         if ($reservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
             return redirect()->back()->with('error', 'Cette réservation n’est pas en attente de jumelage demi-double.');
@@ -1145,7 +1151,7 @@ class ReservationsController extends Controller
         $this->reservationListQuery->applyChannelFilter($base, $channel !== '' ? $channel : null);
 
         $search = (string) $request->query('search', '');
-        $this->reservationListQuery->applyClientSearch($base, $search);
+        $this->reservationListQuery->applyClientSearch($base, $user, $search);
 
         $statusParam = (string) $request->query('status', '');
         if (! in_array($statusParam, [
@@ -1227,12 +1233,17 @@ class ReservationsController extends Controller
         }
 
         $hubStats = $this->reservationListQuery->aggregateStatusCounts(clone $base);
+        $reservationVisibility = $this->reservationVisibility->flagsFor($request->user());
 
         $reservations = (clone $base)
             ->with(['passengers', 'client', 'offer', 'branch', 'partner', 'travelDate', 'creator', 'createdBy', 'agent', 'salesManager', 'reservationRooms'])
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString();
+
+        $reservations->getCollection()->transform(function (Reservation $reservation) use ($request) {
+            return $this->reservationVisibility->sanitizeReservationModel($reservation, $request->user());
+        });
 
         $this->normalizeVoyageLabels(
             $reservations->getCollection()
@@ -1251,6 +1262,7 @@ class ReservationsController extends Controller
             'filterChannel' => $channel !== '' ? $channel : null,
             'hubTableMode' => $hubTableMode,
             'hubVoyageFiltered' => $hubVoyageFiltered,
+            'reservationVisibility' => $reservationVisibility,
         ];
     }
 
@@ -1275,8 +1287,7 @@ class ReservationsController extends Controller
             if ($res
                 && $res->created_at
                 && $res->created_at->gt(now()->subMinutes(5))
-                && ($this->branchScope->userCanAccessReservation($request->user(), $res)
-                    || $this->branchScope->userCanViewReservationSharedOperational($request->user(), $res))) {
+                && $this->reservationVisibility->canAccessReservation($request->user(), $res)) {
                 $reservationCreated = AdminReservationFlash::createdPayload($res);
             }
         }
@@ -1295,6 +1306,7 @@ class ReservationsController extends Controller
             'voyage' => $selectedVoyage,
             'highlightReservationId' => $highlightReservationId,
             'reservationCreated' => $reservationCreated,
+            'reservationVisibility' => $data['reservationVisibility'],
         ]));
     }
 
@@ -1561,12 +1573,16 @@ class ReservationsController extends Controller
         $this->scopeReservationAccessForCalendar($reservationQuery, $request->user(), $calendarScopeContext);
 
         if ($search !== '') {
-            $reservationQuery->where(function (Builder $q) use ($search) {
+            $canViewClientContact = $this->reservationVisibility->canViewClientContact($request->user());
+            $reservationQuery->where(function (Builder $q) use ($search, $canViewClientContact) {
                 $q->where('client_first_name', 'like', '%'.$search.'%')
                     ->orWhere('client_last_name', 'like', '%'.$search.'%')
-                    ->orWhere('client_email', 'like', '%'.$search.'%')
-                    ->orWhere('client_phone', 'like', '%'.$search.'%')
                     ->orWhereHas('offer', fn (Builder $q2) => $q2->where('name', 'like', '%'.$search.'%'));
+
+                if ($canViewClientContact) {
+                    $q->orWhere('client_email', 'like', '%'.$search.'%')
+                        ->orWhere('client_phone', 'like', '%'.$search.'%');
+                }
             });
         }
 
@@ -1622,9 +1638,9 @@ class ReservationsController extends Controller
             return response()->json(['error' => 'Réservation introuvable ou accès refusé'], 404);
         }
 
-        $fullAccess = $this->branchScope->userCanAccessReservation($user, $reservation);
-        $operationalRead = ! $fullAccess && $this->branchScope->userCanViewReservationSharedOperational($user, $reservation);
-        if (! $fullAccess && ! $operationalRead) {
+        $fullAccess = $this->reservationVisibility->canAccessReservation($user, $reservation);
+        $visibility = $this->reservationVisibility->flagsFor($user);
+        if (! $fullAccess) {
             return response()->json(['error' => 'Réservation introuvable ou accès refusé'], 404);
         }
 
@@ -1636,31 +1652,28 @@ class ReservationsController extends Controller
             ?: ($reservation->client?->full_name ?? '—');
 
         $payload = [
-            'view_mode' => $fullAccess ? 'full' : 'operational_read_only',
+            'view_mode' => $visibility['limited_presentation'] ? 'limited' : 'full',
             'kind' => 'reservation',
             'id' => $reservation->id,
             'status' => $reservation->status,
             'client' => $clientName,
-            'email' => $reservation->client_email ?: $reservation->client?->email,
-            'phone' => $reservation->client_phone ?: $reservation->client?->phone,
+            'email' => $visibility['view_client_contact'] ? ($reservation->client_email ?: $reservation->client?->email) : null,
+            'phone' => $visibility['view_client_contact'] ? ($reservation->client_phone ?: $reservation->client?->phone) : null,
             'tour_name' => $reservation->offer?->name ?? '—',
-            'branch' => $reservation->branch?->name,
-            'agency' => $reservation->agency_label,
-            'creator_name' => $reservation->creator?->name,
+            'branch' => $visibility['view_assignment_context'] ? $reservation->branch?->name : null,
+            'agency' => $visibility['view_assignment_context'] ? $reservation->agency_label : null,
+            'creator_name' => $visibility['view_assignment_context'] ? $reservation->creator?->name : null,
             'departure_date' => $departure,
             'departure_date_formatted' => $departureFormatted,
-            'payment_type' => $reservation->payment_type,
-            'total_price' => $reservation->total_price,
-            'route_edit' => route('admin.reservations.edit', $reservation),
+            'payment_type' => $visibility['view_financial'] ? $reservation->payment_type : null,
+            'total_price' => $visibility['view_financial'] ? $reservation->total_price : null,
+            'route_edit' => ($request->user()->can('reservations.edit') && ! $visibility['limited_presentation']) ? route('admin.reservations.edit', $reservation) : null,
+            'visibility' => $visibility,
         ];
 
-        if (! $fullAccess) {
-            $payload['email'] = null;
-            $payload['phone'] = null;
-            $payload['creator_name'] = null;
-            $payload['payment_type'] = null;
-            $payload['total_price'] = null;
-            $payload['route_edit'] = null;
+        if ($visibility['limited_presentation']) {
+            $payload['branch'] = null;
+            $payload['agency'] = null;
         }
 
         return response()->json($payload);
@@ -1681,7 +1694,7 @@ class ReservationsController extends Controller
             'shared_operational_aggregate' => ! empty($context['shared_operational_aggregate']),
         ];
         $this->branchScope->scopeReservations($query, $user, $ctx);
-        $this->branchScope->constrainReservationQueryForPortalUser($query, $user, $ctx);
+        $this->reservationVisibility->applyScope($query, $user);
     }
 
     /**

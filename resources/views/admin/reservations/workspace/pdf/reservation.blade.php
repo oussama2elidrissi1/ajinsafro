@@ -13,6 +13,10 @@
     </style>
 </head>
 <body>
+    @php
+        $showFinancial = $reservation->total_price !== null || $reservation->paid_amount !== null;
+        $showPassengerSensitive = $reservation->passengers->contains(fn ($p) => !empty($p->document_number) || !empty($p->birth_date));
+    @endphp
     <h1>Réservation #{{ $reservation->id }}</h1>
     <p class="meta">Généré le {{ $generatedAt->format('d/m/Y H:i') }}</p>
 

@@ -242,7 +242,15 @@ class Reservation extends Model
 
     public function scopeByCommercial(Builder $query, ?int $userId): Builder
     {
-        return $this->scopeAssignedTo($query, $userId);
+        if (! $userId) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $builder) use ($userId): void {
+            $builder->where('sales_manager_id', $userId)
+                ->orWhere('created_by', $userId)
+                ->orWhere('created_by_user_id', $userId);
+        });
     }
 
     public function scopeByAgent(Builder $query, ?int $userId): Builder
@@ -267,14 +275,37 @@ class Reservation extends Model
             return $query;
         }
 
-        if ($user->branch_id) {
+        if ($user->isManager() || $user->isBranchAdmin()) {
+            return $user->branch_id
+                ? $query->where('branch_id', $user->branch_id)
+                : $this->scopeAssignedTo($query, $user->id);
+        }
+
+        if ($user->isChefCommercial()) {
             return $query->where(function (Builder $builder) use ($user): void {
-                $builder->where('branch_id', $user->branch_id)
-                    ->orWhere('agent_id', $user->id)
-                    ->orWhere('sales_manager_id', $user->id)
+                if ($user->branch_id) {
+                    $builder->where('branch_id', $user->branch_id)
+                        ->orWhere('sales_manager_id', $user->id);
+
+                    return;
+                }
+
+                $builder->where('sales_manager_id', $user->id)
                     ->orWhere('created_by', $user->id)
                     ->orWhere('created_by_user_id', $user->id);
             });
+        }
+
+        if ($user->isCommercial() || $user->isAgent()) {
+            return $query->where(function (Builder $builder) use ($user): void {
+                $builder->where('agent_id', $user->id)
+                    ->orWhere('created_by', $user->id)
+                    ->orWhere('created_by_user_id', $user->id);
+            });
+        }
+
+        if ($user->branch_id) {
+            return $query->where('branch_id', $user->branch_id);
         }
 
         return $query->where(function (Builder $builder) use ($user): void {

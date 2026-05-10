@@ -305,11 +305,15 @@ function init() {
             <p class="font-bold text-[#0e3a5a]">${escapeHtml(data.client || "")}</p>
             <p class="text-gray-600">${escapeHtml(data.tour_name || "")}</p>
             <p class="text-gray-500 text-xs">${escapeHtml(data.departure_date_formatted || data.departure_date || "")}</p>
-            ${data.branch ? `<p class="text-xs text-gray-400">Agence : ${escapeHtml(data.branch)}</p>` : ""}
+            ${data.branch ? `<p class="text-xs text-gray-400">Point de vente : ${escapeHtml(data.branch)}</p>` : ""}
             ${data.email ? `<p class="text-xs"><i class="far fa-envelope mr-1"></i>${escapeHtml(data.email)}</p>` : ""}
             ${data.phone ? `<p class="text-xs"><i class="fas fa-phone mr-1"></i>${escapeHtml(data.phone)}</p>` : ""}
           </div>`;
-        document.getElementById("ajin-btn-res-edit").href = data.route_edit || "#";
+        const editBtn = document.getElementById("ajin-btn-res-edit");
+        if (editBtn) {
+          editBtn.href = data.route_edit || "#";
+          editBtn.classList.toggle("hidden", !data.route_edit);
+        }
       })
       .catch(() => {
         body.innerHTML = `<p class="text-red-600">Erreur de chargement.</p>`;

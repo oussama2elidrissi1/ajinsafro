@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\AgencyEmployee;
 use App\Models\Branch;
 use App\Models\Reservation;
+use App\Models\ReservationAssignmentLog;
 use App\Models\User;
 use App\Services\BranchScopeService;
+use App\Services\ReservationVisibilityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +18,8 @@ use Illuminate\View\View;
 class AssignmentController extends Controller
 {
     public function __construct(
-        protected BranchScopeService $branchScope
+        protected BranchScopeService $branchScope,
+        protected ReservationVisibilityService $reservationVisibility
     ) {}
 
     public function index(Request $request): View
@@ -26,6 +29,7 @@ class AssignmentController extends Controller
             ->orderByDesc('id');
 
         $this->branchScope->scopeReservations($query, $request->user(), []);
+        $this->reservationVisibility->applyScope($query, $request->user());
         $this->applyFilters($query, $request);
 
         $reservations = $query->paginate(15);
@@ -92,6 +96,11 @@ class AssignmentController extends Controller
     public function remove(Request $request, Reservation $reservation): RedirectResponse
     {
         $this->ensureReservationInScope($request->user(), $reservation);
+        $before = [
+            'branch_id' => $reservation->branch_id ? (int) $reservation->branch_id : null,
+            'agent_id' => $reservation->agent_id ? (int) $reservation->agent_id : null,
+            'sales_manager_id' => $reservation->sales_manager_id ? (int) $reservation->sales_manager_id : null,
+        ];
 
         $reservation->forceFill([
             'branch_id' => null,
@@ -108,6 +117,11 @@ class AssignmentController extends Controller
 
     private function applyAssignment(User $currentUser, Reservation $reservation, array $data): void
     {
+        $before = [
+            'branch_id' => $reservation->branch_id ? (int) $reservation->branch_id : null,
+            'agent_id' => $reservation->agent_id ? (int) $reservation->agent_id : null,
+            'sales_manager_id' => $reservation->sales_manager_id ? (int) $reservation->sales_manager_id : null,
+        ];
         $branchId = ! empty($data['branch_id']) ? (int) $data['branch_id'] : null;
         $agentId = ! empty($data['agent_id']) ? (int) $data['agent_id'] : null;
         $salesManagerId = ! empty($data['sales_manager_id']) ? (int) $data['sales_manager_id'] : null;
@@ -116,11 +130,11 @@ class AssignmentController extends Controller
             abort(403, 'Accès non autorisé à ce point de vente.');
         }
 
-        if ($agentId && ! $this->userBelongsToBranch($currentUser, $agentId, $branchId)) {
+        if ($agentId && ! $this->userBelongsToBranch($currentUser, $agentId, $branchId, 'agent')) {
             abort(403, 'Agent hors point de vente sélectionné.');
         }
 
-        if ($salesManagerId && ! $this->userBelongsToBranch($currentUser, $salesManagerId, $branchId)) {
+        if ($salesManagerId && ! $this->userBelongsToBranch($currentUser, $salesManagerId, $branchId, 'sales_manager')) {
             abort(403, 'Chef commercial hors point de vente sélectionné.');
         }
 
@@ -133,6 +147,8 @@ class AssignmentController extends Controller
             'assignment_note' => $data['assignment_note'] ?? null,
             'updated_by' => $currentUser->id,
         ])->save();
+
+        $this->logAssignmentChange($reservation, $before, $currentUser->id, $data['assignment_note'] ?? null);
     }
 
     private function validatePayload(Request $request, bool $isCreate): array
@@ -196,6 +212,7 @@ class AssignmentController extends Controller
     {
         $query = Reservation::query()->whereKey($reservation->id);
         $this->branchScope->scopeReservations($query, $currentUser, []);
+        $this->reservationVisibility->applyScope($query, $currentUser);
 
         abort_unless($query->exists(), 403, 'Accès non autorisé à cette réservation.');
     }
@@ -226,13 +243,16 @@ class AssignmentController extends Controller
                     'name' => $staff->name,
                     'branch_id' => $staff->branch_id,
                     'role' => $staff->getRoleNames()->first(),
+                    'roles' => $staff->getRoleNames()->values()->all(),
                     'job_title' => $staff->job_title,
+                    'can_be_agent' => $this->isAssignableReservationAgent($staff),
+                    'can_be_sales_manager' => $this->isAssignableSalesManager($staff),
                 ];
             })->values()->all();
         })->toArray();
     }
 
-    private function userBelongsToBranch(User $currentUser, int $userId, ?int $branchId): bool
+    private function userBelongsToBranch(User $currentUser, int $userId, ?int $branchId, ?string $purpose = null): bool
     {
         $query = User::query()->whereKey($userId)->agencyStaff();
         if ($branchId) {
@@ -244,6 +264,56 @@ class AssignmentController extends Controller
             $query->whereIn('branch_id', $branchIds);
         }
 
-        return $query->exists();
+        $staff = $query->first();
+        if (! $staff) {
+            return false;
+        }
+
+        return match ($purpose) {
+            'agent' => $this->isAssignableReservationAgent($staff),
+            'sales_manager' => $this->isAssignableSalesManager($staff),
+            default => true,
+        };
+    }
+
+    private function isAssignableReservationAgent(User $user): bool
+    {
+        return $user->isAgent()
+            || $user->isCommercial()
+            || $user->isChefCommercial()
+            || $user->isManager()
+            || $user->isBranchAdmin();
+    }
+
+    private function isAssignableSalesManager(User $user): bool
+    {
+        return $user->isChefCommercial()
+            || $user->isManager()
+            || $user->isBranchAdmin();
+    }
+
+    private function logAssignmentChange(Reservation $reservation, array $before, int $changedBy, ?string $note = null): void
+    {
+        $after = [
+            'branch_id' => $reservation->branch_id ? (int) $reservation->branch_id : null,
+            'agent_id' => $reservation->agent_id ? (int) $reservation->agent_id : null,
+            'sales_manager_id' => $reservation->sales_manager_id ? (int) $reservation->sales_manager_id : null,
+        ];
+
+        if ($before === $after && blank($note)) {
+            return;
+        }
+
+        ReservationAssignmentLog::query()->create([
+            'reservation_id' => $reservation->id,
+            'old_branch_id' => $before['branch_id'],
+            'new_branch_id' => $after['branch_id'],
+            'old_agent_id' => $before['agent_id'],
+            'new_agent_id' => $after['agent_id'],
+            'old_sales_manager_id' => $before['sales_manager_id'],
+            'new_sales_manager_id' => $after['sales_manager_id'],
+            'changed_by' => $changedBy,
+            'note' => $note,
+        ]);
     }
 }

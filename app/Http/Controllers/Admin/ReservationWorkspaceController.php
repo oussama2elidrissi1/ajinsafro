@@ -11,6 +11,7 @@ use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
+use App\Services\ReservationVisibilityService;
 use App\Services\ReservationWorkspaceBookingService;
 use App\Services\ReservationWorkspaceCatalogService;
 use App\Support\AdminReservationFlash;
@@ -30,6 +31,7 @@ class ReservationWorkspaceController extends Controller
         protected ReservationWorkspaceCatalogService $catalog,
         protected ReservationWorkspaceBookingService $workspaceBooking,
         protected ReservationListQueryService $reservationListQuery,
+        protected ReservationVisibilityService $reservationVisibility,
     ) {}
 
     public function index(Request $request): View
@@ -339,6 +341,9 @@ class ReservationWorkspaceController extends Controller
             ->with(['passengers', 'client:id,client_code,full_name', 'travelDate']);
         $this->reservationListQuery->applyTravelDateFilter($q, $travelDateId);
         $reservations = $q->orderByDesc('created_at')->limit(500)->get();
+        $reservations->transform(function (Reservation $reservation) use ($request) {
+            return $this->reservationVisibility->sanitizeReservationModel($reservation, $request->user());
+        });
 
         $wpTourTitle = $this->resolveWpTourTitle($voyage->wp_post_id);
         $prestationDisplayTitle = $wpTourTitle ?? $voyage->name;
@@ -365,6 +370,7 @@ class ReservationWorkspaceController extends Controller
         $this->assertReservationVisible($request, $reservation);
 
         $reservation->load(['passengers', 'client', 'tour', 'travelDate', 'extras']);
+        $this->reservationVisibility->sanitizeReservationModel($reservation, $request->user());
 
         $pdf = Pdf::loadView('admin.reservations.workspace.pdf.reservation', [
             'reservation' => $reservation,
@@ -412,7 +418,7 @@ class ReservationWorkspaceController extends Controller
     {
         $q = Reservation::query()->whereKey($reservation->getKey());
         $this->branchScope->scopeReservations($q, $request->user());
-        $this->branchScope->constrainReservationQueryForPortalUser($q, $request->user());
+        $this->reservationVisibility->applyScope($q, $request->user());
         if (! $q->exists()) {
             abort(404);
         }
