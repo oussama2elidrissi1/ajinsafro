@@ -355,7 +355,7 @@
     <div class="dv2-card kpi-card fade-in d2">
         <div>
             <div class="kpi-icon green"><i class="bx bx-buildings"></i></div>
-            <div class="kpi-label">Agences</div>
+            <div class="kpi-label">Points de vente</div>
             <div class="kpi-value">{{ $stats['branches_count'] ?? 0 }}</div>
         </div>
         <div class="kpi-footer">
@@ -644,7 +644,7 @@
 
     <div class="dv2-card table-card fade-in d5">
         <div class="card-head">
-            <h3>Agences actives</h3>
+            <h3>Points de vente actifs</h3>
             @if(\Illuminate\Support\Facades\Route::has('admin.agencies.index'))
                 <a href="{{ route('admin.agencies.index') }}" class="pill-select">Voir toutes</a>
             @endif
@@ -664,7 +664,7 @@
                     @endif
                 </div>
             @empty
-                <div class="empty-row">Aucune agence à afficher.</div>
+                <div class="empty-row">Aucun point de vente à afficher.</div>
             @endforelse
         </div>
     </div>

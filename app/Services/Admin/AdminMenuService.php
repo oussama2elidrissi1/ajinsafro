@@ -106,11 +106,30 @@ class AdminMenuService
             return false;
         }
 
-        if (! empty($item['permission']) && ! $user->can($item['permission'])) {
+        if (! $this->userCanAccessPermission($user, $item['permission'] ?? null)) {
             return false;
         }
 
         if (! empty($item['route']) && ! $routeExists) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function userCanAccessPermission(User $user, mixed $permission): bool
+    {
+        if (is_string($permission) && $permission !== '') {
+            return $user->can($permission);
+        }
+
+        if (is_array($permission)) {
+            foreach ($permission as $permissionName) {
+                if (is_string($permissionName) && $permissionName !== '' && $user->can($permissionName)) {
+                    return true;
+                }
+            }
+
             return false;
         }
 

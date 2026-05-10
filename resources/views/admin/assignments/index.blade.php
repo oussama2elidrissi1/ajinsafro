@@ -33,7 +33,7 @@
 <div class="aj-page-head">
     <div>
         <h1>Affectations</h1>
-        <p>Attribuer une agence, un agent et un chef commercial aux réservations.</p>
+        <p>Attribuer un point de vente, un agent et un chef commercial aux reservations.</p>
     </div>
     @if(Route::has('admin.reservations.workspace'))
         <a href="{{ route('admin.reservations.workspace') }}" class="aj-btn"><i class="bx bx-calendar-check"></i> Workspace</a>
@@ -46,7 +46,7 @@
             <div class="aj-filter-grid">
                 <input type="text" name="search" class="aj-form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Réservation, client, email">
                 <select name="branch_id" class="aj-select">
-                    <option value="">Toutes les agences</option>
+                    <option value="">Tous les points de vente</option>
                     @foreach($branches as $branch)
                         <option value="{{ $branch->id }}" @selected((int)($filters['branch_id'] ?? 0) === $branch->id)>{{ $branch->display_name }}</option>
                     @endforeach
@@ -105,7 +105,7 @@
             <div class="row g-3">
                 <div class="col-lg-3">
                     <select name="branch_id" class="aj-select assignment-branch-select" id="bulk-branch">
-                        <option value="">Agence</option>
+                        <option value="">Point de vente</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->display_name }}</option>
                         @endforeach
@@ -167,7 +167,7 @@
                     <th>#</th>
                     <th>Client</th>
                     <th>Voyage</th>
-                    <th>Agence</th>
+                    <th>Point de vente</th>
                     <th>Agent</th>
                     <th>Chef commercial</th>
                     <th>Statut</th>
@@ -225,9 +225,9 @@
                     <input type="hidden" name="reservation_id" id="assignment-reservation-id">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Agence</label>
+                            <label class="form-label fw-bold">Point de vente</label>
                             <select name="branch_id" id="assignment-branch" class="aj-select">
-                                <option value="">Sélectionner une agence</option>
+                                <option value="">Selectionner un point de vente</option>
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->display_name }}</option>
                                 @endforeach
@@ -268,6 +268,12 @@
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Note interne</label>
                             <textarea name="assignment_note" id="assignment-note" class="aj-textarea" placeholder="Note interne"></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="notify_agent" value="1" id="assignment-notify-agent">
+                                <label class="form-check-label" for="assignment-notify-agent">Notifier l'agent</label>
+                            </div>
                         </div>
                     </div>
                 </div>

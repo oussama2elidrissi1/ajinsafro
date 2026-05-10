@@ -1,14 +1,14 @@
 @extends('layouts.admin-v2')
 
-@section('title', 'Performance agences')
+@section('title', 'Performance points de vente')
 
 @section('content')
     <x-admin.page-header
-        title="Performance agences"
-        subtitle="Comparatif des réservations, du chiffre d’affaires et des commissions estimées par agence."
+        title="Performance points de vente"
+        subtitle="Comparatif des réservations, du chiffre d’affaires et des commissions estimées par point de vente."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Agences', 'url' => route('admin.agencies.index')],
+            ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
             ['label' => 'Performance'],
         ]"
     />
@@ -27,7 +27,7 @@
                     </div>
                     <div class="aj-field">
                         <select name="agency_id" class="aj-control">
-                            <option value="">Toutes les agences</option>
+                            <option value="">Tous les points de vente</option>
                             @foreach($agencies as $agency)
                                 <option value="{{ $agency->id }}" @selected($filters['agencyId'] === $agency->id)>{{ $agency->name }}</option>
                             @endforeach
@@ -58,12 +58,12 @@
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="mb-3">Comparatif par agence</h5>
+                    <h5 class="mb-3">Comparatif par point de vente</h5>
                     <div class="table-responsive">
                         <table class="aj-table" style="width:100%;">
                             <thead>
                                 <tr>
-                                    <th>Agence</th>
+                                    <th>Point de vente</th>
                                     <th>Réservations</th>
                                     <th>Validées</th>
                                     <th>En attente</th>

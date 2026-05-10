@@ -97,6 +97,7 @@ class AssignmentController extends Controller
             'branch_id' => null,
             'agent_id' => null,
             'sales_manager_id' => null,
+            'assigned_at' => null,
             'assignment_priority' => null,
             'assignment_note' => null,
             'updated_by' => $request->user()->id,
@@ -112,21 +113,22 @@ class AssignmentController extends Controller
         $salesManagerId = ! empty($data['sales_manager_id']) ? (int) $data['sales_manager_id'] : null;
 
         if ($branchId && ! $this->branchesForUser($currentUser)->pluck('id')->contains($branchId)) {
-            abort(403, 'Accès non autorisé à cette agence.');
+            abort(403, 'Accès non autorisé à ce point de vente.');
         }
 
         if ($agentId && ! $this->userBelongsToBranch($currentUser, $agentId, $branchId)) {
-            abort(403, 'Agent hors agence sélectionnée.');
+            abort(403, 'Agent hors point de vente sélectionné.');
         }
 
         if ($salesManagerId && ! $this->userBelongsToBranch($currentUser, $salesManagerId, $branchId)) {
-            abort(403, 'Chef commercial hors agence sélectionnée.');
+            abort(403, 'Chef commercial hors point de vente sélectionné.');
         }
 
         $reservation->forceFill([
             'branch_id' => $branchId,
             'agent_id' => $agentId,
             'sales_manager_id' => $salesManagerId,
+            'assigned_at' => ($branchId || $agentId || $salesManagerId) ? now() : null,
             'assignment_priority' => $data['assignment_priority'] ?? null,
             'assignment_note' => $data['assignment_note'] ?? null,
             'updated_by' => $currentUser->id,

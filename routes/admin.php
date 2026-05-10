@@ -476,6 +476,15 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::patch('agencies/{agency}/toggle-status', [AgencyController::class, 'toggleStatus'])->name('agencies.toggle-status');
         Route::delete('agencies/{agency}', [AgencyController::class, 'destroy'])->name('agencies.destroy');
 
+        Route::get('points-of-sale', [AgencyController::class, 'index'])->name('points-of-sale.index');
+        Route::get('points-of-sale/create', [AgencyController::class, 'create'])->name('points-of-sale.create');
+        Route::post('points-of-sale', [AgencyController::class, 'store'])->name('points-of-sale.store');
+        Route::get('points-of-sale/performance', [AgencyController::class, 'performance'])->name('points-of-sale.performance');
+        Route::get('points-of-sale/{agency}', [AgencyController::class, 'show'])->name('points-of-sale.show');
+        Route::get('points-of-sale/{agency}/edit', [AgencyController::class, 'edit'])->name('points-of-sale.edit');
+        Route::match(['put', 'patch'], 'points-of-sale/{agency}', [AgencyController::class, 'update'])->name('points-of-sale.update');
+        Route::delete('points-of-sale/{agency}', [AgencyController::class, 'destroy'])->name('points-of-sale.destroy');
+
         Route::get('agency-accounts', [AgencyAccountController::class, 'index'])->name('agency-accounts.index');
         Route::get('agency-accounts/create', [AgencyAccountController::class, 'create'])->name('agency-accounts.create');
         Route::post('agency-accounts', [AgencyAccountController::class, 'store'])->name('agency-accounts.store');

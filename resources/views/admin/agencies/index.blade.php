@@ -1,14 +1,14 @@
 @extends('layouts.admin-v2')
 
-@section('title', 'Agences')
+@section('title', 'Points de vente')
 
 @section('content')
     <x-admin.page-header
-        title="Agences"
-        subtitle="Pilotage des agences Ajinsafro, de leurs responsables et de leur activité commerciale."
+        title="Points de vente"
+        subtitle="Pilotage des points de vente Ajinsafro, de leurs responsables et de leur activité commerciale."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Agences'],
+            ['label' => 'Points de vente'],
         ]"
     >
         <x-slot name="actions">
@@ -18,7 +18,7 @@
             </a>
             <a href="{{ route('admin.agencies.create') }}" class="aj-btn aj-btn-primary">
                 <i class="bx bx-plus"></i>
-                <span>Nouvelle agence</span>
+                <span>Nouveau point de vente</span>
             </a>
         </x-slot>
     </x-admin.page-header>
@@ -88,10 +88,10 @@
 
             @if($agencies->isEmpty())
                 <x-admin.empty-state
-                    title="Aucune agence"
-                    message="Aucune agence ne correspond aux filtres actuels."
+                    title="Aucun point de vente"
+                    message="Aucun point de vente ne correspond aux filtres actuels."
                     :action-url="route('admin.agencies.create')"
-                    action-label="Créer une agence"
+                    action-label="Créer un point de vente"
                 />
             @else
                 <div class="table-responsive">
@@ -99,7 +99,7 @@
                         <thead>
                             <tr>
                                 <th>Logo</th>
-                                <th>Agence</th>
+                                <th>Point de vente</th>
                                 <th>Ville</th>
                                 <th>Pays</th>
                                 <th>Téléphone</th>
@@ -153,7 +153,7 @@
                                             </form>
                                             <a href="{{ route('admin.agencies.show', $agency) }}" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">Voir</a>
                                             <a href="{{ route('admin.agencies.edit', $agency) }}" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">Modifier</a>
-                                            <form method="POST" action="{{ route('admin.agencies.destroy', $agency) }}" onsubmit="return confirm('Archiver cette agence ?');">
+                                            <form method="POST" action="{{ route('admin.agencies.destroy', $agency) }}" onsubmit="return confirm('Archiver ce point de vente ?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;color:#d92d20;">Archiver</button>

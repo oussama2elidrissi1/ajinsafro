@@ -5,18 +5,29 @@
 @section('content')
     <x-admin.page-header
         :title="$employee->full_name"
-        subtitle="Fiche employé agence, rattachement et activité liée aux réservations."
+        subtitle="Fiche employe point de vente, rattachement et activite liee aux reservations."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Employés des agences', 'url' => route('admin.agency-employees.index')],
+            ['label' => 'Employes des points de vente', 'url' => route('admin.agency-employees.index')],
             ['label' => $employee->full_name],
         ]"
     >
         <x-slot name="actions">
             <a href="{{ route('admin.agencies.show', $employee->branch_id) }}" class="aj-btn aj-btn-soft">
                 <i class="bx bx-buildings"></i>
-                <span>Voir l’agence</span>
+                <span>Voir le point de vente</span>
             </a>
+            @if($employee->user_id)
+                <a href="{{ route('admin.agency-accounts.edit', $employee->user_id) }}" class="aj-btn aj-btn-soft">
+                    <i class="bx bx-id-card"></i>
+                    <span>Gerer le compte login</span>
+                </a>
+            @else
+                <a href="{{ route('admin.agency-accounts.create', ['employee_id' => $employee->id]) }}" class="aj-btn aj-btn-soft">
+                    <i class="bx bx-user-plus"></i>
+                    <span>Creer compte login</span>
+                </a>
+            @endif
             <a href="{{ route('admin.agency-employees.edit', $employee) }}" class="aj-btn aj-btn-primary">
                 <i class="bx bx-pencil"></i>
                 <span>Modifier</span>
@@ -32,7 +43,7 @@
                 <div class="card-body">
                     <h5 class="mb-3">Informations</h5>
                     <dl class="row mb-0">
-                        <dt class="col-sm-5">Agence</dt><dd class="col-sm-7">{{ $employee->branch?->name ?: '—' }}</dd>
+                        <dt class="col-sm-5">Point de vente</dt><dd class="col-sm-7">{{ $employee->branch?->name ?: '—' }}</dd>
                         <dt class="col-sm-5">Poste</dt><dd class="col-sm-7">{{ $employee->position ?: '—' }}</dd>
                         <dt class="col-sm-5">Statut</dt><dd class="col-sm-7">{{ \App\Models\AgencyEmployee::statusLabels()[$employee->status] ?? $employee->status }}</dd>
                         <dt class="col-sm-5">Email</dt><dd class="col-sm-7">{{ $employee->email ?: '—' }}</dd>
@@ -40,6 +51,9 @@
                         <dt class="col-sm-5">Login</dt><dd class="col-sm-7">{{ $employee->can_login ? 'Oui' : 'Non' }}</dd>
                         <dt class="col-sm-5">Rôle</dt><dd class="col-sm-7">{{ $employee->user?->roles->pluck('name')->join(', ') ?: '—' }}</dd>
                         <dt class="col-sm-5">Dernière connexion</dt><dd class="col-sm-7">{{ $employee->user?->last_login_at?->format('d/m/Y H:i') ?: '—' }}</dd>
+                        <dt class="col-sm-5">Departement</dt><dd class="col-sm-7">{{ $employee->department ?: '—' }}</dd>
+                        <dt class="col-sm-5">Type employe</dt><dd class="col-sm-7">{{ $employee->employee_type ?: '—' }}</dd>
+                        <dt class="col-sm-5">Contrat</dt><dd class="col-sm-7">{{ $employee->contract_type ?: '—' }}</dd>
                     </dl>
                     <div class="mt-3">
                         <strong>Note interne</strong>

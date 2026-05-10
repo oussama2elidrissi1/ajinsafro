@@ -1,14 +1,14 @@
 @extends('layouts.admin-v2')
 
-@section('title', $isEdit ? 'Modifier agence' : 'Créer agence')
+@section('title', $isEdit ? 'Modifier point de vente' : 'Creer point de vente')
 
 @section('content')
     <x-admin.page-header
-        :title="$isEdit ? 'Modifier agence' : 'Créer une agence'"
-        subtitle="Structure, coordonnées, commission, responsable et paramètres métier de l’agence."
+        :title="$isEdit ? 'Modifier point de vente' : 'Creer un point de vente'"
+        subtitle="Structure, coordonnees, commission, responsable et parametres metier du point de vente."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Agences', 'url' => route('admin.agencies.index')],
+            ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
             ['label' => $isEdit ? 'Modifier' : 'Créer'],
         ]"
     />
@@ -25,22 +25,22 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Nom agence</label>
+                        <label class="form-label">Nom du point de vente</label>
                         <input type="text" name="name" class="form-control" value="{{ old('name', $agency->name) }}" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Code agence</label>
+                        <label class="form-label">Code</label>
                         <input type="text" name="code" class="form-control" value="{{ old('code', $agency->code) }}" required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Structure</label>
                         <select name="type" class="form-select">
-                            <option value="{{ \App\Models\Branch::TYPE_BRANCH }}" @selected(old('type', $agency->type) === \App\Models\Branch::TYPE_BRANCH)>Agence</option>
+                            <option value="{{ \App\Models\Branch::TYPE_BRANCH }}" @selected(old('type', $agency->type) === \App\Models\Branch::TYPE_BRANCH)>Point de vente</option>
                             <option value="{{ \App\Models\Branch::TYPE_HEAD_OFFICE }}" @selected(old('type', $agency->type) === \App\Models\Branch::TYPE_HEAD_OFFICE)>Siège</option>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Type agence</label>
+                        <label class="form-label">Type de point de vente</label>
                         <select name="agency_type" class="form-select">
                             @foreach($agencyTypeLabels as $key => $label)
                                 <option value="{{ $key }}" @selected(old('agency_type', $agency->agency_type) === $key)>{{ $label }}</option>
@@ -91,8 +91,29 @@
                         <input type="email" name="email" class="form-control" value="{{ old('email', $agency->email) }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Commission par défaut (%)</label>
+                        <label class="form-label">Commission par defaut (%)</label>
                         <input type="number" step="0.01" min="0" name="default_commission_rate" class="form-control" value="{{ old('default_commission_rate', $agency->default_commission_rate) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Type commission par defaut</label>
+                        <select name="default_commission_type" class="form-select">
+                            <option value="">Selectionner</option>
+                            @foreach(\App\Models\Branch::commissionTypeLabels() as $key => $label)
+                                <option value="{{ $key }}" @selected(old('default_commission_type', $agency->default_commission_type) === $key)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Valeur commission par defaut</label>
+                        <input type="number" step="0.01" min="0" name="default_commission_value" class="form-control" value="{{ old('default_commission_value', $agency->default_commission_value) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Objectif mensuel CA</label>
+                        <input type="number" step="0.01" min="0" name="monthly_revenue_target" class="form-control" value="{{ old('monthly_revenue_target', $agency->monthly_revenue_target) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Objectif mensuel reservations</label>
+                        <input type="number" min="0" name="monthly_reservations_target" class="form-control" value="{{ old('monthly_reservations_target', $agency->monthly_reservations_target) }}">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Logo</label>
@@ -127,7 +148,7 @@
                 @endif
 
                 <div class="d-flex flex-wrap gap-2 mt-4">
-                    <button type="submit" class="aj-btn aj-btn-primary">{{ $isEdit ? 'Mettre à jour' : 'Créer' }}</button>
+                    <button type="submit" class="aj-btn aj-btn-primary">{{ $isEdit ? 'Mettre a jour' : 'Creer' }}</button>
                     <a href="{{ route('admin.agencies.index') }}" class="aj-btn aj-btn-soft">Annuler</a>
                 </div>
             </form>

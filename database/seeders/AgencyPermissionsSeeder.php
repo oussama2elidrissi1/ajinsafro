@@ -23,6 +23,11 @@ class AgencyPermissionsSeeder extends Seeder
             'agencies.create',
             'agencies.edit',
             'agencies.delete',
+            'points_of_sale.view',
+            'points_of_sale.create',
+            'points_of_sale.edit',
+            'points_of_sale.delete',
+            'points_of_sale.performance',
             'agency_dashboard.view',
             'agency_accounts.view',
             'agency_accounts.create',
@@ -38,8 +43,17 @@ class AgencyPermissionsSeeder extends Seeder
             'agency_employees.create',
             'agency_employees.edit',
             'agency_employees.delete',
+            'pos_employees.view',
+            'pos_employees.create',
+            'pos_employees.edit',
+            'pos_employees.delete',
             'agency_performance.view',
             'agency_commissions.view',
+            'reservations.view_sensitive',
+            'reservations.view_financial',
+            'reservations.view_client_contact',
+            'reservations.view_internal_notes',
+            'reservations.view_commissions',
         ];
 
         // Créer les permissions
@@ -50,21 +64,16 @@ class AgencyPermissionsSeeder extends Seeder
         }
 
         // Récupérer les rôles admin/super admin
-        $adminRoles = Role::whereIn('name', [
-            'Admin',
-            'admin',
-            'Super Admin',
-            'Super_Admin',
-            'SUPER_ADMIN',
-            'Manager',
-            'ADMIN',
-            'Chef Commercial',
-            'CHEF_COMMERCIAL',
-            'Commercial',
-            'COMMERCIAL',
-            'Dev',
-            'dev',
-        ])->where('guard_name', 'web')->get();
+        $adminRoles = Role::query()
+            ->where('guard_name', 'web')
+            ->get()
+            ->filter(function (Role $role): bool {
+                $name = strtolower((string) $role->name);
+
+                return str_contains($name, 'admin')
+                    || str_contains($name, 'super')
+                    || str_contains($name, 'dev');
+            });
 
         // Assigner les permissions aux rôles admin
         foreach ($adminRoles as $role) {

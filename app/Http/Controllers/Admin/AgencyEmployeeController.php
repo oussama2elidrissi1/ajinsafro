@@ -114,7 +114,7 @@ class AgencyEmployeeController extends Controller
 
         return redirect()
             ->route('admin.agency-employees.show', $employee)
-            ->with('success', "Employé d'agence créé avec succès.");
+            ->with('success', "Employé du point de vente créé avec succès.");
     }
 
     public function show(Request $request, AgencyEmployee $employee): View
@@ -168,7 +168,7 @@ class AgencyEmployeeController extends Controller
 
         return redirect()
             ->route('admin.agency-employees.show', $employee)
-            ->with('success', "Employé d'agence mis à jour.");
+            ->with('success', "Employé du point de vente mis à jour.");
     }
 
     public function destroy(Request $request, AgencyEmployee $employee): RedirectResponse
@@ -185,7 +185,7 @@ class AgencyEmployeeController extends Controller
 
         return redirect()
             ->route('admin.agency-employees.index')
-            ->with('success', "Employé d'agence supprimé.");
+            ->with('success', "Employé du point de vente supprimé.");
     }
 
     private function fillEmployee(AgencyEmployee $employee, array $data, Request $request): void
@@ -197,6 +197,18 @@ class AgencyEmployeeController extends Controller
             'email' => $data['email'] ?? null,
             'phone' => $data['phone'] ?? null,
             'position' => $data['position'] ?? null,
+            'department' => $data['department'] ?? null,
+            'employee_type' => $data['employee_type'] ?? null,
+            'contract_type' => $data['contract_type'] ?? null,
+            'hire_date' => $data['hire_date'] ?? null,
+            'exit_date' => $data['exit_date'] ?? null,
+            'fixed_salary' => $data['fixed_salary'] ?? null,
+            'salary_currency' => $data['salary_currency'] ?? null,
+            'hr_status' => $data['hr_status'] ?? $data['status'],
+            'national_id' => $data['national_id'] ?? null,
+            'address' => $data['address'] ?? null,
+            'emergency_contact' => $data['emergency_contact'] ?? null,
+            'internal_hr_notes' => $data['internal_hr_notes'] ?? null,
             'status' => $data['status'],
             'can_login' => (bool) ($data['can_login'] ?? false),
             'notes' => $data['notes'] ?? null,
@@ -232,7 +244,7 @@ class AgencyEmployeeController extends Controller
         abort_unless(
             $this->branchesForUser($user)->pluck('id')->contains($branchId),
             403,
-            'Accès non autorisé à cette agence.'
+            'Accès non autorisé à ce point de vente.'
         );
     }
 

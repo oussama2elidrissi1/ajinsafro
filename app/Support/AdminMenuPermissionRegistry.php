@@ -65,19 +65,21 @@ class AdminMenuPermissionRegistry
             static::collectNodePermissionNames($names, $section);
         }
 
-        $names = array_merge(
-            $names,
-            array_values(config('admin_menu.route_permissions', [])),
-            array_values(config('admin_menu.route_prefix_permissions', [])),
-            [
-                'agency_commissions.view',
-                'reservations.create',
-                'reservations.store',
-                'reservations.edit',
-                'reservations.update',
-                'reservations.destroy',
-            ]
-        );
+        $names = array_merge($names, static::flattenPermissionValues(config('admin_menu.route_permissions', [])));
+        $names = array_merge($names, static::flattenPermissionValues(config('admin_menu.route_prefix_permissions', [])));
+        $names = array_merge($names, [
+            'agency_commissions.view',
+            'reservations.create',
+            'reservations.store',
+            'reservations.edit',
+            'reservations.update',
+            'reservations.destroy',
+            'reservations.view_sensitive',
+            'reservations.view_financial',
+            'reservations.view_client_contact',
+            'reservations.view_internal_notes',
+            'reservations.view_commissions',
+        ]);
 
         return array_values(array_unique(array_filter($names)));
     }
@@ -237,8 +239,16 @@ class AdminMenuPermissionRegistry
 
     private static function collectNodePermissionNames(array &$names, array $node): void
     {
-        if (! empty($node['permission'])) {
-            $names[] = (string) $node['permission'];
+        $permission = $node['permission'] ?? null;
+
+        if (is_string($permission) && $permission !== '') {
+            $names[] = $permission;
+        } elseif (is_array($permission)) {
+            foreach ($permission as $permissionName) {
+                if (is_string($permissionName) && $permissionName !== '') {
+                    $names[] = $permissionName;
+                }
+            }
         }
 
         foreach ($node['children'] ?? [] as $child) {
@@ -246,17 +256,21 @@ class AdminMenuPermissionRegistry
         }
     }
 
-    private static function pushPermission(array &$permissions, array &$added, array $available, ?string $name, string $label): void
+    private static function pushPermission(array &$permissions, array &$added, array $available, mixed $name, string $label): void
     {
-        if (! is_string($name) || $name === '' || ! isset($available[$name]) || isset($added[$name])) {
-            return;
-        }
+        $names = is_array($name) ? $name : [$name];
 
-        $permissions[] = [
-            'name' => $name,
-            'label' => $label,
-        ];
-        $added[$name] = true;
+        foreach ($names as $permissionName) {
+            if (! is_string($permissionName) || $permissionName === '' || ! isset($available[$permissionName]) || isset($added[$permissionName])) {
+                continue;
+            }
+
+            $permissions[] = [
+                'name' => $permissionName,
+                'label' => $label,
+            ];
+            $added[$permissionName] = true;
+        }
     }
 
     private static function accessLabel(string $label): string
@@ -269,5 +283,29 @@ class AdminMenuPermissionRegistry
         $availablePermissions ??= Permission::query()->pluck('name')->all();
 
         return array_fill_keys($availablePermissions, true);
+    }
+
+    private static function flattenPermissionValues(array $values): array
+    {
+        $permissions = [];
+
+        foreach ($values as $value) {
+            if (is_string($value) && $value !== '') {
+                $permissions[] = $value;
+                continue;
+            }
+
+            if (! is_array($value)) {
+                continue;
+            }
+
+            foreach ($value as $permissionName) {
+                if (is_string($permissionName) && $permissionName !== '') {
+                    $permissions[] = $permissionName;
+                }
+            }
+        }
+
+        return $permissions;
     }
 }

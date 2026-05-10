@@ -1,14 +1,14 @@
 @extends('layouts.admin-v2')
 
-@section('title', "Employés d'agence")
+@section('title', "Employes des points de vente")
 
 @section('content')
     <x-admin.page-header
-        title="Employés des agences"
-        subtitle="Annuaire opérationnel des équipes d’agence et de leurs accès éventuels à l’admin."
+        title="Employes des points de vente"
+        subtitle="Annuaire operationnel des equipes des points de vente et de leurs acces eventuels a l'admin."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Employés des agences'],
+            ['label' => 'Employes des points de vente'],
         ]"
     >
         <x-slot name="actions">
@@ -30,7 +30,7 @@
                     </div>
                     <div class="aj-field">
                         <select name="branch_id" class="aj-control">
-                            <option value="">Toutes les agences</option>
+                            <option value="">Tous les points de vente</option>
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}" @selected($filters['branchId'] === $branch->id)>{{ $branch->name }}</option>
                             @endforeach
@@ -78,7 +78,7 @@
             @if($employees->isEmpty())
                 <x-admin.empty-state
                     title="Aucun employé"
-                    message="Aucun employé d’agence ne correspond aux critères actuels."
+                    message="Aucun employe de point de vente ne correspond aux criteres actuels."
                     :action-url="route('admin.agency-employees.create')"
                     action-label="Ajouter un employé"
                 />
@@ -91,7 +91,7 @@
                                 <th>Nom</th>
                                 <th>Email</th>
                                 <th>Téléphone</th>
-                                <th>Agence</th>
+                                <th>Point de vente</th>
                                 <th>Poste</th>
                                 <th>Rôle système</th>
                                 <th>Statut</th>

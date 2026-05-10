@@ -1,12 +1,12 @@
 @extends('layouts.admin-v2')
 
-@section('title', 'Compte agence')
+@section('title', 'Compte point de vente')
 
 @section('content')
 <div class="aj-page-head" style="margin-bottom:18px;">
     <div>
         <h1>{{ $account->name }}</h1>
-        <p>{{ $account->email }} • {{ $account->branch?->display_name ?? 'Aucune agence' }}</p>
+        <p>{{ $account->email }} • {{ $account->branch?->display_name ?? 'Aucun point de vente' }}</p>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
         @if(Route::has('admin.agency-accounts.edit'))
@@ -83,7 +83,7 @@
                             <th>#</th>
                             <th>Client</th>
                             <th>Voyage</th>
-                            <th>Agence</th>
+                            <th>Point de vente</th>
                             <th>Statut</th>
                             <th>Date</th>
                         </tr>

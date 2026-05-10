@@ -5,17 +5,17 @@
 @section('content')
     <x-admin.page-header
         :title="$agency->name"
-        subtitle="Vue détaillée de l’agence, de ses équipes et de son activité."
+        subtitle="Vue détaillée du point de vente, de ses équipes et de son activité."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Agences', 'url' => route('admin.agencies.index')],
+            ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
             ['label' => $agency->name],
         ]"
     >
         <x-slot name="actions">
             <a href="{{ route('admin.agency-employees.create', ['agency_id' => $agency->id]) }}" class="aj-btn aj-btn-soft">
                 <i class="bx bx-user-plus"></i>
-                <span>Ajouter un employé</span>
+                <span>Ajouter un employe</span>
             </a>
             <a href="{{ route('admin.agencies.performance', ['agency_id' => $agency->id]) }}" class="aj-btn aj-btn-soft">
                 <i class="bx bx-bar-chart-alt-2"></i>
@@ -53,8 +53,10 @@
                         <dt class="col-sm-5">Téléphone</dt><dd class="col-sm-7">{{ $agency->phone ?: '—' }}</dd>
                         <dt class="col-sm-5">Email</dt><dd class="col-sm-7">{{ $agency->email ?: '—' }}</dd>
                         <dt class="col-sm-5">Manager</dt><dd class="col-sm-7">{{ $agency->manager?->name ?: '—' }}</dd>
-                        <dt class="col-sm-5">Commission</dt><dd class="col-sm-7">{{ $agency->default_commission_rate ? number_format($agency->default_commission_rate, 2, ',', ' ') . '%' : '—' }}</dd>
+                        <dt class="col-sm-5">Commission</dt><dd class="col-sm-7">{{ $agency->default_commission_value ? number_format((float) $agency->default_commission_value, 2, ',', ' ') . ' ' . (\App\Models\Branch::commissionTypeLabels()[$agency->default_commission_type] ?? '') : ($agency->default_commission_rate ? number_format($agency->default_commission_rate, 2, ',', ' ') . '%' : '—') }}</dd>
                         <dt class="col-sm-5">Devise</dt><dd class="col-sm-7">{{ $agency->currency ?: 'MAD' }}</dd>
+                        <dt class="col-sm-5">Objectif CA</dt><dd class="col-sm-7">{{ $agency->monthly_revenue_target ? number_format((float) $agency->monthly_revenue_target, 0, ',', ' ') . ' ' . ($agency->currency ?: 'MAD') : '—' }}</dd>
+                        <dt class="col-sm-5">Objectif reservations</dt><dd class="col-sm-7">{{ $agency->monthly_reservations_target ?: '—' }}</dd>
                     </dl>
                     @if($agency->address)
                         <div class="mt-3">
@@ -126,7 +128,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Employés de l’agence</h5>
+                        <h5 class="mb-0">Employes du point de vente</h5>
                         <a href="{{ route('admin.agency-employees.index', ['branch_id' => $agency->id]) }}" class="aj-btn aj-btn-soft">Voir tous</a>
                     </div>
                     <div class="table-responsive">

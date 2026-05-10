@@ -105,7 +105,7 @@ class AgencyController extends Controller
             'agencyTypeLabels' => Branch::agencyTypeLabels(),
             'statusLabels' => Branch::statusLabels(),
             'kpis' => [
-                ['label' => 'Agences', 'value' => number_format($visibleAgencies->count(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Périmètre visible'],
+                ['label' => 'Points de vente', 'value' => number_format($visibleAgencies->count(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Périmètre visible'],
                 ['label' => 'Actives', 'value' => number_format($visibleAgencies->where('status', Branch::STATUS_ACTIVE)->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'En activité'],
                 ['label' => 'Suspendues', 'value' => number_format($visibleAgencies->where('status', Branch::STATUS_SUSPENDED)->count(), 0, ',', ' '), 'icon' => 'bx bx-pause-circle', 'color' => '-orange', 'note' => 'À surveiller'],
                 ['label' => "CA page", 'value' => number_format($totalRevenue, 0, ',', ' ') . ' DH', 'icon' => 'bx bx-line-chart', 'color' => '-violet', 'note' => 'Sur la liste courante'],
@@ -121,6 +121,7 @@ class AgencyController extends Controller
                 'agency_type' => Branch::AGENCY_TYPE_INTERNAL,
                 'status' => Branch::STATUS_ACTIVE,
                 'currency' => 'MAD',
+                'default_commission_type' => Branch::DEFAULT_COMMISSION_TYPE_PERCENTAGE,
             ]),
             'isEdit' => false,
             'managerOptions' => $this->managerOptionsForUser($request->user()),
@@ -138,7 +139,7 @@ class AgencyController extends Controller
 
         return redirect()
             ->route('admin.agencies.show', $agency)
-            ->with('success', 'Agence créée avec succès.');
+            ->with('success', 'Point de vente créé avec succès.');
     }
 
     public function show(Request $request, Branch $agency): View
@@ -198,7 +199,7 @@ class AgencyController extends Controller
 
         return redirect()
             ->route('admin.agencies.show', $agency)
-            ->with('success', 'Agence mise à jour.');
+            ->with('success', 'Point de vente mis à jour.');
     }
 
     public function toggleStatus(Request $request, Branch $agency): RedirectResponse
@@ -211,7 +212,7 @@ class AgencyController extends Controller
         $agency->is_active = $agency->status === Branch::STATUS_ACTIVE;
         $agency->save();
 
-        return back()->with('success', 'Statut agence mis à jour.');
+        return back()->with('success', 'Statut du point de vente mis à jour.');
     }
 
     public function destroy(Request $request, Branch $agency): RedirectResponse
@@ -225,7 +226,7 @@ class AgencyController extends Controller
 
         return redirect()
             ->route('admin.agencies.index')
-            ->with('success', 'Agence archivée.');
+            ->with('success', 'Point de vente archivé.');
     }
 
     public function performance(Request $request): View
@@ -343,7 +344,7 @@ class AgencyController extends Controller
     private function ensureAgencyInScope(User $user, Branch $agency): void
     {
         $exists = $this->agencyQueryForUser($user)->whereKey($agency->id)->exists();
-        abort_unless($exists, 403, 'Accès non autorisé à cette agence.');
+        abort_unless($exists, 403, 'Accès non autorisé à ce point de vente.');
     }
 
     private function managerOptionsForUser(User $user)
@@ -393,6 +394,10 @@ class AgencyController extends Controller
             'email' => $data['email'] ?? null,
             'manager_user_id' => $data['manager_user_id'] ?? null,
             'default_commission_rate' => $data['default_commission_rate'] ?? null,
+            'default_commission_type' => $data['default_commission_type'] ?? null,
+            'default_commission_value' => $data['default_commission_value'] ?? ($data['default_commission_rate'] ?? null),
+            'monthly_revenue_target' => $data['monthly_revenue_target'] ?? null,
+            'monthly_reservations_target' => $data['monthly_reservations_target'] ?? null,
             'currency' => $data['currency'] ?? 'MAD',
             'business_hours' => $data['business_hours'] ?? null,
             'internal_notes' => $data['internal_notes'] ?? null,

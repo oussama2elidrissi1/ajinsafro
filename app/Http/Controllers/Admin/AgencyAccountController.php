@@ -94,7 +94,7 @@ class AgencyAccountController extends Controller
             }
 
             $user->fill([
-                'name' => $fullName !== '' ? $fullName : 'Compte agence',
+                'name' => $fullName !== '' ? $fullName : 'Compte point de vente',
                 'email' => $data['email'],
                 'phone' => $data['phone'] ?? $user->phone,
                 'branch_id' => $branchId,
@@ -132,7 +132,7 @@ class AgencyAccountController extends Controller
 
         return redirect()
             ->route('admin.agency-accounts.index')
-            ->with('success', 'Compte agence enregistré avec succès.');
+            ->with('success', 'Compte point de vente enregistré avec succès.');
     }
 
     public function show(Request $request, User $user): View
@@ -214,7 +214,7 @@ class AgencyAccountController extends Controller
 
         return redirect()
             ->route('admin.agency-accounts.edit', $user)
-            ->with('success', 'Compte agence mis à jour.');
+            ->with('success', 'Compte point de vente mis à jour.');
     }
 
     public function disable(Request $request, User $user): RedirectResponse
@@ -246,9 +246,10 @@ class AgencyAccountController extends Controller
 
     private function validatePayload(Request $request, ?int $ignoreUserId = null): array
     {
+        $existingUserId = (int) $request->input('existing_user_id', 0);
         $emailRule = Rule::unique('users', 'email');
-        if ($ignoreUserId) {
-            $emailRule = $emailRule->ignore($ignoreUserId);
+        if ($ignoreUserId || $existingUserId > 0) {
+            $emailRule = $emailRule->ignore($ignoreUserId ?: $existingUserId);
         }
 
         $requiresPassword = ! $ignoreUserId && ! $request->filled('existing_user_id');

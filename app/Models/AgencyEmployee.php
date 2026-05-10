@@ -21,6 +21,18 @@ class AgencyEmployee extends Model
         'phone',
         'avatar_path',
         'position',
+        'department',
+        'employee_type',
+        'contract_type',
+        'hire_date',
+        'exit_date',
+        'fixed_salary',
+        'salary_currency',
+        'hr_status',
+        'national_id',
+        'address',
+        'emergency_contact',
+        'internal_hr_notes',
         'status',
         'can_login',
         'notes',
@@ -28,6 +40,9 @@ class AgencyEmployee extends Model
 
     protected $casts = [
         'can_login' => 'boolean',
+        'hire_date' => 'date',
+        'exit_date' => 'date',
+        'fixed_salary' => 'decimal:2',
     ];
 
     public function branch(): BelongsTo
@@ -81,16 +96,18 @@ class AgencyEmployee extends Model
     public static function positionOptions(): array
     {
         return [
-            'Manager agence',
+            'Manager point de vente',
             'Chef commercial',
             'Agent commercial',
             'Agent réservation',
             'Agent visa',
             'Agent finance',
-            'Agent support',
+            'Support client',
             'Guide',
             'Chauffeur',
             'Coordinateur terrain',
+            'Administration centrale',
+            'Developpement / IT',
         ];
     }
 

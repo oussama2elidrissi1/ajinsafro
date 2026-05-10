@@ -1,6 +1,6 @@
 @extends('layouts.admin-v2')
 
-@section('title', 'Comptes agences')
+@section('title', 'Comptes points de vente')
 
 @push('styles')
 <style>
@@ -31,8 +31,8 @@
 @section('content')
 <div class="aj-page-head">
     <div>
-        <h1>Comptes agences</h1>
-        <p>Comptes utilisateurs liés aux agences, rôles, accès et réservations affectées.</p>
+        <h1>Comptes points de vente</h1>
+        <p>Comptes utilisateurs lies aux points de vente, roles, acces et reservations affectees.</p>
     </div>
     @if(Route::has('admin.agency-accounts.create'))
         <a href="{{ route('admin.agency-accounts.create') }}" class="aj-btn primary"><i class="bx bx-user-plus"></i> Nouveau compte</a>
@@ -45,7 +45,7 @@
             <div class="aj-filter-grid">
                 <input type="text" name="search" class="aj-form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Nom, email, téléphone">
                 <select name="branch_id" class="aj-select">
-                    <option value="">Toutes les agences</option>
+                    <option value="">Tous les points de vente</option>
                     @foreach($branches as $branch)
                         <option value="{{ $branch->id }}" @selected((int)($filters['branch_id'] ?? 0) === $branch->id)>{{ $branch->display_name }}</option>
                     @endforeach
@@ -92,7 +92,7 @@
             <thead>
                 <tr>
                     <th>Compte</th>
-                    <th>Agence</th>
+                            <th>Point de vente</th>
                     <th>Employé</th>
                     <th>Rôle</th>
                     <th>Statut</th>
@@ -123,7 +123,7 @@
                                 <span class="aj-badge off">Inactif</span>
                             @endif
                             @if($account->agencyEmployee?->can_login)
-                                <div style="margin-top:6px;"><span class="aj-badge soft">Login agence</span></div>
+                                <div style="margin-top:6px;"><span class="aj-badge soft">Login point de vente</span></div>
                             @endif
                         </td>
                         <td>
@@ -143,7 +143,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucun compte agence trouvé.</td>
+                        <td colspan="8" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucun compte point de vente trouvé.</td>
                     </tr>
                 @endforelse
             </tbody>

@@ -37,10 +37,25 @@ class EnsureRoutePermission
             return $next($request);
         }
 
-        if (! $user->can($permission)) {
+        if (! $this->userCanAccess($user, $permission)) {
             abort(403, 'Unauthorized action.');
         }
 
         return $next($request);
+    }
+
+    private function userCanAccess($user, string|array $permission): bool
+    {
+        if (is_string($permission)) {
+            return $user->can($permission);
+        }
+
+        foreach ($permission as $permissionName) {
+            if (is_string($permissionName) && $permissionName !== '' && $user->can($permissionName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

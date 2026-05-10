@@ -18,6 +18,8 @@ class Branch extends Model
     public const STATUS_ACTIVE = 'active';
     public const STATUS_INACTIVE = 'inactive';
     public const STATUS_SUSPENDED = 'suspended';
+    public const DEFAULT_COMMISSION_TYPE_FIXED = 'fixed';
+    public const DEFAULT_COMMISSION_TYPE_PERCENTAGE = 'percentage';
 
     protected $fillable = [
         'name',
@@ -31,6 +33,10 @@ class Branch extends Model
         'email',
         'logo_path',
         'default_commission_rate',
+        'default_commission_type',
+        'default_commission_value',
+        'monthly_revenue_target',
+        'monthly_reservations_target',
         'currency',
         'business_hours',
         'internal_notes',
@@ -44,6 +50,9 @@ class Branch extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'default_commission_rate' => 'decimal:2',
+        'default_commission_value' => 'decimal:2',
+        'monthly_revenue_target' => 'decimal:2',
+        'monthly_reservations_target' => 'integer',
         'documents' => 'array',
         'archived_at' => 'datetime',
     ];
@@ -114,10 +123,18 @@ class Branch extends Model
     public static function agencyTypeLabels(): array
     {
         return [
-            self::AGENCY_TYPE_INTERNAL => 'Agence interne',
+            self::AGENCY_TYPE_INTERNAL => 'Point de vente interne',
             self::AGENCY_TYPE_PARTNER => 'Partenaire',
             self::AGENCY_TYPE_FRANCHISE => 'Franchise',
             self::AGENCY_TYPE_EXTERNAL => 'Externe',
+        ];
+    }
+
+    public static function commissionTypeLabels(): array
+    {
+        return [
+            self::DEFAULT_COMMISSION_TYPE_PERCENTAGE => 'Pourcentage',
+            self::DEFAULT_COMMISSION_TYPE_FIXED => 'Fixe',
         ];
     }
 

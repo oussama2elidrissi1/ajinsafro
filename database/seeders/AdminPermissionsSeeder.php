@@ -12,6 +12,14 @@ use Spatie\Permission\PermissionRegistrar;
 
 class AdminPermissionsSeeder extends Seeder
 {
+    private const RESTRICTED_RESERVATION_PERMISSIONS = [
+        'reservations.view_sensitive',
+        'reservations.view_financial',
+        'reservations.view_client_contact',
+        'reservations.view_internal_notes',
+        'reservations.view_commissions',
+    ];
+
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -32,10 +40,11 @@ class AdminPermissionsSeeder extends Seeder
 
         $managerRole->syncPermissions(array_values(array_filter($permissions, function (string $permission): bool {
             return ! str_starts_with($permission, 'settings.roles.')
-                && ! str_starts_with($permission, 'settings.security.');
+                && ! str_starts_with($permission, 'settings.security.')
+                && ! in_array($permission, self::RESTRICTED_RESERVATION_PERMISSIONS, true);
         })));
 
-        $agentRole->syncPermissions(array_values(array_filter($permissions, function (string $permission): bool {
+        $agentPermissions = array_values(array_filter($permissions, function (string $permission): bool {
             return str_starts_with($permission, 'dashboard.')
                 || str_starts_with($permission, 'reservations.')
                 || str_starts_with($permission, 'customers.')
@@ -43,8 +52,9 @@ class AdminPermissionsSeeder extends Seeder
                 || str_starts_with($permission, 'accommodations.')
                 || str_starts_with($permission, 'operations.')
                 || str_starts_with($permission, 'visa.')
-                || $permission === 'agencies.view';
-        })));
+                || in_array($permission, ['agencies.view', 'points_of_sale.view'], true);
+        }));
+        $agentRole->syncPermissions(array_values(array_diff($agentPermissions, self::RESTRICTED_RESERVATION_PERMISSIONS)));
 
         $accountantRole->syncPermissions(array_values(array_filter($permissions, function (string $permission): bool {
             return str_starts_with($permission, 'dashboard.')

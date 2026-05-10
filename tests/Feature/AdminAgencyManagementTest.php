@@ -27,7 +27,7 @@ class AdminAgencyManagementTest extends TestCase
         ]);
     }
 
-    public function test_admin_sidebar_shows_agency_entries(): void
+    public function test_admin_sidebar_shows_points_of_sale_entries(): void
     {
         $user = $this->makeAdminUser([
             'dashboard.view',
@@ -35,7 +35,11 @@ class AdminAgencyManagementTest extends TestCase
             'customers.clients.view',
             'customers.travelers.view',
             'agencies.view',
+            'points_of_sale.view',
             'agency_employees.view',
+            'pos_employees.view',
+            'agency_accounts.view',
+            'assignments.view',
             'partners.list.view',
             'partners.suppliers.view',
         ]);
@@ -43,9 +47,9 @@ class AdminAgencyManagementTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.dashboard.v2'));
 
         $response->assertOk();
-        $response->assertSee('Clients & Agences');
-        $response->assertSee('Agences');
-        $response->assertSee("Employés des agences");
+        $response->assertSee('Points de vente');
+        $response->assertSee('Liste des points de vente');
+        $response->assertSee('Comptes points de vente');
     }
 
     public function test_agency_crud_flow_works(): void
@@ -56,6 +60,11 @@ class AdminAgencyManagementTest extends TestCase
             'agencies.create',
             'agencies.edit',
             'agencies.delete',
+            'points_of_sale.view',
+            'points_of_sale.create',
+            'points_of_sale.edit',
+            'points_of_sale.delete',
+            'points_of_sale.performance',
             'agency_performance.view',
         ]);
 
@@ -80,6 +89,14 @@ class AdminAgencyManagementTest extends TestCase
         $showResponse = $this->actingAs($user)->get(route('admin.agencies.show', $agency));
         $showResponse->assertOk();
         $showResponse->assertSee('Ajinsafro Rabat');
+
+        $aliasIndexResponse = $this->actingAs($user)->get(route('admin.points-of-sale.index'));
+        $aliasIndexResponse->assertOk();
+        $aliasIndexResponse->assertSee('Points de vente');
+
+        $aliasShowResponse = $this->actingAs($user)->get(route('admin.points-of-sale.show', $agency));
+        $aliasShowResponse->assertOk();
+        $aliasShowResponse->assertSee('Ajinsafro Rabat');
 
         $updateResponse = $this->actingAs($user)->put(route('admin.agencies.update', $agency), [
             'name' => 'Ajinsafro Rabat Centre',
@@ -113,6 +130,7 @@ class AdminAgencyManagementTest extends TestCase
             'agency_employees.create',
             'agency_employees.edit',
             'agency_employees.delete',
+            'pos_employees.create',
         ]);
 
         $branch = Branch::query()->create([
@@ -134,7 +152,7 @@ class AdminAgencyManagementTest extends TestCase
             'last_name' => 'Manager',
             'email' => 'sara.manager@example.test',
             'phone' => '+212600000001',
-            'position' => 'Manager agence',
+            'position' => 'Manager point de vente',
             'status' => AgencyEmployee::STATUS_ACTIVE,
             'can_login' => '1',
             'role_name' => 'manager',
@@ -153,6 +171,77 @@ class AdminAgencyManagementTest extends TestCase
         $this->assertSame($branch->id, $employee->user?->branch_id);
     }
 
+    public function test_agency_account_can_link_existing_user_and_reset_password(): void
+    {
+        $user = $this->makeAdminUser([
+            'dashboard.view',
+            'agencies.view',
+            'points_of_sale.view',
+            'agency_accounts.view',
+            'agency_accounts.create',
+            'agency_accounts.edit',
+            'agency_accounts.reset_password',
+            'agency_employees.view',
+            'agency_employees.create',
+        ]);
+
+        $branch = Branch::query()->create([
+            'name' => 'Ajinsafro Casablanca',
+            'code' => 'CASA',
+            'type' => Branch::TYPE_BRANCH,
+            'agency_type' => Branch::AGENCY_TYPE_INTERNAL,
+            'status' => Branch::STATUS_ACTIVE,
+            'city' => 'Casablanca',
+            'country' => 'Maroc',
+            'is_active' => true,
+        ]);
+
+        $employee = AgencyEmployee::query()->create([
+            'branch_id' => $branch->id,
+            'first_name' => 'Nadia',
+            'last_name' => 'Sales',
+            'email' => 'nadia.sales@example.test',
+            'position' => 'Agent commercial',
+            'status' => AgencyEmployee::STATUS_ACTIVE,
+            'can_login' => false,
+        ]);
+
+        $existingUser = User::factory()->create([
+            'name' => 'Nadia Sales',
+            'email' => 'nadia.sales@example.test',
+            'branch_id' => $branch->id,
+            'is_active' => true,
+            'access_mode' => 'role',
+        ]);
+
+        Role::findOrCreate('commercial', 'web');
+
+        $storeResponse = $this->actingAs($user)->post(route('admin.agency-accounts.store'), [
+            'name' => 'Nadia Sales',
+            'email' => 'nadia.sales@example.test',
+            'branch_id' => $branch->id,
+            'employee_id' => $employee->id,
+            'existing_user_id' => $existingUser->id,
+            'job_title' => 'Agent commercial',
+            'role_name' => 'commercial',
+            'is_active' => '1',
+            'can_login' => '1',
+        ]);
+
+        $storeResponse->assertRedirect(route('admin.agency-accounts.index'));
+
+        $employee->refresh();
+        $existingUser->refresh();
+
+        $this->assertSame($existingUser->id, $employee->user_id);
+        $this->assertTrue($employee->can_login);
+        $this->assertSame($branch->id, $existingUser->branch_id);
+
+        $resetResponse = $this->actingAs($user)->post(route('admin.agency-accounts.reset-password', $existingUser));
+        $resetResponse->assertRedirect();
+        $resetResponse->assertSessionHas('success');
+    }
+
     public function test_roles_permissions_page_shows_agency_permissions(): void
     {
         $user = $this->makeAdminUser([
@@ -160,7 +249,9 @@ class AdminAgencyManagementTest extends TestCase
             'settings.view',
             'settings.roles.manage',
             'agencies.view',
+            'points_of_sale.view',
             'agency_employees.view',
+            'pos_employees.view',
             'agency_performance.view',
             'agency_commissions.view',
         ]);
@@ -171,7 +262,9 @@ class AdminAgencyManagementTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('agencies.view');
+        $response->assertSee('points_of_sale.view');
         $response->assertSee('agency_employees.view');
+        $response->assertSee('pos_employees.view');
         $response->assertSee('agency_performance.view');
         $response->assertSee('agency_commissions.view');
     }

@@ -10,7 +10,7 @@ class UpdateAgencyEmployeeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->can('agency_employees.edit');
+        return (bool) $this->user()?->canAny(['agency_employees.edit', 'pos_employees.edit']);
     }
 
     public function rules(): array
@@ -37,6 +37,18 @@ class UpdateAgencyEmployeeRequest extends FormRequest
             ])),
             'phone' => ['nullable', 'string', 'max:50'],
             'position' => ['nullable', 'string', 'max:120'],
+            'department' => ['nullable', 'string', 'max:120'],
+            'employee_type' => ['nullable', 'string', 'max:50'],
+            'contract_type' => ['nullable', 'string', 'max:80'],
+            'hire_date' => ['nullable', 'date'],
+            'exit_date' => ['nullable', 'date', 'after_or_equal:hire_date'],
+            'fixed_salary' => ['nullable', 'numeric', 'min:0'],
+            'salary_currency' => ['nullable', 'string', 'max:10'],
+            'hr_status' => ['nullable', 'string', 'max:30'],
+            'national_id' => ['nullable', 'string', 'max:100'],
+            'address' => ['nullable', 'string'],
+            'emergency_contact' => ['nullable', 'string', 'max:190'],
+            'internal_hr_notes' => ['nullable', 'string'],
             'status' => ['required', Rule::in(array_keys(AgencyEmployee::statusLabels()))],
             'can_login' => ['nullable', 'boolean'],
             'role_name' => [$canLogin ? 'required' : 'nullable', Rule::exists('roles', 'name')],

@@ -1,6 +1,6 @@
 @extends('layouts.admin-v2')
 
-@section('title', $isEdit ? 'Éditer le compte agence' : 'Créer un compte agence')
+@section('title', $isEdit ? 'Editer le compte point de vente' : 'Creer un compte point de vente')
 
 @section('content')
 @php
@@ -9,8 +9,8 @@
 
 <div class="aj-page-head" style="margin-bottom:18px;">
     <div>
-        <h1>{{ $isEdit ? 'Éditer le compte agence' : 'Créer un compte agence' }}</h1>
-        <p>Créer, lier ou modifier un compte utilisateur rattaché à une agence.</p>
+        <h1>{{ $isEdit ? 'Editer le compte point de vente' : 'Creer un compte point de vente' }}</h1>
+        <p>Creer, lier ou modifier un compte utilisateur rattache a un point de vente.</p>
     </div>
     @if(Route::has('admin.agency-accounts.index'))
         <a href="{{ route('admin.agency-accounts.index') }}" class="aj-btn"><i class="bx bx-arrow-back"></i> Retour</a>
@@ -40,20 +40,20 @@
                             <input type="text" name="phone" class="aj-form-control" value="{{ old('phone', $account->phone) }}" placeholder="0600000000">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Agence</label>
+                            <label class="form-label fw-bold">Point de vente</label>
                             <select name="branch_id" class="aj-select">
-                                <option value="">Sélectionner une agence</option>
+                                <option value="">Selectionner un point de vente</option>
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}" @selected((int) old('branch_id', $account->branch_id) === $branch->id)>{{ $branch->display_name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Employé lié</label>
+                            <label class="form-label fw-bold">Employe lie</label>
                             <select name="employee_id" class="aj-select">
-                                <option value="">Aucun employé</option>
-                                @foreach($employees as $employee)
-                                    <option value="{{ $employee->id }}" @selected((int) old('employee_id', $employee?->id) === $employee->id)>{{ $employee->full_name }} @if($employee->branch) — {{ $employee->branch->display_name }} @endif</option>
+                                <option value="">Aucun employe</option>
+                                @foreach($employees as $employeeOption)
+                                    <option value="{{ $employeeOption->id }}" @selected((int) old('employee_id', $employee?->id) === $employeeOption->id)>{{ $employeeOption->full_name }} @if($employeeOption->branch) — {{ $employeeOption->branch->display_name }} @endif</option>
                                 @endforeach
                             </select>
                         </div>
@@ -114,7 +114,7 @@
         <div class="aj-card mb-3">
             <div class="aj-card-body">
                 <strong style="display:block;margin-bottom:10px;">Notes</strong>
-                <div class="aj-subtle">Le compte peut être lié à un employé existant ou créé à partir d’un employé d’agence. Le rôle Spatie est synchronisé automatiquement.</div>
+                <div class="aj-subtle">Le compte peut etre lie a un employe existant ou cree a partir d'un employe de point de vente. Le role Spatie est synchronise automatiquement.</div>
             </div>
         </div>
 

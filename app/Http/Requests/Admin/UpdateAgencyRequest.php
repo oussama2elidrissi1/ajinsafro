@@ -10,7 +10,7 @@ class UpdateAgencyRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->can('agencies.edit');
+        return (bool) $this->user()?->canAny(['agencies.edit', 'points_of_sale.edit']);
     }
 
     public function rules(): array
@@ -31,6 +31,10 @@ class UpdateAgencyRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:190'],
             'manager_user_id' => ['nullable', 'exists:users,id'],
             'default_commission_rate' => ['nullable', 'numeric', 'min:0'],
+            'default_commission_type' => ['nullable', Rule::in(['fixed', 'percentage'])],
+            'default_commission_value' => ['nullable', 'numeric', 'min:0'],
+            'monthly_revenue_target' => ['nullable', 'numeric', 'min:0'],
+            'monthly_reservations_target' => ['nullable', 'integer', 'min:0'],
             'currency' => ['nullable', 'string', 'max:10'],
             'business_hours' => ['nullable', 'string'],
             'internal_notes' => ['nullable', 'string'],
