@@ -1,13 +1,8 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 
-@section('title')
-    {{ $isEdit ? 'Modifier rôle' : 'Créer rôle' }}
-@endsection
+@section('title'){{ $isEdit ? 'Modifier rôle' : 'Créer rôle' }} — Rôles & Permissions@endsection
 
-@section('topbar-title', 'Rôles & Permissions')
-@section('topbar-subtitle', $isEdit ? 'Modifier le rôle et ses permissions.' : 'Créer un rôle et définir ses permissions.')
-
-@push('css')
+@push('styles')
     <style>
         .roles-permissions-shell {
             max-width: 1360px;
@@ -308,7 +303,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
         (function () {
