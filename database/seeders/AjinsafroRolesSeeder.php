@@ -26,6 +26,8 @@ class AjinsafroRolesSeeder extends Seeder
                 || str_starts_with($p, 'visa.') || str_starts_with($p, 'finance.') || str_starts_with($p, 'reporting.')
                 || str_starts_with($p, 'messagerie.') || str_starts_with($p, 'products-services.')
                 || str_starts_with($p, 'group-deals.') || str_starts_with($p, 'activities.') || str_starts_with($p, 'transfers.')
+                || str_starts_with($p, 'agencies.') || str_starts_with($p, 'agency_employees.')
+                || str_starts_with($p, 'agency_performance.') || str_starts_with($p, 'agency_commissions.')
                 || str_starts_with($p, 'settings.view')
                 || str_starts_with($p, 'settings.branches.') || str_starts_with($p, 'settings.users.')
                 || str_starts_with($p, 'settings.general.');
@@ -33,13 +35,15 @@ class AjinsafroRolesSeeder extends Seeder
         $commercial = array_values(array_filter($allPermissions, function (string $p): bool {
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'group-deals.')
-                || str_starts_with($p, 'products-services.') || str_starts_with($p, 'messagerie.');
+                || str_starts_with($p, 'products-services.') || str_starts_with($p, 'messagerie.')
+                || in_array($p, ['agencies.view', 'agency_employees.view'], true);
         }));
         $agent = array_values(array_filter($allPermissions, function (string $p): bool {
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'group-deals.')
                 || str_starts_with($p, 'products-services.') || str_starts_with($p, 'operations.') || str_starts_with($p, 'visa.')
-                || str_starts_with($p, 'messagerie.');
+                || str_starts_with($p, 'messagerie.')
+                || $p === 'agencies.view';
         }));
 
         $this->createRole(BranchScopeService::ROLE_SUPER_ADMIN, $allPermissions);

@@ -42,7 +42,8 @@ class AdminPermissionsSeeder extends Seeder
                 || str_starts_with($permission, 'circuits.')
                 || str_starts_with($permission, 'accommodations.')
                 || str_starts_with($permission, 'operations.')
-                || str_starts_with($permission, 'visa.');
+                || str_starts_with($permission, 'visa.')
+                || $permission === 'agencies.view';
         })));
 
         $accountantRole->syncPermissions(array_values(array_filter($permissions, function (string $permission): bool {

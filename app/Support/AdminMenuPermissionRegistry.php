@@ -70,6 +70,7 @@ class AdminMenuPermissionRegistry
             array_values(config('admin_menu.route_permissions', [])),
             array_values(config('admin_menu.route_prefix_permissions', [])),
             [
+                'agency_commissions.view',
                 'reservations.create',
                 'reservations.store',
                 'reservations.edit',

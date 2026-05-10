@@ -837,7 +837,7 @@
                 <span>{{ $stats['branches_active'] ?? 0 }} actives</span>
                 <span class="arrow">→</span>
             </div>
-            <a href="{{ route('admin.branches.index') }}" class="stretched"></a>
+            <a href="{{ route('admin.agencies.index') }}" class="stretched"></a>
         </div>
 
         <div class="d-card kpi-card fade-in d3">
@@ -1170,7 +1170,7 @@
         <div class="d-card table-card fade-in d5">
             <div class="card-head">
                 <h3>Agences actives</h3>
-                <a href="{{ route('admin.branches.index') }}" class="pill-select">Voir toutes</a>
+                <a href="{{ route('admin.agencies.index') }}" class="pill-select">Voir toutes</a>
             </div>
 
             <div class="agency-list">
@@ -1183,7 +1183,7 @@
                                 <div class="agency-city">{{ $b->city }}{{ $b->code ? ' • '.$b->code : '' }}</div>
                             @endif
                         </div>
-                        <a href="{{ route('admin.branches.edit', $b) }}" class="agency-action" title="Voir">→</a>
+                        <a href="{{ route('admin.agencies.show', $b) }}" class="agency-action" title="Voir">→</a>
                     </div>
                 @empty
                     <div class="empty-row">Aucune agence à afficher.</div>

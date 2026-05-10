@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\AccommodationPackageController;
 use App\Http\Controllers\Admin\ActivityOfferController;
 use App\Http\Controllers\Admin\AccommodationsController;
 use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\AgencyController;
+use App\Http\Controllers\Admin\AgencyEmployeeController;
 use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\BusinessReferenceController;
@@ -454,6 +456,24 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('branches/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
         Route::match(['put', 'patch'], 'branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
         Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+
+        Route::get('agencies', [AgencyController::class, 'index'])->name('agencies.index');
+        Route::get('agencies/create', [AgencyController::class, 'create'])->name('agencies.create');
+        Route::post('agencies', [AgencyController::class, 'store'])->name('agencies.store');
+        Route::get('agencies/performance', [AgencyController::class, 'performance'])->name('agencies.performance');
+        Route::get('agencies/{agency}', [AgencyController::class, 'show'])->name('agencies.show');
+        Route::get('agencies/{agency}/edit', [AgencyController::class, 'edit'])->name('agencies.edit');
+        Route::match(['put', 'patch'], 'agencies/{agency}', [AgencyController::class, 'update'])->name('agencies.update');
+        Route::patch('agencies/{agency}/toggle-status', [AgencyController::class, 'toggleStatus'])->name('agencies.toggle-status');
+        Route::delete('agencies/{agency}', [AgencyController::class, 'destroy'])->name('agencies.destroy');
+
+        Route::get('agency-employees', [AgencyEmployeeController::class, 'index'])->name('agency-employees.index');
+        Route::get('agency-employees/create', [AgencyEmployeeController::class, 'create'])->name('agency-employees.create');
+        Route::post('agency-employees', [AgencyEmployeeController::class, 'store'])->name('agency-employees.store');
+        Route::get('agency-employees/{employee}', [AgencyEmployeeController::class, 'show'])->name('agency-employees.show');
+        Route::get('agency-employees/{employee}/edit', [AgencyEmployeeController::class, 'edit'])->name('agency-employees.edit');
+        Route::match(['put', 'patch'], 'agency-employees/{employee}', [AgencyEmployeeController::class, 'update'])->name('agency-employees.update');
+        Route::delete('agency-employees/{employee}', [AgencyEmployeeController::class, 'destroy'])->name('agency-employees.destroy');
 
         Route::prefix('messagerie')
             ->name('messagerie.')

@@ -362,8 +362,8 @@
             <span>{{ $stats['branches_active'] ?? 0 }} actives</span>
             <span class="arrow">→</span>
         </div>
-        @if(\Illuminate\Support\Facades\Route::has('admin.branches.index'))
-            <a href="{{ route('admin.branches.index') }}" class="kpi-stretched"></a>
+        @if(\Illuminate\Support\Facades\Route::has('admin.agencies.index'))
+            <a href="{{ route('admin.agencies.index') }}" class="kpi-stretched"></a>
         @endif
     </div>
 
@@ -645,8 +645,8 @@
     <div class="dv2-card table-card fade-in d5">
         <div class="card-head">
             <h3>Agences actives</h3>
-            @if(\Illuminate\Support\Facades\Route::has('admin.branches.index'))
-                <a href="{{ route('admin.branches.index') }}" class="pill-select">Voir toutes</a>
+            @if(\Illuminate\Support\Facades\Route::has('admin.agencies.index'))
+                <a href="{{ route('admin.agencies.index') }}" class="pill-select">Voir toutes</a>
             @endif
         </div>
         <div class="agency-list">
@@ -659,8 +659,8 @@
                             <div class="agency-city">{{ $b->city }}{{ $b->code ? ' • '.$b->code : '' }}</div>
                         @endif
                     </div>
-                    @if(\Illuminate\Support\Facades\Route::has('admin.branches.edit'))
-                        <a href="{{ route('admin.branches.edit', $b) }}" class="agency-action" title="Voir">→</a>
+                    @if(\Illuminate\Support\Facades\Route::has('admin.agencies.show'))
+                        <a href="{{ route('admin.agencies.show', $b) }}" class="agency-action" title="Voir">→</a>
                     @endif
                 </div>
             @empty

@@ -76,6 +76,7 @@
     $productsNode = $menuByKey->get('products');
     $productsServicesNode = $menuByKey->get('products_services');
     $customersNode = $menuByKey->get('customers');
+    $agenciesNode = $menuByKey->get('agencies');
     $partnersNode = $menuByKey->get('partners');
     $operationsNode = $menuByKey->get('operations');
     $visaNode = $menuByKey->get('visa');
@@ -106,14 +107,18 @@
     $productsChildren = array_values(array_filter($productsChildren));
 
     $customersChildren = [];
-    if ($customersNode) {
-        $customersChildren[] = $customersNode;
+    $customersChildren[] = $makeLeaf('customers_clients_index', 'Clients', 'admin.customers.clients.index', 'bx bx-user', ['admin.customers.clients.*']);
+    $customersChildren[] = $makeLeaf('customers_travelers', 'Voyageurs', 'admin.customers.voyageurs', 'bx bx-id-card', ['admin.customers.voyageurs']);
+    if ($agenciesNode) {
+        foreach ($agenciesNode['children'] ?? [] as $child) {
+            if (in_array($child['label'] ?? '', ['Liste des agences', 'Employés des agences'], true)) {
+                $customersChildren[] = $child;
+            }
+        }
     }
-    $customersChildren[] = $makeLeaf('branches_index', 'Agences', 'admin.branches.index', 'bx bx-buildings', ['admin.branches.*']);
-    if ($partnersNode) {
-        $customersChildren[] = $partnersNode;
-    }
-    $customersChildren = array_values(array_filter($customersChildren));
+    $customersChildren[] = $makeLeaf('partners_list', 'Partenaires', 'admin.partners.partenaires', 'bx bx-group', ['admin.partners.partenaires']);
+    $customersChildren[] = $makeLeaf('partners_suppliers', 'Fournisseurs', 'admin.partners.fournisseurs', 'bx bx-briefcase', ['admin.partners.fournisseurs']);
+    $customersChildren = collect($customersChildren)->filter()->unique('key')->values()->all();
 
     $operationsChildren = [];
     if ($operationsNode) {

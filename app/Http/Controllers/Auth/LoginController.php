@@ -51,6 +51,12 @@ class LoginController extends Controller
 
         $this->clearLoginAttempts($request);
 
+        if ($this->guard()->user()) {
+            $this->guard()->user()->forceFill([
+                'last_login_at' => now(),
+            ])->save();
+        }
+
         if ($response = $this->authenticated($request, $this->guard()->user())) {
             return $response;
         }

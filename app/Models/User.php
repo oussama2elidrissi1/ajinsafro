@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,6 +37,7 @@ class User extends Authenticatable
         'is_active',
         'access_mode',
         'base_role',
+        'last_login_at',
     ];
 
     /**
@@ -60,6 +60,7 @@ class User extends Authenticatable
         'password' => 'hashed',
         'is_admin' => 'boolean',
         'is_active' => 'boolean',
+        'last_login_at' => 'datetime',
     ];
 
     /**
@@ -70,6 +71,7 @@ class User extends Authenticatable
         if ($this->avatar) {
             return asset('storage/' . $this->avatar);
         }
+
         return asset('build/images/users/avatar-2.jpg');
     }
 
@@ -84,7 +86,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Commerciaux / agents rattachés à ce manager (même filtre agence que le portail).
+     * Commerciaux / agents rattachés à ce manager.
      */
     public function directReports(): HasMany
     {
@@ -94,6 +96,11 @@ class User extends Authenticatable
     public function partner(): HasOne
     {
         return $this->hasOne(Partner::class);
+    }
+
+    public function agencyEmployee(): HasOne
+    {
+        return $this->hasOne(AgencyEmployee::class);
     }
 
     public function chatChannels(): BelongsToMany
@@ -153,26 +160,27 @@ class User extends Authenticatable
         if ((string) ($this->user_type ?? '') === 'client') {
             return true;
         }
+
         if ((string) ($this->base_role ?? '') === 'client') {
             return true;
         }
-        // Fallback: if a client record is linked to this user.
+
         return Client::query()->where('user_id', $this->id)->exists();
     }
 
     /**
-     * Whether the user can access the admin area (dashboard, reservations, etc.).
-     * True if is_admin or has any of the Ajinsafro admin roles.
+     * Whether the user can access the admin area.
      */
     public function canAccessAdmin(): bool
     {
-        // Client portal accounts must never access agent/admin area.
         if ($this->isClientPortal()) {
             return false;
         }
+
         if ($this->is_admin) {
             return true;
         }
+
         return $this->hasRole([
             \App\Services\BranchScopeService::ROLE_SUPER_ADMIN,
             \App\Services\BranchScopeService::ROLE_SIEGE_ADMIN,
@@ -186,6 +194,6 @@ class User extends Authenticatable
             'Chef Commercial',
             'Manager',
             'Agent',
-        ]);
+        ]) || $this->can('dashboard.view');
     }
 }
