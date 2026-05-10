@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title') Home page @endsection
 
 @section('content')
@@ -921,7 +921,7 @@
     </div>{{-- /.tab-content --}}
 @endsection
 
-@push('css')
+@push('styles')
 <style>
 .holiday-preview__img {
     flex: 0 0 64px;
@@ -960,7 +960,7 @@
 </style>
 @endpush
 
-@push('script')
+@push('scripts')
 <script>
 (function () {
     /* â”€â”€ Header tab JS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */

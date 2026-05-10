@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title') Départ Group Deal — {{ $departure->start_date?->format('d/m/Y') }} @endsection
 
 @section('content')
@@ -268,6 +268,6 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush

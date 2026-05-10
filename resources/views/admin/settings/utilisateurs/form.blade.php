@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     {{ $isEdit ? 'Modifier utilisateur' : 'Créer utilisateur' }}
 @endsection
@@ -218,7 +218,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
         (function() {

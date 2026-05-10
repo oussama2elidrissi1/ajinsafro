@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 
 @section('title', 'Créer une réservation')
 @section('hidePageFooter', '1')
@@ -56,6 +56,6 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="{{ asset('js/reservation-create.js') }}"></script>
 @endpush

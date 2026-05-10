@@ -196,7 +196,7 @@
 </div>
 
 @if(!empty($galleryUrls))
-@push('script')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.gallery-remove').forEach(function(btn) {

@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Départs & Disponibilités
 @endsection
@@ -264,7 +264,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script src="{{ URL::asset('js/voyage-room-availability-modal.js') }}"></script>
 @endpush

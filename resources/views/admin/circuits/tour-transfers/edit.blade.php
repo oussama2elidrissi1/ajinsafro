@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Transferts du circuit — {{ $tour->post_title }}
 @endsection

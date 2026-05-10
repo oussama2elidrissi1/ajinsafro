@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Fiche client {{ $client->client_code }}
 @endsection

@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Modifier l'hébergement
 @endsection
@@ -101,7 +101,7 @@
         </div>
     </form>
 @endsection
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {

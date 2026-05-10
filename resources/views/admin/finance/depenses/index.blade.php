@@ -1,10 +1,10 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Dépenses
 @endsection
 @section('content')
     @include('admin._placeholder', ['title' => 'Dépenses'])
 @endsection
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush

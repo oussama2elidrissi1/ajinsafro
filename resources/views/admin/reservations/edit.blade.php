@@ -307,7 +307,7 @@
         </div>
     </form>
 
-    @push('script')
+    @push('scripts')
     <script>
         (function () {
             var container = document.getElementById('companions-container');

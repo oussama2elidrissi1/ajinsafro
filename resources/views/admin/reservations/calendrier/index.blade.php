@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Calendrier des départs
 @endsection
@@ -86,7 +86,7 @@
     </div>
 @endsection
 
-@push('css')
+@push('styles')
     @php
         $useAgentShell = \App\Services\View\AgentPortalLayout::shouldUse(auth()->user());
     @endphp

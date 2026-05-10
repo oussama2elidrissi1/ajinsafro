@@ -1,4 +1,4 @@
-﻿@php
+@php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     $laravelV = $laravelVoyage ?? null;
@@ -65,7 +65,7 @@
     $saveUpdateTemplate = route('admin.circuits.voyages.v2.steps.save', ['id' => 999999, 'step' => '__STEP__']);
     $saveUpdateTemplate = str_replace('999999', '__ID__', $saveUpdateTemplate);
 @endphp
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 
 @section('title'){{ $isCreate ? 'Créer un voyage — V2' : 'Modifier — ' . $headerTitle }}@endsection
 
@@ -183,7 +183,7 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
     @include('admin.circuits.voyages.partials._voyage_page_bootstrap')
     <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>

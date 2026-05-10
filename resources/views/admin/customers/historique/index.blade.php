@@ -1,10 +1,10 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Historique
 @endsection
 @section('content')
     @include('admin._placeholder', ['title' => 'Historique'])
 @endsection
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush

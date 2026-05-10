@@ -27,7 +27,7 @@
         : null;
     $veDatesCount = isset($travelDates) && $travelDates instanceof \Illuminate\Support\Collection ? $travelDates->count() : 0;
 @endphp
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 
 @section('title')
     {{ $isCreate ? 'Creer un tour WordPress' : 'Modifier le tour WordPress' }}
@@ -129,7 +129,7 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
     @include('admin.circuits.voyages.partials._voyage_page_bootstrap')
     <script src="{{ URL::asset('build/libs/tinymce/tinymce.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>

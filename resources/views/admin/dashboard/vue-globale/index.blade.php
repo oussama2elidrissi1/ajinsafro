@@ -1,8 +1,8 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 
 @section('title', 'Tableau de bord — Vue globale')
 
-@push('css')
+@push('styles')
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -1196,7 +1196,7 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script src="{{ URL::asset('build/libs/apexcharts/apexcharts.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {

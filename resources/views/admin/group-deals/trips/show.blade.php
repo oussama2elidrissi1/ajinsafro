@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title') Group Deal — {{ $voyage->name }} @endsection
 
 @section('content')
@@ -251,6 +251,6 @@
 @endforeach
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush

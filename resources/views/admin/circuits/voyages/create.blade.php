@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Créer un tour WordPress
 @endsection
@@ -446,7 +446,7 @@
     </form>
 </div>{{-- /.voyage-edit-page --}}
 @endsection
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
     <script>
         // Location search filter for create form (WordPress Traveler behavior)

@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title', 'Hôtel du circuit — ' . $tour->post_title)
 
 @section('content')

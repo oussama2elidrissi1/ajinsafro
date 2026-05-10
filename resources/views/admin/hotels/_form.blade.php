@@ -163,7 +163,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
     <script>
         (function () {
             var container = document.getElementById('room-types-container');

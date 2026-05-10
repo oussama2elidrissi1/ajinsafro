@@ -44,11 +44,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    {{-- Bootstrap + Qovex icons — kept for pages migrated with BS classes --}}
+    {{-- Bootstrap + Qovex base (provides content styles: tables, cards, forms, badges) --}}
     <link href="{{ URL::asset('build/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('build/css/icons.min.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('build/css/app.min.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-branding.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet">
 
-    {{-- Admin V2 system --}}
+    {{-- Admin V2 system — loaded last to override Qovex layout rules --}}
     <link href="{{ URL::asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
 

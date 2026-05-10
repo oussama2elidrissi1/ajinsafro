@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title') Group Deals — Voyages @endsection
 
 @section('content')
@@ -127,6 +127,6 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush

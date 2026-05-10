@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v2')
 @section('title')
     Fiche voyage – {{ $voyage->name }}
 @endsection
@@ -171,10 +171,10 @@
         </div>
     @endif
 @endsection
-@push('script')
+@push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
-@push('style')
+@push('styles')
 <style>
 .program-html ul { padding-left: 1.25rem; }
 .program-html ol { padding-left: 1.25rem; }
