@@ -12,8 +12,10 @@
     $userRole  = $user?->getRoleNames()->first() ?? 'Administrateur';
     $initials  = strtoupper(collect(preg_split('/\s+/', trim($userName)))->filter()->take(2)->map(fn($s) => mb_substr($s, 0, 1))->implode(''));
     if ($initials === '') { $initials = 'AD'; }
-    $brandLogo = \App\Models\Setting::brandLogoUrl('dark');
+    $brandLogoDark = \App\Models\Setting::brandLogoUrl('dark');
+    $brandLogoLight = \App\Models\Setting::brandLogoUrl('light');
     $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
+    $avatarUrl = $user?->avatar_url;
 @endphp
 <!DOCTYPE html>
 <html lang="fr">
@@ -33,10 +35,10 @@
 
     <style>
         :root {
-            --blue: #0b68d1;
-            --blue-dark: #073b74;
-            --blue-soft: #eef6ff;
-            --orange: #ff8a00;
+            --blue: #005792;
+            --blue-dark: #06345c;
+            --blue-soft: #eaf4fb;
+            --orange: #ff6b00;
             --green: #19b982;
             --red: #ef4d45;
             --yellow: #f7b500;
@@ -77,18 +79,31 @@
             padding: 22px 22px 32px;
         }
 
-        .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; }
-        .brand-icon {
-            width: 48px; height: 48px; border-radius: 14px;
-            background: linear-gradient(135deg, var(--blue), #22a7f0);
-            color: #fff; display: grid; place-items: center;
-            font-size: 22px; font-weight: 900;
-            box-shadow: 0 12px 25px rgba(11, 104, 209, 0.25);
+        .brand {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #edf2f7;
         }
-        .brand-icon img { width: 32px; height: 32px; object-fit: contain; }
-        .brand-title { font-size: 22px; font-weight: 900; color: var(--blue); line-height: 1; }
-        .brand-title span { color: var(--orange); }
-        .brand-subtitle { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 4px; }
+        .brand-logo-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            max-width: 100%;
+        }
+        .brand-logo-img,
+        .logo-img {
+            height: 42px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            object-position: left center;
+            display: block;
+        }
+        .brand-subtitle { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 2px; }
 
         .menu-section { margin-bottom: 22px; }
         .menu-label {
@@ -134,62 +149,126 @@
 
         /* ─── TOPBAR ─── */
         .topbar {
-            height: 76px;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(18px);
-            border-bottom: 1px solid var(--border);
+            min-height: 78px;
+            background: linear-gradient(135deg, var(--blue), #064b7f);
+            box-shadow: 0 12px 28px rgba(6, 52, 92, 0.18);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 34px;
             position: sticky; top: 0; z-index: 30;
         }
-        .topbar-left { display: flex; align-items: center; gap: 18px; flex: 1; }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex: 1;
+            min-width: 0;
+        }
+        .topbar-brand-group { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+        .topbar-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+            padding: 10px 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+        }
+        .topbar-logo-img { height: 38px; }
         .hamburger {
-            border: none; background: #f1f6fb;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.12);
             width: 42px; height: 42px; border-radius: 12px;
-            font-size: 20px; cursor: pointer; color: var(--blue-dark);
+            font-size: 20px; cursor: pointer; color: #fff;
             display: none;
         }
         .search { width: min(520px, 100%); position: relative; }
         .search input {
             width: 100%; height: 44px;
-            border: 1px solid var(--border); border-radius: 14px;
-            background: #fff; padding: 0 48px 0 46px;
-            outline: none; color: var(--text); font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 14px;
+            background: rgba(255, 255, 255, 0.14); padding: 0 48px 0 46px;
+            outline: none; color: #fff; font-weight: 600;
             transition: 0.2s;
         }
-        .search input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
-        .search .icon { position: absolute; top: 50%; left: 16px; transform: translateY(-50%); color: #9aa8b7; }
+        .search input::placeholder { color: rgba(255, 255, 255, 0.78); }
+        .search input:focus {
+            border-color: rgba(255, 255, 255, 0.42);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+        }
+        .search .icon { position: absolute; top: 50%; left: 16px; transform: translateY(-50%); color: rgba(255, 255, 255, 0.82); }
         .search .shortcut {
             position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
-            background: #f2f5f8; padding: 4px 8px; border-radius: 8px;
-            font-size: 11px; font-weight: 800; color: #9aa8b7;
+            background: rgba(255, 255, 255, 0.16); padding: 4px 8px; border-radius: 8px;
+            font-size: 11px; font-weight: 800; color: rgba(255, 255, 255, 0.78);
         }
 
-        .topbar-actions { display: flex; align-items: center; gap: 14px; }
+        .topbar-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .notif {
             width: 42px; height: 42px; border-radius: 13px;
             display: grid; place-items: center;
-            background: #fff; border: 1px solid var(--border);
-            position: relative; color: var(--blue-dark);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            position: relative; color: #fff;
             font-size: 17px; cursor: pointer; transition: 0.2s;
         }
-        .notif:hover { background: var(--blue-soft); border-color: var(--blue); }
+        .notif:hover { background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.3); }
         .notif b {
             position: absolute; top: -5px; right: -5px;
-            background: var(--red); color: #fff;
-            width: 18px; height: 18px; border-radius: 50%;
-            display: grid; place-items: center; font-size: 10px;
+            background: var(--orange); color: #fff;
+            min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px;
+            display: grid; place-items: center; font-size: 10px; font-weight: 900;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
         }
 
-        .profile { display: flex; align-items: center; gap: 12px; padding-left: 8px; }
-        .avatar {
-            width: 42px; height: 42px; border-radius: 50%;
-            background: var(--blue); color: #fff;
-            display: grid; place-items: center; font-weight: 900;
+        .profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px 8px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+        }
+        .profile-avatar-shell {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .profile-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,.35);
+            display: block;
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .avatar-fallback {
+            position: absolute;
+            inset: 0;
+            display: none;
+            place-items: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-weight: 900;
         }
         .profile-info { display: flex; flex-direction: column; }
-        .profile-name { font-weight: 900; color: var(--text); font-size: 14px; line-height: 1.2; }
-        .profile-role { color: var(--muted); font-size: 11px; font-weight: 600; }
+        .profile-name { font-weight: 900; color: #fff; font-size: 14px; line-height: 1.2; }
+        .profile-role { color: rgba(255, 255, 255, 0.72); font-size: 11px; font-weight: 700; }
+        .profile-caret {
+            width: 24px;
+            height: 24px;
+            display: grid;
+            place-items: center;
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 18px;
+        }
 
         /* ─── CONTENT ─── */
         .content { padding: 30px 34px; }
@@ -474,7 +553,10 @@
             .main { margin-left: 0; width: 100%; }
             .hamburger { display: grid; place-items: center; }
             .topbar { padding: 0 18px; }
+            .topbar-logo { min-width: 122px; padding-inline: 12px; }
+            .topbar-logo-img { height: 34px; }
             .profile-info { display: none; }
+            .profile { padding-right: 8px; }
             .content { padding: 22px 18px; }
             .page-head { flex-direction: column; align-items: stretch; }
             .kpi-grid { grid-template-columns: 1fr; }
@@ -501,17 +583,10 @@
     {{-- ═════════════ SIDEBAR ═════════════ --}}
     <aside class="sidebar" id="dashv2-sidebar">
         <div class="brand">
-            <div class="brand-icon">
-                @if($brandLogo)
-                    <img src="{{ $brandLogo }}" alt="{{ $brandName }}">
-                @else
-                    <i class="bx bx-paper-plane"></i>
-                @endif
-            </div>
-            <div>
-                <div class="brand-title">Ajinsafro<span>.ma</span></div>
-                <div class="brand-subtitle">Voyagez en toute confiance</div>
-            </div>
+            <a href="{{ route('admin.dashboard.v2') }}" class="brand-logo-link" aria-label="{{ $brandName }}">
+                <img src="{{ $brandLogoDark }}" alt="{{ $brandName }}" class="brand-logo-img">
+            </a>
+            <div class="brand-subtitle">Voyagez en toute confiance</div>
         </div>
 
         <div class="menu-section">
@@ -597,9 +672,15 @@
         {{-- ─── TOPBAR ─── --}}
         <header class="topbar">
             <div class="topbar-left">
-                <button type="button" class="hamburger" id="dashv2-hamburger" aria-label="Menu">
-                    <i class="bx bx-menu"></i>
-                </button>
+                <div class="topbar-brand-group">
+                    <button type="button" class="hamburger" id="dashv2-hamburger" aria-label="Menu">
+                        <i class="bx bx-menu"></i>
+                    </button>
+
+                    <a href="{{ route('admin.dashboard.v2') }}" class="topbar-logo" aria-label="{{ $brandName }}">
+                        <img src="{{ $brandLogoLight }}" alt="{{ $brandName }}" class="logo-img topbar-logo-img">
+                    </a>
+                </div>
 
                 <div class="search">
                     <span class="icon"><i class="bx bx-search"></i></span>
@@ -609,22 +690,40 @@
             </div>
 
             <div class="topbar-actions">
-                @if(\Illuminate\Support\Facades\Route::has('admin.messagerie.index'))
-                    <a href="{{ route('admin.messagerie.index') }}" class="notif" title="Messages">
+                @if(\Illuminate\Support\Facades\Route::has('admin.reservations.index'))
+                    <a href="{{ route('admin.reservations.index') }}" class="notif" title="Notifications">
                         <i class="bx bx-bell"></i>
-                        @if(($stats['messages_count'] ?? 0) > 0)
-                            <b>{{ $stats['messages_count'] }}</b>
+                        @if(($stats['reservations_today'] ?? 0) > 0)
+                            <b>{{ min((int) ($stats['reservations_today'] ?? 0), 99) }}</b>
                         @endif
                     </a>
                 @endif
 
-                <div class="profile">
-                    <div class="avatar">{{ $initials }}</div>
+                @if(\Illuminate\Support\Facades\Route::has('admin.messagerie.index'))
+                    <a href="{{ route('admin.messagerie.index') }}" class="notif" title="Messages">
+                        <i class="bx bx-message-rounded-dots"></i>
+                        @if(($stats['messages_count'] ?? 0) > 0)
+                            <b>{{ min((int) ($stats['messages_count'] ?? 0), 99) }}</b>
+                        @endif
+                    </a>
+                @endif
+
+                <button type="button" class="profile" aria-label="Profil administrateur">
+                    <span class="profile-avatar-shell">
+                        <img
+                            src="{{ $avatarUrl }}"
+                            alt="{{ $userName }}"
+                            class="profile-avatar"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+                        >
+                        <span class="avatar-fallback">{{ $initials }}</span>
+                    </span>
                     <div class="profile-info">
                         <div class="profile-name">{{ $userName }}</div>
                         <div class="profile-role">{{ $userRole }}</div>
                     </div>
-                </div>
+                    <span class="profile-caret"><i class="bx bx-chevron-down"></i></span>
+                </button>
             </div>
         </header>
 
