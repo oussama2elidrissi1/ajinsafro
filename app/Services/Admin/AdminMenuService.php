@@ -3,9 +3,10 @@
 namespace App\Services\Admin;
 
 use App\Models\User;
-use Illuminate\Routing\Exceptions\UrlGenerationException;
+use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Throwable;
 
 class AdminMenuService
 {
@@ -123,11 +124,26 @@ class AdminMenuService
 
     private function buildHref(string $route, array $params, array $query): ?string
     {
-        try {
-            return route($route, array_merge($params, $query));
-        } catch (UrlGenerationException) {
+        if ($this->routeNeedsParameters($route) && $params === []) {
             return null;
         }
+
+        try {
+            return route($route, array_merge($params, $query));
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private function routeNeedsParameters(string $routeName): bool
+    {
+        /** @var LaravelRoute|null $route */
+        $route = Route::getRoutes()->getByName($routeName);
+        if (! $route) {
+            return false;
+        }
+
+        return preg_match('/\{[^}?]+\}/', $route->uri()) === 1;
     }
 
     private function isRouteActive(string $currentRoute, array $item, ?string $route): bool
