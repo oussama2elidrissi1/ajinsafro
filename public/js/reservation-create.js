@@ -97,6 +97,16 @@
         return select && select.selectedOptions.length ? (select.selectedOptions[0].textContent || 'Aucune sélection') : 'Aucune sélection';
     }
 
+    function getSelectedTripOption() {
+        var select = document.getElementById('select-tour-id');
+        return select && select.selectedOptions.length ? select.selectedOptions[0] : null;
+    }
+
+    function getSelectedTripFallbackPrice() {
+        var option = getSelectedTripOption();
+        return parseNumber(option && option.getAttribute('data-price-from'));
+    }
+
     function getSelectedDepartureLabel() {
         var select = document.getElementById('reservation-departure-select');
         return select && select.selectedOptions.length && select.value ? (select.selectedOptions[0].textContent || '—') : '—';
@@ -110,6 +120,18 @@
     function getAvailableDepartureCapacity() {
         var option = getSelectedDepartureOption();
         return parseInt(option && option.getAttribute('data-available-capacity') || '0', 10) || 0;
+    }
+
+    function getRoomMode() {
+        var container = document.getElementById('reservation-hotel-rooms-container');
+        return container && container.getAttribute('data-room-mode') ? String(container.getAttribute('data-room-mode')) : 'unknown';
+    }
+
+    function setAccommodationMode(mode) {
+        var hidden = document.getElementById('reservation-accommodation-mode');
+        if (hidden) {
+            hidden.value = mode || 'rooms';
+        }
     }
 
     function hotelRoomSummary() {
@@ -145,7 +167,12 @@
 
     function getBaseUnitPrice() {
         var input = document.querySelector('input[name="base_price"]');
-        return parseNumber(input && input.value);
+        var fromInput = parseNumber(input && input.value);
+        if (fromInput > 0) {
+            return fromInput;
+        }
+
+        return getSelectedTripFallbackPrice();
     }
 
     function derivePaymentStatus(totalAmount, paidAmount) {
@@ -354,7 +381,8 @@
     function financialSummary() {
         var travelerCount = getTravelerCount();
         var room = hotelRoomSummary();
-        var totalBase = getBaseUnitPrice() * travelerCount;
+        var unitPrice = getBaseUnitPrice();
+        var totalBase = unitPrice * travelerCount;
         var extras = extrasTotal();
         var totalAmount = totalBase + room.roomSupplementTotal + extras;
         var paidAmount = parseNumber(document.getElementById('payment_amount') && document.getElementById('payment_amount').value);
@@ -362,6 +390,7 @@
 
         return {
             travelerCount: travelerCount,
+            unitPrice: unitPrice,
             totalBase: totalBase,
             roomSupplementTotal: room.roomSupplementTotal,
             extrasTotal: extras,
@@ -372,7 +401,9 @@
             selectedRoomCapacity: room.selectedRoomCapacity,
             selectedRoomCount: room.selectedRoomCount,
             stockExceeded: room.stockExceeded,
-            availableDepartureCapacity: getAvailableDepartureCapacity()
+            availableDepartureCapacity: getAvailableDepartureCapacity(),
+            priceMissing: unitPrice <= 0,
+            roomMode: getRoomMode()
         };
     }
 
@@ -391,6 +422,7 @@
         setText('create-summary-travelers', String(summary.travelerCount));
         setText('create-final-travelers', String(summary.travelerCount));
         setText('create-travelers-badge', String(summary.travelerCount));
+        setText('create-summary-unit-price', summary.priceMissing ? '—' : formatMoney(summary.unitPrice));
         setText('create-summary-total', formatMoney(summary.totalAmount));
         setText('create-summary-paid', formatMoney(summary.paidAmount));
         setText('create-summary-remaining', formatMoney(summary.remainingAmount));
@@ -428,6 +460,8 @@
                 : 'Le montant payé ne peut pas dépasser le total du dossier.';
             paymentHelp.classList.toggle('is-error', summary.paidAmount > summary.totalAmount);
         }
+
+        setAccommodationMode(summary.roomMode === 'places_only' ? 'places_only' : (summary.roomMode === 'blocked' ? 'blocked' : 'rooms'));
 
         var capacityError = document.getElementById('reservation-capacity-error');
         if (capacityError) {
@@ -505,21 +539,42 @@
                 showInlineError('Sélectionnez un départ avant de continuer.');
                 return false;
             }
-            if (summary.selectedRoomCount < 1) {
-                showInlineError('Sélectionnez au moins une chambre pour ce dossier.');
+            if (summary.priceMissing) {
+                showInlineError('Aucun prix configuré pour ce voyage/départ.');
                 return false;
             }
-            if (summary.stockExceeded) {
-                showInlineError('Le nombre de chambres demandé dépasse le stock disponible.');
+
+            if (summary.roomMode === 'blocked') {
+                showInlineError('Configuration incomplète : ajoutez les chambres pour ce départ.');
                 return false;
             }
-            if (summary.selectedRoomCapacity < summary.travelerCount) {
-                showInlineError('La capacité des chambres sélectionnées est insuffisante pour les voyageurs du dossier.');
-                return false;
-            }
-            if (summary.availableDepartureCapacity > 0 && summary.travelerCount > summary.availableDepartureCapacity) {
-                showInlineError('Le nombre de voyageurs dépasse le stock disponible sur ce départ.');
-                return false;
+
+            if (summary.roomMode === 'places_only') {
+                if (summary.availableDepartureCapacity <= 0) {
+                    showInlineError('Ce départ n’a plus de places disponibles.');
+                    return false;
+                }
+                if (summary.travelerCount > summary.availableDepartureCapacity) {
+                    showInlineError('Stock insuffisant : il reste seulement ' + summary.availableDepartureCapacity + ' places.');
+                    return false;
+                }
+            } else {
+                if (summary.selectedRoomCount < 1) {
+                    showInlineError('Sélectionnez au moins une chambre pour ce dossier.');
+                    return false;
+                }
+                if (summary.stockExceeded) {
+                    showInlineError('Le nombre de chambres demandé dépasse le stock disponible.');
+                    return false;
+                }
+                if (summary.selectedRoomCapacity < summary.travelerCount) {
+                    showInlineError('La capacité des chambres sélectionnées est insuffisante pour les voyageurs du dossier.');
+                    return false;
+                }
+                if (summary.availableDepartureCapacity > 0 && summary.travelerCount > summary.availableDepartureCapacity) {
+                    showInlineError('Le nombre de voyageurs dépasse le stock disponible sur ce départ.');
+                    return false;
+                }
             }
         }
 

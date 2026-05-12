@@ -262,9 +262,20 @@
         }
     }
 
+    function getSelectedTripOption() {
+        var select = document.getElementById('select-tour-id');
+        return select && select.selectedOptions.length ? select.selectedOptions[0] : null;
+    }
+
     function departureUnitPrice(option) {
         if (!option) return 0;
-        return parseNumber(option.getAttribute('data-sale-price')) || parseNumber(option.getAttribute('data-base-price'));
+        var departurePrice = parseNumber(option.getAttribute('data-sale-price')) || parseNumber(option.getAttribute('data-base-price'));
+        if (departurePrice > 0) {
+            return departurePrice;
+        }
+
+        var tripOption = getSelectedTripOption();
+        return parseNumber(tripOption && tripOption.getAttribute('data-price-from'));
     }
 
     function syncDepartureHidden() {
@@ -287,41 +298,76 @@
 
         var hotels = payload && payload.hotels ? payload.hotels : [];
         var currency = payload && payload.currency ? payload.currency : 'DH';
+        var availableCapacity = parseInt((payload && payload.available_capacity) || '0', 10) || 0;
+        var hasAssociatedHotels = !!(payload && payload.has_associated_hotels);
+        var hasConfiguredRooms = !!(payload && payload.has_configured_rooms);
+        var configureUrl = payload && payload.configure_url ? String(payload.configure_url) : '';
+        var travelers = travelerCount();
         var html = '';
         var index = 0;
 
-        hotels.forEach(function (hotel) {
-            html += '<div class="card mb-2 reservation-hotel-block">' +
-                '<div class="card-header bg-light py-2"><strong>' + (hotel.hotel_name || 'Hôtel') + '</strong></div>' +
-                '<div class="card-body py-2"><div class="table-responsive"><table class="table table-sm table-bordered mb-0">' +
-                '<thead><tr><th>Type</th><th class="text-center">Places dispo</th><th class="text-center">Chambres dispo</th><th class="text-center">Cap.</th><th class="text-center">Supplément</th><th class="text-center">Nb chambres</th><th class="text-end">Sous-total</th></tr></thead><tbody>';
+        if (hotels.length) {
+            roomsContainer.setAttribute('data-room-mode', 'rooms');
+            setAccommodationMode('rooms');
 
-            (hotel.rooms || []).forEach(function (room) {
-                var roomId = room.departure_hotel_room_id == null ? '' : String(room.departure_hotel_room_id);
-                var count = initialRooms[roomId] != null ? parseInt(initialRooms[roomId], 10) || 0 : 0;
-                var supplement = parseNumber(room.supplement);
-                var subtotal = count * supplement;
+            hotels.forEach(function (hotel) {
+                html += '<div class="card mb-2 reservation-hotel-block">' +
+                    '<div class="card-header bg-light py-2"><strong>' + (hotel.hotel_name || 'Hôtel') + '</strong></div>' +
+                    '<div class="card-body py-2"><div class="table-responsive"><table class="table table-sm table-bordered mb-0">' +
+                    '<thead><tr><th>Type</th><th class="text-center">Places dispo</th><th class="text-center">Chambres dispo</th><th class="text-center">Cap.</th><th class="text-center">Supplément</th><th class="text-center">Nb chambres</th><th class="text-end">Sous-total</th></tr></thead><tbody>';
 
-                html += '<tr class="reservation-room-row">' +
-                    '<td>' + (room.room_type || '') + '</td>' +
-                    '<td class="text-center">' + (room.available_places || 0) + '</td>' +
-                    '<td class="text-center">' + (room.available_rooms || 0) + '</td>' +
-                    '<td class="text-center">' + (room.capacity_total || 0) + '</td>' +
-                    '<td class="text-center">' + supplement.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + currency + '</td>' +
-                    '<td class="text-center">' +
-                        '<input type="hidden" name="hotel_rooms[' + index + '][departure_hotel_room_id]" value="' + roomId + '">' +
-                        '<input type="number" name="hotel_rooms[' + index + '][room_count]" class="form-control form-control-sm text-center reservation-room-count" value="' + count + '" min="0" max="' + (room.available_rooms || 0) + '" data-room-supplement="' + supplement + '" data-room-capacity="' + (room.capacity_total || 0) + '">' +
-                    '</td>' +
-                    '<td class="text-end reservation-room-total">' + (count > 0 ? subtotal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '—') + '</td>' +
-                '</tr>';
-                index += 1;
+                (hotel.rooms || []).forEach(function (room) {
+                    var roomId = room.departure_hotel_room_id == null ? '' : String(room.departure_hotel_room_id);
+                    var count = initialRooms[roomId] != null ? parseInt(initialRooms[roomId], 10) || 0 : 0;
+                    var supplement = parseNumber(room.supplement);
+                    var subtotal = count * supplement;
+
+                    html += '<tr class="reservation-room-row">' +
+                        '<td>' + (room.room_type || '') + '</td>' +
+                        '<td class="text-center">' + (room.available_places || 0) + '</td>' +
+                        '<td class="text-center">' + (room.available_rooms || 0) + '</td>' +
+                        '<td class="text-center">' + (room.capacity_total || 0) + '</td>' +
+                        '<td class="text-center">' + supplement.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + currency + '</td>' +
+                        '<td class="text-center">' +
+                            '<input type="hidden" name="hotel_rooms[' + index + '][departure_hotel_room_id]" value="' + roomId + '">' +
+                            '<input type="number" name="hotel_rooms[' + index + '][room_count]" class="form-control form-control-sm text-center reservation-room-count" value="' + count + '" min="0" max="' + (room.available_rooms || 0) + '" data-room-supplement="' + supplement + '" data-room-capacity="' + (room.capacity_total || 0) + '">' +
+                        '</td>' +
+                        '<td class="text-end reservation-room-total">' + (count > 0 ? subtotal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '—') + '</td>' +
+                    '</tr>';
+                    index += 1;
+                });
+
+                html += '</tbody></table></div></div></div>';
             });
-
-            html += '</tbody></table></div></div></div>';
-        });
-
-        if (!html) {
-            html = '<p class="text-muted mb-0">Aucune chambre configurée pour ce départ.</p>';
+        } else if (hasAssociatedHotels) {
+            roomsContainer.setAttribute('data-room-mode', 'blocked');
+            setAccommodationMode('blocked');
+            html = '<div class="alert alert-warning mb-0">Configuration incomplète : ajoutez les chambres pour ce départ.' + (configureUrl ? ' <a class="btn btn-sm btn-outline-primary ms-2" href="' + configureUrl + '" target="_blank" rel="noopener">Configurer les chambres du départ</a>' : '') + '</div>';
+        } else if (availableCapacity > 0) {
+            roomsContainer.setAttribute('data-room-mode', 'places_only');
+            setAccommodationMode('places_only');
+            html = '' +
+                '<div class="card mb-2 reservation-hotel-block reservation-hotel-block--stock-only">' +
+                    '<div class="card-body py-3">' +
+                        '<div class="d-flex flex-column gap-2">' +
+                            '<div class="alert alert-info mb-0">Ce départ dispose de ' + availableCapacity + ' place' + (availableCapacity > 1 ? 's' : '') + '. Aucune chambre détaillée n’est configurée, la réservation sera faite sur stock de places.</div>' +
+                            '<div class="reservation-create__grid reservation-create__grid--two">' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Départ</label><input class="reservation-create__input" type="text" value="' + getSelectedDepartureLabel() + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Places disponibles</label><input class="reservation-create__input" type="text" value="' + availableCapacity + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Nombre voyageurs</label><input class="reservation-create__input" type="text" value="' + travelers + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Prix unitaire</label><input class="reservation-create__input" type="text" value="' + formatMoney(departureUnitPrice(getSelectedDepartureOption())) + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Total base</label><input class="reservation-create__input" type="text" value="' + formatMoney(departureUnitPrice(getSelectedDepartureOption()) * travelers) + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Supplément chambres</label><input class="reservation-create__input" type="text" value="0 DH" readonly></div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        } else {
+            roomsContainer.setAttribute('data-room-mode', 'blocked');
+            setAccommodationMode('blocked');
+            html = hasConfiguredRooms
+                ? '<div class="alert alert-warning mb-0">Configuration incomplète : ajoutez les chambres pour ce départ.</div>'
+                : '<div class="alert alert-secondary mb-0">Ce départ n’a plus de places disponibles.</div>';
         }
 
         roomsContainer.innerHTML = html;
@@ -352,10 +398,12 @@
         if (!tourId) {
             if (roomsContainer) {
                 roomsContainer.innerHTML = '<p class="text-muted mb-0" id="reservation-hotel-placeholder">Sélectionnez un voyage puis un départ pour charger les chambres du dossier.</p>';
+                roomsContainer.setAttribute('data-room-mode', 'unknown');
             }
             if (summaryBlock) {
                 summaryBlock.classList.add('d-none');
             }
+            setAccommodationMode('rooms');
             syncSummary();
             return;
         }

@@ -527,6 +527,7 @@ class ReservationsController extends Controller
         }
         $voyage = Voyage::find($departure->voyage_id);
         $currency = $voyage?->currency_symbol ?? ($voyage?->currency ?? 'DH');
+        $associatedHotelsCount = (int) $departure->departureHotels->where('is_active', true)->count();
 
         $hotels = $departure->departureHotels->where('is_active', true)->values()->map(function ($dh) {
             return [
@@ -605,6 +606,7 @@ class ReservationsController extends Controller
             'sale_price' => $departure->sale_price !== null ? (float) $departure->sale_price : null,
             'available_capacity' => (int) ($departure->available_capacity ?? 0),
             'hotels' => $hotels,
+            'has_associated_hotels' => $associatedHotelsCount > 0,
             'has_configured_rooms' => ! empty($hotels),
             'configure_url' => route('admin.circuits.voyages.departures.show', [$departure->voyage_id, $departure]),
             'currency' => is_string($currency) ? $currency : 'DH',
@@ -1245,11 +1247,41 @@ class ReservationsController extends Controller
         }
 
         if ($departureId > 0) {
-            $dep = Departure::query()->find($departureId);
-            if ($dep && (int) $dep->available_capacity < $totalTravelers) {
+            $dep = Departure::query()->with(['departureHotels.rooms'])->find($departureId);
+            if (! $dep) {
+                return;
+            }
+
+            $hasAssociatedHotels = $dep->departureHotels->contains(function ($hotel) {
+                return ($hotel->is_active ?? true) === true;
+            });
+            $configuredRooms = $dep->departureHotels
+                ->flatMap(fn ($hotel) => $hotel->rooms)
+                ->filter(fn ($room) => (int) ($room->is_active ?? 0) === 1)
+                ->values();
+
+            if ($configuredRooms->isNotEmpty()) {
+                if ((int) $dep->available_capacity < $totalTravelers) {
+                    throw ValidationException::withMessages([
+                        'hotel_rooms' => [
+                            "Capacité insuffisante sur ce départ ({$dep->available_capacity} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
+                        ],
+                    ]);
+                }
+
+                return;
+            }
+
+            if ($hasAssociatedHotels) {
+                throw ValidationException::withMessages([
+                    'hotel_rooms' => ['Configuration incomplète : ajoutez les chambres pour ce départ.'],
+                ]);
+            }
+
+            if ((int) $dep->available_capacity < $totalTravelers) {
                 throw ValidationException::withMessages([
                     'hotel_rooms' => [
-                        "Capacité insuffisante sur ce départ ({$dep->available_capacity} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
+                        "Stock insuffisant : il reste seulement {$dep->available_capacity} places.",
                     ],
                 ]);
             }

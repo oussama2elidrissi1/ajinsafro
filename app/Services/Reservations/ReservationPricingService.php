@@ -194,21 +194,35 @@ class ReservationPricingService
             ->filter(fn ($row) => is_array($row) && (int) ($row['room_count'] ?? 0) > 0)
             ->values();
 
-        $configuredRooms = $payload['departure_hotel_rooms'] ?? null;
-        if ($configuredRooms instanceof Collection) {
-            $rooms = $configuredRooms;
-        } elseif (is_array($configuredRooms)) {
-            $rooms = collect($configuredRooms);
-        } else {
-            $rooms = DepartureHotelRoom::query()
-                ->whereHas('departureHotel', fn ($query) => $query->where('departure_id', $departure->id))
-                ->get();
-        }
+        $departure->loadMissing(['departureHotels.rooms']);
+        $rooms = $departure->departureHotels
+            ->flatMap(fn ($hotel) => $hotel->rooms)
+            ->filter(fn ($room) => (int) ($room->is_active ?? 0) === 1)
+            ->values();
 
         if ($rooms->isEmpty()) {
-            throw ValidationException::withMessages([
-                'hotel_rooms' => ['Aucune chambre configurée pour ce départ.'],
-            ]);
+            if ($departure->departureHotels->where('is_active', true)->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    'hotel_rooms' => ['Configuration incomplète : ajoutez les chambres pour ce départ.'],
+                ]);
+            }
+
+            if ((int) ($departure->available_capacity ?? 0) <= 0) {
+                throw ValidationException::withMessages([
+                    'hotel_rooms' => ['Ce départ n’a plus de places disponibles.'],
+                ]);
+            }
+
+            if ($travelersCount > (int) $departure->available_capacity) {
+                throw ValidationException::withMessages([
+                    'hotel_rooms' => ["Stock insuffisant : il reste seulement {$departure->available_capacity} places."],
+                ]);
+            }
+
+            return [
+                'room_supplement_total' => 0.0,
+                'details' => [],
+            ];
         }
 
         if ($selectedRows->isEmpty()) {

@@ -45,6 +45,10 @@
             <strong id="create-summary-travelers">1</strong>
         </div>
         <div class="reservation-create__summary-item">
+            <span>Prix unitaire</span>
+            <strong id="create-summary-unit-price">—</strong>
+        </div>
+        <div class="reservation-create__summary-item">
             <span>Total provisoire</span>
             <strong id="create-summary-total">—</strong>
         </div>

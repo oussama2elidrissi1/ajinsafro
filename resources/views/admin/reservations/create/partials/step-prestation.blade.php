@@ -31,7 +31,7 @@
                                 ? ($wpTitles->get($voyage->wp_post_id)->post_title ?? $voyage->name ?? $voyage->slug)
                                 : ($voyage->name ?? $voyage->slug ?? 'Voyage #' . $voyage->id);
                         @endphp
-                        <option value="{{ $voyage->id }}" {{ $selectedTourId === (int) $voyage->id ? 'selected' : '' }}>
+                        <option value="{{ $voyage->id }}" data-price-from="{{ (float) ($voyage->price_from ?? 0) }}" {{ $selectedTourId === (int) $voyage->id ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
