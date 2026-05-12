@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -57,7 +57,7 @@ class ReservationsController extends Controller
     ) {}
 
     /**
-     * Hub unique : liste, filtres, stats alignées, actions (modals / tiroir).
+     * Hub unique : liste, filtres, stats alignÃ©es, actions (modals / tiroir).
      */
     public function index(Request $request): RedirectResponse
     {
@@ -65,8 +65,8 @@ class ReservationsController extends Controller
     }
 
     /**
-     * JSON debug : toutes les réservations du périmètre courant (mêmes filtres que le hub), max 500.
-     * Uniquement si APP_DEBUG — pour tester l’affichage / la cohérence des données.
+     * JSON debug : toutes les rÃ©servations du pÃ©rimÃ¨tre courant (mÃªmes filtres que le hub), max 500.
+     * Uniquement si APP_DEBUG â€” pour tester lâ€™affichage / la cohÃ©rence des donnÃ©es.
      */
     public function hubDebug(Request $request): JsonResponse
     {
@@ -129,7 +129,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * JSON : stats + fragment HTML du tableau (mêmes filtres que le hub) pour rafraîchir sans recharger la page.
+     * JSON : stats + fragment HTML du tableau (mÃªmes filtres que le hub) pour rafraÃ®chir sans recharger la page.
      */
     public function hubRefresh(Request $request): JsonResponse
     {
@@ -153,7 +153,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Anciennes URLs (/toutes, /en-attente, /paiements…) → hub avec query équivalente.
+     * Anciennes URLs (/toutes, /en-attente, /paiementsâ€¦) â†’ hub avec query Ã©quivalente.
      */
     public function page(Request $request): RedirectResponse
     {
@@ -176,9 +176,9 @@ class ReservationsController extends Controller
     }
 
     /**
-     * JSON pour modals (détails + participants).
-     * Accès complet (édition) : périmètre agence + portail.
-     * Accès opérationnel partagé : lecture seule sans champs sensibles (autres agences, même voyage).
+     * JSON pour modals (dÃ©tails + participants).
+     * AccÃ¨s complet (Ã©dition) : pÃ©rimÃ¨tre agence + portail.
+     * AccÃ¨s opÃ©rationnel partagÃ© : lecture seule sans champs sensibles (autres agences, mÃªme voyage).
      */
     public function panel(Request $request, Reservation $reservation): JsonResponse
     {
@@ -186,7 +186,7 @@ class ReservationsController extends Controller
         $visibility = $this->reservationVisibility->flagsFor($user);
         $fullAccess = $this->reservationVisibility->canAccessReservation($user, $reservation);
         $operationalRead = false;
-        abort_unless($fullAccess || $operationalRead, 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($fullAccess || $operationalRead, 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
 
         $reservation->load([
             'passengers',
@@ -238,7 +238,7 @@ class ReservationsController extends Controller
             'departure_end' => $reservation->departure?->end_date?->format('Y-m-d'),
             'departure_label' => $reservation->departure
                 ? ($reservation->departure->start_date?->format('d/m/Y')
-                    .($reservation->departure->end_date ? ' → '.$reservation->departure->end_date->format('d/m/Y') : ''))
+                    .($reservation->departure->end_date ? ' â†’ '.$reservation->departure->end_date->format('d/m/Y') : ''))
                 : null,
             'hotel_room_lines' => $reservation->reservationRooms->map(function ($rr) {
                 $dhr = $rr->departureHotelRoom;
@@ -292,14 +292,20 @@ class ReservationsController extends Controller
             $payload['creator_name'] = null;
             $payload['creator_email'] = null;
         }
+            Log::info('URGENT ROOM ENDPOINT RESULT', [
+                'mode' => $payload['mode'] ?? null,
+                'rooms_count' => count($payload['rooms'] ?? []),
+                'rooms' => $payload['rooms'] ?? [],
+            ]);
+
 
         return response()->json($payload);
     }
 
     /**
-     * Formulaire de création de réservation.
-     * Préremplissage depuis le calendrier / workspace : voyage_id ou tour_id, travel_date_id (optionnel).
-     * Le voyage affiché vient du Voyage Laravel. Les libellés viennent de WordPress quand disponible.
+     * Formulaire de crÃ©ation de rÃ©servation.
+     * PrÃ©remplissage depuis le calendrier / workspace : voyage_id ou tour_id, travel_date_id (optionnel).
+     * Le voyage affichÃ© vient du Voyage Laravel. Les libellÃ©s viennent de WordPress quand disponible.
      */
     public function create(Request $request): View
     {
@@ -432,7 +438,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * API JSON : hôtels et chambres pour un voyage (tour_id = Voyage.id).
+     * API JSON : hÃ´tels et chambres pour un voyage (tour_id = Voyage.id).
      */
     public function hotelsRooms(Request $request): JsonResponse
     {
@@ -469,12 +475,18 @@ class ReservationsController extends Controller
             })->all(),
             'currency' => $voyage->currency ?? 'DH',
         ];
+            Log::info('URGENT ROOM ENDPOINT RESULT', [
+                'mode' => $payload['mode'] ?? null,
+                'rooms_count' => count($payload['rooms'] ?? []),
+                'rooms' => $payload['rooms'] ?? [],
+            ]);
+
 
         return response()->json($payload);
     }
 
     /**
-     * Liste des départs Laravel pour un voyage (sélection réservation).
+     * Liste des dÃ©parts Laravel pour un voyage (sÃ©lection rÃ©servation).
      */
     public function voyageDepartures(Request $request): JsonResponse
     {
@@ -495,8 +507,8 @@ class ReservationsController extends Controller
         return response()->json([
             'departures' => $deps->map(fn (Departure $d) => [
                 'id' => $d->id,
-                'label' => ($d->start_date ? $d->start_date->format('d/m/Y') : '—')
-                    .($d->end_date ? ' → '.$d->end_date->format('d/m/Y') : ''),
+                'label' => ($d->start_date ? $d->start_date->format('d/m/Y') : 'â€”')
+                    .($d->end_date ? ' â†’ '.$d->end_date->format('d/m/Y') : ''),
                 'status' => $d->status,
                 'available_capacity' => (int) ($d->available_capacity ?? 0),
                 'base_price' => $d->base_price !== null ? (float) $d->base_price : null,
@@ -507,12 +519,17 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Hôtels + chambres (stock départ) pour un départ donné.
+     * HÃ´tels + chambres (stock dÃ©part) pour un dÃ©part donnÃ©.
      */
     public function departureHotelsRooms(Request $request): JsonResponse
     {
         try {
             $tourId = (int) $request->query('tour_id', 0);
+        Log::info('URGENT ROOM ENDPOINT HIT', [
+            'tour_id' => (int) $request->query('tour_id', 0),
+            'travel_date_id' => (int) $request->query('travel_date_id', 0),
+            'departure_id' => (int) $request->query('departure_id', 0),
+        ]);
             $departureId = (int) $request->query('departure_id', 0);
             $travelDateId = (int) $request->query('travel_date_id', 0);
 
@@ -597,6 +614,12 @@ class ReservationsController extends Controller
             } catch (\Throwable $e) {
                 // ignore logging issues
             }
+            Log::info('URGENT ROOM ENDPOINT RESULT', [
+                'mode' => $payload['mode'] ?? null,
+                'rooms_count' => count($payload['rooms'] ?? []),
+                'rooms' => $payload['rooms'] ?? [],
+            ]);
+
 
             return response()->json($payload);
         } catch (\Throwable $e) {
@@ -607,7 +630,7 @@ class ReservationsController extends Controller
                 'message' => $e->getMessage(),
             ]);
 
-            $message = 'Impossible de charger les chambres pour ce départ.';
+            $message = 'Impossible de charger les chambres pour ce dÃ©part.';
             if ($e instanceof \Illuminate\Validation\ValidationException) {
                 $errors = $e->errors();
                 $first = array_values($errors)[0] ?? null;
@@ -642,7 +665,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Enregistrement d'une réservation (avec chambres et validation capacité).
+     * Enregistrement d'une rÃ©servation (avec chambres et validation capacitÃ©).
      */
     public function store(Request $request)
     {
@@ -662,7 +685,7 @@ class ReservationsController extends Controller
             $hotelRooms = $data['hotel_rooms'] ?? $request->input('hotel_rooms', []);
             if (! is_array($hotelRooms) || count($hotelRooms) === 0) {
                 throw ValidationException::withMessages([
-                    'hotel_rooms' => ['Veuillez sélectionner au moins une chambre pour ce départ.'],
+                    'hotel_rooms' => ['Veuillez sÃ©lectionner au moins une chambre pour ce dÃ©part.'],
                 ]);
             }
 
@@ -679,7 +702,7 @@ class ReservationsController extends Controller
                 }
                 if ($count < 1) {
                     throw ValidationException::withMessages([
-                        "hotel_rooms.{$idx}.room_count" => ['Le nombre de chambres doit être au moins 1.'],
+                        "hotel_rooms.{$idx}.room_count" => ['Le nombre de chambres doit Ãªtre au moins 1.'],
                     ]);
                 }
 
@@ -687,7 +710,7 @@ class ReservationsController extends Controller
                     $room = DepartureHotelRoom::query()->find($depRoomId);
                     if (! $room) {
                         throw ValidationException::withMessages([
-                            "hotel_rooms.{$idx}.departure_hotel_room_id" => ['La chambre sélectionnée est introuvable.'],
+                            "hotel_rooms.{$idx}.departure_hotel_room_id" => ['La chambre sÃ©lectionnÃ©e est introuvable.'],
                         ]);
                     }
 
@@ -705,7 +728,7 @@ class ReservationsController extends Controller
                     $tourRoom = \App\Models\TourHotelRoom::query()->find($tourRoomId);
                     if (! $tourRoom) {
                         throw ValidationException::withMessages([
-                            "hotel_rooms.{$idx}.tour_hotel_room_id" => ['La chambre (tour) sélectionnée est introuvable.'],
+                            "hotel_rooms.{$idx}.tour_hotel_room_id" => ['La chambre (tour) sÃ©lectionnÃ©e est introuvable.'],
                         ]);
                     }
 
@@ -732,7 +755,7 @@ class ReservationsController extends Controller
 
             if ($totalSelectedCapacity < $pricingContext['travelers_count']) {
                 throw ValidationException::withMessages([
-                    'hotel_rooms' => ['La capacité des chambres sélectionnées est insuffisante pour le nombre de voyageurs.'],
+                    'hotel_rooms' => ['La capacitÃ© des chambres sÃ©lectionnÃ©es est insuffisante pour le nombre de voyageurs.'],
                 ]);
             }
         }
@@ -774,7 +797,7 @@ class ReservationsController extends Controller
         if ($paymentAmount > 0) {
             if (empty($data['payment_type'])) {
                 throw ValidationException::withMessages([
-                    'payment_type' => ['Le type de paiement est requis lorsque vous indiquez un montant payé.'],
+                    'payment_type' => ['Le type de paiement est requis lorsque vous indiquez un montant payÃ©.'],
                 ]);
             }
             $paymentPayload = [
@@ -848,16 +871,16 @@ class ReservationsController extends Controller
 
         return redirect()
             ->route('admin.reservation-dossiers.show', $dossier)
-            ->with('success', 'Dossier de réservation créé avec succès.');
+            ->with('success', 'Dossier de rÃ©servation crÃ©Ã© avec succÃ¨s.');
     }
 
     /**
-     * Fiche réservation : redirige vers l’édition (même périmètre d’accès que {@see edit}).
-     * La route est utilisée après création (workspace), liens « Ouvrir », etc.
+     * Fiche rÃ©servation : redirige vers lâ€™Ã©dition (mÃªme pÃ©rimÃ¨tre dâ€™accÃ¨s que {@see edit}).
+     * La route est utilisÃ©e aprÃ¨s crÃ©ation (workspace), liens Â« Ouvrir Â», etc.
      */
     public function show(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
 
         if ($reservation->reservation_dossier_id) {
             return redirect()->route('admin.reservation-dossiers.show', $reservation->reservation_dossier_id);
@@ -867,11 +890,11 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Formulaire d'édition d'une réservation.
+     * Formulaire d'Ã©dition d'une rÃ©servation.
      */
     public function edit(Request $request, Reservation $reservation): View
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
         $reservation->load(['passengers', 'client', 'offer', 'extras', 'payments.creator', 'documents.creator', 'histories.user', 'reservationRooms.departureHotelRoom', 'departure', 'branch', 'partner', 'creator', 'createdBy']);
         $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
@@ -900,11 +923,11 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Mise à jour d'une réservation (avec chambres et validation capacité).
+     * Mise Ã  jour d'une rÃ©servation (avec chambres et validation capacitÃ©).
      */
     public function update(Request $request, Reservation $reservation): RedirectResponse|HttpResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
         $this->mergeDepartureFromLegacyRequest($request, $reservation);
 
         $data = $request->validate($this->reservationValidationRules(true));
@@ -987,16 +1010,16 @@ class ReservationsController extends Controller
             ], fn ($v) => $v !== null && $v !== ''));
 
             return response()
-                ->view('admin.reservations.embed-parent-refresh', ['url' => $back, 'message' => 'Réservation mise à jour.']);
+                ->view('admin.reservations.embed-parent-refresh', ['url' => $back, 'message' => 'RÃ©servation mise Ã  jour.']);
         }
 
         return redirect()
             ->route('admin.reservation-dossiers.show', $dossier)
-            ->with('success', 'Réservation mise à jour.');
+            ->with('success', 'RÃ©servation mise Ã  jour.');
     }
 
     /**
-     * Nombre total de voyageurs : 1 (principal) + accompagnants avec au moins un nom renseigné.
+     * Nombre total de voyageurs : 1 (principal) + accompagnants avec au moins un nom renseignÃ©.
      */
     public function pricingPreview(Request $request): JsonResponse
     {
@@ -1028,7 +1051,7 @@ class ReservationsController extends Controller
 
     public function storePayment(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃƒÂ¨s non autorisÃƒÂ© ÃƒÂ  cette rÃƒÂ©servation.');
 
         $data = $request->validate([
             'payment_date' => 'required|date',
@@ -1049,7 +1072,7 @@ class ReservationsController extends Controller
         ], $request->file('proof_file'));
 
         if (! $payment) {
-            return redirect()->back()->with('error', 'Le paiement nâ€™a pas pu Ãªtre enregistrÃ©.');
+            return redirect()->back()->with('error', 'Le paiement nÃ¢â‚¬â„¢a pas pu ÃƒÂªtre enregistrÃƒÂ©.');
         }
 
         $reservation->save();
@@ -1068,12 +1091,12 @@ class ReservationsController extends Controller
             $data['note'] ?? null
         );
 
-        return redirect()->back()->with('success', 'Paiement ajoutÃ© au dossier.');
+        return redirect()->back()->with('success', 'Paiement ajoutÃƒÂ© au dossier.');
     }
 
     public function storeDocument(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃƒÂ¨s non autorisÃƒÂ© ÃƒÂ  cette rÃƒÂ©servation.');
 
         $data = $request->validate([
             'type' => 'required|string|max:100',
@@ -1101,12 +1124,12 @@ class ReservationsController extends Controller
             ]
         );
 
-        return redirect()->back()->with('success', 'Document ajoutÃ© au dossier.');
+        return redirect()->back()->with('success', 'Document ajoutÃƒÂ© au dossier.');
     }
 
     public function cancel(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃƒÂ¨s non autorisÃƒÂ© ÃƒÂ  cette rÃƒÂ©servation.');
 
         $data = $request->validate([
             'note' => 'nullable|string|max:2000',
@@ -1134,12 +1157,12 @@ class ReservationsController extends Controller
             $data['note'] ?? null
         );
 
-        return redirect()->back()->with('success', 'Dossier annulÃ©.');
+        return redirect()->back()->with('success', 'Dossier annulÃƒÂ©.');
     }
 
     public function dossierPdf(Request $request, Reservation $reservation)
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃƒÂ¨s non autorisÃƒÂ© ÃƒÂ  cette rÃƒÂ©servation.');
 
         $reservation->load([
             'client',
@@ -1162,7 +1185,7 @@ class ReservationsController extends Controller
 
     public function paymentReceiptPdf(Request $request, Reservation $reservation, ReservationPayment $payment)
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃƒÂ¨s non autorisÃƒÂ© ÃƒÂ  cette rÃƒÂ©servation.');
         abort_unless((int) $payment->reservation_id === (int) $reservation->id, 404);
 
         $payment->loadMissing('creator');
@@ -1288,7 +1311,7 @@ class ReservationsController extends Controller
             // ensure pricing service found a valid unit price
             if (empty($pricing['base_price']) || (float) $pricing['base_price'] <= 0) {
                 throw ValidationException::withMessages([
-                    'base_price' => ['Aucun prix valide trouvé pour ce départ.'],
+                    'base_price' => ['Aucun prix valide trouvÃ© pour ce dÃ©part.'],
                 ]);
             }
 
@@ -1328,9 +1351,9 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Si le client envoie seulement travel_date_id (flux historique), déduit departure_id
-     * à partir du voyage + wp_travel_date_id. Peut aussi reprendre departure_id / travel_date_id
-     * depuis la réservation en édition.
+     * Si le client envoie seulement travel_date_id (flux historique), dÃ©duit departure_id
+     * Ã  partir du voyage + wp_travel_date_id. Peut aussi reprendre departure_id / travel_date_id
+     * depuis la rÃ©servation en Ã©dition.
      */
     protected function mergeDepartureFromLegacyRequest(Request $request, ?Reservation $reservation = null): void
     {
@@ -1376,14 +1399,14 @@ class ReservationsController extends Controller
         $dep = Departure::query()->find($depId);
         if (! $dep || (int) $dep->voyage_id !== $tourId) {
             throw ValidationException::withMessages([
-                'departure_id' => ['Le départ sélectionné ne correspond pas à ce voyage.'],
+                'departure_id' => ['Le dÃ©part sÃ©lectionnÃ© ne correspond pas Ã  ce voyage.'],
             ]);
         }
     }
 
     /**
-     * Vérifie que la capacité disponible sur la date de départ couvre le nombre de voyageurs.
-     * La capacité vient des chambres configurées dans l’hôtel du voyage + l’occupation (stock réel).
+     * VÃ©rifie que la capacitÃ© disponible sur la date de dÃ©part couvre le nombre de voyageurs.
+     * La capacitÃ© vient des chambres configurÃ©es dans lâ€™hÃ´tel du voyage + lâ€™occupation (stock rÃ©el).
      */
     private function validateRoomCapacity(int $departureId, int $travelDateId, int $tourId, int $totalTravelers): void
     {
@@ -1402,14 +1425,14 @@ class ReservationsController extends Controller
             });
             $configuredRooms = $dep->departureHotels
                 ->flatMap(fn ($hotel) => $hotel->rooms)
-                ->filter(fn ($room) => (int) ($room->is_active ?? 0) === 1)
+                ->filter(fn ($room) => ($room->status ?? null) !== 'inactive')
                 ->values();
 
             if ($configuredRooms->isNotEmpty()) {
                 if ((int) $dep->available_capacity < $totalTravelers) {
                     throw ValidationException::withMessages([
                         'hotel_rooms' => [
-                            "Capacité insuffisante sur ce départ ({$dep->available_capacity} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
+                            "CapacitÃ© insuffisante sur ce dÃ©part ({$dep->available_capacity} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
                         ],
                     ]);
                 }
@@ -1419,7 +1442,7 @@ class ReservationsController extends Controller
 
             if ($hasAssociatedHotels) {
                 throw ValidationException::withMessages([
-                    'hotel_rooms' => ['Configuration incomplète : ajoutez les chambres pour ce départ.'],
+                    'hotel_rooms' => ['Configuration incomplÃ¨te : ajoutez les chambres pour ce dÃ©part.'],
                 ]);
             }
 
@@ -1458,7 +1481,7 @@ class ReservationsController extends Controller
         }
 
         if ($totalCapacitySeats <= 0) {
-            // Aucune capacité configurée : la réservation sera bloquée plus tard côté service si nécessaire.
+            // Aucune capacitÃ© configurÃ©e : la rÃ©servation sera bloquÃ©e plus tard cÃ´tÃ© service si nÃ©cessaire.
             return;
         }
 
@@ -1468,7 +1491,7 @@ class ReservationsController extends Controller
                 ->where('travel_date_id', $travelDateId)
                 ->sum('seats_occupied_total');
         } catch (\Throwable $e) {
-            // Table absente ou erreur DB : pas de contrôle de capacité fine ici ; le service crée la réservation en chemin standard.
+            // Table absente ou erreur DB : pas de contrÃ´le de capacitÃ© fine ici ; le service crÃ©e la rÃ©servation en chemin standard.
             return;
         }
 
@@ -1476,7 +1499,7 @@ class ReservationsController extends Controller
         if ($availableSeats > 0 && $availableSeats < $totalTravelers) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'hotel_rooms' => [
-                    "Capacité insuffisante sur cette date de départ ({$availableSeats} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
+                    "CapacitÃ© insuffisante sur cette date de dÃ©part ({$availableSeats} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
                 ],
             ]);
         }
@@ -1495,7 +1518,7 @@ class ReservationsController extends Controller
             $dep = Departure::query()->find($departureId);
             if (! $dep) {
                 throw ValidationException::withMessages([
-                    'departure_id' => ['Départ invalide.'],
+                    'departure_id' => ['DÃ©part invalide.'],
                 ]);
             }
 
@@ -1520,46 +1543,46 @@ class ReservationsController extends Controller
             } catch (\Throwable $e) {
                 return;
             }
-            // can't determine total capacity here reliably — allow proceed
+            // can't determine total capacity here reliably â€” allow proceed
             return;
         }
     }
 
     /**
-     * Suppression d'une réservation.
+     * Suppression d'une rÃ©servation.
      */
     public function destroy(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
         $this->reservationService->delete($reservation);
 
         return redirect()
             ->route('admin.reservations.index')
-            ->with('success', 'Réservation supprimée.');
+            ->with('success', 'RÃ©servation supprimÃ©e.');
     }
 
     /**
-     * Valider une réservation (passer en VALIDEE).
+     * Valider une rÃ©servation (passer en VALIDEE).
      */
     public function validateReservation(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
         $this->reservationService->validateReservation($reservation);
 
         return redirect()
             ->back()
-            ->with('success', 'Réservation validée.');
+            ->with('success', 'RÃ©servation validÃ©e.');
     }
 
     /**
-     * Jumelage manuel de deux réservations demi-double compatibles.
+     * Jumelage manuel de deux rÃ©servations demi-double compatibles.
      */
     public function pairSharedRoom(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
 
         if ($reservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
-            return redirect()->back()->with('error', 'Cette réservation n’est pas en attente de jumelage demi-double.');
+            return redirect()->back()->with('error', 'Cette rÃ©servation nâ€™est pas en attente de jumelage demi-double.');
         }
 
         $hasSourceRoomId = Schema::connection('mysql')->hasColumn('reservation_rooms', 'source_room_id');
@@ -1577,7 +1600,7 @@ class ReservationsController extends Controller
             ->get();
 
         if ($targetLines->isEmpty()) {
-            return redirect()->back()->with('error', 'Aucune place demi-double en attente sur cette réservation.');
+            return redirect()->back()->with('error', 'Aucune place demi-double en attente sur cette rÃ©servation.');
         }
 
         $candidateReservationId = 0;
@@ -1616,7 +1639,7 @@ class ReservationsController extends Controller
         }
 
         if ($candidateReservationId <= 0) {
-            return redirect()->back()->with('error', 'Aucun dossier demi-double compatible trouvé pour jumelage.');
+            return redirect()->back()->with('error', 'Aucun dossier demi-double compatible trouvÃ© pour jumelage.');
         }
 
         Reservation::query()
@@ -1636,11 +1659,11 @@ class ReservationsController extends Controller
                 ]);
         }
 
-        return redirect()->back()->with('success', 'Demi-double jumelée manuellement avec la réservation #'.$candidateReservationId.'.');
+        return redirect()->back()->with('success', 'Demi-double jumelÃ©e manuellement avec la rÃ©servation #'.$candidateReservationId.'.');
     }
 
     /**
-     * Servir le fichier reçu (image/PDF) depuis le stockage — évite le 404 si le symlink storage n'existe pas.
+     * Servir le fichier reÃ§u (image/PDF) depuis le stockage â€” Ã©vite le 404 si le symlink storage n'existe pas.
      */
     public function showReceipt(Request $request): StreamedResponse|\Illuminate\Http\Response
     {
@@ -1677,7 +1700,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Requête réservations hub avec les filtres query (liste, stats, debug).
+     * RequÃªte rÃ©servations hub avec les filtres query (liste, stats, debug).
      */
     protected function hubFilteredReservationBuilder(Request $request): Builder
     {
@@ -1754,7 +1777,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Données hub (stats + page courante) : même logique pour la vue HTML et {@see hubRefresh()}.
+     * DonnÃ©es hub (stats + page courante) : mÃªme logique pour la vue HTML et {@see hubRefresh()}.
      *
      * @return array{hubStats: array, reservations: \Illuminate\Contracts\Pagination\LengthAwarePaginator, filterTourId: int|null, filterTravelDateId: int|null, filterSearch: string|null, filterStatus: string|null, filterChannel: string|null, hubTableMode: string, hubVoyageFiltered: bool}
      */
@@ -1819,7 +1842,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Liste + stats : une seule base de requête filtrée (identique au tableau paginé).
+     * Liste + stats : une seule base de requÃªte filtrÃ©e (identique au tableau paginÃ©).
      */
     protected function renderList(Request $request): View
     {
@@ -1931,8 +1954,8 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Calendrier des départs (admin).
-     * Le filtre "Voyage" utilise la même source que /admin/circuits/voyages : tous les tours WordPress (WpPost::tours()).
+     * Calendrier des dÃ©parts (admin).
+     * Le filtre "Voyage" utilise la mÃªme source que /admin/circuits/voyages : tous les tours WordPress (WpPost::tours()).
      */
     public function calendar(Request $request): View
     {
@@ -1944,7 +1967,7 @@ class ReservationsController extends Controller
             $voyagesForFilter = $tours->map(fn ($t) => (object) ['id' => $t->ID, 'name' => $t->post_title ?? '']);
         } catch (\Throwable $e) {
             \Log::warning('ReservationsController@calendar: WP tours list failed, fallback to Voyage', ['error' => $e->getMessage()]);
-            // Fallback: on garde un identifiant cohérent avec TravelDate.travel_id => Voyage.wp_post_id (pas Voyage.id)
+            // Fallback: on garde un identifiant cohÃ©rent avec TravelDate.travel_id => Voyage.wp_post_id (pas Voyage.id)
             $voyagesForFilter = Voyage::query()
                 ->whereNotNull('wp_post_id')
                 ->orderBy('name')
@@ -1993,8 +2016,8 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Événements JSON pour le calendrier : dates de départ (offres) + réservations liées.
-     * Le paramètre "voyage" est l'ID tour WordPress (TravelDate.travel_id).
+     * Ã‰vÃ©nements JSON pour le calendrier : dates de dÃ©part (offres) + rÃ©servations liÃ©es.
+     * Le paramÃ¨tre "voyage" est l'ID tour WordPress (TravelDate.travel_id).
      */
     public function calendarEvents(Request $request): JsonResponse
     {
@@ -2146,7 +2169,7 @@ class ReservationsController extends Controller
             $dateStr = $td->date->format('Y-m-d');
             $client = trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''));
             $tourName = $reservation->offer?->name ?? 'Voyage';
-            $chip = '#'.$reservation->id.' · '.($client !== '' ? $client : 'Client');
+            $chip = '#'.$reservation->id.' Â· '.($client !== '' ? $client : 'Client');
             $events[] = [
                 'id' => 'res-'.$reservation->id,
                 'title' => $chip,
@@ -2171,13 +2194,13 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Détail JSON d'une réservation (modale calendrier).
+     * DÃ©tail JSON d'une rÃ©servation (modale calendrier).
      */
     public function calendarReservationDetails(Request $request): JsonResponse
     {
         $id = (int) $request->query('id', 0);
         if ($id <= 0) {
-            return response()->json(['error' => 'Paramètre id manquant'], 422);
+            return response()->json(['error' => 'ParamÃ¨tre id manquant'], 422);
         }
 
         $user = $request->user();
@@ -2187,13 +2210,13 @@ class ReservationsController extends Controller
             ->first();
 
         if (! $reservation) {
-            return response()->json(['error' => 'Réservation introuvable ou accès refusé'], 404);
+            return response()->json(['error' => 'RÃ©servation introuvable ou accÃ¨s refusÃ©'], 404);
         }
 
         $fullAccess = $this->reservationVisibility->canAccessReservation($user, $reservation);
         $visibility = $this->reservationVisibility->flagsFor($user);
         if (! $fullAccess) {
-            return response()->json(['error' => 'Réservation introuvable ou accès refusé'], 404);
+            return response()->json(['error' => 'RÃ©servation introuvable ou accÃ¨s refusÃ©'], 404);
         }
 
         $td = $reservation->travelDate;
@@ -2201,7 +2224,7 @@ class ReservationsController extends Controller
         $departureFormatted = $td?->date?->translatedFormat('l j F Y');
 
         $clientName = trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? ''))
-            ?: ($reservation->client?->full_name ?? '—');
+            ?: ($reservation->client?->full_name ?? 'â€”');
 
         $payload = [
             'view_mode' => $visibility['limited_presentation'] ? 'limited' : 'full',
@@ -2211,7 +2234,7 @@ class ReservationsController extends Controller
             'client' => $clientName,
             'email' => $visibility['view_client_contact'] ? ($reservation->client_email ?: $reservation->client?->email) : null,
             'phone' => $visibility['view_client_contact'] ? ($reservation->client_phone ?: $reservation->client?->phone) : null,
-            'tour_name' => $reservation->offer?->name ?? '—',
+            'tour_name' => $reservation->offer?->name ?? 'â€”',
             'branch' => $visibility['view_assignment_context'] ? $reservation->branch?->name : null,
             'agency' => $visibility['view_assignment_context'] ? $reservation->agency_label : null,
             'creator_name' => $visibility['view_assignment_context'] ? $reservation->creator?->name : null,
@@ -2227,13 +2250,19 @@ class ReservationsController extends Controller
             $payload['branch'] = null;
             $payload['agency'] = null;
         }
+            Log::info('URGENT ROOM ENDPOINT RESULT', [
+                'mode' => $payload['mode'] ?? null,
+                'rooms_count' => count($payload['rooms'] ?? []),
+                'rooms' => $payload['rooms'] ?? [],
+            ]);
+
 
         return response()->json($payload);
     }
 
     /**
-     * Réservations calendrier : périmètre agence par défaut ; vue partagée si un voyage WP est filtré
-     * (même logique que le hub filtré par voyage).
+     * RÃ©servations calendrier : pÃ©rimÃ¨tre agence par dÃ©faut ; vue partagÃ©e si un voyage WP est filtrÃ©
+     * (mÃªme logique que le hub filtrÃ© par voyage).
      *
      * @param  array{tour_id?: int}  $context
      */
@@ -2250,8 +2279,8 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Détails d'un événement calendrier (pour le modal).
-     * Priorité : travel_date_id (exact) > voyage_id + date > wp_travel_id + date.
+     * DÃ©tails d'un Ã©vÃ©nement calendrier (pour le modal).
+     * PrioritÃ© : travel_date_id (exact) > voyage_id + date > wp_travel_id + date.
      */
     public function calendarEventDetails(Request $request): JsonResponse
     {
@@ -2293,7 +2322,7 @@ class ReservationsController extends Controller
         }
 
         if (! $travelDate) {
-            return response()->json(['error' => $date === '' ? 'Paramètre date manquant' : 'Date de départ introuvable'], $date === '' ? 422 : 404);
+            return response()->json(['error' => $date === '' ? 'ParamÃ¨tre date manquant' : 'Date de dÃ©part introuvable'], $date === '' ? 422 : 404);
         }
         if ($wpId === null) {
             $wpId = (int) $travelDate->travel_id;
@@ -2307,7 +2336,7 @@ class ReservationsController extends Controller
             // ignore
         }
 
-        // Source de vérité : données du voyage = post WordPress + meta (pas le modèle Laravel Voyage qui peut être désynchronisé)
+        // Source de vÃ©ritÃ© : donnÃ©es du voyage = post WordPress + meta (pas le modÃ¨le Laravel Voyage qui peut Ãªtre dÃ©synchronisÃ©)
         $destination = null;
         $durationText = null;
         $priceFrom = null;
@@ -2454,3 +2483,6 @@ class ReservationsController extends Controller
         return $n >= 0 ? $n : null;
     }
 }
+
+
+
