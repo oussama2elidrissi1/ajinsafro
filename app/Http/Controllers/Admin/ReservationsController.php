@@ -673,8 +673,7 @@ class ReservationsController extends Controller
                 'assigned_to' => $data['assigned_to'] ?? null,
             ]);
 
-            $dossier->dossier_number = $this->reservationDossier->generateDossierNumber((int) $dossier->id, now());
-            $dossier->save();
+            $this->reservationDossier->assignUniqueDossierNumber($dossier, now());
 
             $data['reservation_dossier_id'] = $dossier->id;
             $data['dossier_number'] = $dossier->dossier_number;
@@ -805,8 +804,7 @@ class ReservationsController extends Controller
                     'created_by' => $reservation->created_by_user_id ?: $reservation->created_by,
                     'assigned_to' => $reservation->assigned_to ?: $reservation->agent_id,
                 ]);
-                $dossier->dossier_number = $this->reservationDossier->generateDossierNumber((int) $dossier->id, $reservation->created_at ?: now());
-                $dossier->save();
+                $this->reservationDossier->assignUniqueDossierNumber($dossier, $reservation->created_at ?: now());
             }
 
             $data['reservation_dossier_id'] = $dossier->id;
@@ -1105,16 +1103,6 @@ class ReservationsController extends Controller
     {
         $travelersCount = $this->computeTotalTravelers($request->input('passengers', []));
         $accommodationMode = (string) ($request->input('accommodation_mode') ?? 'rooms');
-        if ($accommodationMode === 'places_only') {
-            $this->validateDeparturePlacesCapacity((int) $data['departure_id'], (int) ($data['travel_date_id'] ?? 0), $travelersCount);
-        } else {
-            $this->validateRoomCapacity(
-                (int) $data['departure_id'],
-                (int) ($data['travel_date_id'] ?? 0),
-                (int) $data['tour_id'],
-                $travelersCount
-            );
-        }
 
         $extrasPayload = $this->extractExtrasPayloadFromRequest($request);
         $paymentAmount = round((float) $request->input('payment_amount', 0), 2);
@@ -1127,7 +1115,44 @@ class ReservationsController extends Controller
             'passengers' => $request->input('passengers', []),
             'extras_json' => $extrasPayload,
             'payment_amount' => $paymentAmount,
+            'accommodation_mode' => $accommodationMode,
         ]);
+
+        // Log pricing context for debugging
+        try {
+            Log::info('Reservation final pricing validation', [
+                'tour_id' => (int) $data['tour_id'],
+                'departure_id' => (int) ($data['departure_id'] ?? 0),
+                'travel_date_id' => (int) ($data['travel_date_id'] ?? 0),
+                'accommodation_mode' => $accommodationMode,
+                'request_base_price' => $request->input('base_price'),
+                'request_total_amount' => $request->input('total_amount'),
+                'pricing_unit_price' => $pricing['base_price'] ?? null,
+                'pricing_total_amount' => $pricing['total_amount'] ?? null,
+                'pricing_source' => $pricing['details']['departure']['base_price'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            // ignore logging errors
+        }
+
+        if ($accommodationMode === 'places_only') {
+            // ensure pricing service found a valid unit price
+            if (empty($pricing['base_price']) || (float) $pricing['base_price'] <= 0) {
+                throw ValidationException::withMessages([
+                    'base_price' => ['Aucun prix valide trouvé pour ce départ.'],
+                ]);
+            }
+
+            $this->validateDeparturePlacesCapacity((int) $data['departure_id'], (int) ($data['travel_date_id'] ?? 0), $travelersCount);
+        } else {
+            $this->validateRoomCapacity(
+                (int) $data['departure_id'],
+                (int) ($data['travel_date_id'] ?? 0),
+                (int) $data['tour_id'],
+                $travelersCount
+            );
+        }
+
 
         return [
             'pricing' => $pricing,
@@ -1329,20 +1354,6 @@ class ReservationsController extends Controller
             if ($available < $totalTravelers) {
                 throw ValidationException::withMessages([
                     'hotel_rooms' => ["Stock insuffisant : il reste seulement {$available} places."],
-                ]);
-            }
-
-            // Ensure a valid unit price exists for the departure
-            $unit = (float) ($dep->sale_price ?? $dep->base_price ?? 0);
-            if ($unit <= 0) {
-                $voyage = Voyage::query()->find($dep->voyage_id);
-                if ($voyage && $voyage->price_from) {
-                    $unit = (float) $voyage->price_from;
-                }
-            }
-            if ($unit <= 0) {
-                throw ValidationException::withMessages([
-                    'base_price' => ['Prix unitaire invalide pour ce départ.'],
                 ]);
             }
 

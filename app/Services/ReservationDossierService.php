@@ -248,6 +248,39 @@ class ReservationDossierService
         return $candidate;
     }
 
+    /**
+     * Assign a unique dossier_number to the given dossier, retrying on duplicate key.
+     * This method persists the dossier with the resolved unique number.
+     *
+     * @param  ReservationDossier  $dossier
+     */
+    public function assignUniqueDossierNumber(ReservationDossier $dossier, CarbonInterface|string|null $date = null, int $maxAttempts = 5): void
+    {
+        $attempt = 0;
+        $sequence = (int) ($dossier->id ?: 1);
+        do {
+            $attempt++;
+            $candidate = $this->generateDossierNumber($sequence + ($attempt - 1), $date);
+            $dossier->dossier_number = $candidate;
+            try {
+                $dossier->save();
+                return;
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Duplicate key? try again with higher sequence
+                $sqlState = $e->errorInfo[0] ?? null;
+                $errorCode = $e->errorInfo[1] ?? null;
+                if ($sqlState === '23000' || $errorCode === 1062) {
+                    // continue loop to try next sequence
+                    continue;
+                }
+                throw $e;
+            }
+        } while ($attempt < max(1, $maxAttempts));
+
+        // If we exhausted retries, throw an exception to surface the issue.
+        throw new \RuntimeException('Unable to assign unique dossier number after ' . $maxAttempts . ' attempts.');
+    }
+
     public function applyCancellationState(Reservation $reservation, ?CarbonInterface $when = null): Reservation
     {
         $reservation->status = Reservation::STATUS_CANCELLED;
