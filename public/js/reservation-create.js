@@ -786,5 +786,17 @@
         };
         window.reservationCreateGetHotelSummary = hotelRoomSummary;
         window.reservationCreateRecomputeTotals = syncFinancialSummary;
+
+        // Expose setAccommodationMode globally and flush any queued calls
+        if (typeof window.setAccommodationMode !== 'function') {
+            window.setAccommodationMode = setAccommodationMode;
+        } else {
+            var _pending = window._reservation_setAccommodationMode_pending || [];
+            window.setAccommodationMode = setAccommodationMode;
+            if (Array.isArray(_pending) && _pending.length) {
+                _pending.forEach(function (m) { try { setAccommodationMode(m); } catch (e) { /* ignore */ } });
+                delete window._reservation_setAccommodationMode_pending;
+            }
+        }
     });
 })();

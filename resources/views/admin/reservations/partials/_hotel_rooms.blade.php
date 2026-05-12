@@ -155,6 +155,14 @@
 
 <script>
 (function () {
+    // Ensure calls to setAccommodationMode from inline templates don't fail
+    // if the main reservation-create.js hasn't loaded yet. Queue calls.
+    window._reservation_setAccommodationMode_pending = window._reservation_setAccommodationMode_pending || [];
+    if (typeof window.setAccommodationMode !== 'function') {
+        window.setAccommodationMode = function (mode) {
+            window._reservation_setAccommodationMode_pending.push(mode);
+        };
+    }
     var legacyEdit = @json($legacyEdit);
     var voyageDeparturesUrl = @json($voyageDeparturesPath);
     var departureHotelsRoomsUrl = @json($departureHotelsRoomsPath);
