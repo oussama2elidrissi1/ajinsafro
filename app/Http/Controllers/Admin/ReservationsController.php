@@ -542,10 +542,21 @@ class ReservationsController extends Controller
                     $hotelsCount = isset($payload['hotels']) && is_array($payload['hotels']) ? count($payload['hotels']) : 0;
                 }
 
+                // include selected travel date (string) when available
+                $selectedDate = null;
+                try {
+                    $td = TravelDate::query()->find($travelDateId);
+                    if ($td && $td->date) {
+                        $selectedDate = $td->date instanceof \DateTimeInterface ? $td->date->format('Y-m-d') : (string) $td->date;
+                    }
+                } catch (\Throwable $_) {
+                }
+
                 Log::info('Reservation rooms lookup debug', [
                     'tour_id' => $tourId,
                     'travel_date_id' => $travelDateId,
                     'departure_id' => $departureId,
+                    'date' => $selectedDate,
                     'mode' => $payload['mode'] ?? null,
                     'departure_hotels_count' => $hotelsCount,
                     'rooms_count' => $roomsCount,
@@ -612,6 +623,56 @@ class ReservationsController extends Controller
         $extrasPayload = $pricingContext['extras_payload'];
         $paymentAmount = $pricingContext['payment_amount'];
         $pricing = $pricingContext['pricing'];
+
+        // Enforce room selection when accommodation_mode == rooms
+        $accommodationMode = (string) ($data['accommodation_mode'] ?? ($request->input('accommodation_mode') ?? 'rooms'));
+        if ($accommodationMode === 'rooms') {
+            $hotelRooms = $data['hotel_rooms'] ?? $request->input('hotel_rooms', []);
+            if (! is_array($hotelRooms) || count($hotelRooms) === 0) {
+                throw ValidationException::withMessages([
+                    'hotel_rooms' => ['Veuillez sélectionner au moins une chambre pour ce départ.'],
+                ]);
+            }
+
+            $totalSelectedCapacity = 0;
+            foreach ($hotelRooms as $idx => $hr) {
+                $roomId = isset($hr['departure_hotel_room_id']) ? (int) $hr['departure_hotel_room_id'] : 0;
+                $count = isset($hr['room_count']) ? (int) $hr['room_count'] : 0;
+                if ($roomId <= 0) {
+                    throw ValidationException::withMessages([
+                        "hotel_rooms.{$idx}.departure_hotel_room_id" => ['Identifiant de chambre invalide ou manquant.'],
+                    ]);
+                }
+                if ($count < 1) {
+                    throw ValidationException::withMessages([
+                        "hotel_rooms.{$idx}.room_count" => ['Le nombre de chambres doit être au moins 1.'],
+                    ]);
+                }
+
+                $room = DepartureHotelRoom::query()->find($roomId);
+                if (! $room) {
+                    throw ValidationException::withMessages([
+                        "hotel_rooms.{$idx}.departure_hotel_room_id" => ['La chambre sélectionnée est introuvable.'],
+                    ]);
+                }
+
+                $availableRooms = (int) ($room->available_rooms ?? 0);
+                if ($count > $availableRooms) {
+                    throw ValidationException::withMessages([
+                        "hotel_rooms.{$idx}.room_count" => ["Il n'y a que {$availableRooms} chambre(s) disponible(s) pour ce type."],
+                    ]);
+                }
+
+                $capacityPerRoom = max(1, (int) ($room->capacity_total ?? 0));
+                $totalSelectedCapacity += $count * $capacityPerRoom;
+            }
+
+            if ($totalSelectedCapacity < $pricingContext['travelers_count']) {
+                throw ValidationException::withMessages([
+                    'hotel_rooms' => ['La capacité des chambres sélectionnées est insuffisante pour le nombre de voyageurs.'],
+                ]);
+            }
+        }
 
         $data['status'] = Reservation::STATUS_EN_COURS;
         $data['dossier_status'] = Reservation::DOSSIER_PENDING;
