@@ -111,7 +111,8 @@
     $settingsNode = $menuByKey->get('settings');
 
     $reservationsChildren = array_values(array_filter([
-        $makeLeaf('reservations_workspace', 'Toutes les réservations', 'admin.reservations.workspace', 'bx bx-calendar-check', ['admin.reservations.workspace*']),
+        $makeLeaf('reservations_index', 'Toutes les réservations', 'admin.reservations.index', 'bx bx-calendar-check', ['admin.reservations.index']),
+        $makeLeaf('reservations_workspace', 'Workspace commercial', 'admin.reservations.workspace', 'bx bx-briefcase-alt', ['admin.reservations.workspace*']),
         $makeLeaf('reservations_clients', 'Réservations clients', 'admin.reservations.clients', 'bx bx-user', ['admin.reservations.clients']),
         $makeLeaf('reservations_pending', 'Demandes en attente', 'admin.reservations.en-attente', 'bx bx-time-five', ['admin.reservations.en-attente'], [], $pendingReservationsCount > 0 ? $pendingReservationsCount : null, 'reservations.view'),
         $makeLeaf('assignments_index', 'Affectations', 'admin.assignments.index', 'bx bx-transfer', ['admin.assignments.*'], [], null, 'assignments.view'),
