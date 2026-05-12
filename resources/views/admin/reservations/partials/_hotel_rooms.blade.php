@@ -196,6 +196,16 @@
             .replace(/'/g, '&#39;');
     }
 
+    // Provide a safe local formatMoney fallback in case reservation-create.js
+    // hasn't loaded yet and `formatMoney` is not available globally.
+    function formatMoney(value) {
+        if (typeof window !== 'undefined' && typeof window.formatMoney === 'function') {
+            try { return window.formatMoney(value); } catch (e) { /* ignore */ }
+        }
+        var n = Math.round((Number(value) || 0) * 100) / 100;
+        return n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' DH';
+    }
+
     function travelerCount() {
         var count = 1;
         var container = document.getElementById('companions-container');
