@@ -153,7 +153,7 @@
     flex: 1 1 auto;
 }
 
-.aj-sidebar-v2__toggle {
+.aj-sidebar-v2__link-group > .aj-sidebar-v2__toggle {
     flex: 0 0 44px;
     width: 44px;
     justify-content: center;
