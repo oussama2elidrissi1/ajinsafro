@@ -530,6 +530,31 @@ class ReservationsController extends Controller
                 'travel_date_id' => $travelDateId,
             ]);
 
+            // Debug logging required by QA to trace why rooms may be missing
+            try {
+                $roomsCount = 0;
+                $hotelsCount = 0;
+                if (isset($payload['rooms']) && is_array($payload['rooms'])) {
+                    $roomsCount = count($payload['rooms']);
+                }
+                if (isset($payload['departure']) && is_array($payload['departure'])) {
+                    // count hotels if present in payload structure
+                    $hotelsCount = isset($payload['hotels']) && is_array($payload['hotels']) ? count($payload['hotels']) : 0;
+                }
+
+                Log::info('Reservation rooms lookup debug', [
+                    'tour_id' => $tourId,
+                    'travel_date_id' => $travelDateId,
+                    'departure_id' => $departureId,
+                    'mode' => $payload['mode'] ?? null,
+                    'departure_hotels_count' => $hotelsCount,
+                    'rooms_count' => $roomsCount,
+                    'rooms' => is_array($payload['rooms']) ? array_map(fn($r) => $r['departure_hotel_room_id'] ?? null, $payload['rooms']) : [],
+                ]);
+            } catch (\Throwable $e) {
+                // ignore logging issues
+            }
+
             return response()->json($payload);
         } catch (\Throwable $e) {
             Log::error('reservations.departure_hotels_rooms_failed', [

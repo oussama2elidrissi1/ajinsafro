@@ -351,6 +351,24 @@ class ReservationPricingService
                     return $departure;
                 }
             }
+
+            // Fallback: try matching by start_date == travel_date.date (useful when wp_travel_date_id not populated)
+            try {
+                if (! isset($travelDate)) {
+                    $travelDate = TravelDate::query()->find($travelDateId);
+                }
+                if ($travelDate && $travelDate->date) {
+                    $maybe = Departure::query()
+                        ->where('voyage_id', $voyage->id)
+                        ->whereDate('start_date', $travelDate->date)
+                        ->first();
+                    if ($maybe) {
+                        return $maybe;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // ignore and continue to global fallback
+            }
         }
 
         $departure = Departure::query()->where('voyage_id', $voyage->id)->orderBy('start_date')->orderBy('id')->first();
