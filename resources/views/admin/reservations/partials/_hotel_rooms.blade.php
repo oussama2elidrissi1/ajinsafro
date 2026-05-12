@@ -2,6 +2,9 @@
     $hotelsRoomsUrl = $hotelsRoomsUrl ?? route('admin.reservations.hotels-rooms');
     $voyageDeparturesUrl = $voyageDeparturesUrl ?? route('admin.reservations.voyage-departures');
     $departureHotelsRoomsUrl = $departureHotelsRoomsUrl ?? route('admin.reservations.departure-hotels-rooms');
+    $hotelsRoomsPath = parse_url($hotelsRoomsUrl, PHP_URL_PATH) ?: $hotelsRoomsUrl;
+    $voyageDeparturesPath = parse_url($voyageDeparturesUrl, PHP_URL_PATH) ?: $voyageDeparturesUrl;
+    $departureHotelsRoomsPath = parse_url($departureHotelsRoomsUrl, PHP_URL_PATH) ?: $departureHotelsRoomsUrl;
     $tourHotelsWithRooms = $tourHotelsWithRooms ?? collect();
     $reservation = $reservation ?? null;
     $selectedTravelDate = $selectedTravelDate ?? null;
@@ -153,8 +156,8 @@
 <script>
 (function () {
     var legacyEdit = @json($legacyEdit);
-    var voyageDeparturesUrl = @json($voyageDeparturesUrl);
-    var departureHotelsRoomsUrl = @json($departureHotelsRoomsUrl);
+    var voyageDeparturesUrl = @json($voyageDeparturesPath);
+    var departureHotelsRoomsUrl = @json($departureHotelsRoomsPath);
     var initialRooms = {};
 
     try {
@@ -378,6 +381,12 @@
     }
 
     function loadDepartureRooms(departureId) {
+        if (!departureId && departureSelect && departureSelect.value) {
+            departureId = departureSelect.value;
+        }
+        if (!departureId && inputDepartureId && inputDepartureId.value) {
+            departureId = inputDepartureId.value;
+        }
         if (!roomsContainer || !departureId) {
             return;
         }
@@ -441,10 +450,17 @@
                     departureSelect.appendChild(option);
                 });
 
+                if (!selectedDepartureId && departures.length === 1) {
+                    selectedDepartureId = departures[0].id;
+                }
+
                 if (selectedDepartureId) {
                     departureSelect.value = String(selectedDepartureId);
                     syncDepartureHidden();
                     loadDepartureRooms(selectedDepartureId);
+                } else if (departureSelect.options.length > 1 && departureSelect.selectedIndex > 0) {
+                    syncDepartureHidden();
+                    loadDepartureRooms(departureSelect.value);
                 }
 
                 syncSummary();
