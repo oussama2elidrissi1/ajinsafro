@@ -383,10 +383,19 @@
         }
 
         roomsContainer.innerHTML = '<p class="text-muted mb-0">Chargement des chambres…</p>';
-        fetch(departureHotelsRoomsUrl + '?departure_id=' + encodeURIComponent(departureId))
-            .then(function (response) { return response.json(); })
+        fetch(departureHotelsRoomsUrl + '?departure_id=' + encodeURIComponent(departureId), {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                var ct = response.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) throw new Error('Invalid response content-type');
+                return response.json();
+            })
             .then(renderDepartureRooms)
-            .catch(function () {
+            .catch(function (err) {
+                console && console.debug && console.debug('departure rooms load error', err);
                 roomsContainer.innerHTML = '<p class="text-danger mb-0">Erreur de chargement des chambres.</p>';
             });
     }
@@ -408,8 +417,16 @@
             return;
         }
 
-        fetch(voyageDeparturesUrl + '?tour_id=' + encodeURIComponent(tourId))
-            .then(function (response) { return response.json(); })
+        fetch(voyageDeparturesUrl + '?tour_id=' + encodeURIComponent(tourId), {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                var ct = response.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) throw new Error('Invalid response content-type');
+                return response.json();
+            })
             .then(function (payload) {
                 var departures = payload && payload.departures ? payload.departures : [];
 
