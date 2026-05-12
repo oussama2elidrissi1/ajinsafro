@@ -768,6 +768,15 @@
             }
             collectExtras();
             syncFinancialSummary();
+            // If we're in places_only mode, remove any hotel_rooms inputs so null IDs
+            // are not submitted and backend treats this as places-only booking.
+            try {
+                if (typeof getRoomMode === 'function' && getRoomMode() === 'places_only') {
+                    document.querySelectorAll('[name^="hotel_rooms"]').forEach(function (el) { el.remove(); });
+                }
+            } catch (e) {
+                // ignore
+            }
         });
     }
 

@@ -623,6 +623,11 @@ class ReservationsController extends Controller
 
         $paymentPayload = null;
         if ($paymentAmount > 0) {
+            if (empty($data['payment_type'])) {
+                throw ValidationException::withMessages([
+                    'payment_type' => ['Le type de paiement est requis lorsque vous indiquez un montant payé.'],
+                ]);
+            }
             $paymentPayload = [
                 'payment_date' => $request->input('payment_date') ?: now()->toDateString(),
                 'payment_method' => ! empty($data['payment_type']) ? $data['payment_type'] : 'Autre',
@@ -1027,6 +1032,7 @@ class ReservationsController extends Controller
     private function reservationValidationRules(bool $updating = false): array
     {
         $rules = [
+            'accommodation_mode' => 'nullable|in:rooms,places_only,blocked',
             'tour_id' => 'required|integer',
             'departure_id' => 'required|integer|exists:departures,id',
             'travel_date_id' => 'nullable|integer',
@@ -1098,12 +1104,17 @@ class ReservationsController extends Controller
     private function buildReservationPricingContext(Request $request, array $data): array
     {
         $travelersCount = $this->computeTotalTravelers($request->input('passengers', []));
-        $this->validateRoomCapacity(
-            (int) $data['departure_id'],
-            (int) ($data['travel_date_id'] ?? 0),
-            (int) $data['tour_id'],
-            $travelersCount
-        );
+        $accommodationMode = (string) ($request->input('accommodation_mode') ?? 'rooms');
+        if ($accommodationMode === 'places_only') {
+            $this->validateDeparturePlacesCapacity((int) $data['departure_id'], (int) ($data['travel_date_id'] ?? 0), $travelersCount);
+        } else {
+            $this->validateRoomCapacity(
+                (int) $data['departure_id'],
+                (int) ($data['travel_date_id'] ?? 0),
+                (int) $data['tour_id'],
+                $travelersCount
+            );
+        }
 
         $extrasPayload = $this->extractExtrasPayloadFromRequest($request);
         $paymentAmount = round((float) $request->input('payment_amount', 0), 2);
@@ -1294,6 +1305,63 @@ class ReservationsController extends Controller
                     "Capacité insuffisante sur cette date de départ ({$availableSeats} place(s) disponible(s)) pour {$totalTravelers} voyageur(s).",
                 ],
             ]);
+        }
+    }
+
+    /**
+     * Validate capacity based on departure stock (places only mode).
+     */
+    private function validateDeparturePlacesCapacity(int $departureId, int $travelDateId, int $totalTravelers): void
+    {
+        if ($totalTravelers <= 0) {
+            return;
+        }
+
+        if ($departureId > 0) {
+            $dep = Departure::query()->find($departureId);
+            if (! $dep) {
+                throw ValidationException::withMessages([
+                    'departure_id' => ['Départ invalide.'],
+                ]);
+            }
+
+            $available = (int) ($dep->available_capacity ?? $dep->available_places ?? 0);
+            if ($available < $totalTravelers) {
+                throw ValidationException::withMessages([
+                    'hotel_rooms' => ["Stock insuffisant : il reste seulement {$available} places."],
+                ]);
+            }
+
+            // Ensure a valid unit price exists for the departure
+            $unit = (float) ($dep->sale_price ?? $dep->base_price ?? 0);
+            if ($unit <= 0) {
+                $voyage = Voyage::query()->find($dep->voyage_id);
+                if ($voyage && $voyage->price_from) {
+                    $unit = (float) $voyage->price_from;
+                }
+            }
+            if ($unit <= 0) {
+                throw ValidationException::withMessages([
+                    'base_price' => ['Prix unitaire invalide pour ce départ.'],
+                ]);
+            }
+
+            return;
+        }
+
+        // If no explicit departure, try travel_date fallback (best-effort)
+        if ($travelDateId > 0) {
+            $voyageOccupancy = 0;
+            try {
+                $occupied = DB::table('tour_room_type_occupancies')
+                    ->where('travel_date_id', $travelDateId)
+                    ->sum('seats_occupied_total');
+                $voyageOccupancy = (int) $occupied;
+            } catch (\Throwable $e) {
+                return;
+            }
+            // can't determine total capacity here reliably — allow proceed
+            return;
         }
     }
 

@@ -135,7 +135,7 @@
             <hr>
             <div class="row">
                 <div class="col-md-4">
-                    <strong>Capacité chambres sélectionnées :</strong> <span id="reservation-total-capacity">0</span> pers.
+                    <strong id="reservation-capacity-label">Capacité chambres sélectionnées :</strong> <span id="reservation-total-capacity">0</span> pers.
                 </div>
                 <div class="col-md-4">
                     <strong>Suppléments chambres :</strong> <span id="reservation-total-supplement">0 DH</span>
@@ -280,13 +280,27 @@
         var totalEl = document.getElementById('reservation-grand-total');
         var errorEl = document.getElementById('reservation-capacity-error');
 
+        var roomMode = getRoomMode();
         if (travelersEl) travelersEl.textContent = String(travelers);
-        if (capacityEl) capacityEl.textContent = String(selected.capacity);
-        if (supplementEl) supplementEl.textContent = selected.supplement.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH';
-        if (totalEl) totalEl.textContent = total.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH';
-        if (errorEl) {
-            errorEl.classList.toggle('d-none', selected.capacity === 0 || selected.capacity >= travelers);
+
+        if (roomMode === 'places_only') {
+            var avail = 0;
+            try { avail = parseInt((roomsContainer && roomsContainer.getAttribute('data-available-capacity')) || '0', 10) || 0; } catch (e) { avail = 0; }
+            var capLabel = document.getElementById('reservation-capacity-label');
+            if (capLabel) capLabel.textContent = 'Capacité validée par stock de places :';
+            if (capacityEl) capacityEl.textContent = String(avail) + ' place' + (avail > 1 ? 's' : '');
+            if (supplementEl) supplementEl.textContent = '0 DH';
+            if (errorEl) errorEl.classList.add('d-none');
+        } else {
+            if (capacityEl) capacityEl.textContent = String(selected.capacity);
+            if (supplementEl) supplementEl.textContent = selected.supplement.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH';
+            if (errorEl) {
+                errorEl.classList.toggle('d-none', selected.capacity === 0 || selected.capacity >= travelers);
+            }
+            var capLabel = document.getElementById('reservation-capacity-label');
+            if (capLabel) capLabel.textContent = 'Capacité chambres sélectionnées :';
         }
+        if (totalEl) totalEl.textContent = total.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH';
         if (summaryBlock && document.querySelector('.reservation-hotel-block')) {
             summaryBlock.classList.remove('d-none');
         }
@@ -335,6 +349,7 @@
             if (avail > 0 && fallbackUnit > 0) {
                 // render places_only fallback
                 roomsContainer.setAttribute('data-room-mode', 'places_only');
+                roomsContainer.setAttribute('data-available-capacity', String(avail));
                 setAccommodationMode('places_only');
                 var travelers = travelerCount();
                 // safe label fallback: prefer global helper, then option text, then travel date from payload
@@ -432,6 +447,7 @@
             });
         } else if (payload.mode === 'places_only') {
             roomsContainer.setAttribute('data-room-mode', 'places_only');
+            roomsContainer.setAttribute('data-available-capacity', String(availableCapacity));
             // safe label fallback: prefer global helper, then departure JSON data, then option text
             var selectedLabel = '';
             if (typeof window.getSelectedDepartureLabel === 'function') {

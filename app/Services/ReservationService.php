@@ -97,7 +97,7 @@ class ReservationService
                 $synced = $reservation->fresh(['reservationRooms']);
                 $this->reservationLifecycle->validateAvailabilityIfNeeded($synced);
                 $this->reservationLifecycle->commitAfterPersist($synced);
-            } elseif (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation)) {
+            } elseif (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation) && (($data['accommodation_mode'] ?? '') !== 'places_only')) {
                 $this->allocateAndSyncReservationRooms($reservation);
             } else {
                 if (! empty($reservation->travel_date_id)) {
@@ -201,7 +201,7 @@ class ReservationService
                 $fresh = $reservation->fresh(['reservationRooms']);
                 $this->reservationLifecycle->validateAvailabilityIfNeeded($fresh);
                 $this->reservationLifecycle->commitAfterPersist($fresh);
-            } elseif (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation)) {
+            } elseif (! empty($reservation->travel_date_id) && $this->shouldAllocateProgressiveRooms($reservation) && (($data['accommodation_mode'] ?? '') !== 'places_only')) {
                 $this->allocateAndSyncReservationRooms($reservation);
             } else {
                 if (! empty($reservation->travel_date_id)) {
