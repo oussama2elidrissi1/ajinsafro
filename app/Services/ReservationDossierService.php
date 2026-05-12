@@ -14,6 +14,7 @@ use App\Models\ReservationRoom;
 use App\Models\TourHotelRoom;
 use App\Models\Voyage;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -229,7 +230,22 @@ class ReservationDossierService
             ? (int) $date->format('Y')
             : (is_string($date) && trim($date) !== '' ? (int) date('Y', strtotime($date)) : (int) now()->format('Y'));
 
-        return sprintf('RES-%d-%06d', $year, max(1, $sequence));
+        $baseSeq = max(1, $sequence);
+        $candidate = sprintf('RES-%d-%06d', $year, $baseSeq);
+
+        // If candidate already exists, find the max sequence used for the year and increment it.
+        if (ReservationDossier::query()->where('dossier_number', $candidate)->exists()) {
+            $like = 'RES-' . $year . '-%';
+            $maxSeq = ReservationDossier::query()
+                ->where('dossier_number', 'like', $like)
+                ->select(DB::raw("MAX(CAST(SUBSTRING_INDEX(dossier_number, '-', -1) AS UNSIGNED)) as max_seq"))
+                ->value('max_seq');
+
+            $next = ($maxSeq ? (int) $maxSeq + 1 : $baseSeq + 1);
+            $candidate = sprintf('RES-%d-%06d', $year, $next);
+        }
+
+        return $candidate;
     }
 
     public function applyCancellationState(Reservation $reservation, ?CarbonInterface $when = null): Reservation
