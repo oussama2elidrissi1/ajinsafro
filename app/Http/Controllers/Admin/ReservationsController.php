@@ -539,10 +539,23 @@ class ReservationsController extends Controller
                 'message' => $e->getMessage(),
             ]);
 
+            $message = 'Impossible de charger les chambres pour ce départ.';
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                $errors = $e->errors();
+                $first = array_values($errors)[0] ?? null;
+                if (is_array($first)) {
+                    $message = $first[0] ?? $message;
+                } elseif (is_string($first)) {
+                    $message = $first;
+                }
+            } elseif (config('app.debug')) {
+                $message = $e->getMessage();
+            }
+
             return response()->json([
                 'success' => false,
                 'mode' => 'blocked',
-                'message' => 'Impossible de charger les chambres pour ce départ.',
+                'message' => $message,
                 'debug' => config('app.debug') ? $e->getMessage() : null,
                 'departure' => null,
                 'pricing' => [

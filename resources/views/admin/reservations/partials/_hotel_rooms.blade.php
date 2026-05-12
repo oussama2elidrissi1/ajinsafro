@@ -315,8 +315,38 @@
 
     function renderDepartureRooms(payload) {
         if (!roomsContainer) return;
-
         if (!payload || payload.success === false) {
+            // Try a graceful client-side fallback: if departure option contains capacity
+            // and a fallback price exists on the trip, render a places_only card instead
+            var option = departureSelect && departureSelect.options[departureSelect.selectedIndex];
+            var fallbackUnit = option ? departureUnitPrice(option) : 0;
+            var avail = option ? parseInt(option.getAttribute('data-available-capacity') || '0', 10) || 0 : 0;
+
+            if (avail > 0 && fallbackUnit > 0) {
+                // render places_only fallback
+                roomsContainer.setAttribute('data-room-mode', 'places_only');
+                setAccommodationMode('places_only');
+                var travelers = travelerCount();
+                roomsContainer.innerHTML = '' +
+                    '<div class="card mb-2 reservation-hotel-block reservation-hotel-block--stock-only">' +
+                        '<div class="card-body py-3"><div class="d-flex flex-column gap-2">' +
+                            '<div class="alert alert-info mb-0">Stock de places disponible : ' + avail + ' place' + (avail > 1 ? 's' : '') + '. Aucune chambre détaillée configurée, réservation sur stock de places.</div>' +
+                            '<div class="reservation-create__grid reservation-create__grid--two">' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Départ</label><input class="reservation-create__input" type="text" value="' + getSelectedDepartureLabel() + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Places restantes</label><input class="reservation-create__input" type="text" value="' + avail + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Nombre voyageurs</label><input class="reservation-create__input" type="text" value="' + travelers + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Prix unitaire</label><input class="reservation-create__input" type="text" value="' + formatMoney(fallbackUnit) + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Total base</label><input class="reservation-create__input" type="text" value="' + formatMoney(fallbackUnit * travelers) + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Supplément chambres</label><input class="reservation-create__input" type="text" value="0 DH" readonly></div>' +
+                            '</div>' +
+                        '</div></div></div>';
+                syncSummary();
+                if (typeof window.reservationCreateRecomputeTotals === 'function') {
+                    window.reservationCreateRecomputeTotals();
+                }
+                return;
+            }
+
             roomsContainer.setAttribute('data-room-mode', 'blocked');
             setAccommodationMode('blocked');
             roomsContainer.innerHTML = '<div class="alert alert-danger mb-0">' + escapeHtml((payload && payload.message) ? payload.message : 'Erreur de chargement des chambres.') + '</div>';
