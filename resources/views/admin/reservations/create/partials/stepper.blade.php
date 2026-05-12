@@ -23,6 +23,10 @@
                 <span class="reservation-create__step-index">5</span>
                 <span class="reservation-create__step-label">Paiement</span>
             </button>
+            <button type="button" class="reservation-create__step" data-create-step-nav="6">
+                <span class="reservation-create__step-index">6</span>
+                <span class="reservation-create__step-label">Dossier</span>
+            </button>
         </div>
     </div>
 
@@ -43,6 +47,14 @@
         <div class="reservation-create__summary-item">
             <span>Total provisoire</span>
             <strong id="create-summary-total">—</strong>
+        </div>
+        <div class="reservation-create__summary-item">
+            <span>Total payé</span>
+            <strong id="create-summary-paid">0 DH</strong>
+        </div>
+        <div class="reservation-create__summary-item">
+            <span>Reste à payer</span>
+            <strong id="create-summary-remaining">0 DH</strong>
         </div>
     </div>
 </aside>

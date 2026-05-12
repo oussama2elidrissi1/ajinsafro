@@ -22,7 +22,7 @@ final class ReservationWorkspaceBookingService
     /**
      * @param  array<int, array<string, mixed>>  $passengersNormalized
      * @param  array<int, mixed>  $extrasPayload
-     * @return array{authoritative_total: float, resolved_travel_date_id: ?int, booking_snapshot: array<string, mixed>}
+     * @return array{authoritative_total: float, base_total: float, extras_total: float, room_supplement_total: float, resolved_travel_date_id: ?int, booking_snapshot: array<string, mixed>}
      */
     public function validateWorkspaceStoreAndResolveTotals(
         Request $request,
@@ -58,7 +58,8 @@ final class ReservationWorkspaceBookingService
         $this->assertPlacesAvailable($prefill, $paxCount, $voyage, $travelDateId, $user);
 
         $counts = $this->countPassengerTypes($passengersNormalized);
-        $serverTotal = $this->computeExpectedTotal($voyage, $prefill, $counts, $extrasPayload, $prestationType, $passengersNormalized);
+        $pricingBreakdown = $this->computeExpectedPricingBreakdown($voyage, $prefill, $counts, $extrasPayload, $prestationType, $passengersNormalized);
+        $serverTotal = $pricingBreakdown['total_amount'];
 
         $clientTotal = round((float) $request->input('montant_total'), 2);
         if (abs($serverTotal - $clientTotal) > 2.0) {
@@ -72,6 +73,9 @@ final class ReservationWorkspaceBookingService
 
         return [
             'authoritative_total' => $serverTotal,
+            'base_total' => $pricingBreakdown['base_total'],
+            'extras_total' => $pricingBreakdown['extras_total'],
+            'room_supplement_total' => 0.0,
             'resolved_travel_date_id' => $travelDateId,
             'booking_snapshot' => [
                 'catalog_row_code' => $row['code'] ?? null,
@@ -87,6 +91,7 @@ final class ReservationWorkspaceBookingService
                 'places_catalog' => $prefill['places'] ?? [],
                 'rooms_catalog' => $prefill['rooms'] ?? [],
                 'server_total' => $serverTotal,
+                'pricing_breakdown' => $pricingBreakdown,
                 'client_total' => $clientTotal,
                 'computed_at' => now()->toIso8601String(),
             ],
@@ -232,14 +237,14 @@ final class ReservationWorkspaceBookingService
      * @param  array<int, mixed>  $extrasPayload
      * @param  array<int, array<string, mixed>>  $passengersNormalized
      */
-    private function computeExpectedTotal(
+    private function computeExpectedPricingBreakdown(
         Voyage $voyage,
         array $prefill,
         array $counts,
         array $extrasPayload,
         string $prestationType,
         array $passengersNormalized,
-    ): float {
+    ): array {
         $pr = $prefill['prices'] ?? [];
         $adult = isset($pr['adult_amount']) && is_numeric($pr['adult_amount']) ? (float) $pr['adult_amount'] : null;
         $child = isset($pr['child_amount']) && is_numeric($pr['child_amount']) ? (float) $pr['child_amount'] : null;
@@ -260,11 +265,14 @@ final class ReservationWorkspaceBookingService
         }
         $inf = 0.0;
 
-        $base = $counts['adult'] * $adult + $counts['child'] * $child + $counts['infant'] * $inf;
-
+        $base = round($counts['adult'] * $adult + $counts['child'] * $child + $counts['infant'] * $inf, 2);
         $extras = $this->computeExtrasTotalFromCatalog($prefill, $passengersNormalized, $extrasPayload);
 
-        return round($base + $extras, 2);
+        return [
+            'base_total' => $base,
+            'extras_total' => $extras,
+            'total_amount' => round($base + $extras, 2),
+        ];
     }
 
     /**

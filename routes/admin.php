@@ -186,6 +186,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
         Route::get('reservations/hub-debug', [ReservationsController::class, 'hubDebug'])->name('reservations.hub-debug');
         Route::get('reservations/hub-refresh', [ReservationsController::class, 'hubRefresh'])->name('reservations.hub-refresh');
+        Route::post('reservations/{reservation}/payments', [ReservationsController::class, 'storePayment'])->name('reservations.payments.store');
+        Route::post('reservations/{reservation}/documents', [ReservationsController::class, 'storeDocument'])->name('reservations.documents.store');
+        Route::post('reservations/{reservation}/cancel', [ReservationsController::class, 'cancel'])->name('reservations.cancel');
+        Route::get('reservations/{reservation}/dossier/pdf', [ReservationsController::class, 'dossierPdf'])->name('reservations.dossier.pdf');
+        Route::get('reservations/{reservation}/payments/{payment}/receipt/pdf', [ReservationsController::class, 'paymentReceiptPdf'])->name('reservations.payments.receipt.pdf');
         Route::get('reservations/{reservation}/panel', [ReservationsController::class, 'panel'])->name('reservations.panel');
         Route::get('reservations/{reservation}/edit', [ReservationsController::class, 'edit'])->name('reservations.edit');
         Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');

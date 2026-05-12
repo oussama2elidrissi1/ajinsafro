@@ -154,6 +154,12 @@
     color: #0e3a5a;
 }
 
+.reservation-create__step.is-complete {
+    border-color: rgba(14, 58, 90, 0.18);
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
 .reservation-create__step-index {
     width: 1.9rem;
     height: 1.9rem;
@@ -169,6 +175,11 @@
 
 .reservation-create__step.is-active .reservation-create__step-index {
     background: #0e3a5a;
+    color: #fff;
+}
+
+.reservation-create__step.is-complete .reservation-create__step-index {
+    background: #0f766e;
     color: #fff;
 }
 
@@ -305,6 +316,7 @@
 .reservation-create__placeholder,
 .reservation-create__visa-card,
 .reservation-create__payment-card,
+.reservation-create__financial-card,
 .reservation-create__final-summary,
 .reservation-create__metric {
     border: 1px solid #e8eef4;
@@ -478,9 +490,10 @@
     padding: 0.55rem 0.7rem;
     border-radius: 0.8rem;
     background: #f8fafc;
+    cursor: pointer;
 }
 
-.reservation-create__extra-traveler label {
+.reservation-create__extra-traveler > span {
     display: inline-flex;
     align-items: center;
     gap: 0.65rem;
@@ -501,6 +514,22 @@
     color: #0e3a5a;
     font-size: 0.82rem;
     font-weight: 800;
+}
+
+.reservation-create__extra-controls {
+    margin-bottom: 0.85rem;
+}
+
+.reservation-create__extra-total {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #e2e8f0;
+    font-weight: 700;
+    color: #334155;
+}
+
+.reservation-create__extra-total strong {
+    color: #0e3a5a;
 }
 
 .reservation-create__empty-state,
@@ -569,6 +598,7 @@
 }
 
 .reservation-create__payment-card,
+.reservation-create__financial-card,
 .reservation-create__final-summary {
     padding: 1rem 1.1rem;
 }
@@ -582,6 +612,14 @@
 .reservation-create__final-line--total strong {
     font-size: 1.25rem;
     color: #0e3a5a;
+}
+
+.reservation-create__final-line--success strong {
+    color: #15803d;
+}
+
+.reservation-create__final-line--warning strong {
+    color: #c2410c;
 }
 
 .reservation-create__toggle {
@@ -646,6 +684,21 @@
 
 .reservation-create__button--ghost {
     border-color: #e2e8f0;
+}
+
+.reservation-create__helper {
+    margin: 0.85rem 0 0;
+    color: #64748b;
+    font-size: 0.82rem;
+}
+
+.reservation-create__helper.is-error {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
+.reservation-create__inline-error p {
+    margin: 0.5rem 0 0;
 }
 
 .d-none {

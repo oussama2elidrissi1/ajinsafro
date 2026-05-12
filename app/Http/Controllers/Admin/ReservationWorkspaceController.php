@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
-use App\Models\ReservationExtra;
 use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
@@ -12,6 +11,7 @@ use App\Services\BranchScopeService;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
 use App\Services\ReservationVisibilityService;
+use App\Services\ReservationDossierService;
 use App\Services\ReservationWorkspaceBookingService;
 use App\Services\ReservationWorkspaceCatalogService;
 use App\Support\AdminReservationFlash;
@@ -32,6 +32,7 @@ class ReservationWorkspaceController extends Controller
         protected ReservationWorkspaceBookingService $workspaceBooking,
         protected ReservationListQueryService $reservationListQuery,
         protected ReservationVisibilityService $reservationVisibility,
+        protected ReservationDossierService $reservationDossier,
     ) {}
 
     public function index(Request $request): View
@@ -219,16 +220,33 @@ class ReservationWorkspaceController extends Controller
                 'client_document_number' => $request->string('titulaire_document')->toString(),
                 'payment_type' => $paymentType,
                 'status' => Reservation::STATUS_EN_COURS,
-                'base_price' => $bookingResolve['authoritative_total'],
+                'dossier_status' => Reservation::DOSSIER_PENDING,
+                'base_price' => $bookingResolve['base_total'],
+                'total_base' => $bookingResolve['base_total'],
+                'room_supplement_total' => $bookingResolve['room_supplement_total'],
+                'extras_total' => $bookingResolve['extras_total'],
+                'total_amount' => $bookingResolve['authoritative_total'],
                 'paid_amount' => (float) $request->input('montant_paye'),
+                'remaining_amount' => max(0, (float) $bookingResolve['authoritative_total'] - (float) $request->input('montant_paye')),
+                'payment_status' => $this->reservationDossier->derivePaymentStatus((float) $bookingResolve['authoritative_total'], (float) $request->input('montant_paye')),
                 'notes' => $notes,
                 'passengers' => $passengers,
                 'branch_id' => $ownership['branch_id'],
                 'sales_manager_id' => $ownership['sales_manager_id'],
                 'agent_id' => $user->id,
+                'assigned_to' => $user->id,
                 'created_by' => $user->id,
                 'created_by_user_id' => $user->id,
                 'hotel_rooms' => [],
+                'extras_payload' => $extrasPayload,
+                'payment_payload' => (float) $request->input('montant_paye') > 0 ? [
+                    'payment_date' => now()->toDateString(),
+                    'payment_method' => $request->input('payment_mode') ?: 'Autre',
+                    'amount' => (float) $request->input('montant_paye'),
+                    'reference' => null,
+                    'note' => 'Paiement initial workspace',
+                    'created_by' => $user->id,
+                ] : null,
                 'wp_tour_post_id' => $voyageForMeta->wp_post_id ? (int) $voyageForMeta->wp_post_id : null,
                 'catalog_source_code' => $catalogRow['code'] ?? null,
                 'voyage_flight_id' => isset($catalogRow['flight_id']) ? (int) $catalogRow['flight_id'] : null,
@@ -240,29 +258,15 @@ class ReservationWorkspaceController extends Controller
 
             $reservation = $this->reservationService->create($data, null, null);
 
-            foreach ($extrasPayload as $extra) {
-                if (! is_array($extra)) {
-                    continue;
-                }
-                $name = trim((string) ($extra['name'] ?? ''));
-                if ($name === '') {
-                    continue;
-                }
-                $selectionMode = (string) ($extra['selection_mode'] ?? '');
-                $quantity = max(1, (int) ($extra['quantity'] ?? 1));
-                $passengerKey = isset($extra['pax']) ? (string) $extra['pax'] : null;
-                if ($selectionMode === 'line_item') {
-                    $name = $quantity > 1 ? ($name.' x'.$quantity) : $name;
-                    $passengerKey = isset($extra['activity_id']) && (int) $extra['activity_id'] > 0
-                        ? 'activity:'.(int) $extra['activity_id']
-                        : null;
-                }
-                ReservationExtra::query()->create([
-                    'reservation_id' => $reservation->id,
-                    'name' => $name,
-                    'price' => isset($extra['price']) ? (float) $extra['price'] : 0,
-                    'passenger_key' => $passengerKey,
-                ]);
+            foreach ($docPaths as $index => $path) {
+                $this->reservationDossier->addDocument(
+                    $reservation,
+                    'other',
+                    'Document workspace #'.($index + 1),
+                    $path,
+                    null,
+                    $user->id
+                );
             }
 
             if (config('app.debug')) {

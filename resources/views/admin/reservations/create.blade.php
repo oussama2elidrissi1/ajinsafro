@@ -38,6 +38,10 @@
         <form method="post" action="{{ route('admin.reservations.store') }}" enctype="multipart/form-data" id="reservation-create-form">
             @csrf
             <input type="hidden" name="extras_json" id="reservation-create-extras-json" value="[]">
+            <input type="hidden" name="total_base" id="reservation-total-base-input" value="{{ old('total_base', 0) }}">
+            <input type="hidden" name="room_supplement_total" id="reservation-room-supplement-total-input" value="{{ old('room_supplement_total', 0) }}">
+            <input type="hidden" name="extras_total" id="reservation-extras-total-input" value="{{ old('extras_total', 0) }}">
+            <input type="hidden" name="total_amount" id="reservation-total-amount-input" value="{{ old('total_amount', 0) }}">
 
             <div class="reservation-create__layout">
                 @include('admin.reservations.create.partials.stepper')
@@ -48,6 +52,7 @@
                     @include('admin.reservations.create.partials.step-voyageurs')
                     @include('admin.reservations.create.partials.step-extras')
                     @include('admin.reservations.create.partials.step-payment')
+                    @include('admin.reservations.create.partials.step-dossier')
                 </div>
             </div>
         </form>

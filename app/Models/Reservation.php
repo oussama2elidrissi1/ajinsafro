@@ -56,6 +56,24 @@ class Reservation extends Model
 
     public const PAYMENT_ESPECE = 'ESPECE';
 
+    public const DOSSIER_DRAFT = 'draft';
+
+    public const DOSSIER_PENDING = 'pending';
+
+    public const DOSSIER_CONFIRMED = 'confirmed';
+
+    public const DOSSIER_CANCELLED = 'cancelled';
+
+    public const DOSSIER_COMPLETED = 'completed';
+
+    public const PAYMENT_STATUS_UNPAID = 'unpaid';
+
+    public const PAYMENT_STATUS_DEPOSIT = 'deposit';
+
+    public const PAYMENT_STATUS_PARTIAL = 'partial';
+
+    public const PAYMENT_STATUS_PAID = 'paid';
+
     public const VISA_STATUS_NOT_REQUIRED = 'not_required';
 
     public const VISA_STATUS_PENDING = 'pending';
@@ -69,6 +87,7 @@ class Reservation extends Model
         'branch_id',
         'sales_manager_id',
         'agent_id',
+        'assigned_to',
         'assigned_at',
         'assignment_priority',
         'assignment_note',
@@ -77,6 +96,7 @@ class Reservation extends Model
         'updated_by',
         'tour_id',
         'voyage_id',
+        'dossier_number',
         'departure_id',
         'wp_tour_post_id',
         'channel',
@@ -95,13 +115,21 @@ class Reservation extends Model
         'payment_type',
         'payment_receipt_path',
         'status',
+        'dossier_status',
+        'payment_status',
         'passengers_count',
         'notes',
+        'total_base',
         'paid_amount',
+        'extras_total',
+        'total_amount',
+        'remaining_amount',
         'visa_ok',
         'visa_notes',
         'visa_status',
         'visa_document_path',
+        'confirmed_at',
+        'cancelled_at',
     ];
 
     protected $casts = [
@@ -117,14 +145,21 @@ class Reservation extends Model
         'branch_id' => 'integer',
         'sales_manager_id' => 'integer',
         'agent_id' => 'integer',
+        'assigned_to' => 'integer',
         'assigned_at' => 'datetime',
         'assignment_priority' => 'string',
         'created_by' => 'integer',
         'created_by_user_id' => 'integer',
         'updated_by' => 'integer',
         'passengers_count' => 'integer',
+        'total_base' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'extras_total' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
         'visa_ok' => 'boolean',
+        'confirmed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function reservationRooms(): HasMany
@@ -140,6 +175,21 @@ class Reservation extends Model
     public function extras(): HasMany
     {
         return $this->hasMany(ReservationExtra::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(ReservationPayment::class)->orderByDesc('payment_date')->orderByDesc('id');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ReservationDocument::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(ReservationHistory::class)->orderByDesc('created_at')->orderByDesc('id');
     }
 
     public function client(): BelongsTo
@@ -195,6 +245,11 @@ class Reservation extends Model
     public function agent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function assignedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function assignedAgent(): BelongsTo
@@ -336,13 +391,19 @@ class Reservation extends Model
      */
     public function getTotalPriceAttribute(): ?float
     {
+        $totalAmount = $this->attributes['total_amount'] ?? null;
+        if ($totalAmount !== null && $totalAmount !== '') {
+            return (float) $totalAmount;
+        }
+
         $base = $this->base_price !== null ? (float) $this->base_price : null;
         $supp = $this->room_supplement_total !== null ? (float) $this->room_supplement_total : null;
-        if ($base === null && $supp === null) {
+        $extras = $this->extras_total !== null ? (float) $this->extras_total : null;
+        if ($base === null && $supp === null && $extras === null) {
             return null;
         }
 
-        return ($base ?? 0) + ($supp ?? 0);
+        return ($base ?? 0) + ($supp ?? 0) + ($extras ?? 0);
     }
 
     public function getBasePriceAttribute(): ?float
@@ -367,6 +428,84 @@ class Reservation extends Model
     public function getAgencyLabelAttribute(): ?string
     {
         return $this->branch?->name ?: $this->partner?->name;
+    }
+
+    public function getEffectivePaidAmountAttribute(): float
+    {
+        $paymentsTotal = $this->relationLoaded('payments')
+            ? (float) $this->payments->sum('amount')
+            : 0.0;
+
+        if ($paymentsTotal > 0) {
+            return round($paymentsTotal, 2);
+        }
+
+        return round((float) ($this->paid_amount ?? 0), 2);
+    }
+
+    public function getEffectiveExtrasTotalAttribute(): float
+    {
+        if ($this->extras_total !== null) {
+            return round((float) $this->extras_total, 2);
+        }
+
+        if ($this->relationLoaded('extras')) {
+            return round((float) $this->extras->sum(fn ($extra) => $extra->total_price ?? $extra->price ?? 0), 2);
+        }
+
+        return 0.0;
+    }
+
+    public function getEffectiveTotalBaseAttribute(): float
+    {
+        if ($this->total_base !== null) {
+            return round((float) $this->total_base, 2);
+        }
+
+        return round((float) ($this->base_price ?? 0), 2);
+    }
+
+    public function getEffectiveTotalAmountAttribute(): float
+    {
+        if ($this->total_amount !== null) {
+            return round((float) $this->total_amount, 2);
+        }
+
+        return round($this->effective_total_base + (float) ($this->room_supplement_total ?? 0) + $this->effective_extras_total, 2);
+    }
+
+    public function getEffectiveRemainingAmountAttribute(): float
+    {
+        if ($this->remaining_amount !== null) {
+            return round((float) $this->remaining_amount, 2);
+        }
+
+        return round(max(0, $this->effective_total_amount - $this->effective_paid_amount), 2);
+    }
+
+    public function paymentStatusLabelFr(): string
+    {
+        $status = (string) ($this->payment_status ?: self::PAYMENT_STATUS_UNPAID);
+
+        return match ($status) {
+            self::PAYMENT_STATUS_DEPOSIT => 'Acompte',
+            self::PAYMENT_STATUS_PARTIAL => 'Payé partiellement',
+            self::PAYMENT_STATUS_PAID => 'Payé',
+            default => 'Non payé',
+        };
+    }
+
+    public function dossierStatusLabelFr(): string
+    {
+        $status = (string) ($this->dossier_status ?: self::DOSSIER_PENDING);
+
+        return match ($status) {
+            self::DOSSIER_DRAFT => 'Brouillon',
+            self::DOSSIER_CONFIRMED => 'Confirmé',
+            self::DOSSIER_CANCELLED => 'Annulé',
+            self::DOSSIER_COMPLETED => 'Terminé',
+            default => 'En attente',
+        };
     }
 
     /**

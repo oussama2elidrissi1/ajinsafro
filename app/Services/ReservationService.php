@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Client;
 use App\Models\Departure;
 use App\Models\DepartureHotelRoom;
 use App\Models\Reservation;
@@ -31,6 +32,7 @@ class ReservationService
         private readonly PartnerCommissionService $commissionService,
         private readonly DepartureStockService $departureStock,
         private readonly ReservationLifecycleService $reservationLifecycle,
+        private readonly ReservationDossierService $reservationDossier,
     ) {}
 
     /**
@@ -67,6 +69,9 @@ class ReservationService
     public function create(array $data, ?UploadedFile $paymentReceipt = null, ?UploadedFile $visaDocument = null): Reservation
     {
         return DB::transaction(function () use ($data, $paymentReceipt, $visaDocument) {
+            $client = $this->reservationDossier->resolveOrCreateClientFromPayload($data);
+            $data = $this->enrichDataWithClientSnapshot($data, $client);
+
             $reservation = new Reservation;
             $this->fillReservation($reservation, $data);
 
@@ -101,9 +106,47 @@ class ReservationService
                 $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
             }
 
+            $this->syncExtras($reservation, $data['extras_payload'] ?? []);
+            $this->reservationDossier->ensureDossierNumber($reservation);
+            $this->reservationDossier->refreshReservationFinancials($reservation);
+            $reservation->save();
+
+            if (! empty($data['payment_payload']) && is_array($data['payment_payload'])) {
+                $this->reservationDossier->addPayment($reservation, $data['payment_payload'], $paymentReceipt);
+                $reservation->save();
+            }
+
+            if (! empty($data['documents_payload']) && is_array($data['documents_payload'])) {
+                foreach ($data['documents_payload'] as $documentPayload) {
+                    if (! is_array($documentPayload) || ! (($documentPayload['file'] ?? null) instanceof UploadedFile)) {
+                        continue;
+                    }
+
+                    $this->reservationDossier->addUploadedDocument(
+                        $reservation,
+                        (string) ($documentPayload['type'] ?? 'other'),
+                        (string) ($documentPayload['title'] ?? 'Document'),
+                        $documentPayload['file'],
+                        isset($documentPayload['created_by']) ? (int) $documentPayload['created_by'] : null
+                    );
+                }
+            }
+
             if ($reservation->partner_id) {
                 $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
             }
+            $this->reservationDossier->addHistory(
+                $reservation,
+                'reservation.created',
+                isset($data['created_by']) ? (int) $data['created_by'] : null,
+                null,
+                [
+                    'dossier_number' => $reservation->dossier_number,
+                    'total_amount' => $reservation->total_amount,
+                    'paid_amount' => $reservation->paid_amount,
+                    'payment_status' => $reservation->payment_status,
+                ]
+            );
             $fresh = $reservation->fresh(['passengers', 'reservationRooms', 'tour']);
             if (config('app.debug') && $fresh) {
                 Log::debug('reservation.created', [
@@ -127,6 +170,15 @@ class ReservationService
     public function update(Reservation $reservation, array $data, ?UploadedFile $paymentReceipt = null, ?UploadedFile $visaDocument = null): Reservation
     {
         return DB::transaction(function () use ($reservation, $data, $paymentReceipt, $visaDocument) {
+            $client = $this->reservationDossier->resolveOrCreateClientFromPayload($data, $reservation);
+            $data = $this->enrichDataWithClientSnapshot($data, $client);
+            $historyBefore = [
+                'total_amount' => $reservation->total_amount,
+                'paid_amount' => $reservation->paid_amount,
+                'payment_status' => $reservation->payment_status,
+                'dossier_status' => $reservation->dossier_status,
+            ];
+
             // Revenir à un état neutre avant de recalculer une allocation (passengers_count, travel_date_id, etc.).
             $this->rollbackReservationAllocations($reservation->id);
 
@@ -158,9 +210,32 @@ class ReservationService
                 $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
             }
 
+            $this->syncExtras($reservation, $data['extras_payload'] ?? []);
+            $this->reservationDossier->ensureDossierNumber($reservation);
+            $this->reservationDossier->refreshReservationFinancials($reservation);
+            $reservation->save();
+
+            if (! empty($data['payment_payload']) && is_array($data['payment_payload'])) {
+                $this->reservationDossier->addPayment($reservation, $data['payment_payload'], $paymentReceipt);
+                $reservation->save();
+            }
+
             if ($reservation->partner_id) {
                 $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
             }
+
+            $this->reservationDossier->addHistory(
+                $reservation,
+                'reservation.updated',
+                isset($data['updated_by']) ? (int) $data['updated_by'] : null,
+                $historyBefore,
+                [
+                    'total_amount' => $reservation->total_amount,
+                    'paid_amount' => $reservation->paid_amount,
+                    'payment_status' => $reservation->payment_status,
+                    'dossier_status' => $reservation->dossier_status,
+                ]
+            );
 
             return $reservation->fresh(['passengers', 'reservationRooms']);
         });
@@ -177,12 +252,17 @@ class ReservationService
                 return $reservation->fresh();
             }
 
-            $reservation->status = Reservation::STATUS_CONFIRMED;
+            $this->reservationDossier->applyConfirmationState($reservation);
             $reservation->save();
             if ($reservation->partner_id) {
                 $this->commissionService->validateCommissionForReservation($reservation);
             }
             $this->reservationLifecycle->commitAfterPersist($reservation->fresh());
+            $this->reservationDossier->addHistory($reservation, 'reservation.confirmed', null, null, [
+                'status' => $reservation->status,
+                'dossier_status' => $reservation->dossier_status,
+                'confirmed_at' => optional($reservation->confirmed_at)->toIso8601String(),
+            ]);
 
             return $reservation->fresh();
         });
@@ -259,17 +339,42 @@ class ReservationService
 
         $reservation->notes = $data['notes'] ?? $reservation->notes;
 
+        if ($this->reservationsHasBasePriceColumn()) {
+            $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
+        }
+        if (array_key_exists('total_base', $data)) {
+            $reservation->total_base = $data['total_base'] !== '' && $data['total_base'] !== null
+                ? (float) $data['total_base']
+                : null;
+        }
+        if (array_key_exists('extras_total', $data)) {
+            $reservation->extras_total = $data['extras_total'] !== '' && $data['extras_total'] !== null
+                ? (float) $data['extras_total']
+                : null;
+        }
+        if (array_key_exists('total_amount', $data)) {
+            $reservation->total_amount = $data['total_amount'] !== '' && $data['total_amount'] !== null
+                ? (float) $data['total_amount']
+                : null;
+        }
         if (array_key_exists('paid_amount', $data)) {
             $reservation->paid_amount = $data['paid_amount'] !== '' && $data['paid_amount'] !== null
                 ? (float) $data['paid_amount']
                 : null;
-        } elseif (array_key_exists('base_price', $data)) {
-            $reservation->paid_amount = $data['base_price'] !== '' && $data['base_price'] !== null
-                ? (float) $data['base_price']
+        }
+        if (array_key_exists('remaining_amount', $data)) {
+            $reservation->remaining_amount = $data['remaining_amount'] !== '' && $data['remaining_amount'] !== null
+                ? (float) $data['remaining_amount']
                 : null;
         }
-        if ($this->reservationsHasBasePriceColumn()) {
-            $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
+        if (array_key_exists('payment_status', $data)) {
+            $reservation->payment_status = $data['payment_status'] ?: null;
+        }
+        if (array_key_exists('dossier_status', $data)) {
+            $reservation->dossier_status = $data['dossier_status'] ?: null;
+        }
+        if (array_key_exists('dossier_number', $data)) {
+            $reservation->dossier_number = $data['dossier_number'] ?: null;
         }
         if (array_key_exists('prestation_type', $data)) {
             $reservation->prestation_type = $data['prestation_type'] ?: null;
@@ -294,6 +399,11 @@ class ReservationService
         if (array_key_exists('agent_id', $data)) {
             $reservation->agent_id = $data['agent_id'];
         }
+        if (array_key_exists('assigned_to', $data)) {
+            $reservation->assigned_to = $data['assigned_to'];
+        } elseif (array_key_exists('agent_id', $data)) {
+            $reservation->assigned_to = $data['agent_id'];
+        }
         if (array_key_exists('created_by', $data)) {
             $reservation->created_by = $data['created_by'];
         }
@@ -315,6 +425,12 @@ class ReservationService
         if (array_key_exists('voyage_flight_id', $data)) {
             $vf = $data['voyage_flight_id'];
             $reservation->voyage_flight_id = $vf !== null && $vf !== '' ? (int) $vf : null;
+        }
+        if (array_key_exists('confirmed_at', $data)) {
+            $reservation->confirmed_at = $data['confirmed_at'];
+        }
+        if (array_key_exists('cancelled_at', $data)) {
+            $reservation->cancelled_at = $data['cancelled_at'];
         }
     }
 
@@ -396,6 +512,46 @@ class ReservationService
 
         $reservation->passengers_count = ReservationPassenger::where('reservation_id', $reservation->id)->count() ?: 1;
         $reservation->save();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $extrasPayload
+     */
+    private function syncExtras(Reservation $reservation, array $extrasPayload): void
+    {
+        $reservation->extras()->delete();
+
+        foreach ($extrasPayload as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $name = trim((string) ($row['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+
+            $quantity = max(1, (int) ($row['quantity'] ?? 1));
+            $unitPrice = isset($row['unit_price']) && is_numeric($row['unit_price'])
+                ? (float) $row['unit_price']
+                : (float) ($row['price'] ?? 0);
+            $totalPrice = isset($row['total_price']) && is_numeric($row['total_price'])
+                ? (float) $row['total_price']
+                : round($unitPrice * $quantity, 2);
+
+            $reservation->extras()->create([
+                'voyage_extra_id' => ! empty($row['voyage_extra_id']) ? (int) $row['voyage_extra_id'] : null,
+                'name' => $name,
+                'description' => $row['description'] ?? null,
+                'price' => $totalPrice,
+                'unit_price' => $unitPrice,
+                'quantity' => $quantity,
+                'total_price' => $totalPrice,
+                'application_scope' => $row['application_scope'] ?? null,
+                'passenger_key' => $row['passenger_key'] ?? ($row['pax'] ?? null),
+                'traveler_keys' => is_array($row['traveler_keys'] ?? null) ? $row['traveler_keys'] : null,
+            ]);
+        }
     }
 
     /**
@@ -951,5 +1107,31 @@ class ReservationService
     {
         return $this->reservationsHasChannelColumn
             ??= Schema::connection('mysql')->hasColumn('reservations', 'channel');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function enrichDataWithClientSnapshot(array $data, ?Client $client): array
+    {
+        if (! $client) {
+            return $data;
+        }
+
+        $data['client_external_id'] = (int) $client->id;
+        $data['client_first_name'] = $data['client_first_name'] ?? $client->first_name;
+        $data['client_last_name'] = $data['client_last_name'] ?? $client->last_name;
+        $data['client_email'] = $data['client_email'] ?? $client->email;
+        $data['client_phone'] = $data['client_phone'] ?? $client->phone;
+
+        if (empty($data['client_document_number'])) {
+            $data['client_document_number'] = $client->national_id_number ?: $client->passport_number;
+        }
+        if (empty($data['client_document_type'])) {
+            $data['client_document_type'] = $client->national_id_number ? 'cin' : ($client->passport_number ? 'passport' : null);
+        }
+
+        return $data;
     }
 }
