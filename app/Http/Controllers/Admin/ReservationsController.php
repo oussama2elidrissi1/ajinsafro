@@ -525,11 +525,13 @@ class ReservationsController extends Controller
     {
         try {
             $tourId = (int) $request->query('tour_id', 0);
-        Log::info('URGENT ROOM ENDPOINT HIT', [
-            'tour_id' => (int) $request->query('tour_id', 0),
-            'travel_date_id' => (int) $request->query('travel_date_id', 0),
-            'departure_id' => (int) $request->query('departure_id', 0),
-        ]);
+            Log::info('URGENT ROOM ENDPOINT HIT', [
+                'tour_id' => $request->input('tour_id'),
+                'travel_date_id' => $request->input('travel_date_id'),
+                'departure_id' => $request->input('departure_id'),
+                'route' => $request->route()?->getName(),
+                'url' => $request->fullUrl(),
+            ]);
             $departureId = (int) $request->query('departure_id', 0);
             $travelDateId = (int) $request->query('travel_date_id', 0);
 
@@ -615,9 +617,12 @@ class ReservationsController extends Controller
                 // ignore logging issues
             }
             Log::info('URGENT ROOM ENDPOINT RESULT', [
+                'success' => $payload['success'] ?? null,
                 'mode' => $payload['mode'] ?? null,
-                'rooms_count' => count($payload['rooms'] ?? []),
-                'rooms' => $payload['rooms'] ?? [],
+                'rooms_count' => isset($payload['rooms']) && is_array($payload['rooms']) ? count($payload['rooms']) : null,
+                'rooms' => $payload['rooms'] ?? null,
+                'pricing' => $payload['pricing'] ?? null,
+                'departure' => $payload['departure'] ?? null,
             ]);
 
 

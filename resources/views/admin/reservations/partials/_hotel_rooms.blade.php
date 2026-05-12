@@ -20,6 +20,7 @@
     $initialTravelDateId = old('travel_date_id', $reservation?->travel_date_id ?? ($selectedTravelDate?->id ?? ''));
     $selectedDepartureId = $selectedDepartureId ?? null;
     $initialDepartureId = old('departure_id', $reservation?->departure_id ?? $selectedDepartureId ?? '');
+    $roomsDebugEnabled = config('app.debug') || request()->boolean('debug');
 
     $legacyEdit = $reservation && ! $reservation->departure_id && $tourHotelsWithRooms->isNotEmpty();
     $reservationRoomsByKey = $reservation
@@ -130,6 +131,12 @@
                 <p class="text-muted mb-0" id="reservation-hotel-placeholder">Sélectionnez un voyage puis un départ pour charger les chambres du dossier.</p>
             @endif
         </div>
+        @if($roomsDebugEnabled)
+            <div id="reservation-rooms-debug-panel" class="alert alert-secondary small mt-3 mb-0">
+                <strong>Debug chambres</strong>
+                <div id="reservation-rooms-debug-content" class="mt-2">Waiting for request...</div>
+            </div>
+        @endif
 
         <div id="reservation-hotel-summary" class="mt-3 {{ $legacyEdit && $tourHotelsWithRooms->isNotEmpty() ? '' : 'd-none' }}">
             <hr>
@@ -181,6 +188,9 @@
     var basePriceInput = document.getElementById('reservation-base-price');
     var inputDepartureId = document.getElementById('input-departure-id');
     var inputTravelDateId = document.getElementById('input-travel-date-id');
+    var roomsDebugEnabled = @json($roomsDebugEnabled);
+    var roomsDebugPanel = document.getElementById('reservation-rooms-debug-content');
+    var roomsDebugRequestSeq = 0;
 
     function parseNumber(value) {
         var parsed = parseFloat(value || '0');
@@ -194,6 +204,49 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+    function flattenRoomIds(rooms) {
+        var ids = [];
+        if (!Array.isArray(rooms)) {
+            return ids;
+        }
+
+        rooms.forEach(function (hotel) {
+            var hotelRooms = hotel && Array.isArray(hotel.rooms) ? hotel.rooms : [];
+            hotelRooms.forEach(function (room) {
+                var id = room && (room.departure_hotel_room_id || room.tour_hotel_room_id || room.id || null);
+                if (id !== null && id !== undefined && id !== '') {
+                    ids.push(String(id));
+                }
+            });
+        });
+
+        return ids;
+    }
+
+    function updateRoomsDebugPanel(data) {
+        if (!roomsDebugEnabled || !roomsDebugPanel) {
+            return;
+        }
+
+        var mode = data && data.mode ? String(data.mode) : 'unknown';
+        var endpoint = data && data.url ? String(data.url) : '-';
+        var rooms = data && Array.isArray(data.rooms) ? data.rooms : [];
+        var ids = flattenRoomIds(rooms);
+        var source = data && data.source ? String(data.source) : 'unknown';
+        var lines = [
+            'Endpoint called: ' + endpoint,
+            'Mode received: ' + mode,
+            'Rooms groups received: ' + rooms.length,
+            'Room IDs received: ' + (ids.length ? ids.join(', ') : '-'),
+            'Source: ' + source,
+            'Timestamp: ' + (data && data.timestamp ? String(data.timestamp) : new Date().toISOString())
+        ];
+
+        roomsDebugPanel.innerHTML = lines.map(function (line) {
+            return '<div>' + escapeHtml(line) + '</div>';
+        }).join('');
     }
 
     // Provide a safe local formatMoney fallback in case reservation-create.js
@@ -339,7 +392,21 @@
 
     function renderDepartureRooms(payload) {
         if (!roomsContainer) return;
+        console.group('[Reservation Rooms Render]');
+        console.log('Timestamp:', new Date().toISOString());
+        console.log('Mode reçu:', payload && payload.mode ? payload.mode : null);
+        console.log('Rooms reçues:', payload && payload.rooms ? payload.rooms : null);
+        console.log('Doit afficher rooms ?', !!(payload && payload.mode === 'rooms'));
+        console.log('Doit afficher places_only ?', !!(payload && payload.mode === 'places_only'));
+        console.groupEnd();
         if (!payload || payload.success === false) {
+            updateRoomsDebugPanel({
+                url: payload && payload.__debug ? payload.__debug.url : '',
+                mode: payload && payload.mode ? payload.mode : 'blocked',
+                rooms: payload && Array.isArray(payload.rooms) ? payload.rooms : [],
+                source: payload && payload.rooms_source ? payload.rooms_source : 'unknown',
+                timestamp: payload && payload.__debug ? payload.__debug.timestamp : new Date().toISOString()
+            });
             // Try a graceful client-side fallback: if departure option contains capacity
             // and a fallback price exists on the trip, render a places_only card instead
             var option = departureSelect && departureSelect.options[departureSelect.selectedIndex];
@@ -412,8 +479,16 @@
         }
 
         setAccommodationMode(payload.mode || 'rooms');
+        updateRoomsDebugPanel({
+            url: payload && payload.__debug ? payload.__debug.url : '',
+            mode: payload && payload.mode ? payload.mode : 'unknown',
+            rooms: Array.isArray(hotels) ? hotels : [],
+            source: payload && payload.rooms_source ? payload.rooms_source : 'unknown',
+            timestamp: payload && payload.__debug ? payload.__debug.timestamp : new Date().toISOString()
+        });
 
         if (payload.mode === 'rooms' && hotels.length) {
+            console.info('[Reservation Rooms Render] chambres affichées', payload.rooms);
             roomsContainer.setAttribute('data-room-mode', 'rooms');
 
             hotels.forEach(function (hotel) {
@@ -447,6 +522,11 @@
                 html += '</tbody></table></div></div></div>';
             });
         } else if (payload.mode === 'places_only') {
+            console.warn('[Reservation Rooms Render] places_only affiché', {
+                mode: payload.mode,
+                rooms: payload.rooms,
+                reason: 'Aucune chambre détectée ou mode places_only reçu'
+            });
             roomsContainer.setAttribute('data-room-mode', 'places_only');
             roomsContainer.setAttribute('data-available-capacity', String(availableCapacity));
             // safe label fallback: prefer global helper, then departure JSON data, then option text
@@ -510,14 +590,21 @@
 
         var tourSelect = document.getElementById('select-tour-id');
         var travelDateInput = document.getElementById('input-travel-date-id');
+        var tourId = tourSelect && tourSelect.value ? tourSelect.value : '';
+        var travelDateId = travelDateInput && travelDateInput.value ? travelDateInput.value : '';
+        var selectedOption = departureSelect && departureSelect.selectedOptions.length ? departureSelect.selectedOptions[0] : null;
+        var selectedDate = selectedOption && selectedOption.textContent ? selectedOption.textContent.trim() : '';
+        var requestTimestamp = new Date().toISOString();
+        var requestSeq = ++roomsDebugRequestSeq;
         var query = [
             'departure_id=' + encodeURIComponent(departureId),
-            'tour_id=' + encodeURIComponent(tourSelect && tourSelect.value ? tourSelect.value : ''),
-            'travel_date_id=' + encodeURIComponent(travelDateInput && travelDateInput.value ? travelDateInput.value : '')
+            'tour_id=' + encodeURIComponent(tourId),
+            'travel_date_id=' + encodeURIComponent(travelDateId)
         ].join('&');
+        var url = departureHotelsRoomsUrl + '?' + query;
 
         roomsContainer.innerHTML = '<p class="text-muted mb-0">Chargement des chambres…</p>';
-        fetch(departureHotelsRoomsUrl + '?' + query, {
+        fetch(url, {
             credentials: 'same-origin',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
@@ -527,10 +614,58 @@
                 if (!ct.includes('application/json')) throw new Error('Invalid response content-type');
                 return response.json();
             })
+            .then(function (response) {
+                console.group('[Reservation Rooms Debug]');
+                console.log('Timestamp:', requestTimestamp);
+                console.log('Request #:', requestSeq);
+                console.log('URL appelée:', url);
+                console.log('Payload envoyé:', {
+                    tour_id: tourId,
+                    departure_id: departureId,
+                    travel_date_id: travelDateId,
+                    selectedDate: selectedDate || null
+                });
+                console.log('Réponse brute:', response);
+                console.log('success:', response ? response.success : undefined);
+                console.log('mode:', response ? response.mode : undefined);
+                console.log('rooms:', response ? response.rooms : undefined);
+                console.log('rooms count:', Array.isArray(response && response.rooms) ? response.rooms.length : 'not array');
+                console.log('pricing:', response ? response.pricing : undefined);
+                console.log('departure:', response ? response.departure : undefined);
+                console.groupEnd();
+
+                if (response && typeof response === 'object') {
+                    response.__debug = {
+                        url: url,
+                        timestamp: requestTimestamp,
+                        requestSeq: requestSeq,
+                        selectedDate: selectedDate || null
+                    };
+                }
+
+                return response;
+            })
             .then(renderDepartureRooms)
-            .catch(function (err) {
-                console.error('departure rooms load error', err);
-                roomsContainer.innerHTML = '<p class="text-danger mb-0">Erreur de chargement des chambres. ' + escapeHtml(String(err && err.message ? err.message : err)) + '</p>';
+            .catch(function (error) {
+                console.error('[Reservation Rooms Error]', {
+                    error: error,
+                    message: error && error.message ? error.message : undefined,
+                    stack: error && error.stack ? error.stack : undefined,
+                    url: url,
+                    payload: {
+                        tour_id: tourId,
+                        departure_id: departureId,
+                        travel_date_id: travelDateId
+                    }
+                });
+                updateRoomsDebugPanel({
+                    url: url,
+                    mode: 'error',
+                    rooms: [],
+                    source: 'request_error',
+                    timestamp: requestTimestamp
+                });
+                roomsContainer.innerHTML = '<p class="text-danger mb-0">Erreur de chargement des chambres. ' + escapeHtml(String(error && error.message ? error.message : error)) + '</p>';
             });
     }
 

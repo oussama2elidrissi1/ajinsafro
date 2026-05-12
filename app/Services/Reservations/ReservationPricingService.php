@@ -86,6 +86,15 @@ class ReservationPricingService
      */
     public function previewDepartureSelection(array $payload): array
     {
+        $tourId = (int) ($payload['tour_id'] ?? 0);
+        $travelDateId = (int) ($payload['travel_date_id'] ?? 0);
+        $departureId = (int) ($payload['departure_id'] ?? 0);
+        Log::info('URGENT PRICING PREVIEW INPUT', [
+            'tour_id' => $tourId ?: null,
+            'travel_date_id' => $travelDateId ?: null,
+            'departure_id' => $departureId ?: null,
+        ]);
+
         $voyage = $this->resolveVoyage($payload);
         $departure = $this->resolveDepartureForPreview($payload, $voyage);
         $travelersCount = max(1, $this->countTravelers($payload['passengers'] ?? []));
@@ -105,6 +114,7 @@ class ReservationPricingService
                 return $hotel->rooms->filter(fn ($room) => ($room->status ?? null) !== 'inactive');
             })
             ->values();
+        $departureRoomsCount = $rooms->count();
 
         $hasAssociatedHotels = $departure->departureHotels->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))->isNotEmpty();
         Log::info('URGENT ROOM SERVICE rooms after filter', [
@@ -116,9 +126,13 @@ class ReservationPricingService
         $mode = 'blocked';
         $message = null;
         $roomsPayload = [];
+        $roomsSource = null;
+        $tourHotelRoomsCount = null;
+        $availabilityCount = null;
 
         if ($rooms->isNotEmpty()) {
             $mode = 'rooms';
+            $roomsSource = 'departure_hotel_rooms';
             $roomsPayload = $departure->departureHotels
                 ->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))
                 ->map(function ($hotel) {
@@ -154,6 +168,9 @@ class ReservationPricingService
                 $wpId = $voyage->wp_post_id ?? null;
                 if ($wpId && $travelDate?->id) {
                     $tourHotels = \App\Models\TourHotel::getAllForTour($wpId)->load(['rooms', 'roomAvailabilities']);
+                    $tourHotelRoomsCount = $tourHotels->flatMap(function ($hotel) {
+                        return $hotel->rooms;
+                    })->count();
                     $wpHotels = $tourHotels->map(function ($hotel) use ($travelDate) {
                         $rooms = [];
                         foreach ($hotel->rooms as $room) {
@@ -186,9 +203,13 @@ class ReservationPricingService
                             'rooms' => $rooms,
                         ] : null;
                     })->filter()->values()->all();
+                    $availabilityCount = collect($wpHotels)->sum(function ($hotel) {
+                        return count($hotel['rooms'] ?? []);
+                    });
 
                     if (! empty($wpHotels)) {
                         $mode = 'rooms';
+                        $roomsSource = 'tour_hotel_room_availabilities';
                         $roomsPayload = $wpHotels;
                     }
                 }
@@ -206,11 +227,19 @@ class ReservationPricingService
         }
 
         $totalBase = round($unitPrice * $travelersCount, 2);
+        Log::info('URGENT PRICING PREVIEW ROOMS SOURCE', [
+            'departure_rooms_count' => $departureRoomsCount,
+            'tour_hotel_rooms_count' => $tourHotelRoomsCount,
+            'availability_count' => $availabilityCount,
+            'final_mode' => $mode,
+            'rooms' => $roomsPayload,
+        ]);
 
         return [
             'success' => true,
             'mode' => $mode,
             'message' => $message,
+            'rooms_source' => $roomsSource,
             'departure' => [
                 'id' => (int) $departure->id,
                 'start_date' => $departure->getRawOriginal('start_date') ? date('Y-m-d', strtotime((string) $departure->getRawOriginal('start_date'))) : null,
