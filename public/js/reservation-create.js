@@ -798,5 +798,15 @@
                 delete window._reservation_setAccommodationMode_pending;
             }
         }
+        // Expose helper to allow inline templates to read selected departure label safely
+        if (typeof window.getSelectedDepartureLabel !== 'function') {
+            window.getSelectedDepartureLabel = getSelectedDepartureLabel;
+        }
+        if (typeof window.getAvailableDepartureCapacity !== 'function') {
+            window.getAvailableDepartureCapacity = getAvailableDepartureCapacity;
+        }
+        if (typeof window.getRoomMode !== 'function') {
+            window.getRoomMode = getRoomMode;
+        }
     });
 })();

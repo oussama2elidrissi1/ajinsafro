@@ -327,12 +327,25 @@
                 roomsContainer.setAttribute('data-room-mode', 'places_only');
                 setAccommodationMode('places_only');
                 var travelers = travelerCount();
+                // safe label fallback: prefer global helper, then option text, then travel date from payload
+                var selectedLabel = '';
+                if (typeof window.getSelectedDepartureLabel === 'function') {
+                    try { selectedLabel = String(window.getSelectedDepartureLabel() || '').trim(); } catch (e) { selectedLabel = ''; }
+                }
+                if (!selectedLabel) {
+                    var opt = departureSelect && departureSelect.options[departureSelect.selectedIndex];
+                    if (opt && opt.textContent) selectedLabel = opt.textContent.trim();
+                    else if (typeof payload !== 'undefined' && payload && payload.departure && payload.departure.start_date) {
+                        selectedLabel = (payload.departure.start_date || '') + (payload.departure.end_date ? ' → ' + payload.departure.end_date : '');
+                    }
+                }
+
                 roomsContainer.innerHTML = '' +
                     '<div class="card mb-2 reservation-hotel-block reservation-hotel-block--stock-only">' +
                         '<div class="card-body py-3"><div class="d-flex flex-column gap-2">' +
                             '<div class="alert alert-info mb-0">Stock de places disponible : ' + avail + ' place' + (avail > 1 ? 's' : '') + '. Aucune chambre détaillée configurée, réservation sur stock de places.</div>' +
                             '<div class="reservation-create__grid reservation-create__grid--two">' +
-                                '<div class="reservation-create__field"><label class="reservation-create__label">Départ</label><input class="reservation-create__input" type="text" value="' + getSelectedDepartureLabel() + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Départ</label><input class="reservation-create__input" type="text" value="' + escapeHtml(selectedLabel) + '" readonly></div>' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Places restantes</label><input class="reservation-create__input" type="text" value="' + avail + '" readonly></div>' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Nombre voyageurs</label><input class="reservation-create__input" type="text" value="' + travelers + '" readonly></div>' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Prix unitaire</label><input class="reservation-create__input" type="text" value="' + formatMoney(fallbackUnit) + '" readonly></div>' +
@@ -409,13 +422,26 @@
             });
         } else if (payload.mode === 'places_only') {
             roomsContainer.setAttribute('data-room-mode', 'places_only');
+            // safe label fallback: prefer global helper, then departure JSON data, then option text
+            var selectedLabel = '';
+            if (typeof window.getSelectedDepartureLabel === 'function') {
+                try { selectedLabel = String(window.getSelectedDepartureLabel() || '').trim(); } catch (e) { selectedLabel = ''; }
+            }
+            if (!selectedLabel && departureData && (departureData.start_date || departureData.end_date)) {
+                selectedLabel = (departureData.start_date || '') + (departureData.end_date ? ' → ' + departureData.end_date : '');
+            }
+            if (!selectedLabel) {
+                var opt = departureSelect && departureSelect.options[departureSelect.selectedIndex];
+                if (opt && opt.textContent) selectedLabel = opt.textContent.trim();
+            }
+
             html = '' +
                 '<div class="card mb-2 reservation-hotel-block reservation-hotel-block--stock-only">' +
                     '<div class="card-body py-3">' +
                         '<div class="d-flex flex-column gap-2">' +
                             '<div class="alert alert-info mb-0">Stock de places disponible : ' + availableCapacity + ' place' + (availableCapacity > 1 ? 's' : '') + '. Aucune chambre détaillée configurée, réservation sur stock de places.</div>' +
                             '<div class="reservation-create__grid reservation-create__grid--two">' +
-                                '<div class="reservation-create__field"><label class="reservation-create__label">Départ</label><input class="reservation-create__input" type="text" value="' + getSelectedDepartureLabel() + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Départ</label><input class="reservation-create__input" type="text" value="' + escapeHtml(selectedLabel) + '" readonly></div>' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Places restantes</label><input class="reservation-create__input" type="text" value="' + availableCapacity + '" readonly></div>' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Nombre voyageurs</label><input class="reservation-create__input" type="text" value="' + travelers + '" readonly></div>' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Prix unitaire</label><input class="reservation-create__input" type="text" value="' + formatMoney(unitPrice) + '" readonly></div>' +
