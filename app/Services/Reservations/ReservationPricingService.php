@@ -7,7 +7,9 @@ use App\Models\DepartureHotelRoom;
 use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Models\VoyageExtra;
+use App\Models\Wp\WpPost;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ReservationPricingService
@@ -265,12 +267,53 @@ class ReservationPricingService
      */
     private function resolveBasePrice(array $payload, Voyage $voyage, Departure $departure, ?TravelDate $travelDate = null): float
     {
+        $priceFromTravelDate = $travelDate?->price_override;
+        $priceFromDepartureSale = $departure->sale_price;
+        $priceFromDepartureBase = $departure->base_price;
+        $priceFromVoyage = $voyage->price_from;
+
         $candidates = [
-            $travelDate?->price_override,
-            $departure->sale_price,
-            $departure->base_price,
-            $voyage->price_from,
+            $priceFromTravelDate,
+            $priceFromDepartureSale,
+            $priceFromDepartureBase,
+            $priceFromVoyage,
         ];
+
+        // Try WordPress meta as a fallback (min_price / base_price)
+        $wpPrice = null;
+        $wpId = $travelDate?->travel_id ?? $voyage->wp_post_id ?? null;
+        if ($wpId) {
+            try {
+                $wp = WpPost::query()->find((int) $wpId);
+                if ($wp) {
+                    $metaMin = $wp->getMeta('min_price');
+                    $metaBase = $wp->getMeta('base_price');
+                    $wpPrice = is_numeric($metaMin) ? (float) $metaMin : (is_numeric($metaBase) ? (float) $metaBase : null);
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+
+        if ($wpPrice !== null) {
+            $candidates[] = $wpPrice;
+        }
+
+        // Debug log to compare sources when troubleshooting
+        try {
+            Log::info('Reservation pricing debug', [
+                'voyage_id' => $voyage->id ?? null,
+                'departure_id' => $departure->id ?? null,
+                'travel_date_id' => $travelDate?->id ?? null,
+                'price_from_travel_date' => $priceFromTravelDate,
+                'price_from_departure_sale' => $priceFromDepartureSale,
+                'price_from_departure_base' => $priceFromDepartureBase,
+                'price_from_voyage' => $priceFromVoyage,
+                'price_from_wordpress' => $wpPrice,
+            ]);
+        } catch (\Throwable $e) {
+            // ignore logging failures
+        }
 
         foreach ($candidates as $candidate) {
             if ($candidate !== null && (float) $candidate > 0) {

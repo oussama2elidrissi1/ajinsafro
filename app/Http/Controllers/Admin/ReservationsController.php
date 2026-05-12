@@ -2142,6 +2142,12 @@ class ReservationsController extends Controller
             ];
         })->all();
 
+        // Try to find a matching Departure record (by wp_travel_date_id) to include departure_id in reserve link
+        $departureForRoute = null;
+        if ($voyage) {
+            $departureForRoute = Departure::query()->where('voyage_id', $voyage->id)->where('wp_travel_date_id', $travelDate->id)->first();
+        }
+
         $basePayload = [
             'travel_date_id' => $travelDate->id,
             'voyage_id' => $voyage?->id,
@@ -2165,7 +2171,11 @@ class ReservationsController extends Controller
             'hotels_with_rooms' => $hotelsPayload,
             'route_consulter' => route('admin.circuits.voyages.edit', ['id' => $wpId]),
             'route_reserver' => $voyage
-                ? route('admin.reservations.create', ['tour_id' => $voyage->id, 'travel_date_id' => $travelDate->id])
+                ? route('admin.reservations.create', array_filter([
+                    'tour_id' => $voyage->id,
+                    'travel_date_id' => $travelDate->id,
+                    'departure_id' => $departureForRoute?->id,
+                ]))
                 : route('admin.reservations.create'),
             'route_voir_fiche' => route('admin.circuits.voyages.show', ['id' => $wpId]),
         ];
