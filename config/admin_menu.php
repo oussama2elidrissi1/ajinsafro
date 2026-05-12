@@ -84,7 +84,9 @@ return [
                     'key' => 'voyages',
                     'label' => 'Voyages',
                     'icon' => 'bx bx-plane',
+                    'route' => 'admin.circuits.voyages.index',
                     'permission' => 'circuits.voyages.view',
+                    'active_patterns' => ['admin.circuits.voyages.*'],
                     'children' => [
                         ['label' => 'Tous les voyages', 'route' => 'admin.circuits.voyages.index', 'permission' => 'circuits.voyages.view'],
                         ['label' => 'Départs / disponibilités', 'route' => 'admin.circuits.departs-dates', 'permission' => 'circuits.departures.view'],

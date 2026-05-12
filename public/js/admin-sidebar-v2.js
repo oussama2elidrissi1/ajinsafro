@@ -1,14 +1,43 @@
 (function () {
+    function setItemOpen(item, isOpen) {
+        if (!item) {
+            return;
+        }
+
+        item.classList.toggle('is-open', isOpen);
+
+        var toggle = item.querySelector('.aj-sidebar-v2__toggle');
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+    }
+
+    function closeDescendantGroups(item) {
+        if (!item) {
+            return;
+        }
+
+        item.querySelectorAll('.aj-sidebar-v2__item.has-children.is-open').forEach(function (child) {
+            setItemOpen(child, false);
+        });
+    }
+
+    function openAncestors(item) {
+        var parent = item && item.parentElement ? item.parentElement.closest('.aj-sidebar-v2__item.has-children') : null;
+
+        while (parent) {
+            setItemOpen(parent, true);
+            parent = parent.parentElement ? parent.parentElement.closest('.aj-sidebar-v2__item.has-children') : null;
+        }
+    }
+
     function storageKey(root) {
         return 'aj-sidebar-v2:active-group:' + (root.dataset.sidebarContext || 'default');
     }
 
-    /**
-     * Sauvegarde SEULEMENT le groupe actif (un seul à la fois).
-     */
     function persistState(root) {
         var key = storageKey(root);
-        var openItem = root.querySelector('.aj-sidebar-v2__item.has-children.is-open');
+        var openItem = root.querySelector('.aj-sidebar-v2__list--depth-0 > .aj-sidebar-v2__item.has-children.is-open');
         var activeGroupKey = openItem ? openItem.dataset.groupKey : null;
 
         try {
@@ -21,15 +50,9 @@
         }
     }
 
-    /**
-     * Restaure l'état:
-     * 1. Ferme tous les groupes
-     * 2. Ouvre SEULEMENT le groupe actif (route actuelle)
-     * 3. Sinon, ouvre le groupe stocké en localStorage
-     */
     function restoreState(root) {
         var key = storageKey(root);
-        var activeItem = root.querySelector('.aj-sidebar-v2__item.is-active.has-children');
+        var activeItems = root.querySelectorAll('.aj-sidebar-v2__item.is-active.has-children');
         var savedGroupKey = null;
 
         try {
@@ -38,42 +61,23 @@
             savedGroupKey = null;
         }
 
-        // Fermer tous les groupes
         root.querySelectorAll('.aj-sidebar-v2__item.has-children').forEach(function (item) {
-            item.classList.remove('is-open');
-            var toggle = item.querySelector('.aj-sidebar-v2__toggle');
-            if (toggle) {
-                toggle.setAttribute('aria-expanded', 'false');
-            }
+            setItemOpen(item, false);
         });
 
-        // Ouvrir SEULEMENT le groupe actif (route actuelle)
-        if (activeItem) {
-            activeItem.classList.add('is-open');
-            var activeToggle = activeItem.querySelector('.aj-sidebar-v2__toggle');
-            if (activeToggle) {
-                activeToggle.setAttribute('aria-expanded', 'true');
-            }
-            // Ouvrir aussi les parents si imbriqués
-            var parent = activeItem.parentElement ? activeItem.parentElement.closest('.aj-sidebar-v2__item.has-children') : null;
-            while (parent) {
-                parent.classList.add('is-open');
-                var parentToggle = parent.querySelector('.aj-sidebar-v2__toggle');
-                if (parentToggle) {
-                    parentToggle.setAttribute('aria-expanded', 'true');
-                }
-                parent = parent.parentElement ? parent.parentElement.closest('.aj-sidebar-v2__item.has-children') : null;
-            }
+        if (activeItems.length > 0) {
+            activeItems.forEach(function (activeItem) {
+                setItemOpen(activeItem, true);
+                openAncestors(activeItem);
+            });
+            return;
         }
-        // Sinon, ouvrir le groupe sauvegardé en localStorage
-        else if (savedGroupKey) {
+
+        if (savedGroupKey) {
             var savedItem = root.querySelector('[data-group-key="' + savedGroupKey + '"]');
             if (savedItem) {
-                savedItem.classList.add('is-open');
-                var savedToggle = savedItem.querySelector('.aj-sidebar-v2__toggle');
-                if (savedToggle) {
-                    savedToggle.setAttribute('aria-expanded', 'true');
-                }
+                setItemOpen(savedItem, true);
+                openAncestors(savedItem);
             }
         }
     }
@@ -87,28 +91,33 @@
         restoreState(root);
 
         root.querySelectorAll('[data-aj-sidebar-toggle]').forEach(function (toggle) {
-            toggle.addEventListener('click', function () {
+            toggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
                 var item = toggle.closest('.aj-sidebar-v2__item.has-children');
                 if (!item) {
                     return;
                 }
 
                 var isOpen = item.classList.contains('is-open');
+                var siblings = item.parentElement ? Array.prototype.slice.call(item.parentElement.children) : [];
 
-                // Fermer tous les autres groupes
-                root.querySelectorAll('.aj-sidebar-v2__item.has-children').forEach(function (otherItem) {
-                    if (otherItem !== item) {
-                        otherItem.classList.remove('is-open');
-                        var otherToggle = otherItem.querySelector('.aj-sidebar-v2__toggle');
-                        if (otherToggle) {
-                            otherToggle.setAttribute('aria-expanded', 'false');
-                        }
+                siblings.forEach(function (sibling) {
+                    if (sibling !== item && sibling.classList && sibling.classList.contains('aj-sidebar-v2__item') && sibling.classList.contains('has-children')) {
+                        setItemOpen(sibling, false);
+                        closeDescendantGroups(sibling);
                     }
                 });
 
-                // Basculer le groupe actif
-                item.classList.toggle('is-open');
-                toggle.setAttribute('aria-expanded', item.classList.contains('is-open') ? 'true' : 'false');
+                if (isOpen) {
+                    setItemOpen(item, false);
+                    closeDescendantGroups(item);
+                } else {
+                    setItemOpen(item, true);
+                    openAncestors(item);
+                }
+
                 persistState(root);
             });
         });

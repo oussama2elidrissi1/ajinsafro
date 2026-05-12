@@ -183,10 +183,14 @@
         foreach ($nodes as $node) {
             $children = is_array($node['children'] ?? null) ? $node['children'] : [];
             $hasChildren = $children !== [];
+            $hasDirectLink = $hasChildren && !empty($node['href']);
             $itemClasses = ['aj-sidebar-v2__item'];
 
             if ($hasChildren) {
                 $itemClasses[] = 'has-children';
+            }
+            if ($hasDirectLink) {
+                $itemClasses[] = 'has-direct-link';
             }
             if (!empty($node['active'])) {
                 $itemClasses[] = 'is-active';
@@ -198,13 +202,27 @@
             $html .= '<li class="' . e(implode(' ', $itemClasses)) . '" data-group-key="' . e((string) ($node['key'] ?? '')) . '">';
 
             if ($hasChildren) {
-                $html .= '<button type="button" class="aj-sidebar-v2__link aj-sidebar-v2__toggle" data-aj-sidebar-toggle aria-expanded="' . (!empty($node['open']) ? 'true' : 'false') . '">';
-                if (!empty($node['icon'])) {
-                    $html .= '<span class="aj-sidebar-v2__icon"><i class="' . e((string) $node['icon']) . '"></i></span>';
+                if ($hasDirectLink) {
+                    $html .= '<div class="aj-sidebar-v2__link-group">';
+                    $html .= '<a href="' . e((string) $node['href']) . '" class="aj-sidebar-v2__link aj-sidebar-v2__link--parent">';
+                    if (!empty($node['icon'])) {
+                        $html .= '<span class="aj-sidebar-v2__icon"><i class="' . e((string) $node['icon']) . '"></i></span>';
+                    }
+                    $html .= '<span class="aj-sidebar-v2__label">' . e((string) ($node['label'] ?? '')) . '</span>';
+                    $html .= '</a>';
+                    $html .= '<button type="button" class="aj-sidebar-v2__link aj-sidebar-v2__toggle" data-aj-sidebar-toggle aria-expanded="' . (!empty($node['open']) ? 'true' : 'false') . '" aria-label="Afficher le sous-menu ' . e((string) ($node['label'] ?? '')) . '">';
+                    $html .= '<span class="aj-sidebar-v2__chevron"><i class="bx bx-chevron-down"></i></span>';
+                    $html .= '</button>';
+                    $html .= '</div>';
+                } else {
+                    $html .= '<button type="button" class="aj-sidebar-v2__link aj-sidebar-v2__toggle" data-aj-sidebar-toggle aria-expanded="' . (!empty($node['open']) ? 'true' : 'false') . '">';
+                    if (!empty($node['icon'])) {
+                        $html .= '<span class="aj-sidebar-v2__icon"><i class="' . e((string) $node['icon']) . '"></i></span>';
+                    }
+                    $html .= '<span class="aj-sidebar-v2__label">' . e((string) ($node['label'] ?? '')) . '</span>';
+                    $html .= '<span class="aj-sidebar-v2__chevron"><i class="bx bx-chevron-down"></i></span>';
+                    $html .= '</button>';
                 }
-                $html .= '<span class="aj-sidebar-v2__label">' . e((string) ($node['label'] ?? '')) . '</span>';
-                $html .= '<span class="aj-sidebar-v2__chevron"><i class="bx bx-chevron-down"></i></span>';
-                $html .= '</button>';
                 $html .= '<div class="aj-sidebar-v2__submenu">' . $renderNodes($children, $depth + 1) . '</div>';
             } else {
                 $html .= '<a href="' . e((string) ($node['href'] ?? 'javascript:void(0);')) . '" class="aj-sidebar-v2__link">';
