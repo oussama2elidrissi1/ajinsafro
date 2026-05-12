@@ -512,121 +512,49 @@ class ReservationsController extends Controller
     public function departureHotelsRooms(Request $request): JsonResponse
     {
         try {
+            $tourId = (int) $request->query('tour_id', 0);
             $departureId = (int) $request->query('departure_id', 0);
-            if ($departureId <= 0) {
-                return response()->json(['hotels' => [], 'currency' => 'DH', 'departure_id' => null]);
-            }
-            $departure = Departure::query()
-                ->with([
-                    'departureHotels' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'),
-                    'departureHotels.rooms' => fn ($q) => $q->orderBy('id'),
-                    'roomAllocations',
-                ])
-                ->find($departureId);
-            if (! $departure) {
-                return response()->json(['hotels' => [], 'currency' => 'DH', 'departure_id' => null]);
-            }
-            $voyage = Voyage::find($departure->voyage_id);
-            $currency = $voyage?->currency_symbol ?? ($voyage?->currency ?? 'DH');
-            $associatedHotelsCount = (int) $departure->departureHotels->where('is_active', true)->count();
-
-            $hotels = $departure->departureHotels->where('is_active', true)->values()->map(function ($dh) {
-                return [
-                    'departure_hotel_id' => $dh->id,
-                    'hotel_name' => $dh->hotel_name ?: 'Hôtel',
-                    'rooms' => $dh->rooms->map(fn ($r) => [
-                        'departure_hotel_room_id' => $r->id,
-                        'room_type' => $r->room_type,
-                        'capacity' => (int) $r->capacity_total,
-                        'capacity_total' => (int) $r->capacity_total,
-                        'available_rooms' => (int) $r->available_rooms,
-                        'available_places' => (int) $r->available_places,
-                        'unit_supplement' => (float) $r->supplement,
-                        'supplement' => (float) $r->supplement,
-                        'room_count' => 0,
-                        'subtotal' => 0,
-                        'status' => $r->status,
-                    ])->values()->all(),
-                ];
-            })->all();
-
-            if (false && empty($hotels) && $departure->roomAllocations->isNotEmpty()) {
-                $hotelNames = Hotel::query()
-                    ->whereIn('id', $departure->roomAllocations->pluck('hotel_id')->filter(fn ($id) => (int) $id > 0)->unique()->values())
-                    ->get(['id', 'name'])
-                    ->keyBy('id');
-
-                $hotels = $departure->roomAllocations
-                    ->groupBy(fn ($allocation) => (int) ($allocation->hotel_id ?? 0))
-                    ->map(function ($allocations, $hotelId) use ($hotelNames) {
-                        $hotelId = (int) $hotelId;
-                        $hotelName = $hotelId > 0
-                            ? (optional($hotelNames->get($hotelId))->name ?: 'Hôtel')
-                            : 'Répartition du départ';
-
-                        return [
-                            'departure_hotel_id' => null,
-                            'hotel_name' => $hotelName,
-                            'rooms' => $allocations->map(function ($allocation) {
-                                $qty = max(0, (int) ($allocation->quantity ?? 0));
-                                $cap = max(1, (int) ($allocation->capacity_per_room ?? 1));
-
-                                return [
-                                    'departure_hotel_room_id' => null,
-                                    'room_type' => $allocation->room_type,
-                                    'capacity_total' => $cap,
-                                    'available_rooms' => $qty,
-                                    'available_places' => $qty * $cap,
-                                    'supplement' => 0,
-                                    'status' => DepartureHotelRoom::STATUS_AVAILABLE,
-                                ];
-                            })->values()->all(),
-                            'source' => 'allocations',
-                        ];
-                    })
-                    ->values()
-                    ->all();
-            }
+            $travelDateId = (int) $request->query('travel_date_id', 0);
 
             if (config('app.debug')) {
-                Log::debug('reservations.departure_hotels_rooms', [
-                    'departure_id' => $departure->id,
-                    'voyage_id' => (int) $departure->voyage_id,
-                    'wp_travel_date_id' => (int) ($departure->wp_travel_date_id ?? 0),
-                    'departure_hotels_count' => $departure->departureHotels->count(),
-                    'departure_rooms_count' => $departure->rooms()->count(),
-                    'room_allocations_count' => $departure->roomAllocations->count(),
-                    'response_hotels_count' => count($hotels),
-                    'response_hotels' => $hotels,
+                Log::info('reservation rooms/pricing payload', [
+                    'tour_id' => $tourId,
+                    'departure_id' => $departureId,
+                    'travel_date_id' => $travelDateId,
                 ]);
             }
 
-            return response()->json([
-                'departure_id' => $departure->id,
-                'base_price' => $departure->base_price !== null ? (float) $departure->base_price : null,
-                'sale_price' => $departure->sale_price !== null ? (float) $departure->sale_price : null,
-                'available_capacity' => (int) ($departure->available_capacity ?? 0),
-                'hotels' => $hotels,
-                'has_associated_hotels' => $associatedHotelsCount > 0,
-                'has_configured_rooms' => ! empty($hotels),
-                'configure_url' => route('admin.circuits.voyages.departures.show', [$departure->voyage_id, $departure]),
-                'currency' => is_string($currency) ? $currency : 'DH',
+            $payload = $this->reservationPricing->previewDepartureSelection([
+                'tour_id' => $tourId,
+                'departure_id' => $departureId,
+                'travel_date_id' => $travelDateId,
             ]);
+
+            return response()->json($payload);
         } catch (\Throwable $e) {
             Log::error('reservations.departure_hotels_rooms_failed', [
+                'tour_id' => (int) $request->query('tour_id', 0),
                 'departure_id' => (int) $request->query('departure_id', 0),
+                'travel_date_id' => (int) $request->query('travel_date_id', 0),
                 'message' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'departure_id' => null,
-                'base_price' => null,
-                'sale_price' => null,
-                'available_capacity' => 0,
+                'success' => false,
+                'mode' => 'blocked',
+                'message' => 'Impossible de charger les chambres pour ce départ.',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
+                'departure' => null,
+                'pricing' => [
+                    'unit_price' => 0,
+                    'travelers_count' => 1,
+                    'total_base' => 0,
+                    'room_supplement_total' => 0,
+                    'extras_total' => 0,
+                    'total_amount' => 0,
+                ],
+                'rooms' => [],
                 'hotels' => [],
-                'has_associated_hotels' => false,
-                'has_configured_rooms' => false,
-                'configure_url' => null,
                 'currency' => 'DH',
             ]);
         }

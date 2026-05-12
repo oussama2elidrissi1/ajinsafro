@@ -179,6 +179,15 @@
         return Number.isFinite(parsed) ? parsed : 0;
     }
 
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function travelerCount() {
         var count = 1;
         var container = document.getElementById('companions-container');
@@ -299,19 +308,37 @@
     function renderDepartureRooms(payload) {
         if (!roomsContainer) return;
 
-        var hotels = payload && payload.hotels ? payload.hotels : [];
+        if (!payload || payload.success === false) {
+            roomsContainer.setAttribute('data-room-mode', 'blocked');
+            setAccommodationMode('blocked');
+            roomsContainer.innerHTML = '<div class="alert alert-danger mb-0">' + escapeHtml((payload && payload.message) ? payload.message : 'Erreur de chargement des chambres.') + '</div>';
+            console.error('departure rooms payload error', payload);
+            syncSummary();
+            if (typeof window.reservationCreateRecomputeTotals === 'function') {
+                window.reservationCreateRecomputeTotals();
+            }
+            return;
+        }
+
+        var hotels = payload && payload.rooms ? payload.rooms : (payload && payload.hotels ? payload.hotels : []);
         var currency = payload && payload.currency ? payload.currency : 'DH';
-        var availableCapacity = parseInt((payload && payload.available_capacity) || '0', 10) || 0;
-        var hasAssociatedHotels = !!(payload && payload.has_associated_hotels);
-        var hasConfiguredRooms = !!(payload && payload.has_configured_rooms);
-        var configureUrl = payload && payload.configure_url ? String(payload.configure_url) : '';
+        var departureData = payload && payload.departure ? payload.departure : {};
+        var availableCapacity = parseInt(departureData.available_places || departureData.available_capacity || '0', 10) || 0;
+        var configureUrl = departureData.configure_url ? String(departureData.configure_url) : '';
+        var pricing = payload && payload.pricing ? payload.pricing : {};
+        var unitPrice = parseNumber(pricing.unit_price);
         var travelers = travelerCount();
         var html = '';
         var index = 0;
 
-        if (hotels.length) {
+        if (basePriceInput && unitPrice > 0) {
+            basePriceInput.value = unitPrice.toFixed(2);
+        }
+
+        setAccommodationMode(payload.mode || 'rooms');
+
+        if (payload.mode === 'rooms' && hotels.length) {
             roomsContainer.setAttribute('data-room-mode', 'rooms');
-            setAccommodationMode('rooms');
 
             hotels.forEach(function (hotel) {
                 html += '<div class="card mb-2 reservation-hotel-block">' +
@@ -342,34 +369,33 @@
 
                 html += '</tbody></table></div></div></div>';
             });
-        } else if (hasAssociatedHotels) {
-            roomsContainer.setAttribute('data-room-mode', 'blocked');
-            setAccommodationMode('blocked');
-            html = '<div class="alert alert-warning mb-0">Configuration incomplète : ajoutez les chambres pour ce départ.' + (configureUrl ? ' <a class="btn btn-sm btn-outline-primary ms-2" href="' + configureUrl + '" target="_blank" rel="noopener">Configurer les chambres du départ</a>' : '') + '</div>';
-        } else if (availableCapacity > 0) {
+        } else if (payload.mode === 'places_only') {
             roomsContainer.setAttribute('data-room-mode', 'places_only');
-            setAccommodationMode('places_only');
             html = '' +
                 '<div class="card mb-2 reservation-hotel-block reservation-hotel-block--stock-only">' +
                     '<div class="card-body py-3">' +
                         '<div class="d-flex flex-column gap-2">' +
-                            '<div class="alert alert-info mb-0">Ce départ dispose de ' + availableCapacity + ' place' + (availableCapacity > 1 ? 's' : '') + '. Aucune chambre détaillée n’est configurée, la réservation sera faite sur stock de places.</div>' +
+                            '<div class="alert alert-info mb-0">Stock de places disponible : ' + availableCapacity + ' place' + (availableCapacity > 1 ? 's' : '') + '. Aucune chambre détaillée configurée, réservation sur stock de places.</div>' +
                             '<div class="reservation-create__grid reservation-create__grid--two">' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Départ</label><input class="reservation-create__input" type="text" value="' + getSelectedDepartureLabel() + '" readonly></div>' +
-                                '<div class="reservation-create__field"><label class="reservation-create__label">Places disponibles</label><input class="reservation-create__input" type="text" value="' + availableCapacity + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Places restantes</label><input class="reservation-create__input" type="text" value="' + availableCapacity + '" readonly></div>' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Nombre voyageurs</label><input class="reservation-create__input" type="text" value="' + travelers + '" readonly></div>' +
-                                '<div class="reservation-create__field"><label class="reservation-create__label">Prix unitaire</label><input class="reservation-create__input" type="text" value="' + formatMoney(departureUnitPrice(getSelectedDepartureOption())) + '" readonly></div>' +
-                                '<div class="reservation-create__field"><label class="reservation-create__label">Total base</label><input class="reservation-create__input" type="text" value="' + formatMoney(departureUnitPrice(getSelectedDepartureOption()) * travelers) + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Prix unitaire</label><input class="reservation-create__input" type="text" value="' + formatMoney(unitPrice) + '" readonly></div>' +
+                                '<div class="reservation-create__field"><label class="reservation-create__label">Total base</label><input class="reservation-create__input" type="text" value="' + formatMoney(unitPrice * travelers) + '" readonly></div>' +
                                 '<div class="reservation-create__field"><label class="reservation-create__label">Supplément chambres</label><input class="reservation-create__input" type="text" value="0 DH" readonly></div>' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
+        } else if (payload.mode === 'blocked' && payload.message) {
+            roomsContainer.setAttribute('data-room-mode', 'blocked');
+            setAccommodationMode('blocked');
+            html = '<div class="alert alert-warning mb-0">' + escapeHtml(payload.message) + (configureUrl ? ' <a class="btn btn-sm btn-outline-primary ms-2" href="' + configureUrl + '" target="_blank" rel="noopener">Configurer les chambres</a>' : '') + '</div>';
         } else {
             roomsContainer.setAttribute('data-room-mode', 'blocked');
             setAccommodationMode('blocked');
-            html = hasConfiguredRooms
-                ? '<div class="alert alert-warning mb-0">Configuration incomplète : ajoutez les chambres pour ce départ.</div>'
+            html = payload.message
+                ? '<div class="alert alert-warning mb-0">' + escapeHtml(payload.message) + '</div>'
                 : '<div class="alert alert-secondary mb-0">Ce départ n’a plus de places disponibles.</div>';
         }
 
@@ -391,8 +417,16 @@
             return;
         }
 
+        var tourSelect = document.getElementById('select-tour-id');
+        var travelDateInput = document.getElementById('input-travel-date-id');
+        var query = [
+            'departure_id=' + encodeURIComponent(departureId),
+            'tour_id=' + encodeURIComponent(tourSelect && tourSelect.value ? tourSelect.value : ''),
+            'travel_date_id=' + encodeURIComponent(travelDateInput && travelDateInput.value ? travelDateInput.value : '')
+        ].join('&');
+
         roomsContainer.innerHTML = '<p class="text-muted mb-0">Chargement des chambres…</p>';
-        fetch(departureHotelsRoomsUrl + '?departure_id=' + encodeURIComponent(departureId), {
+        fetch(departureHotelsRoomsUrl + '?' + query, {
             credentials: 'same-origin',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
@@ -404,8 +438,8 @@
             })
             .then(renderDepartureRooms)
             .catch(function (err) {
-                console && console.debug && console.debug('departure rooms load error', err);
-                roomsContainer.innerHTML = '<p class="text-danger mb-0">Erreur de chargement des chambres.</p>';
+                console.error('departure rooms load error', err);
+                roomsContainer.innerHTML = '<p class="text-danger mb-0">Erreur de chargement des chambres. ' + escapeHtml(String(err && err.message ? err.message : err)) + '</p>';
             });
     }
 
@@ -426,6 +460,7 @@
             return;
         }
 
+        var travelDateValue = inputTravelDateId ? String(inputTravelDateId.value || '') : '';
         fetch(voyageDeparturesUrl + '?tour_id=' + encodeURIComponent(tourId), {
             credentials: 'same-origin',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -449,6 +484,15 @@
                     option.setAttribute('data-available-capacity', departure.available_capacity || 0);
                     departureSelect.appendChild(option);
                 });
+
+                if (!selectedDepartureId && travelDateValue) {
+                    var matchedDeparture = departures.find(function (departure) {
+                        return String(departure.wp_travel_date_id || '') === travelDateValue;
+                    });
+                    if (matchedDeparture) {
+                        selectedDepartureId = matchedDeparture.id;
+                    }
+                }
 
                 if (!selectedDepartureId && departures.length === 1) {
                     selectedDepartureId = departures[0].id;

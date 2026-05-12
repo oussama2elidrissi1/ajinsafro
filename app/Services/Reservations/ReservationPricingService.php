@@ -4,6 +4,7 @@ namespace App\Services\Reservations;
 
 use App\Models\Departure;
 use App\Models\DepartureHotelRoom;
+use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Models\VoyageExtra;
 use Illuminate\Support\Collection;
@@ -24,8 +25,9 @@ class ReservationPricingService
     {
         $voyage = $this->resolveVoyage($payload);
         $departure = $this->resolveDeparture($payload, $voyage);
+        $travelDate = $this->resolveTravelDate($payload, $departure);
         $travelersCount = $this->countTravelers($payload['passengers'] ?? []);
-        $basePrice = $this->resolveBasePrice($payload, $voyage, $departure);
+        $basePrice = $this->resolveBasePrice($payload, $voyage, $departure, $travelDate);
 
         if ($basePrice <= 0) {
             throw ValidationException::withMessages([
@@ -65,7 +67,7 @@ class ReservationPricingService
                 ],
                 'departure' => [
                     'id' => (int) $departure->id,
-                    'travel_date_id' => (int) ($departure->wp_travel_date_id ?? ($payload['travel_date_id'] ?? 0)),
+                    'travel_date_id' => (int) ($travelDate?->id ?? ($departure->wp_travel_date_id ?? ($payload['travel_date_id'] ?? 0))),
                     'base_price' => $departure->base_price !== null ? (float) $departure->base_price : null,
                     'sale_price' => $departure->sale_price !== null ? (float) $departure->sale_price : null,
                     'available_capacity' => (int) ($departure->available_capacity ?? 0),
@@ -73,6 +75,100 @@ class ReservationPricingService
                 'rooms' => $roomSummary['details'],
                 'extras' => $extrasSummary['details'],
             ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function previewDepartureSelection(array $payload): array
+    {
+        $voyage = $this->resolveVoyage($payload);
+        $departure = $this->resolveDepartureForPreview($payload, $voyage);
+        $travelersCount = max(1, $this->countTravelers($payload['passengers'] ?? []));
+        $travelDate = $this->resolveTravelDate($payload, $departure);
+        $unitPrice = $this->resolveBasePrice($payload, $voyage, $departure, $travelDate);
+
+        if ($unitPrice <= 0) {
+            throw ValidationException::withMessages([
+                'tour_id' => ['Aucun prix configuré pour ce voyage ou ce départ.'],
+            ]);
+        }
+
+        $departure->loadMissing(['departureHotels.rooms', 'roomAllocations']);
+        $rooms = $departure->departureHotels
+            ->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))
+            ->flatMap(function ($hotel) {
+                return $hotel->rooms->filter(fn ($room) => (int) ($room->is_active ?? 0) === 1);
+            })
+            ->values();
+
+        $hasAssociatedHotels = $departure->departureHotels->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))->isNotEmpty();
+        $mode = 'blocked';
+        $message = null;
+        $roomsPayload = [];
+
+        if ($rooms->isNotEmpty()) {
+            $mode = 'rooms';
+            $roomsPayload = $departure->departureHotels
+                ->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))
+                ->map(function ($hotel) {
+                    return [
+                        'departure_hotel_id' => (int) $hotel->id,
+                        'hotel_name' => $hotel->hotel_name ?: 'Hôtel',
+                        'rooms' => $hotel->rooms
+                            ->filter(fn ($room) => (int) ($room->is_active ?? 0) === 1)
+                            ->map(fn ($room) => [
+                                'departure_hotel_room_id' => (int) $room->id,
+                                'room_type' => (string) $room->room_type,
+                                'capacity' => (int) $room->capacity_total,
+                                'capacity_total' => (int) $room->capacity_total,
+                                'available_rooms' => (int) $room->available_rooms,
+                                'available_places' => (int) $room->available_places,
+                                'unit_supplement' => (float) $room->supplement,
+                                'supplement' => (float) $room->supplement,
+                                'room_count' => 0,
+                                'subtotal' => 0,
+                                'status' => $room->status,
+                            ])
+                            ->values()
+                            ->all(),
+                    ];
+                })
+                ->values()
+                ->all();
+        } elseif (! $hasAssociatedHotels && (int) ($departure->available_capacity ?? 0) > 0) {
+            $mode = 'places_only';
+        } elseif ($hasAssociatedHotels) {
+            $message = 'Configuration incomplète : des hôtels sont liés à ce départ mais aucune chambre n’est configurée.';
+        } else {
+            $message = 'Ce départ n’a plus de places disponibles.';
+        }
+
+        $totalBase = round($unitPrice * $travelersCount, 2);
+
+        return [
+            'success' => true,
+            'mode' => $mode,
+            'message' => $message,
+            'departure' => [
+                'id' => (int) $departure->id,
+                'start_date' => $departure->getRawOriginal('start_date') ? date('Y-m-d', strtotime((string) $departure->getRawOriginal('start_date'))) : null,
+                'end_date' => $departure->getRawOriginal('end_date') ? date('Y-m-d', strtotime((string) $departure->getRawOriginal('end_date'))) : null,
+                'travel_date_id' => (int) ($travelDate?->id ?? ($departure->wp_travel_date_id ?? 0)),
+                'available_places' => (int) ($departure->available_capacity ?? 0),
+                'configure_url' => route('admin.circuits.voyages.departures.show', [$departure->voyage_id, $departure]),
+            ],
+            'pricing' => [
+                'unit_price' => round($unitPrice, 2),
+                'travelers_count' => $travelersCount,
+                'total_base' => $totalBase,
+                'room_supplement_total' => 0.0,
+                'extras_total' => 0.0,
+                'total_amount' => $totalBase,
+            ],
+            'rooms' => $roomsPayload,
         ];
     }
 
@@ -167,9 +263,10 @@ class ReservationPricingService
     /**
      * @param  array<string, mixed>  $payload
      */
-    private function resolveBasePrice(array $payload, Voyage $voyage, Departure $departure): float
+    private function resolveBasePrice(array $payload, Voyage $voyage, Departure $departure, ?TravelDate $travelDate = null): float
     {
         $candidates = [
+            $travelDate?->price_override,
             $departure->sale_price,
             $departure->base_price,
             $voyage->price_from,
@@ -182,6 +279,65 @@ class ReservationPricingService
         }
 
         return 0.0;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function resolveDepartureForPreview(array $payload, Voyage $voyage): Departure
+    {
+        $departureId = (int) ($payload['departure_id'] ?? 0);
+        if ($departureId > 0) {
+            $departure = Departure::query()->find($departureId);
+            if ($departure) {
+                return $departure;
+            }
+        }
+
+        $travelDateId = (int) ($payload['travel_date_id'] ?? 0);
+        if ($travelDateId > 0) {
+            $departure = Departure::query()->where('voyage_id', $voyage->id)->where('wp_travel_date_id', $travelDateId)->first();
+            if ($departure) {
+                return $departure;
+            }
+
+            $travelDate = TravelDate::query()->find($travelDateId);
+            if ($travelDate) {
+                $departure = Departure::query()->where('voyage_id', $voyage->id)->where('wp_travel_date_id', (int) $travelDate->id)->first();
+                if ($departure) {
+                    return $departure;
+                }
+            }
+        }
+
+        $departure = Departure::query()->where('voyage_id', $voyage->id)->orderBy('start_date')->orderBy('id')->first();
+        if (! $departure) {
+            throw ValidationException::withMessages([
+                'departure_id' => ['Le départ sélectionné est introuvable.'],
+            ]);
+        }
+
+        return $departure;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function resolveTravelDate(array $payload, Departure $departure): ?TravelDate
+    {
+        $travelDateId = (int) ($payload['travel_date_id'] ?? 0);
+        if ($travelDateId > 0) {
+            $travelDate = TravelDate::query()->find($travelDateId);
+            if ($travelDate) {
+                return $travelDate;
+            }
+        }
+
+        if ((int) ($departure->wp_travel_date_id ?? 0) > 0) {
+            return TravelDate::query()->find((int) $departure->wp_travel_date_id);
+        }
+
+        return null;
     }
 
     /**
