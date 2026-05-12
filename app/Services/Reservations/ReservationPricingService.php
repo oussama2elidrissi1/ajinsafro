@@ -142,10 +142,61 @@ class ReservationPricingService
                 ->all();
         } elseif (! $hasAssociatedHotels && (int) ($departure->available_capacity ?? 0) > 0) {
             $mode = 'places_only';
-        } elseif ($hasAssociatedHotels) {
-            $message = 'Configuration incomplète : des hôtels sont liés à ce départ mais aucune chambre n’est configurée.';
         } else {
-            $message = 'Ce départ n’a plus de places disponibles.';
+            // Fallback: try to use WP tour hotels / room availabilities for this travel_date
+            try {
+                $wpId = $voyage->wp_post_id ?? null;
+                if ($wpId && $travelDate?->id) {
+                    $tourHotels = \App\Models\TourHotel::getAllForTour($wpId)->load(['rooms', 'roomAvailabilities']);
+                    $wpHotels = $tourHotels->map(function ($hotel) use ($travelDate) {
+                        $rooms = [];
+                        foreach ($hotel->rooms as $room) {
+                            // find availability row for this travel_date
+                            $avail = $room->dateAvailabilities->first(fn($a) => (int) ($a->travel_date_id ?? 0) === (int) $travelDate->id);
+                            if (! $avail) {
+                                continue;
+                            }
+                            $rooms[] = [
+                                'departure_hotel_room_id' => null, // use tour_hotel_room_id below to reference WP room IDs
+                                'tour_hotel_room_id' => (int) ($room->id ?? 0),
+                                'departure_hotel_id' => (int) ($hotel->id ?? 0),
+                                'hotel_name' => (string) ($hotel->hotel_name ?? 'Hôtel'),
+                                'room_type' => (string) ($room->room_type ?? ''),
+                                'capacity' => (int) ($room->capacity_total ?? $room->capacity_total ?? 0),
+                                'capacity_total' => (int) ($room->capacity_total ?? 0),
+                                'available_rooms' => (int) ($avail->available_rooms ?? ($room->room_count ?? 0)),
+                                'available_places' => (int) ($avail->available_places ?? (($room->room_count ?? 0) * ($room->capacity_total ?? 0))),
+                                'unit_supplement' => (float) ($avail->supplement ?? $room->supplement ?? 0),
+                                'supplement' => (float) ($avail->supplement ?? $room->supplement ?? 0),
+                                'room_count' => 0,
+                                'subtotal' => 0,
+                                'status' => $avail->status ?? null,
+                            ];
+                        }
+
+                        return $rooms ? [
+                            'departure_hotel_id' => (int) $hotel->id,
+                            'hotel_name' => (string) ($hotel->hotel_name ?? 'Hôtel'),
+                            'rooms' => $rooms,
+                        ] : null;
+                    })->filter()->values()->all();
+
+                    if (! empty($wpHotels)) {
+                        $mode = 'rooms';
+                        $roomsPayload = $wpHotels;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // ignore and keep previous mode
+            }
+
+            if ($mode !== 'rooms') {
+                if ($hasAssociatedHotels) {
+                    $message = 'Configuration incomplète : des hôtels sont liés à ce départ mais aucune chambre n’est configurée.';
+                } else {
+                    $message = 'Ce départ n’a plus de places disponibles.';
+                }
+            }
         }
 
         $totalBase = round($unitPrice * $travelersCount, 2);
@@ -418,28 +469,63 @@ class ReservationPricingService
             ->values();
 
         if ($rooms->isEmpty()) {
-            if ($departure->departureHotels->where('is_active', true)->isNotEmpty()) {
-                throw ValidationException::withMessages([
-                    'hotel_rooms' => ['Configuration incomplète : ajoutez les chambres pour ce départ.'],
-                ]);
+            // Try WP tour hotels availability as fallback (tour_hotels -> tour_hotel_rooms -> date availabilities)
+            $travelDateId = (int) ($payload['travel_date_id'] ?? 0);
+            $voyage = $departure->voyage;
+            $wpId = $voyage?->wp_post_id ?? null;
+
+            if ($wpId && $travelDateId > 0) {
+                try {
+                    $tourHotels = \App\Models\TourHotel::getAllForTour($wpId)->load(['rooms', 'rooms.dateAvailabilities']);
+                    $built = collect();
+                    foreach ($tourHotels as $hotel) {
+                        foreach ($hotel->rooms as $room) {
+                            $avail = $room->dateAvailabilities->first(fn($a) => (int) ($a->travel_date_id ?? 0) === $travelDateId);
+                            if (! $avail) continue;
+                            $built->push((object) [
+                                'id' => (int) $room->id,
+                                'room_type' => $room->room_type,
+                                'capacity_total' => (int) ($room->capacity_total ?? 0),
+                                'available_rooms' => (int) ($avail->available_rooms ?? ($room->room_count ?? 0)),
+                                'available_places' => (int) ($avail->available_places ?? (($room->room_count ?? 0) * ($room->capacity_total ?? 0))),
+                                'supplement' => (float) ($avail->supplement ?? $room->supplement ?? 0),
+                                'is_wp' => true,
+                            ]);
+                        }
+                    }
+
+                    if ($built->isNotEmpty()) {
+                        $rooms = $built->values();
+                    }
+                } catch (\Throwable $e) {
+                    // ignore
+                }
             }
 
-            if ((int) ($departure->available_capacity ?? 0) <= 0) {
-                throw ValidationException::withMessages([
-                    'hotel_rooms' => ['Ce départ n’a plus de places disponibles.'],
-                ]);
-            }
+            if ($rooms->isEmpty()) {
+                if ($departure->departureHotels->where('is_active', true)->isNotEmpty()) {
+                    throw ValidationException::withMessages([
+                        'hotel_rooms' => ['Configuration incomplète : ajoutez les chambres pour ce départ.'],
+                    ]);
+                }
 
-            if ($travelersCount > (int) $departure->available_capacity) {
-                throw ValidationException::withMessages([
-                    'hotel_rooms' => ["Stock insuffisant : il reste seulement {$departure->available_capacity} places."],
-                ]);
-            }
+                if ((int) ($departure->available_capacity ?? 0) <= 0) {
+                    throw ValidationException::withMessages([
+                        'hotel_rooms' => ['Ce départ n’a plus de places disponibles.'],
+                    ]);
+                }
 
-            return [
-                'room_supplement_total' => 0.0,
-                'details' => [],
-            ];
+                if ($travelersCount > (int) $departure->available_capacity) {
+                    throw ValidationException::withMessages([
+                        'hotel_rooms' => ["Stock insuffisant : il reste seulement {$departure->available_capacity} places."],
+                    ]);
+                }
+
+                return [
+                    'room_supplement_total' => 0.0,
+                    'details' => [],
+                ];
+            }
         }
 
         if ($selectedRows->isEmpty()) {
@@ -454,9 +540,17 @@ class ReservationPricingService
 
         foreach ($selectedRows as $index => $row) {
             $roomId = (int) ($row['departure_hotel_room_id'] ?? 0);
+            $tourRoomId = (int) ($row['tour_hotel_room_id'] ?? 0);
+            $usingTourRoom = false;
+
+            if ($roomId <= 0 && $tourRoomId > 0) {
+                $roomId = $tourRoomId;
+                $usingTourRoom = true;
+            }
+
             if ($roomId <= 0) {
                 throw ValidationException::withMessages([
-                    "hotel_rooms.$index.departure_hotel_room_id" => ['Chaque ligne chambre doit référencer une vraie chambre de départ.'],
+                    "hotel_rooms.$index.departure_hotel_room_id" => ['Chaque ligne chambre doit référencer une vraie chambre de départ ou une chambre du catalogue.'],
                 ]);
             }
 

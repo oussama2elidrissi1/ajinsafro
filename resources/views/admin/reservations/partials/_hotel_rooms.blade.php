@@ -436,6 +436,7 @@
                         '<td class="text-center">' + supplement.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + currency + '</td>' +
                         '<td class="text-center">' +
                             '<input type="hidden" name="hotel_rooms[' + index + '][departure_hotel_room_id]" value="' + roomId + '">' +
+                            (room.tour_hotel_room_id ? '<input type="hidden" name="hotel_rooms[' + index + '][tour_hotel_room_id]" value="' + (room.tour_hotel_room_id || '') + '">' : '') +
                             '<input type="number" name="hotel_rooms[' + index + '][room_count]" class="form-control form-control-sm text-center reservation-room-count" value="' + count + '" min="0" max="' + (room.available_rooms || 0) + '" data-room-supplement="' + supplement + '" data-room-capacity="' + (room.capacity_total || 0) + '">' +
                         '</td>' +
                         '<td class="text-end reservation-room-total">' + (count > 0 ? subtotal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '—') + '</td>' +
