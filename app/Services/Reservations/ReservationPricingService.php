@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Services\Reservations;
 
@@ -389,7 +389,7 @@ class ReservationPricingService
         $departureId = (int) ($payload['departure_id'] ?? 0);
         if ($departureId > 0) {
             $departure = Departure::query()->find($departureId);
-            if ($departure) {
+            if ($departure && (int) $departure->voyage_id === (int) $voyage->id) {
                 return $departure;
             }
         }
