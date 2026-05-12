@@ -9,6 +9,7 @@ use App\Models\Departure;
 use App\Models\DepartureHotelRoom;
 use App\Models\Hotel;
 use App\Models\Reservation;
+use App\Models\ReservationDossier;
 use App\Models\ReservationDocument;
 use App\Models\ReservationPayment;
 use App\Models\TourHotel;
@@ -22,6 +23,7 @@ use App\Services\ReservationListQueryService;
 use App\Services\ReservationDossierService;
 use App\Services\ReservationService;
 use App\Services\ReservationVisibilityService;
+use App\Services\Reservations\ReservationPricingService;
 use App\Services\Wp\WpHeroImageService;
 use App\Services\Wp\WpTourRepository;
 use App\Support\AdminReservationFlash;
@@ -51,14 +53,15 @@ class ReservationsController extends Controller
         protected ReservationHubTableProfile $reservationHubTableProfile,
         protected ReservationVisibilityService $reservationVisibility,
         protected ReservationDossierService $reservationDossier,
+        protected ReservationPricingService $reservationPricing,
     ) {}
 
     /**
      * Hub unique : liste, filtres, stats alignées, actions (modals / tiroir).
      */
-    public function index(Request $request): View
+    public function index(Request $request): RedirectResponse
     {
-        return $this->renderList($request);
+        return redirect()->route('admin.reservation-dossiers.index', $request->query());
     }
 
     /**
@@ -532,16 +535,20 @@ class ReservationsController extends Controller
                 'rooms' => $dh->rooms->map(fn ($r) => [
                     'departure_hotel_room_id' => $r->id,
                     'room_type' => $r->room_type,
+                    'capacity' => (int) $r->capacity_total,
                     'capacity_total' => (int) $r->capacity_total,
                     'available_rooms' => (int) $r->available_rooms,
                     'available_places' => (int) $r->available_places,
+                    'unit_supplement' => (float) $r->supplement,
                     'supplement' => (float) $r->supplement,
+                    'room_count' => 0,
+                    'subtotal' => 0,
                     'status' => $r->status,
                 ])->values()->all(),
             ];
         })->all();
 
-        if (empty($hotels) && $departure->roomAllocations->isNotEmpty()) {
+        if (false && empty($hotels) && $departure->roomAllocations->isNotEmpty()) {
             $hotelNames = Hotel::query()
                 ->whereIn('id', $departure->roomAllocations->pluck('hotel_id')->filter(fn ($id) => (int) $id > 0)->unique()->values())
                 ->get(['id', 'name'])
@@ -598,6 +605,8 @@ class ReservationsController extends Controller
             'sale_price' => $departure->sale_price !== null ? (float) $departure->sale_price : null,
             'available_capacity' => (int) ($departure->available_capacity ?? 0),
             'hotels' => $hotels,
+            'has_configured_rooms' => ! empty($hotels),
+            'configure_url' => route('admin.circuits.voyages.departures.show', [$departure->voyage_id, $departure]),
             'currency' => is_string($currency) ? $currency : 'DH',
         ]);
     }
@@ -609,94 +618,13 @@ class ReservationsController extends Controller
     {
         $this->mergeDepartureFromLegacyRequest($request);
 
-        $data = $request->validate([
-            'tour_id' => 'required|integer',
-            'departure_id' => 'required|integer|exists:departures,id',
-            'travel_date_id' => 'nullable|integer',
-            'client_mode' => 'required|in:existing,new',
-            'client_external_id' => 'required_if:client_mode,existing|nullable|integer|exists:clients,id',
-            'client_first_name' => 'required_if:client_mode,new|nullable|string|max:100',
-            'client_last_name' => 'required_if:client_mode,new|nullable|string|max:100',
-            'client_phone' => 'required_if:client_mode,new|nullable|string|max:50',
-            'client_email' => 'nullable|email|max:190',
-            'client_nationality' => 'nullable|string|max:120',
-            'client_address' => 'nullable|string|max:255',
-            'client_document_type' => 'nullable|string|max:50',
-            'client_document_number' => 'nullable|string|max:100',
-            'payment_type' => 'nullable|string|max:50',
-            'payment_receipt' => 'nullable|file|max:5120',
-            'base_price' => 'nullable|numeric|min:0',
-            'total_base' => 'nullable|numeric|min:0',
-            'room_supplement_total' => 'nullable|numeric|min:0',
-            'extras_total' => 'nullable|numeric|min:0',
-            'total_amount' => 'nullable|numeric|min:0',
-            'payment_amount' => 'nullable|numeric|min:0',
-            'payment_date' => 'nullable|date',
-            'payment_reference' => 'nullable|string|max:120',
-            'payment_note' => 'nullable|string|max:2000',
-            'extras_json' => 'nullable|string',
-            'hotel_rooms' => 'nullable|array',
-            'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',
-            'hotel_rooms.*.tour_hotel_id' => 'nullable|integer',
-            'hotel_rooms.*.tour_hotel_room_id' => 'nullable|integer',
-            'hotel_rooms.*.room_count' => 'nullable|integer|min:0',
-            'dossier_documents' => 'nullable|array',
-            'dossier_documents.*' => 'file|max:10240',
-            'visa_ok' => 'nullable|boolean',
-            'visa_notes' => 'nullable|string|max:2000',
-            'visa_status' => 'nullable|in:not_required,pending,approved,rejected',
-            'visa_document' => 'nullable|file|max:5120',
-            'passengers' => 'nullable|array',
-            'passengers.*.first_name' => 'nullable|string|max:100',
-            'passengers.*.last_name' => 'nullable|string|max:100',
-            'passengers.*.type' => 'nullable|in:adult,child,infant',
-            'passengers.*.birth_date' => 'nullable|date',
-            'passengers.*.document_type' => 'nullable|string|max:50',
-            'passengers.*.document_number' => 'nullable|string|max:100',
-        ]);
+        $data = $request->validate($this->reservationValidationRules());
         $this->validateDepartureMatchesTour($data);
 
-        $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
-        $this->validateRoomCapacity(
-            (int) $data['departure_id'],
-            (int) ($data['travel_date_id'] ?? 0),
-            (int) $data['tour_id'],
-            $totalTravelers
-        );
-
-        $extrasPayload = $reservation->extras->map(function ($extra) {
-            return [
-                'voyage_extra_id' => $extra->voyage_extra_id,
-                'name' => $extra->name,
-                'description' => $extra->description,
-                'unit_price' => $extra->unit_price ?: $extra->price,
-                'quantity' => $extra->quantity ?: 1,
-                'total_price' => $extra->total_price ?: $extra->price,
-                'application_scope' => $extra->application_scope,
-                'traveler_keys' => $extra->traveler_keys,
-            ];
-        })->values()->all();
-        if ($request->filled('extras_json')) {
-            $decoded = json_decode($request->string('extras_json')->toString(), true);
-            $extrasPayload = is_array($decoded) ? $decoded : [];
-        }
-
-        $financialSummary = $this->reservationDossier->summarizeForReservationPayload(
-            (int) $data['tour_id'],
-            (int) $data['departure_id'],
-            $totalTravelers,
-            $request->input('hotel_rooms', []),
-            $extrasPayload,
-            isset($data['base_price']) ? (float) $data['base_price'] : null
-        );
-
-        $paymentAmount = round((float) $request->input('payment_amount', 0), 2);
-        $summaryWithPayment = $this->reservationDossier->computeFinancialSummary(
-            $financialSummary['total_base'],
-            $financialSummary['room_supplement_total'],
-            $financialSummary['extras_total'],
-            $paymentAmount
-        );
+        $pricingContext = $this->buildReservationPricingContext($request, $data);
+        $extrasPayload = $pricingContext['extras_payload'];
+        $paymentAmount = $pricingContext['payment_amount'];
+        $pricing = $pricingContext['pricing'];
 
         $data['status'] = Reservation::STATUS_EN_COURS;
         $data['dossier_status'] = Reservation::DOSSIER_PENDING;
@@ -710,15 +638,26 @@ class ReservationsController extends Controller
         $data['assigned_to'] = $user->id;
         $data['created_by'] = $user->id;
         $data['created_by_user_id'] = $user->id;
-        $data['base_price'] = $summaryWithPayment['total_base'];
-        $data['total_base'] = $summaryWithPayment['total_base'];
-        $data['room_supplement_total'] = $summaryWithPayment['room_supplement_total'];
-        $data['extras_total'] = $summaryWithPayment['extras_total'];
-        $data['total_amount'] = $summaryWithPayment['total_amount'];
-        $data['paid_amount'] = $summaryWithPayment['paid_amount'];
-        $data['remaining_amount'] = $summaryWithPayment['remaining_amount'];
-        $data['payment_status'] = $summaryWithPayment['payment_status'];
-        $data['extras_payload'] = $extrasPayload;
+        $data['base_price'] = $pricing['base_price'];
+        $data['total_base'] = $pricing['total_base'];
+        $data['room_supplement_total'] = $pricing['room_supplement_total'];
+        $data['extras_total'] = $pricing['extras_total'];
+        $data['total_amount'] = $pricing['total_amount'];
+        $data['paid_amount'] = $pricing['paid_amount'];
+        $data['remaining_amount'] = $pricing['remaining_amount'];
+        $data['payment_status'] = $pricing['payment_status'];
+        $data['extras_payload'] = collect($pricing['details']['extras'] ?? [])->map(function (array $extra) {
+            return [
+                'voyage_extra_id' => $extra['voyage_extra_id'] ?? null,
+                'name' => $extra['name'] ?? 'Extra',
+                'description' => $extra['description'] ?? null,
+                'unit_price' => $extra['unit_price_adult'] ?? 0,
+                'quantity' => $extra['quantity'] ?? 1,
+                'total_price' => $extra['total_price'] ?? 0,
+                'application_scope' => $extra['application_scope'] ?? 'dossier',
+                'traveler_keys' => $extra['traveler_keys'] ?? [],
+            ];
+        })->values()->all();
 
         $paymentPayload = null;
         if ($paymentAmount > 0) {
@@ -746,14 +685,54 @@ class ReservationsController extends Controller
                 'created_by' => $user->id,
             ])->values()->all();
 
-        $reservation = $this->reservationService->create(
-            $data,
-            $request->file('payment_receipt'),
-            $request->file('visa_document')
-        );
+        $dossier = DB::transaction(function () use ($data, $request) {
+            $client = $this->reservationDossier->resolveOrCreateClientFromPayload($data);
+            if ($client) {
+                $data['client_external_id'] = $client->id;
+                $data['client_mode'] = 'existing';
+            }
+
+            $dossier = ReservationDossier::query()->create([
+                'client_id' => $client?->id,
+                'total_base' => (float) $data['total_base'],
+                'room_supplement_total' => (float) $data['room_supplement_total'],
+                'extras_total' => (float) $data['extras_total'],
+                'total_amount' => (float) $data['total_amount'],
+                'paid_amount' => (float) $data['paid_amount'],
+                'remaining_amount' => (float) $data['remaining_amount'],
+                'payment_status' => (string) $data['payment_status'],
+                'dossier_status' => (string) $data['dossier_status'],
+                'created_by' => $data['created_by_user_id'] ?? $data['created_by'] ?? null,
+                'assigned_to' => $data['assigned_to'] ?? null,
+            ]);
+
+            $dossier->dossier_number = $this->reservationDossier->generateDossierNumber((int) $dossier->id, now());
+            $dossier->save();
+
+            $data['reservation_dossier_id'] = $dossier->id;
+            $data['dossier_number'] = $dossier->dossier_number;
+
+            $reservation = $this->reservationService->create(
+                $data,
+                $request->file('payment_receipt'),
+                $request->file('visa_document')
+            );
+
+            $reservation->reservation_dossier_id = $dossier->id;
+            $reservation->dossier_number = $dossier->dossier_number;
+            $reservation->save();
+
+            $dossier->client_id = $reservation->client_external_id ?: $dossier->client_id;
+            $dossier->main_reservation_id = $reservation->id;
+            $dossier->save();
+
+            $this->reservationDossier->syncDossierFromReservation($reservation->fresh('dossier'));
+
+            return $dossier->fresh();
+        });
 
         return redirect()
-            ->route('admin.reservations.edit', $reservation)
+            ->route('admin.reservation-dossiers.show', $dossier)
             ->with('success', 'Dossier de réservation créé avec succès.');
     }
 
@@ -764,6 +743,10 @@ class ReservationsController extends Controller
     public function show(Request $request, Reservation $reservation): RedirectResponse
     {
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
+
+        if ($reservation->reservation_dossier_id) {
+            return redirect()->route('admin.reservation-dossiers.show', $reservation->reservation_dossier_id);
+        }
 
         return redirect()->route('admin.reservations.edit', $reservation);
     }
@@ -809,88 +792,77 @@ class ReservationsController extends Controller
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Accès non autorisé à cette réservation.');
         $this->mergeDepartureFromLegacyRequest($request, $reservation);
 
-        $data = $request->validate([
-            'tour_id' => 'required|integer',
-            'departure_id' => 'required|integer|exists:departures,id',
-            'travel_date_id' => 'nullable|integer',
-            'client_mode' => 'required|in:existing,new',
-            'client_external_id' => 'required_if:client_mode,existing|nullable|integer|exists:clients,id',
-            'client_first_name' => 'required_if:client_mode,new|nullable|string|max:100',
-            'client_last_name' => 'required_if:client_mode,new|nullable|string|max:100',
-            'client_phone' => 'required_if:client_mode,new|nullable|string|max:50',
-            'client_email' => 'nullable|email|max:190',
-            'client_nationality' => 'nullable|string|max:120',
-            'client_address' => 'nullable|string|max:255',
-            'client_document_type' => 'nullable|string|max:50',
-            'client_document_number' => 'nullable|string|max:100',
-            'payment_type' => 'nullable|string|max:50',
-            'payment_receipt' => 'nullable|file|max:5120',
-            'base_price' => 'nullable|numeric|min:0',
-            'total_base' => 'nullable|numeric|min:0',
-            'room_supplement_total' => 'nullable|numeric|min:0',
-            'extras_total' => 'nullable|numeric|min:0',
-            'total_amount' => 'nullable|numeric|min:0',
-            'extras_json' => 'nullable|string',
-            'hotel_rooms' => 'nullable|array',
-            'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',
-            'hotel_rooms.*.tour_hotel_id' => 'nullable|integer',
-            'hotel_rooms.*.tour_hotel_room_id' => 'nullable|integer',
-            'hotel_rooms.*.room_count' => 'nullable|integer|min:0',
-            'visa_ok' => 'nullable|boolean',
-            'visa_notes' => 'nullable|string|max:2000',
-            'visa_status' => 'nullable|in:not_required,pending,approved,rejected',
-            'visa_document' => 'nullable|file|max:5120',
-            'passengers' => 'nullable|array',
-            'passengers.*.id' => 'nullable|integer',
-            'passengers.*.first_name' => 'nullable|string|max:100',
-            'passengers.*.last_name' => 'nullable|string|max:100',
-            'passengers.*.type' => 'nullable|in:adult,child,infant',
-            'passengers.*.birth_date' => 'nullable|date',
-            'passengers.*.document_type' => 'nullable|string|max:50',
-            'passengers.*.document_number' => 'nullable|string|max:100',
-        ]);
+        $data = $request->validate($this->reservationValidationRules(true));
         $this->validateDepartureMatchesTour($data);
 
-        $totalTravelers = $this->computeTotalTravelers($request->input('passengers', []));
-        $this->validateRoomCapacity(
-            (int) $data['departure_id'],
-            (int) ($data['travel_date_id'] ?? 0),
-            (int) $data['tour_id'],
-            $totalTravelers
-        );
-
-        $extrasPayload = [];
-        if ($request->filled('extras_json')) {
-            $decoded = json_decode($request->string('extras_json')->toString(), true);
-            $extrasPayload = is_array($decoded) ? $decoded : [];
-        }
-
-        $financialSummary = $this->reservationDossier->summarizeForReservationPayload(
-            (int) $data['tour_id'],
-            (int) $data['departure_id'],
-            $totalTravelers,
-            $request->input('hotel_rooms', []),
-            $extrasPayload,
-            isset($data['base_price']) ? (float) $data['base_price'] : null
-        );
+        $pricingContext = $this->buildReservationPricingContext($request, $data);
+        $extrasPayload = $pricingContext['extras_payload'];
+        $pricing = $pricingContext['pricing'];
 
         $data['visa_ok'] = $request->boolean('visa_ok');
         $data['updated_by'] = $request->user()->id;
-        $data['base_price'] = $financialSummary['total_base'];
-        $data['total_base'] = $financialSummary['total_base'];
-        $data['room_supplement_total'] = $financialSummary['room_supplement_total'];
-        $data['extras_total'] = $financialSummary['extras_total'];
-        $data['total_amount'] = $financialSummary['total_amount'];
-        $data['payment_status'] = $reservation->payment_status;
-        $data['dossier_status'] = $reservation->dossier_status;
-        $data['extras_payload'] = $extrasPayload;
+        $data['base_price'] = $pricing['base_price'];
+        $data['total_base'] = $pricing['total_base'];
+        $data['room_supplement_total'] = $pricing['room_supplement_total'];
+        $data['extras_total'] = $pricing['extras_total'];
+        $data['total_amount'] = $pricing['total_amount'];
+        $data['paid_amount'] = (float) ($reservation->paid_amount ?? 0);
+        $data['remaining_amount'] = max(0, round($pricing['total_amount'] - $data['paid_amount'], 2));
+        $data['payment_status'] = $this->reservationPricing->derivePaymentStatus((float) $pricing['total_amount'], (float) $data['paid_amount']);
+        $data['dossier_status'] = $reservation->dossier_status ?: Reservation::DOSSIER_PENDING;
+        $data['extras_payload'] = collect($pricing['details']['extras'] ?? [])->map(function (array $extra) {
+            return [
+                'voyage_extra_id' => $extra['voyage_extra_id'] ?? null,
+                'name' => $extra['name'] ?? 'Extra',
+                'description' => $extra['description'] ?? null,
+                'unit_price' => $extra['unit_price_adult'] ?? 0,
+                'quantity' => $extra['quantity'] ?? 1,
+                'total_price' => $extra['total_price'] ?? 0,
+                'application_scope' => $extra['application_scope'] ?? 'dossier',
+                'traveler_keys' => $extra['traveler_keys'] ?? [],
+            ];
+        })->values()->all();
 
-        $this->reservationService->update(
-            $reservation,
-            $data,
-            $request->file('payment_receipt'),
-            $request->file('visa_document')
-        );
+        $dossier = DB::transaction(function () use ($request, $reservation, $data) {
+            $client = $this->reservationDossier->resolveOrCreateClientFromPayload($data, $reservation);
+            if ($client) {
+                $data['client_external_id'] = $client->id;
+                $data['client_mode'] = 'existing';
+            }
+
+            $dossier = $reservation->dossier;
+            if (! $dossier) {
+                $dossier = ReservationDossier::query()->create([
+                    'client_id' => $client?->id ?: $reservation->client_external_id,
+                    'main_reservation_id' => $reservation->id,
+                    'created_by' => $reservation->created_by_user_id ?: $reservation->created_by,
+                    'assigned_to' => $reservation->assigned_to ?: $reservation->agent_id,
+                ]);
+                $dossier->dossier_number = $this->reservationDossier->generateDossierNumber((int) $dossier->id, $reservation->created_at ?: now());
+                $dossier->save();
+            }
+
+            $data['reservation_dossier_id'] = $dossier->id;
+            $data['dossier_number'] = $dossier->dossier_number;
+            $updatedReservation = $this->reservationService->update(
+                $reservation,
+                $data,
+                $request->file('payment_receipt'),
+                $request->file('visa_document')
+            );
+
+            $updatedReservation->reservation_dossier_id = $dossier->id;
+            $updatedReservation->dossier_number = $dossier->dossier_number;
+            $updatedReservation->save();
+
+            $dossier->client_id = $updatedReservation->client_external_id ?: $dossier->client_id;
+            $dossier->main_reservation_id = $updatedReservation->id;
+            $dossier->save();
+
+            $this->reservationDossier->syncDossierFromReservation($updatedReservation->fresh('dossier'));
+
+            return $dossier->fresh();
+        });
 
         if ($request->boolean('_embed')) {
             $back = route('admin.reservations.index', array_filter([
@@ -905,13 +877,41 @@ class ReservationsController extends Controller
         }
 
         return redirect()
-            ->route('admin.reservations.edit', $reservation)
+            ->route('admin.reservation-dossiers.show', $dossier)
             ->with('success', 'Réservation mise à jour.');
     }
 
     /**
      * Nombre total de voyageurs : 1 (principal) + accompagnants avec au moins un nom renseigné.
      */
+    public function pricingPreview(Request $request): JsonResponse
+    {
+        $this->mergeDepartureFromLegacyRequest($request);
+
+        $data = $request->validate([
+            'tour_id' => 'required|integer',
+            'departure_id' => 'required|integer|exists:departures,id',
+            'travel_date_id' => 'nullable|integer',
+            'payment_amount' => 'nullable|numeric|min:0',
+            'extras_json' => 'nullable|string',
+            'hotel_rooms' => 'nullable|array',
+            'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',
+            'hotel_rooms.*.room_count' => 'nullable|integer|min:0',
+            'passengers' => 'nullable|array',
+            'passengers.*.first_name' => 'nullable|string|max:100',
+            'passengers.*.last_name' => 'nullable|string|max:100',
+            'passengers.*.type' => 'nullable|in:adult,child,infant',
+        ]);
+        $this->validateDepartureMatchesTour($data);
+
+        $context = $this->buildReservationPricingContext($request, $data);
+
+        return response()->json([
+            'pricing' => $context['pricing'],
+            'travelers_count' => $context['travelers_count'],
+        ]);
+    }
+
     public function storePayment(Request $request, Reservation $reservation): RedirectResponse
     {
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
@@ -1060,6 +1060,108 @@ class ReservationsController extends Controller
             'reservation' => $reservation,
             'payment' => $payment,
         ])->stream($filename);
+    }
+
+    private function reservationValidationRules(bool $updating = false): array
+    {
+        $rules = [
+            'tour_id' => 'required|integer',
+            'departure_id' => 'required|integer|exists:departures,id',
+            'travel_date_id' => 'nullable|integer',
+            'client_mode' => 'required|in:existing,new',
+            'client_external_id' => 'required_if:client_mode,existing|nullable|integer|exists:clients,id',
+            'client_first_name' => 'required_if:client_mode,new|nullable|string|max:100',
+            'client_last_name' => 'required_if:client_mode,new|nullable|string|max:100',
+            'client_phone' => 'required_if:client_mode,new|nullable|string|max:50',
+            'client_email' => 'nullable|email|max:190',
+            'client_nationality' => 'nullable|string|max:120',
+            'client_address' => 'nullable|string|max:255',
+            'client_document_type' => 'nullable|string|max:50',
+            'client_document_number' => 'nullable|string|max:100',
+            'payment_type' => 'nullable|string|max:50',
+            'payment_receipt' => 'nullable|file|max:5120',
+            'base_price' => 'nullable|numeric|min:0',
+            'total_base' => 'nullable|numeric|min:0',
+            'room_supplement_total' => 'nullable|numeric|min:0',
+            'extras_total' => 'nullable|numeric|min:0',
+            'total_amount' => 'nullable|numeric|min:0',
+            'payment_amount' => 'nullable|numeric|min:0',
+            'payment_date' => 'nullable|date',
+            'payment_reference' => 'nullable|string|max:120',
+            'payment_note' => 'nullable|string|max:2000',
+            'extras_json' => 'nullable|string',
+            'hotel_rooms' => 'nullable|array',
+            'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',
+            'hotel_rooms.*.tour_hotel_id' => 'nullable|integer',
+            'hotel_rooms.*.tour_hotel_room_id' => 'nullable|integer',
+            'hotel_rooms.*.room_count' => 'nullable|integer|min:0',
+            'visa_ok' => 'nullable|boolean',
+            'visa_notes' => 'nullable|string|max:2000',
+            'visa_status' => 'nullable|in:not_required,pending,approved,rejected',
+            'visa_document' => 'nullable|file|max:5120',
+            'passengers' => 'nullable|array',
+            'passengers.*.first_name' => 'nullable|string|max:100',
+            'passengers.*.last_name' => 'nullable|string|max:100',
+            'passengers.*.type' => 'nullable|in:adult,child,infant',
+            'passengers.*.birth_date' => 'nullable|date',
+            'passengers.*.document_type' => 'nullable|string|max:50',
+            'passengers.*.document_number' => 'nullable|string|max:100',
+        ];
+
+        if (! $updating) {
+            $rules['dossier_documents'] = 'nullable|array';
+            $rules['dossier_documents.*'] = 'file|max:10240';
+        } else {
+            $rules['passengers.*.id'] = 'nullable|integer';
+        }
+
+        return $rules;
+    }
+
+    private function extractExtrasPayloadFromRequest(Request $request): array
+    {
+        if (! $request->filled('extras_json')) {
+            return [];
+        }
+
+        $decoded = json_decode($request->string('extras_json')->toString(), true);
+
+        return is_array($decoded) ? array_values($decoded) : [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{pricing: array<string, mixed>, extras_payload: array<int, array<string, mixed>>, payment_amount: float, travelers_count: int}
+     */
+    private function buildReservationPricingContext(Request $request, array $data): array
+    {
+        $travelersCount = $this->computeTotalTravelers($request->input('passengers', []));
+        $this->validateRoomCapacity(
+            (int) $data['departure_id'],
+            (int) ($data['travel_date_id'] ?? 0),
+            (int) $data['tour_id'],
+            $travelersCount
+        );
+
+        $extrasPayload = $this->extractExtrasPayloadFromRequest($request);
+        $paymentAmount = round((float) $request->input('payment_amount', 0), 2);
+
+        $pricing = $this->reservationPricing->calculate([
+            'tour_id' => (int) $data['tour_id'],
+            'departure_id' => (int) $data['departure_id'],
+            'travel_date_id' => (int) ($data['travel_date_id'] ?? 0),
+            'hotel_rooms' => $request->input('hotel_rooms', []),
+            'passengers' => $request->input('passengers', []),
+            'extras_json' => $extrasPayload,
+            'payment_amount' => $paymentAmount,
+        ]);
+
+        return [
+            'pricing' => $pricing,
+            'extras_payload' => $extrasPayload,
+            'payment_amount' => $paymentAmount,
+            'travelers_count' => $travelersCount,
+        ];
     }
 
     private function computeTotalTravelers(array $passengers): int

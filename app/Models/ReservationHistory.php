@@ -10,6 +10,7 @@ class ReservationHistory extends Model
     protected $table = 'reservation_histories';
 
     protected $fillable = [
+        'reservation_dossier_id',
         'reservation_id',
         'user_id',
         'action',
@@ -19,6 +20,7 @@ class ReservationHistory extends Model
     ];
 
     protected $casts = [
+        'reservation_dossier_id' => 'integer',
         'reservation_id' => 'integer',
         'user_id' => 'integer',
     ];
@@ -26,6 +28,11 @@ class ReservationHistory extends Model
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
+    }
+
+    public function dossier(): BelongsTo
+    {
+        return $this->belongsTo(ReservationDossier::class, 'reservation_dossier_id');
     }
 
     public function user(): BelongsTo

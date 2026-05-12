@@ -321,6 +321,10 @@ class ReservationService
         } elseif (! empty($reservation->created_by) && empty($reservation->created_by_user_id)) {
             $reservation->created_by_user_id = (int) $reservation->created_by;
         }
+        if (array_key_exists('reservation_dossier_id', $data)) {
+            $rawDossier = $data['reservation_dossier_id'];
+            $reservation->reservation_dossier_id = $rawDossier !== null && $rawDossier !== '' ? (int) $rawDossier : null;
+        }
         $reservation->client_mode = $data['client_mode'] ?? $reservation->client_mode ?? 'existing';
         $reservation->client_external_id = $data['client_external_id'] ?? $reservation->client_external_id;
 

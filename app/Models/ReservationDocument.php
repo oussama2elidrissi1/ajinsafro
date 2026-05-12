@@ -10,6 +10,7 @@ class ReservationDocument extends Model
     protected $table = 'reservation_documents';
 
     protected $fillable = [
+        'reservation_dossier_id',
         'reservation_id',
         'type',
         'title',
@@ -19,6 +20,7 @@ class ReservationDocument extends Model
     ];
 
     protected $casts = [
+        'reservation_dossier_id' => 'integer',
         'reservation_id' => 'integer',
         'created_by' => 'integer',
     ];
@@ -26,6 +28,11 @@ class ReservationDocument extends Model
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
+    }
+
+    public function dossier(): BelongsTo
+    {
+        return $this->belongsTo(ReservationDossier::class, 'reservation_dossier_id');
     }
 
     public function creator(): BelongsTo

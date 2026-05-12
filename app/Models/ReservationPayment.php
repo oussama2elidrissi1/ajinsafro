@@ -10,6 +10,7 @@ class ReservationPayment extends Model
     protected $table = 'reservation_payments';
 
     protected $fillable = [
+        'reservation_dossier_id',
         'reservation_id',
         'payment_date',
         'payment_method',
@@ -22,6 +23,7 @@ class ReservationPayment extends Model
     ];
 
     protected $casts = [
+        'reservation_dossier_id' => 'integer',
         'reservation_id' => 'integer',
         'payment_date' => 'date',
         'amount' => 'decimal:2',
@@ -31,6 +33,11 @@ class ReservationPayment extends Model
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
+    }
+
+    public function dossier(): BelongsTo
+    {
+        return $this->belongsTo(ReservationDossier::class, 'reservation_dossier_id');
     }
 
     public function creator(): BelongsTo

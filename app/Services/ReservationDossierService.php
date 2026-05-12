@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Departure;
 use App\Models\DepartureHotelRoom;
 use App\Models\Reservation;
+use App\Models\ReservationDossier;
 use App\Models\ReservationDocument;
 use App\Models\ReservationHistory;
 use App\Models\ReservationPayment;
@@ -20,6 +21,7 @@ use Illuminate\Validation\ValidationException;
 class ReservationDossierService
 {
     public const PAYMENT_UNPAID = 'unpaid';
+    public const PAYMENT_NON_PAID = 'non_paid';
     public const PAYMENT_DEPOSIT = 'deposit';
     public const PAYMENT_PARTIAL = 'partial';
     public const PAYMENT_PAID = 'paid';
@@ -198,7 +200,7 @@ class ReservationDossierService
         $paidAmount = round(max(0, $paidAmount), 2);
 
         if ($paidAmount <= 0.0) {
-            return self::PAYMENT_UNPAID;
+            return self::PAYMENT_NON_PAID;
         }
 
         if ($totalAmount > 0.0 && abs($paidAmount - $totalAmount) < 0.01) {
@@ -206,7 +208,7 @@ class ReservationDossierService
         }
 
         if ($paidAmount > 0.0 && $totalAmount > 0.0 && $paidAmount < $totalAmount) {
-            return $paidAmount < ($totalAmount / 2) ? self::PAYMENT_DEPOSIT : self::PAYMENT_PARTIAL;
+            return self::PAYMENT_PARTIAL;
         }
 
         return self::PAYMENT_PARTIAL;
@@ -218,8 +220,16 @@ class ReservationDossierService
             return;
         }
 
-        $year = (int) ($reservation->created_at?->format('Y') ?: now()->format('Y'));
-        $reservation->dossier_number = sprintf('RES-%d-%06d', $year, (int) $reservation->id);
+        $reservation->dossier_number = $this->generateDossierNumber((int) $reservation->id, $reservation->created_at);
+    }
+
+    public function generateDossierNumber(int $sequence, CarbonInterface|string|null $date = null): string
+    {
+        $year = $date instanceof CarbonInterface
+            ? (int) $date->format('Y')
+            : (is_string($date) && trim($date) !== '' ? (int) date('Y', strtotime($date)) : (int) now()->format('Y'));
+
+        return sprintf('RES-%d-%06d', $year, max(1, $sequence));
     }
 
     public function applyCancellationState(Reservation $reservation, ?CarbonInterface $when = null): Reservation
@@ -260,6 +270,40 @@ class ReservationDossierService
         $reservation->remaining_amount = $summary['remaining_amount'];
         $reservation->payment_status = $summary['payment_status'];
         $reservation->dossier_status = $reservation->dossier_status ?: self::DOSSIER_PENDING;
+
+        if ($reservation->relationLoaded('dossier') ? $reservation->dossier : $reservation->dossier()->exists()) {
+            $this->syncDossierFromReservation($reservation);
+        }
+    }
+
+    public function syncDossierFromReservation(Reservation $reservation): ?ReservationDossier
+    {
+        $dossier = $reservation->relationLoaded('dossier') ? $reservation->dossier : $reservation->dossier()->first();
+        if (! $dossier) {
+            return null;
+        }
+
+        if (empty($dossier->dossier_number)) {
+            $dossier->dossier_number = $reservation->dossier_number ?: $this->generateDossierNumber((int) $dossier->id, $reservation->created_at);
+        }
+
+        $dossier->client_id = $reservation->client_external_id ?: $dossier->client_id;
+        $dossier->main_reservation_id = $dossier->main_reservation_id ?: $reservation->id;
+        $dossier->created_by = $dossier->created_by ?: ($reservation->created_by_user_id ?: $reservation->created_by);
+        $dossier->assigned_to = $reservation->assigned_to ?: $reservation->agent_id ?: $dossier->assigned_to;
+        $dossier->total_base = (float) ($reservation->total_base ?? $reservation->base_price ?? 0);
+        $dossier->room_supplement_total = (float) ($reservation->room_supplement_total ?? 0);
+        $dossier->extras_total = (float) ($reservation->extras_total ?? 0);
+        $dossier->total_amount = (float) ($reservation->total_amount ?? 0);
+        $dossier->paid_amount = (float) ($reservation->paid_amount ?? 0);
+        $dossier->remaining_amount = (float) ($reservation->remaining_amount ?? max(0, $dossier->total_amount - $dossier->paid_amount));
+        $dossier->payment_status = $reservation->payment_status ?: $dossier->payment_status ?: self::PAYMENT_NON_PAID;
+        $dossier->dossier_status = $reservation->dossier_status ?: $dossier->dossier_status ?: self::DOSSIER_PENDING;
+        $dossier->confirmed_at = $reservation->confirmed_at ?: $dossier->confirmed_at;
+        $dossier->cancelled_at = $reservation->cancelled_at ?: $dossier->cancelled_at;
+        $dossier->save();
+
+        return $dossier;
     }
 
     /**
@@ -281,6 +325,7 @@ class ReservationDossierService
         }
 
         $payment = $reservation->payments()->create([
+            'reservation_dossier_id' => $reservation->reservation_dossier_id,
             'payment_date' => $payload['payment_date'] ?? now()->toDateString(),
             'payment_method' => (string) ($payload['payment_method'] ?? 'Autre'),
             'amount' => $amount,
@@ -304,6 +349,8 @@ class ReservationDossierService
         }
 
         $this->refreshReservationFinancials($reservation, true);
+        $reservation->save();
+        $this->syncDossierFromReservation($reservation);
 
         return $payment;
     }
@@ -329,6 +376,7 @@ class ReservationDossierService
         ?int $createdBy = null,
     ): ReservationDocument {
         return $reservation->documents()->create([
+            'reservation_dossier_id' => $reservation->reservation_dossier_id,
             'type' => $type,
             'title' => $title,
             'file_path' => $filePath,
@@ -350,6 +398,7 @@ class ReservationDossierService
         ?string $note = null,
     ): ReservationHistory {
         return $reservation->histories()->create([
+            'reservation_dossier_id' => $reservation->reservation_dossier_id,
             'user_id' => $userId,
             'action' => $action,
             'old_value' => $oldValue ? json_encode($oldValue, JSON_UNESCAPED_UNICODE) : null,

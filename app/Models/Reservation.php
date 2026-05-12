@@ -68,6 +68,8 @@ class Reservation extends Model
 
     public const PAYMENT_STATUS_UNPAID = 'unpaid';
 
+    public const PAYMENT_STATUS_NON_PAID = 'non_paid';
+
     public const PAYMENT_STATUS_DEPOSIT = 'deposit';
 
     public const PAYMENT_STATUS_PARTIAL = 'partial';
@@ -95,6 +97,7 @@ class Reservation extends Model
         'created_by_user_id',
         'updated_by',
         'tour_id',
+        'reservation_dossier_id',
         'voyage_id',
         'dossier_number',
         'departure_id',
@@ -134,6 +137,7 @@ class Reservation extends Model
 
     protected $casts = [
         'tour_id' => 'integer',
+        'reservation_dossier_id' => 'integer',
         'voyage_id' => 'integer',
         'departure_id' => 'integer',
         'wp_tour_post_id' => 'integer',
@@ -175,6 +179,11 @@ class Reservation extends Model
     public function extras(): HasMany
     {
         return $this->hasMany(ReservationExtra::class);
+    }
+
+    public function dossier(): BelongsTo
+    {
+        return $this->belongsTo(ReservationDossier::class, 'reservation_dossier_id');
     }
 
     public function payments(): HasMany

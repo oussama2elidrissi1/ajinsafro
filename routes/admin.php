@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\PartnersController;
 use App\Http\Controllers\Admin\ProductsController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProgramApiController;
+use App\Http\Controllers\Admin\ReservationDossierController;
 use App\Http\Controllers\Admin\ReportingController;
 use App\Http\Controllers\Admin\ReservationsController;
 use App\Http\Controllers\Admin\ReservationWorkspaceController;
@@ -141,6 +142,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('dashboard/v2', [DashboardController::class, 'v2'])->name('dashboard.v2');
 
         Route::get('reservations', [ReservationsController::class, 'index'])->name('reservations.index');
+        Route::get('reservation-dossiers', [ReservationDossierController::class, 'index'])->name('reservation-dossiers.index');
+        Route::get('reservation-dossiers/{reservationDossier}', [ReservationDossierController::class, 'show'])->name('reservation-dossiers.show');
         Route::get('reservations/clients', function (\Illuminate\Http\Request $request) {
             $query = $request->query();
             $query['channel'] = 'client';
@@ -182,6 +185,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
         Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');
         Route::get('reservations/departure-hotels-rooms', [ReservationsController::class, 'departureHotelsRooms'])->name('reservations.departure-hotels-rooms');
+        Route::post('reservations/pricing-preview', [ReservationsController::class, 'pricingPreview'])->name('reservations.pricing-preview');
         Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');
         Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');
         Route::get('reservations/hub-debug', [ReservationsController::class, 'hubDebug'])->name('reservations.hub-debug');
