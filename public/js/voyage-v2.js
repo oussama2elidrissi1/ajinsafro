@@ -51,6 +51,10 @@
     var railStatus = document.getElementById('v2-rail-status');
     var railDestination = document.getElementById('v2-rail-destination');
     var railId = document.getElementById('v2-rail-id');
+    var slugPreview = document.querySelector('[data-v3-slug-preview]');
+    var slugCopyButton = document.querySelector('[data-v3-copy-slug]');
+    var excerptCounter = document.querySelector('[data-v3-counter-for="excerpt"]');
+    var publicBaseUrl = String(page.getAttribute('data-v3-public-base-url') || '');
 
     function clearStepErrors() {
         if (!stepErrorBox) return;
@@ -414,6 +418,19 @@
         if (destinationInput && railDestination) {
             railDestination.textContent = String(destinationInput.value || '').trim() || '-';
         }
+
+        var slugInput = document.getElementById('slug');
+        if (slugInput && slugPreview) {
+            var slugValue = String(slugInput.value || '').trim().replace(/^\/+/, '');
+            slugPreview.textContent = slugValue && publicBaseUrl
+                ? publicBaseUrl.replace(/\/+$/, '') + '/' + slugValue
+                : (publicBaseUrl ? publicBaseUrl.replace(/\/+$/, '') + '/...' : '/voyages/...');
+        }
+
+        var excerptInput = document.getElementById('excerpt');
+        if (excerptInput && excerptCounter) {
+            excerptCounter.textContent = String((excerptInput.value || '').trim().length) + ' / 160';
+        }
     }
 
     function applyVoyageIdentity(data) {
@@ -703,6 +720,22 @@
         if (event.stopPropagation) event.stopPropagation();
         saveStep(state.current, 'manual', state.current);
     }, true);
+
+    if (slugCopyButton && slugPreview) {
+        slugCopyButton.addEventListener('click', function () {
+            var value = String(slugPreview.textContent || '').trim();
+            if (!value || !navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+                return;
+            }
+
+            navigator.clipboard.writeText(value).then(function () {
+                slugCopyButton.textContent = 'Copie';
+                window.setTimeout(function () {
+                    slugCopyButton.textContent = 'Copier';
+                }, 1200);
+            }).catch(function () {});
+        });
+    }
 
     window.addEventListener('beforeunload', function (event) {
         var hasDirty = stepIds.some(function (id) { return !!state.dirty[id]; });

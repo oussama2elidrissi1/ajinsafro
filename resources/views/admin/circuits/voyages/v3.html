@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AjinSafro Admin — Voyage Studio V3</title>
+  <style>
+    :root {
+      --aj-blue: #005b96;
+      --aj-blue-2: #0076d6;
+      --aj-blue-soft: #eef7ff;
+      --aj-orange: #f05a1a;
+      --aj-orange-dark: #c8470f;
+      --aj-green: #22a45d;
+      --aj-green-soft: #e9f9f1;
+      --aj-red: #ef4444;
+      --aj-bg: #f5f8fc;
+      --aj-card: #ffffff;
+      --aj-border: #dfe8f3;
+      --aj-border-2: #edf2f7;
+      --aj-text: #10233f;
+      --aj-muted: #6a7b90;
+      --aj-shadow: 0 16px 45px rgba(15, 35, 65, 0.08);
+      --aj-shadow-soft: 0 8px 24px rgba(15, 35, 65, 0.06);
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--aj-bg);
+      color: var(--aj-text);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font-family: inherit;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+      border-right: 1px solid var(--aj-border);
+      padding: 24px 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .logo-mark {
+      width: 46px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--aj-blue), #24a7e8);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 22px;
+      transform: rotate(-7deg);
+      box-shadow: 0 10px 24px rgba(0, 91, 150, 0.18);
+    }
+
+    .logo-title {
+      font-weight: 900;
+      font-size: 25px;
+      letter-spacing: -0.8px;
+      color: #0072c6;
+      line-height: 1;
+    }
+
+    .logo-title span {
+      color: var(--aj-orange);
+    }
+
+    .logo-ar {
+      font-size: 11px;
+      color: var(--aj-orange);
+      font-weight: 700;
+      margin-top: 2px;
+      text-align: right;
+    }
+
+    .profile-card {
+      background: var(--aj-card);
+      border: 1px solid var(--aj-border-2);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--aj-shadow-soft);
+      margin-bottom: 28px;
+    }
+
+    .profile-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #005b96, #0b7bd3);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      box-shadow: 0 10px 20px rgba(0, 91, 150, 0.2);
+    }
+
+    .profile-name {
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .profile-role {
+      color: var(--aj-muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .side-title {
+      color: #6d7c90;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 22px 0 12px;
+    }
+
+    .menu {
+      display: grid;
+      gap: 6px;
+    }
+
+    .menu-item,
+    .submenu-item {
+      min-height: 42px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      color: #243b5a;
+      font-weight: 750;
+      font-size: 13px;
+      text-decoration: none;
+      transition: 0.2s ease;
+    }
+
+    .menu-item .chev {
+      margin-left: auto;
+      color: #8a9ab0;
+    }
+
+    .menu-item:hover,
+    .submenu-item:hover {
+      background: #f1f7ff;
+      color: var(--aj-blue);
+    }
+
+    .menu-item.active {
+      background: linear-gradient(90deg, #eaf5ff, #f6fbff);
+      color: var(--aj-blue);
+      box-shadow: inset 4px 0 0 var(--aj-blue-2);
+    }
+
+    .submenu {
+      border-left: 1px solid #dce8f7;
+      margin-left: 21px;
+      padding: 4px 0 6px 10px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .submenu-item {
+      min-height: 38px;
+      font-size: 12px;
+      padding: 0 12px;
+    }
+
+    .submenu-item.selected {
+      background: #eaf5ff;
+      color: var(--aj-blue);
+      font-weight: 900;
+    }
+
+    .help-card {
+      margin-top: 48px;
+      background: var(--aj-card);
+      border: 1px solid var(--aj-border-2);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      box-shadow: var(--aj-shadow-soft);
+    }
+
+    .help-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--aj-blue-soft);
+      display: grid;
+      place-items: center;
+      color: var(--aj-blue);
+      font-weight: 900;
+    }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 78px 1fr auto;
+    }
+
+    .topbar {
+      background: rgba(255,255,255,0.88);
+      border-bottom: 1px solid var(--aj-border);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .search {
+      width: min(620px, 48vw);
+      height: 46px;
+      border: 1px solid var(--aj-border);
+      border-radius: 14px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      color: var(--aj-muted);
+      gap: 12px;
+      box-shadow: 0 5px 15px rgba(15, 35, 65, 0.04);
+    }
+
+    .search input {
+      border: 0;
+      outline: 0;
+      flex: 1;
+      font-weight: 700;
+      color: var(--aj-text);
+    }
+
+    .shortcut {
+      background: #f0f5fb;
+      color: #7d8ca2;
+      border-radius: 8px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .icon-btn {
+      position: relative;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid var(--aj-border);
+      background: #fff;
+      display: grid;
+      place-items: center;
+      color: #254262;
+      box-shadow: 0 5px 15px rgba(15, 35, 65, 0.04);
+    }
+
+    .badge-dot {
+      position: absolute;
+      top: -7px;
+      right: -6px;
+      min-width: 20px;
+      height: 20px;
+      background: var(--aj-orange);
+      color: #fff;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 900;
+      border: 2px solid #fff;
+    }
+
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border: 1px solid var(--aj-border);
+      border-radius: 18px;
+      padding: 8px 13px 8px 8px;
+      box-shadow: 0 5px 15px rgba(15, 35, 65, 0.04);
+    }
+
+    .content {
+      padding: 34px 36px 22px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .hero-card {
+      background: var(--aj-card);
+      border: 1px solid var(--aj-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--aj-shadow-soft);
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 220px 1fr 330px;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .voyage-thumb {
+      height: 146px;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at 85% 18%, #f7d28a 0 2px, transparent 3px),
+        linear-gradient(155deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),
+        linear-gradient(180deg, #6bb9ff 0 35%, #40c6d6 35% 58%, #0ca1b3 58% 64%, #d9b879 64% 100%);
+      box-shadow: inset 0 -30px 50px rgba(0,0,0,0.08);
+    }
+
+    .voyage-thumb::before {
+      content: "";
+      position: absolute;
+      left: -40px;
+      top: 78px;
+      width: 250px;
+      height: 90px;
+      background: linear-gradient(135deg, #e7cb90, #c8aa75);
+      border-radius: 50%;
+      transform: rotate(-10deg);
+      box-shadow: 70px -8px 0 rgba(255,255,255,0.18);
+    }
+
+    .voyage-thumb::after {
+      content: "";
+      position: absolute;
+      right: 15px;
+      bottom: 18px;
+      width: 90px;
+      height: 18px;
+      border-radius: 50%;
+      border-top: 3px solid rgba(255,255,255,0.7);
+      transform: rotate(-15deg);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      color: var(--aj-blue-2);
+      background: var(--aj-blue-soft);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 10px;
+    }
+
+    .hero-title-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .hero-title {
+      font-size: 26px;
+      letter-spacing: -0.65px;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      color: #08783f;
+      background: var(--aj-green-soft);
+      border: 1px solid #bfe8d1;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--aj-green);
+    }
+
+    .hero-id {
+      color: var(--aj-muted);
+      font-size: 13px;
+      margin-top: 10px;
+      font-weight: 750;
+    }
+
+    .stat-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .mini-stat {
+      border: 1px solid var(--aj-border);
+      border-radius: 13px;
+      background: #fff;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 170px;
+    }
+
+    .mini-stat-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: var(--aj-blue-soft);
+      color: var(--aj-blue-2);
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+    }
+
+    .mini-stat small {
+      display: block;
+      color: var(--aj-muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .mini-stat strong {
+      display: block;
+      font-size: 13px;
+      margin-top: 1px;
+    }
+
+    .hero-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn {
+      border: 1px solid var(--aj-border);
+      border-radius: 13px;
+      height: 46px;
+      padding: 0 18px;
+      font-weight: 900;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      background: #fff;
+      color: #163452;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 20px rgba(15, 35, 65, 0.08);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--aj-orange), #ff6b20);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 14px 26px rgba(240, 90, 26, 0.24);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 245px minmax(520px, 1fr) 300px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--aj-card);
+      border: 1px solid var(--aj-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--aj-shadow-soft);
+    }
+
+    .steps-card {
+      padding: 22px 16px;
+      position: sticky;
+      top: 102px;
+    }
+
+    .card-title {
+      color: #465c78;
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin: 0 8px 16px;
+    }
+
+    .step-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .step {
+      min-height: 45px;
+      border-radius: 13px;
+      display: grid;
+      grid-template-columns: 30px 1fr 22px;
+      align-items: center;
+      gap: 10px;
+      padding: 0 9px;
+      color: #29415e;
+      font-weight: 850;
+      font-size: 13px;
+      position: relative;
+    }
+
+    .step.active {
+      background: #eaf5ff;
+      color: var(--aj-blue);
+      box-shadow: inset 4px 0 0 var(--aj-blue-2);
+    }
+
+    .step-no {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid #d9e4f1;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .step.active .step-no {
+      background: #fff;
+      color: var(--aj-blue-2);
+      border-color: #b6dcff;
+    }
+
+    .step-state {
+      justify-self: end;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #ccd8e6;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      color: #fff;
+    }
+
+    .step-state.done {
+      background: var(--aj-green);
+      border-color: var(--aj-green);
+    }
+
+    .step-state.current {
+      background: var(--aj-blue-2);
+      border-color: var(--aj-blue-2);
+    }
+
+    .workflow-btn {
+      width: calc(100% - 16px);
+      margin: 20px 8px 0;
+      height: 46px;
+    }
+
+    .editor-card {
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--aj-border);
+      padding: 0 18px;
+    }
+
+    .tab {
+      height: 64px;
+      border: 0;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #526983;
+      font-weight: 900;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tab.active {
+      color: var(--aj-blue-2);
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: -1px;
+      height: 3px;
+      border-radius: 999px 999px 0 0;
+      background: var(--aj-blue-2);
+    }
+
+    .form-body {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 26px;
+    }
+
+    .field {
+      display: grid;
+      gap: 9px;
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      font-weight: 900;
+      color: #314865;
+      font-size: 13px;
+    }
+
+    .required {
+      color: var(--aj-red);
+    }
+
+    .input,
+    .textarea,
+    .select {
+      width: 100%;
+      border: 1px solid var(--aj-border);
+      background: #fff;
+      border-radius: 12px;
+      outline: 0;
+      color: var(--aj-text);
+      font-weight: 650;
+      font-size: 14px;
+      transition: 0.18s ease;
+    }
+
+    .input,
+    .select {
+      height: 48px;
+      padding: 0 15px;
+    }
+
+    .textarea {
+      min-height: 94px;
+      padding: 15px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    .input:focus,
+    .textarea:focus,
+    .select:focus {
+      border-color: #8ecaff;
+      box-shadow: 0 0 0 4px rgba(0, 118, 214, 0.09);
+    }
+
+    .url-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #71839a;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: -8px;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      margin-left: auto;
+      border: 1px solid var(--aj-border);
+      background: #fff;
+      border-radius: 8px;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+    }
+
+    .counter {
+      text-align: right;
+      color: #8a98aa;
+      font-size: 11px;
+      font-weight: 800;
+      margin-top: -26px;
+      padding-right: 12px;
+    }
+
+    .rich-editor {
+      border: 1px solid var(--aj-border);
+      border-radius: 13px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .toolbar {
+      height: 48px;
+      border-bottom: 1px solid var(--aj-border);
+      background: #fbfdff;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 10px;
+      color: #2e4562;
+      font-weight: 900;
+    }
+
+    .tool {
+      min-width: 34px;
+      height: 34px;
+      border: 0;
+      background: transparent;
+      border-radius: 9px;
+      color: #263e5c;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .tool:hover {
+      background: #eef6ff;
+    }
+
+    .tool.select-tool {
+      min-width: 125px;
+      text-align: left;
+      padding: 0 10px;
+      color: #344c68;
+      font-size: 12px;
+    }
+
+    .editor-content {
+      min-height: 220px;
+      padding: 22px;
+      line-height: 1.75;
+      font-weight: 650;
+      color: #203b5a;
+      font-size: 14px;
+    }
+
+    .word-count {
+      text-align: right;
+      color: #70839a;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 0 16px 14px;
+    }
+
+    .settings-panel {
+      border: 1px solid var(--aj-border);
+      border-radius: 16px;
+      padding: 18px;
+      align-self: start;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      color: #344a65;
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    .check-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--aj-blue-2);
+    }
+
+    .right-panel {
+      display: grid;
+      gap: 14px;
+      position: sticky;
+      top: 102px;
+    }
+
+    .info-card {
+      padding: 18px;
+    }
+
+    .info-card h3 {
+      font-size: 14px;
+      color: #435a77;
+      margin-bottom: 13px;
+    }
+
+    .progress-big {
+      font-size: 31px;
+      font-weight: 950;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .progress-big span {
+      color: #78889c;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .progress-line {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #e7eef6;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      width: 78%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--aj-green), #39bd70);
+      border-radius: inherit;
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      color: var(--aj-muted);
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.5;
+    }
+
+    .link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 12px;
+      color: var(--aj-blue-2);
+      font-weight: 950;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .quick-list {
+      display: grid;
+      gap: 4px;
+    }
+
+    .quick-item {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #435a77;
+      font-weight: 750;
+      font-size: 13px;
+      border-radius: 10px;
+      padding: 0 7px;
+    }
+
+    .quick-item:hover {
+      background: #f3f8ff;
+      color: var(--aj-blue-2);
+    }
+
+    .summary-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 9px 0;
+      color: #62738a;
+      font-size: 13px;
+      font-weight: 750;
+      border-bottom: 1px solid #f0f3f7;
+    }
+
+    .summary-line strong {
+      color: #213a57;
+      text-align: right;
+    }
+
+    .mini-status {
+      background: var(--aj-green-soft);
+      color: #08783f;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .alert-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .alert-count {
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--aj-orange);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .alert-box {
+      border: 1px solid #ffd2bd;
+      background: #fff8f4;
+      border-radius: 14px;
+      padding: 13px;
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 10px;
+    }
+
+    .alert-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: #ffe9df;
+      color: var(--aj-orange);
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+    }
+
+    .alert-title {
+      font-weight: 950;
+      color: #223a56;
+      font-size: 13px;
+    }
+
+    .alert-desc {
+      color: #6f7e90;
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.45;
+      margin: 4px 0 8px;
+    }
+
+    .footer {
+      padding: 0 36px 24px;
+      color: #71839a;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media (max-width: 1350px) {
+      .app {
+        grid-template-columns: 240px 1fr;
+      }
+
+      .hero-card {
+        grid-template-columns: 180px 1fr;
+      }
+
+      .hero-actions {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .workspace {
+        grid-template-columns: 220px 1fr;
+      }
+
+      .right-panel {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(4, 1fr);
+        position: static;
+      }
+    }
+
+    @media (max-width: 1020px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .search {
+        width: 55vw;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .hero-card,
+      .workspace,
+      .form-body {
+        grid-template-columns: 1fr;
+      }
+
+      .steps-card,
+      .right-panel {
+        position: static;
+      }
+
+      .right-panel,
+      .hero-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-mark">▰</div>
+        <div>
+          <div class="logo-title">AjinSafro<span>.ma</span></div>
+          <div class="logo-ar">أجي نسافرو</div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-left">
+          <div class="avatar">A</div>
+          <div>
+            <div class="profile-name">Admin</div>
+            <div class="profile-role">Administrateur</div>
+          </div>
+        </div>
+        <strong>›</strong>
+      </div>
+
+      <div class="side-title">Menu principal</div>
+      <nav class="menu">
+        <a href="#" class="menu-item"><span>⌂</span> Tableau de bord</a>
+        <a href="#" class="menu-item"><span>☑</span> Réservations <span class="chev">⌄</span></a>
+        <a href="#" class="menu-item active"><span>◈</span> Produits & Services <span class="chev">⌃</span></a>
+        <div class="submenu">
+          <a href="#" class="submenu-item">▦ Grille commerciale</a>
+          <a href="#" class="submenu-item selected">◈ Voyages</a>
+          <a href="#" class="submenu-item">♚ Group Deals</a>
+          <a href="#" class="submenu-item">▤ Hébergements</a>
+          <a href="#" class="submenu-item">▣ Hajj & Omra</a>
+          <a href="#" class="submenu-item">⌑ Activités</a>
+        </div>
+        <a href="#" class="menu-item"><span>♙</span> Clients <span class="chev">⌄</span></a>
+        <a href="#" class="menu-item"><span>▣</span> Points de vente <span class="chev">⌄</span></a>
+        <a href="#" class="menu-item"><span>▥</span> Finance & Reporting <span class="chev">⌄</span></a>
+        <a href="#" class="menu-item"><span>⚙</span> Administration <span class="chev">⌄</span></a>
+      </nav>
+
+      <div class="help-card">
+        <div class="help-icon">?</div>
+        <div>
+          <div class="profile-name" style="font-size:13px">Besoin d'aide ?</div>
+          <div class="profile-role">Consultez notre centre d’aide</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="search">
+          <span>⌕</span>
+          <input value="Rechercher (voyage, agence, réservation...)" aria-label="Recherche" />
+          <span class="shortcut">⌘ K</span>
+        </div>
+
+        <div class="top-actions">
+          <button class="icon-btn" aria-label="Notifications">🔔<span class="badge-dot">16</span></button>
+          <button class="icon-btn" aria-label="Messages">💬</button>
+          <div class="user-box">
+            <div class="avatar" style="width:40px;height:40px">A</div>
+            <div>
+              <div class="profile-name">Admin</div>
+              <div class="profile-role">Administrateur</div>
+            </div>
+            <strong>⌄</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="content">
+        <article class="hero-card">
+          <div class="voyage-thumb" aria-label="Image Dakhla"></div>
+
+          <div>
+            <span class="eyebrow">Voyage</span>
+            <div class="hero-title-row">
+              <h1 class="hero-title">Séjour 4 jours à Dakhla à partir de 3980 DHs!</h1>
+              <span class="status-pill">Publié</span>
+            </div>
+            <div class="hero-id">ID #14825</div>
+
+            <div class="stat-row">
+              <div class="mini-stat">
+                <div class="mini-stat-icon">📅</div>
+                <div><strong>3 départs programmés</strong></div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-icon">◇</div>
+                <div><small>Prix de base</small><strong>3 980 MAD</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-actions">
+            <button class="btn">👁 Aperçu public</button>
+            <button class="btn">▣ Version classique</button>
+            <button class="btn">💾 Enregistrer</button>
+            <button class="btn btn-primary">Suivant ›</button>
+          </div>
+        </article>
+
+        <div class="workspace">
+          <aside class="card steps-card">
+            <h2 class="card-title">Étapes du voyage</h2>
+            <div class="step-list">
+              <div class="step active"><span class="step-no">1</span><span>Infos générales</span><span class="step-state current"></span></div>
+              <div class="step"><span class="step-no">2</span><span>Tarifs & capacités</span><span class="step-state done">✓</span></div>
+              <div class="step"><span class="step-no">3</span><span>Destination</span><span class="step-state done">✓</span></div>
+              <div class="step"><span class="step-no">4</span><span>Médias</span><span class="step-state done">✓</span></div>
+              <div class="step"><span class="step-no">5</span><span>Programme</span><span class="step-state"></span></div>
+              <div class="step"><span class="step-no">6</span><span>Inclus / Exclus</span><span class="step-state"></span></div>
+              <div class="step"><span class="step-no">7</span><span>Catégories</span><span class="step-state done">✓</span></div>
+              <div class="step"><span class="step-no">8</span><span>Disponibilités</span><span class="step-state done">✓</span></div>
+              <div class="step"><span class="step-no">9</span><span>Vols</span><span class="step-state"></span></div>
+              <div class="step"><span class="step-no">10</span><span>Hôtels</span><span class="step-state"></span></div>
+              <div class="step"><span class="step-no">11</span><span>Transferts</span><span class="step-state"></span></div>
+            </div>
+            <button class="btn workflow-btn">Voir le workflow ↔</button>
+          </aside>
+
+          <section class="card editor-card">
+            <div class="tabs">
+              <button class="tab active">📋 Fiche commerciale</button>
+              <button class="tab">🔗 SEO & URL</button>
+              <button class="tab">▣ Présentation</button>
+              <button class="tab">⚙ Réglages</button>
+            </div>
+
+            <div class="form-body">
+              <div>
+                <div class="field">
+                  <label>Titre du voyage <span class="required">*</span></label>
+                  <input class="input" value="Séjour 4 jours à Dakhla à partir de 3980 DHs!" />
+                </div>
+
+                <div class="field">
+                  <label>URL du voyage <span class="required">*</span></label>
+                  <input class="input" value="sejour-4-jours-a-dakhla-a-partir-de-3980-dhs" />
+                  <div class="url-preview">
+                    https://www.ajinsafro.ma/voyages/sejour-4-jours-a-dakhla-a-partir-de-3980-dhs
+                    <button class="copy-btn">⧉</button>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Accroche courte</label>
+                  <textarea class="textarea">Profitez de votre séjour à l’extrême sud du Maroc, entre dunes de sable fin au bord d’une magnifique lagune aux eaux turquoise.</textarea>
+                  <div class="counter">118 / 160</div>
+                </div>
+
+                <div class="field" style="margin-bottom:0">
+                  <label>Présentation détaillée</label>
+                  <div class="rich-editor">
+                    <div class="toolbar">
+                      <button class="tool">↶</button>
+                      <button class="tool">↷</button>
+                      <button class="tool select-tool">Paragraphe⌄</button>
+                      <button class="tool">B</button>
+                      <button class="tool"><em>I</em></button>
+                      <button class="tool"><u>U</u></button>
+                      <button class="tool">≡</button>
+                      <button class="tool">☷</button>
+                      <button class="tool">🔗</button>
+                      <button class="tool">•••</button>
+                    </div>
+                    <div class="editor-content" contenteditable="true">
+                      <p>Profitez de votre séjour à l’extrême sud du Maroc, un séjour riche entre les dunes de sable fin au bord d’une magnifique lagune aux eaux turquoise.</p>
+                      <br />
+                      <p>Le vent chante sur la lagune, un dauphin jaillit des flots, les flamants roses traversent le soleil couchant, une immense raie passe sous votre planche et déjà le jour s’éteint.</p>
+                    </div>
+                    <div class="word-count">71 mots</div>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="settings-panel">
+                <div class="field">
+                  <label>Statut</label>
+                  <select class="select">
+                    <option>Publié</option>
+                    <option>Brouillon</option>
+                    <option>Archivé</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>Min. personnes</label>
+                  <input class="input" value="2" />
+                </div>
+
+                <div class="field">
+                  <label>Tarification par <span class="required">*</span></label>
+                  <select class="select">
+                    <option>Par personne</option>
+                    <option>Par chambre</option>
+                    <option>Par groupe</option>
+                  </select>
+                </div>
+
+                <label class="check-row"><input type="checkbox" checked /> Mettre en avant le voyage ⓘ</label>
+                <label class="check-row"><input type="checkbox" checked /> Afficher dans Group Deals ⓘ</label>
+              </aside>
+            </div>
+          </section>
+
+          <aside class="right-panel">
+            <div class="card info-card">
+              <h3>Progression</h3>
+              <div class="progress-big">11 <span>/ 14 étapes validées</span></div>
+              <div class="progress-line"><div class="progress-fill"></div></div>
+              <div class="progress-text"><span>Continuez ainsi ! Votre voyage est presque prêt.</span><strong>78%</strong></div>
+              <a href="#" class="link">Voir le workflow détaillé →</a>
+            </div>
+
+            <div class="card info-card">
+              <h3>Actions rapides</h3>
+              <div class="quick-list">
+                <div class="quick-item">⧉ Dupliquer ce voyage</div>
+                <div class="quick-item">👁 Aperçu rapide</div>
+                <div class="quick-item">🌐 Voir sur le site public</div>
+                <div class="quick-item">↺ Historique des modifications</div>
+              </div>
+            </div>
+
+            <div class="card info-card">
+              <h3>Résumé</h3>
+              <div class="summary-line"><span>ID Voyage</span><strong>#14825</strong></div>
+              <div class="summary-line"><span>Statut</span><strong><span class="mini-status">Publié</span></strong></div>
+              <div class="summary-line"><span>Destination</span><strong>Dakhla, Maroc</strong></div>
+              <div class="summary-line"><span>Départs programmés</span><strong>3</strong></div>
+              <div class="summary-line"><span>Prix de base</span><strong>3 980 MAD</strong></div>
+              <a href="#" class="link">Voir le détail complet →</a>
+            </div>
+
+            <div class="card info-card">
+              <div class="alert-head">
+                <h3 style="margin:0">Alertes</h3>
+                <span class="alert-count">1</span>
+              </div>
+              <div class="alert-box">
+                <div class="alert-icon">!</div>
+                <div>
+                  <div class="alert-title">Renseignez les vols</div>
+                  <div class="alert-desc">Ajoutez les informations de vol pour compléter votre voyage.</div>
+                  <a href="#" class="link" style="margin-top:0">Aller à l’étape Vols →</a>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>© 2026 Ajinsafro.ma — Tous droits réservés.</span>
+        <span>Admin V2.0</span>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

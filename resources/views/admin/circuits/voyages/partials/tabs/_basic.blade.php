@@ -14,16 +14,23 @@
                     <div class="mb-4">
                         <label for="slug" class="form-label">URL du voyage</label>
                         <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug', $voyage->post_name) }}">
+                        <div class="v3-slug-preview">
+                            <span class="v3-slug-preview__text" data-v3-slug-preview>{{ (rtrim(route('front.voyages.index'), '/') . '/' . ltrim((string) old('slug', $voyage->post_name), '/')) }}</span>
+                            <button type="button" class="v3-slug-preview__copy" data-v3-copy-slug>Copier</button>
+                        </div>
                     </div>
 
                     <div class="mb-4 ve-rich-field">
-                        <label for="content" class="form-label">Présentation détaillée</label>
-                        <textarea class="form-control rich-editor" id="content" name="content" rows="10">{{ old('content', $voyage->post_content) }}</textarea>
+                        <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+                            <label for="excerpt" class="form-label mb-0">Accroche courte</label>
+                            <span class="v3-field-counter" data-v3-counter-for="excerpt">{{ \Illuminate\Support\Str::length(trim(strip_tags((string) old('excerpt', $voyage->post_excerpt)))) }} / 160</span>
+                        </div>
+                        <textarea class="form-control" id="excerpt" name="excerpt" rows="4">{{ old('excerpt', $voyage->post_excerpt) }}</textarea>
                     </div>
 
                     <div class="mb-0 ve-rich-field">
-                        <label for="excerpt" class="form-label">Accroche courte</label>
-                        <textarea class="form-control rich-editor" id="excerpt" name="excerpt" rows="3">{{ old('excerpt', $voyage->post_excerpt) }}</textarea>
+                        <label for="content" class="form-label">Presentation detaillee</label>
+                        <textarea class="form-control rich-editor" id="content" name="content" rows="10">{{ old('content', $voyage->post_content) }}</textarea>
                     </div>
                 </div>
             </div>
@@ -36,11 +43,11 @@
                         <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-pulse text-primary"></i> Vue rapide</h5>
                         <ul class="list-unstyled small mb-0 ve-summary-list">
                             <li class="d-flex justify-content-between py-2 border-bottom">
-                                <span class="text-muted">Réf. voyage</span>
+                                <span class="text-muted">Ref. voyage</span>
                                 <span class="fw-semibold font-monospace">#{{ $veWpId ?: '-' }}</span>
                             </li>
                             <li class="d-flex justify-content-between py-2 border-bottom">
-                                <span class="text-muted">Départs</span>
+                                <span class="text-muted">Departs</span>
                                 <span class="fw-semibold">{{ $veDatesCount }}</span>
                             </li>
                             @if($vePriceLabel)
@@ -52,7 +59,7 @@
                             @if($veDestination)
                                 <li class="d-flex justify-content-between py-2">
                                     <span class="text-muted">Destination</span>
-                                    <span class="fw-semibold text-end small" style="max-width:55%">{{ Str::limit($veDestination, 40) }}</span>
+                                    <span class="fw-semibold text-end small" style="max-width:55%">{{ \Illuminate\Support\Str::limit($veDestination, 40) }}</span>
                                 </li>
                             @endif
                         </ul>
@@ -61,14 +68,14 @@
 
                 <div class="card ve-pane-card ve-basic-side-card mb-0">
                     <div class="card-body">
-                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> Réglages</h5>
+                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> Reglages</h5>
 
                         <div class="mb-3">
                             <label for="post_status" class="form-label">Statut</label>
                             <select class="form-select" id="post_status" name="post_status">
-                                <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>Publié</option>
+                                <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>Publie</option>
                                 <option value="draft" {{ old('post_status', $voyage->post_status) === 'draft' ? 'selected' : '' }}>Brouillon</option>
-                                <option value="private" {{ old('post_status', $voyage->post_status) === 'private' ? 'selected' : '' }}>Archivé</option>
+                                <option value="private" {{ old('post_status', $voyage->post_status) === 'private' ? 'selected' : '' }}>Archive</option>
                             </select>
                         </div>
 
@@ -83,7 +90,7 @@
                         <div class="mb-3">
                             <label for="tour_price_by" class="form-label">Tarification par</label>
                             <select class="form-select" id="tour_price_by" name="tour_price_by">
-                                <option value="">— Sélectionner —</option>
+                                <option value="">- Selectionner -</option>
                                 @foreach($tourPriceByOpts as $opt)
                                     <option value="{{ $opt['value'] }}" @selected(old('tour_price_by', $meta['tour_price_by'] ?? '') === $opt['value'])>{{ $opt['label'] }}</option>
                                 @endforeach
