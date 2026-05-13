@@ -40,8 +40,11 @@
 
             <div class="row g-2 mb-3">
                 <div class="col-md-6">
-                    <label class="form-label" for="reservation-departure-select">Départ <span class="text-danger">*</span></label>
-                    <select class="form-select" id="reservation-departure-select">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label mb-0" for="reservation-departure-select">Départ <span class="text-danger">*</span></label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btn-toggle-departure">Modifier</button>
+                    </div>
+                    <select class="form-select" id="reservation-departure-select" disabled>
                         <option value="">— Choisir un départ —</option>
                     </select>
                     <input type="hidden" name="departure_id" id="input-departure-id" value="{{ $initialDepartureId }}">
@@ -208,6 +211,39 @@
         travelers: [],
         roomAllocations: []
     };
+
+    var tourPreviousValue = tourSelect ? tourSelect.value : '';
+    var departurePreviousValue = departureSelect ? departureSelect.value : '';
+    var tourHidden = document.getElementById('tour_id_hidden');
+    if (tourSelect && tourHidden) {
+        tourHidden.value = tourSelect.value || '';
+    }
+
+    function hasDownstreamData() {
+        var companionsContainer = document.getElementById('companions-container');
+        var hasCompanionData = false;
+        if (companionsContainer) {
+            var companionRows = companionsContainer.querySelectorAll('.companion-row');
+            for (var i = 0; i < companionRows.length; i++) {
+                var first = companionRows[i].querySelector('input[name*="[first_name]"]');
+                var last = companionRows[i].querySelector('input[name*="[last_name]"]');
+                if ((first && String(first.value || '').trim() !== '') || (last && String(last.value || '').trim() !== '')) {
+                    hasCompanionData = true;
+                    break;
+                }
+            }
+        }
+        var hasRooming = window.reservationState && Array.isArray(window.reservationState.roomAllocations) && window.reservationState.roomAllocations.length > 0;
+        var hasLegacyRooms = false;
+        document.querySelectorAll('.reservation-room-count').forEach(function (input) {
+            if ((parseInt(input.value || '0', 10) || 0) > 0) {
+                hasLegacyRooms = true;
+            }
+        });
+        var paymentAmount = parseFloat(document.getElementById('payment_amount') && document.getElementById('payment_amount').value || '0') || 0;
+        var extrasTotal = typeof window.reservationCreateGetExtrasTotal === 'function' ? window.reservationCreateGetExtrasTotal() : 0;
+        return hasCompanionData || hasRooming || hasLegacyRooms || paymentAmount > 0 || extrasTotal > 0;
+    }
 
     function parseNumber(value) {
         var parsed = parseFloat(value || '0');
@@ -858,6 +894,7 @@
                 }
 
                 syncSummary();
+                departurePreviousValue = departureSelect ? departureSelect.value : '';
             })
             .catch(function () {
                 departureSelect.innerHTML = '<option value="">Erreur de chargement</option>';
@@ -888,10 +925,29 @@
 
     if (departureSelect) {
         departureSelect.addEventListener('change', function () {
+            if (departureSelect.disabled) {
+                return;
+            }
+            var newValue = this.value;
+            if (newValue === departurePreviousValue) {
+                syncDepartureHidden();
+                return;
+            }
+            if (hasDownstreamData()) {
+                if (!confirm('Changer la date de départ peut modifier les chambres, prix et disponibilités. Continuer ?')) {
+                    this.value = departurePreviousValue;
+                    syncDepartureHidden();
+                    return;
+                }
+            }
+            departurePreviousValue = newValue;
             syncDepartureHidden();
-            if (this.value) {
-                window.reservationState.selectedDepartureId = this.value;
-                loadDepartureRooms(this.value, window.reservationState.selectedTourId || null, window.reservationState.selectedTravelDateId || null);
+            if (typeof window.resetReservationDownstream === 'function') {
+                window.resetReservationDownstream({ tourChanged: false });
+            }
+            if (newValue) {
+                window.reservationState.selectedDepartureId = newValue;
+                loadDepartureRooms(newValue, window.reservationState.selectedTourId || null, window.reservationState.selectedTravelDateId || null);
             } else if (roomsContainer) {
                 roomsContainer.innerHTML = '<p class="text-muted mb-0">Choisissez un départ.</p>';
                 if (summaryBlock) summaryBlock.classList.add('d-none');
@@ -901,7 +957,28 @@
 
     if (tourSelect && !legacyEdit) {
         tourSelect.addEventListener('change', function () {
-            loadDeparturesForTour(this.value, '');
+            if (tourSelect.disabled) {
+                return;
+            }
+            var newValue = this.value;
+            if (newValue === tourPreviousValue) {
+                if (tourHidden) tourHidden.value = newValue;
+                return;
+            }
+            if (hasDownstreamData()) {
+                if (!confirm('Changer le voyage va réinitialiser les voyageurs, chambres, extras et paiement déjà saisis. Continuer ?')) {
+                    this.value = tourPreviousValue;
+                    if (tourHidden) tourHidden.value = tourPreviousValue;
+                    return;
+                }
+            }
+            tourPreviousValue = newValue;
+            if (tourHidden) tourHidden.value = newValue;
+            if (typeof window.resetReservationDownstream === 'function') {
+                window.resetReservationDownstream({ tourChanged: true });
+            }
+            departurePreviousValue = '';
+            loadDeparturesForTour(newValue, '');
         });
 
         if (tourSelect.value) {
@@ -922,6 +999,28 @@
             syncSummary();
         }
     });
+
+    var btnToggleTour = document.getElementById('btn-toggle-tour');
+    if (btnToggleTour && tourSelect) {
+        btnToggleTour.addEventListener('click', function () {
+            var isLocked = tourSelect.disabled;
+            tourSelect.disabled = !isLocked;
+            btnToggleTour.textContent = isLocked ? 'Verrouiller' : 'Modifier';
+            btnToggleTour.classList.toggle('btn-outline-primary', !isLocked);
+            btnToggleTour.classList.toggle('btn-outline-secondary', isLocked);
+        });
+    }
+
+    var btnToggleDeparture = document.getElementById('btn-toggle-departure');
+    if (btnToggleDeparture && departureSelect) {
+        btnToggleDeparture.addEventListener('click', function () {
+            var isLocked = departureSelect.disabled;
+            departureSelect.disabled = !isLocked;
+            btnToggleDeparture.textContent = isLocked ? 'Verrouiller' : 'Modifier';
+            btnToggleDeparture.classList.toggle('btn-outline-primary', !isLocked);
+            btnToggleDeparture.classList.toggle('btn-outline-secondary', isLocked);
+        });
+    }
 
     // Global wrapper function that uses state global if DOM elements not accessible
     window.reservationReloadRoomsFromState = function() {

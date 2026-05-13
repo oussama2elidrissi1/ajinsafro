@@ -1516,6 +1516,26 @@
         window.reservationCreateGetHotelSummary = hotelRoomSummary;
         window.reservationCreateRecomputeTotals = syncFinancialSummary;
 
+        window.resetReservationDownstream = function (options) {
+            options = options || {};
+            if (options.tourChanged) {
+                var companionsContainer = document.getElementById('companions-container');
+                if (companionsContainer) {
+                    companionsContainer.innerHTML = '';
+                }
+                syncTravelersEmptyState();
+                var paymentInput = document.getElementById('payment_amount');
+                if (paymentInput) {
+                    paymentInput.value = '';
+                }
+                renderExtras();
+            }
+            roomingAllocations = [];
+            window.reservationState.roomAllocations = [];
+            renderRooming();
+            syncFinancialSummary();
+        };
+
         // Expose setAccommodationMode globally and flush any queued calls
         if (typeof window.setAccommodationMode !== 'function') {
             window.setAccommodationMode = setAccommodationMode;

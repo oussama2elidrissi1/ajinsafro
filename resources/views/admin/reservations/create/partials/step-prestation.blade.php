@@ -22,8 +22,11 @@
 
         <div class="reservation-create__grid reservation-create__grid--two">
             <div class="reservation-create__field reservation-create__field--full">
-                <label class="reservation-create__label" for="select-tour-id">Voyage / circuit <span>*</span></label>
-                <select name="tour_id" class="reservation-create__input" required id="select-tour-id">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="reservation-create__label mb-0" for="select-tour-id">Voyage / circuit <span>*</span></label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-toggle-tour">Modifier</button>
+                </div>
+                <select class="reservation-create__input" required id="select-tour-id" disabled>
                     <option value="">Sélectionner un voyage…</option>
                     @foreach($voyages as $voyage)
                         @php
@@ -36,6 +39,7 @@
                         </option>
                     @endforeach
                 </select>
+                <input type="hidden" name="tour_id" id="tour_id_hidden" value="{{ old('tour_id', $selectedTourId) }}">
             </div>
         </div>
 
