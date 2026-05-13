@@ -6,8 +6,10 @@
     use App\Models\Reservation;
     use Illuminate\Support\Facades\Storage;
 
+    $offerImageUrl = $offerImageUrl ?? null;
+    $offer = $offer ?? null;
     $client = $dossier->client ?: $reservation->client;
-    $offer = $reservation->offer;
+    $offer = $offer ?: ($reservation->offer ?? $reservation->voyage ?? $reservation->tour ?? null);
     $departure = $reservation->departure;
     $payments = $dossier->payments->isNotEmpty() ? $dossier->payments : $reservation->payments;
     $documents = $dossier->documents->isNotEmpty() ? $dossier->documents : $reservation->documents;

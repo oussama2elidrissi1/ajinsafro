@@ -8,9 +8,11 @@ use App\Models\ReservationDossier;
 use App\Models\User;
 use App\Models\Voyage;
 use App\Services\ReservationVisibilityService;
+use App\Services\Wp\WpHeroImageService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ReservationDossierController extends Controller
 {
@@ -143,11 +145,17 @@ class ReservationDossierController extends Controller
             'documents.creator',
             'histories.user',
             'reservations.offer',
+            'reservations.offer.images',
+            'reservations.voyage.images',
+            'reservations.tour.images',
             'reservations.departure',
             'reservations.passengers',
             'reservations.extras',
             'reservations.reservationRooms.departureHotelRoom',
             'mainReservation.offer',
+            'mainReservation.offer.images',
+            'mainReservation.voyage.images',
+            'mainReservation.tour.images',
             'mainReservation.departure',
             'mainReservation.passengers',
             'mainReservation.extras',
@@ -171,9 +179,47 @@ class ReservationDossierController extends Controller
             $backUrl = route('admin.reservation-dossiers.index');
         }
 
+        $offer = $reservation->voyage
+            ?? $reservation->offer
+            ?? $reservation->tour
+            ?? null;
+
+        $offerImageUrl = null;
+
+        if ($offer) {
+            if (! empty($offer->image_url)) {
+                $offerImageUrl = $offer->image_url;
+            } elseif (! empty($offer->featured_image_url)) {
+                $offerImageUrl = $offer->featured_image_url;
+            } elseif (! empty($offer->cover_image)) {
+                $offerImageUrl = asset('storage/'.ltrim((string) $offer->cover_image, '/'));
+            } elseif (! empty($offer->thumbnail)) {
+                $offerImageUrl = asset('storage/'.ltrim((string) $offer->thumbnail, '/'));
+            } elseif (! empty($offer->featured_image)) {
+                $featuredImage = (string) $offer->featured_image;
+                $offerImageUrl = str_starts_with($featuredImage, 'http://') || str_starts_with($featuredImage, 'https://')
+                    ? $featuredImage
+                    : Storage::disk('public')->url($featuredImage);
+            } elseif (! empty($offer->wp_image_url)) {
+                $offerImageUrl = $offer->wp_image_url;
+            } elseif ((int) ($offer->wp_post_id ?? 0) > 0) {
+                $heroImageId = \App\Models\Wp\WpPostMeta::query()
+                    ->where('post_id', (int) $offer->wp_post_id)
+                    ->whereIn('meta_key', ['_tour_hero_image_id', '_thumbnail_id'])
+                    ->orderByRaw("FIELD(meta_key, '_tour_hero_image_id', '_thumbnail_id')")
+                    ->value('meta_value');
+
+                if ((int) $heroImageId > 0) {
+                    $offerImageUrl = WpHeroImageService::publicUrlForAttachmentId((int) $heroImageId);
+                }
+            }
+        }
+
         return view('admin.reservation-dossiers.show', [
             'dossier' => $reservationDossier,
             'reservation' => $reservation,
+            'offer' => $offer,
+            'offerImageUrl' => $offerImageUrl,
             'backUrl' => $backUrl,
         ]);
     }
