@@ -1,4 +1,4 @@
-<section class="reservation-create__panel" data-create-step="6" hidden>
+<section class="reservation-create__panel" data-create-step="6" data-reservation-step="6" hidden>
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
@@ -95,7 +95,7 @@
     </div>
 
     <div class="reservation-create__actions reservation-create__actions--final">
-        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev>Retour</button>
+        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="5">Retour</button>
         <div class="reservation-create__submit-group">
             <a href="{{ route('admin.reservations.workspace') }}" class="reservation-create__button reservation-create__button--ghost">Annuler</a>
             <button type="submit" class="reservation-create__button reservation-create__button--primary">Confirmer la réservation</button>

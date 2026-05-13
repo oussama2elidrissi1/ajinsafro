@@ -6,14 +6,20 @@
     var roomingAllocations = [];
     var availableRoomTypes = [];
     window.reservationState = window.reservationState || {
+        currentStep: 1,
         selectedTourId: null,
         selectedDepartureId: null,
         selectedTravelDateId: null,
         pricing: {},
         availableRooms: [],
+        roomsMode: null,
         travelers: [],
-        roomAllocations: []
+        roomAllocations: [],
+        extras: [],
+        payment: {}
     };
+    window.currentStep = currentStep;
+    console.log('[Reservation Create] JS loaded');
 
     function parseJsonScript(id, fallback) {
         var el = document.getElementById(id);
@@ -478,7 +484,8 @@
         var target = document.getElementById('rooming-available-rooms');
         if (!target) return;
         if (!availableRoomTypes.length) {
-            target.innerHTML = '<div class="reservation-create__placeholder">Aucune chambre detaillee chargee pour ce depart.</div>';
+            target.innerHTML = '<div class="reservation-create__placeholder">Aucune chambre detaillee chargee pour ce depart.</div>' +
+                '<button type="button" class="reservation-create__button reservation-create__button--secondary mt-2" id="btn-reload-rooms">Recharger les chambres</button>';
             return;
         }
         target.innerHTML = availableRoomTypes.map(function (room) {
@@ -573,14 +580,19 @@
     function autoRooming() {
         var travelers = travelerRows().filter(function (t) { return t.consumesBed; });
         var stats = travelerStats();
+        console.log('[Rooming] runAutoRooming', { travelers: travelers, rooms: availableRoomTypes });
+        if (!travelers.length) {
+            showRoomingAlert('Ajoutez au moins un voyageur avant la repartition.');
+            return;
+        }
+        if (!availableRoomTypes.length) {
+            showRoomingAlert('Aucune chambre disponible chargee pour ce depart.');
+            return;
+        }
         if (stats.genderUnknown > 0) {
             roomingAllocations = [];
             renderRooming();
-            var alerts = document.getElementById('rooming-alerts');
-            if (alerts) {
-                alerts.classList.remove('d-none');
-                alerts.innerHTML = '<strong>Alertes rooming</strong><ul><li>Veuillez renseigner le sexe de tous les voyageurs pour faire la repartition des chambres.</li></ul>';
-            }
+            showRoomingAlert('Veuillez renseigner le sexe de tous les voyageurs pour faire la repartition des chambres.');
             return;
         }
         var result = [];
@@ -635,6 +647,37 @@
         roomingAllocations = result;
         window.reservationState.roomAllocations = roomingAllocations;
         renderRooming();
+    }
+
+    function showRoomingAlert(message) {
+        var alerts = document.getElementById('rooming-alerts');
+        if (!alerts) {
+            showInlineError(message);
+            return;
+        }
+        alerts.classList.remove('d-none');
+        alerts.innerHTML = '<strong>Alertes rooming</strong><ul><li>' + message + '</li></ul>';
+    }
+
+    function addManualRoomAllocation() {
+        console.log('[Rooming] Add room clicked', { rooms: availableRoomTypes });
+        if (!availableRoomTypes.length) {
+            showRoomingAlert('Aucune chambre disponible chargee pour ce depart.');
+            return;
+        }
+        var room = availableRoomTypes[0];
+        roomingAllocations.push(makeAllocation(room, [], room.capacity === 1 ? 'single' : 'full'));
+        window.reservationState.roomAllocations = roomingAllocations;
+        renderRooming();
+        syncFinancialSummary();
+    }
+
+    function resetRooming() {
+        console.log('[Rooming] Reset clicked');
+        roomingAllocations = [];
+        window.reservationState.roomAllocations = [];
+        renderRooming();
+        syncFinancialSummary();
     }
 
     function renderRooming() {
@@ -996,11 +1039,15 @@
         var max = panels.length;
         var next = Math.max(1, Math.min(Number(step) || 1, max));
         currentStep = next;
+        window.currentStep = next;
+        window.reservationState.currentStep = next;
+        console.log('[Workflow] goToStep', next);
 
         panels.forEach(function (panel) {
             var isActive = Number(panel.getAttribute('data-create-step')) === next;
             panel.classList.toggle('is-active', isActive);
             panel.hidden = !isActive;
+            panel.classList.toggle('d-none', !isActive);
         });
 
         document.querySelectorAll('[data-create-step-nav]').forEach(function (button) {
@@ -1011,6 +1058,21 @@
 
         syncFinancialSummary();
         clearInlineError();
+        if (next === 3) {
+            setAvailableRoomTypes(window.reservationState.availableRooms || window.reservationAvailableRooms || []);
+            renderRooming();
+        }
+    }
+
+    function goToStep(step) {
+        var target = Number(step) || currentStep;
+        console.log('[Workflow] Next step:', target);
+        if (target > currentStep && !validateStep(currentStep)) {
+            console.warn('[Workflow] Step validation failed', currentStep);
+            return false;
+        }
+        setStep(target);
+        return true;
     }
 
     function addCompanion() {
@@ -1144,43 +1206,62 @@
             }
         });
 
-        form.addEventListener('click', function (event) {
+        document.addEventListener('click', function (event) {
             var target = event.target;
-            if (!target) return;
+            if (!target || !target.closest('#reservation-create-form')) return;
 
-            if (target.id === 'btn-add-companion') {
+            var addCompanionBtn = target.closest('#btn-add-companion');
+            if (addCompanionBtn) {
                 event.preventDefault();
+                console.log('[Travelers] Add companion clicked');
                 addCompanion();
                 renderRooming();
+                return;
             }
 
-            if (target.id === 'btn-rooming-auto') {
+            var autoBtn = target.closest('#btn-rooming-auto, #btn-auto-rooming');
+            if (autoBtn) {
                 event.preventDefault();
+                console.log('[Rooming] Auto clicked');
                 autoRooming();
                 syncFinancialSummary();
+                return;
             }
 
-            if (target.id === 'btn-rooming-reset') {
+            var resetBtn = target.closest('#btn-rooming-reset, #btn-reset-rooming');
+            if (resetBtn) {
                 event.preventDefault();
-                roomingAllocations = [];
-                window.reservationState.roomAllocations = [];
-                renderRooming();
-                syncFinancialSummary();
+                resetRooming();
+                return;
             }
 
-            if (target.id === 'btn-rooming-add') {
+            var addRoomBtn = target.closest('#btn-rooming-add, #btn-add-room-allocation');
+            if (addRoomBtn) {
                 event.preventDefault();
-                var room = availableRoomTypes[0];
-                if (room) {
-                    roomingAllocations.push(makeAllocation(room, [], room.capacity === 1 ? 'single' : 'full'));
-                    renderRooming();
-                    syncFinancialSummary();
+                addManualRoomAllocation();
+                return;
+            }
+
+            var reloadBtn = target.closest('#btn-reload-rooms');
+            if (reloadBtn) {
+                event.preventDefault();
+                console.log('[Rooming] Reload rooms clicked');
+                if (typeof window.reservationCreateReloadDepartureRooms === 'function') {
+                    window.reservationCreateReloadDepartureRooms();
+                    return;
                 }
+                setAvailableRoomTypes(window.reservationAvailableRooms || window.reservationState.availableRooms || []);
+                if (!availableRoomTypes.length) {
+                    showRoomingAlert('Aucune chambre n est encore chargee. Retournez a l etape Prestation et choisissez un depart.');
+                }
+                return;
             }
 
-            if (target.classList.contains('btn-remove-companion')) {
+            var removeCompanionBtn = target.closest('.btn-remove-companion');
+            if (removeCompanionBtn) {
                 event.preventDefault();
-                var row = target.closest('.companion-row');
+                console.log('[Travelers] Remove companion clicked');
+                var row = removeCompanionBtn.closest('.companion-row');
                 if (row) {
                     row.remove();
                     syncTravelersEmptyState();
@@ -1188,27 +1269,35 @@
                     renderRooming();
                     syncFinancialSummary();
                 }
+                return;
             }
 
-            if (target.hasAttribute('data-create-next')) {
+            var nextBtn = target.closest('[data-create-next], [data-step-next]');
+            if (nextBtn) {
                 event.preventDefault();
-                if (validateStep(currentStep)) {
-                    setStep(currentStep + 1);
-                }
+                var nextStep = nextBtn.hasAttribute('data-step-next')
+                    ? parseInt(nextBtn.getAttribute('data-step-next') || '0', 10)
+                    : currentStep + 1;
+                goToStep(nextStep);
+                return;
             }
 
-            if (target.hasAttribute('data-create-prev')) {
+            var prevBtn = target.closest('[data-create-prev], [data-step-back]');
+            if (prevBtn) {
                 event.preventDefault();
-                setStep(currentStep - 1);
+                var prevStep = prevBtn.hasAttribute('data-step-back')
+                    ? parseInt(prevBtn.getAttribute('data-step-back') || '0', 10)
+                    : currentStep - 1;
+                console.log('[Workflow] Back step:', prevStep);
+                setStep(prevStep);
+                return;
             }
 
-            if (target.hasAttribute('data-create-step-nav')) {
+            var navBtn = target.closest('[data-create-step-nav]');
+            if (navBtn) {
                 event.preventDefault();
-                var requested = Number(target.getAttribute('data-create-step-nav'));
-                if (requested > currentStep && !validateStep(currentStep)) {
-                    return;
-                }
-                setStep(requested);
+                var requested = Number(navBtn.getAttribute('data-create-step-nav'));
+                goToStep(requested);
             }
         });
 
@@ -1246,6 +1335,8 @@
             setAvailableRoomTypes(event && event.detail ? event.detail.rooms : []);
         });
         setStep(1);
+        console.log('[Reservation Create] Current step:', window.currentStep);
+        console.log('[Reservation Create] State:', window.reservationState);
 
         window.reservationCreateCollectExtras = collectExtras;
         window.reservationCreateGetExtrasTotal = function () {

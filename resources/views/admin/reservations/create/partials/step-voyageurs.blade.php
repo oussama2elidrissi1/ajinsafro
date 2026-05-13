@@ -1,4 +1,4 @@
-<section class="reservation-create__panel" data-create-step="3" hidden>
+<section class="reservation-create__panel" data-create-step="3" data-reservation-step="3" hidden>
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
@@ -36,9 +36,9 @@
         </div>
 
         <div class="reservation-create__rooming-actions">
-            <button type="button" class="reservation-create__button reservation-create__button--primary" id="btn-rooming-auto">Repartition automatique</button>
-            <button type="button" class="reservation-create__button reservation-create__button--ghost" id="btn-rooming-add">Ajouter chambre</button>
-            <button type="button" class="reservation-create__button reservation-create__button--secondary" id="btn-rooming-reset">Reinitialiser</button>
+            <button type="button" class="reservation-create__button reservation-create__button--primary" id="btn-auto-rooming">Repartition automatique</button>
+            <button type="button" class="reservation-create__button reservation-create__button--ghost" id="btn-add-room-allocation">Ajouter chambre</button>
+            <button type="button" class="reservation-create__button reservation-create__button--secondary" id="btn-reset-rooming">Reinitialiser</button>
         </div>
 
         <div class="reservation-create__rooming-board" id="rooming-allocation-board"></div>
@@ -47,7 +47,7 @@
     </div>
 
     <div class="reservation-create__actions">
-        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev>Retour</button>
-        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next>Continuer</button>
+        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="2">Retour</button>
+        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="4">Continuer</button>
     </div>
 </section>

@@ -499,6 +499,7 @@
         window.reservationDepartureRoomsPayload = payload || {};
         window.reservationState.availableRooms = window.reservationAvailableRooms;
         window.reservationState.pricing = pricing || {};
+        window.reservationState.roomsMode = payload && payload.mode ? payload.mode : null;
         window.reservationState.selectedTourId = tourSelect && tourSelect.value ? tourSelect.value : null;
         window.reservationState.selectedDepartureId = inputDepartureId && inputDepartureId.value ? inputDepartureId.value : null;
         window.reservationState.selectedTravelDateId = inputTravelDateId && inputTravelDateId.value ? inputTravelDateId.value : null;
@@ -864,6 +865,7 @@
         }
     });
 
+    window.reservationCreateReloadDepartureRooms = loadDepartureRooms;
     window.reservationCreateRecomputeTotals = window.reservationCreateRecomputeTotals || syncSummary;
 })();
 </script>

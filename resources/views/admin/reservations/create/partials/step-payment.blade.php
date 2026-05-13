@@ -1,4 +1,4 @@
-<section class="reservation-create__panel" data-create-step="5" hidden>
+<section class="reservation-create__panel" data-create-step="5" data-reservation-step="5" hidden>
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
@@ -83,7 +83,7 @@
     </div>
 
     <div class="reservation-create__actions">
-        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev>Retour</button>
-        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next>Continuer</button>
+        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="4">Retour</button>
+        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="6">Continuer</button>
     </div>
 </section>

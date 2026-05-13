@@ -3,7 +3,7 @@
     $wpTitles = $wpTitles ?? collect();
 @endphp
 
-<section class="reservation-create__panel is-active" data-create-step="1">
+<section class="reservation-create__panel is-active" data-create-step="1" data-reservation-step="1">
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
@@ -72,6 +72,6 @@
 
     <div class="reservation-create__actions">
         <span></span>
-        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next>Continuer</button>
+        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="2">Continuer</button>
     </div>
 </section>
