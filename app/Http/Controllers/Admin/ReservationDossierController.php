@@ -165,9 +165,16 @@ class ReservationDossierController extends Controller
 
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403);
 
+        $backUrl = url()->previous();
+
+        if (! $backUrl || str_contains($backUrl, '/admin/reservation-dossiers/'.$reservationDossier->id)) {
+            $backUrl = route('admin.reservation-dossiers.index');
+        }
+
         return view('admin.reservation-dossiers.show', [
             'dossier' => $reservationDossier,
             'reservation' => $reservation,
+            'backUrl' => $backUrl,
         ]);
     }
 }

@@ -580,7 +580,7 @@
             </div>
 
             <div class="dossier-actions">
-                <a href="{{ $backUrl }}" class="dossier-btn dossier-btn-soft">
+                <a href="{{ $backUrl ?? route('admin.reservation-dossiers.index') }}" class="dossier-btn dossier-btn-soft">
                     <i class="bx bx-arrow-back"></i>
                     <span>Retour</span>
                 </a>
