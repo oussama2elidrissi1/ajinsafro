@@ -677,7 +677,10 @@ class ReservationsController extends Controller
         $this->mergeDepartureFromLegacyRequest($request);
 
         $data = $request->validate($this->reservationValidationRules());
+        $data['passengers'] = $this->mergeMainTravelerIntoPassengers($request, $data);
         $this->validateDepartureMatchesTour($data);
+        $data['room_allocations_payload'] = $this->extractRoomAllocationsPayloadFromRequest($request);
+        $this->validateRoomingPayload($data['passengers'], $data['room_allocations_payload']);
 
         $pricingContext = $this->buildReservationPricingContext($request, $data);
         $extrasPayload = $pricingContext['extras_payload'];
@@ -686,7 +689,7 @@ class ReservationsController extends Controller
 
         // Enforce room selection when accommodation_mode == rooms
         $accommodationMode = (string) ($data['accommodation_mode'] ?? ($request->input('accommodation_mode') ?? 'rooms'));
-        if ($accommodationMode === 'rooms') {
+        if ($accommodationMode === 'rooms' && empty($data['room_allocations_payload'])) {
             $hotelRooms = $data['hotel_rooms'] ?? $request->input('hotel_rooms', []);
             if (! is_array($hotelRooms) || count($hotelRooms) === 0) {
                 throw ValidationException::withMessages([
@@ -1036,6 +1039,7 @@ class ReservationsController extends Controller
             'travel_date_id' => 'nullable|integer',
             'payment_amount' => 'nullable|numeric|min:0',
             'extras_json' => 'nullable|string',
+            'room_allocations_json' => 'nullable|string',
             'hotel_rooms' => 'nullable|array',
             'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',
             'hotel_rooms.*.room_count' => 'nullable|integer|min:0',
@@ -1221,6 +1225,10 @@ class ReservationsController extends Controller
             'client_address' => 'nullable|string|max:255',
             'client_document_type' => 'nullable|string|max:50',
             'client_document_number' => 'nullable|string|max:100',
+            'client_birth_date' => 'nullable|date',
+            'client_gender' => 'nullable|in:male,female',
+            'client_traveler_type' => 'nullable|in:adult,child,infant',
+            'client_consumes_bed' => 'nullable|boolean',
             'payment_type' => 'nullable|string|max:50',
             'payment_receipt' => 'nullable|file|max:5120',
             'base_price' => 'nullable|numeric|min:0',
@@ -1246,6 +1254,9 @@ class ReservationsController extends Controller
             'passengers.*.first_name' => 'nullable|string|max:100',
             'passengers.*.last_name' => 'nullable|string|max:100',
             'passengers.*.type' => 'nullable|in:adult,child,infant',
+            'passengers.*.gender' => 'nullable|in:male,female',
+            'passengers.*.relationship_to_main' => 'nullable|in:spouse,child,parent,friend,group,solo',
+            'passengers.*.consumes_bed' => 'nullable|boolean',
             'passengers.*.birth_date' => 'nullable|date',
             'passengers.*.document_type' => 'nullable|string|max:50',
             'passengers.*.document_number' => 'nullable|string|max:100',
@@ -1272,13 +1283,119 @@ class ReservationsController extends Controller
         return is_array($decoded) ? array_values($decoded) : [];
     }
 
+    private function extractRoomAllocationsPayloadFromRequest(Request $request): array
+    {
+        if (! $request->filled('room_allocations_json')) {
+            return [];
+        }
+
+        $decoded = json_decode($request->string('room_allocations_json')->toString(), true);
+
+        return is_array($decoded) ? array_values($decoded) : [];
+    }
+
+    private function mergeMainTravelerIntoPassengers(Request $request, array $data): array
+    {
+        $passengers = is_array($data['passengers'] ?? null) ? $data['passengers'] : [];
+        $passengers['__main'] = [
+            'traveler_key' => 'main',
+            'first_name' => $data['client_first_name'] ?? null,
+            'last_name' => $data['client_last_name'] ?? null,
+            'type' => $request->input('client_traveler_type', 'adult'),
+            'gender' => $request->input('client_gender'),
+            'birth_date' => $request->input('client_birth_date'),
+            'document_type' => $data['client_document_type'] ?? null,
+            'document_number' => $data['client_document_number'] ?? null,
+            'nationality' => $request->input('client_nationality'),
+            'relationship_to_main' => 'main',
+            'consumes_bed' => $request->boolean('client_consumes_bed', true),
+        ];
+
+        return $passengers;
+    }
+
+    private function validateRoomingPayload(array $passengers, array $allocations): void
+    {
+        if ($allocations === []) {
+            return;
+        }
+
+        $travelers = collect($passengers)
+            ->filter(fn ($row) => is_array($row))
+            ->mapWithKeys(function (array $row, $key) {
+                $travelerKey = (string) ($row['traveler_key'] ?? ($key === '__main' ? 'main' : $key));
+
+                return [$travelerKey => [
+                    'gender' => $row['gender'] ?? null,
+                    'relationship' => $row['relationship_to_main'] ?? null,
+                    'consumes_bed' => filter_var($row['consumes_bed'] ?? true, FILTER_VALIDATE_BOOLEAN),
+                ]];
+            });
+
+        $assigned = [];
+        foreach ($allocations as $index => $allocation) {
+            if (! is_array($allocation)) {
+                continue;
+            }
+
+            $capacity = max(0, (int) ($allocation['capacity'] ?? 0));
+            $travelerKeys = is_array($allocation['traveler_keys'] ?? null) ? $allocation['traveler_keys'] : [];
+            if ($capacity <= 0 || count($travelerKeys) > $capacity) {
+                throw ValidationException::withMessages([
+                    "room_allocations.{$index}" => ['Capacite chambre invalide.'],
+                ]);
+            }
+
+            foreach ($travelerKeys as $travelerKey) {
+                if (isset($assigned[$travelerKey])) {
+                    throw ValidationException::withMessages([
+                        'room_allocations' => ['Un voyageur est affecte deux fois.'],
+                    ]);
+                }
+                $assigned[$travelerKey] = true;
+            }
+
+            $genders = collect($travelerKeys)
+                ->map(fn ($key) => $travelers->get($key)['gender'] ?? null)
+                ->filter()
+                ->unique()
+                ->values();
+            $relations = collect($travelerKeys)
+                ->map(fn ($key) => $travelers->get($key)['relationship'] ?? null)
+                ->filter()
+                ->unique()
+                ->values();
+            $mode = (string) ($allocation['occupancy_mode'] ?? '');
+            $familyAllowed = in_array($mode, ['family'], true)
+                || $relations->intersect(['spouse', 'child', 'parent', 'main'])->isNotEmpty();
+
+            if ($genders->count() > 1 && ! $familyAllowed) {
+                throw ValidationException::withMessages([
+                    "room_allocations.{$index}" => ['Melange homme/femme interdit sans relation couple ou famille.'],
+                ]);
+            }
+        }
+
+        $missing = $travelers
+            ->filter(fn ($row) => (bool) ($row['consumes_bed'] ?? true))
+            ->keys()
+            ->filter(fn ($key) => ! isset($assigned[$key]))
+            ->values();
+
+        if ($missing->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'room_allocations' => ['Tous les voyageurs qui consomment un lit doivent etre affectes a une chambre.'],
+            ]);
+        }
+    }
+
     /**
      * @param  array<string, mixed>  $data
      * @return array{pricing: array<string, mixed>, extras_payload: array<int, array<string, mixed>>, payment_amount: float, travelers_count: int}
      */
     private function buildReservationPricingContext(Request $request, array $data): array
     {
-        $travelersCount = $this->computeTotalTravelers($request->input('passengers', []));
+        $travelersCount = $this->computeTotalTravelers($data['passengers'] ?? $request->input('passengers', []));
         $accommodationMode = (string) ($request->input('accommodation_mode') ?? 'rooms');
 
         $extrasPayload = $this->extractExtrasPayloadFromRequest($request);
@@ -1289,7 +1406,8 @@ class ReservationsController extends Controller
             'departure_id' => (int) $data['departure_id'],
             'travel_date_id' => (int) ($data['travel_date_id'] ?? 0),
             'hotel_rooms' => $request->input('hotel_rooms', []),
-            'passengers' => $request->input('passengers', []),
+            'room_allocations' => $this->extractRoomAllocationsPayloadFromRequest($request),
+            'passengers' => $data['passengers'] ?? $request->input('passengers', []),
             'extras_json' => $extrasPayload,
             'payment_amount' => $paymentAmount,
             'accommodation_mode' => $accommodationMode,
@@ -1341,7 +1459,7 @@ class ReservationsController extends Controller
 
     private function computeTotalTravelers(array $passengers): int
     {
-        $count = 1;
+        $count = isset($passengers['__main']) ? 0 : 1;
         foreach ($passengers as $p) {
             if (! is_array($p)) {
                 continue;

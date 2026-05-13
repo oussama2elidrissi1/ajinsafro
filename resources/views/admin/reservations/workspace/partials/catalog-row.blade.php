@@ -316,27 +316,6 @@
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
                 </button>
             @endif
-            @can('reservations.view')
-                @if($hasLaravel)
-                    <button type="button"
-                        class="ws-btn ws-btn--primary ws-btn--sm btn-ws-open-reserve"
-                        data-row-code="{{ e($row['code']) }}"
-                        title="{{ $reserveLabel }}">
-                        @if($typeKey === 'vol')
-                            <i class="fas fa-plane-departure" aria-hidden="true"></i>
-                        @else
-                            <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
-                        @endif
-                        <span>{{ $reserveLabel }}</span>
-                    </button>
-                @else
-                    <a href="{{ $editTourUrl ?: '#' }}"
-                        class="ws-btn ws-btn--sm {{ $editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled' }}"
-                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}>
-                        <i class="fas fa-link" aria-hidden="true"></i><span>Lier</span>
-                    </a>
-                @endif
-            @endcan
         </div>
     </div>
 </article>

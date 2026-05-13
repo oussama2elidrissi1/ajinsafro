@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Reservation extends Model
 {
@@ -121,6 +121,12 @@ class Reservation extends Model
         'dossier_status',
         'payment_status',
         'passengers_count',
+        'adults_count',
+        'children_count',
+        'infants_count',
+        'male_count',
+        'female_count',
+        'rooming_status',
         'notes',
         'total_base',
         'paid_amount',
@@ -156,6 +162,11 @@ class Reservation extends Model
         'created_by_user_id' => 'integer',
         'updated_by' => 'integer',
         'passengers_count' => 'integer',
+        'adults_count' => 'integer',
+        'children_count' => 'integer',
+        'infants_count' => 'integer',
+        'male_count' => 'integer',
+        'female_count' => 'integer',
         'total_base' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'extras_total' => 'decimal:2',
@@ -169,6 +180,11 @@ class Reservation extends Model
     public function reservationRooms(): HasMany
     {
         return $this->hasMany(ReservationRoom::class);
+    }
+
+    public function roomAllocations(): HasMany
+    {
+        return $this->hasMany(ReservationRoomAllocation::class);
     }
 
     public function passengers(): HasMany

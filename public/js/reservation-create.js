@@ -3,6 +3,8 @@
 
     var currentStep = 1;
     var extrasMap = {};
+    var roomingAllocations = [];
+    var availableRoomTypes = [];
 
     function parseJsonScript(id, fallback) {
         var el = document.getElementById(id);
@@ -35,15 +37,7 @@
     }
 
     function getTravelerCount() {
-        var count = 1;
-        document.querySelectorAll('#companions-container .companion-row').forEach(function (row) {
-            var first = row.querySelector('input[name*="[first_name]"]');
-            var last = row.querySelector('input[name*="[last_name]"]');
-            if (String(first && first.value || '').trim() !== '' || String(last && last.value || '').trim() !== '') {
-                count += 1;
-            }
-        });
-        return count;
+        return travelerRows().length;
     }
 
     function principalTravelerLabel() {
@@ -63,17 +57,28 @@
     }
 
     function travelerRows() {
+        var principalType = String(document.getElementById('client_traveler_type') && document.getElementById('client_traveler_type').value || 'adult');
+        var principalGender = String(document.getElementById('client_gender') && document.getElementById('client_gender').value || '');
+        var principalConsumesBed = String(document.getElementById('client_consumes_bed') && document.getElementById('client_consumes_bed').value || '1') !== '0';
         var rows = [{
-            id: 'principal',
+            id: 'main',
             label: principalTravelerLabel(),
-            type: 'adult',
-            priceType: 'adult'
+            type: principalType,
+            travelerType: principalType,
+            gender: principalGender,
+            relationship: 'main',
+            consumesBed: principalConsumesBed,
+            priceType: principalType === 'child' ? 'child' : 'adult',
+            isMain: true
         }];
 
         document.querySelectorAll('#companions-container .companion-row').forEach(function (row, index) {
             var first = row.querySelector('input[name*="[first_name]"]');
             var last = row.querySelector('input[name*="[last_name]"]');
             var typeSelect = row.querySelector('select[name*="[type]"]');
+            var genderSelect = row.querySelector('select[name*="[gender]"]');
+            var relationSelect = row.querySelector('select[name*="[relationship_to_main]"]');
+            var consumesBedSelect = row.querySelector('select[name*="[consumes_bed]"]');
             var firstName = String(first && first.value || '').trim();
             var lastName = String(last && last.value || '').trim();
             if (firstName === '' && lastName === '') {
@@ -85,7 +90,12 @@
                 id: 'companion_' + index,
                 label: [firstName, lastName].filter(Boolean).join(' ') || ('Accompagnant #' + (index + 1)),
                 type: type,
-                priceType: type === 'child' ? 'child' : 'adult'
+                travelerType: type,
+                gender: String(genderSelect && genderSelect.value || ''),
+                relationship: String(relationSelect && relationSelect.value || 'group'),
+                consumesBed: String(consumesBedSelect && consumesBedSelect.value || '1') !== '0',
+                priceType: type === 'child' ? 'child' : 'adult',
+                isMain: false
             });
         });
 
@@ -378,13 +388,292 @@
         }, 0);
     }
 
+    function travelerStats() {
+        var rows = travelerRows();
+        return rows.reduce(function (stats, traveler) {
+            stats.total += 1;
+            if (traveler.consumesBed) stats.beds += 1;
+            if (traveler.type === 'child') stats.child += 1;
+            else if (traveler.type === 'infant') stats.infant += 1;
+            else stats.adult += 1;
+            if (traveler.gender === 'male') stats.male += 1;
+            if (traveler.gender === 'female') stats.female += 1;
+            return stats;
+        }, { total: 0, adult: 0, child: 0, infant: 0, male: 0, female: 0, beds: 0 });
+    }
+
+    function setStat(selector, value) {
+        document.querySelectorAll(selector).forEach(function (el) { el.textContent = String(value); });
+    }
+
+    function syncTravelerStats() {
+        var stats = travelerStats();
+        setStat('[data-traveler-stat="total"]', stats.total);
+        setStat('[data-traveler-stat="adult"]', stats.adult);
+        setStat('[data-traveler-stat="child"]', stats.child);
+        setStat('[data-traveler-stat="infant"]', stats.infant);
+        setStat('[data-traveler-stat="male"]', stats.male);
+        setStat('[data-traveler-stat="female"]', stats.female);
+        setStat('[data-rooming-stat="total"]', stats.total);
+        setStat('[data-rooming-stat="adult"]', stats.adult);
+        setStat('[data-rooming-stat="child"]', stats.child);
+        setStat('[data-rooming-stat="infant"]', stats.infant);
+        setStat('[data-rooming-stat="male"]', stats.male);
+        setStat('[data-rooming-stat="female"]', stats.female);
+        setStat('[data-rooming-stat="beds"]', stats.beds);
+    }
+
+    function flattenAvailableRooms(groups) {
+        var rows = [];
+        (Array.isArray(groups) ? groups : []).forEach(function (hotel) {
+            var hotelRooms = Array.isArray(hotel.rooms) ? hotel.rooms : [hotel];
+            hotelRooms.forEach(function (room) {
+                var sourceId = room.tour_hotel_room_id || room.departure_hotel_room_id || room.room_source_id || room.id || null;
+                var capacity = parseInt(room.capacity || room.capacity_total || '0', 10) || 0;
+                var availableRooms = parseInt(room.available_rooms || '0', 10) || 0;
+                if (!sourceId || capacity <= 0 || availableRooms <= 0) return;
+                rows.push({
+                    room_source_type: room.tour_hotel_room_id ? 'tour_hotel_room' : 'departure_room',
+                    room_source_id: sourceId,
+                    hotel_name: room.hotel_name || hotel.hotel_name || 'Hotel',
+                    room_type: room.room_type || 'Chambre',
+                    capacity: capacity,
+                    available_rooms: availableRooms,
+                    available_places: parseInt(room.available_places || '0', 10) || availableRooms * capacity,
+                    unit_supplement: parseNumber(room.unit_supplement != null ? room.unit_supplement : room.supplement)
+                });
+            });
+        });
+        return rows;
+    }
+
+    function setAvailableRoomTypes(groups) {
+        availableRoomTypes = flattenAvailableRooms(groups);
+        renderAvailableRooms();
+        renderRooming();
+    }
+
+    function renderAvailableRooms() {
+        var target = document.getElementById('rooming-available-rooms');
+        if (!target) return;
+        if (!availableRoomTypes.length) {
+            target.innerHTML = '<div class="reservation-create__placeholder">Aucune chambre detaillee chargee pour ce depart.</div>';
+            return;
+        }
+        target.innerHTML = availableRoomTypes.map(function (room) {
+            return '<div class="reservation-create__available-room">' +
+                '<strong>' + room.room_type + '</strong>' +
+                '<span>' + room.available_rooms + ' chambres, capacite ' + room.capacity + ', ' + formatMoney(room.unit_supplement) + '</span>' +
+            '</div>';
+        }).join('');
+    }
+
+    function roomingSummary() {
+        var usedByType = {};
+        var assigned = {};
+        var supplement = 0;
+        var occupiedBeds = 0;
+        var partial = false;
+        var invalid = false;
+        var errors = [];
+        var travelers = travelerRows();
+        var bedTravelerIds = travelers.filter(function (t) { return t.consumesBed; }).map(function (t) { return t.id; });
+
+        roomingAllocations.forEach(function (allocation) {
+            var key = String(allocation.room_source_id || allocation.room_type || '');
+            usedByType[key] = (usedByType[key] || 0) + 1;
+            var assignedCount = (allocation.traveler_keys || []).length;
+            occupiedBeds += assignedCount;
+            supplement += parseNumber(allocation.unit_supplement);
+            if (assignedCount > allocation.capacity) {
+                invalid = true;
+                errors.push('Une chambre depasse sa capacite.');
+            }
+            if (allocation.status === 'partial') partial = true;
+            (allocation.traveler_keys || []).forEach(function (id) {
+                if (assigned[id]) {
+                    invalid = true;
+                    errors.push('Un voyageur est affecte deux fois.');
+                }
+                assigned[id] = true;
+            });
+        });
+
+        availableRoomTypes.forEach(function (room) {
+            var key = String(room.room_source_id || room.room_type || '');
+            if ((usedByType[key] || 0) > room.available_rooms) {
+                invalid = true;
+                errors.push('Stock depasse pour ' + room.room_type + '.');
+            }
+        });
+
+        bedTravelerIds.forEach(function (id) {
+            if (!assigned[id]) {
+                invalid = true;
+                errors.push('Tous les voyageurs consommant un lit doivent etre affectes.');
+            }
+        });
+
+        var status = invalid ? 'invalid' : (roomingAllocations.length === 0 ? 'pending' : (partial ? 'partial' : 'complete'));
+        return {
+            roomSupplementTotal: supplement,
+            occupiedBeds: occupiedBeds,
+            status: status,
+            errors: Array.from(new Set(errors))
+        };
+    }
+
+    function roomTypeForCapacity(capacity, preferredType) {
+        var rooms = availableRoomTypes.filter(function (room) {
+            return room.capacity >= capacity && (!preferredType || String(room.room_type).toLowerCase().indexOf(preferredType) !== -1);
+        });
+        return rooms[0] || availableRoomTypes.filter(function (room) { return room.capacity >= capacity; })[0] || availableRoomTypes[0] || null;
+    }
+
+    function makeAllocation(room, travelers, mode) {
+        var occupied = travelers.filter(function (t) { return t.consumesBed; }).length;
+        return {
+            local_id: 'room_' + Date.now() + '_' + Math.random().toString(16).slice(2),
+            room_source_type: room.room_source_type,
+            room_source_id: room.room_source_id,
+            room_type: room.room_type,
+            occupancy_mode: mode,
+            capacity: room.capacity,
+            traveler_keys: travelers.filter(function (t) { return t.consumesBed; }).map(function (t) { return t.id; }),
+            occupied_count: occupied,
+            status: occupied >= room.capacity || mode === 'single' || mode === 'family' || mode === 'full' ? 'complete' : 'partial',
+            unit_supplement: room.unit_supplement,
+            supplement_total: room.unit_supplement
+        };
+    }
+
+    function autoRooming() {
+        var travelers = travelerRows().filter(function (t) { return t.consumesBed; });
+        var result = [];
+        var used = {};
+        function mark(list) { list.forEach(function (t) { used[t.id] = true; }); }
+        function unused(filter) { return travelers.filter(function (t) { return !used[t.id] && (!filter || filter(t)); }); }
+
+        var family = unused(function (t) { return t.isMain || ['spouse', 'child', 'parent'].indexOf(t.relationship) !== -1; });
+        if (family.length >= 3) {
+            var familyRoom = roomTypeForCapacity(family.length, 'triple') || roomTypeForCapacity(family.length, '');
+            if (familyRoom) {
+                result.push(makeAllocation(familyRoom, family, 'family'));
+                mark(family);
+            }
+        }
+
+        var spouse = unused(function (t) { return t.relationship === 'spouse'; })[0];
+        var main = unused(function (t) { return t.isMain; })[0];
+        if (main && spouse && main.gender && spouse.gender && main.gender !== spouse.gender) {
+            var coupleRoom = roomTypeForCapacity(2, 'double');
+            if (coupleRoom) {
+                result.push(makeAllocation(coupleRoom, [main, spouse], 'full'));
+                mark([main, spouse]);
+            }
+        }
+
+        ['male', 'female'].forEach(function (gender) {
+            var pool = unused(function (t) { return t.gender === gender; });
+            while (pool.length >= 2) {
+                var room = roomTypeForCapacity(2, 'double');
+                if (!room) break;
+                result.push(makeAllocation(room, pool.slice(0, 2), 'full'));
+                mark(pool.slice(0, 2));
+                pool = unused(function (t) { return t.gender === gender; });
+            }
+        });
+
+        unused().forEach(function (traveler) {
+            var single = roomTypeForCapacity(1, 'single');
+            if (single) {
+                result.push(makeAllocation(single, [traveler], 'single'));
+                mark([traveler]);
+                return;
+            }
+            var double = roomTypeForCapacity(2, 'double');
+            if (double) {
+                result.push(makeAllocation(double, [traveler], traveler.gender === 'female' ? 'half_female' : 'half_male'));
+                mark([traveler]);
+            }
+        });
+
+        roomingAllocations = result;
+        renderRooming();
+    }
+
+    function renderRooming() {
+        syncTravelerStats();
+        var board = document.getElementById('rooming-allocation-board');
+        var pool = document.getElementById('rooming-unassigned-travelers');
+        var hidden = document.getElementById('reservation-room-allocations-json');
+        if (!board || !pool) return;
+
+        var assigned = {};
+        roomingAllocations.forEach(function (allocation) {
+            (allocation.traveler_keys || []).forEach(function (id) { assigned[id] = true; });
+        });
+        var travelers = travelerRows();
+        var byId = {};
+        travelers.forEach(function (t) { byId[t.id] = t; });
+        var unassigned = travelers.filter(function (t) { return t.consumesBed && !assigned[t.id]; });
+        pool.innerHTML = unassigned.length ? unassigned.map(function (t) {
+            return '<span class="reservation-create__traveler-chip">' + t.label + ' - ' + (t.gender || '-') + ' - ' + t.type + '</span>';
+        }).join('') : '<span class="reservation-create__muted">Tous les voyageurs avec lit sont affectes.</span>';
+
+        board.innerHTML = roomingAllocations.length ? roomingAllocations.map(function (allocation, index) {
+            var travelerList = (allocation.traveler_keys || []).map(function (id) {
+                var t = byId[id] || { label: id, gender: '-', type: '-' };
+                return '<li>' + t.label + ' - ' + (t.gender || '-') + ' - ' + t.type + '</li>';
+            }).join('');
+            var travelerControls = travelers.filter(function (t) { return t.consumesBed; }).map(function (t) {
+                var checked = (allocation.traveler_keys || []).indexOf(t.id) !== -1 ? ' checked' : '';
+                return '<label class="reservation-create__room-traveler"><input type="checkbox" data-rooming-toggle="' + index + '" value="' + t.id + '"' + checked + '> ' + t.label + '</label>';
+            }).join('');
+            var remaining = Math.max(0, allocation.capacity - (allocation.traveler_keys || []).length);
+            return '<article class="reservation-create__room-card">' +
+                '<div><strong>Chambre ' + (index + 1) + ' - ' + allocation.room_type + '</strong><span>' + allocation.occupancy_mode + '</span></div>' +
+                '<p>Capacite: ' + allocation.capacity + ' | Occupes: ' + (allocation.traveler_keys || []).length + '/' + allocation.capacity + ' | Statut: ' + allocation.status + '</p>' +
+                '<ul>' + travelerList + '</ul>' +
+                '<div class="reservation-create__room-travelers">' + travelerControls + '</div>' +
+                (remaining ? '<p class="reservation-create__room-warning">Place restante: ' + remaining + '</p>' : '') +
+            '</article>';
+        }).join('') : '<div class="reservation-create__placeholder">Aucune repartition faite. Lancez la repartition automatique ou ajoutez une chambre.</div>';
+
+        var summary = roomingSummary();
+        var alerts = document.getElementById('rooming-alerts');
+        var pill = document.getElementById('rooming-status-pill');
+        if (pill) pill.textContent = 'Rooming ' + summary.status;
+        if (alerts) {
+            var warnings = summary.errors.slice();
+            if (summary.status === 'partial') warnings.push('Cette demi-double n est pas encore completee.');
+            alerts.classList.toggle('d-none', warnings.length === 0);
+            alerts.innerHTML = warnings.length ? '<strong>Alertes rooming</strong><ul><li>' + warnings.join('</li><li>') + '</li></ul>' : '';
+        }
+        if (hidden) hidden.value = JSON.stringify(roomingAllocations.map(function (allocation) {
+            return {
+                room_source_type: allocation.room_source_type,
+                room_source_id: allocation.room_source_id,
+                room_type: allocation.room_type,
+                occupancy_mode: allocation.occupancy_mode,
+                capacity: allocation.capacity,
+                traveler_keys: allocation.traveler_keys || [],
+                occupied_count: (allocation.traveler_keys || []).length,
+                status: allocation.status,
+                supplement_total: allocation.supplement_total || 0
+            };
+        }));
+    }
+
     function financialSummary() {
         var travelerCount = getTravelerCount();
         var room = hotelRoomSummary();
+        var rooming = roomingSummary();
         var unitPrice = getBaseUnitPrice();
         var totalBase = unitPrice * travelerCount;
         var extras = extrasTotal();
-        var totalAmount = totalBase + room.roomSupplementTotal + extras;
+        var effectiveRoomSupplement = rooming.roomSupplementTotal > 0 ? rooming.roomSupplementTotal : room.roomSupplementTotal;
+        var totalAmount = totalBase + effectiveRoomSupplement + extras;
         var paidAmount = parseNumber(document.getElementById('payment_amount') && document.getElementById('payment_amount').value);
         var remainingAmount = Math.max(0, totalAmount - paidAmount);
 
@@ -392,7 +681,7 @@
             travelerCount: travelerCount,
             unitPrice: unitPrice,
             totalBase: totalBase,
-            roomSupplementTotal: room.roomSupplementTotal,
+            roomSupplementTotal: effectiveRoomSupplement,
             extrasTotal: extras,
             totalAmount: totalAmount,
             paidAmount: paidAmount,
@@ -400,6 +689,8 @@
             paymentStatus: derivePaymentStatus(totalAmount, paidAmount),
             selectedRoomCapacity: room.selectedRoomCapacity,
             selectedRoomCount: room.selectedRoomCount,
+            roomingStatus: rooming.status,
+            roomingErrors: rooming.errors,
             stockExceeded: room.stockExceeded,
             availableDepartureCapacity: getAvailableDepartureCapacity(),
             priceMissing: unitPrice <= 0,
@@ -413,6 +704,7 @@
     }
 
     function syncFinancialSummary() {
+        syncTravelerStats();
         var summary = financialSummary();
 
         setText('create-summary-trip', getSelectedTripLabel());
@@ -545,6 +837,16 @@
             }
 
             if (summary.roomMode === 'blocked') {
+                showInlineError('Configuration chambres indisponible pour ce depart.');
+                return false;
+            }
+            if (summary.availableDepartureCapacity > 0 && summary.travelerCount > summary.availableDepartureCapacity) {
+                showInlineError('Le nombre de voyageurs depasse le stock disponible sur ce depart.');
+                return false;
+            }
+            return true;
+
+            if (summary.roomMode === 'blocked') {
                 showInlineError('Configuration incomplète : ajoutez les chambres pour ce départ.');
                 return false;
             }
@@ -602,6 +904,17 @@
         }
 
         if (step === 3) {
+            renderRooming();
+            if (summary.roomingStatus === 'pending') {
+                showInlineError('Lancez une repartition automatique ou ajoutez une repartition manuelle.');
+                return false;
+            }
+            if (summary.roomingStatus === 'invalid') {
+                showInlineError((summary.roomingErrors || ['Repartition chambres invalide.'])[0]);
+                return false;
+            }
+            return true;
+
             if (summary.selectedRoomCapacity > 0 && summary.travelerCount > summary.selectedRoomCapacity) {
                 showInlineError('Le nombre de voyageurs dépasse la capacité des chambres sélectionnées.');
                 return false;
@@ -666,6 +979,15 @@
                 '<div class="reservation-create__field"><label class="reservation-create__label">Type document</label><input type="text" name="passengers[' + index + '][document_type]" class="reservation-create__input"></div>' +
                 '<div class="reservation-create__field"><label class="reservation-create__label">N° document</label><input type="text" name="passengers[' + index + '][document_number]" class="reservation-create__input"></div>' +
             '</div>';
+        row.setAttribute('data-traveler-key', 'companion_' + index);
+        var grid = row.querySelector('.reservation-create__grid');
+        if (grid && !grid.querySelector('select[name*="[gender]"]')) {
+            grid.insertAdjacentHTML('beforeend',
+                '<div class="reservation-create__field"><label class="reservation-create__label">Sexe</label><select name="passengers[' + index + '][gender]" class="reservation-create__input"><option value="">Selectionner...</option><option value="male">Homme</option><option value="female">Femme</option></select></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Relation</label><select name="passengers[' + index + '][relationship_to_main]" class="reservation-create__input"><option value="spouse">Conjoint / conjointe</option><option value="child">Enfant</option><option value="parent">Parent</option><option value="friend">Ami</option><option value="group" selected>Groupe</option><option value="solo">Seul</option></select></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Lit</label><select name="passengers[' + index + '][consumes_bed]" class="reservation-create__input"><option value="1" selected>Consomme un lit</option><option value="0">Sans lit</option></select></div>'
+            );
+        }
         container.appendChild(row);
         syncTravelersEmptyState();
         renderExtras();
@@ -693,6 +1015,10 @@
             if (target.closest('#companions-container')) {
                 syncTravelersEmptyState();
                 renderExtras();
+                renderRooming();
+            }
+            if (target.matches('#client_first_name, #client_last_name, #client_traveler_type, #client_gender, #client_consumes_bed')) {
+                renderRooming();
             }
         });
 
@@ -716,6 +1042,27 @@
             if (target.closest('#companions-container')) {
                 syncTravelersEmptyState();
                 renderExtras();
+                renderRooming();
+            }
+            if (target.matches('#client_traveler_type, #client_gender, #client_consumes_bed')) {
+                renderRooming();
+            }
+            if (target.hasAttribute('data-rooming-toggle')) {
+                var roomIndex = parseInt(target.getAttribute('data-rooming-toggle') || '-1', 10);
+                if (roomingAllocations[roomIndex]) {
+                    var keys = roomingAllocations[roomIndex].traveler_keys || [];
+                    if (target.checked && keys.indexOf(target.value) === -1) {
+                        keys.push(target.value);
+                    }
+                    if (!target.checked) {
+                        keys = keys.filter(function (key) { return key !== target.value; });
+                    }
+                    roomingAllocations[roomIndex].traveler_keys = keys;
+                    roomingAllocations[roomIndex].occupied_count = keys.length;
+                    roomingAllocations[roomIndex].status = keys.length >= roomingAllocations[roomIndex].capacity ? 'complete' : 'partial';
+                    renderRooming();
+                    syncFinancialSummary();
+                }
             }
         });
 
@@ -726,6 +1073,30 @@
             if (target.id === 'btn-add-companion') {
                 event.preventDefault();
                 addCompanion();
+                renderRooming();
+            }
+
+            if (target.id === 'btn-rooming-auto') {
+                event.preventDefault();
+                autoRooming();
+                syncFinancialSummary();
+            }
+
+            if (target.id === 'btn-rooming-reset') {
+                event.preventDefault();
+                roomingAllocations = [];
+                renderRooming();
+                syncFinancialSummary();
+            }
+
+            if (target.id === 'btn-rooming-add') {
+                event.preventDefault();
+                var room = availableRoomTypes[0];
+                if (room) {
+                    roomingAllocations.push(makeAllocation(room, [], room.capacity === 1 ? 'single' : 'full'));
+                    renderRooming();
+                    syncFinancialSummary();
+                }
             }
 
             if (target.classList.contains('btn-remove-companion')) {
@@ -735,6 +1106,7 @@
                     row.remove();
                     syncTravelersEmptyState();
                     renderExtras();
+                    renderRooming();
                     syncFinancialSummary();
                 }
             }
@@ -767,11 +1139,14 @@
                 return;
             }
             collectExtras();
+            renderRooming();
             syncFinancialSummary();
             // If we're in places_only mode, remove any hotel_rooms inputs so null IDs
             // are not submitted and backend treats this as places-only booking.
             try {
-                if (typeof getRoomMode === 'function' && getRoomMode() === 'places_only') {
+                var roomingHidden = document.getElementById('reservation-room-allocations-json');
+                var hasRooming = roomingHidden && String(roomingHidden.value || '[]') !== '[]';
+                if (hasRooming || (typeof getRoomMode === 'function' && getRoomMode() === 'places_only')) {
                     document.querySelectorAll('[name^="hotel_rooms"]').forEach(function (el) { el.remove(); });
                 }
             } catch (e) {
@@ -787,6 +1162,10 @@
         syncVisaMode();
         syncTravelersEmptyState();
         renderExtras();
+        setAvailableRoomTypes(window.reservationAvailableRooms || []);
+        document.addEventListener('reservation:rooms-loaded', function (event) {
+            setAvailableRoomTypes(event && event.detail ? event.detail.rooms : []);
+        });
         setStep(1);
 
         window.reservationCreateCollectExtras = collectExtras;

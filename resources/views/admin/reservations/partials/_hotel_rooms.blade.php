@@ -478,6 +478,10 @@
             basePriceInput.value = unitPrice.toFixed(2);
         }
 
+        window.reservationAvailableRooms = Array.isArray(hotels) ? hotels : [];
+        window.reservationDepartureRoomsPayload = payload || {};
+        document.dispatchEvent(new CustomEvent('reservation:rooms-loaded', { detail: { payload: payload || {}, rooms: window.reservationAvailableRooms } }));
+
         setAccommodationMode(payload.mode || 'rooms');
         updateRoomsDebugPanel({
             url: payload && payload.__debug ? payload.__debug.url : '',
@@ -571,6 +575,10 @@
         }
 
         roomsContainer.innerHTML = html;
+        roomsContainer.querySelectorAll('.reservation-room-count').forEach(function (input) {
+            input.disabled = true;
+            input.closest('td').innerHTML = '<span class="badge bg-light text-dark">Lecture seule</span>';
+        });
         syncSummary();
         if (typeof window.reservationCreateRecomputeTotals === 'function') {
             window.reservationCreateRecomputeTotals();

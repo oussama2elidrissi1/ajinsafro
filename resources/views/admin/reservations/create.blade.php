@@ -38,6 +38,7 @@
         <form method="post" action="{{ route('admin.reservations.store') }}" enctype="multipart/form-data" id="reservation-create-form">
             @csrf
             <input type="hidden" name="extras_json" id="reservation-create-extras-json" value="[]">
+            <input type="hidden" name="room_allocations_json" id="reservation-room-allocations-json" value="{{ old('room_allocations_json', '[]') }}">
             <input type="hidden" name="accommodation_mode" id="reservation-accommodation-mode" value="rooms">
             <input type="hidden" name="total_base" id="reservation-total-base-input" value="{{ old('total_base', 0) }}">
             <input type="hidden" name="room_supplement_total" id="reservation-room-supplement-total-input" value="{{ old('room_supplement_total', 0) }}">

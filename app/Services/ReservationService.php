@@ -8,6 +8,7 @@ use App\Models\DepartureHotelRoom;
 use App\Models\Reservation;
 use App\Models\ReservationPassenger;
 use App\Models\ReservationRoom;
+use App\Models\ReservationRoomAllocation;
 use App\Models\TourHotel;
 use App\Models\TourHotelRoom;
 use App\Models\Voyage;
@@ -92,7 +93,9 @@ class ReservationService
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
-            if ($this->usesDepartureHotelRooms($data['hotel_rooms'] ?? []) && ! empty($reservation->departure_id)) {
+            if (! empty($data['room_allocations_payload']) && is_array($data['room_allocations_payload'])) {
+                $this->syncRoomAllocations($reservation, $data['room_allocations_payload']);
+            } elseif ($this->usesDepartureHotelRooms($data['hotel_rooms'] ?? []) && ! empty($reservation->departure_id)) {
                 $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
                 $synced = $reservation->fresh(['reservationRooms']);
                 $this->reservationLifecycle->validateAvailabilityIfNeeded($synced);
@@ -109,6 +112,7 @@ class ReservationService
             $this->syncExtras($reservation, $data['extras_payload'] ?? []);
             $this->reservationDossier->ensureDossierNumber($reservation);
             $this->reservationDossier->refreshReservationFinancials($reservation);
+            $this->syncDossierRoomingSnapshot($reservation);
             $reservation->save();
 
             if (! empty($data['payment_payload']) && is_array($data['payment_payload'])) {
@@ -196,7 +200,9 @@ class ReservationService
 
             $this->syncPassengers($reservation, $data['passengers'] ?? []);
 
-            if ($this->usesDepartureHotelRooms($data['hotel_rooms'] ?? []) && ! empty($reservation->departure_id)) {
+            if (! empty($data['room_allocations_payload']) && is_array($data['room_allocations_payload'])) {
+                $this->syncRoomAllocations($reservation, $data['room_allocations_payload']);
+            } elseif ($this->usesDepartureHotelRooms($data['hotel_rooms'] ?? []) && ! empty($reservation->departure_id)) {
                 $this->syncReservationRooms($reservation, $data['hotel_rooms'] ?? []);
                 $fresh = $reservation->fresh(['reservationRooms']);
                 $this->reservationLifecycle->validateAvailabilityIfNeeded($fresh);
@@ -213,6 +219,7 @@ class ReservationService
             $this->syncExtras($reservation, $data['extras_payload'] ?? []);
             $this->reservationDossier->ensureDossierNumber($reservation);
             $this->reservationDossier->refreshReservationFinancials($reservation);
+            $this->syncDossierRoomingSnapshot($reservation);
             $reservation->save();
 
             if (! empty($data['payment_payload']) && is_array($data['payment_payload'])) {
@@ -334,6 +341,12 @@ class ReservationService
         $reservation->client_phone = $data['client_phone'] ?? $reservation->client_phone;
         $reservation->client_document_type = $data['client_document_type'] ?? $reservation->client_document_type;
         $reservation->client_document_number = $data['client_document_number'] ?? $reservation->client_document_number;
+
+        foreach (['adults_count', 'children_count', 'infants_count', 'male_count', 'female_count', 'rooming_status'] as $column) {
+            if (array_key_exists($column, $data)) {
+                $reservation->{$column} = $data[$column];
+            }
+        }
 
         $reservation->payment_type = $data['payment_type'] ?? $reservation->payment_type;
 
@@ -472,9 +485,45 @@ class ReservationService
     private function syncPassengers(Reservation $reservation, array $passengersData): void
     {
         $keepIds = [];
+        $mainPayload = [
+            'first_name' => $reservation->client_first_name,
+            'last_name' => $reservation->client_last_name,
+            'type' => 'adult',
+            'traveler_type' => 'adult',
+            'gender' => null,
+            'birth_date' => null,
+            'document_type' => $reservation->client_document_type,
+            'document_number' => $reservation->client_document_number,
+            'relationship_to_main' => 'main',
+            'phone' => $reservation->client_phone,
+            'email' => $reservation->client_email,
+            'traveler_key' => 'main',
+            'is_main' => true,
+            'consumes_bed' => true,
+        ];
+
+        if (is_array($passengersData['__main'] ?? null)) {
+            $main = $passengersData['__main'];
+            $mainPayload['type'] = $main['type'] ?? $mainPayload['type'];
+            $mainPayload['traveler_type'] = $mainPayload['type'];
+            $mainPayload['gender'] = $main['gender'] ?? null;
+            $mainPayload['birth_date'] = $main['birth_date'] ?? null;
+            $mainPayload['nationality'] = $main['nationality'] ?? null;
+            $mainPayload['consumes_bed'] = (bool) ($main['consumes_bed'] ?? true);
+        }
+
+        $mainPassenger = ReservationPassenger::query()->firstOrNew([
+            'reservation_id' => $reservation->id,
+            'traveler_key' => 'main',
+        ]);
+        $mainPassenger->fill($mainPayload)->save();
+        $keepIds[] = $mainPassenger->id;
 
         foreach ($passengersData as $row) {
             if (! is_array($row)) {
+                continue;
+            }
+            if (($row['traveler_key'] ?? null) === 'main') {
                 continue;
             }
             $hasContent = ($row['first_name'] ?? '') !== '' || ($row['last_name'] ?? '') !== '';
@@ -487,9 +536,15 @@ class ReservationService
                 'first_name' => $row['first_name'] ?? null,
                 'last_name' => $row['last_name'] ?? null,
                 'type' => $row['type'] ?? null,
+                'traveler_type' => $row['type'] ?? null,
+                'gender' => $row['gender'] ?? null,
                 'birth_date' => $row['birth_date'] ?? null,
                 'document_type' => $row['document_type'] ?? null,
                 'document_number' => $row['document_number'] ?? null,
+                'relationship_to_main' => $row['relationship_to_main'] ?? null,
+                'traveler_key' => $row['traveler_key'] ?? ('companion_'.count($keepIds)),
+                'is_main' => false,
+                'consumes_bed' => (bool) ($row['consumes_bed'] ?? true),
             ];
 
             if ($id > 0) {
@@ -514,7 +569,13 @@ class ReservationService
             ReservationPassenger::where('reservation_id', $reservation->id)->delete();
         }
 
-        $reservation->passengers_count = ReservationPassenger::where('reservation_id', $reservation->id)->count() ?: 1;
+        $passengers = ReservationPassenger::where('reservation_id', $reservation->id)->get();
+        $reservation->passengers_count = $passengers->count() ?: 1;
+        $reservation->adults_count = $passengers->where('type', 'adult')->count();
+        $reservation->children_count = $passengers->where('type', 'child')->count();
+        $reservation->infants_count = $passengers->where('type', 'infant')->count();
+        $reservation->male_count = $passengers->where('gender', 'male')->count();
+        $reservation->female_count = $passengers->where('gender', 'female')->count();
         $reservation->save();
     }
 
@@ -658,6 +719,111 @@ class ReservationService
             $reservation->room_supplement_total = $totalSupplement;
         }
         $reservation->save();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $allocations
+     */
+    private function syncRoomAllocations(Reservation $reservation, array $allocations): void
+    {
+        ReservationRoomAllocation::query()->where('reservation_id', $reservation->id)->delete();
+        ReservationRoom::query()->where('reservation_id', $reservation->id)->delete();
+
+        $passengersByKey = $reservation->passengers()->get()->keyBy('traveler_key');
+        $roomingStatus = 'pending';
+        $totalSupplement = 0.0;
+        $hasPartial = false;
+        $hasAny = false;
+
+        foreach ($allocations as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $travelerKeys = is_array($row['traveler_keys'] ?? null) ? $row['traveler_keys'] : [];
+            $occupied = max(0, (int) ($row['occupied_count'] ?? count($travelerKeys)));
+            $capacity = max(0, (int) ($row['capacity'] ?? 0));
+            if ($capacity <= 0 || $occupied <= 0) {
+                continue;
+            }
+
+            $sourceType = (string) ($row['room_source_type'] ?? 'tour_hotel_room');
+            $sourceId = (int) ($row['room_source_id'] ?? 0);
+            $status = (string) ($row['status'] ?? ($occupied >= $capacity ? 'complete' : 'partial'));
+            $supplementTotal = round(max(0, (float) ($row['supplement_total'] ?? 0)), 2);
+            $totalSupplement += $supplementTotal;
+            $hasAny = true;
+            if ($status === 'partial') {
+                $hasPartial = true;
+            }
+
+            $allocation = ReservationRoomAllocation::query()->create([
+                'reservation_id' => $reservation->id,
+                'reservation_dossier_id' => $reservation->reservation_dossier_id,
+                'travel_date_id' => (int) ($reservation->travel_date_id ?? 0),
+                'tour_hotel_id' => 0,
+                'tour_hotel_room_id' => $sourceType === 'tour_hotel_room' ? $sourceId : 0,
+                'seats_allocated' => $occupied,
+                'rooms_new_count' => 1,
+                'rooms_total_count' => 1,
+                'room_source_type' => $sourceType,
+                'room_source_id' => $sourceId ?: null,
+                'room_type' => $row['room_type'] ?? 'Chambre',
+                'occupancy_mode' => $row['occupancy_mode'] ?? 'full',
+                'capacity' => $capacity,
+                'occupied_count' => $occupied,
+                'status' => $status,
+                'supplement_total' => $supplementTotal,
+            ]);
+
+            $travelerIds = collect($travelerKeys)
+                ->map(fn ($key) => $passengersByKey->get($key)?->id)
+                ->filter()
+                ->values()
+                ->all();
+            if ($travelerIds !== []) {
+                $allocation->travelers()->sync($travelerIds);
+            }
+
+            $reservation->reservationRooms()->create([
+                'source_room_id' => $sourceId ?: null,
+                'source_room_type' => $sourceType,
+                'room_mode' => $row['occupancy_mode'] ?? 'full',
+                'shared_room_status' => $status === 'partial' ? 'pending' : 'complete',
+                'room_type_snapshot' => $row['room_type'] ?? 'Chambre',
+                'passenger_count' => $occupied,
+                'tour_hotel_id' => null,
+                'tour_hotel_room_id' => $sourceType === 'tour_hotel_room' ? $sourceId : null,
+                'room_count' => 1,
+                'supplement_unit' => $supplementTotal,
+                'supplement_total' => $supplementTotal,
+            ]);
+        }
+
+        $reservation->rooming_status = ! $hasAny ? 'pending' : ($hasPartial ? 'partial' : 'complete');
+        if ($this->reservationsHasRoomSupplementTotalColumn()) {
+            $reservation->room_supplement_total = $totalSupplement;
+        }
+        $reservation->save();
+    }
+
+    private function syncDossierRoomingSnapshot(Reservation $reservation): void
+    {
+        if (! $reservation->reservation_dossier_id) {
+            return;
+        }
+
+        DB::table('reservation_dossiers')
+            ->where('id', $reservation->reservation_dossier_id)
+            ->update(array_filter([
+                'adults_count' => $reservation->adults_count ?? 0,
+                'children_count' => $reservation->children_count ?? 0,
+                'infants_count' => $reservation->infants_count ?? 0,
+                'male_count' => $reservation->male_count ?? 0,
+                'female_count' => $reservation->female_count ?? 0,
+                'rooming_status' => $reservation->rooming_status ?? 'pending',
+                'updated_at' => now(),
+            ], fn ($value) => $value !== null));
     }
 
     /**

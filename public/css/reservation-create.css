@@ -204,6 +204,99 @@
     line-height: 1.4;
 }
 
+.reservation-create__traveler-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.reservation-create__traveler-stats span,
+.reservation-create__available-room,
+.reservation-create__traveler-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 0.85rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.85rem;
+}
+
+.reservation-create__rooming-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.reservation-create__rooming-panel,
+.reservation-create__room-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1rem;
+    background: #fff;
+}
+
+.reservation-create__available-rooms,
+.reservation-create__traveler-pool,
+.reservation-create__rooming-board {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.reservation-create__available-room {
+    justify-content: space-between;
+}
+
+.reservation-create__rooming-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 1rem 0;
+}
+
+.reservation-create__room-card div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.reservation-create__room-card ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1rem;
+}
+
+.reservation-create__room-travelers {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+}
+
+.reservation-create__room-traveler {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.86rem;
+    color: #334155;
+}
+
+.reservation-create__room-warning {
+    margin: 0.7rem 0 0;
+    color: #b45309;
+    font-weight: 700;
+}
+
+.reservation-create__muted {
+    color: #64748b;
+}
+
+@media (min-width: 992px) {
+    .reservation-create__rooming-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 .reservation-create__panel {
     display: none;
 }

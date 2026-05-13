@@ -521,8 +521,9 @@ class ReservationPricingService
             return 1;
         }
 
-        $count = 1;
-        foreach ($passengers as $row) {
+        $passengersArray = is_array($passengers) ? $passengers : [];
+        $count = isset($passengersArray['__main']) ? 0 : 1;
+        foreach ($passengers as $key => $row) {
             if (! is_array($row)) {
                 continue;
             }
@@ -729,6 +730,58 @@ class ReservationPricingService
      */
     private function resolveRoomSelection(array $payload, Departure $departure, int $travelersCount): array
     {
+        $roomAllocations = is_array($payload['room_allocations'] ?? null) ? $payload['room_allocations'] : [];
+        if ($roomAllocations !== []) {
+            $totalCapacity = 0;
+            $supplementTotal = 0.0;
+            $details = [];
+
+            foreach ($roomAllocations as $index => $allocation) {
+                if (! is_array($allocation)) {
+                    continue;
+                }
+
+                $capacity = max(0, (int) ($allocation['capacity'] ?? 0));
+                $occupied = max(0, (int) ($allocation['occupied_count'] ?? count($allocation['traveler_keys'] ?? [])));
+                $supplement = round(max(0, (float) ($allocation['supplement_total'] ?? 0)), 2);
+                if ($capacity <= 0 || $occupied <= 0) {
+                    throw ValidationException::withMessages([
+                        "room_allocations.$index.capacity" => ['Allocation chambre invalide.'],
+                    ]);
+                }
+                if ($occupied > $capacity) {
+                    throw ValidationException::withMessages([
+                        "room_allocations.$index.occupied_count" => ['Une chambre depasse sa capacite.'],
+                    ]);
+                }
+
+                $totalCapacity += $capacity;
+                $supplementTotal += $supplement;
+                $details[] = [
+                    'room_source_type' => $allocation['room_source_type'] ?? null,
+                    'room_source_id' => $allocation['room_source_id'] ?? null,
+                    'room_type' => (string) ($allocation['room_type'] ?? 'Chambre'),
+                    'occupancy_mode' => $allocation['occupancy_mode'] ?? null,
+                    'capacity' => $capacity,
+                    'occupied_count' => $occupied,
+                    'status' => $allocation['status'] ?? 'pending',
+                    'traveler_keys' => is_array($allocation['traveler_keys'] ?? null) ? $allocation['traveler_keys'] : [],
+                    'subtotal' => $supplement,
+                ];
+            }
+
+            if ($totalCapacity < $travelersCount) {
+                throw ValidationException::withMessages([
+                    'room_allocations' => ['La capacite des chambres selectionnees est insuffisante pour le nombre de voyageurs.'],
+                ]);
+            }
+
+            return [
+                'room_supplement_total' => round($supplementTotal, 2),
+                'details' => $details,
+            ];
+        }
+
         $selectedRows = collect(is_array($payload['hotel_rooms'] ?? null) ? $payload['hotel_rooms'] : [])
             ->filter(fn ($row) => is_array($row) && (int) ($row['room_count'] ?? 0) > 0)
             ->values();

@@ -9,11 +9,11 @@
             </button>
             <button type="button" class="reservation-create__step" data-create-step-nav="2">
                 <span class="reservation-create__step-index">2</span>
-                <span class="reservation-create__step-label">Client</span>
+                <span class="reservation-create__step-label">Voyageurs</span>
             </button>
             <button type="button" class="reservation-create__step" data-create-step-nav="3">
                 <span class="reservation-create__step-index">3</span>
-                <span class="reservation-create__step-label">Voyageurs</span>
+                <span class="reservation-create__step-label">Chambres</span>
             </button>
             <button type="button" class="reservation-create__step" data-create-step-nav="4">
                 <span class="reservation-create__step-index">4</span>
