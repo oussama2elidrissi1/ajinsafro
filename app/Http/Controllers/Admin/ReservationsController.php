@@ -438,7 +438,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * API JSON : hÃ´tels et chambres pour un voyage (tour_id = Voyage.id).
+     * API JSON : hÃ­tels et chambres pour un voyage (tour_id = Voyage.id).
      */
     public function hotelsRooms(Request $request): JsonResponse
     {
@@ -519,154 +519,92 @@ class ReservationsController extends Controller
     }
 
     /**
-     * HÃ´tels + chambres (stock dÃ©part) pour un dÃ©part donnÃ©.
+     * HÃ­tels + chambres (stock dÃ©part) pour un dÃ©part donnÃ©.
      */
     public function departureHotelsRooms(Request $request): JsonResponse
     {
-        try {
-            $tourId = (int) $request->query('tour_id', 0);
-            Log::info('URGENT ROOM ENDPOINT HIT', [
-                'tour_id' => $request->input('tour_id'),
-                'travel_date_id' => $request->input('travel_date_id'),
-                'departure_id' => $request->input('departure_id'),
-                'route' => $request->route()?->getName(),
-                'url' => $request->fullUrl(),
-            ]);
-            $departureId = (int) $request->query('departure_id', 0);
-            $travelDateId = (int) $request->query('travel_date_id', 0);
+        $departureId = $request->input('departure_id');
+        $tourId = $request->input('tour_id');
+        $travelDateId = $request->input('travel_date_id');
 
-            if (config('app.debug')) {
-                Log::info('reservation rooms/pricing payload', [
-                    'tour_id' => $tourId,
-                    'departure_id' => $departureId,
-                    'travel_date_id' => $travelDateId,
-                ]);
+        if (! $departureId && $travelDateId) {
+            $travelDate = TravelDate::find($travelDateId);
+            if ($travelDate) {
+                $departureId = $travelDate->departure_id;
             }
-
-            $payload = $this->reservationPricing->previewDepartureSelection([
-                'tour_id' => $tourId,
-                'departure_id' => $departureId,
-                'travel_date_id' => $travelDateId,
-            ]);
-
-            // Debug logging required by QA to trace why rooms may be missing
-            try {
-                $roomsCount = 0;
-                $hotelsCount = 0;
-                if (isset($payload['rooms']) && is_array($payload['rooms'])) {
-                    $roomsCount = count($payload['rooms']);
-                }
-                if (isset($payload['departure']) && is_array($payload['departure'])) {
-                    // count hotels if present in payload structure
-                    $hotelsCount = isset($payload['hotels']) && is_array($payload['hotels']) ? count($payload['hotels']) : 0;
-                }
-
-                // include selected travel date (string) when available
-                $selectedDate = null;
-                try {
-                    $td = TravelDate::query()->find($travelDateId);
-                    if ($td && $td->date) {
-                        $selectedDate = $td->date instanceof \DateTimeInterface ? $td->date->format('Y-m-d') : (string) $td->date;
-                    }
-                } catch (\Throwable $_) {
-                }
-
-                Log::info('Reservation rooms lookup debug', [
-                    'tour_id' => $tourId,
-                    'travel_date_id' => $travelDateId,
-                    'departure_id' => $departureId,
-                    'date' => $selectedDate,
-                    'mode' => $payload['mode'] ?? null,
-                    'departure_hotels_count' => $hotelsCount,
-                    'rooms_count' => $roomsCount,
-                    'rooms' => is_array($payload['rooms']) ? array_map(fn($r) => $r['departure_hotel_room_id'] ?? null, $payload['rooms']) : [],
-                ]);
-
-                // Additional debug log in requested format with flattened rooms
-                try {
-                    $roomsFound = [];
-                    if (! empty($payload['rooms']) && is_array($payload['rooms'])) {
-                        foreach ($payload['rooms'] as $hotel) {
-                            $hotelName = $hotel['hotel_name'] ?? ($hotel['hotel_name'] ?? '');
-                            foreach (($hotel['rooms'] ?? []) as $room) {
-                                $roomsFound[] = [
-                                    'id' => $room['departure_hotel_room_id'] ?? ($room['tour_hotel_room_id'] ?? null),
-                                    'type' => $room['room_type'] ?? null,
-                                    'quantity' => $room['available_rooms'] ?? $room['room_count'] ?? null,
-                                    'capacity' => $room['capacity'] ?? $room['capacity_total'] ?? null,
-                                    'available_places' => $room['available_places'] ?? null,
-                                ];
-                            }
-                        }
-                    }
-
-                    Log::info('DEBUG reservation room lookup', [
-                        'tour_id' => $tourId,
-                        'travel_date_id' => $travelDateId,
-                        'departure_id' => $departureId,
-                        'selected_date' => $selectedDate,
-                        'departure_hotels_count' => $hotelsCount,
-                        'departure_hotel_rooms_count' => $roomsCount,
-                        'rooms_found' => $roomsFound,
-                        'final_mode' => $payload['mode'] ?? null,
-                    ]);
-                } catch (\Throwable $_e) {
-                    // ignore
-                }
-            } catch (\Throwable $e) {
-                // ignore logging issues
-            }
-            Log::info('URGENT ROOM ENDPOINT RESULT', [
-                'success' => $payload['success'] ?? null,
-                'mode' => $payload['mode'] ?? null,
-                'rooms_count' => isset($payload['rooms']) && is_array($payload['rooms']) ? count($payload['rooms']) : null,
-                'rooms' => $payload['rooms'] ?? null,
-                'pricing' => $payload['pricing'] ?? null,
-                'departure' => $payload['departure'] ?? null,
-            ]);
-
-
-            return response()->json($payload);
-        } catch (\Throwable $e) {
-            Log::error('reservations.departure_hotels_rooms_failed', [
-                'tour_id' => (int) $request->query('tour_id', 0),
-                'departure_id' => (int) $request->query('departure_id', 0),
-                'travel_date_id' => (int) $request->query('travel_date_id', 0),
-                'message' => $e->getMessage(),
-            ]);
-
-            $message = 'Impossible de charger les chambres pour ce dÃ©part.';
-            if ($e instanceof \Illuminate\Validation\ValidationException) {
-                $errors = $e->errors();
-                $first = array_values($errors)[0] ?? null;
-                if (is_array($first)) {
-                    $message = $first[0] ?? $message;
-                } elseif (is_string($first)) {
-                    $message = $first;
-                }
-            } elseif (config('app.debug')) {
-                $message = $e->getMessage();
-            }
-
-            return response()->json([
-                'success' => false,
-                'mode' => 'blocked',
-                'message' => $message,
-                'debug' => config('app.debug') ? $e->getMessage() : null,
-                'departure' => null,
-                'pricing' => [
-                    'unit_price' => 0,
-                    'travelers_count' => 1,
-                    'total_base' => 0,
-                    'room_supplement_total' => 0,
-                    'extras_total' => 0,
-                    'total_amount' => 0,
-                ],
-                'rooms' => [],
-                'hotels' => [],
-                'currency' => 'DH',
-            ]);
         }
+
+        if (! $departureId) {
+            return response()->json(['success' => false, 'message' => 'Departure ID manquant.'], 400);
+        }
+
+        $departure = Departure::with([
+            'departureRooms.roomType',
+            'departureHotelRooms.roomType',
+            'departureHotelRooms.hotel',
+        ])->find($departureId);
+
+        if (! $departure) {
+            return response()->json(['success' => false, 'message' => 'Départ non trouvé.'], 404);
+        }
+
+        $availableRooms = $this->roomAvailability->getAvailableRoomsForDeparture($departure);
+
+        $formattedRooms = $availableRooms->map(function ($room) {
+            $sourceType = 'unknown';
+            $sourceId = null;
+            $departureHotelRoomId = null;
+            $tourHotelRoomId = null;
+
+            if ($room instanceof DepartureRoomAllocation) {
+                $sourceType = 'departure_room_allocation';
+                $sourceId = $room->id;
+                // Assuming DepartureRoomAllocation can be linked to a DepartureHotelRoom
+                if (isset($room->departure_hotel_room_id)) {
+                    $departureHotelRoomId = $room->departure_hotel_room_id;
+                }
+            } elseif ($room instanceof DepartureHotelRoom) {
+                $sourceType = 'departure_hotel_room';
+                $sourceId = $room->id;
+                $departureHotelRoomId = $room->id;
+            } elseif ($room instanceof TourHotelRoomAvailability) {
+                $sourceType = 'tour_hotel_room';
+                $sourceId = $room->id;
+                $tourHotelRoomId = $room->id;
+            }
+
+            // Fallback for ID if it's still null
+            if ($sourceId === null) {
+                $sourceId = $room->id ?? $room->departure_hotel_room_id ?? $room->tour_hotel_room_id ?? null;
+            }
+            
+            return [
+                'id' => $sourceId,
+                'room_source_id' => $sourceId,
+                'room_source_type' => $sourceType,
+                'departure_hotel_room_id' => $departureHotelRoomId,
+                'tour_hotel_room_id' => $tourHotelRoomId,
+                'room_type' => $room->room_type_name ?? $room->room_type,
+                'available_rooms' => $room->computed_available_rooms ?? $room->available_rooms,
+                'capacity' => $room->capacity,
+                'available_places' => $room->computed_available_places ?? $room->available_places,
+                'unit_supplement' => $room->unit_supplement ?? 0,
+                'hotel_name' => $room->hotel_name ?? $room->hotel?->name ?? 'Hôtel non spécifié',
+            ];
+        });
+
+        $html = view('admin.reservations.partials._hotel_rooms', [
+            'availableRooms' => $formattedRooms,
+            'mode' => 'rooms',
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+            'rooms' => $formattedRooms,
+            'count' => $formattedRooms->count(),
+            'mode' => 'rooms',
+        ]);
     }
 
     /**
@@ -1530,7 +1468,7 @@ class ReservationsController extends Controller
 
     /**
      * VÃ©rifie que la capacitÃ© disponible sur la date de dÃ©part couvre le nombre de voyageurs.
-     * La capacitÃ© vient des chambres configurÃ©es dans lâ€™hÃ´tel du voyage + lâ€™occupation (stock rÃ©el).
+     * La capacitÃ© vient des chambres configurÃ©es dans lâ€™hÃ­tels du voyage + lâ€™occupation (stock rÃ©el).
      */
     private function validateRoomCapacity(int $departureId, int $travelDateId, int $tourId, int $totalTravelers): void
     {
@@ -1605,7 +1543,7 @@ class ReservationsController extends Controller
         }
 
         if ($totalCapacitySeats <= 0) {
-            // Aucune capacitÃ© configurÃ©e : la rÃ©servation sera bloquÃ©e plus tard cÃ´tÃ© service si nÃ©cessaire.
+            // Aucune capacitÃ© configurÃ©e : la rÃ©servation sera bloquÃ©e plus tard cÃ´tÃ‚Â© service si nÃ©cessaire.
             return;
         }
 
@@ -1615,7 +1553,7 @@ class ReservationsController extends Controller
                 ->where('travel_date_id', $travelDateId)
                 ->sum('seats_occupied_total');
         } catch (\Throwable $e) {
-            // Table absente ou erreur DB : pas de contrÃ´le de capacitÃ© fine ici ; le service crÃ©e la rÃ©servation en chemin standard.
+            // Table absente ou erreur DB : pas de contrÃ´le de capacitÃ© fine ici ; le service crÃ‚Â©e la rÃ©servation en chemin standard.
             return;
         }
 
@@ -2140,7 +2078,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * Ã‰vÃ©nements JSON pour le calendrier : dates de dÃ©part (offres) + rÃ©servations liÃ©es.
+     * Ã‰vÃ‚Â©nements JSON pour le calendrier : dates de dÃ©part (offres) + rÃ©servations liÃ©es.
      * Le paramÃ¨tre "voyage" est l'ID tour WordPress (TravelDate.travel_id).
      */
     public function calendarEvents(Request $request): JsonResponse
@@ -2318,7 +2256,7 @@ class ReservationsController extends Controller
     }
 
     /**
-     * DÃ©tail JSON d'une rÃ©servation (modale calendrier).
+     * DÃ‚Â©tails JSON d'une rÃ©servation (modale calendrier).
      */
     public function calendarReservationDetails(Request $request): JsonResponse
     {
@@ -2403,8 +2341,8 @@ class ReservationsController extends Controller
     }
 
     /**
-     * DÃ©tails d'un Ã©vÃ©nement calendrier (pour le modal).
-     * PrioritÃ© : travel_date_id (exact) > voyage_id + date > wp_travel_id + date.
+     * DÃ‚Â©tails d'un Ã‰vÃ‚Â©nement calendrier (pour le modal).
+     * PrioritÃ‚Â© : travel_date_id (exact) > voyage_id + date > wp_travel_id + date.
      */
     public function calendarEventDetails(Request $request): JsonResponse
     {
@@ -2460,7 +2398,7 @@ class ReservationsController extends Controller
             // ignore
         }
 
-        // Source de vÃ©ritÃ© : donnÃ©es du voyage = post WordPress + meta (pas le modÃ¨le Laravel Voyage qui peut Ãªtre dÃ©synchronisÃ©)
+        // Source de vÃ‚Â©ritÃ‚Â© : donnÃ‚Â©es du voyage = post WordPress + meta (pas le modÃ‚Âèle Laravel Voyage qui peut Ã‚ÂÊtre dÃ‚ÂsynchronisÃ‚ÂÃ‚Â)
         $destination = null;
         $durationText = null;
         $priceFrom = null;

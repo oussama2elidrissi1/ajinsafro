@@ -139,7 +139,11 @@
 
     function getSelectedDepartureLabel() {
         var select = document.getElementById('reservation-departure-select');
-        return select && select.selectedOptions.length && select.value ? (select.selectedOptions[0].textContent || '—') : '—';
+        if (select && select.selectedOptions.length && select.value) {
+            var fullText = select.selectedOptions[0].textContent || '—';
+            return fullText.split(' - ')[0].trim();
+        }
+        return '—';
     }
 
     function getSelectedDepartureOption() {
@@ -457,10 +461,25 @@
             console.log('[Rooming] flattenAvailableRooms hotel rooms', { hotelRoomsLength: hotelRooms.length, hotelRooms: hotelRooms });
             
             hotelRooms.forEach(function (room, roomIdx) {
-                var sourceId = room.departure_hotel_room_id || room.tour_hotel_room_id || room.room_source_id || room.source_id || room.id || null;
-                var sourceType = room.room_source_type || (room.departure_hotel_room_id ? 'departure_hotel_room' : null) || (room.tour_hotel_room_id ? 'tour_hotel_room' : null) || room.source_type || 'unknown';
+                const sourceId =
+                    room.departure_hotel_room_id ||
+                    room.tour_hotel_room_id ||
+                    room.room_source_id ||
+                    room.source_id ||
+                    room.id ||
+                    null;
+
+                const sourceType =
+                    room.room_source_type ||
+                    (room.departure_hotel_room_id ? 'departure_hotel_room' : null) ||
+                    (room.tour_hotel_room_id ? 'tour_hotel_room' : null) ||
+                    room.source_type ||
+                    'unknown';
+
                 var capacity = parseInt(room.capacity || room.capacity_total || '0', 10) || 0;
                 var availableRooms = parseInt(room.available_rooms || '0', 10) || 0;
+                var availablePlaces = parseInt(room.available_places || '0', 10) || availableRooms * capacity;
+                var unitSupplement = parseNumber(room.unit_supplement != null ? room.unit_supplement : room.supplement);
                 
                 console.log('[Rooming] flattenAvailableRooms room check', {
                     roomIdx: roomIdx,
@@ -478,14 +497,17 @@
                     return;
                 }
                 rows.push({
-                    room_source_type: sourceType,
-                    room_source_id: sourceId,
-                    hotel_name: room.hotel_name || hotel.hotel_name || 'Hotel',
-                    room_type: room.room_type || 'Chambre',
-                    capacity: capacity,
-                    available_rooms: availableRooms,
-                    available_places: parseInt(room.available_places || '0', 10) || availableRooms * capacity,
-                    unit_supplement: parseNumber(room.unit_supplement != null ? room.unit_supplement : room.supplement)
+                  source_id: sourceId,
+                  room_source_id: sourceId,
+                  room_source_type: sourceType,
+                  departure_hotel_room_id: room.departure_hotel_room_id || null,
+                  tour_hotel_room_id: room.tour_hotel_room_id || null,
+                  room_type: room.room_type || room.type || 'Chambre',
+                  hotel_name: hotel.hotel_name || hotel.name || room.hotel_name || 'Hôtel',
+                  available_rooms: availableRooms,
+                  capacity: capacity,
+                  available_places: availablePlaces,
+                  unit_supplement: unitSupplement
                 });
             });
         });
@@ -1386,6 +1408,39 @@
                 // ignore
             }
         });
+    }
+
+    function initializeReservationState() {
+        var tourSelect = document.getElementById('select-tour-id');
+        var departureSelect = document.getElementById('reservation-departure-select');
+        
+        if (tourSelect && tourSelect.value) {
+            window.reservationState.selectedTourId = tourSelect.value;
+        }
+
+        if (departureSelect && departureSelect.value) {
+            var selectedOption = departureSelect.options[departureSelect.selectedIndex];
+            window.reservationState.selectedDepartureId = departureSelect.value;
+            if (selectedOption) {
+                window.reservationState.selectedTravelDateId = selectedOption.getAttribute('data-travel-date-id');
+            }
+        }
+
+        // If values are still null, try to get them from URL params
+        var urlParams = new URLSearchParams(window.location.search);
+        if (!window.reservationState.selectedTourId) {
+            window.reservationState.selectedTourId = urlParams.get('tour_id');
+        }
+        if (!window.reservationState.selectedTravelDateId) {
+            window.reservationState.selectedTravelDateId = urlParams.get('travel_date_id');
+        }
+
+        console.log('[Reservation Create] Initial state loaded:', window.reservationState);
+
+        if (typeof window.reservationCreateReloadDepartureRooms === 'function') {
+            console.log('[Reservation Create] Calling reservationCreateReloadDepartureRooms on init.');
+            window.reservationCreateReloadDepartureRooms();
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
