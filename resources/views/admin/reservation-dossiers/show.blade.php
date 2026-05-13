@@ -6,15 +6,18 @@
     use App\Models\Reservation;
     use Illuminate\Support\Facades\Storage;
 
+    $backUrl = $backUrl ?? route('admin.reservation-dossiers.index');
     $offerImageUrl = $offerImageUrl ?? null;
     $offer = $offer ?? null;
+    $relatedReservations = $relatedReservations ?? collect();
+    $allClientReservationsUrl = $allClientReservationsUrl ?? url('/admin/reservations');
     $client = $dossier->client ?: $reservation->client;
     $offer = $offer ?: ($reservation->offer ?? $reservation->voyage ?? $reservation->tour ?? null);
     $departure = $reservation->departure;
-    $payments = $dossier->payments->isNotEmpty() ? $dossier->payments : $reservation->payments;
-    $documents = $dossier->documents->isNotEmpty() ? $dossier->documents : $reservation->documents;
-    $histories = $dossier->histories->isNotEmpty() ? $dossier->histories : $reservation->histories;
-    $passengers = $reservation->passengers;
+    $payments = $dossier->payments->isNotEmpty() ? $dossier->payments : ($reservation->payments ?? collect());
+    $documents = $dossier->documents->isNotEmpty() ? $dossier->documents : ($reservation->documents ?? collect());
+    $histories = $dossier->histories->isNotEmpty() ? $dossier->histories : ($reservation->histories ?? collect());
+    $passengers = $reservation->passengers ?? collect();
     $totalAmount = (float) ($dossier->total_amount ?? $reservation->total_amount ?? 0);
     $paidAmount = (float) ($dossier->paid_amount ?? $reservation->paid_amount ?? 0);
     $remainingAmount = (float) ($dossier->remaining_amount ?? $reservation->remaining_amount ?? max(0, $totalAmount - $paidAmount));

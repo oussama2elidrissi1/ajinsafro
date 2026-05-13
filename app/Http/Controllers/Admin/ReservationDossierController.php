@@ -144,17 +144,23 @@ class ReservationDossierController extends Controller
             'payments.creator',
             'documents.creator',
             'histories.user',
+            'reservations.client',
             'reservations.offer',
             'reservations.offer.images',
+            'reservations.voyage',
             'reservations.voyage.images',
+            'reservations.tour',
             'reservations.tour.images',
             'reservations.departure',
             'reservations.passengers',
             'reservations.extras',
             'reservations.reservationRooms.departureHotelRoom',
+            'mainReservation.client',
             'mainReservation.offer',
             'mainReservation.offer.images',
+            'mainReservation.voyage',
             'mainReservation.voyage.images',
+            'mainReservation.tour',
             'mainReservation.tour.images',
             'mainReservation.departure',
             'mainReservation.passengers',
@@ -215,12 +221,35 @@ class ReservationDossierController extends Controller
             }
         }
 
+        $clientId = $reservationDossier->client_id ?? $reservation->client_external_id ?? null;
+        $relatedReservations = Reservation::query()
+            ->with(['client', 'departure', 'voyage', 'offer'])
+            ->where(function ($query) use ($reservationDossier, $clientId) {
+                $query->where('reservation_dossier_id', $reservationDossier->id);
+
+                if ($clientId) {
+                    $query->orWhere('client_external_id', $clientId);
+                }
+            })
+            ->where('id', '!=', $reservation->id)
+            ->latest()
+            ->limit(6)
+            ->get()
+            ->filter(fn (Reservation $candidate) => $this->reservationVisibility->canAccessReservation($request->user(), $candidate))
+            ->values();
+
+        $allClientReservationsUrl = $clientId
+            ? route('admin.reservations.index', ['client_id' => $clientId])
+            : route('admin.reservations.index');
+
         return view('admin.reservation-dossiers.show', [
             'dossier' => $reservationDossier,
             'reservation' => $reservation,
             'offer' => $offer,
             'offerImageUrl' => $offerImageUrl,
             'backUrl' => $backUrl,
+            'relatedReservations' => $relatedReservations,
+            'allClientReservationsUrl' => $allClientReservationsUrl,
         ]);
     }
 }
