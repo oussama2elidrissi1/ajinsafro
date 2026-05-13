@@ -523,87 +523,54 @@ class ReservationsController extends Controller
      */
     public function departureHotelsRooms(Request $request): JsonResponse
     {
-        $departureId = $request->input('departure_id');
-        $tourId = $request->input('tour_id');
-        $travelDateId = $request->input('travel_date_id');
+        try {
+            $payload = $this->reservationPricing->previewDepartureSelection($request->all());
 
-        if (! $departureId && $travelDateId) {
-            $travelDate = TravelDate::find($travelDateId);
-            if ($travelDate) {
-                $departureId = $travelDate->departure_id;
-            }
+            return response()->json([
+                'success' => (bool) ($payload['success'] ?? false),
+                'mode' => (string) ($payload['mode'] ?? 'error'),
+                'rooms_source' => $payload['rooms_source'] ?? null,
+                'message' => $payload['message'] ?? null,
+                'departure' => $payload['departure'] ?? null,
+                'pricing' => $payload['pricing'] ?? null,
+                'rooms' => $payload['rooms'] ?? [],
+                'count' => is_array($payload['rooms'] ?? null) ? count($payload['rooms']) : 0,
+            ], 200);
+        } catch (ValidationException $e) {
+            Log::warning('Reservation rooms endpoint validation failed', [
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+                'tour_id' => $request->input('tour_id'),
+                'departure_id' => $request->input('departure_id'),
+                'travel_date_id' => $request->input('travel_date_id'),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'mode' => 'error',
+                'message' => 'Erreur de chargement des disponibilités du départ.',
+                'debug' => config('app.debug') ? $e->errors() : null,
+            ], 200);
+        } catch (
+            \Throwable $e
+        ) {
+            Log::error('Reservation rooms endpoint failed', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => collect($e->getTrace())->take(5)->toArray(),
+                'tour_id' => $request->input('tour_id'),
+                'departure_id' => $request->input('departure_id'),
+                'travel_date_id' => $request->input('travel_date_id'),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'mode' => 'error',
+                'message' => 'Erreur de chargement des disponibilités du départ.',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
+            ], 200);
         }
-
-        if (! $departureId) {
-            return response()->json(['success' => false, 'message' => 'Departure ID manquant.'], 400);
-        }
-
-        $departure = Departure::with([
-            'departureRooms.roomType',
-            'departureHotelRooms.roomType',
-            'departureHotelRooms.hotel',
-        ])->find($departureId);
-
-        if (! $departure) {
-            return response()->json(['success' => false, 'message' => 'Départ non trouvé.'], 404);
-        }
-
-        $availableRooms = $this->roomAvailability->getAvailableRoomsForDeparture($departure);
-
-        $formattedRooms = $availableRooms->map(function ($room) {
-            $sourceType = 'unknown';
-            $sourceId = $room->id ?? $room->departure_hotel_room_id ?? $room->tour_hotel_room_id ?? $room->room_source_id ?? null;
-            $departureHotelRoomId = null;
-            $tourHotelRoomId = null;
-
-            if ($room instanceof DepartureRoomAllocation) {
-                $sourceType = 'departure_room_allocation';
-                $sourceId = $room->id ?? $sourceId;
-                $departureHotelRoomId = $room->departure_hotel_room_id ?? $room->room_id ?? $sourceId;
-            } elseif ($room instanceof DepartureHotelRoom) {
-                $sourceType = 'departure_hotel_room';
-                $sourceId = $room->id ?? $sourceId;
-                $departureHotelRoomId = $room->id ?? $room->departure_hotel_room_id ?? $sourceId;
-            } elseif ($room instanceof TourHotelRoomAvailability) {
-                $sourceType = 'tour_hotel_room';
-                $sourceId = $room->id ?? $sourceId;
-                $tourHotelRoomId = $room->tour_hotel_room_id ?? $room->id ?? $sourceId;
-            }
-
-            $departureHotelRoomId = $departureHotelRoomId ?? ($room->departure_hotel_room_id ?? null);
-            $tourHotelRoomId = $tourHotelRoomId ?? ($room->tour_hotel_room_id ?? null);
-
-            if ($sourceId === null) {
-                $sourceId = $departureHotelRoomId ?? $tourHotelRoomId ?? $room->room_source_id ?? $room->source_id ?? null;
-            }
-
-            return [
-                'id' => $sourceId,
-                'room_source_id' => $sourceId,
-                'room_source_type' => $sourceType,
-                'departure_hotel_room_id' => $departureHotelRoomId,
-                'tour_hotel_room_id' => $tourHotelRoomId,
-                'room_type' => $room->room_type_name ?? $room->room_type ?? $room->type ?? 'Chambre',
-                'available_rooms' => $room->computed_available_rooms ?? $room->available_rooms ?? 0,
-                'capacity' => $room->capacity ?? $room->capacity_total ?? 0,
-                'available_places' => $room->computed_available_places ?? $room->available_places ?? 0,
-                'unit_supplement' => $room->unit_supplement ?? $room->supplement ?? 0,
-                'hotel_name' => $room->hotel_name ?? $room->hotel?->name ?? 'Hôtel',
-            ];
-        })->values();
-
-        $html = view('admin.reservations.partials._hotel_rooms', [
-            'availableRooms' => $formattedRooms,
-            'mode' => 'rooms',
-        ])->render();
-
-        return response()->json([
-            'success' => true,
-            'html' => $html,
-            'rooms' => $formattedRooms,
-            'count' => $formattedRooms->count(),
-            'mode' => 'rooms',
-        ]);
     }
 
     /**
