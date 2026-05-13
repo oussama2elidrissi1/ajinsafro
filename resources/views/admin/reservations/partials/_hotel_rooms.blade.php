@@ -503,6 +503,17 @@
         window.reservationState.selectedTourId = tourSelect && tourSelect.value ? tourSelect.value : null;
         window.reservationState.selectedDepartureId = inputDepartureId && inputDepartureId.value ? inputDepartureId.value : null;
         window.reservationState.selectedTravelDateId = inputTravelDateId && inputTravelDateId.value ? inputTravelDateId.value : null;
+        
+        console.log('[Rooming] renderDepartureRooms - State updated:', {
+            hotelsLength: Array.isArray(hotels) ? hotels.length : 'not-array',
+            hotels: hotels,
+            availableRooms: window.reservationState.availableRooms,
+            roomsMode: window.reservationState.roomsMode,
+            selectedTourId: window.reservationState.selectedTourId,
+            selectedDepartureId: window.reservationState.selectedDepartureId,
+            selectedTravelDateId: window.reservationState.selectedTravelDateId
+        });
+        
         document.dispatchEvent(new CustomEvent('reservation:rooms-loaded', { detail: { payload: payload || {}, rooms: window.reservationAvailableRooms } }));
 
         setAccommodationMode(payload.mode || 'rooms');
@@ -744,8 +755,9 @@
                 return response;
             })
             .then(function (response) {
-                console.log('[Rooming] availableRooms after reload', window.reservationState.availableRooms);
+                console.log('[Rooming] availableRooms BEFORE renderDepartureRooms', window.reservationState.availableRooms);
                 renderDepartureRooms(response);
+                console.log('[Rooming] availableRooms AFTER renderDepartureRooms', window.reservationState.availableRooms);
             })
             .catch(function (error) {
                 console.error('[Rooming] Reload rooms Error', {
