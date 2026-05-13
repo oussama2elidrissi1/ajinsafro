@@ -84,7 +84,6 @@ return [
                     'key' => 'voyages',
                     'label' => 'Voyages',
                     'icon' => 'bx bx-plane',
-                    'route' => 'admin.circuits.voyages.index',
                     'permission' => 'circuits.voyages.view',
                     'active_patterns' => ['admin.circuits.voyages.*'],
                     'children' => [
