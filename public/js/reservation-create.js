@@ -448,12 +448,28 @@
 
     function flattenAvailableRooms(groups) {
         var rows = [];
-        (Array.isArray(groups) ? groups : []).forEach(function (hotel) {
+        console.log('[Rooming] flattenAvailableRooms input', { groups: groups, isArray: Array.isArray(groups) });
+        
+        (Array.isArray(groups) ? groups : []).forEach(function (hotel, hotelIdx) {
+            console.log('[Rooming] flattenAvailableRooms processing hotel', { hotelIdx: hotelIdx, hotel: hotel });
+            
             var hotelRooms = Array.isArray(hotel.rooms) ? hotel.rooms : [hotel];
-            hotelRooms.forEach(function (room) {
+            console.log('[Rooming] flattenAvailableRooms hotel rooms', { hotelRoomsLength: hotelRooms.length, hotelRooms: hotelRooms });
+            
+            hotelRooms.forEach(function (room, roomIdx) {
                 var sourceId = room.tour_hotel_room_id || room.departure_hotel_room_id || room.room_source_id || room.id || null;
                 var capacity = parseInt(room.capacity || room.capacity_total || '0', 10) || 0;
                 var availableRooms = parseInt(room.available_rooms || '0', 10) || 0;
+                
+                console.log('[Rooming] flattenAvailableRooms room check', {
+                    roomIdx: roomIdx,
+                    sourceId: sourceId,
+                    capacity: capacity,
+                    availableRooms: availableRooms,
+                    willInclude: !!(sourceId && capacity > 0 && availableRooms > 0),
+                    room: room
+                });
+                
                 if (!sourceId || capacity <= 0 || availableRooms <= 0) return;
                 rows.push({
                     room_source_type: room.tour_hotel_room_id ? 'tour_hotel_room' : 'departure_room',
@@ -467,15 +483,32 @@
                 });
             });
         });
+        
+        console.log('[Rooming] flattenAvailableRooms output', { rowsLength: rows.length, rows: rows });
         return rows;
     }
 
     function setAvailableRoomTypes(groups) {
+        console.log('[Rooming] setAvailableRoomTypes called', {
+            groupsArg: groups,
+            groupsLength: groups ? groups.length : 0,
+            windowReservationStateAvailableRooms: window.reservationState && window.reservationState.availableRooms ? window.reservationState.availableRooms : undefined
+        });
+        
         if ((!groups || !groups.length) && window.reservationState && Array.isArray(window.reservationState.availableRooms)) {
             groups = window.reservationState.availableRooms;
+            console.log('[Rooming] setAvailableRoomTypes - Fallback to window.reservationState.availableRooms', groups);
         }
+        
         availableRoomTypes = flattenAvailableRooms(groups);
+        console.log('[Rooming] setAvailableRoomTypes - After flatten', {
+            availableRoomTypesLength: availableRoomTypes ? availableRoomTypes.length : 0,
+            availableRoomTypes: availableRoomTypes
+        });
+        
         window.reservationState.availableRooms = groups || [];
+        console.log('[Rooming] setAvailableRoomTypes - State updated, now calling renderAvailableRooms and renderRooming');
+        
         renderAvailableRooms();
         renderRooming();
     }
