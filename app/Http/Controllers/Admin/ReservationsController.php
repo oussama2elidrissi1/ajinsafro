@@ -973,7 +973,7 @@ class ReservationsController extends Controller
             'amount' => 'required|numeric|gt:0',
             'reference' => 'nullable|string|max:120',
             'note' => 'nullable|string|max:2000',
-            'proof_file' => 'nullable|file|max:10240',
+            'proof_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
         ]);
 
         $payment = $this->reservationDossier->addPayment($reservation, [
@@ -1015,7 +1015,7 @@ class ReservationsController extends Controller
         $data = $request->validate([
             'type' => 'required|string|max:100',
             'title' => 'required|string|max:190',
-            'file' => 'required|file|max:10240',
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
         ]);
 
         $document = $this->reservationDossier->addUploadedDocument(
@@ -1039,6 +1039,45 @@ class ReservationsController extends Controller
         );
 
         return redirect()->back()->with('success', 'Document ajoutÃƒÂ© au dossier.');
+    }
+
+    public function storeNote(Request $request, Reservation $reservation): RedirectResponse
+    {
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless(
+            $request->user()->can('reservations.view_internal_notes') || $request->user()->can('reservations.update'),
+            403,
+            'Vous ne pouvez pas ajouter de note interne sur ce dossier.'
+        );
+
+        $data = $request->validate([
+            'note' => 'required|string|max:5000',
+        ]);
+
+        $timestamp = now()->format('d/m/Y H:i');
+        $author = trim((string) ($request->user()->name ?? 'Admin'));
+        $entry = '['.$timestamp.'] '.$author.PHP_EOL.trim((string) $data['note']);
+        $existingNotes = trim((string) ($reservation->notes ?? ''));
+
+        $reservation->notes = $existingNotes !== ''
+            ? $existingNotes.PHP_EOL.PHP_EOL.$entry
+            : $entry;
+        $reservation->updated_by = $request->user()->id;
+        $reservation->save();
+
+        $this->reservationDossier->syncDossierFromReservation($reservation);
+        $this->reservationDossier->addHistory(
+            $reservation,
+            'reservation.note_added',
+            $request->user()->id,
+            null,
+            [
+                'note_excerpt' => Str::limit(trim((string) $data['note']), 160),
+            ],
+            trim((string) $data['note'])
+        );
+
+        return redirect()->back()->with('success', 'Note interne ajoutÃ©e au dossier.');
     }
 
     public function cancel(Request $request, Reservation $reservation): RedirectResponse
@@ -1093,6 +1132,26 @@ class ReservationsController extends Controller
         $filename = Str::slug((string) ($reservation->dossier_number ?: 'reservation-'.$reservation->id)).'-dossier.pdf';
 
         return Pdf::loadView('admin.reservations.pdf.dossier', [
+            'reservation' => $reservation,
+        ])->stream($filename);
+    }
+
+    public function invoice(Request $request, Reservation $reservation)
+    {
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+
+        $reservation->load([
+            'client',
+            'offer',
+            'departure',
+            'passengers',
+            'extras',
+            'payments.creator',
+        ]);
+
+        $filename = Str::slug((string) ($reservation->dossier_number ?: 'reservation-'.$reservation->id)).'-invoice.pdf';
+
+        return Pdf::loadView('admin.reservations.pdf.invoice', [
             'reservation' => $reservation,
         ])->stream($filename);
     }
@@ -2511,6 +2570,5 @@ class ReservationsController extends Controller
         return $n >= 0 ? $n : null;
     }
 }
-
 
 

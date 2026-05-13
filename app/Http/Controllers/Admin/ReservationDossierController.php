@@ -20,6 +20,16 @@ class ReservationDossierController extends Controller
 
     public function index(Request $request): View
     {
+        $status = trim((string) $request->query('status', ''));
+
+        // Global stats (unfiltered base) for KPI cards
+        $globalStats = [
+            'total' => ReservationDossier::count(),
+            'pending' => ReservationDossier::whereIn('dossier_status', ['draft', 'pending'])->count(),
+            'remaining' => ReservationDossier::where('remaining_amount', '>', 0)->count(),
+            'paid' => ReservationDossier::where('payment_status', 'paid')->count(),
+        ];
+
         $query = ReservationDossier::query()
             ->with([
                 'client',
@@ -73,35 +83,39 @@ class ReservationDossierController extends Controller
             $query->where('payment_status', $paymentStatus);
         }
 
-        if ($request->boolean('remaining_only')) {
-            $query->where('remaining_amount', '>', 0);
-        }
-
-        if ($request->boolean('payment_complete')) {
-            $query->where('remaining_amount', '<=', 0);
+        // Gestion du parametre status (prioritaire)
+        if ($status !== '' && $status !== 'all') {
+            match ($status) {
+                'pending' => $query->whereIn('dossier_status', ['draft', 'pending']),
+                'paid' => $query->where('payment_status', 'paid'),
+                'follow_up' => $query->where('remaining_amount', '>', 0),
+                default => null,
+            };
+        } else {
+            // Fallback: legacy boolean params
+            if ($request->boolean('remaining_only')) {
+                $query->where('remaining_amount', '>', 0);
+            }
+            if ($request->boolean('payment_complete')) {
+                $query->where('remaining_amount', '<=', 0);
+            }
+            if ($request->boolean('pending_only')) {
+                $query->whereIn('dossier_status', ['draft', 'pending']);
+            }
         }
 
         if ($request->boolean('today')) {
             $query->whereDate('created_at', now()->toDateString());
         }
 
-        if ($request->boolean('pending_only')) {
-            $query->whereIn('dossier_status', ['draft', 'pending']);
-        }
-
         $dossiers = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
 
-        $statsBase = clone $query;
-        $stats = [
-            'total' => (clone $statsBase)->count(),
-            'pending' => (clone $statsBase)->whereIn('dossier_status', ['draft', 'pending'])->count(),
-            'remaining' => (clone $statsBase)->where('remaining_amount', '>', 0)->count(),
-            'paid' => (clone $statsBase)->where('payment_status', 'paid')->count(),
-        ];
+        $stats = $globalStats;
 
         return view('admin.reservation-dossiers.index', [
             'dossiers' => $dossiers,
             'stats' => $stats,
+            'currentStatus' => $status !== '' && $status !== 'all' ? $status : 'all',
             'filters' => [
                 'search' => $request->query('search'),
                 'voyage_id' => $request->query('voyage_id'),
