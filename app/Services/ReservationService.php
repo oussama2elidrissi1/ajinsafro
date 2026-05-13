@@ -31,6 +31,7 @@ class ReservationService
     public function __construct(
         private readonly WordPressMediaService $mediaService,
         private readonly PartnerCommissionService $commissionService,
+        private readonly AgentCommissionService $agentCommissionService,
         private readonly DepartureStockService $departureStock,
         private readonly ReservationLifecycleService $reservationLifecycle,
         private readonly ReservationDossierService $reservationDossier,
@@ -139,6 +140,7 @@ class ReservationService
             if ($reservation->partner_id) {
                 $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
             }
+            $this->agentCommissionService->createFromReservation($reservation->fresh());
             $this->reservationDossier->addHistory(
                 $reservation,
                 'reservation.created',
@@ -230,6 +232,7 @@ class ReservationService
             if ($reservation->partner_id) {
                 $this->commissionService->calculateAndSaveForReservation($reservation->fresh());
             }
+            $this->agentCommissionService->refreshFromReservationStatus($reservation->fresh());
 
             $this->reservationDossier->addHistory(
                 $reservation,
@@ -264,6 +267,7 @@ class ReservationService
             if ($reservation->partner_id) {
                 $this->commissionService->validateCommissionForReservation($reservation);
             }
+            $this->agentCommissionService->markAsConfirmed($reservation->fresh());
             $this->reservationLifecycle->commitAfterPersist($reservation->fresh());
             $this->reservationDossier->addHistory($reservation, 'reservation.confirmed', null, null, [
                 'status' => $reservation->status,
@@ -282,6 +286,7 @@ class ReservationService
             if ($reservation->partner_id) {
                 $this->commissionService->cancelCommissionForReservation($reservation);
             }
+            $this->agentCommissionService->reverseForReservation($reservation->fresh());
             $reservation->delete();
         });
     }

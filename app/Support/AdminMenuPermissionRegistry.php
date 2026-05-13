@@ -69,6 +69,12 @@ class AdminMenuPermissionRegistry
         $names = array_merge($names, static::flattenPermissionValues(config('admin_menu.route_prefix_permissions', [])));
         $names = array_merge($names, [
             'agency_commissions.view',
+            'commissions.view-own',
+            'commissions.view-team',
+            'commissions.view-all',
+            'commissions.manage',
+            'commissions.mark-paid',
+            'commissions.export',
             'reservations.create',
             'reservations.store',
             'reservations.edit',

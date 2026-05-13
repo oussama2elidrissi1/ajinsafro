@@ -257,6 +257,11 @@ class Reservation extends Model
         return $this->hasOne(PartnerCommission::class, 'reservation_id');
     }
 
+    public function agentCommissionEntries(): HasMany
+    {
+        return $this->hasMany(AgentCommissionEntry::class, 'reservation_id');
+    }
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);

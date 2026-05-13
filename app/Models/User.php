@@ -99,6 +99,11 @@ class User extends Authenticatable
         return $this->hasOne(Partner::class);
     }
 
+    public function agentCommissionEntries(): HasMany
+    {
+        return $this->hasMany(AgentCommissionEntry::class, 'agent_id');
+    }
+
     public function agencyEmployee(): HasOne
     {
         return $this->hasOne(AgencyEmployee::class);

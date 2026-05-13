@@ -47,7 +47,7 @@ class AjinsafroRolesSeeder extends Seeder
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'group-deals.')
                 || str_starts_with($p, 'products-services.') || str_starts_with($p, 'messagerie.')
-                || in_array($p, ['agencies.view', 'points_of_sale.view', 'agency_employees.view', 'pos_employees.view', 'agency_accounts.view', 'assignments.view'], true);
+                || in_array($p, ['agencies.view', 'points_of_sale.view', 'agency_employees.view', 'pos_employees.view', 'agency_accounts.view', 'assignments.view', 'commissions.view-team'], true);
         }));
         $commercial = array_values(array_diff($commercial, self::RESTRICTED_RESERVATION_PERMISSIONS));
         $agent = array_values(array_filter($allPermissions, function (string $p): bool {
@@ -55,7 +55,7 @@ class AjinsafroRolesSeeder extends Seeder
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'group-deals.')
                 || str_starts_with($p, 'products-services.') || str_starts_with($p, 'operations.') || str_starts_with($p, 'visa.')
                 || str_starts_with($p, 'messagerie.')
-                || in_array($p, ['agencies.view', 'points_of_sale.view', 'agency_accounts.view'], true);
+                || in_array($p, ['agencies.view', 'points_of_sale.view', 'agency_accounts.view', 'commissions.view-own'], true);
         }));
         $agent = array_values(array_diff($agent, self::RESTRICTED_RESERVATION_PERMISSIONS));
 

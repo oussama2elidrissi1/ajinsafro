@@ -52,15 +52,26 @@ class AdminPermissionsSeeder extends Seeder
                 || str_starts_with($permission, 'accommodations.')
                 || str_starts_with($permission, 'operations.')
                 || str_starts_with($permission, 'visa.')
-                || in_array($permission, ['agencies.view', 'points_of_sale.view'], true);
+                || in_array($permission, ['agencies.view', 'points_of_sale.view', 'commissions.view-own'], true);
         }));
         $agentRole->syncPermissions(array_values(array_diff($agentPermissions, self::RESTRICTED_RESERVATION_PERMISSIONS)));
+
+        $managerPermissions = array_values(array_unique(array_merge(
+            array_values(array_filter($permissions, function (string $permission): bool {
+                return ! str_starts_with($permission, 'settings.roles.')
+                    && ! str_starts_with($permission, 'settings.security.')
+                    && ! in_array($permission, self::RESTRICTED_RESERVATION_PERMISSIONS, true);
+            })),
+            ['commissions.view-team']
+        )));
+        $managerRole->syncPermissions($managerPermissions);
 
         $accountantRole->syncPermissions(array_values(array_filter($permissions, function (string $permission): bool {
             return str_starts_with($permission, 'dashboard.')
                 || str_starts_with($permission, 'finance.')
                 || str_starts_with($permission, 'reporting.')
-                || str_starts_with($permission, 'reservations.payments.');
+                || str_starts_with($permission, 'reservations.payments.')
+                || str_starts_with($permission, 'commissions.');
         })));
 
         $adminUsers = User::query()->where('is_admin', true)->get();

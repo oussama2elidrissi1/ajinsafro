@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
+use App\Services\AgentCommissionService;
 use App\Services\ReservationHubTableProfile;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationDossierService;
@@ -54,6 +55,7 @@ class ReservationsController extends Controller
         protected ReservationVisibilityService $reservationVisibility,
         protected ReservationDossierService $reservationDossier,
         protected ReservationPricingService $reservationPricing,
+        protected AgentCommissionService $agentCommissionService,
     ) {}
 
     /**
@@ -990,6 +992,12 @@ class ReservationsController extends Controller
         }
 
         $reservation->save();
+        $this->agentCommissionService->refreshFromReservationStatus($reservation->fresh(), \App\Models\AgentCommissionEntry::SOURCE_PAYMENT_RECEIVED);
+
+        if ($reservation->payment_status === Reservation::PAYMENT_STATUS_PAID) {
+            $this->agentCommissionService->markAsPayable($reservation->fresh(), $request->user());
+        }
+
         $this->reservationDossier->addHistory(
             $reservation,
             'reservation.payment_added',
@@ -1096,6 +1104,7 @@ class ReservationsController extends Controller
 
         $this->reservationDossier->applyCancellationState($reservation);
         $reservation->save();
+        $this->agentCommissionService->cancelForReservation($reservation->fresh(), $request->user());
 
         $this->reservationDossier->addHistory(
             $reservation,
@@ -2570,5 +2579,4 @@ class ReservationsController extends Controller
         return $n >= 0 ? $n : null;
     }
 }
-
 

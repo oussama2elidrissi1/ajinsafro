@@ -15,7 +15,9 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CustomersController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartureController;
+use App\Http\Controllers\Admin\AgentCommissionPortalController;
 use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\Finance\AgentCommissionController as FinanceAgentCommissionController;
 use App\Http\Controllers\Admin\GroupDeals\GroupDealController;
 use App\Http\Controllers\Admin\GroupDeals\OfferController as GroupDealOfferController;
 use App\Http\Controllers\Admin\HajjOmraBookingRequestController;
@@ -407,10 +409,21 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('visa/documents', [VisaController::class, 'page'])->name('visa.documents')->defaults('submenu', 'documents');
 
         Route::get('finance', [FinanceController::class, 'index'])->name('finance.index');
+        Route::get('agent/commissions', [AgentCommissionPortalController::class, 'index'])->name('agent.commissions.index');
+        Route::get('agent/commissions/{entry}', [AgentCommissionPortalController::class, 'show'])->name('agent.commissions.show');
         Route::get('finance/factures', [FinanceController::class, 'page'])->name('finance.factures')->defaults('submenu', 'factures');
         Route::get('finance/paiements', [FinanceController::class, 'page'])->name('finance.paiements')->defaults('submenu', 'paiements');
         Route::get('finance/depenses', [FinanceController::class, 'page'])->name('finance.depenses')->defaults('submenu', 'depenses');
-        Route::get('finance/commissions', [FinanceController::class, 'page'])->name('finance.commissions')->defaults('submenu', 'commissions');
+        Route::get('finance/commissions', [FinanceAgentCommissionController::class, 'index'])->name('finance.commissions');
+        Route::get('finance/commissions/export/excel', [FinanceAgentCommissionController::class, 'exportExcel'])->name('finance.commissions.export.excel');
+        Route::get('finance/commissions/export/pdf', [FinanceAgentCommissionController::class, 'exportPdf'])->name('finance.commissions.export.pdf');
+        Route::get('finance/commissions/{entry}', [FinanceAgentCommissionController::class, 'show'])->name('finance.commissions.show');
+        Route::post('finance/commissions/{entry}/confirm', [FinanceAgentCommissionController::class, 'confirm'])->name('finance.commissions.confirm');
+        Route::post('finance/commissions/{entry}/payable', [FinanceAgentCommissionController::class, 'payable'])->name('finance.commissions.payable');
+        Route::post('finance/commissions/{entry}/paid', [FinanceAgentCommissionController::class, 'paid'])->name('finance.commissions.paid');
+        Route::post('finance/commissions/{entry}/cancel', [FinanceAgentCommissionController::class, 'cancel'])->name('finance.commissions.cancel');
+        Route::post('finance/commissions/{entry}/reverse', [FinanceAgentCommissionController::class, 'reverse'])->name('finance.commissions.reverse');
+        Route::post('finance/commissions/{entry}/adjust', [FinanceAgentCommissionController::class, 'adjust'])->name('finance.commissions.adjust');
         Route::get('finance/rapports-financiers', [FinanceController::class, 'page'])->name('finance.rapports-financiers')->defaults('submenu', 'rapports-financiers');
 
         Route::get('partners', [PartnersController::class, 'index'])->name('partners.index');
