@@ -850,6 +850,13 @@
         background: #e6f3fa;
         border-color: #0083c4;
     }
+    .ws-md-btn-disabled {
+        background: #e2e8f0;
+        color: #94a3b8;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
     body.ws-md-open {
         overflow: hidden !important;
     }
@@ -1311,9 +1318,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (f.tour_id) {
             h += '<button type="button" class="ws-md-btn ws-md-btn-success" id="ws-md-btn-new-res"><i class="fas fa-suitcase-rolling"></i> Nouvelle réservation</button>';
-        }
-        if (r.edit_voyage) {
-            h += '<a href="' + r.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
         }
         h += '</div>';
         return h;
@@ -1813,24 +1817,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function selectorFooter(detail, selectedDeparture) {
         var html = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i> Fermer</button><div class="ws-md-footer-actions">';
-        if (selectedDeparture && selectedDeparture.routes && selectedDeparture.routes.reservations) {
-            html += '<a href="' + selectedDeparture.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
-        } else if (detail.routes && detail.routes.reservations) {
-            html += '<a href="' + detail.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        var resUrl = (selectedDeparture && selectedDeparture.routes && selectedDeparture.routes.reservations)
+            ? selectedDeparture.routes.reservations
+            : (detail.routes && detail.routes.reservations ? detail.routes.reservations : null);
+        if (resUrl) {
+            html += '<a href="' + resUrl + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
         }
-        if (selectedDeparture && selectedDeparture.routes && selectedDeparture.routes.reserve) {
-            html += '<a href="' + selectedDeparture.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
+        if (selectedDeparture) {
+            var isPast = selectedDeparture.is_past === true;
+            var noRooms = selectedDeparture.capacity_note === 'Aucune chambre configurée';
+            var canReserve = !isPast && !noRooms && selectedDeparture.routes && selectedDeparture.routes.reserve;
+            if (canReserve) {
+                html += '<a href="' + selectedDeparture.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
+            } else if (noRooms) {
+                html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="Aucune chambre configurée pour ce départ"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
+            }
         }
-        if (detail.routes && detail.routes.edit_voyage) html += '<a href="' + detail.routes.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
         html += '</div>';
         return html;
     }
 
     function departureFooter(code, detail, departure) {
         var html = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i> Fermer</button><div class="ws-md-footer-actions">';
-        if (departure.routes && departure.routes.reservations) html += '<a href="' + departure.routes.reservations + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
-        if (departure.routes && departure.routes.reserve) html += '<a href="' + departure.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
-        if (detail.routes && detail.routes.edit_voyage) html += '<a href="' + detail.routes.edit_voyage + '" class="ws-md-btn ws-md-btn-outline"><i class="fas fa-edit"></i> Modifier le voyage</a>';
+        var resUrl = (departure.routes && departure.routes.reservations)
+            ? departure.routes.reservations
+            : (detail.routes && detail.routes.reservations ? detail.routes.reservations : null);
+        if (resUrl) html += '<a href="' + resUrl + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        if (departure) {
+            var isPast = departure.is_past === true;
+            var noRooms = departure.capacity_note === 'Aucune chambre configurée';
+            var canReserve = !isPast && !noRooms && departure.routes && departure.routes.reserve;
+            if (canReserve) {
+                html += '<a href="' + departure.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
+            } else if (noRooms) {
+                html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="Aucune chambre configurée pour ce départ"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
+            }
+        }
         html += '</div>';
         return html;
     }
