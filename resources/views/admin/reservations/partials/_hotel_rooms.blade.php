@@ -8,6 +8,7 @@
     $tourHotelsWithRooms = $tourHotelsWithRooms ?? collect();
     $reservation = $reservation ?? null;
     $selectedTravelDate = $selectedTravelDate ?? null;
+    $compactAvailabilityOnly = (bool) ($compactAvailabilityOnly ?? false);
 
     $initialDepartureRoomCounts = [];
     if ($reservation) {
@@ -131,7 +132,7 @@
                 <p class="text-muted mb-0" id="reservation-hotel-placeholder">Sélectionnez un voyage puis un départ pour charger les chambres du dossier.</p>
             @endif
         </div>
-        @if($roomsDebugEnabled)
+        @if($roomsDebugEnabled && ! $compactAvailabilityOnly)
             <div id="reservation-rooms-debug-panel" class="alert alert-secondary small mt-3 mb-0">
                 <strong>Debug chambres</strong>
                 <div id="reservation-rooms-debug-content" class="mt-2">Waiting for request...</div>
@@ -171,6 +172,7 @@
         };
     }
     var legacyEdit = @json($legacyEdit);
+    var compactAvailabilityOnly = @json($compactAvailabilityOnly);
     var voyageDeparturesUrl = @json($voyageDeparturesPath);
     var departureHotelsRoomsUrl = @json($departureHotelsRoomsPath);
     var initialRooms = {};
@@ -191,6 +193,21 @@
     var roomsDebugEnabled = @json($roomsDebugEnabled);
     var roomsDebugPanel = document.getElementById('reservation-rooms-debug-content');
     var roomsDebugRequestSeq = 0;
+    if (compactAvailabilityOnly) {
+        var cardTitle = document.querySelector('#reservation-hotel-card .card-title');
+        if (cardTitle) {
+            cardTitle.textContent = 'Disponibilites du depart';
+        }
+    }
+    window.reservationState = window.reservationState || {
+        selectedTourId: null,
+        selectedDepartureId: null,
+        selectedTravelDateId: null,
+        pricing: {},
+        availableRooms: [],
+        travelers: [],
+        roomAllocations: []
+    };
 
     function parseNumber(value) {
         var parsed = parseFloat(value || '0');
@@ -480,6 +497,11 @@
 
         window.reservationAvailableRooms = Array.isArray(hotels) ? hotels : [];
         window.reservationDepartureRoomsPayload = payload || {};
+        window.reservationState.availableRooms = window.reservationAvailableRooms;
+        window.reservationState.pricing = pricing || {};
+        window.reservationState.selectedTourId = tourSelect && tourSelect.value ? tourSelect.value : null;
+        window.reservationState.selectedDepartureId = inputDepartureId && inputDepartureId.value ? inputDepartureId.value : null;
+        window.reservationState.selectedTravelDateId = inputTravelDateId && inputTravelDateId.value ? inputTravelDateId.value : null;
         document.dispatchEvent(new CustomEvent('reservation:rooms-loaded', { detail: { payload: payload || {}, rooms: window.reservationAvailableRooms } }));
 
         setAccommodationMode(payload.mode || 'rooms');
@@ -490,6 +512,42 @@
             source: payload && payload.rooms_source ? payload.rooms_source : 'unknown',
             timestamp: payload && payload.__debug ? payload.__debug.timestamp : new Date().toISOString()
         });
+
+        if (compactAvailabilityOnly) {
+            var typeNames = [];
+            hotels.forEach(function (hotel) {
+                (hotel.rooms || [hotel]).forEach(function (room) {
+                    var label = String(room.room_type || '').trim();
+                    if (label && typeNames.indexOf(label) === -1) {
+                        typeNames.push(label);
+                    }
+                });
+            });
+            var departureLabel = '';
+            if (departureData && (departureData.start_date || departureData.end_date)) {
+                departureLabel = (departureData.start_date || '') + (departureData.end_date ? ' -> ' + departureData.end_date : '');
+            } else if (typeof window.getSelectedDepartureLabel === 'function') {
+                departureLabel = window.getSelectedDepartureLabel();
+            }
+            roomsContainer.setAttribute('data-room-mode', payload.mode || 'rooms');
+            roomsContainer.setAttribute('data-available-capacity', String(availableCapacity));
+            roomsContainer.innerHTML = '' +
+                '<div class="reservation-create__availability-summary">' +
+                    '<div><span>Depart</span><strong>' + escapeHtml(departureLabel || '-') + '</strong></div>' +
+                    '<div><span>Places restantes</span><strong>' + availableCapacity + '</strong></div>' +
+                    '<div><span>Types disponibles</span><strong>' + escapeHtml(typeNames.length ? typeNames.join(', ') : 'Aucun type detaille') + '</strong></div>' +
+                    '<div><span>Prix unitaire</span><strong>' + formatMoney(unitPrice) + '</strong></div>' +
+                    '<p>La repartition des chambres se fait a l etape 3 apres la saisie des voyageurs.</p>' +
+                '</div>';
+            if (summaryBlock) {
+                summaryBlock.classList.add('d-none');
+            }
+            syncSummary();
+            if (typeof window.reservationCreateRecomputeTotals === 'function') {
+                window.reservationCreateRecomputeTotals();
+            }
+            return;
+        }
 
         if (payload.mode === 'rooms' && hotels.length) {
             console.info('[Reservation Rooms Render] chambres affichées', payload.rooms);
@@ -711,7 +769,7 @@
                 departures.forEach(function (departure) {
                     var option = document.createElement('option');
                     option.value = departure.id;
-                    option.textContent = departure.label + (departure.available_capacity != null ? ' · ' + departure.available_capacity + ' pl.' : '');
+                    option.textContent = String(departure.label || '').replace(/â†’|→/g, ' -> ') + (departure.available_capacity != null ? ' - ' + departure.available_capacity + ' pl.' : '');
                     option.setAttribute('data-wp-travel-date-id', departure.wp_travel_date_id || '');
                     option.setAttribute('data-base-price', departure.base_price || 0);
                     option.setAttribute('data-sale-price', departure.sale_price || 0);

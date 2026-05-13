@@ -161,8 +161,8 @@
     <td class="ws-td ws-td--actions" data-label="Actions">
         <div class="ws-td__actions">
             @if(!empty($modalDetail))
-                <button type="button"
-                    class="ws-btn ws-btn--secondary ws-btn--sm ws-btn--iconish btn-ws-open-detail"
+                    <button type="button"
+                        class="ws-btn ws-btn--secondary ws-btn--sm ws-btn--iconish btn-ws-open-detail btn-view"
                     data-row-code="{{ e($row['code']) }}"
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
@@ -310,7 +310,7 @@
         <div class="ws-offer-card__actions ws-offer-card__actions--compact" role="group" aria-label="Actions">
             @if(!empty($modalDetail))
                 <button type="button"
-                    class="ws-btn ws-btn--secondary ws-btn--sm btn-ws-open-detail"
+                    class="ws-btn ws-btn--secondary ws-btn--sm btn-ws-open-detail btn-view"
                     data-row-code="{{ e($row['code']) }}"
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>

@@ -507,8 +507,8 @@ class ReservationsController extends Controller
         return response()->json([
             'departures' => $deps->map(fn (Departure $d) => [
                 'id' => $d->id,
-                'label' => ($d->start_date ? $d->start_date->format('d/m/Y') : 'â€”')
-                    .($d->end_date ? ' â†’ '.$d->end_date->format('d/m/Y') : ''),
+                'label' => ($d->start_date ? $d->start_date->format('d/m/Y') : '-')
+                    .($d->end_date ? ' -> '.$d->end_date->format('d/m/Y') : ''),
                 'status' => $d->status,
                 'available_capacity' => (int) ($d->available_capacity ?? 0),
                 'base_price' => $d->base_price !== null ? (float) $d->base_price : null,
@@ -1039,6 +1039,7 @@ class ReservationsController extends Controller
             'travel_date_id' => 'nullable|integer',
             'payment_amount' => 'nullable|numeric|min:0',
             'extras_json' => 'nullable|string',
+            'travelers_json' => 'nullable|string',
             'room_allocations_json' => 'nullable|string',
             'hotel_rooms' => 'nullable|array',
             'hotel_rooms.*.departure_hotel_room_id' => 'nullable|integer',

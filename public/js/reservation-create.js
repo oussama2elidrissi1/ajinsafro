@@ -5,6 +5,15 @@
     var extrasMap = {};
     var roomingAllocations = [];
     var availableRoomTypes = [];
+    window.reservationState = window.reservationState || {
+        selectedTourId: null,
+        selectedDepartureId: null,
+        selectedTravelDateId: null,
+        pricing: {},
+        availableRooms: [],
+        travelers: [],
+        roomAllocations: []
+    };
 
     function parseJsonScript(id, fallback) {
         var el = document.getElementById(id);
@@ -99,6 +108,11 @@
             });
         });
 
+        window.reservationState.travelers = rows;
+        var travelersHidden = document.getElementById('reservation-travelers-json');
+        if (travelersHidden) {
+            travelersHidden.value = JSON.stringify(rows);
+        }
         return rows;
     }
 
@@ -397,9 +411,10 @@
             else if (traveler.type === 'infant') stats.infant += 1;
             else stats.adult += 1;
             if (traveler.gender === 'male') stats.male += 1;
-            if (traveler.gender === 'female') stats.female += 1;
+            else if (traveler.gender === 'female') stats.female += 1;
+            else stats.genderUnknown += 1;
             return stats;
-        }, { total: 0, adult: 0, child: 0, infant: 0, male: 0, female: 0, beds: 0 });
+        }, { total: 0, adult: 0, child: 0, infant: 0, male: 0, female: 0, genderUnknown: 0, beds: 0 });
     }
 
     function setStat(selector, value) {
@@ -414,12 +429,14 @@
         setStat('[data-traveler-stat="infant"]', stats.infant);
         setStat('[data-traveler-stat="male"]', stats.male);
         setStat('[data-traveler-stat="female"]', stats.female);
+        setStat('[data-traveler-stat="gender_unknown"]', stats.genderUnknown);
         setStat('[data-rooming-stat="total"]', stats.total);
         setStat('[data-rooming-stat="adult"]', stats.adult);
         setStat('[data-rooming-stat="child"]', stats.child);
         setStat('[data-rooming-stat="infant"]', stats.infant);
         setStat('[data-rooming-stat="male"]', stats.male);
         setStat('[data-rooming-stat="female"]', stats.female);
+        setStat('[data-rooming-stat="gender_unknown"]', stats.genderUnknown);
         setStat('[data-rooming-stat="beds"]', stats.beds);
     }
 
@@ -448,7 +465,11 @@
     }
 
     function setAvailableRoomTypes(groups) {
+        if ((!groups || !groups.length) && window.reservationState && Array.isArray(window.reservationState.availableRooms)) {
+            groups = window.reservationState.availableRooms;
+        }
         availableRoomTypes = flattenAvailableRooms(groups);
+        window.reservationState.availableRooms = groups || [];
         renderAvailableRooms();
         renderRooming();
     }
@@ -507,14 +528,16 @@
             }
         });
 
-        bedTravelerIds.forEach(function (id) {
-            if (!assigned[id]) {
-                invalid = true;
-                errors.push('Tous les voyageurs consommant un lit doivent etre affectes.');
-            }
-        });
+        if (roomingAllocations.length > 0) {
+            bedTravelerIds.forEach(function (id) {
+                if (!assigned[id]) {
+                    invalid = true;
+                    errors.push('Tous les voyageurs consommant un lit doivent etre affectes.');
+                }
+            });
+        }
 
-        var status = invalid ? 'invalid' : (roomingAllocations.length === 0 ? 'pending' : (partial ? 'partial' : 'complete'));
+        var status = roomingAllocations.length === 0 ? 'pending' : (invalid ? 'invalid' : (partial ? 'partial' : 'complete'));
         return {
             roomSupplementTotal: supplement,
             occupiedBeds: occupiedBeds,
@@ -549,6 +572,17 @@
 
     function autoRooming() {
         var travelers = travelerRows().filter(function (t) { return t.consumesBed; });
+        var stats = travelerStats();
+        if (stats.genderUnknown > 0) {
+            roomingAllocations = [];
+            renderRooming();
+            var alerts = document.getElementById('rooming-alerts');
+            if (alerts) {
+                alerts.classList.remove('d-none');
+                alerts.innerHTML = '<strong>Alertes rooming</strong><ul><li>Veuillez renseigner le sexe de tous les voyageurs pour faire la repartition des chambres.</li></ul>';
+            }
+            return;
+        }
         var result = [];
         var used = {};
         function mark(list) { list.forEach(function (t) { used[t.id] = true; }); }
@@ -599,6 +633,7 @@
         });
 
         roomingAllocations = result;
+        window.reservationState.roomAllocations = roomingAllocations;
         renderRooming();
     }
 
@@ -630,10 +665,24 @@
                 var checked = (allocation.traveler_keys || []).indexOf(t.id) !== -1 ? ' checked' : '';
                 return '<label class="reservation-create__room-traveler"><input type="checkbox" data-rooming-toggle="' + index + '" value="' + t.id + '"' + checked + '> ' + t.label + '</label>';
             }).join('');
+            var roomOptions = availableRoomTypes.map(function (room) {
+                var selected = String(room.room_source_id) === String(allocation.room_source_id) ? ' selected' : '';
+                return '<option value="' + room.room_source_id + '"' + selected + '>' + room.room_type + ' (' + room.available_rooms + ' dispo)</option>';
+            }).join('');
+            var modeOptions = [
+                ['full', 'Chambre complete'],
+                ['half_male', 'Demi-double homme'],
+                ['half_female', 'Demi-double femme'],
+                ['single', 'Chambre single'],
+                ['family', 'Chambre famille']
+            ].map(function (mode) {
+                return '<option value="' + mode[0] + '"' + (allocation.occupancy_mode === mode[0] ? ' selected' : '') + '>' + mode[1] + '</option>';
+            }).join('');
             var remaining = Math.max(0, allocation.capacity - (allocation.traveler_keys || []).length);
             return '<article class="reservation-create__room-card">' +
                 '<div><strong>Chambre ' + (index + 1) + ' - ' + allocation.room_type + '</strong><span>' + allocation.occupancy_mode + '</span></div>' +
                 '<p>Capacite: ' + allocation.capacity + ' | Occupes: ' + (allocation.traveler_keys || []).length + '/' + allocation.capacity + ' | Statut: ' + allocation.status + '</p>' +
+                '<div class="reservation-create__room-controls"><select class="reservation-create__input" data-rooming-room-type="' + index + '">' + roomOptions + '</select><select class="reservation-create__input" data-rooming-mode="' + index + '">' + modeOptions + '</select></div>' +
                 '<ul>' + travelerList + '</ul>' +
                 '<div class="reservation-create__room-travelers">' + travelerControls + '</div>' +
                 (remaining ? '<p class="reservation-create__room-warning">Place restante: ' + remaining + '</p>' : '') +
@@ -663,6 +712,7 @@
                 supplement_total: allocation.supplement_total || 0
             };
         }));
+        window.reservationState.roomAllocations = roomingAllocations;
     }
 
     function financialSummary() {
@@ -905,6 +955,10 @@
 
         if (step === 3) {
             renderRooming();
+            if (travelerStats().genderUnknown > 0) {
+                showInlineError('Veuillez renseigner le sexe de tous les voyageurs pour faire la repartition des chambres.');
+                return false;
+            }
             if (summary.roomingStatus === 'pending') {
                 showInlineError('Lancez une repartition automatique ou ajoutez une repartition manuelle.');
                 return false;
@@ -1064,6 +1118,30 @@
                     syncFinancialSummary();
                 }
             }
+            if (target.hasAttribute('data-rooming-room-type')) {
+                var typeIndex = parseInt(target.getAttribute('data-rooming-room-type') || '-1', 10);
+                var selectedRoom = availableRoomTypes.find(function (room) { return String(room.room_source_id) === String(target.value); });
+                if (roomingAllocations[typeIndex] && selectedRoom) {
+                    roomingAllocations[typeIndex].room_source_type = selectedRoom.room_source_type;
+                    roomingAllocations[typeIndex].room_source_id = selectedRoom.room_source_id;
+                    roomingAllocations[typeIndex].room_type = selectedRoom.room_type;
+                    roomingAllocations[typeIndex].capacity = selectedRoom.capacity;
+                    roomingAllocations[typeIndex].unit_supplement = selectedRoom.unit_supplement;
+                    roomingAllocations[typeIndex].supplement_total = selectedRoom.unit_supplement;
+                    roomingAllocations[typeIndex].status = (roomingAllocations[typeIndex].traveler_keys || []).length >= selectedRoom.capacity ? 'complete' : 'partial';
+                    renderRooming();
+                    syncFinancialSummary();
+                }
+            }
+            if (target.hasAttribute('data-rooming-mode')) {
+                var modeIndex = parseInt(target.getAttribute('data-rooming-mode') || '-1', 10);
+                if (roomingAllocations[modeIndex]) {
+                    roomingAllocations[modeIndex].occupancy_mode = target.value;
+                    roomingAllocations[modeIndex].status = (roomingAllocations[modeIndex].traveler_keys || []).length >= roomingAllocations[modeIndex].capacity || ['single', 'family', 'full'].indexOf(target.value) !== -1 ? 'complete' : 'partial';
+                    renderRooming();
+                    syncFinancialSummary();
+                }
+            }
         });
 
         form.addEventListener('click', function (event) {
@@ -1085,6 +1163,7 @@
             if (target.id === 'btn-rooming-reset') {
                 event.preventDefault();
                 roomingAllocations = [];
+                window.reservationState.roomAllocations = [];
                 renderRooming();
                 syncFinancialSummary();
             }

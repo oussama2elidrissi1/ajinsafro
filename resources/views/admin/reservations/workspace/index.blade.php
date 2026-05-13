@@ -169,25 +169,19 @@
     }
     .ws-offer-card__actions--compact {
         margin-top: auto;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.75rem;
-        align-items: stretch;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 16px;
     }
-    .ws-offer-card__actions--compact > * {
-        min-width: 0;
-    }
-    .ws-offer-card__actions--compact .ws-btn {
-        width: 100%;
-        min-height: 44px;
-        height: 44px;
-        max-height: 46px;
+    .ws-offer-card__actions--compact > * { min-width: 0; }
+    .ws-offer-card__actions--compact .btn-view {
+        min-width: 180px;
+        height: 46px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.45rem;
-        flex: 0 0 auto;
-        white-space: nowrap;
+        gap: 8px;
     }
     .ws-md-selector-list {
         display: grid;
@@ -1193,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 h += '<div class="ws-md-dep-kpi"><span>Taux remplissage</span><strong>' + dep.fill_pct + '%</strong></div>';
             }
             h += '</div>';
-            if (dep.capacity_note) {
+            if (dep.capacity_note && !(d.rooms && d.rooms.length)) {
                 h += '<p style="margin:0.5rem 0 0;font-size:0.75rem;color:#64748b">' + escapeWsHtml(dep.capacity_note) + '</p>';
             }
             if (dep.capacity_known && dep.fill_pct != null) {
@@ -1767,7 +1761,7 @@ document.addEventListener('DOMContentLoaded', function () {
         html += '<div class="ws-md-selector-kpi"><span>Restantes</span><strong>' + escapeHtml(departure.remaining != null ? departure.remaining : '—') + '</strong></div>';
         html += '<div class="ws-md-selector-kpi"><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
         html += '</div>';
-        if (departure.capacity_note) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
+        if (departure.capacity_note && !(detail.rooms && detail.rooms.length)) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
         html += '<div class="ws-md-progress ws-md-progress--dep" role="progressbar" aria-valuenow="' + fillPct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + fillPct + '%"></div></div>';
         html += '</section>';
         if (detail.rooms && detail.rooms.length) {
@@ -1825,12 +1819,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (selectedDeparture) {
             var isPast = selectedDeparture.is_past === true;
-            var noRooms = selectedDeparture.capacity_note === 'Aucune chambre configurée';
-            var canReserve = !isPast && !noRooms && selectedDeparture.routes && selectedDeparture.routes.reserve;
+            var remaining = Number(selectedDeparture.remaining != null ? selectedDeparture.remaining : 0);
+            var statusKey = selectedDeparture.status_key || '';
+            var isAvailable = (statusKey === 'available' || statusKey === 'almost_full');
+            var hasReserveRoute = selectedDeparture.routes && selectedDeparture.routes.reserve;
+            var canReserve = !isPast && remaining > 0 && isAvailable && hasReserveRoute;
             if (canReserve) {
                 html += '<a href="' + selectedDeparture.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
-            } else if (noRooms) {
-                html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="Aucune chambre configurée pour ce départ"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
+            } else {
+                var title = isPast ? 'Départ passé' : (remaining <= 0 ? 'Aucune place restante' : (!isAvailable ? 'Départ indisponible' : 'Réservation non configurée'));
+                html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="' + title + '"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
             }
         }
         html += '</div>';
@@ -1845,12 +1843,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (resUrl) html += '<a href="' + resUrl + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
         if (departure) {
             var isPast = departure.is_past === true;
-            var noRooms = departure.capacity_note === 'Aucune chambre configurée';
-            var canReserve = !isPast && !noRooms && departure.routes && departure.routes.reserve;
+            var remaining = Number(departure.remaining != null ? departure.remaining : 0);
+            var statusKey = departure.status_key || '';
+            var isAvailable = (statusKey === 'available' || statusKey === 'almost_full');
+            var hasReserveRoute = departure.routes && departure.routes.reserve;
+            var canReserve = !isPast && remaining > 0 && isAvailable && hasReserveRoute;
             if (canReserve) {
                 html += '<a href="' + departure.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
-            } else if (noRooms) {
-                html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="Aucune chambre configurée pour ce départ"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
+            } else {
+                var title = isPast ? 'Départ passé' : (remaining <= 0 ? 'Aucune place restante' : (!isAvailable ? 'Départ indisponible' : 'Réservation non configurée'));
+                html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="' + title + '"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
             }
         }
         html += '</div>';

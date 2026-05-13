@@ -273,6 +273,40 @@
     margin-top: 0.75rem;
 }
 
+.reservation-create__room-controls {
+    display: grid;
+    gap: 0.6rem;
+    margin: 0.75rem 0;
+}
+
+.reservation-create__availability-summary {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    background: #f8fafc;
+}
+
+.reservation-create__availability-summary div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.55rem;
+}
+
+.reservation-create__availability-summary span {
+    color: #64748b;
+    font-size: 0.82rem;
+}
+
+.reservation-create__availability-summary p {
+    margin: 0;
+    color: #475569;
+    font-weight: 700;
+}
+
 .reservation-create__room-traveler {
     display: flex;
     align-items: center;

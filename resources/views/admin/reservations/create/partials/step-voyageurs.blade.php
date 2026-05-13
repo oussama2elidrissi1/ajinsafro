@@ -19,6 +19,7 @@
                     <span>Bebes: <strong data-rooming-stat="infant">0</strong></span>
                     <span>Hommes: <strong data-rooming-stat="male">0</strong></span>
                     <span>Femmes: <strong data-rooming-stat="female">0</strong></span>
+                    <span>Sexe non renseigne: <strong data-rooming-stat="gender_unknown">1</strong></span>
                     <span>Lits a couvrir: <strong data-rooming-stat="beds">1</strong></span>
                 </div>
 

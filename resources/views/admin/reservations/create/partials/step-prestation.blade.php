@@ -67,6 +67,7 @@
         'departureHotelsRoomsUrl' => route('admin.reservations.departure-hotels-rooms'),
         'selectedTravelDate' => $selectedTravelDate ?? null,
         'selectedDepartureId' => $selectedDepartureId ?? null,
+        'compactAvailabilityOnly' => true,
     ])
 
     <div class="reservation-create__actions">
