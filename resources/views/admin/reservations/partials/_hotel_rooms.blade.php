@@ -644,21 +644,45 @@
         }
     }
 
-    function loadDepartureRooms(departureId) {
+    function loadDepartureRooms(departureId, tourId, travelDateId) {
+        console.log('[Rooming] loadDepartureRooms called', { departureId: departureId, tourId: tourId, travelDateId: travelDateId });
+        
+        // Try to get values from DOM if not provided
         if (!departureId && departureSelect && departureSelect.value) {
             departureId = departureSelect.value;
         }
         if (!departureId && inputDepartureId && inputDepartureId.value) {
             departureId = inputDepartureId.value;
         }
+        // Fallback to state global if DOM elements not accessible (e.g., at step 3)
+        if (!departureId && window.reservationState && window.reservationState.selectedDepartureId) {
+            departureId = window.reservationState.selectedDepartureId;
+        }
+        
+        if (!tourId) {
+            var tourSelectElem = document.getElementById('select-tour-id');
+            tourId = tourSelectElem && tourSelectElem.value ? tourSelectElem.value : '';
+        }
+        if (!tourId && window.reservationState && window.reservationState.selectedTourId) {
+            tourId = window.reservationState.selectedTourId;
+        }
+        
+        if (!travelDateId) {
+            var travelDateInput = document.getElementById('input-travel-date-id');
+            travelDateId = travelDateInput && travelDateInput.value ? travelDateInput.value : '';
+        }
+        if (!travelDateId && window.reservationState && window.reservationState.selectedTravelDateId) {
+            travelDateId = window.reservationState.selectedTravelDateId;
+        }
+        
         if (!roomsContainer || !departureId) {
+            console.warn('[Rooming] loadDepartureRooms: missing departureId or roomsContainer', {
+                departureId: departureId,
+                roomsContainer: !!roomsContainer
+            });
             return;
         }
 
-        var tourSelect = document.getElementById('select-tour-id');
-        var travelDateInput = document.getElementById('input-travel-date-id');
-        var tourId = tourSelect && tourSelect.value ? tourSelect.value : '';
-        var travelDateId = travelDateInput && travelDateInput.value ? travelDateInput.value : '';
         var selectedOption = departureSelect && departureSelect.selectedOptions.length ? departureSelect.selectedOptions[0] : null;
         var selectedDate = selectedOption && selectedOption.textContent ? selectedOption.textContent.trim() : '';
         var requestTimestamp = new Date().toISOString();
@@ -669,6 +693,13 @@
             'travel_date_id=' + encodeURIComponent(travelDateId)
         ].join('&');
         var url = departureHotelsRoomsUrl + '?' + query;
+
+        console.log('[Rooming] Reload rooms clicked');
+        console.log('[Rooming] Reload rooms payload', {
+            tour_id: tourId,
+            departure_id: departureId,
+            travel_date_id: travelDateId
+        });
 
         roomsContainer.innerHTML = '<p class="text-muted mb-0">Chargement des chambres…</p>';
         fetch(url, {
@@ -682,7 +713,7 @@
                 return response.json();
             })
             .then(function (response) {
-                console.group('[Reservation Rooms Debug]');
+                console.group('[Rooming] Reload rooms response');
                 console.log('Timestamp:', requestTimestamp);
                 console.log('Request #:', requestSeq);
                 console.log('URL appelée:', url);
@@ -692,7 +723,7 @@
                     travel_date_id: travelDateId,
                     selectedDate: selectedDate || null
                 });
-                console.log('Réponse brute:', response);
+                console.log('[Rooming] Reload rooms response', response);
                 console.log('success:', response ? response.success : undefined);
                 console.log('mode:', response ? response.mode : undefined);
                 console.log('rooms:', response ? response.rooms : undefined);
@@ -712,9 +743,12 @@
 
                 return response;
             })
-            .then(renderDepartureRooms)
+            .then(function (response) {
+                console.log('[Rooming] availableRooms after reload', window.reservationState.availableRooms);
+                renderDepartureRooms(response);
+            })
             .catch(function (error) {
-                console.error('[Reservation Rooms Error]', {
+                console.error('[Rooming] Reload rooms Error', {
                     error: error,
                     message: error && error.message ? error.message : undefined,
                     stack: error && error.stack ? error.stack : undefined,
@@ -865,7 +899,27 @@
         }
     });
 
-    window.reservationCreateReloadDepartureRooms = loadDepartureRooms;
+    // Global wrapper function that uses state global if DOM elements not accessible
+    window.reservationReloadRoomsFromState = function() {
+        console.log('[Rooming Step Render]', {
+            selectedTourId: window.reservationState && window.reservationState.selectedTourId,
+            selectedDepartureId: window.reservationState && window.reservationState.selectedDepartureId,
+            selectedTravelDateId: window.reservationState && window.reservationState.selectedTravelDateId,
+            availableRooms: window.reservationState && window.reservationState.availableRooms,
+            travelers: window.reservationState && window.reservationState.travelers
+        });
+        if (window.reservationState && window.reservationState.selectedDepartureId) {
+            loadDepartureRooms(
+                window.reservationState.selectedDepartureId,
+                window.reservationState.selectedTourId || null,
+                window.reservationState.selectedTravelDateId || null
+            );
+        } else {
+            console.warn('[Rooming] No departure ID in state to reload');
+        }
+    };
+    
+    window.reservationCreateReloadDepartureRooms = window.reservationReloadRoomsFromState;
     window.reservationCreateRecomputeTotals = window.reservationCreateRecomputeTotals || syncSummary;
 })();
 </script>

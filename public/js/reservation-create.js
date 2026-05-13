@@ -483,6 +483,13 @@
     function renderAvailableRooms() {
         var target = document.getElementById('rooming-available-rooms');
         if (!target) return;
+        
+        console.log('[Rooming] renderAvailableRooms called', {
+            availableRoomTypesLength: availableRoomTypes ? availableRoomTypes.length : 0,
+            availableRoomTypes: availableRoomTypes,
+            windowReservationState: window.reservationState
+        });
+        
         if (!availableRoomTypes.length) {
             target.innerHTML = '<div class="reservation-create__placeholder">Aucune chambre detaillee chargee pour ce depart.</div>' +
                 '<button type="button" class="reservation-create__button reservation-create__button--secondary mt-2" id="btn-reload-rooms">Recharger les chambres</button>';
@@ -1059,6 +1066,13 @@
         syncFinancialSummary();
         clearInlineError();
         if (next === 3) {
+            console.log('[Rooming Step Render]', {
+                selectedTourId: window.reservationState.selectedTourId,
+                selectedDepartureId: window.reservationState.selectedDepartureId,
+                selectedTravelDateId: window.reservationState.selectedTravelDateId,
+                availableRooms: window.reservationState.availableRooms,
+                travelers: window.reservationState.travelers
+            });
             setAvailableRoomTypes(window.reservationState.availableRooms || window.reservationAvailableRooms || []);
             renderRooming();
         }
@@ -1246,6 +1260,18 @@
             if (reloadBtn) {
                 event.preventDefault();
                 console.log('[Rooming] Reload rooms clicked');
+                console.log('[Rooming Step Render]', {
+                    selectedTourId: window.reservationState.selectedTourId,
+                    selectedDepartureId: window.reservationState.selectedDepartureId,
+                    selectedTravelDateId: window.reservationState.selectedTravelDateId,
+                    availableRooms: window.reservationState.availableRooms,
+                    travelers: window.reservationState.travelers
+                });
+                console.log('[Rooming] Reload rooms payload', {
+                    tour_id: window.reservationState.selectedTourId,
+                    departure_id: window.reservationState.selectedDepartureId,
+                    travel_date_id: window.reservationState.selectedTravelDateId
+                });
                 if (typeof window.reservationCreateReloadDepartureRooms === 'function') {
                     window.reservationCreateReloadDepartureRooms();
                     return;
@@ -1324,16 +1350,27 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        console.log('[Reservation Create] DOMContentLoaded started');
+        
+        // Register event listener FIRST before any room loading happens
+        document.addEventListener('reservation:rooms-loaded', function (event) {
+            console.log('[Reservation Create] Event reservation:rooms-loaded received', event.detail);
+            setAvailableRoomTypes(event && event.detail ? event.detail.rooms : []);
+        });
+        
         extrasMap = parseJsonScript('reservation-create-extras-map', {});
         bindDelegatedEvents();
         syncClientMode();
         syncVisaMode();
         syncTravelersEmptyState();
         renderExtras();
-        setAvailableRoomTypes(window.reservationAvailableRooms || []);
-        document.addEventListener('reservation:rooms-loaded', function (event) {
-            setAvailableRoomTypes(event && event.detail ? event.detail.rooms : []);
+        
+        // Now safely call setAvailableRoomTypes with existing rooms
+        console.log('[Reservation Create] Setting initial available rooms', {
+            windowReservationAvailableRooms: window.reservationAvailableRooms,
+            windowReservationState: window.reservationState
         });
+        setAvailableRoomTypes(window.reservationAvailableRooms || []);
         setStep(1);
         console.log('[Reservation Create] Current step:', window.currentStep);
         console.log('[Reservation Create] State:', window.reservationState);

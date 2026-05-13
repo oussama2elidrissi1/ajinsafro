@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ajinsafro — Dossiers de réservation</title>
+  <style>
+    :root {
+      --blue-900: #003d68;
+      --blue-800: #00558d;
+      --blue-700: #006eb8;
+      --blue-100: #e8f4ff;
+      --orange: #f97316;
+      --green: #12b76a;
+      --red: #ef4444;
+      --purple: #7c3aed;
+      --ink: #102a43;
+      --muted: #6b7a90;
+      --line: #e5edf6;
+      --bg: #f5f8fc;
+      --white: #ffffff;
+      --shadow: 0 14px 36px rgba(16, 42, 67, 0.08);
+      --shadow-soft: 0 8px 24px rgba(16, 42, 67, 0.06);
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --sidebar: 280px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar) 1fr;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.96);
+      border-right: 1px solid var(--line);
+      padding: 24px 18px;
+      box-shadow: 8px 0 35px rgba(15, 23, 42, 0.04);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 26px;
+      padding-left: 4px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0ea5e9, #00558d);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+      transform: rotate(-5deg);
+      box-shadow: 0 10px 20px rgba(0, 110, 184, 0.25);
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 22px;
+      letter-spacing: -0.6px;
+      color: var(--blue-800);
+      line-height: 1;
+    }
+
+    .brand-text span {
+      display: block;
+      font-size: 12px;
+      color: var(--orange);
+      margin-top: 3px;
+    }
+
+    .profile-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #eef7ff, #ffffff);
+      display: grid;
+      place-items: center;
+      color: var(--blue-800);
+      font-weight: 900;
+      border: 1px solid var(--line);
+      box-shadow: inset 0 0 0 4px #f6fbff;
+    }
+
+    .profile-row strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .profile-row span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .profile-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      background: #f4f8fd;
+      padding: 12px 14px;
+      color: var(--blue-900);
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .menu-section-label {
+      margin: 22px 10px 10px;
+      color: #8a9ab0;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav-item,
+    .sub-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      border-radius: 14px;
+      padding: 11px 13px;
+      color: #263f60;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      transition: 0.18s ease;
+    }
+
+    .nav-item:hover,
+    .sub-item:hover {
+      background: #f1f7ff;
+      color: var(--blue-800);
+    }
+
+    .nav-item.active {
+      background: var(--blue-100);
+      color: var(--blue-800);
+      box-shadow: inset 4px 0 0 var(--blue-700);
+    }
+
+    .nav-icon {
+      width: 22px;
+      text-align: center;
+      opacity: 0.9;
+    }
+
+    .chevron {
+      margin-left: auto;
+      color: #8aa0b8;
+    }
+
+    .sub-menu {
+      list-style: none;
+      margin: 4px 0 8px 28px;
+      padding-left: 12px;
+      border-left: 1px solid var(--line);
+      display: grid;
+      gap: 3px;
+    }
+
+    .sub-item {
+      min-height: 38px;
+      font-size: 13px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .sub-item.selected {
+      background: #f1f7ff;
+      color: var(--blue-800);
+    }
+
+    .badge-count {
+      margin-left: auto;
+      min-width: 23px;
+      height: 23px;
+      border-radius: 999px;
+      background: var(--orange);
+      color: white;
+      display: inline-grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .logout {
+      color: #dc2626;
+    }
+
+    /* MAIN */
+    .main {
+      min-width: 0;
+    }
+
+    .topbar {
+      height: 84px;
+      background: linear-gradient(135deg, var(--blue-800), var(--blue-900));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 38px;
+      color: white;
+      box-shadow: 0 18px 40px rgba(0, 85, 141, 0.22);
+    }
+
+    .search {
+      width: min(650px, 52vw);
+      height: 50px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 16px;
+      backdrop-filter: blur(12px);
+    }
+
+    .search input {
+      flex: 1;
+      background: transparent;
+      border: 0;
+      outline: 0;
+      color: white;
+      font-weight: 700;
+    }
+
+    .search input::placeholder {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .kbd {
+      font-size: 12px;
+      font-weight: 900;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 5px 8px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      position: relative;
+      width: 46px;
+      height: 46px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 17px;
+    }
+
+    .notif {
+      position: absolute;
+      top: -6px;
+      right: -4px;
+      background: var(--orange);
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 170px;
+      height: 54px;
+      border-radius: 999px;
+      padding: 6px 14px 6px 6px;
+      background: rgba(255, 255, 255, 0.11);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .user-pill .avatar-small {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: white;
+      color: var(--blue-800);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+
+    .user-pill strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .user-pill span {
+      display: block;
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    .content {
+      padding: 34px 38px 20px;
+      max-width: 1500px;
+    }
+
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .page-head h1 {
+      font-size: clamp(28px, 3vw, 40px);
+      line-height: 1.05;
+      letter-spacing: -1px;
+      color: #0b2545;
+      margin-bottom: 8px;
+    }
+
+    .page-head p {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .primary-btn {
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--blue-700), var(--blue-900));
+      color: white;
+      padding: 14px 20px;
+      font-weight: 900;
+      box-shadow: 0 14px 30px rgba(0, 110, 184, 0.24);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .kpi-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .kpi-icon.blue { background: #eaf5ff; color: var(--blue-700); }
+    .kpi-icon.orange { background: #fff2e8; color: var(--orange); }
+    .kpi-icon.purple { background: #f3edff; color: var(--purple); }
+    .kpi-icon.green { background: #e8fff4; color: var(--green); }
+
+    .kpi-card span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .kpi-card strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+      margin: 5px 0 6px;
+      color: #102a43;
+    }
+
+    .kpi-card small {
+      color: #7e8fa6;
+      font-weight: 600;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 22px;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 16px;
+      color: #50637c;
+      background: transparent;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--blue-800);
+      color: white;
+      box-shadow: 0 10px 24px rgba(0, 85, 141, 0.22);
+    }
+
+    .pill-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 24px;
+      margin-left: 8px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .pill-count.orange { background: #fff2e8; color: var(--orange); }
+    .pill-count.green { background: #e8fff4; color: var(--green); }
+    .pill-count.purple { background: #f3edff; color: var(--purple); }
+
+    .tool-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .secondary-btn {
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: white;
+      color: #50637c;
+      padding: 0 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .reservation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .reservation-card {
+      overflow: hidden;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .reservation-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(16, 42, 67, 0.12);
+    }
+
+    .card-image {
+      position: relative;
+      height: 155px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .card-image::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 46%, rgba(0,0,0,0.18));
+    }
+
+    .status {
+      position: absolute;
+      z-index: 2;
+      top: 16px;
+      right: 16px;
+      border-radius: 10px;
+      padding: 8px 11px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: lowercase;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    .status.waiting { background: #fff3e8; color: #ea580c; }
+    .status.paid { background: #e8fff4; color: #059669; }
+    .status.partial { background: #eef4ff; color: #2454d6; }
+    .status.unpaid { background: #fff0f0; color: #dc2626; }
+
+    .card-body {
+      padding: 18px 18px 0;
+    }
+
+    .card-title-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title-row h3 {
+      min-height: 48px;
+      font-size: 18px;
+      line-height: 1.32;
+      letter-spacing: -0.2px;
+      color: #16375c;
+    }
+
+    .more {
+      border: 0;
+      background: transparent;
+      color: #5c708a;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .meta-label {
+      display: block;
+      color: #8a9ab0;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .meta-value {
+      display: block;
+      color: #263f60;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .card-footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      padding: 16px 18px 18px;
+      border-top: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+
+    .foot-label {
+      display: block;
+      font-size: 11px;
+      color: #8a9ab0;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .foot-value {
+      font-size: 13px;
+      color: #16375c;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .view-btn {
+      height: 42px;
+      min-width: 68px;
+      border-radius: 12px;
+      border: 1px solid #1d72d2;
+      background: #ffffff;
+      color: #0b63ce;
+      font-weight: 900;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .view-btn:hover {
+      background: #0b63ce;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .pagination-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 24px;
+      gap: 16px;
+    }
+
+    .pagination {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .page-btn {
+      min-width: 40px;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: #50637c;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .page-btn.active {
+      background: var(--blue-800);
+      border-color: var(--blue-800);
+      color: white;
+      box-shadow: 0 10px 20px rgba(0, 85, 141, 0.18);
+    }
+
+    .per-page {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .select-like {
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: white;
+      padding: 0 14px;
+      color: #50637c;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      color: #7d8da4;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 22px 2px 8px;
+    }
+
+    @media (max-width: 1280px) {
+      .reservation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 920px) {
+      :root { --sidebar: 0px; }
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .topbar { padding: 0 18px; }
+      .search { width: 100%; }
+      .user-pill { display: none; }
+      .content { padding: 24px 18px; }
+      .page-head { flex-direction: column; }
+      .reservation-grid { grid-template-columns: 1fr; }
+      .toolbar { align-items: flex-start; flex-direction: column; }
+      .card-footer { grid-template-columns: 1fr 1fr; }
+      .view-btn { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 560px) {
+      .kpis { grid-template-columns: 1fr; }
+      .tool-buttons { width: 100%; }
+      .secondary-btn { flex: 1; }
+      .pagination-row, .footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div class="brand-text">
+          <strong>AJiNSafro<span style="display:inline;color:#f97316">.ma</span></strong>
+          <span>by Ajinsafro</span>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-row">
+          <div class="avatar">AF</div>
+          <div>
+            <strong>Admin</strong>
+            <span>Administrateur</span>
+          </div>
+        </div>
+        <button class="profile-btn">☻ &nbsp; Mon profil</button>
+      </div>
+
+      <ul class="nav-list">
+        <li><a href="#" class="nav-item"><span class="nav-icon">⌂</span> Tableau de bord <span class="chevron">⌄</span></a></li>
+        <li>
+          <a href="#" class="nav-item active"><span class="nav-icon">▣</span> Réservations <span class="chevron">⌃</span></a>
+          <ul class="sub-menu">
+            <li><a href="#" class="sub-item selected"><span class="nav-icon">□</span> Toutes les réservations</a></li>
+            <li><a href="#" class="sub-item"><span class="nav-icon">▤</span> Workspace commercial</a></li>
+            <li><a href="#" class="sub-item"><span class="nav-icon">♡</span> Réservations clients</a></li>
+            <li><a href="#" class="sub-item"><span class="nav-icon">◷</span> Demandes en attente <span class="badge-count">12</span></a></li>
+            <li><a href="#" class="sub-item"><span class="nav-icon">↔</span> Affectations</a></li>
+            <li><a href="#" class="sub-item"><span class="nav-icon">✉</span> Messages</a></li>
+          </ul>
+        </li>
+        <li><a href="#" class="nav-item"><span class="nav-icon">◇</span> Produits & Services <span class="chevron">⌄</span></a></li>
+        <li><a href="#" class="nav-item"><span class="nav-icon">◎</span> Clients <span class="chevron">⌄</span></a></li>
+        <li><a href="#" class="nav-item"><span class="nav-icon">▦</span> Points de vente <span class="chevron">⌄</span></a></li>
+        <li><a href="#" class="nav-item"><span class="nav-icon">◫</span> Opérations <span class="chevron">⌄</span></a></li>
+        <li><a href="#" class="nav-item"><span class="nav-icon">▭</span> Finance & Reporting <span class="chevron">⌄</span></a></li>
+        <li><a href="#" class="nav-item"><span class="nav-icon">⚙</span> Administration <span class="chevron">⌄</span></a></li>
+      </ul>
+
+      <div class="menu-section-label">Compte</div>
+      <ul class="nav-list">
+        <li><a href="#" class="nav-item"><span class="nav-icon">☻</span> Mon profil</a></li>
+        <li><a href="#" class="nav-item logout"><span class="nav-icon">⏻</span> Déconnexion</a></li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="search">
+          <span>⌕</span>
+          <input type="search" placeholder="Rechercher (voyage, agence, réservation...)" />
+          <span class="kbd">⌘K</span>
+        </div>
+
+        <div class="top-actions">
+          <button class="icon-btn">🔔 <span class="notif">6</span></button>
+          <button class="icon-btn">💬</button>
+          <div class="user-pill">
+            <div class="avatar-small">AF</div>
+            <div>
+              <strong>Admin</strong>
+              <span>Administrateur</span>
+            </div>
+            <span>⌄</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="page-head">
+          <div>
+            <h1>Dossiers de réservation</h1>
+            <p>Gérez et suivez toutes les réservations de vos clients.</p>
+          </div>
+          <button class="primary-btn">+ Créer un dossier</button>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi-card">
+            <div class="kpi-icon blue">▣</div>
+            <div>
+              <span>Total</span>
+              <strong>43</strong>
+              <small>Dossiers enregistrés</small>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon orange">◷</div>
+            <div>
+              <span>En attente</span>
+              <strong>18</strong>
+              <small>À confirmer ou en cours</small>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon purple">⌛</div>
+            <div>
+              <span>Restant</span>
+              <strong>1</strong>
+              <small>À solder</small>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon green">✓</div>
+            <div>
+              <span>Payés</span>
+              <strong>24</strong>
+              <small>Totalement réglés</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="toolbar">
+            <div class="tabs">
+              <button class="tab active">Tous</button>
+              <button class="tab">En attente <span class="pill-count orange">18</span></button>
+              <button class="tab">Payés <span class="pill-count green">24</span></button>
+              <button class="tab">À suivre <span class="pill-count purple">1</span></button>
+            </div>
+            <div class="tool-buttons">
+              <button class="secondary-btn">⚐ Filtres</button>
+              <button class="secondary-btn">↕ Trier par</button>
+            </div>
+          </div>
+
+          <div class="reservation-grid">
+            <article class="reservation-card">
+              <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=900&q=80')">
+                <span class="status waiting">en attente</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title-row">
+                  <h3>Séjour Dubaï 7 jours (le rush)</h3>
+                  <button class="more">⋮</button>
+                </div>
+                <div class="meta-grid">
+                  <div><span class="meta-label">Dossier</span><span class="meta-value">RES-2026-000041</span></div>
+                  <div><span class="meta-label">Client</span><span class="meta-value">♙ Oussama Idrissi</span></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div><span class="foot-label">Départ</span><span class="foot-value">12/05/2026</span></div>
+                <div><span class="foot-label">Total</span><span class="foot-value">8 600,00 DH</span></div>
+                <div><span class="foot-label">Restant</span><span class="foot-value">7 000,00 DH</span></div>
+                <button class="view-btn">Voir</button>
+              </div>
+            </article>
+
+            <article class="reservation-card">
+              <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80')">
+                <span class="status paid">payé</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title-row">
+                  <h3>Séjour 4 jours à Dakhla</h3>
+                  <button class="more">⋮</button>
+                </div>
+                <div class="meta-grid">
+                  <div><span class="meta-label">Dossier</span><span class="meta-value">RES-2026-000038</span></div>
+                  <div><span class="meta-label">Client</span><span class="meta-value">♙ Oussama Idrissi</span></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div><span class="foot-label">Départ</span><span class="foot-value">12/05/2026</span></div>
+                <div><span class="foot-label">Total</span><span class="foot-value">3 980,00 DH</span></div>
+                <div><span class="foot-label">Restant</span><span class="foot-value">0,00 DH</span></div>
+                <button class="view-btn">Voir</button>
+              </div>
+            </article>
+
+            <article class="reservation-card">
+              <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80')">
+                <span class="status partial">partiel</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title-row">
+                  <h3>Week-end shopping : Essaouira</h3>
+                  <button class="more">⋮</button>
+                </div>
+                <div class="meta-grid">
+                  <div><span class="meta-label">Dossier</span><span class="meta-value">RES-2026-000029</span></div>
+                  <div><span class="meta-label">Client</span><span class="meta-value">♙ Test test</span></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div><span class="foot-label">Départ</span><span class="foot-value">10/04/2026</span></div>
+                <div><span class="foot-label">Total</span><span class="foot-value">3 350,00 DH</span></div>
+                <div><span class="foot-label">Restant</span><span class="foot-value">1 350,00 DH</span></div>
+                <button class="view-btn">Voir</button>
+              </div>
+            </article>
+
+            <article class="reservation-card">
+              <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=900&q=80')">
+                <span class="status unpaid">non payé</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title-row">
+                  <h3>Séjour Marrakech 3 jours</h3>
+                  <button class="more">⋮</button>
+                </div>
+                <div class="meta-grid">
+                  <div><span class="meta-label">Dossier</span><span class="meta-value">RES-2026-000047</span></div>
+                  <div><span class="meta-label">Client</span><span class="meta-value">♙ Salma Benjelloun</span></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div><span class="foot-label">Départ</span><span class="foot-value">15/06/2026</span></div>
+                <div><span class="foot-label">Total</span><span class="foot-value">2 450,00 DH</span></div>
+                <div><span class="foot-label">Restant</span><span class="foot-value">2 450,00 DH</span></div>
+                <button class="view-btn">Voir</button>
+              </div>
+            </article>
+
+            <article class="reservation-card">
+              <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80')">
+                <span class="status waiting">en attente</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title-row">
+                  <h3>Séjour Chefchaouen 2 nuits</h3>
+                  <button class="more">⋮</button>
+                </div>
+                <div class="meta-grid">
+                  <div><span class="meta-label">Dossier</span><span class="meta-value">RES-2026-000044</span></div>
+                  <div><span class="meta-label">Client</span><span class="meta-value">♙ Youssef El Amrani</span></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div><span class="foot-label">Départ</span><span class="foot-value">18/05/2026</span></div>
+                <div><span class="foot-label">Total</span><span class="foot-value">1 950,00 DH</span></div>
+                <div><span class="foot-label">Restant</span><span class="foot-value">1 950,00 DH</span></div>
+                <button class="view-btn">Voir</button>
+              </div>
+            </article>
+
+            <article class="reservation-card">
+              <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80')">
+                <span class="status paid">payé</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title-row">
+                  <h3>Séjour Agadir 5 jours</h3>
+                  <button class="more">⋮</button>
+                </div>
+                <div class="meta-grid">
+                  <div><span class="meta-label">Dossier</span><span class="meta-value">RES-2026-000032</span></div>
+                  <div><span class="meta-label">Client</span><span class="meta-value">♙ Fatima Zahra</span></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div><span class="foot-label">Départ</span><span class="foot-value">22/06/2026</span></div>
+                <div><span class="foot-label">Total</span><span class="foot-value">4 200,00 DH</span></div>
+                <div><span class="foot-label">Restant</span><span class="foot-value">0,00 DH</span></div>
+                <button class="view-btn">Voir</button>
+              </div>
+            </article>
+          </div>
+
+          <div class="pagination-row">
+            <div class="pagination">
+              <button class="page-btn">‹</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">...</button>
+              <button class="page-btn">8</button>
+              <button class="page-btn">›</button>
+            </div>
+            <div class="per-page">
+              <span>Afficher</span>
+              <div class="select-like">9 / page ⌄</div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <span>© 2026 Ajinsafro.ma — Tous droits réservés.</span>
+          <span>Admin V2</span>
+        </footer>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
