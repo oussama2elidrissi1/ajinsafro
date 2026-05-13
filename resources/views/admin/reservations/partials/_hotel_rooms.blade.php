@@ -695,6 +695,14 @@
         }
 
         var selectedOption = departureSelect && departureSelect.selectedOptions.length ? departureSelect.selectedOptions[0] : null;
+        if (departureSelect && departureSelect.options && departureSelect.options.length) {
+            for (var optionIndex = 0; optionIndex < departureSelect.options.length; optionIndex++) {
+                if (String(departureSelect.options[optionIndex].value) === String(departureId)) {
+                    selectedOption = departureSelect.options[optionIndex];
+                    break;
+                }
+            }
+        }
         var selectedDate = selectedOption && selectedOption.textContent ? selectedOption.textContent.trim() : '';
         var requestTimestamp = new Date().toISOString();
         var requestSeq = ++roomsDebugRequestSeq;
@@ -839,11 +847,14 @@
 
                 if (selectedDepartureId) {
                     departureSelect.value = String(selectedDepartureId);
+                    window.reservationState.selectedDepartureId = String(selectedDepartureId);
+                    window.reservationState.selectedTourId = String(tourId || window.reservationState.selectedTourId || '');
+                    window.reservationState.selectedTravelDateId = String(travelDateValue || window.reservationState.selectedTravelDateId || '');
                     syncDepartureHidden();
-                    loadDepartureRooms(selectedDepartureId);
+                    loadDepartureRooms(selectedDepartureId, tourId, travelDateValue);
                 } else if (departureSelect.options.length > 1 && departureSelect.selectedIndex > 0) {
                     syncDepartureHidden();
-                    loadDepartureRooms(departureSelect.value);
+                    loadDepartureRooms(departureSelect.value, tourId, travelDateValue);
                 }
 
                 syncSummary();
@@ -879,7 +890,8 @@
         departureSelect.addEventListener('change', function () {
             syncDepartureHidden();
             if (this.value) {
-                loadDepartureRooms(this.value);
+                window.reservationState.selectedDepartureId = this.value;
+                loadDepartureRooms(this.value, window.reservationState.selectedTourId || null, window.reservationState.selectedTravelDateId || null);
             } else if (roomsContainer) {
                 roomsContainer.innerHTML = '<p class="text-muted mb-0">Choisissez un départ.</p>';
                 if (summaryBlock) summaryBlock.classList.add('d-none');

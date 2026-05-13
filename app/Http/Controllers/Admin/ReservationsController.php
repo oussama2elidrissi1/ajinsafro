@@ -552,46 +552,45 @@ class ReservationsController extends Controller
 
         $formattedRooms = $availableRooms->map(function ($room) {
             $sourceType = 'unknown';
-            $sourceId = null;
+            $sourceId = $room->id ?? $room->departure_hotel_room_id ?? $room->tour_hotel_room_id ?? $room->room_source_id ?? null;
             $departureHotelRoomId = null;
             $tourHotelRoomId = null;
 
             if ($room instanceof DepartureRoomAllocation) {
                 $sourceType = 'departure_room_allocation';
-                $sourceId = $room->id;
-                // Assuming DepartureRoomAllocation can be linked to a DepartureHotelRoom
-                if (isset($room->departure_hotel_room_id)) {
-                    $departureHotelRoomId = $room->departure_hotel_room_id;
-                }
+                $sourceId = $room->id ?? $sourceId;
+                $departureHotelRoomId = $room->departure_hotel_room_id ?? $room->room_id ?? $sourceId;
             } elseif ($room instanceof DepartureHotelRoom) {
                 $sourceType = 'departure_hotel_room';
-                $sourceId = $room->id;
-                $departureHotelRoomId = $room->id;
+                $sourceId = $room->id ?? $sourceId;
+                $departureHotelRoomId = $room->id ?? $room->departure_hotel_room_id ?? $sourceId;
             } elseif ($room instanceof TourHotelRoomAvailability) {
                 $sourceType = 'tour_hotel_room';
-                $sourceId = $room->id;
-                $tourHotelRoomId = $room->id;
+                $sourceId = $room->id ?? $sourceId;
+                $tourHotelRoomId = $room->tour_hotel_room_id ?? $room->id ?? $sourceId;
             }
 
-            // Fallback for ID if it's still null
+            $departureHotelRoomId = $departureHotelRoomId ?? ($room->departure_hotel_room_id ?? null);
+            $tourHotelRoomId = $tourHotelRoomId ?? ($room->tour_hotel_room_id ?? null);
+
             if ($sourceId === null) {
-                $sourceId = $room->id ?? $room->departure_hotel_room_id ?? $room->tour_hotel_room_id ?? null;
+                $sourceId = $departureHotelRoomId ?? $tourHotelRoomId ?? $room->room_source_id ?? $room->source_id ?? null;
             }
-            
+
             return [
                 'id' => $sourceId,
                 'room_source_id' => $sourceId,
                 'room_source_type' => $sourceType,
                 'departure_hotel_room_id' => $departureHotelRoomId,
                 'tour_hotel_room_id' => $tourHotelRoomId,
-                'room_type' => $room->room_type_name ?? $room->room_type,
-                'available_rooms' => $room->computed_available_rooms ?? $room->available_rooms,
-                'capacity' => $room->capacity,
-                'available_places' => $room->computed_available_places ?? $room->available_places,
-                'unit_supplement' => $room->unit_supplement ?? 0,
-                'hotel_name' => $room->hotel_name ?? $room->hotel?->name ?? 'Hôtel non spécifié',
+                'room_type' => $room->room_type_name ?? $room->room_type ?? $room->type ?? 'Chambre',
+                'available_rooms' => $room->computed_available_rooms ?? $room->available_rooms ?? 0,
+                'capacity' => $room->capacity ?? $room->capacity_total ?? 0,
+                'available_places' => $room->computed_available_places ?? $room->available_places ?? 0,
+                'unit_supplement' => $room->unit_supplement ?? $room->supplement ?? 0,
+                'hotel_name' => $room->hotel_name ?? $room->hotel?->name ?? 'Hôtel',
             ];
-        });
+        })->values();
 
         $html = view('admin.reservations.partials._hotel_rooms', [
             'availableRooms' => $formattedRooms,

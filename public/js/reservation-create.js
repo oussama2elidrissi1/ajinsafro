@@ -533,8 +533,11 @@
             availableRoomTypesLength: availableRoomTypes ? availableRoomTypes.length : 0,
             availableRoomTypes: availableRoomTypes
         });
+
+        window.availableRoomTypes = availableRoomTypes;
         
         window.reservationState.availableRooms = groups || [];
+        window.reservationState.availableRoomTypes = availableRoomTypes;
         console.log('[Rooming] setAvailableRoomTypes - State updated, now calling renderAvailableRooms and renderRooming');
         
         renderAvailableRooms();
@@ -622,10 +625,14 @@
     }
 
     function roomTypeForCapacity(capacity, preferredType) {
-        var rooms = availableRoomTypes.filter(function (room) {
+        var roomPool = Array.isArray(window.availableRoomTypes) && window.availableRoomTypes.length ? window.availableRoomTypes : availableRoomTypes;
+        if ((!roomPool || !roomPool.length) && window.reservationState && Array.isArray(window.reservationState.availableRoomTypes)) {
+            roomPool = window.reservationState.availableRoomTypes;
+        }
+        var rooms = roomPool.filter(function (room) {
             return room.capacity >= capacity && (!preferredType || String(room.room_type).toLowerCase().indexOf(preferredType) !== -1);
         });
-        return rooms[0] || availableRoomTypes.filter(function (room) { return room.capacity >= capacity; })[0] || availableRoomTypes[0] || null;
+        return rooms[0] || roomPool.filter(function (room) { return room.capacity >= capacity; })[0] || roomPool[0] || null;
     }
 
     function makeAllocation(room, travelers, mode) {
@@ -648,12 +655,20 @@
     function autoRooming() {
         var travelers = travelerRows().filter(function (t) { return t.consumesBed; });
         var stats = travelerStats();
-        console.log('[Rooming] runAutoRooming', { travelers: travelers, rooms: availableRoomTypes });
+        var roomPool = Array.isArray(window.availableRoomTypes) && window.availableRoomTypes.length ? window.availableRoomTypes : availableRoomTypes;
+        if ((!roomPool || !roomPool.length) && window.reservationState && Array.isArray(window.reservationState.availableRoomTypes)) {
+            roomPool = window.reservationState.availableRoomTypes;
+        }
+        if (roomPool !== availableRoomTypes) {
+            availableRoomTypes = roomPool || [];
+        }
+        window.availableRoomTypes = roomPool || [];
+        console.log('[Rooming] runAutoRooming', { travelers: travelers, rooms: roomPool });
         if (!travelers.length) {
             showRoomingAlert('Ajoutez au moins un voyageur avant la repartition.');
             return;
         }
-        if (!availableRoomTypes.length) {
+        if (!roomPool.length) {
             showRoomingAlert('Aucune chambre disponible chargee pour ce depart.');
             return;
         }
@@ -728,12 +743,20 @@
     }
 
     function addManualRoomAllocation() {
-        console.log('[Rooming] Add room clicked', { rooms: availableRoomTypes });
-        if (!availableRoomTypes.length) {
+        var roomPool = Array.isArray(window.availableRoomTypes) && window.availableRoomTypes.length ? window.availableRoomTypes : availableRoomTypes;
+        if ((!roomPool || !roomPool.length) && window.reservationState && Array.isArray(window.reservationState.availableRoomTypes)) {
+            roomPool = window.reservationState.availableRoomTypes;
+        }
+        if (roomPool !== availableRoomTypes) {
+            availableRoomTypes = roomPool || [];
+        }
+        window.availableRoomTypes = roomPool || [];
+        console.log('[Rooming] Add room clicked', { rooms: roomPool });
+        if (!roomPool.length) {
             showRoomingAlert('Aucune chambre disponible chargee pour ce depart.');
             return;
         }
-        var room = availableRoomTypes[0];
+        var room = roomPool[0];
         roomingAllocations.push(makeAllocation(room, [], room.capacity === 1 ? 'single' : 'full'));
         window.reservationState.roomAllocations = roomingAllocations;
         renderRooming();
@@ -1413,31 +1436,47 @@
     function initializeReservationState() {
         var tourSelect = document.getElementById('select-tour-id');
         var departureSelect = document.getElementById('reservation-departure-select');
+        var departureIdInput = document.getElementById('input-departure-id');
+        var travelDateInput = document.getElementById('input-travel-date-id');
+        var urlParams = new URLSearchParams(window.location.search);
         
         if (tourSelect && tourSelect.value) {
             window.reservationState.selectedTourId = tourSelect.value;
+        }
+
+        if (!window.reservationState.selectedTourId) {
+            window.reservationState.selectedTourId = urlParams.get('tour_id');
         }
 
         if (departureSelect && departureSelect.value) {
             var selectedOption = departureSelect.options[departureSelect.selectedIndex];
             window.reservationState.selectedDepartureId = departureSelect.value;
             if (selectedOption) {
-                window.reservationState.selectedTravelDateId = selectedOption.getAttribute('data-travel-date-id');
+                window.reservationState.selectedTravelDateId = selectedOption.getAttribute('data-wp-travel-date-id') || selectedOption.getAttribute('data-travel-date-id');
             }
         }
 
-        // If values are still null, try to get them from URL params
-        var urlParams = new URLSearchParams(window.location.search);
-        if (!window.reservationState.selectedTourId) {
-            window.reservationState.selectedTourId = urlParams.get('tour_id');
+        if (!window.reservationState.selectedDepartureId && departureIdInput && departureIdInput.value) {
+            window.reservationState.selectedDepartureId = departureIdInput.value;
         }
+
+        if (!window.reservationState.selectedTravelDateId && travelDateInput && travelDateInput.value) {
+            window.reservationState.selectedTravelDateId = travelDateInput.value;
+        }
+
+        // If values are still null, try to get them from URL params
         if (!window.reservationState.selectedTravelDateId) {
             window.reservationState.selectedTravelDateId = urlParams.get('travel_date_id');
         }
 
+        window.availableRoomTypes = Array.isArray(window.availableRoomTypes) ? window.availableRoomTypes : [];
+        window.reservationState.availableRoomTypes = Array.isArray(window.reservationState.availableRoomTypes)
+            ? window.reservationState.availableRoomTypes
+            : window.availableRoomTypes;
+
         console.log('[Reservation Create] Initial state loaded:', window.reservationState);
 
-        if (typeof window.reservationCreateReloadDepartureRooms === 'function') {
+        if (typeof window.reservationCreateReloadDepartureRooms === 'function' && window.reservationState.selectedDepartureId) {
             console.log('[Reservation Create] Calling reservationCreateReloadDepartureRooms on init.');
             window.reservationCreateReloadDepartureRooms();
         }
@@ -1458,6 +1497,7 @@
         syncVisaMode();
         syncTravelersEmptyState();
         renderExtras();
+        initializeReservationState();
         
         // Now safely call setAvailableRoomTypes with existing rooms
         console.log('[Reservation Create] Setting initial available rooms', {
