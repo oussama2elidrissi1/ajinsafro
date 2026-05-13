@@ -496,7 +496,7 @@ class ReservationPricingService
             'room_source_id' => (int) $allocation->id,
             'room_source_type' => 'departure_room_allocation',
             'hotel_name' => (string) ($hotelNames->get($hotelId) ?: 'Hotel'),
-        }
+        ];
 
         return ['rooms' => $roomsPayload];
     }
