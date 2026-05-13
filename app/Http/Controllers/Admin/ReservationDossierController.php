@@ -242,6 +242,18 @@ class ReservationDossierController extends Controller
             ? route('admin.reservations.index', ['client_id' => $clientId])
             : route('admin.reservations.index');
 
+        $noteEntries = $reservationDossier->histories
+            ->filter(fn ($history) => $history->action === 'reservation.note_added')
+            ->values();
+
+        $notesContent = (string) (
+            $reservationDossier->notes
+            ?? $reservationDossier->internal_notes
+            ?? $reservationDossier->admin_notes
+            ?? $reservation->notes
+            ?? ''
+        );
+
         return view('admin.reservation-dossiers.show', [
             'dossier' => $reservationDossier,
             'reservation' => $reservation,
@@ -250,6 +262,8 @@ class ReservationDossierController extends Controller
             'backUrl' => $backUrl,
             'relatedReservations' => $relatedReservations,
             'allClientReservationsUrl' => $allClientReservationsUrl,
+            'noteEntries' => $noteEntries,
+            'notesContent' => $notesContent,
         ]);
     }
 }

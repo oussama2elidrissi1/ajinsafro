@@ -11,6 +11,8 @@
     $offer = $offer ?? null;
     $relatedReservations = $relatedReservations ?? collect();
     $allClientReservationsUrl = $allClientReservationsUrl ?? url('/admin/reservations');
+    $noteEntries = $noteEntries ?? collect();
+    $notesContent = $notesContent ?? '';
     $client = $dossier->client ?: $reservation->client;
     $offer = $offer ?: ($reservation->offer ?? $reservation->voyage ?? $reservation->tour ?? null);
     $departure = $reservation->departure;
@@ -46,7 +48,7 @@
         $normalizedPhone = substr($normalizedPhone, 2);
     }
     $whatsAppUrl = $normalizedPhone ? 'https://wa.me/'.$normalizedPhone : null;
-    $notesContent = trim((string) ($reservation->notes ?? ''));
+    $notesContent = trim((string) $notesContent);
 
     $statusMap = [
         'draft' => ['label' => 'Brouillon', 'class' => 'is-draft'],
