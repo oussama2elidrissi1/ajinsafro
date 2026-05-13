@@ -471,26 +471,31 @@ class ReservationPricingService
 
             $hotelId = (int) ($allocation->hotel_id ?? 0);
             $roomPayload = [
-                'departure_room_allocation_id' => (int) $allocation->id,
-                'departure_hotel_room_id' => null,
-                'tour_hotel_id' => $hotelId ?: null,
-                'departure_hotel_id' => $hotelId ?: null,
-                'hotel_name' => (string) ($hotelNames->get($hotelId) ?: 'Hotel'),
-                'room_type' => $roomType,
-                'capacity' => $capacity,
-                'capacity_total' => $capacity,
-                'available_rooms' => $quantity,
-                'available_places' => $quantity * $capacity,
-                'unit_supplement' => (float) ($allocation->supplement ?? 0),
-                'supplement' => (float) ($allocation->supplement ?? 0),
-                'room_count' => 0,
-                'subtotal' => 0,
-                'status' => 'available',
-            ];
+            'id' => (int) $allocation->id,
+            'room_source_id' => (int) $allocation->id,
+            'room_source_type' => 'departure_room_allocation',
+            'departure_room_allocation_id' => (int) $allocation->id,
+            'departure_hotel_room_id' => null,
+            'tour_hotel_id' => $hotelId ?: null,
+            'departure_hotel_id' => $hotelId ?: null,
+            'hotel_name' => (string) ($hotelNames->get($hotelId) ?: 'Hotel'),
+            'room_type' => $roomType,
+            'capacity' => $capacity,
+            'capacity_total' => $capacity,
+            'available_rooms' => $quantity,
+            'available_places' => $quantity * $capacity,
+            'unit_supplement' => (float) ($allocation->supplement ?? 0),
+            'supplement' => (float) ($allocation->supplement ?? 0),
+            'room_count' => 0,
+            'subtotal' => 0,
+            'status' => 'available',
+        ];
 
-            $roomsPayload[] = $roomPayload + [
-                'rooms' => [$roomPayload],
-            ];
+        $roomsPayload[] = [
+            'id' => (int) $allocation->id,
+            'room_source_id' => (int) $allocation->id,
+            'room_source_type' => 'departure_room_allocation',
+            'hotel_name' => (string) ($hotelNames->get($hotelId) ?: 'Hotel'),
         }
 
         return ['rooms' => $roomsPayload];

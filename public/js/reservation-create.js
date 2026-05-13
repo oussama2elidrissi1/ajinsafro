@@ -457,7 +457,8 @@
             console.log('[Rooming] flattenAvailableRooms hotel rooms', { hotelRoomsLength: hotelRooms.length, hotelRooms: hotelRooms });
             
             hotelRooms.forEach(function (room, roomIdx) {
-                var sourceId = room.tour_hotel_room_id || room.departure_hotel_room_id || room.room_source_id || room.id || null;
+                var sourceId = room.departure_hotel_room_id || room.tour_hotel_room_id || room.room_source_id || room.source_id || room.id || null;
+                var sourceType = room.room_source_type || (room.departure_hotel_room_id ? 'departure_hotel_room' : null) || (room.tour_hotel_room_id ? 'tour_hotel_room' : null) || room.source_type || 'unknown';
                 var capacity = parseInt(room.capacity || room.capacity_total || '0', 10) || 0;
                 var availableRooms = parseInt(room.available_rooms || '0', 10) || 0;
                 
@@ -470,9 +471,14 @@
                     room: room
                 });
                 
-                if (!sourceId || capacity <= 0 || availableRooms <= 0) return;
+                if (!sourceId || capacity <= 0 || availableRooms <= 0) {
+                    if (capacity > 0 && availableRooms > 0) {
+                        console.error('[Rooming] Room skipped because sourceId is missing', room);
+                    }
+                    return;
+                }
                 rows.push({
-                    room_source_type: room.tour_hotel_room_id ? 'tour_hotel_room' : 'departure_room',
+                    room_source_type: sourceType,
                     room_source_id: sourceId,
                     hotel_name: room.hotel_name || hotel.hotel_name || 'Hotel',
                     room_type: room.room_type || 'Chambre',
