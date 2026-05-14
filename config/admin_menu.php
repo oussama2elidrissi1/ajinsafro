@@ -357,6 +357,7 @@ return [
         'admin.agency-employees.destroy' => ['agency_employees.delete', 'pos_employees.delete'],
         'admin.agent.commissions.index' => ['commissions.view-own', 'commissions.view-team', 'commissions.view-all'],
         'admin.agent.commissions.show' => ['commissions.view-own', 'commissions.view-team', 'commissions.view-all'],
+        'admin.tailor-made-requests.index' => 'reservations.view',
         'admin.finance.commissions' => 'commissions.view-all',
         'admin.finance.commissions.show' => 'commissions.view-all',
         'admin.finance.commissions.confirm' => 'commissions.manage',

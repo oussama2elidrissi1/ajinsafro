@@ -52,7 +52,18 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="reservation-base-price">Prix unitaire par voyageur (DH)</label>
-                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ old('base_price', $reservation?->base_price ?? '') }}" min="0" step="0.01" placeholder="0.00">
+                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ old('base_price', $reservation?->base_price ?? '') }}" min="0" step="0.01" placeholder="0.00" readonly>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="reservation-discount-value">Réduction</label>
+                    <div class="input-group">
+                        <input type="number" id="reservation-discount-value" name="discount_value" class="form-control" value="{{ old('discount_value', $reservation?->discount_value ?? '') }}" min="0" step="0.01" placeholder="0">
+                        <select id="reservation-discount-type" name="discount_type" class="form-select" style="max-width: 96px;">
+                            <option value="percentage" @selected(old('discount_type', $reservation?->discount_type ?? 'percentage') === 'percentage')>%</option>
+                            <option value="fixed" @selected(old('discount_type', $reservation?->discount_type ?? '') === 'fixed')>DH</option>
+                        </select>
+                    </div>
+                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">—</strong></div>
                 </div>
             </div>
         @else
@@ -63,7 +74,18 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-4">
                     <label class="form-label" for="reservation-base-price">Prix unitaire par voyageur (DH)</label>
-                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ old('base_price', $reservation?->base_price ?? '') }}" min="0" step="0.01" placeholder="0.00">
+                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ old('base_price', $reservation?->base_price ?? '') }}" min="0" step="0.01" placeholder="0.00" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="reservation-discount-value">Réduction</label>
+                    <div class="input-group">
+                        <input type="number" id="reservation-discount-value" name="discount_value" class="form-control" value="{{ old('discount_value', $reservation?->discount_value ?? '') }}" min="0" step="0.01" placeholder="0">
+                        <select id="reservation-discount-type" name="discount_type" class="form-select" style="max-width: 96px;">
+                            <option value="percentage" @selected(old('discount_type', $reservation?->discount_type ?? 'percentage') === 'percentage')>%</option>
+                            <option value="fixed" @selected(old('discount_type', $reservation?->discount_type ?? '') === 'fixed')>DH</option>
+                        </select>
+                    </div>
+                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">—</strong></div>
                 </div>
             </div>
         @endif
@@ -373,7 +395,7 @@
 
     function syncSummary() {
         var travelers = travelerCount();
-        var baseUnitPrice = parseNumber(basePriceInput && basePriceInput.value);
+        var baseUnitPrice = discountedUnitPrice();
         var selected = selectedRoomSummary();
         var extrasTotal = typeof window.reservationCreateGetExtrasTotal === 'function'
             ? parseNumber(window.reservationCreateGetExtrasTotal())
@@ -407,6 +429,8 @@
             if (capLabel) capLabel.textContent = 'Capacité chambres sélectionnées :';
         }
         if (totalEl) totalEl.textContent = total.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH';
+        var afterDiscountEl = document.getElementById('reservation-price-after-discount');
+        if (afterDiscountEl) afterDiscountEl.textContent = formatMoney(baseUnitPrice);
         if (summaryBlock && document.querySelector('.reservation-hotel-block')) {
             summaryBlock.classList.remove('d-none');
         }
@@ -426,6 +450,28 @@
 
         var tripOption = getSelectedTripOption();
         return parseNumber(tripOption && tripOption.getAttribute('data-price-from'));
+    }
+
+    function discountedUnitPrice() {
+        var unitPrice = parseNumber(basePriceInput && basePriceInput.value);
+        var typeInput = document.getElementById('reservation-discount-type');
+        var valueInput = document.getElementById('reservation-discount-value');
+        var type = typeInput ? String(typeInput.value || 'percentage') : 'percentage';
+        var value = Math.max(0, parseNumber(valueInput && valueInput.value));
+        var discountAmount = 0;
+
+        if (value > 0) {
+            if (type === 'percentage') {
+                value = Math.min(100, value);
+                if (valueInput && parseNumber(valueInput.value) > 100) valueInput.value = '100';
+                discountAmount = unitPrice * (value / 100);
+            } else {
+                discountAmount = Math.min(unitPrice, value);
+                if (valueInput && value > unitPrice) valueInput.value = String(unitPrice.toFixed(2));
+            }
+        }
+
+        return Math.max(0, unitPrice - discountAmount);
     }
 
     function syncDepartureHidden() {
@@ -922,6 +968,16 @@
             }
         });
     }
+    ['reservation-discount-value', 'reservation-discount-type'].forEach(function (id) {
+        var discountEl = document.getElementById(id);
+        if (!discountEl) return;
+        discountEl.addEventListener(id === 'reservation-discount-type' ? 'change' : 'input', function () {
+            syncSummary();
+            if (typeof window.reservationCreateRecomputeTotals === 'function') {
+                window.reservationCreateRecomputeTotals();
+            }
+        });
+    });
 
     if (departureSelect) {
         departureSelect.addEventListener('change', function () {

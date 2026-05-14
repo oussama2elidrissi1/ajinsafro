@@ -318,6 +318,7 @@ class ReservationWorkspaceCatalogService
                     $childRaw,
                     $durationRaw,
                     $priceLabel,
+                    $adultPriceRaw,
                     $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
                     $travelDateId,
                 )),
@@ -916,6 +917,79 @@ class ReservationWorkspaceCatalogService
         }
 
         return 'none';
+    }
+
+    private function resolveCommercialCommissionPayload(WpPost $wp, ?Voyage $voyage, mixed $adultPriceRaw): array
+    {
+        $rawAdultCommission = $wp->getMeta('commission_adulte');
+        $rawType = $wp->getMeta('commission_type', $wp->getMeta('commission_commerciale_type'));
+        $commissionValue = $this->parseCommissionValue($rawAdultCommission);
+
+        if ($commissionValue === null && $voyage && isset($voyage->commission_adulte)) {
+            $commissionValue = $this->parseCommissionValue($voyage->commission_adulte);
+        }
+
+        if ($commissionValue === null || $commissionValue <= 0) {
+            return [
+                'configured' => false,
+                'message' => 'Aucune commission configurée pour cette offre',
+            ];
+        }
+
+        $type = $this->normalizeCommissionType($rawType, $rawAdultCommission);
+        $unitPrice = $this->parseWpAdultPriceToFloat($adultPriceRaw)
+            ?? ($voyage && $voyage->price_from ? (float) $voyage->price_from : 0.0);
+        $estimated = $type === 'percentage'
+            ? round($unitPrice * ($commissionValue / 100), 2)
+            : round($commissionValue, 2);
+
+        return [
+            'configured' => true,
+            'type' => $type,
+            'type_label' => $type === 'percentage' ? 'Pourcentage' : 'Montant fixe',
+            'value' => round($commissionValue, 2),
+            'value_label' => $type === 'percentage'
+                ? rtrim(rtrim(number_format($commissionValue, 2, ',', ' '), '0'), ',').'%'
+                : number_format($commissionValue, 0, ',', ' ').' DH',
+            'estimated_amount' => $estimated,
+            'estimated_label' => number_format($estimated, 0, ',', ' ').' DH',
+            'basis_unit_price' => round($unitPrice, 2),
+            'currency' => trim((string) ($voyage?->currency ?? 'MAD')) ?: 'MAD',
+        ];
+    }
+
+    private function parseCommissionValue(mixed $raw): ?float
+    {
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        if (is_numeric($raw)) {
+            return max(0, (float) $raw);
+        }
+
+        $value = trim((string) $raw);
+        if ($value === '') {
+            return null;
+        }
+
+        $value = str_replace(["\xc2\xa0", ' ', '%', 'DH', 'MAD', 'dh', 'mad'], '', $value);
+        $value = str_replace(',', '.', $value);
+
+        return is_numeric($value) ? max(0, (float) $value) : null;
+    }
+
+    private function normalizeCommissionType(mixed $rawType, mixed $rawValue): string
+    {
+        $type = strtolower(trim((string) ($rawType ?? '')));
+        if (in_array($type, ['percent', 'percentage', 'pourcentage', '%'], true)) {
+            return 'percentage';
+        }
+        if (in_array($type, ['fixed', 'amount', 'montant', 'flat'], true)) {
+            return 'fixed';
+        }
+
+        return str_contains((string) $rawValue, '%') ? 'percentage' : 'fixed';
     }
 
     private function formatVoyagePriceLabel(?Voyage $voyage): ?string
@@ -1671,6 +1745,7 @@ class ReservationWorkspaceCatalogService
         mixed $childPriceMetaRaw,
         mixed $durationMetaRaw,
         ?string $priceLabel,
+        mixed $adultPriceRaw,
         ?string $destination,
         ?int $preferredTravelDateId,
     ): array {
@@ -1731,6 +1806,7 @@ class ReservationWorkspaceCatalogService
                 'child_label' => $this->formatChildPriceLabel($childPriceMetaRaw),
                 'currency' => $currency,
             ],
+            'commission' => $this->resolveCommercialCommissionPayload($wp, $voyage, $adultPriceRaw),
             'stats' => $stats,
             'stats_total' => ($stats['validee'] ?? 0) + ($stats['en_cours'] ?? 0) + ($stats['annulee'] ?? 0),
             'availability_band' => $band,
@@ -2221,6 +2297,10 @@ class ReservationWorkspaceCatalogService
                 'adult_label' => $priceLabel,
                 'child_label' => null,
                 'currency' => $currency,
+            ],
+            'commission' => [
+                'configured' => false,
+                'message' => 'Aucune commission configurée pour cette offre',
             ],
             'stats' => $stats,
             'stats_total' => ($stats['validee'] ?? 0) + ($stats['en_cours'] ?? 0) + ($stats['annulee'] ?? 0),

@@ -30,18 +30,24 @@
 
         <div id="existing-client-block" class="{{ $clientMode === 'existing' ? '' : 'd-none' }}">
             <div class="reservation-create__field">
-                <label class="reservation-create__label" for="client_external_id">Recherche client <span>*</span></label>
+                <label class="reservation-create__label" for="reservation-client-search">Client existant <span>*</span></label>
+                <input type="search" id="reservation-client-search" class="reservation-create__input mb-2" placeholder="Recherche par nom, téléphone, email ou CIN" autocomplete="off">
                 <select name="client_external_id" id="client_external_id" class="reservation-create__input">
                     <option value="">Choisir un client…</option>
                     @foreach($clients as $client)
-                        <option value="{{ $client->id }}" {{ old('client_external_id') == $client->id ? 'selected' : '' }}>
+                        <option
+                            value="{{ $client->id }}"
+                            data-search="{{ \Illuminate\Support\Str::lower(trim(($client->full_name ?? '').' '.($client->phone ?? '').' '.($client->email ?? '').' '.($client->national_id_number ?? '').' '.($client->passport_number ?? '').' '.($client->client_code ?? ''))) }}"
+                            {{ old('client_external_id') == $client->id ? 'selected' : '' }}
+                        >
                             [{{ $client->client_code }}] {{ $client->full_name }}
                             @if($client->phone) — {{ $client->phone }} @endif
                             @if($client->email) — {{ $client->email }} @endif
                         </option>
                     @endforeach
                 </select>
-                <p class="reservation-create__helper">Recherche par nom, téléphone, email ou CIN depuis la liste existante.</p>
+                <p id="reservation-client-search-empty" class="reservation-create__helper d-none">Aucun client trouvé.</p>
+                <a href="{{ route('admin.customers.clients.create') }}" class="reservation-create__helper d-inline-flex mt-2" target="_blank" rel="noopener">Créer un nouveau client</a>
             </div>
         </div>
 

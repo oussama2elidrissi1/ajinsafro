@@ -41,6 +41,7 @@ use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\RoleAccessController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TaxonomyTermController;
+use App\Http\Controllers\Admin\TailorMadeRequestController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\LaravelVoyageThemeController;
@@ -183,6 +184,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('reservations/messages/{message}/label', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.label')->whereNumber('message');
         Route::post('reservations/messages/{message}/important', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.important')->whereNumber('message');
 
+        Route::get('demande-a-la-carte', [TailorMadeRequestController::class, 'index'])->name('tailor-made-requests.index');
         Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
         Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');

@@ -28,6 +28,9 @@ class ReservationService
 
     private ?bool $reservationsHasChannelColumn = null;
 
+    /** @var array<string, bool> */
+    private array $reservationColumnCache = [];
+
     public function __construct(
         private readonly WordPressMediaService $mediaService,
         private readonly PartnerCommissionService $commissionService,
@@ -363,6 +366,13 @@ class ReservationService
 
         if ($this->reservationsHasBasePriceColumn()) {
             $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
+        }
+        foreach (['unit_price_before_discount', 'discount_type', 'discount_value', 'unit_price_after_discount'] as $column) {
+            if (array_key_exists($column, $data) && $this->reservationColumnExists($column)) {
+                $reservation->{$column} = in_array($column, ['discount_type'], true)
+                    ? ($data[$column] ?: null)
+                    : ($data[$column] !== '' && $data[$column] !== null ? (float) $data[$column] : null);
+            }
         }
         if (array_key_exists('total_base', $data)) {
             $reservation->total_base = $data['total_base'] !== '' && $data['total_base'] !== null
@@ -1276,6 +1286,12 @@ class ReservationService
     {
         return $this->reservationsHasRoomSupplementTotalColumn
             ??= Schema::connection('mysql')->hasColumn('reservations', 'room_supplement_total');
+    }
+
+    private function reservationColumnExists(string $column): bool
+    {
+        return $this->reservationColumnCache[$column]
+            ??= Schema::connection('mysql')->hasColumn('reservations', $column);
     }
 
     private function reservationsHasChannelColumn(): bool

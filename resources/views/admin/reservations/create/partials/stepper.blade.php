@@ -49,6 +49,14 @@
             <strong id="create-summary-unit-price">—</strong>
         </div>
         <div class="reservation-create__summary-item">
+            <span>Réduction</span>
+            <strong id="create-summary-discount">Aucune</strong>
+        </div>
+        <div class="reservation-create__summary-item">
+            <span>Prix après réduction</span>
+            <strong id="create-summary-price-after-discount">—</strong>
+        </div>
+        <div class="reservation-create__summary-item">
             <span>Total provisoire</span>
             <strong id="create-summary-total">—</strong>
         </div>

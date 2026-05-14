@@ -283,6 +283,96 @@
         font-size: 0.95rem;
         color: #0f172a;
     }
+    .ws-md-departure-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 0.9rem;
+    }
+    @media (min-width: 768px) {
+        .ws-md-departure-kpi-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+    }
+    .ws-md-departure-kpi {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        padding: 0.9rem;
+        border: 1px solid #e2e8f0;
+        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+        min-height: 104px;
+    }
+    .ws-md-departure-kpi i {
+        color: rgba(14, 58, 90, 0.25);
+        font-size: 1.05rem;
+    }
+    .ws-md-departure-kpi span {
+        display: block;
+        margin-top: 0.6rem;
+        color: #64748b;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    .ws-md-departure-kpi strong {
+        display: block;
+        margin-top: 0.15rem;
+        color: #0f172a;
+        font-size: 1.55rem;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+    }
+    .ws-md-departure-kpi--ok { border-color: #bfdbfe; background: linear-gradient(180deg, #eff6ff, #fff); }
+    .ws-md-departure-kpi--wait { border-color: #fde68a; background: linear-gradient(180deg, #fffbeb, #fff); }
+    .ws-md-departure-kpi--cancel { border-color: #fecaca; background: linear-gradient(180deg, #fef2f2, #fff); }
+    .ws-md-departure-kpi--remain { border-color: #bae6fd; background: linear-gradient(180deg, #f0f9ff, #fff); }
+    .ws-md-departure-kpi--rate { border-color: #bbf7d0; background: linear-gradient(180deg, #f0fdf4, #fff); }
+    .ws-md-departure-info-grid {
+        display: grid;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+    @media (min-width: 640px) {
+        .ws-md-departure-info-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    .ws-md-departure-info {
+        border-radius: 14px;
+        border: 1px solid #e8ecf1;
+        background: #f8fafc;
+        padding: 0.85rem;
+    }
+    .ws-md-departure-info span,
+    .ws-md-commission-card span {
+        display: block;
+        color: #64748b;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .ws-md-departure-info strong,
+    .ws-md-commission-card strong {
+        display: block;
+        margin-top: 0.25rem;
+        color: #0f172a;
+        font-weight: 850;
+    }
+    .ws-md-commission-card {
+        border-radius: 16px;
+        border: 1px solid rgba(243, 122, 31, 0.25);
+        background: linear-gradient(135deg, #fff7ed 0%, #ffffff 62%);
+        padding: 1rem;
+    }
+    .ws-md-commission-card p {
+        margin: 0.3rem 0 0;
+        color: #9a3412;
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
     .ws-md-selector-actions { margin-top: 0.9rem; }
     .ws-md-selector-actions .ws-md-btn { margin: 0; }
     .ws-md-inline-note {
@@ -351,7 +441,8 @@
         z-index: 1;
         width: 100%;
         max-width: 900px;
-        max-height: 90vh;
+        max-height: min(94vh, 900px);
+        max-height: min(94dvh, 900px);
         display: flex;
         flex-direction: column;
         background: #fff;
@@ -786,6 +877,7 @@
         flex-wrap: wrap;
         gap: 0.5rem;
         justify-content: flex-end;
+        align-items: center;
     }
     .ws-md-btn {
         display: inline-flex;
@@ -804,6 +896,10 @@
     }
     .ws-md-btn:active {
         transform: scale(0.98);
+    }
+    .ws-md-btn:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(0, 131, 196, 0.18);
     }
     .ws-md-btn-primary {
         background: #0e3a5a;
@@ -845,11 +941,19 @@
         border-color: #0083c4;
     }
     .ws-md-btn-disabled {
-        background: #e2e8f0;
-        color: #94a3b8;
-        border-color: #e2e8f0;
+        background: #f1f5f9;
+        color: #475569;
+        border-color: #cbd5e1;
         cursor: not-allowed;
         pointer-events: none;
+        opacity: 1;
+    }
+    @media (max-width: 640px) {
+        .ws-md-footer .ws-md-btn,
+        .ws-md-footer-actions,
+        .ws-md-footer-actions .ws-md-btn {
+            width: 100%;
+        }
     }
     body.ws-md-open {
         overflow: hidden !important;
@@ -1744,33 +1848,57 @@ document.addEventListener('DOMContentLoaded', function () {
         return '<span class="' + cls + '">' + escapeHtml(label) + '</span>';
     }
 
+    function commercialCommissionHtml(detail) {
+        var commission = detail && detail.commission ? detail.commission : null;
+        var html = '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-hand-holding-usd"></i> Commission commerciale</div>';
+        if (!commission || !commission.configured) {
+            html += '<p class="ws-md-inline-note">' + escapeHtml((commission && commission.message) || 'Aucune commission configurée pour cette offre') + '</p></section>';
+            return html;
+        }
+        html += '<div class="ws-md-commission-card">';
+        html += '<span>' + escapeHtml(commission.type_label || 'Commission') + '</span>';
+        if (commission.type === 'percentage') {
+            html += '<strong>' + escapeHtml(commission.value_label || '') + ' = ' + escapeHtml(commission.estimated_label || '0 DH') + ' / voyageur</strong>';
+        } else {
+            html += '<strong>' + escapeHtml(commission.value_label || commission.estimated_label || '0 DH') + ' / voyageur</strong>';
+        }
+        if (commission.basis_unit_price) {
+            html += '<p>Estimation sur prix unitaire ' + escapeHtml(String(commission.basis_unit_price).replace('.', ',')) + ' ' + escapeHtml(commission.currency || 'MAD') + '.</p>';
+        }
+        html += '</div></section>';
+        return html;
+    }
+
     function departureBody(detail, departure) {
         var reservations = departure.reservations || {};
         var fillPct = departure.fill_pct != null ? departure.fill_pct : 0;
         var html = '<div class="ws-md-detail-panel">';
-        html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-info-circle"></i> Détails du départ sélectionné</div><dl class="ws-md-dl">';
-        if (detail.destination) html += '<div><dt>Destination</dt><dd>' + escapeHtml(detail.destination) + '</dd></div>';
-        if (detail.duration) html += '<div><dt>Durée</dt><dd>' + escapeHtml(detail.duration) + '</dd></div>';
-        if (detail.prices && detail.prices.adult_label) html += '<div><dt>Prix à partir de</dt><dd>' + escapeHtml(detail.prices.adult_label) + '</dd></div>';
-        html += '<div><dt>Date sélectionnée</dt><dd>' + escapeHtml(departure.date_label || '—') + '</dd></div></dl></section>';
-        html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-route"></i> Détail du départ</div><div class="ws-md-selector-meta">';
-        html += '<div class="ws-md-selector-kpi"><span>Capacité</span><strong>' + escapeHtml(departure.capacity != null ? departure.capacity : '—') + '</strong></div>';
-        html += '<div class="ws-md-selector-kpi"><span>Confirmées</span><strong>' + escapeHtml(reservations.validee != null ? reservations.validee : 0) + '</strong></div>';
-        html += '<div class="ws-md-selector-kpi"><span>En attente</span><strong>' + escapeHtml(reservations.en_cours != null ? reservations.en_cours : 0) + '</strong></div>';
-        html += '<div class="ws-md-selector-kpi"><span>Annulées</span><strong>' + escapeHtml(reservations.annulee != null ? reservations.annulee : 0) + '</strong></div>';
-        html += '<div class="ws-md-selector-kpi"><span>Restantes</span><strong>' + escapeHtml(departure.remaining != null ? departure.remaining : '—') + '</strong></div>';
-        html += '<div class="ws-md-selector-kpi"><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
+        html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-route"></i> Détail du départ</div>';
+        html += '<div class="ws-md-departure-kpi-grid">';
+        html += '<div class="ws-md-departure-kpi"><i class="fas fa-users"></i><span>Capacité</span><strong>' + escapeHtml(departure.capacity != null ? departure.capacity : '—') + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--ok"><i class="fas fa-check-circle"></i><span>Confirmées</span><strong>' + escapeHtml(reservations.validee != null ? reservations.validee : 0) + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--wait"><i class="fas fa-hourglass-half"></i><span>En attente</span><strong>' + escapeHtml(reservations.en_cours != null ? reservations.en_cours : 0) + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--cancel"><i class="fas fa-times-circle"></i><span>Annulées</span><strong>' + escapeHtml(reservations.annulee != null ? reservations.annulee : 0) + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--remain"><i class="fas fa-chair"></i><span>Restantes</span><strong>' + escapeHtml(departure.remaining != null ? departure.remaining : '—') + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--rate"><i class="fas fa-chart-line"></i><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
         html += '</div>';
-        if (departure.capacity_note && !(detail.rooms && detail.rooms.length)) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
         html += '<div class="ws-md-progress ws-md-progress--dep" role="progressbar" aria-valuenow="' + fillPct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + fillPct + '%"></div></div>';
-        html += '</section>';
+        if (departure.capacity_note && !(detail.rooms && detail.rooms.length)) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
+        html += '<div class="ws-md-departure-info-grid" style="margin-top:1rem">';
+        if (detail.duration) html += '<div class="ws-md-departure-info"><span>Durée</span><strong>' + escapeHtml(detail.duration) + '</strong></div>';
+        html += '<div class="ws-md-departure-info"><span>Date sélectionnée</span><strong>' + escapeHtml(departure.date_label || '—') + '</strong></div>';
+        if (detail.prices && detail.prices.adult_label) html += '<div class="ws-md-departure-info"><span>Prix à partir de</span><strong>' + escapeHtml(detail.prices.adult_label) + '</strong></div>';
+        html += '<div class="ws-md-departure-info"><span>Statut du départ</span><strong>' + availabilityBadge(departure) + '</strong></div>';
         if (detail.rooms && detail.rooms.length) {
-            html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-bed"></i> Chambres configurées</div><div class="ws-md-room-pills">';
-            detail.rooms.forEach(function (room) {
-                html += '<span class="ws-md-room-pill">' + escapeHtml(room.room_type || 'Chambre') + ' <span style="color:#94a3b8;font-weight:800">' + escapeHtml(room.product || 0) + '</span></span>';
-            });
-            html += '</div></section>';
+            var roomLabels = detail.rooms.map(function (room) {
+                return (room.room_type || 'Chambre') + ' (' + (room.product || 0) + ')';
+            }).join(', ');
+            html += '<div class="ws-md-departure-info"><span>Chambres disponibles</span><strong>' + escapeHtml(roomLabels) + '</strong></div>';
+        } else {
+            html += '<div class="ws-md-departure-info"><span>Chambres disponibles</span><strong>Aucune chambre configurée</strong></div>';
         }
+        html += '</div></section>';
+        html += commercialCommissionHtml(detail);
         html += '</div>';
         return html;
     }
@@ -1816,6 +1944,8 @@ document.addEventListener('DOMContentLoaded', function () {
             : (detail.routes && detail.routes.reservations ? detail.routes.reservations : null);
         if (resUrl) {
             html += '<a href="' + resUrl + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        } else {
+            html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled"><i class="fas fa-list-ul"></i> Voir les réservations</button>';
         }
         if (selectedDeparture) {
             var isPast = selectedDeparture.is_past === true;
@@ -1841,6 +1971,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ? departure.routes.reservations
             : (detail.routes && detail.routes.reservations ? detail.routes.reservations : null);
         if (resUrl) html += '<a href="' + resUrl + '" class="ws-md-btn ws-md-btn-primary"><i class="fas fa-list-ul"></i> Voir les réservations</a>';
+        else html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled"><i class="fas fa-list-ul"></i> Voir les réservations</button>';
         if (departure) {
             var isPast = departure.is_past === true;
             var remaining = Number(departure.remaining != null ? departure.remaining : 0);

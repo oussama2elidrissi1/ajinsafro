@@ -209,6 +209,37 @@
         return getSelectedTripFallbackPrice();
     }
 
+    function discountSummary() {
+        var unitPrice = getBaseUnitPrice();
+        var typeInput = document.getElementById('reservation-discount-type');
+        var valueInput = document.getElementById('reservation-discount-value');
+        var type = typeInput ? String(typeInput.value || 'percentage') : 'percentage';
+        var value = Math.max(0, parseNumber(valueInput && valueInput.value));
+        var amount = 0;
+
+        if (value > 0) {
+            if (type === 'percentage') {
+                value = Math.min(100, value);
+                if (valueInput && parseNumber(valueInput.value) > 100) valueInput.value = '100';
+                amount = unitPrice * (value / 100);
+            } else {
+                amount = Math.min(unitPrice, value);
+                if (valueInput && value > unitPrice) valueInput.value = String(unitPrice.toFixed(2));
+            }
+        }
+
+        var after = Math.max(0, unitPrice - amount);
+
+        return {
+            unitPrice: unitPrice,
+            type: type,
+            value: value,
+            amount: amount,
+            priceAfterDiscount: after,
+            label: value > 0 ? (type === 'percentage' ? value + '%' : formatMoney(value)) : 'Aucune'
+        };
+    }
+
     function derivePaymentStatus(totalAmount, paidAmount) {
         if (paidAmount <= 0) {
             return 'Non payé';
@@ -853,7 +884,8 @@
         var travelerCount = getTravelerCount();
         var room = hotelRoomSummary();
         var rooming = roomingSummary();
-        var unitPrice = getBaseUnitPrice();
+        var discount = discountSummary();
+        var unitPrice = discount.priceAfterDiscount;
         var totalBase = unitPrice * travelerCount;
         var extras = extrasTotal();
         var effectiveRoomSupplement = rooming.roomSupplementTotal > 0 ? rooming.roomSupplementTotal : room.roomSupplementTotal;
@@ -864,6 +896,12 @@
         return {
             travelerCount: travelerCount,
             unitPrice: unitPrice,
+            unitPriceBeforeDiscount: discount.unitPrice,
+            discountType: discount.type,
+            discountValue: discount.value,
+            discountAmount: discount.amount,
+            discountLabel: discount.label,
+            priceAfterDiscount: discount.priceAfterDiscount,
             totalBase: totalBase,
             roomSupplementTotal: effectiveRoomSupplement,
             extrasTotal: extras,
@@ -877,7 +915,7 @@
             roomingErrors: rooming.errors,
             stockExceeded: room.stockExceeded,
             availableDepartureCapacity: getAvailableDepartureCapacity(),
-            priceMissing: unitPrice <= 0,
+            priceMissing: discount.unitPrice <= 0,
             roomMode: getRoomMode()
         };
     }
@@ -898,7 +936,9 @@
         setText('create-summary-travelers', String(summary.travelerCount));
         setText('create-final-travelers', String(summary.travelerCount));
         setText('create-travelers-badge', String(summary.travelerCount));
-        setText('create-summary-unit-price', summary.priceMissing ? '—' : formatMoney(summary.unitPrice));
+        setText('create-summary-unit-price', summary.priceMissing ? '—' : formatMoney(summary.unitPriceBeforeDiscount));
+        setText('create-summary-discount', summary.discountLabel);
+        setText('create-summary-price-after-discount', summary.priceMissing ? '—' : formatMoney(summary.priceAfterDiscount));
         setText('create-summary-total', formatMoney(summary.totalAmount));
         setText('create-summary-paid', formatMoney(summary.paidAmount));
         setText('create-summary-remaining', formatMoney(summary.remainingAmount));
@@ -918,6 +958,7 @@
         setText('reservation-total-capacity', String(summary.selectedRoomCapacity));
         setText('reservation-total-supplement', formatMoney(summary.roomSupplementTotal));
         setText('reservation-grand-total', formatMoney(summary.totalAmount));
+        setText('reservation-price-after-discount', summary.priceMissing ? '—' : formatMoney(summary.priceAfterDiscount));
 
         var totalBaseInput = document.getElementById('reservation-total-base-input');
         var roomSupplementInput = document.getElementById('reservation-room-supplement-total-input');
@@ -963,6 +1004,30 @@
         if (existingSelect) {
             existingSelect.required = useExisting;
         }
+    }
+
+    function filterExistingClients() {
+        var search = document.getElementById('reservation-client-search');
+        var select = document.getElementById('client_external_id');
+        var empty = document.getElementById('reservation-client-search-empty');
+        if (!search || !select) return;
+
+        var query = String(search.value || '').trim().toLowerCase();
+        var visible = 0;
+        Array.prototype.slice.call(select.options).forEach(function (option, index) {
+            if (index === 0) return;
+            var haystack = String(option.getAttribute('data-search') || option.textContent || '').toLowerCase();
+            var match = query === '' || haystack.indexOf(query) !== -1;
+            option.hidden = !match;
+            option.disabled = !match;
+            if (match) visible += 1;
+        });
+
+        if (select.selectedOptions.length && select.selectedOptions[0].disabled) {
+            select.value = '';
+            syncFinancialSummary();
+        }
+        if (empty) empty.classList.toggle('d-none', visible > 0 || query === '');
     }
 
     function syncVisaMode() {
@@ -1222,8 +1287,11 @@
             var target = event.target;
             if (!target) return;
 
-            if (target.matches('#client_first_name, #client_last_name, #client_phone, #client_email, #client_external_id, #payment_amount, input[name="base_price"], .reservation-room-count')) {
+            if (target.matches('#client_first_name, #client_last_name, #client_phone, #client_email, #client_external_id, #payment_amount, input[name="base_price"], #reservation-discount-value, .reservation-room-count')) {
                 syncFinancialSummary();
+            }
+            if (target.matches('#reservation-client-search')) {
+                filterExistingClients();
             }
 
             if (target.closest('#companions-container')) {
@@ -1247,7 +1315,7 @@
             if (target.matches('#visa_ok')) {
                 syncVisaMode();
             }
-            if (target.matches('#select-tour-id, #reservation-departure-select, #client_external_id, .reservation-room-count, #payment_type, #payment_date')) {
+            if (target.matches('#select-tour-id, #reservation-departure-select, #client_external_id, #reservation-discount-type, .reservation-room-count, #payment_type, #payment_date')) {
                 syncFinancialSummary();
                 if (target.id === 'select-tour-id') {
                     renderExtras();
@@ -1494,6 +1562,7 @@
         extrasMap = parseJsonScript('reservation-create-extras-map', {});
         bindDelegatedEvents();
         syncClientMode();
+        filterExistingClients();
         syncVisaMode();
         syncTravelersEmptyState();
         renderExtras();

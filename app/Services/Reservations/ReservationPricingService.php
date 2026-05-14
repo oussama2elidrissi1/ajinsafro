@@ -31,9 +31,11 @@ class ReservationPricingService
         $departure = $this->resolveDeparture($payload, $voyage);
         $travelDate = $this->resolveTravelDate($payload, $departure);
         $travelersCount = $this->countTravelers($payload['passengers'] ?? []);
-        $basePrice = $this->resolveBasePrice($payload, $voyage, $departure, $travelDate);
+        $unitPriceBeforeDiscount = $this->resolveBasePrice($payload, $voyage, $departure, $travelDate);
+        $discount = $this->resolveDiscount($payload, $unitPriceBeforeDiscount);
+        $basePrice = $discount['unit_price_after_discount'];
 
-        if ($basePrice <= 0) {
+        if ($unitPriceBeforeDiscount <= 0) {
             throw ValidationException::withMessages([
                 'tour_id' => ['Aucun prix nâ€™a Ã©tÃ© trouvÃ© pour ce voyage ou ce dÃ©part.'],
             ]);
@@ -56,6 +58,10 @@ class ReservationPricingService
 
         return [
             'base_price' => round($basePrice, 2),
+            'unit_price_before_discount' => round($unitPriceBeforeDiscount, 2),
+            'discount_type' => $discount['discount_type'],
+            'discount_value' => $discount['discount_value'],
+            'unit_price_after_discount' => round($basePrice, 2),
             'travelers_count' => $travelersCount,
             'total_base' => $totalBase,
             'room_supplement_total' => $roomSummary['room_supplement_total'],
@@ -78,8 +84,50 @@ class ReservationPricingService
                 ],
                 'rooms' => $roomSummary['details'],
                 'extras' => $extrasSummary['details'],
+                'discount' => $discount,
             ],
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array{discount_type: string|null, discount_value: float, discount_amount: float, unit_price_after_discount: float}
+     */
+    private function resolveDiscount(array $payload, float $unitPrice): array
+    {
+        $type = $this->normalizeDiscountType($payload['discount_type'] ?? null);
+        $value = round(max(0, (float) ($payload['discount_value'] ?? 0)), 2);
+
+        if ($type === null || $value <= 0) {
+            return [
+                'discount_type' => null,
+                'discount_value' => 0.0,
+                'discount_amount' => 0.0,
+                'unit_price_after_discount' => round(max(0, $unitPrice), 2),
+            ];
+        }
+
+        $discountAmount = $type === 'percentage'
+            ? round($unitPrice * (min(100, $value) / 100), 2)
+            : min(round($value, 2), round($unitPrice, 2));
+
+        return [
+            'discount_type' => $type,
+            'discount_value' => $type === 'percentage' ? min(100, $value) : $value,
+            'discount_amount' => $discountAmount,
+            'unit_price_after_discount' => round(max(0, $unitPrice - $discountAmount), 2),
+        ];
+    }
+
+    private function normalizeDiscountType(mixed $type): ?string
+    {
+        $type = strtolower(trim((string) $type));
+
+        return match ($type) {
+            'percentage', 'percent', '%' => 'percentage',
+            'fixed', 'amount', 'dh', 'mad' => 'fixed',
+            default => null,
+        };
     }
 
     /**
