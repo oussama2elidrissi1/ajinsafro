@@ -922,7 +922,7 @@ class ReservationWorkspaceCatalogService
     private function resolveCommercialCommissionPayload(WpPost $wp, ?Voyage $voyage, mixed $adultPriceRaw): array
     {
         $rawAdultCommission = $wp->getMeta('commission_adulte');
-        $rawType = $wp->getMeta('commission_type', $wp->getMeta('commission_commerciale_type'));
+        $rawType = $wp->getMeta('commission_adulte_type', $wp->getMeta('commission_type', $wp->getMeta('commission_commerciale_type')));
         $commissionValue = $this->parseCommissionValue($rawAdultCommission);
 
         if ($commissionValue === null && $voyage && isset($voyage->commission_adulte)) {

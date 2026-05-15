@@ -118,14 +118,38 @@
     <div class="card ve-pane-card mb-3">
         <div class="card-body">
             <p class="text-uppercase text-muted small fw-bold mb-2">Commissions</p>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label" for="commission_adulte">Commission adulte (MAD)</label>
-                    <input type="number" class="form-control" id="commission_adulte" name="commission_adulte" value="{{ old('commission_adulte', $meta['commission_adulte'] ?? '') }}" step="0.01" min="0" placeholder="0">
+            <div class="row g-3 align-items-end">
+                @php
+                    $adultCommissionType = old('commission_adulte_type', $meta['commission_adulte_type'] ?? 'fixed');
+                    $childCommissionType = old('commission_enfant_type', $meta['commission_enfant_type'] ?? 'fixed');
+                @endphp
+                <div class="col-md-5">
+                    <label class="form-label" for="commission_adulte">Commission adulte</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="commission_adulte" name="commission_adulte" value="{{ old('commission_adulte', $meta['commission_adulte'] ?? '') }}" step="0.01" min="0" placeholder="0">
+                        <div class="input-group-text p-0 border-0">
+                            <div class="btn-group" role="group" aria-label="Type commission adulte">
+                                <input type="radio" class="btn-check" name="commission_adulte_type" id="commission_adulte_type_percentage" value="percentage" autocomplete="off" {{ $adultCommissionType === 'percentage' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-secondary" for="commission_adulte_type_percentage" style="border-radius:0;">%</label>
+                                <input type="radio" class="btn-check" name="commission_adulte_type" id="commission_adulte_type_fixed" value="fixed" autocomplete="off" {{ $adultCommissionType === 'fixed' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-secondary" for="commission_adulte_type_fixed">MAD</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="commission_enfant">Commission enfant (MAD)</label>
-                    <input type="number" class="form-control" id="commission_enfant" name="commission_enfant" value="{{ old('commission_enfant', $meta['commission_enfant'] ?? '') }}" step="0.01" min="0" placeholder="0">
+                <div class="col-md-5">
+                    <label class="form-label" for="commission_enfant">Commission enfant</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="commission_enfant" name="commission_enfant" value="{{ old('commission_enfant', $meta['commission_enfant'] ?? '') }}" step="0.01" min="0" placeholder="0">
+                        <div class="input-group-text p-0 border-0">
+                            <div class="btn-group" role="group" aria-label="Type commission enfant">
+                                <input type="radio" class="btn-check" name="commission_enfant_type" id="commission_enfant_type_percentage" value="percentage" autocomplete="off" {{ $childCommissionType === 'percentage' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-secondary" for="commission_enfant_type_percentage" style="border-radius:0;">%</label>
+                                <input type="radio" class="btn-check" name="commission_enfant_type" id="commission_enfant_type_fixed" value="fixed" autocomplete="off" {{ $childCommissionType === 'fixed' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-secondary" for="commission_enfant_type_fixed">MAD</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -403,9 +403,15 @@ class AgentCommissionService
     {
         $counts = $this->resolvePassengerCounts($reservation);
         $units = $this->resolveCommissionUnits($reservation);
-        $adult = round($units['adult'] * $counts['adult'], 2);
-        $child = round($units['child'] * $counts['child'], 2);
-        $baby = round($units['baby'] * $counts['baby'], 2);
+        $prices = $this->resolvePriceUnits($reservation);
+
+        $adultUnit = $this->computeCommissionUnit($units['adult'], $units['adult_type'], $prices['adult']);
+        $childUnit = $this->computeCommissionUnit($units['child'], $units['child_type'], $prices['child']);
+        $babyUnit = $units['baby'];
+
+        $adult = round($adultUnit * $counts['adult'], 2);
+        $child = round($childUnit * $counts['child'], 2);
+        $baby = round($babyUnit * $counts['baby'], 2);
         $total = round($adult + $child + $baby, 2);
 
         return [
@@ -431,9 +437,13 @@ class AgentCommissionService
                     'adult_count' => $counts['adult'],
                     'child_count' => $counts['child'],
                     'baby_count' => $counts['baby'],
-                    'adult_unit' => $units['adult'],
-                    'child_unit' => $units['child'],
-                    'baby_unit' => $units['baby'],
+                    'adult_unit_raw' => $units['adult'],
+                    'adult_unit_type' => $units['adult_type'],
+                    'adult_unit_effective' => $adultUnit,
+                    'child_unit_raw' => $units['child'],
+                    'child_unit_type' => $units['child_type'],
+                    'child_unit_effective' => $childUnit,
+                    'baby_unit' => $babyUnit,
                 ],
                 'reservation' => [
                     'total_base' => $reservation->effective_total_base,
@@ -493,7 +503,7 @@ class AgentCommissionService
     private function resolveCommissionUnits(Reservation $reservation): array
     {
         $wpPostId = (int) ($reservation->tour?->wp_post_id ?? $reservation->voyage?->wp_post_id ?? 0);
-        $default = ['adult' => 0.0, 'child' => 0.0, 'baby' => 0.0];
+        $default = ['adult' => 0.0, 'child' => 0.0, 'baby' => 0.0, 'adult_type' => 'fixed', 'child_type' => 'fixed'];
 
         if ($wpPostId <= 0) {
             return $default;
@@ -515,11 +525,74 @@ class AgentCommissionService
             $wpPost->getMeta('commission_baby', $wpPost->getMeta('commission_bebe', $wpPost->getMeta('commission_infant', 0)))
         );
 
+        $adultType = $this->normalizeCommissionType($wpPost->getMeta('commission_adulte_type'));
+        $childType = $this->normalizeCommissionType($wpPost->getMeta('commission_enfant_type'));
+
         return [
             'adult' => $adult,
             'child' => $child,
             'baby' => $baby,
+            'adult_type' => $adultType,
+            'child_type' => $childType,
         ];
+    }
+
+    private function resolvePriceUnits(Reservation $reservation): array
+    {
+        $wpPostId = (int) ($reservation->tour?->wp_post_id ?? $reservation->voyage?->wp_post_id ?? 0);
+        $default = ['adult' => 0.0, 'child' => 0.0];
+
+        if ($wpPostId <= 0) {
+            return $default;
+        }
+
+        try {
+            $wpPost = WpPost::query()->find($wpPostId);
+        } catch (\Throwable) {
+            return $default;
+        }
+
+        if (! $wpPost) {
+            return $default;
+        }
+
+        $adult = $this->metaToFloat($wpPost->getMeta('adult_price'));
+        $child = $this->metaToFloat($wpPost->getMeta('child_price'));
+
+        if ($adult <= 0) {
+            $voyage = $reservation->voyage ?: $reservation->tour;
+            if ($voyage && $voyage->price_from > 0) {
+                $adult = (float) $voyage->price_from;
+            }
+        }
+
+        return [
+            'adult' => $adult,
+            'child' => $child,
+        ];
+    }
+
+    private function computeCommissionUnit(float $value, string $type, float $basePrice): float
+    {
+        if ($value <= 0) {
+            return 0.0;
+        }
+
+        if ($type === 'percentage' && $basePrice > 0) {
+            return round($basePrice * ($value / 100), 2);
+        }
+
+        return $value;
+    }
+
+    private function normalizeCommissionType(mixed $raw): string
+    {
+        $type = strtolower(trim((string) ($raw ?? '')));
+        if (in_array($type, ['percent', 'percentage', 'pourcentage', '%'], true)) {
+            return 'percentage';
+        }
+
+        return 'fixed';
     }
 
     private function reverseObsoleteEntries(Reservation $reservation, int $activeAgentId): void

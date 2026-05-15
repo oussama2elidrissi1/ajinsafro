@@ -599,7 +599,9 @@ class VoyageController extends Controller
                 'sale_price' => 'nullable|numeric|min:0',
                 'infant_price' => 'nullable|numeric|min:0',
                 'commission_adulte' => 'nullable|numeric|min:0',
+                'commission_adulte_type' => 'nullable|in:fixed,percentage',
                 'commission_enfant' => 'nullable|numeric|min:0',
+                'commission_enfant_type' => 'nullable|in:fixed,percentage',
                 'discount' => 'nullable|string',
                 'discount_type' => 'nullable|string|max:100',
                 'discount_by_people_type' => 'nullable|string|max:100',
@@ -1351,7 +1353,7 @@ class VoyageController extends Controller
     {
         $fieldsByStep = [
             's-general' => ['title', 'slug', 'content', 'excerpt', 'post_status', 'duration_text', 'destination', 'is_featured'],
-            's-pricing' => ['adult_price', 'child_price', 'min_price', 'base_price', 'sale_price', 'infant_price', 'commission_adulte', 'commission_enfant', 'discount', 'discount_type', 'discount_by_people_type', 'calculator_discount_by_people_type', 'min_people', 'max_people'],
+            's-pricing' => ['adult_price', 'child_price', 'min_price', 'base_price', 'sale_price', 'infant_price', 'commission_adulte', 'commission_adulte_type', 'commission_enfant', 'commission_enfant_type', 'discount', 'discount_type', 'discount_by_people_type', 'calculator_discount_by_people_type', 'min_people', 'max_people'],
             's-location' => ['locations', 'address', 'contact_email', 'phone', 'fax', 'website', 'map_lat', 'map_lng', 'map_zoom', 'map_type'],
             's-media' => ['thumbnail_id', 'hero_image_id', 'hero_gallery_ids', 'gallery_ids', 'video', 'st_google_map', 'hero_use_as_thumbnail'],
             's-information' => ['tours_include', 'tours_exclude', 'tours_highlight', 'tours_faq', 'tours_program_style'],
@@ -1682,7 +1684,9 @@ class VoyageController extends Controller
             'child_price' => $wpPost->getMeta('child_price'),
             'infant_price' => $wpPost->getMeta('infant_price'),
             'commission_adulte' => $wpPost->getMeta('commission_adulte'),
+            'commission_adulte_type' => $wpPost->getMeta('commission_adulte_type'),
             'commission_enfant' => $wpPost->getMeta('commission_enfant'),
+            'commission_enfant_type' => $wpPost->getMeta('commission_enfant_type'),
             'discount' => $wpPost->getMeta('discount'),
             'discount_type' => $wpPost->getMeta('discount_type'),
             'discount_by_people_type' => $wpPost->getMeta('discount_by_people_type'),
