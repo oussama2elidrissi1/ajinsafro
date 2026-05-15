@@ -764,25 +764,25 @@
         padding: 0.35rem 0.55rem;
         border-radius: 8px;
         text-decoration: none;
-        border: 1px solid #e2e8f0;
-        background: #fff;
-        color: #475569;
+        border: 1px solid #0f766e;
+        background: #0f766e;
+        color: #fff;
         transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
     .ws-md-departure-actions a:hover {
-        border-color: #0083c4;
-        color: #0083c4;
-        background: #f0f9ff;
+        border-color: #115e59;
+        color: #fff;
+        background: #115e59;
     }
     .ws-md-departure-actions a.ws-md-dep-primary {
-        border-color: rgba(5, 150, 105, 0.45);
-        background: #ecfdf5;
-        color: #047857;
+        border-color: #2563eb;
+        background: #2563eb;
+        color: #fff;
     }
     .ws-md-departure-actions a.ws-md-dep-primary:hover {
-        background: #d1fae5;
-        border-color: #059669;
-        color: #065f46;
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #fff;
     }
     .ws-md-avail-badge {
         display: inline-flex;
@@ -906,20 +906,36 @@
         color: #fff;
         border-color: #0e3a5a;
     }
+    .ws-md-btn-primary i,
+    .ws-md-btn-primary .fas {
+        color: #fff !important;
+    }
     .ws-md-btn-primary:hover {
         background: #0083c4;
         border-color: #0083c4;
         color: #fff;
+    }
+    .ws-md-btn-primary:hover i,
+    .ws-md-btn-primary:hover .fas {
+        color: #fff !important;
     }
     .ws-md-btn-success {
         background: #059669;
         color: #fff;
         border-color: #059669;
     }
+    .ws-md-btn-success i,
+    .ws-md-btn-success .fas {
+        color: #fff !important;
+    }
     .ws-md-btn-success:hover {
         background: #047857;
         border-color: #047857;
         color: #fff;
+    }
+    .ws-md-btn-success:hover i,
+    .ws-md-btn-success:hover .fas {
+        color: #fff !important;
     }
     .ws-md-btn-secondary {
         background: #fff;

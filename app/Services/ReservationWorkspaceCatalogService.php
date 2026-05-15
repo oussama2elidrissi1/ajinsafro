@@ -26,8 +26,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
- * Catalogue workspace : packages WordPress, packages Laravel sans wp_post_id (code LVL-*), vols, hébergements.
- * Stats / passagers : {@see ReservationLinkResolver::workspaceStatsTourIdUniverse} + agrégation par ids voyage étendus.
+ * Catalogue workspace : packages WordPress, packages Laravel sans wp_post_id (code LVL-*), vols, h+�bergements.
+ * Stats / passagers : {@see ReservationLinkResolver::workspaceStatsTourIdUniverse} + agr+�gation par ids voyage +�tendus.
  * Vols : tous les {@see VoyageFlight}. Dates {@see TravelDate} : travel_id = wp_post_id ou id fiche Laravel si pas de WP.
  */
 class ReservationWorkspaceCatalogService
@@ -57,7 +57,7 @@ class ReservationWorkspaceCatalogService
         try {
             $wpTours = AdminWpTourCatalogQuery::allToursOrdered();
         } catch (\Throwable $e) {
-            Log::warning('ReservationWorkspaceCatalog: WP indisponible — poursuite avec voyages Laravel / vols uniquement', ['error' => $e->getMessage()]);
+            Log::warning('ReservationWorkspaceCatalog: WP indisponible ��� poursuite avec voyages Laravel / vols uniquement', ['error' => $e->getMessage()]);
             $meta['wp_connection_failed'] = true;
             $wpTours = collect();
         }
@@ -70,7 +70,7 @@ class ReservationWorkspaceCatalogService
         $wpPostTitleById = $wpTours->keyBy(fn (WpPost $p) => (int) $p->ID)
             ->map(fn (WpPost $p) => trim((string) $p->post_title) ?: 'Tour #'.(int) $p->ID);
 
-        /** Même clé que {@see VoyageController::index} : postmeta meta_key = adult_price */
+        /** M+�me cl+� que {@see VoyageController::index} : postmeta meta_key = adult_price */
         $adultPriceMetaByPostId = [];
         if ($wpIds !== []) {
             $adultPriceMetaByPostId = WpPostMeta::query()
@@ -106,9 +106,9 @@ class ReservationWorkspaceCatalogService
                 ->all();
 
             if ($laravelDuplicatesByWpPostId !== []) {
-                Log::warning('ReservationWorkspaceCatalog: plusieurs lignes voyages pour le même wp_post_id', [
+                Log::warning('ReservationWorkspaceCatalog: plusieurs lignes voyages pour le m+�me wp_post_id', [
                     'duplicates' => $laravelDuplicatesByWpPostId,
-                    'note' => 'Une seule fiche Laravel est retenue par wp_post_id (priorité au plus petit voyages.id).',
+                    'note' => 'Une seule fiche Laravel est retenue par wp_post_id (priorit+� au plus petit voyages.id).',
                 ]);
             }
 
@@ -234,7 +234,7 @@ class ReservationWorkspaceCatalogService
                     'laravel_voyage_id' => $voyage?->id,
                     'storage' => 'wp.aj_travel_dates (model TravelDate), travel_id = voyages.wp_post_id',
                     'active_travel_dates_ymd' => $tdColl
-                        ->map(fn (TravelDate $d) => $d->date?->format('Y-m-d'))
+                        ->map(fn (TravelDate $d) => Carbon::parse($d->date)->format('Y-m-d'))
                         ->filter()
                         ->values()
                         ->all(),
@@ -253,7 +253,7 @@ class ReservationWorkspaceCatalogService
             $durationRaw = $extraMeta['duration_day'] ?? $wp->getMeta('duration_day');
             $paxBooked = $tourId ? (int) ($passengersByTour[$tourId] ?? 0) : 0;
             $rowStats = $tourId ? ($statsByTour[$tourId] ?? $this->emptyStats()) : $this->emptyStats();
-            $hasFutureTravelDate = $tdColl->contains(fn (TravelDate $d) => $d->date && ! $d->date->lt($today));
+            $hasFutureTravelDate = $tdColl->contains(fn (TravelDate $d) => $d->date && ! Carbon::parse($d->date)->lt($today));
             $wsAvail = $this->computeWorkspaceAvailabilityBand($placesPayload, $paxBooked);
 
             if (config('app.debug') && $voyage !== null && count($packagePlacesDebug) < 8) {
@@ -280,7 +280,7 @@ class ReservationWorkspaceCatalogService
                 'name' => $wpDisplayTitle,
                 'subtitle' => $voyage
                     ? null
-                    : ('Pas de fiche Laravel — renseignez voyages.wp_post_id = '.$wpId.' pour réserver / stats.'),
+                    : ('Pas de fiche Laravel ��� renseignez voyages.wp_post_id = '.$wpId.' pour r+�server / stats.'),
                 'voyage_id' => $tourId,
                 'wp_post_id' => $wpId,
                 'laravel_synced' => $voyage !== null,
@@ -337,15 +337,15 @@ class ReservationWorkspaceCatalogService
             $meta['package_price_debug'] = $packagePriceDebug;
             $meta['package_departure_debug'] = $packageDepartureDebug;
             $meta['package_places_debug'] = $packagePlacesDebug;
-            $meta['package_departure_source_doc'] = 'Disponibilité CRUD → request travel_dates → VoyageController::syncTravelDates → TravelDate (wp.aj_travel_dates)';
-            $meta['package_places_source_doc'] = 'TourHotel (wp.aj_tour_hotels.tour_id = wp_post_id) → TourHotelRoom (wp.aj_tour_hotel_rooms) ; places = TourPlacesCalculator::explainFromDatabase (identique édition voyage).';
-            Log::debug('Workspace package prices (alignés sur VoyageController@index adult_price meta)', [
+            $meta['package_departure_source_doc'] = 'Disponibilit+� CRUD ��� request travel_dates ��� VoyageController::syncTravelDates ��� TravelDate (wp.aj_travel_dates)';
+            $meta['package_places_source_doc'] = 'TourHotel (wp.aj_tour_hotels.tour_id = wp_post_id) ��� TourHotelRoom (wp.aj_tour_hotel_rooms) ; places = TourPlacesCalculator::explainFromDatabase (identique +�dition voyage).';
+            Log::debug('Workspace package prices (align+�s sur VoyageController@index adult_price meta)', [
                 'packages' => $packagePriceDebug,
             ]);
-            Log::debug('Workspace package départs (Disponibilité = aj_travel_dates)', [
+            Log::debug('Workspace package d+�parts (Disponibilit+� = aj_travel_dates)', [
                 'packages' => $packageDepartureDebug,
             ]);
-            Log::debug('Workspace package places (chambres / capacité)', [
+            Log::debug('Workspace package places (chambres / capacit+�)', [
                 'sample' => $packagePlacesDebug,
             ]);
         }
@@ -370,7 +370,7 @@ class ReservationWorkspaceCatalogService
                 continue;
             }
             $tourId = (int) $voyage->id;
-            $label = trim(($flight->flight_number ?: 'Vol').' · '.$flight->from_label.' → '.$flight->to_label);
+            $label = trim(($flight->flight_number ?: 'Vol').' -� '.$flight->from_label.' ��� '.$flight->to_label);
             $wpPid = $voyage->wp_post_id ? (int) $voyage->wp_post_id : null;
             $travelDateIdVol = $this->resolveTravelDateId($voyage, $flight->departure_date);
             $volStats = $statsByTour[$tourId] ?? $this->emptyStats();
@@ -385,7 +385,7 @@ class ReservationWorkspaceCatalogService
             );
             $volSummary = collect([trim((string) ($flight->from_label ?? '')), trim((string) ($flight->to_label ?? ''))])
                 ->filter()
-                ->implode(' → ');
+                ->implode(' ��� ');
             $rows->push([
                 'type' => 'vol',
                 'code' => 'VOL-'.$flight->id,
@@ -427,7 +427,7 @@ class ReservationWorkspaceCatalogService
             $tourWpTitle = $wpPostTitleById->get($wpPidHotel) ?: $voyage->name;
             foreach (TourHotel::getAllForTour($wpPidHotel) as $hotel) {
                 $travelDateIdHot = $this->resolveTravelDateId($voyage, $startDate);
-                $hotTitle = ($hotel->hotel_name ?: 'Hébergement').' — '.$tourWpTitle;
+                $hotTitle = ($hotel->hotel_name ?: 'H+�bergement').' ��� '.$tourWpTitle;
                 $hotStats = $statsByTour[$tourId] ?? $this->emptyStats();
                 $hotFuture = $startDate instanceof Carbon
                     ? ! $startDate->lt($today)
@@ -446,7 +446,7 @@ class ReservationWorkspaceCatalogService
                     : null;
                 $hotelSummary = trim((string) ($hotel->address ?? ''));
                 if ($hotelSummary === '') {
-                    $hotelSummary = trim(implode(' · ', array_filter([
+                    $hotelSummary = trim(implode(' -� ', array_filter([
                         (string) ($hotel->meal_plan ?? ''),
                         (string) ($hotel->room_type ?? ''),
                     ])));
@@ -454,7 +454,7 @@ class ReservationWorkspaceCatalogService
                 $rows->push([
                     'type' => 'hebergement',
                     'code' => 'HOT-'.$hotel->id,
-                    'name' => $hotel->hotel_name ?: 'Hébergement',
+                    'name' => $hotel->hotel_name ?: 'H+�bergement',
                     'subtitle' => $tourWpTitle,
                     'image_url' => $hotelImg ?: $this->resolveCatalogRowImageUrl($voyage, null),
                     'summary' => Str::limit($hotelSummary, 200),
@@ -503,7 +503,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Filtre optionnel des lignes (paramètre URL `catalog`).
+     * Filtre optionnel des lignes (param+�tre URL `catalog`).
      *
      * @param  Collection<int, array<string, mixed>>  $rows
      * @return Collection<int, array<string, mixed>>
@@ -537,11 +537,11 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Tri workspace (PHP, catalogue agrégé hors d’une seule requête SQL).
+     * Tri workspace (PHP, catalogue agr+�g+� hors d���une seule requ+�te SQL).
      *
      * Ordre :
-     * 1) type : package (circuit) → hébergement → vol → autre
-     * 2) départ : futur / aujourd’hui → sans date → passé
+     * 1) type : package (circuit) ��� h+�bergement ��� vol ��� autre
+     * 2) d+�part : futur / aujourd���hui ��� sans date ��� pass+�
      * 3) departure_date ASC, puis code
      *
      * @param  Collection<int, array<string, mixed>>  $rows
@@ -583,7 +583,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * @return int 0 package (voyage/circuit), 1 hébergement, 2 vol, 3 autre
+     * @return int 0 package (voyage/circuit), 1 h+�bergement, 2 vol, 3 autre
      */
     private function workspaceCatalogTypeTier(array $r): int
     {
@@ -596,7 +596,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * @return int 0 futur / aujourd’hui, 1 sans date, 2 passé
+     * @return int 0 futur / aujourd���hui, 1 sans date, 2 pass+�
      */
     private function workspaceCatalogSortTier(array $r, Carbon $today): int
     {
@@ -618,7 +618,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Retrouve la ligne catalogue pour un voyage Laravel + type de prestation (même agrégat que la page workspace).
+     * Retrouve la ligne catalogue pour un voyage Laravel + type de prestation (m+�me agr+�gat que la page workspace).
      *
      * @return array<string, mixed>|null
      */
@@ -631,7 +631,7 @@ class ReservationWorkspaceCatalogService
             default => 'package',
         };
 
-        // Package « LVL-* » : ligne construite sans dépendre du catalogue WordPress ni de buildRows() complet.
+        // Package -� LVL-* -+ : ligne construite sans d+�pendre du catalogue WordPress ni de buildRows() complet.
         if ($type === 'package') {
             $fresh = Voyage::query()
                 ->with([
@@ -694,7 +694,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Recalcule places réservées / restantes pour une date de départ (même logique que {@see ReservationWorkspaceBookingService::resolveRemainingSeats}).
+     * Recalcule places r+�serv+�es / restantes pour une date de d+�part (m+�me logique que {@see ReservationWorkspaceBookingService::resolveRemainingSeats}).
      *
      * @param  array<string, mixed>  $prefill
      * @return array<string, mixed>
@@ -759,14 +759,14 @@ class ReservationWorkspaceCatalogService
         $eligible = $departures->filter(fn ($d) => $d instanceof Departure
             && in_array($d->status, [Departure::STATUS_OPEN, Departure::STATUS_FULL], true)
             && $d->start_date
-        )->sortBy(fn (Departure $d) => $d->start_date->timestamp);
+        )->sortBy(fn (Departure $d) => Carbon::parse($d->start_date)->timestamp);
 
-        $future = $eligible->first(fn (Departure $d) => ! $d->start_date->lt($today));
+        $future = $eligible->first(fn (Departure $d) => ! Carbon::parse($d->start_date)->lt($today));
         if ($future) {
             return ['departure' => $future, 'is_past' => false];
         }
 
-        $past = $eligible->filter(fn (Departure $d) => $d->start_date->lt($today))->sortByDesc(fn (Departure $d) => $d->start_date->timestamp)->first();
+        $past = $eligible->filter(fn (Departure $d) => Carbon::parse($d->start_date)->lt($today))->sortByDesc(fn (Departure $d) => Carbon::parse($d->start_date)->timestamp)->first();
 
         return [
             'departure' => $past,
@@ -775,7 +775,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Places affichées workspace = même règle que l’édition circuit/voyage {@see TourPlacesCalculator}.
+     * Places affich+�es workspace = m+�me r+�gle que l���+�dition circuit/voyage {@see TourPlacesCalculator}.
      *
      * @param  Collection<int, \Illuminate\Support\Collection<int, TourHotel>>  $hotelsByWpTourId
      * @return array{state: string, total: ?int, lines: list<array<string, mixed>>, ignored: list<array<string, mixed>>}
@@ -820,26 +820,26 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Dates actives de la section Disponibilité (CRUD) : {@see TravelDate}.
+     * Dates actives de la section Disponibilit+� (CRUD) : {@see TravelDate}.
      *
      * @return array{travelDate: ?TravelDate, is_past: bool}
      */
     private function pickTravelDateForPackageDisplay(Collection $travelDates, Carbon $today): array
     {
         $sorted = $travelDates->filter(fn ($d) => $d instanceof TravelDate && $d->date)
-            ->sortBy(fn (TravelDate $d) => $d->date->timestamp);
+            ->sortBy(fn (TravelDate $d) => Carbon::parse($d->date)->timestamp);
 
         if ($sorted->isEmpty()) {
             return ['travelDate' => null, 'is_past' => false];
         }
 
-        $future = $sorted->first(fn (TravelDate $d) => ! $d->date->lt($today));
+        $future = $sorted->first(fn (TravelDate $d) => ! Carbon::parse($d->date)->lt($today));
         if ($future) {
             return ['travelDate' => $future, 'is_past' => false];
         }
 
-        $past = $sorted->filter(fn (TravelDate $d) => $d->date->lt($today))
-            ->sortByDesc(fn (TravelDate $d) => $d->date->timestamp)
+        $past = $sorted->filter(fn (TravelDate $d) => Carbon::parse($d->date)->lt($today))
+            ->sortByDesc(fn (TravelDate $d) => Carbon::parse($d->date)->timestamp)
             ->first();
 
         return [
@@ -849,8 +849,8 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Colonne « Prix Adulte » Circuits / voyages : {@see VoyageController::index} applique `$tour->getMeta('adult_price')`.
-     * Même meta `postmeta.meta_key = adult_price`, format identique à la vue (`number_format` + MAD).
+     * Colonne -� Prix Adulte -+ Circuits / voyages : {@see VoyageController::index} applique `$tour->getMeta('adult_price')`.
+     * M+�me meta `postmeta.meta_key = adult_price`, format identique +� la vue (`number_format` + MAD).
      */
     private function formatPackagePriceLabel(mixed $adultPriceMetaRaw, ?Voyage $voyage): ?string
     {
@@ -932,7 +932,7 @@ class ReservationWorkspaceCatalogService
         if ($commissionValue === null || $commissionValue <= 0) {
             return [
                 'configured' => false,
-                'message' => 'Aucune commission configurée pour cette offre',
+                'message' => 'Aucune commission configur+�e pour cette offre',
             ];
         }
 
@@ -1056,9 +1056,9 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Image catalogue : aligné sur {@see \App\Http\Controllers\Front\VoyageController::resolveHeroImages}
-     * (méta WP _tour_hero_image_id, _tour_hero_gallery_ids, _thumbnail_id + base uploads comme le front),
-     * puis Laravel (featured / galerie), puis IDs galerie WP stockés sur {@see Voyage::$gallery_wp_ids}.
+     * Image catalogue : align+� sur {@see \App\Http\Controllers\Front\VoyageController::resolveHeroImages}
+     * (m+�ta WP _tour_hero_image_id, _tour_hero_gallery_ids, _thumbnail_id + base uploads comme le front),
+     * puis Laravel (featured / galerie), puis IDs galerie WP stock+�s sur {@see Voyage::$gallery_wp_ids}.
      */
     private function resolveCatalogRowImageUrl(?Voyage $voyage, ?WpPost $wp = null): ?string
     {
@@ -1092,7 +1092,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Première image utile pour un tour WordPress (même ordre que la fiche voyage front).
+     * Premi+�re image utile pour un tour WordPress (m+�me ordre que la fiche voyage front).
      */
     private function resolveWpTourFirstImageUrl(int $wpTourId): ?string
     {
@@ -1196,7 +1196,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Passagers réservés (confirmés + en attente), même périmètre que les stats par statut.
+     * Passagers r+�serv+�s (confirm+�s + en attente), m+�me p+�rim+�tre que les stats par statut.
      *
      * @param  array<int>  $tourIds
      * @return array<int, int>
@@ -1241,7 +1241,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Libellé date long français (ex. 01 avril 2026) — évite les artefacts ICU (MMM / mois dupliqués).
+     * Libell+� date long fran+�ais (ex. 01 avril 2026) ��� +�vite les artefacts ICU (MMM / mois dupliqu+�s).
      */
     private function formatFrenchLongDate(Carbon $date): string
     {
@@ -1261,8 +1261,8 @@ class ReservationWorkspaceCatalogService
             $pr = (int) ($line['product'] ?? 0);
             $rt = (string) ($line['room_type'] ?? '');
             $detail = ($rc > 0 && $cu > 0)
-                ? sprintf('%d ch. %s × %d pl. = %d places', $rc, $rt, $cu, $pr)
-                : ($rt !== '' ? $rt.' · '.$pr.' pl.' : '—');
+                ? sprintf('%d ch. %s +� %d pl. = %d places', $rc, $rt, $cu, $pr)
+                : ($rt !== '' ? $rt.' -� '.$pr.' pl.' : '���');
             $out[] = array_merge($line, ['detail_label' => $detail]);
         }
 
@@ -1270,7 +1270,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Extras proposés dans le formulaire workspace (alignés sur les grilles historiques ; pilotés par le catalogue).
+     * Extras propos+�s dans le formulaire workspace (align+�s sur les grilles historiques ; pilot+�s par le catalogue).
      *
      * @return list<array{id: string, name: string, desc: string, price_adult: float, price_child: float, icon: string}>
      */
@@ -1279,18 +1279,18 @@ class ReservationWorkspaceCatalogService
         return match ($kind) {
             'vol' => [
                 ['id' => 'ext4', 'name' => 'Bagage soute 23kg', 'desc' => 'Ancillary', 'price_adult' => 450, 'price_child' => 450, 'icon' => 'fa-suitcase'],
-                ['id' => 'ext5', 'name' => 'Siège', 'desc' => 'SSR', 'price_adult' => 100, 'price_child' => 50, 'icon' => 'fa-chair'],
-                ['id' => 'ext6', 'name' => 'Repas bord', 'desc' => 'Halal / végétarien', 'price_adult' => 150, 'price_child' => 100, 'icon' => 'fa-hamburger'],
+                ['id' => 'ext5', 'name' => 'Si+�ge', 'desc' => 'SSR', 'price_adult' => 100, 'price_child' => 50, 'icon' => 'fa-chair'],
+                ['id' => 'ext6', 'name' => 'Repas bord', 'desc' => 'Halal / v+�g+�tarien', 'price_adult' => 150, 'price_child' => 100, 'icon' => 'fa-hamburger'],
             ],
             'hebergement' => [
-                ['id' => 'ext7', 'name' => 'Vue mer', 'desc' => 'Supplément', 'price_adult' => 200, 'price_child' => 200, 'icon' => 'fa-water'],
-                ['id' => 'ext8', 'name' => 'Transfert aéroport', 'desc' => 'A/R', 'price_adult' => 300, 'price_child' => 150, 'icon' => 'fa-taxi'],
+                ['id' => 'ext7', 'name' => 'Vue mer', 'desc' => 'Suppl+�ment', 'price_adult' => 200, 'price_child' => 200, 'icon' => 'fa-water'],
+                ['id' => 'ext8', 'name' => 'Transfert a+�roport', 'desc' => 'A/R', 'price_adult' => 300, 'price_child' => 150, 'icon' => 'fa-taxi'],
                 ['id' => 'ext9', 'name' => 'Spa', 'desc' => '45 min', 'price_adult' => 400, 'price_child' => 0, 'icon' => 'fa-spa'],
             ],
             default => [
                 ['id' => 'ext1', 'name' => 'Visite historique', 'desc' => 'Guide', 'price_adult' => 150, 'price_child' => 100, 'icon' => 'fa-map-marked-alt'],
-                ['id' => 'ext2', 'name' => 'Assurance multirisque', 'desc' => 'Annulation & santé', 'price_adult' => 350, 'price_child' => 200, 'icon' => 'fa-shield-alt'],
-                ['id' => 'ext3', 'name' => 'Demi-pension', 'desc' => 'PD + dîner', 'price_adult' => 1200, 'price_child' => 600, 'icon' => 'fa-utensils'],
+                ['id' => 'ext2', 'name' => 'Assurance multirisque', 'desc' => 'Annulation & sant+�', 'price_adult' => 350, 'price_child' => 200, 'icon' => 'fa-shield-alt'],
+                ['id' => 'ext3', 'name' => 'Demi-pension', 'desc' => 'PD + d+�ner', 'price_adult' => 1200, 'price_child' => 600, 'icon' => 'fa-utensils'],
             ],
         };
     }
@@ -1337,11 +1337,11 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Activités liées au voyage pour la réservation workspace.
-     * Priorité:
+     * Activit+�s li+�es au voyage pour la r+�servation workspace.
+     * Priorit+�:
      * 1. travel_day_items type=activity (source voyage_activities_tab)
      * 2. wp.aj_tour_day_activities pour le wp_post_id du voyage
-     * 3. fallback catalogue actif avec région/localisation tarifée quand aucun lien explicite n'existe
+     * 3. fallback catalogue actif avec r+�gion/localisation tarif+�e quand aucun lien explicite n'existe
      *
      * @return list<array<string, mixed>>
      */
@@ -1390,8 +1390,8 @@ class ReservationWorkspaceCatalogService
                 $push([
                     'id' => 'act_tdi_'.$row->id,
                     'activity_id' => $activityId > 0 ? $activityId : null,
-                    'name' => trim((string) ($row->title ?? $activity?->title ?? 'Activité')),
-                    'desc' => 'Activité voyage',
+                    'name' => trim((string) ($row->title ?? $activity?->title ?? 'Activit+�')),
+                    'desc' => 'Activit+� voyage',
                     'price_adult' => $unitPrice,
                     'price_child' => $childPrice > 0 ? $childPrice : $unitPrice,
                     'unit_price' => $unitPrice,
@@ -1422,8 +1422,8 @@ class ReservationWorkspaceCatalogService
                 $push([
                     'id' => 'act_wp_'.$row->id,
                     'activity_id' => (int) $activity->id,
-                    'name' => trim((string) ($row->custom_title ?: $activity->title ?: 'Activité')),
-                    'desc' => trim((string) ($row->custom_description ?: ($activity->activity_type ?? 'Activité voyage'))),
+                    'name' => trim((string) ($row->custom_title ?: $activity->title ?: 'Activit+�')),
+                    'desc' => trim((string) ($row->custom_description ?: ($activity->activity_type ?? 'Activit+� voyage'))),
                     'price_adult' => $unitPrice,
                     'price_child' => $childPrice > 0 ? $childPrice : $unitPrice,
                     'unit_price' => $unitPrice,
@@ -1444,9 +1444,9 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Fallback prudent pour les bases où les liens explicites n'ont pas encore été persistés.
-     * On retient d'abord les activités dont la région/localisation correspond au voyage, sinon
-     * les activités tarifées avec région/localisation renseignée.
+     * Fallback prudent pour les bases o+� les liens explicites n'ont pas encore +�t+� persist+�s.
+     * On retient d'abord les activit+�s dont la r+�gion/localisation correspond au voyage, sinon
+     * les activit+�s tarif+�es avec r+�gion/localisation renseign+�e.
      *
      * @return list<array<string, mixed>>
      */
@@ -1490,8 +1490,8 @@ class ReservationWorkspaceCatalogService
             return [
                 'id' => 'act_cat_'.$activity->id,
                 'activity_id' => (int) $activity->id,
-                'name' => trim((string) ($activity->title ?? 'Activité')),
-                'desc' => trim((string) ($activity->region_name ?: $activity->location_text ?: ($activity->activity_type ?? 'Activité voyage'))),
+                'name' => trim((string) ($activity->title ?? 'Activit+�')),
+                'desc' => trim((string) ($activity->region_name ?: $activity->location_text ?: ($activity->activity_type ?? 'Activit+� voyage'))),
                 'price_adult' => $adult,
                 'price_child' => $child > 0 ? $child : $adult,
                 'unit_price' => $adult,
@@ -1536,14 +1536,14 @@ class ReservationWorkspaceCatalogService
     private function availabilityUiFromBand(string $band, bool $hasPastOnlyDates): array
     {
         if ($hasPastOnlyDates) {
-            return ['key' => 'past', 'label' => 'Départs passés', 'tone' => 'amber'];
+            return ['key' => 'past', 'label' => 'D+�parts pass+�s', 'tone' => 'amber'];
         }
 
         return match ($band) {
             'full' => ['key' => 'full', 'label' => 'Complet', 'tone' => 'red'],
             'low' => ['key' => 'low', 'label' => 'Peu de places', 'tone' => 'orange'],
             'ok' => ['key' => 'ok', 'label' => 'Disponible', 'tone' => 'emerald'],
-            default => ['key' => 'unknown', 'label' => 'Capacité N/A', 'tone' => 'slate'],
+            default => ['key' => 'unknown', 'label' => 'Capacit+� N/A', 'tone' => 'slate'],
         };
     }
 
@@ -1568,7 +1568,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Date par défaut pour le formulaire : prochain départ à venir, sinon le plus récent (passé).
+     * Date par d+�faut pour le formulaire : prochain d+�part +� venir, sinon le plus r+�cent (pass+�).
      *
      * @param  list<array{id: int, date_iso: string, date_label: string, is_past: bool}>  $travelDates
      */
@@ -1588,7 +1588,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Données pour préremplissage du formulaire workspace (mêmes sources que le catalogue / modal).
+     * Donn+�es pour pr+�remplissage du formulaire workspace (m+�mes sources que le catalogue / modal).
      *
      * @param  array<string, mixed>  $modalDetail
      * @return array<string, mixed>
@@ -1691,13 +1691,13 @@ class ReservationWorkspaceCatalogService
     private function labelWpPostStatus(?string $s): string
     {
         return match ($s) {
-            'publish' => 'Publié',
+            'publish' => 'Publi+�',
             'draft' => 'Brouillon',
             'pending' => 'En attente de validation',
-            'private' => 'Privé',
-            'future' => 'Planifié',
+            'private' => 'Priv+�',
+            'future' => 'Planifi+�',
             'trash' => 'Corbeille',
-            default => $s ?: '—',
+            default => $s ?: '���',
         };
     }
 
@@ -1755,12 +1755,13 @@ class ReservationWorkspaceCatalogService
             : 'MAD';
 
         $travelDates = [];
-        foreach ($tdColl->filter(fn ($d) => $d instanceof TravelDate && $d->date)->sortBy(fn (TravelDate $d) => $d->date->timestamp) as $td) {
+        foreach ($tdColl->filter(fn ($d) => $d instanceof TravelDate && $d->date)->sortBy(fn (TravelDate $d) => Carbon::parse($d->date)->timestamp) as $td) {
+            $travelDate = Carbon::parse($td->date);
             $travelDates[] = [
                 'id' => $td->id,
-                'date_iso' => $td->date->format('Y-m-d'),
-                'date_label' => $this->formatFrenchLongDate($td->date),
-                'is_past' => $td->date->lt($today),
+                'date_iso' => $travelDate->format('Y-m-d'),
+                'date_label' => $this->formatFrenchLongDate($travelDate),
+                'is_past' => $travelDate->lt($today),
             ];
         }
 
@@ -1831,7 +1832,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Statistiques et places par date de départ (réservations filtrées par {@see TravelDate} id).
+     * Statistiques et places par date de d+�part (r+�servations filtr+�es par {@see TravelDate} id).
      *
      * @param  Collection<int, TravelDate>  $tdColl
      * @return list<array<string, mixed>>
@@ -1854,8 +1855,8 @@ class ReservationWorkspaceCatalogService
 
         $metrics = $this->batchReservationMetricsByTravelDateIds($user, $voyage, $ids);
 
-        // Source de vérité capacité : départ (répartition chambres) → departure_hotel_rooms.total_places.
-        // Mapping : TravelDate(id) ↔ Departure.wp_travel_date_id (pour les voyages WP liés).
+        // Source de v+�rit+� capacit+� : d+�part (r+�partition chambres) ��� departure_hotel_rooms.total_places.
+        // Mapping : TravelDate(id) ��� Departure.wp_travel_date_id (pour les voyages WP li+�s).
         $departuresByTravelDateId = collect();
         if ($voyage !== null && (int) ($voyage->id ?? 0) > 0) {
             $depQuery = Departure::query()
@@ -1898,13 +1899,13 @@ class ReservationWorkspaceCatalogService
                 $cap = max(0, (int) ($roomRow->tp ?? 0));
                 $roomsCount = (int) ($roomRow->rooms_count ?? 0);
 
-                // Fallback prudent : si des bases ont total_capacity renseigné mais total_places non rempli.
+                // Fallback prudent : si des bases ont total_capacity renseign+� mais total_places non rempli.
                 if ($cap === 0 && (int) ($departure->total_capacity ?? 0) > 0) {
                     $cap = (int) $departure->total_capacity;
                 }
 
                 if ($roomsCount <= 0) {
-                    $capNote = 'Aucune chambre configurée';
+                    $capNote = 'Aucune chambre configur+�e';
                 }
 
                 if (config('app.debug')) {
@@ -1918,18 +1919,18 @@ class ReservationWorkspaceCatalogService
                     ];
                 }
             } else {
-                $capNote = 'Départ non synchronisé';
+                $capNote = 'D+�part non synchronis+�';
             }
 
-            // IMPORTANT: places occupées = confirmées uniquement (pending n’occupe pas).
+            // IMPORTANT: places occup+�es = confirm+�es uniquement (pending n���occupe pas).
             $remaining = max(0, $cap - $confirmedPax);
             $fillPct = $cap > 0 ? min(100, (int) round(($confirmedPax / $cap) * 100)) : null;
 
-            $almostThreshold = 10; // seuil métier (modifiable)
+            $almostThreshold = 10; // seuil m+�tier (modifiable)
 
             if ($cap <= 0) {
                 $statusKey = 'unknown';
-                $statusLabel = $capNote ?: 'Aucune capacité';
+                $statusLabel = $capNote ?: 'Aucune capacit+�';
             } elseif ($remaining <= 0) {
                 $statusKey = 'full';
                 $statusLabel = 'Complet';
@@ -1953,9 +1954,9 @@ class ReservationWorkspaceCatalogService
 
             $out[] = [
                 'travel_date_id' => $tid,
-                'date_iso' => $td->date->format('Y-m-d'),
-                'date_label' => $this->formatFrenchLongDate($td->date),
-                'is_past' => $td->date->lt($today),
+                'date_iso' => Carbon::parse($td->date)->format('Y-m-d'),
+                'date_label' => $this->formatFrenchLongDate(Carbon::parse($td->date)),
+                'is_past' => Carbon::parse($td->date)->lt($today),
                 'departure_id' => $departureId,
                 'capacity' => $cap,
                 'capacity_known' => true,
@@ -2110,7 +2111,7 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Packages pour fiches {@see Voyage} sans wp_post_id (réservables hors catalogue WordPress).
+     * Packages pour fiches {@see Voyage} sans wp_post_id (r+�servables hors catalogue WordPress).
      *
      * @param  array<int, array{validee: int, en_cours: int, annulee: int}>  $statsByTour
      * @param  array<int, int>  $passengersByTour
@@ -2300,7 +2301,7 @@ class ReservationWorkspaceCatalogService
             ],
             'commission' => [
                 'configured' => false,
-                'message' => 'Aucune commission configurée pour cette offre',
+                'message' => 'Aucune commission configur+�e pour cette offre',
             ],
             'stats' => $stats,
             'stats_total' => ($stats['validee'] ?? 0) + ($stats['en_cours'] ?? 0) + ($stats['annulee'] ?? 0),
@@ -2311,7 +2312,7 @@ class ReservationWorkspaceCatalogService
                 'tour_id' => $tid,
                 'travel_date_id' => $preferredTravelDateId,
                 'prestation_type' => 'package',
-                'label' => ($voyage->name ?: 'Voyage').' · Laravel',
+                'label' => ($voyage->name ?: 'Voyage').' -� Laravel',
             ],
             'route_reserver' => $createRoute,
             'routes' => [

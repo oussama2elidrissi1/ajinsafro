@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\Departure;
 use App\Models\Reservation;
 use App\Models\ReservationDossier;
+use App\Models\TravelDate;
 use App\Models\User;
 use App\Models\Voyage;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationVisibilityService;
 use App\Services\Wp\WpHeroImageService;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -156,13 +159,39 @@ class ReservationDossierController extends Controller
             'remaining_amount' => 0.0,
         ];
 
-        $voyageCards = $reservations
-            ->groupBy(fn (Reservation $reservation) => $this->resolveReservationGroupKey($reservation))
-            ->map(function (Collection $group) {
+        $voyageIdsForCards = $voyageId > 0
+            ? collect(Voyage::allIdsSharingWpTour($voyageId))->map(fn ($id) => (int) $id)->filter()->unique()->values()
+            : $reservations->pluck('tour_id')->map(fn ($id) => (int) $id)->filter()->unique()->values();
+
+        $voyagesById = Voyage::query()
+            ->whereIn('id', $voyageIdsForCards->all())
+            ->with([
+                'images' => function ($q) {
+                    $q->orderBy('sort_order')->orderBy('id');
+                },
+                'departures' => function ($q) {
+                    $q->orderBy('start_date')->orderBy('id');
+                },
+            ])
+            ->orderBy('name')
+            ->get()
+            ->keyBy(fn (Voyage $voyage) => (int) $voyage->id);
+
+        $reservationsByTravelDateId = $reservations
+            ->groupBy(fn (Reservation $reservation) => (int) ($reservation->travel_date_id ?? 0));
+
+        $departureCards = collect();
+        foreach ($voyagesById as $voyage) {
+            $departureCollection = $voyage->departures instanceof Collection ? $voyage->departures : collect($voyage->departures ?? []);
+            $departureCollection = $departureCollection
+                ->filter(fn ($departure) => $departure instanceof Departure)
+                ->sortBy(fn (Departure $departure) => Carbon::parse($departure->start_date)->timestamp)
+                ->values();
+
+            foreach ($departureCollection as $departure) {
+                $travelDateId = $this->resolveDepartureTravelDateId($departure);
+                $group = $travelDateId ? ($reservationsByTravelDateId->get($travelDateId) ?? collect()) : collect();
                 $sorted = $group->sortByDesc(fn (Reservation $reservation) => optional($reservation->created_at)?->timestamp ?? 0)->values();
-                $lead = $sorted->first();
-                $offer = $this->resolveReservationOffer($lead);
-                $imageUrl = $this->resolveOfferImageUrl($offer);
                 $pendingCount = $sorted->filter(fn (Reservation $reservation) => in_array($reservation->status, [
                     Reservation::STATUS_PENDING,
                     Reservation::STATUS_OPTION,
@@ -181,22 +210,19 @@ class ReservationDossierController extends Controller
                 $paidAmount = round($sorted->sum(fn (Reservation $reservation) => (float) $reservation->effective_paid_amount), 2);
                 $remainingAmount = round($sorted->sum(fn (Reservation $reservation) => (float) $reservation->effective_remaining_amount), 2);
                 $latestReservation = $sorted->first();
+                $departureDate = $travelDateId ? TravelDate::query()->find($travelDateId)?->date : null;
+                $departureLabel = $departureDate ? Carbon::parse($departureDate)->locale('fr')->translatedFormat('d F Y') : Carbon::parse($departure->start_date)->locale('fr')->translatedFormat('d F Y');
+                $badgeDate = $departureDate ? Carbon::parse($departureDate)->format('d/m/Y') : Carbon::parse($departure->start_date)->format('d/m/Y');
 
-                $globalBadge = ['label' => 'Actif', 'class' => 'is-active'];
-                if ($followUpCount > 0) {
-                    $globalBadge = ['label' => 'À suivre', 'class' => 'is-follow-up'];
-                } elseif ($latestReservation?->created_at && $latestReservation->created_at->greaterThanOrEqualTo(now()->subDays(7))) {
-                    $globalBadge = ['label' => 'Réservations récentes', 'class' => 'is-recent'];
-                } elseif ($sorted->count() > 0 && $remainingAmount <= 0.0) {
-                    $globalBadge = ['label' => 'Complet', 'class' => 'is-complete'];
-                }
-
-                return (object) [
-                    'key' => $this->resolveReservationGroupKey($lead),
-                    'offer' => $offer,
-                    'image_url' => $imageUrl,
-                    'title' => $offer?->name ?? 'Voyage non renseigné',
-                    'destination' => $offer?->destination ?? 'Destination non renseignée',
+                $departureCards->push((object) [
+                    'key' => 'departure:'.(string) ($travelDateId ?: $departure->id),
+                    'offer' => $voyage,
+                    'image_url' => $this->resolveOfferImageUrl($voyage),
+                    'title' => $voyage->name ?? 'Voyage non renseigné',
+                    'destination' => $voyage->destination ?? 'Destination non renseignée',
+                    'departure' => $departure,
+                    'departure_date' => $departureDate ? Carbon::parse($departureDate) : Carbon::parse($departure->start_date),
+                    'departure_label' => $departureLabel,
                     'reservations' => $sorted,
                     'reservations_count' => $sorted->count(),
                     'pending_count' => $pendingCount,
@@ -208,23 +234,26 @@ class ReservationDossierController extends Controller
                     'paid_amount' => $paidAmount,
                     'remaining_amount' => $remainingAmount,
                     'latest_reservation' => $latestReservation,
-                    'global_badge' => $globalBadge,
-                ];
-            })
-            ->sortByDesc(fn ($card) => optional($card->latest_reservation?->created_at)?->timestamp ?? 0)
-            ->values();
+                    'global_badge' => ['label' => 'Départ : '.$badgeDate, 'class' => 'is-departure'],
+                    'departure_status_label' => $departure->status ? ucfirst(str_replace('_', ' ', $departure->status)) : 'Départ',
+                    'travel_date_id' => $travelDateId,
+                ]);
+            }
+        }
 
-        $stats['voyages'] = $voyageCards->count();
-        $stats['pending'] = (int) $voyageCards->sum('pending_count');
-        $stats['follow_up'] = (int) $voyageCards->sum('follow_up_count');
-        $stats['paid'] = (int) $voyageCards->sum('paid_count');
-        $stats['remaining_amount'] = round((float) $voyageCards->sum('remaining_amount'), 2);
+        $departureCards = $departureCards->sortBy(fn ($card) => optional($card->departure_date)?->timestamp ?? 0)->values();
+
+        $stats['voyages'] = $departureCards->count();
+        $stats['pending'] = (int) $departureCards->sum('pending_count');
+        $stats['follow_up'] = (int) $departureCards->sum('follow_up_count');
+        $stats['paid'] = (int) $departureCards->sum('paid_count');
+        $stats['remaining_amount'] = round((float) $departureCards->sum('remaining_amount'), 2);
 
         $perPage = max(1, min(24, (int) $request->query('per_page', 9)));
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $voyagePaginator = new LengthAwarePaginator(
-            $voyageCards->forPage($currentPage, $perPage)->values(),
-            $voyageCards->count(),
+            $departureCards->forPage($currentPage, $perPage)->values(),
+            $departureCards->count(),
             $perPage,
             $currentPage,
             [
@@ -321,13 +350,11 @@ class ReservationDossierController extends Controller
                 $offerImageUrl = $offer->featured_image_url;
             } elseif (! empty($offer->cover_image)) {
                 $offerImageUrl = asset('storage/'.ltrim((string) $offer->cover_image, '/'));
-            } elseif (! empty($offer->thumbnail)) {
-                $offerImageUrl = asset('storage/'.ltrim((string) $offer->thumbnail, '/'));
             } elseif (! empty($offer->featured_image)) {
                 $featuredImage = (string) $offer->featured_image;
                 $offerImageUrl = str_starts_with($featuredImage, 'http://') || str_starts_with($featuredImage, 'https://')
                     ? $featuredImage
-                    : Storage::disk('public')->url($featuredImage);
+                    : asset('storage/'.ltrim($featuredImage, '/'));
             } elseif (! empty($offer->wp_image_url)) {
                 $offerImageUrl = $offer->wp_image_url;
             } elseif ((int) ($offer->wp_post_id ?? 0) > 0) {
@@ -443,7 +470,7 @@ class ReservationDossierController extends Controller
 
             return str_starts_with($featuredImage, 'http://') || str_starts_with($featuredImage, 'https://')
                 ? $featuredImage
-                : Storage::disk('public')->url($featuredImage);
+                : asset('storage/'.ltrim($featuredImage, '/'));
         }
 
         if (! empty($offer->wp_image_url)) {
