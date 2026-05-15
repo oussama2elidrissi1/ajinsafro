@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Facture proforma {{ $reservation->dossier_number ?: $reservation->id }}</title>
     <style>
-        @page { margin: 130px 30px 70px 30px; }
+        @page { margin: 30px; }
 
         * { box-sizing: border-box; }
 
@@ -15,90 +15,14 @@
             line-height: 1.45;
         }
 
-        /* ===== Header (fixed for DomPDF) ===== */
-        .pdf-header {
-            position: fixed;
-            top: -115px;
-            left: 0;
-            right: 0;
-        }
-
-        .pdf-header table { width: 100%; border-collapse: collapse; }
-        .pdf-header td { vertical-align: top; padding: 0; }
-
-        .brand-logo {
-            font-size: 24px;
-            font-weight: 900;
-            color: #07598f;
-            letter-spacing: -0.5px;
-        }
-
-        .brand-sub {
-            font-size: 13px;
-            font-weight: 700;
-            color: #f97316;
-            margin-top: 2px;
-        }
-
-        .company-info {
-            text-align: right;
-            font-size: 10px;
-            color: #334155;
-            line-height: 1.65;
-        }
-
-        .company-info strong { color: #07598f; }
-
-        .header-line {
+        .invoice-header-img,
+        .invoice-footer-img {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
+            display: block;
         }
 
-        .header-line td {
-            height: 3px;
-            padding: 0;
-            line-height: 0;
-            font-size: 0;
-        }
-
-        .header-line .bar-blue { background: #07598f; width: 70%; }
-        .header-line .bar-orange { background: #f97316; width: 30%; }
-
-        /* ===== Footer (fixed for DomPDF) ===== */
-        .pdf-footer {
-            position: fixed;
-            bottom: -55px;
-            left: 0;
-            right: 0;
-        }
-
-        .footer-line {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 6px;
-        }
-
-        .footer-line td {
-            height: 2px;
-            padding: 0;
-            line-height: 0;
-            font-size: 0;
-        }
-
-        .footer-line .bar-blue { background: #07598f; width: 70%; }
-        .footer-line .bar-orange { background: #f97316; width: 30%; }
-
-        .footer-text {
-            text-align: center;
-            font-size: 9px;
-            color: #64748b;
-            line-height: 1.5;
-        }
-
-        /* ===== Document title ===== */
         h1.doc-title {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
             color: #07598f;
             margin: 0 0 6px;
@@ -111,26 +35,24 @@
             text-align: center;
             color: #64748b;
             font-size: 11px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
-        /* ===== Sections ===== */
         .section-title {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 800;
             color: #07598f;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e2e8f0;
             padding-bottom: 4px;
-            margin: 18px 0 10px;
+            margin: 16px 0 10px;
         }
 
-        /* ===== Info grid ===== */
         .info-grid {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .info-grid td {
@@ -150,7 +72,6 @@
             text-transform: uppercase;
         }
 
-        /* ===== Tables ===== */
         table.lines {
             width: 100%;
             border-collapse: collapse;
@@ -198,45 +119,16 @@
 </head>
 <body>
 
-    <!-- ===== HEADER ===== -->
-    <div class="pdf-header">
-        <table>
-            <tr>
-                <td>
-                    <!-- Logo placeholder : remplacer par <img src="..."> si le logo est disponible -->
-                    <div class="brand-logo">AJINSAFRO</div>
-                    <div class="brand-sub">Agence de voyage</div>
-                </td>
-                <td class="company-info">
-                    <div><strong>Agence de voyage :</strong> 45D / 17</div>
-                    <div><strong>Patente :</strong> 50471316 &nbsp;|&nbsp; <strong>R.C :</strong> 70489 &nbsp;|&nbsp; <strong>I.F :</strong> 15254892 &nbsp;|&nbsp; <strong>ICE :</strong> 001585417000035</div>
-                    <div>145, Avenue Mohammed V, Appart N&deg;30, 5&egrave;me &eacute;tage, 90 000 Tanger - Maroc</div>
-                    <div>T&eacute;l : 06 63 000 380 - 06 20 202 091 &nbsp;|&nbsp; Fixe : +212 5 39 323 874</div>
-                    <div>Email : contact@ajinsafro.ma &nbsp;|&nbsp; Site : www.ajinsafro.ma</div>
-                </td>
-            </tr>
-        </table>
-        <table class="header-line">
-            <tr>
-                <td class="bar-blue"></td>
-                <td class="bar-orange"></td>
-            </tr>
-        </table>
-    </div>
+    @php
+        $invoiceHeaderPath = \App\Models\Setting::getValue('invoice_header_image');
+        $invoiceFooterPath = \App\Models\Setting::getValue('invoice_footer_image');
+        $invoiceHeaderLocal = $invoiceHeaderPath ? public_path('storage/' . $invoiceHeaderPath) : null;
+        $invoiceFooterLocal = $invoiceFooterPath ? public_path('storage/' . $invoiceFooterPath) : null;
+    @endphp
 
-    <!-- ===== FOOTER ===== -->
-    <div class="pdf-footer">
-        <table class="footer-line">
-            <tr>
-                <td class="bar-blue"></td>
-                <td class="bar-orange"></td>
-            </tr>
-        </table>
-        <div class="footer-text">
-            Ajinsafro.ma &mdash; Agence de voyage &nbsp;|&nbsp; 145, Avenue Mohammed V, Tanger - Maroc<br>
-            Email : contact@ajinsafro.ma &nbsp;|&nbsp; Site : www.ajinsafro.ma
-        </div>
-    </div>
+    @if($invoiceHeaderLocal && file_exists($invoiceHeaderLocal))
+        <img src="{{ $invoiceHeaderLocal }}" class="invoice-header-img" alt="En-tête">
+    @endif
 
     <!-- ===== TITLE ===== -->
     <h1 class="doc-title">Facture proforma</h1>
@@ -320,6 +212,10 @@
             @endforelse
         </tbody>
     </table>
+
+    @if($invoiceFooterLocal && file_exists($invoiceFooterLocal))
+        <img src="{{ $invoiceFooterLocal }}" class="invoice-footer-img" alt="Pied de page">
+    @endif
 
 </body>
 </html>

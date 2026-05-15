@@ -185,6 +185,45 @@
             </div>
         </div>
 
+        {{-- D) Paramètres des factures --}}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">D) Paramètres des factures</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 row">
+                            <label for="invoice_header_image" class="col-md-3 col-form-label">En-tête facture</label>
+                            <div class="col-md-9">
+                                @if(!empty($settings['invoice_header_image_url']))
+                                    <div class="mb-2">
+                                        <img src="{{ $settings['invoice_header_image_url'] }}" alt="En-tête facture" class="img-thumbnail" style="max-height: 120px;">
+                                        <span class="text-muted small d-block">Image actuelle</span>
+                                    </div>
+                                @endif
+                                <input class="form-control" type="file" name="invoice_header_image" id="invoice_header_image" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp">
+                                <small class="text-muted">Image affichée en haut des factures PDF. Largeur recommandée : 1200px environ. Stockage : storage/app/public/settings/invoices/</small>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label for="invoice_footer_image" class="col-md-3 col-form-label">Pied de page facture</label>
+                            <div class="col-md-9">
+                                @if(!empty($settings['invoice_footer_image_url']))
+                                    <div class="mb-2">
+                                        <img src="{{ $settings['invoice_footer_image_url'] }}" alt="Pied de page facture" class="img-thumbnail" style="max-height: 120px;">
+                                        <span class="text-muted small d-block">Image actuelle</span>
+                                    </div>
+                                @endif
+                                <input class="form-control" type="file" name="invoice_footer_image" id="invoice_footer_image" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp">
+                                <small class="text-muted">Image affichée en bas des factures PDF. Largeur recommandée : 1200px environ. Stockage : storage/app/public/settings/invoices/</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-12">
                 <button type="submit" class="btn btn-primary waves-effect waves-light">Enregistrer les paramètres</button>

@@ -43,6 +43,10 @@ class SettingsController extends Controller
                 'hero_overlay_opacity' => Setting::getValue('hero_overlay_opacity'),
                 'hero_title' => Setting::getValue('hero_title'),
                 'hero_subtitle' => Setting::getValue('hero_subtitle'),
+                'invoice_header_image' => Setting::getValue('invoice_header_image'),
+                'invoice_header_image_url' => Setting::storageUrl(Setting::getValue('invoice_header_image')),
+                'invoice_footer_image' => Setting::getValue('invoice_footer_image'),
+                'invoice_footer_image_url' => Setting::storageUrl(Setting::getValue('invoice_footer_image')),
             ];
             return view($view, compact('settings'));
         }
@@ -74,6 +78,8 @@ class SettingsController extends Controller
             'hero_overlay_opacity' => ['required', 'numeric', 'min:0', 'max:1'],
             'hero_title' => ['required', 'string', 'max:255'],
             'hero_subtitle' => ['nullable', 'string', 'max:500'],
+            'invoice_header_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
+            'invoice_footer_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
         ]);
 
         // Vérification manuelle : si type=image et pas d'image actuelle ni uploadée
@@ -123,6 +129,24 @@ class SettingsController extends Controller
             }
             $path = $request->file('hero_video')->store('front/hero', 'public');
             Setting::setValue('hero_video', $path);
+        }
+
+        if ($request->hasFile('invoice_header_image')) {
+            $oldPath = Setting::normalizePublicDiskPath(Setting::getValue('invoice_header_image'));
+            if ($oldPath) {
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('invoice_header_image')->store('settings/invoices', 'public');
+            Setting::setValue('invoice_header_image', Setting::normalizePublicDiskPath($path));
+        }
+
+        if ($request->hasFile('invoice_footer_image')) {
+            $oldPath = Setting::normalizePublicDiskPath(Setting::getValue('invoice_footer_image'));
+            if ($oldPath) {
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('invoice_footer_image')->store('settings/invoices', 'public');
+            Setting::setValue('invoice_footer_image', Setting::normalizePublicDiskPath($path));
         }
 
         return redirect()
