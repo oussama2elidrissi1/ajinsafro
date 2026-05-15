@@ -31,222 +31,328 @@
 
 @push('styles')
 <style>
-    :root {
-        --voy-blue-900: #073b63;
-        --voy-blue-800: #07598f;
-        --voy-blue-700: #0877bd;
-        --voy-blue-100: #e8f4ff;
-        --voy-orange: #f97316;
-        --voy-green: #12b76a;
-        --voy-red: #ef4444;
-        --voy-violet: #7c3aed;
-        --voy-ink: #102a43;
-        --voy-muted: #6b7a90;
-        --voy-line: #e5edf6;
-        --voy-bg: #f5f8fc;
-        --voy-white: #ffffff;
-        --voy-shadow: 0 18px 36px rgba(16, 42, 67, 0.08);
-        --voy-shadow-soft: 0 10px 24px rgba(16, 42, 67, 0.06);
-        --voy-radius-xl: 24px;
-        --voy-radius-lg: 18px;
-        --voy-radius-md: 14px;
+    .reservation-dossiers-page {
+        padding-bottom: 24px;
     }
 
-    .voy-page {
-        display: grid;
-        gap: 24px;
-    }
-
-    .voy-hero {
+    .reservation-dossiers-page .rd-hero {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 18px;
         flex-wrap: wrap;
+        margin-bottom: 24px;
     }
 
-    .voy-hero h1 {
-        font-size: clamp(30px, 3vw, 42px);
-        line-height: 1.02;
-        letter-spacing: -0.04em;
+    .reservation-dossiers-page .rd-hero h1 {
+        font-size: clamp(28px, 3vw, 40px);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
         margin: 0 0 8px;
         color: #0b2545;
         font-weight: 800;
     }
 
-    .voy-hero p {
+    .reservation-dossiers-page .rd-hero p {
         margin: 0;
-        color: var(--voy-muted);
+        color: #6b7a90;
         font-weight: 600;
-        max-width: 760px;
+        max-width: 720px;
+        font-size: 15px;
     }
 
-    .voy-btn {
+    .reservation-dossiers-page .rd-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         border-radius: 12px;
         padding: 12px 18px;
-        font-weight: 800;
+        font-weight: 700;
+        font-size: 14px;
         text-decoration: none;
         border: 1px solid transparent;
         transition: all .2s ease;
+        cursor: pointer;
+        white-space: nowrap;
     }
 
-    .voy-btn-primary {
+    .reservation-dossiers-page .rd-btn-primary {
         color: #fff !important;
-        background: linear-gradient(135deg, var(--voy-blue-700), var(--voy-blue-900));
-        box-shadow: 0 12px 24px rgba(8, 119, 189, 0.22);
+        background: linear-gradient(135deg, #0877bd, #073b63);
+        box-shadow: 0 8px 20px rgba(8, 119, 189, 0.22);
     }
 
-    .voy-btn-soft {
-        color: var(--voy-blue-900);
-        background: #fff;
-        border-color: var(--voy-line);
-    }
-
-    .voy-kpis {
+    .reservation-dossiers-page .rd-page-kpis {
         display: grid;
         grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 18px;
+        gap: 14px;
+        margin-bottom: 24px;
     }
 
-    .voy-kpi {
-        background: var(--voy-white);
-        border: 1px solid var(--voy-line);
-        border-radius: var(--voy-radius-lg);
-        box-shadow: var(--voy-shadow-soft);
-        padding: 20px;
+    .reservation-dossiers-page .rd-page-kpi {
+        background: #fff;
+        border: 1px solid #e5edf6;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(16, 42, 67, 0.04);
+        padding: 18px;
         display: flex;
-        gap: 14px;
+        gap: 12px;
         align-items: center;
     }
 
-    .voy-kpi__icon {
-        width: 52px;
-        height: 52px;
+    .reservation-dossiers-page .rd-page-kpi__icon {
+        width: 46px;
+        height: 46px;
         display: grid;
         place-items: center;
-        border-radius: 18px;
-        font-size: 22px;
+        border-radius: 14px;
+        font-size: 20px;
+        flex-shrink: 0;
     }
 
-    .bg-blue { background: #eaf5ff; color: var(--voy-blue-700); }
-    .bg-orange { background: #fff2e8; color: var(--voy-orange); }
-    .bg-violet { background: #f3edff; color: var(--voy-violet); }
-    .bg-green { background: #e8fff4; color: var(--voy-green); }
+    .reservation-dossiers-page .rd-page-kpi__label {
+        display: block;
+        color: #6b7a90;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
 
-    .voy-badge {
+    .reservation-dossiers-page .rd-page-kpi__value {
+        display: block;
+        color: #102a43;
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.1;
+    }
+
+    .reservation-dossiers-page .rd-panel {
+        background: #fff;
+        border: 1px solid #e5edf6;
+        border-radius: 20px;
+        box-shadow: 0 8px 24px rgba(16, 42, 67, 0.06);
+        padding: 22px;
+    }
+
+    .reservation-dossiers-page .rd-toolbar {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .reservation-dossiers-page .rd-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .reservation-dossiers-page .rd-tab {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        color: #6b7a90;
+        background: #f8fbff;
+        border: 1px solid #e5edf6;
+        transition: all .2s ease;
+    }
+
+    .reservation-dossiers-page .rd-tab.active,
+    .reservation-dossiers-page .rd-tab:hover {
+        background: #07598f;
+        color: #fff;
+        border-color: #07598f;
+    }
+
+    .reservation-dossiers-page .rd-filter-grid {
+        display: grid;
+        grid-template-columns: 1fr 220px 220px;
+        gap: 12px;
+        align-items: end;
+    }
+
+    .reservation-dossiers-page .rd-filter-grid .full {
+        grid-column: 1 / -1;
+    }
+
+    .reservation-dossiers-page .rd-card {
+        background: #fff;
+        border: 1px solid #e5edf6;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(16, 42, 67, 0.04);
+        margin-bottom: 14px;
+        overflow: hidden;
+    }
+
+    .reservation-dossiers-page .rd-card__head {
+        display: grid;
+        grid-template-columns: 180px 1fr auto;
+        gap: 18px;
+        align-items: center;
+        padding: 16px 20px;
+    }
+
+    .reservation-dossiers-page .rd-card__media {
+        width: 180px;
+        height: 115px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #f5f8fc;
+        flex-shrink: 0;
+    }
+
+    .reservation-dossiers-page .rd-card__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .reservation-dossiers-page .rd-card__placeholder {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        color: #6b7a90;
+        font-size: 12px;
+    }
+
+    .reservation-dossiers-page .rd-card__placeholder i {
+        font-size: 22px;
+        margin-bottom: 2px;
+    }
+
+    .reservation-dossiers-page .rd-card__main {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .reservation-dossiers-page .rd-card__top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .reservation-dossiers-page .rd-card__title h3 {
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0;
+        color: #102a43;
+        line-height: 1.25;
+    }
+
+    .reservation-dossiers-page .rd-card__title p {
+        font-size: 13px;
+        color: #6b7a90;
+        margin: 3px 0 0;
+    }
+
+    .reservation-dossiers-page .rd-badge-departure {
         display: inline-flex;
         align-items: center;
         border-radius: 999px;
-        padding: 7px 12px;
-        font-size: 12px;
-        font-weight: 900;
-        text-transform: uppercase;
-    }
-
-    .voy-badge.is-active { background: #eef4ff; color: #2454d6; }
-    .voy-badge.is-recent { background: #e8f4ff; color: var(--voy-blue-800); }
-    .voy-badge.is-follow-up { background: #f3edff; color: var(--voy-violet); }
-    .voy-badge.is-complete { background: #e8fff4; color: var(--voy-green); }
-    .voy-badge.is-pending { background: #fff3e8; color: #cb5f12; }
-    .voy-badge.is-confirmed { background: #eef4ff; color: #2454d6; }
-    .voy-badge.is-paid { background: #e8fff4; color: #0a8d58; }
-    .voy-badge.is-unpaid { background: #fff1f2; color: #d12f45; }
-    .voy-badge.is-cancelled { background: #f1f5f9; color: #64748b; }
-    .voy-badge.is-follow-up-light { background: #fff7ed; color: var(--voy-orange); }
-    .voy-badge.is-neutral { background: #f1f5f9; color: #64748b; }
-    .voy-badge.is-departure { background: #e8f4ff; color: var(--voy-blue-800); }
-
-    .voy-stats {
-        display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 12px;
-    }
-
-    .voy-stat {
-        background: #f8fbff;
-        border: 1px solid var(--voy-line);
-        border-radius: 16px;
-        padding: 14px 16px;
-    }
-
-    .voy-stat span {
-        display: block;
-        color: #8a9ab0;
+        padding: 5px 12px;
         font-size: 11px;
         font-weight: 800;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        background: #e8f4ff;
+        color: #07598f;
+        white-space: nowrap;
+        letter-spacing: 0.02em;
     }
 
-    .voy-stat strong {
-        display: block;
-        color: var(--voy-ink);
-        font-size: 18px;
-        font-weight: 900;
-        line-height: 1.15;
+    .reservation-dossiers-page .rd-mini-kpis {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
-    .voy-card__actions {
-        display: grid;
-        gap: 10px;
-        min-width: 210px;
+    .reservation-dossiers-page .rd-mini-kpi {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #102a43;
+        background: #f8fbff;
+        border: 1px solid #e5edf6;
+        border-radius: 8px;
+        padding: 5px 11px;
+        white-space: nowrap;
     }
 
-    .voy-card__actions .voy-btn {
-        width: 100%;
+    .reservation-dossiers-page .rd-mini-kpi span {
+        color: #6b7a90;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
     }
 
-    .voy-card__detail {
-        border-top: 1px solid var(--voy-line);
+    .reservation-dossiers-page .rd-card__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 0;
+    }
+
+    .reservation-dossiers-page .rd-card__detail {
+        border-top: 1px solid #e5edf6;
         background: linear-gradient(180deg, #fff, #fbfdff);
         padding: 20px;
     }
 
-    .voy-table-wrap {
+    .reservation-dossiers-page .rd-table-wrap {
         overflow-x: auto;
     }
 
-    .voy-table {
+    .reservation-dossiers-page .rd-table {
         width: 100%;
         min-width: 1120px;
         margin: 0;
     }
 
-    .voy-table thead th {
+    .reservation-dossiers-page .rd-table thead th {
         background: #f8fbff;
         color: #6b7a90;
         font-size: 12px;
         font-weight: 900;
         text-transform: uppercase;
         letter-spacing: .04em;
-        border-bottom: 1px solid var(--voy-line);
+        border-bottom: 1px solid #e5edf6;
         padding: 14px 12px;
         white-space: nowrap;
     }
 
-    .voy-table tbody td {
+    .reservation-dossiers-page .rd-table tbody td {
         padding: 14px 12px;
         border-bottom: 1px solid #edf2f7;
         vertical-align: middle;
         color: #233c59;
         font-weight: 600;
+        font-size: 13px;
     }
 
-    .voy-table tbody tr:last-child td {
+    .reservation-dossiers-page .rd-table tbody tr:last-child td {
         border-bottom: 0;
     }
 
-    .voy-row-actions {
+    .reservation-dossiers-page .rd-row-actions {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
     }
 
-    .voy-mini-btn {
+    .reservation-dossiers-page .rd-mini-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
@@ -254,129 +360,185 @@
         padding: 0 12px;
         border-radius: 10px;
         font-size: 12px;
-        font-weight: 800;
+        font-weight: 700;
         text-decoration: none;
-        border: 1px solid var(--voy-line);
+        border: 1px solid #e5edf6;
         background: #fff;
-        color: var(--voy-blue-900);
+        color: #073b63;
+        white-space: nowrap;
     }
 
-    .voy-empty {
+    .reservation-dossiers-page .rd-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .reservation-dossiers-page .rd-badge.is-pending { background: #fff3e8; color: #cb5f12; }
+    .reservation-dossiers-page .rd-badge.is-confirmed { background: #eef4ff; color: #2454d6; }
+    .reservation-dossiers-page .rd-badge.is-paid { background: #e8fff4; color: #0a8d58; }
+    .reservation-dossiers-page .rd-badge.is-unpaid { background: #fff1f2; color: #d12f45; }
+    .reservation-dossiers-page .rd-badge.is-follow-up { background: #f3edff; color: #7c3aed; }
+    .reservation-dossiers-page .rd-badge.is-follow-up-light { background: #fff7ed; color: #f97316; }
+    .reservation-dossiers-page .rd-badge.is-cancelled { background: #f1f5f9; color: #64748b; }
+    .reservation-dossiers-page .rd-badge.is-neutral { background: #f1f5f9; color: #64748b; }
+
+    .reservation-dossiers-page .rd-empty {
         display: grid;
         place-items: center;
         padding: 64px 20px;
         text-align: center;
-        color: var(--voy-muted);
+        color: #6b7a90;
     }
 
-    .voy-empty i {
+    .reservation-dossiers-page .rd-empty i {
         font-size: 56px;
         color: #cbd5e1;
         margin-bottom: 16px;
     }
 
-    .voy-pagination {
+    .reservation-dossiers-page .rd-pagination {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 16px;
         margin-top: 24px;
         flex-wrap: wrap;
+        color: #6b7a90;
+        font-size: 13px;
+        font-weight: 600;
     }
 
-    .voy-pagination .pagination {
+    .reservation-dossiers-page .rd-pagination .pagination {
         margin: 0;
-        gap: 8px;
+        gap: 6px;
     }
 
-    .voy-pagination .page-link {
+    .reservation-dossiers-page .rd-pagination .page-link {
         border-radius: 10px !important;
-        border: 1px solid var(--voy-line);
-        min-width: 40px;
-        height: 40px;
+        border: 1px solid #e5edf6;
+        min-width: 38px;
+        height: 38px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 800;
+        font-weight: 700;
         color: #50637c;
+        font-size: 13px;
     }
 
-    .voy-pagination .page-item.active .page-link {
-        background: var(--voy-blue-800);
-        border-color: var(--voy-blue-800);
+    .reservation-dossiers-page .rd-pagination .page-item.active .page-link {
+        background: #07598f;
+        border-color: #07598f;
         color: #fff;
     }
 
     @media (max-width: 1399.98px) {
-        .voy-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .voy-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .reservation-dossiers-page .rd-page-kpis {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
     }
 
     @media (max-width: 1199.98px) {
-        .voy-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .voy-card__head { grid-template-columns: 120px minmax(0, 1fr); }
-        .voy-card__actions { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; }
+        .reservation-dossiers-page .rd-card__head {
+            grid-template-columns: 160px 1fr auto;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .reservation-dossiers-page .rd-filter-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .reservation-dossiers-page .rd-card__head {
+            grid-template-columns: 140px 1fr;
+        }
+        .reservation-dossiers-page .rd-card__actions {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
+        }
     }
 
     @media (max-width: 767.98px) {
-        .voy-kpis, .voy-stats, .voy-filter-grid, .voy-card__actions { grid-template-columns: 1fr; }
-        .voy-filter-grid .full { grid-column: span 1; }
-        .voy-card__head { grid-template-columns: 1fr; }
-        .voy-card__media { min-height: 180px; }
+        .reservation-dossiers-page .rd-page-kpis {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .reservation-dossiers-page .rd-filter-grid {
+            grid-template-columns: 1fr;
+        }
+        .reservation-dossiers-page .rd-filter-grid .full {
+            grid-column: span 1;
+        }
+        .reservation-dossiers-page .rd-card__head {
+            grid-template-columns: 1fr;
+        }
+        .reservation-dossiers-page .rd-card__media {
+            width: 100%;
+            height: 180px;
+        }
+        .reservation-dossiers-page .rd-mini-kpis {
+            gap: 6px;
+        }
+        .reservation-dossiers-page .rd-btn {
+            width: 100%;
+        }
     }
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid voy-page">
-    <div class="voy-hero">
+<div class="container-fluid reservation-dossiers-page">
+    <div class="rd-hero">
         <div>
             <h1>Dossiers de reservation</h1>
             <p>Vue V3 orientee departs: identifiez d'abord les departs qui bougent, puis ouvrez au clic toutes les reservations qui demandent une action.</p>
         </div>
-        <a href="{{ route('admin.reservations.create') }}" class="voy-btn voy-btn-primary">
+        <a href="{{ route('admin.reservations.create') }}" class="rd-btn rd-btn-primary">
             <i class="bx bx-plus"></i>
             <span>Creer un dossier</span>
         </a>
     </div>
 
-    <div class="voy-kpis">
-        <div class="voy-kpi">
-            <div class="voy-kpi__icon bg-blue"><i class="bx bx-map"></i></div>
-            <div><span>Departs actifs</span><strong>{{ $stats['voyages'] ?? 0 }}</strong></div>
+    <div class="rd-page-kpis">
+        <div class="rd-page-kpi">
+            <div class="rd-page-kpi__icon" style="background:#eaf5ff;color:#0877bd;"><i class="bx bx-map"></i></div>
+            <div><span class="rd-page-kpi__label">Departs actifs</span><strong class="rd-page-kpi__value">{{ $stats['voyages'] ?? 0 }}</strong></div>
         </div>
-        <div class="voy-kpi">
-            <div class="voy-kpi__icon bg-blue"><i class="bx bx-collection"></i></div>
-            <div><span>Reservations</span><strong>{{ $stats['reservations'] ?? 0 }}</strong></div>
+        <div class="rd-page-kpi">
+            <div class="rd-page-kpi__icon" style="background:#eaf5ff;color:#0877bd;"><i class="bx bx-collection"></i></div>
+            <div><span class="rd-page-kpi__label">Reservations</span><strong class="rd-page-kpi__value">{{ $stats['reservations'] ?? 0 }}</strong></div>
         </div>
-        <div class="voy-kpi">
-            <div class="voy-kpi__icon bg-orange"><i class="bx bx-time-five"></i></div>
-            <div><span>En attente</span><strong>{{ $stats['pending'] ?? 0 }}</strong></div>
+        <div class="rd-page-kpi">
+            <div class="rd-page-kpi__icon" style="background:#fff2e8;color:#f97316;"><i class="bx bx-time-five"></i></div>
+            <div><span class="rd-page-kpi__label">En attente</span><strong class="rd-page-kpi__value">{{ $stats['pending'] ?? 0 }}</strong></div>
         </div>
-        <div class="voy-kpi">
-            <div class="voy-kpi__icon bg-violet"><i class="bx bx-bell"></i></div>
-            <div><span>A suivre</span><strong>{{ $stats['follow_up'] ?? 0 }}</strong></div>
+        <div class="rd-page-kpi">
+            <div class="rd-page-kpi__icon" style="background:#f3edff;color:#7c3aed;"><i class="bx bx-bell"></i></div>
+            <div><span class="rd-page-kpi__label">A suivre</span><strong class="rd-page-kpi__value">{{ $stats['follow_up'] ?? 0 }}</strong></div>
         </div>
-        <div class="voy-kpi">
-            <div class="voy-kpi__icon bg-green"><i class="bx bx-check-circle"></i></div>
-            <div><span>Payees</span><strong>{{ $stats['paid'] ?? 0 }}</strong></div>
+        <div class="rd-page-kpi">
+            <div class="rd-page-kpi__icon" style="background:#e8fff4;color:#12b76a;"><i class="bx bx-check-circle"></i></div>
+            <div><span class="rd-page-kpi__label">Payees</span><strong class="rd-page-kpi__value">{{ $stats['paid'] ?? 0 }}</strong></div>
         </div>
-        <div class="voy-kpi">
-            <div class="voy-kpi__icon bg-red"><i class="bx bx-wallet"></i></div>
-            <div><span>Restant DH</span><strong>{{ number_format((float) ($stats['remaining_amount'] ?? 0), 0, ',', ' ') }}</strong></div>
+        <div class="rd-page-kpi">
+            <div class="rd-page-kpi__icon" style="background:#ffe8e8;color:#ef4444;"><i class="bx bx-wallet"></i></div>
+            <div><span class="rd-page-kpi__label">Restant DH</span><strong class="rd-page-kpi__value">{{ number_format((float) ($stats['remaining_amount'] ?? 0), 0, ',', ' ') }}</strong></div>
         </div>
     </div>
 
-    <div class="voy-panel">
-        <div class="voy-toolbar">
-            <div class="voy-tabs">
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'all'])) }}" class="voy-tab {{ $currentStatus === 'all' ? 'active' : '' }}">Tous</a>
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'pending'])) }}" class="voy-tab {{ $currentStatus === 'pending' ? 'active' : '' }}">En attente</a>
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'paid'])) }}" class="voy-tab {{ $currentStatus === 'paid' ? 'active' : '' }}">Payees</a>
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'follow_up'])) }}" class="voy-tab {{ $currentStatus === 'follow_up' ? 'active' : '' }}">A suivre</a>
+    <div class="rd-panel">
+        <div class="rd-toolbar">
+            <div class="rd-tabs">
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'all'])) }}" class="rd-tab {{ $currentStatus === 'all' ? 'active' : '' }}">Tous</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'pending'])) }}" class="rd-tab {{ $currentStatus === 'pending' ? 'active' : '' }}">En attente</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'paid'])) }}" class="rd-tab {{ $currentStatus === 'paid' ? 'active' : '' }}">Payees</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'follow_up'])) }}" class="rd-tab {{ $currentStatus === 'follow_up' ? 'active' : '' }}">A suivre</a>
             </div>
 
-            <form method="GET" action="{{ route('admin.reservation-dossiers.index') }}" class="voy-filter-grid">
+            <form method="GET" action="{{ route('admin.reservation-dossiers.index') }}" class="rd-filter-grid">
                 @if($currentStatus !== 'all')
                     <input type="hidden" name="status" value="{{ $currentStatus }}">
                 @endif
@@ -407,49 +569,44 @@
         </div>
 
         @if($voyages->count() > 0)
-            <div class="voy-list">
+            <div class="rd-list">
                 @foreach($voyages as $voyageCard)
-                    <article class="voy-card">
-                        <div class="voy-card__head">
-                            <div class="voy-card__media">
+                    <article class="rd-card">
+                        <div class="rd-card__head">
+                            <div class="rd-card__media">
                                 @if($voyageCard->image_url)
                                     <img src="{{ $voyageCard->image_url }}" alt="{{ $voyageCard->title }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
-                                    <div class="voy-card__placeholder" style="display:none;">
-                                        <div><i class="bx bx-map-pin fs-1 d-block mb-2"></i><span>Voyage</span></div>
+                                    <div class="rd-card__placeholder" style="display:none;">
+                                        <div><i class="bx bx-map-pin"></i><span>Voyage</span></div>
                                     </div>
                                 @else
-                                    <div class="voy-card__placeholder">
-                                        <div><i class="bx bx-map-pin fs-1 d-block mb-2"></i><span>Voyage</span></div>
+                                    <div class="rd-card__placeholder">
+                                        <div><i class="bx bx-map-pin"></i><span>Voyage</span></div>
                                     </div>
                                 @endif
                             </div>
 
-                            <div class="voy-card__main">
-                                <div class="voy-card__title-row">
-                                    <div class="voy-card__title">
+                            <div class="rd-card__main">
+                                <div class="rd-card__top">
+                                    <div class="rd-card__title">
                                         <h3>{{ $voyageCard->title }}</h3>
                                         <p>{{ $voyageCard->destination }}</p>
-                                        <p class="small text-muted mb-0">Depart: {{ $voyageCard->departure_label ?? optional($voyageCard->departure_date)->format('d/m/Y') ?? '—' }}</p>
                                     </div>
-                                    <span class="voy-badge {{ $voyageCard->global_badge['class'] }}">{{ $voyageCard->global_badge['label'] }}</span>
+                                    <span class="rd-badge-departure">{{ $voyageCard->global_badge['label'] }}</span>
                                 </div>
 
-                                <div class="voy-stats">
-                                    <div class="voy-stat"><span>Reservations</span><strong>{{ $voyageCard->reservations_count }}</strong></div>
-                                    <div class="voy-stat"><span>En attente</span><strong>{{ $voyageCard->pending_count }}</strong></div>
-                                    <div class="voy-stat"><span>Confirmees</span><strong>{{ $voyageCard->confirmed_count }}</strong></div>
-                                    <div class="voy-stat"><span>A suivre</span><strong>{{ $voyageCard->follow_up_count }}</strong></div>
-                                    <div class="voy-stat"><span>Total genere</span><strong>{{ number_format($voyageCard->total_amount, 0, ',', ' ') }} DH</strong></div>
-                                    <div class="voy-stat"><span>Restant</span><strong>{{ number_format($voyageCard->remaining_amount, 0, ',', ' ') }} DH</strong></div>
+                                <div class="rd-mini-kpis">
+                                    <div class="rd-mini-kpi"><span>Reservations</span> <strong>{{ $voyageCard->reservations_count }}</strong></div>
+                                    <div class="rd-mini-kpi"><span>En attente</span> <strong>{{ $voyageCard->pending_count }}</strong></div>
+                                    <div class="rd-mini-kpi"><span>Confirmees</span> <strong>{{ $voyageCard->confirmed_count }}</strong></div>
+                                    <div class="rd-mini-kpi"><span>A suivre</span> <strong>{{ $voyageCard->follow_up_count }}</strong></div>
+                                    <div class="rd-mini-kpi"><span>Total genere</span> <strong>{{ number_format($voyageCard->total_amount, 0, ',', ' ') }} DH</strong></div>
+                                    <div class="rd-mini-kpi"><span>Restant</span> <strong>{{ number_format($voyageCard->remaining_amount, 0, ',', ' ') }} DH</strong></div>
                                 </div>
                             </div>
 
-                            <div class="voy-card__actions">
-                                <div class="voy-stat">
-                                    <span>Derniere reservation</span>
-                                    <strong>{{ optional($voyageCard->latest_reservation?->created_at)->format('d/m/Y H:i') ?? '—' }}</strong>
-                                </div>
-                                <button class="voy-btn voy-btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}" aria-expanded="false">
+                            <div class="rd-card__actions">
+                                <button class="rd-btn rd-btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}" aria-expanded="false">
                                     <i class="bx bx-list-ul"></i>
                                     <span>Voir les reservations</span>
                                 </button>
@@ -457,10 +614,10 @@
                         </div>
 
                         <div class="collapse" id="voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}">
-                            <div class="voy-card__detail">
-                                <p class="voy-card__detail-subtitle mb-3">Réservations de ce départ uniquement.</p>
-                                <div class="voy-table-wrap">
-                                    <table class="table voy-table align-middle">
+                            <div class="rd-card__detail">
+                                <p class="mb-3" style="color:#6b7a90;font-size:13px;font-weight:600;">Reservations de ce depart uniquement.</p>
+                                <div class="rd-table-wrap">
+                                    <table class="table rd-table align-middle">
                                         <thead>
                                             <tr>
                                                 <th>Dossier</th>
@@ -495,29 +652,29 @@
                                                     <td>{{ $reservation->travelDate?->date?->format('d/m/Y') ?? $reservation->departure?->start_date?->format('d/m/Y') ?? '—' }}</td>
                                                     <td>{{ optional($reservation->created_at)->format('d/m/Y H:i') ?? '—' }}</td>
                                                     <td>{{ $actor?->name ?? '—' }}</td>
-                                                    <td><span class="voy-badge {{ $resBadge['class'] }}">{{ $resBadge['label'] }}</span></td>
-                                                    <td><span class="voy-badge {{ $payBadge['class'] }}">{{ $payBadge['label'] }}</span></td>
+                                                    <td><span class="rd-badge {{ $resBadge['class'] }}">{{ $resBadge['label'] }}</span></td>
+                                                    <td><span class="rd-badge {{ $payBadge['class'] }}">{{ $payBadge['label'] }}</span></td>
                                                     <td>{{ number_format((float) $reservation->effective_total_amount, 2, ',', ' ') }} DH</td>
                                                     <td>{{ number_format((float) $reservation->effective_paid_amount, 2, ',', ' ') }} DH</td>
                                                     <td>
                                                         {{ number_format((float) $reservation->effective_remaining_amount, 2, ',', ' ') }} DH
                                                         @if((float) $reservation->effective_remaining_amount > 0)
-                                                            <div class="mt-1"><span class="voy-badge is-follow-up-light">Restant a solder</span></div>
+                                                            <div class="mt-1"><span class="rd-badge is-follow-up-light">Restant a solder</span></div>
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        <div class="voy-row-actions">
-                                                            <a href="{{ $detailUrl }}" class="voy-mini-btn"><i class="bx bx-show"></i><span>Voir</span></a>
+                                                        <div class="rd-row-actions">
+                                                            <a href="{{ $detailUrl }}" class="rd-mini-btn"><i class="bx bx-show"></i><span>Voir</span></a>
                                                             @can('reservations.update')
                                                                 @if(in_array($reservation->status, [Reservation::STATUS_PENDING, Reservation::STATUS_OPTION, Reservation::STATUS_SHARED_ROOM_PENDING], true))
                                                                     <form action="{{ route('admin.reservations.validate', $reservation) }}" method="POST">
                                                                         @csrf
-                                                                        <button type="submit" class="voy-mini-btn"><i class="bx bx-check"></i><span>Valider</span></button>
+                                                                        <button type="submit" class="rd-mini-btn"><i class="bx bx-check"></i><span>Valider</span></button>
                                                                     </form>
                                                                 @endif
                                                             @endcan
-                                                            <a href="{{ $paymentFollowUrl }}" class="voy-mini-btn"><i class="bx bx-wallet"></i><span>Suivre paiement</span></a>
-                                                            <a href="{{ route('admin.reservations.dossier.pdf', $reservation) }}" target="_blank" class="voy-mini-btn"><i class="bx bx-printer"></i><span>Imprimer</span></a>
+                                                            <a href="{{ $paymentFollowUrl }}" class="rd-mini-btn"><i class="bx bx-wallet"></i><span>Suivre paiement</span></a>
+                                                            <a href="{{ route('admin.reservations.dossier.pdf', $reservation) }}" target="_blank" class="rd-mini-btn"><i class="bx bx-printer"></i><span>Imprimer</span></a>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -535,17 +692,17 @@
                 @endforeach
             </div>
 
-            <div class="voy-pagination">
+            <div class="rd-pagination">
                 <div>
                     Affichage de {{ $voyages->firstItem() ?? 0 }} a {{ $voyages->lastItem() ?? 0 }} sur {{ $voyages->total() }} departs avec reservations
                 </div>
                 <div>{{ $voyages->links() }}</div>
             </div>
         @else
-            <div class="voy-empty">
+            <div class="rd-empty">
                 <div>
                     <i class="bx bx-map"></i>
-                    <h3 class="h5 mb-2">Aucun depart avec reservations</h3>
+                    <h3 class="h5 mb-2">Aucun dossier de reservation trouve</h3>
                     <p class="mb-0">Aucun depart ne correspond aux filtres actuels. Ajustez la periode ou les statuts pour retrouver l'activite reservation.</p>
                 </div>
             </div>
