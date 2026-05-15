@@ -5,6 +5,7 @@
     var extrasMap = {};
     var roomingAllocations = [];
     var availableRoomTypes = [];
+    var companionIdCounter = 0;
     window.reservationState = window.reservationState || {
         currentStep: 1,
         selectedTourId: null,
@@ -94,15 +95,19 @@
             var genderSelect = row.querySelector('select[name*="[gender]"]');
             var relationSelect = row.querySelector('select[name*="[relationship_to_main]"]');
             var consumesBedSelect = row.querySelector('select[name*="[consumes_bed]"]');
+            var travelerKeyInput = row.querySelector('input[name*="[traveler_key]"]');
             var firstName = String(first && first.value || '').trim();
             var lastName = String(last && last.value || '').trim();
             if (firstName === '' && lastName === '') {
                 return;
             }
 
+            var stableId = travelerKeyInput && travelerKeyInput.value
+                ? String(travelerKeyInput.value)
+                : (row.getAttribute('data-companion-id') || row.getAttribute('data-traveler-key') || ('companion_' + index));
             var type = String(typeSelect && typeSelect.value || 'adult');
             rows.push({
-                id: 'companion_' + index,
+                id: stableId,
                 label: [firstName, lastName].filter(Boolean).join(' ') || ('Accompagnant #' + (index + 1)),
                 type: type,
                 travelerType: type,
@@ -637,13 +642,20 @@
             }
         });
 
+        var travelerNamesById = {};
+        travelers.forEach(function (t) { travelerNamesById[t.id] = t.label; });
+
         if (roomingAllocations.length > 0) {
+            var missingNames = [];
             bedTravelerIds.forEach(function (id) {
                 if (!assigned[id]) {
                     invalid = true;
-                    errors.push('Tous les voyageurs consommant un lit doivent etre affectes.');
+                    missingNames.push(travelerNamesById[id] || id);
                 }
             });
+            if (missingNames.length) {
+                errors.push('Voyageurs non affectes a une chambre : ' + missingNames.join(', ') + '.');
+            }
         }
 
         var status = roomingAllocations.length === 0 ? 'pending' : (invalid ? 'invalid' : (partial ? 'partial' : 'complete'));
@@ -1243,28 +1255,31 @@
         if (!container) return;
 
         var index = container.querySelectorAll('.companion-row').length;
+        var stableId = 'companion_' + (++companionIdCounter);
         var row = document.createElement('div');
         row.className = 'companion-row reservation-create__companion';
+        row.setAttribute('data-companion-id', stableId);
+        row.setAttribute('data-traveler-key', stableId);
         row.innerHTML =
             '<div class="reservation-create__companion-head">' +
                 '<h4 class="reservation-create__companion-title">Accompagnant #' + (index + 1) + '</h4>' +
                 '<button type="button" class="btn-remove-companion reservation-create__remove" aria-label="Supprimer">×</button>' +
             '</div>' +
             '<div class="reservation-create__grid reservation-create__grid--two">' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Prénom</label><input type="text" name="passengers[' + index + '][first_name]" class="reservation-create__input"></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Nom</label><input type="text" name="passengers[' + index + '][last_name]" class="reservation-create__input"></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Type</label><select name="passengers[' + index + '][type]" class="reservation-create__input"><option value="adult">Adulte</option><option value="child">Enfant</option><option value="infant">Bébé</option></select></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Date de naissance</label><input type="date" name="passengers[' + index + '][birth_date]" class="reservation-create__input"></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Type document</label><input type="text" name="passengers[' + index + '][document_type]" class="reservation-create__input"></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">N° document</label><input type="text" name="passengers[' + index + '][document_number]" class="reservation-create__input"></div>' +
+                '<input type="hidden" name="passengers[' + stableId + '][traveler_key]" value="' + stableId + '">' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Prénom</label><input type="text" name="passengers[' + stableId + '][first_name]" class="reservation-create__input"></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Nom</label><input type="text" name="passengers[' + stableId + '][last_name]" class="reservation-create__input"></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Type</label><select name="passengers[' + stableId + '][type]" class="reservation-create__input"><option value="adult">Adulte</option><option value="child">Enfant</option><option value="infant">Bébé</option></select></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Date de naissance</label><input type="date" name="passengers[' + stableId + '][birth_date]" class="reservation-create__input"></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Type document</label><input type="text" name="passengers[' + stableId + '][document_type]" class="reservation-create__input"></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">N° document</label><input type="text" name="passengers[' + stableId + '][document_number]" class="reservation-create__input"></div>' +
             '</div>';
-        row.setAttribute('data-traveler-key', 'companion_' + index);
         var grid = row.querySelector('.reservation-create__grid');
         if (grid && !grid.querySelector('select[name*="[gender]"]')) {
             grid.insertAdjacentHTML('beforeend',
-                '<div class="reservation-create__field"><label class="reservation-create__label">Sexe</label><select name="passengers[' + index + '][gender]" class="reservation-create__input"><option value="">Selectionner...</option><option value="male">Homme</option><option value="female">Femme</option></select></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Relation</label><select name="passengers[' + index + '][relationship_to_main]" class="reservation-create__input"><option value="spouse">Conjoint / conjointe</option><option value="child">Enfant</option><option value="parent">Parent</option><option value="friend">Ami</option><option value="group" selected>Groupe</option><option value="solo">Seul</option></select></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Lit</label><select name="passengers[' + index + '][consumes_bed]" class="reservation-create__input"><option value="1" selected>Consomme un lit</option><option value="0">Sans lit</option></select></div>'
+                '<div class="reservation-create__field"><label class="reservation-create__label">Sexe</label><select name="passengers[' + stableId + '][gender]" class="reservation-create__input"><option value="">Selectionner...</option><option value="male">Homme</option><option value="female">Femme</option></select></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Relation</label><select name="passengers[' + stableId + '][relationship_to_main]" class="reservation-create__input"><option value="spouse">Conjoint / conjointe</option><option value="child">Enfant</option><option value="parent">Parent</option><option value="friend">Ami</option><option value="group" selected>Groupe</option><option value="solo">Seul</option></select></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Lit</label><select name="passengers[' + stableId + '][consumes_bed]" class="reservation-create__input"><option value="1" selected>Consomme un lit</option><option value="0">Sans lit</option></select></div>'
             );
         }
         container.appendChild(row);
@@ -1441,6 +1456,19 @@
                 console.log('[Travelers] Remove companion clicked');
                 var row = removeCompanionBtn.closest('.companion-row');
                 if (row) {
+                    var removedId = row.getAttribute('data-companion-id') || row.getAttribute('data-traveler-key');
+                    if (removedId) {
+                        roomingAllocations = roomingAllocations.map(function (allocation) {
+                            var keys = (allocation.traveler_keys || []).filter(function (k) { return k !== removedId; });
+                            allocation.traveler_keys = keys;
+                            allocation.occupied_count = keys.length;
+                            allocation.status = keys.length >= allocation.capacity ? 'complete' : 'partial';
+                            return allocation;
+                        }).filter(function (allocation) {
+                            return (allocation.traveler_keys || []).length > 0;
+                        });
+                        window.reservationState.roomAllocations = roomingAllocations;
+                    }
                     row.remove();
                     syncTravelersEmptyState();
                     renderExtras();
@@ -1552,13 +1580,22 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         console.log('[Reservation Create] DOMContentLoaded started');
-        
+
+        // Seed companionIdCounter from existing rows so new companions don't collide
+        document.querySelectorAll('#companions-container .companion-row').forEach(function (row) {
+            var id = row.getAttribute('data-companion-id') || row.getAttribute('data-traveler-key') || '';
+            var match = id.match(/^companion_(\d+)$/);
+            if (match) {
+                companionIdCounter = Math.max(companionIdCounter, parseInt(match[1], 10));
+            }
+        });
+
         // Register event listener FIRST before any room loading happens
         document.addEventListener('reservation:rooms-loaded', function (event) {
             console.log('[Reservation Create] Event reservation:rooms-loaded received', event.detail);
             setAvailableRoomTypes(event && event.detail ? event.detail.rooms : []);
         });
-        
+
         extrasMap = parseJsonScript('reservation-create-extras-map', {});
         bindDelegatedEvents();
         syncClientMode();
