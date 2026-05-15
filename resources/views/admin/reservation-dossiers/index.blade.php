@@ -136,153 +136,7 @@
     .bg-orange { background: #fff2e8; color: var(--voy-orange); }
     .bg-violet { background: #f3edff; color: var(--voy-violet); }
     .bg-green { background: #e8fff4; color: var(--voy-green); }
-        @if($voyages->count() > 0)
-            <div class="voy-list">
-                @foreach($voyages as $voyageCard)
-                    <article class="voy-card">
-                        <div class="voy-card__head">
-                            <div class="voy-card__media">
-                                @if($voyageCard->image_url)
-                                    <img src="{{ $voyageCard->image_url }}" alt="{{ $voyageCard->title }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
-                                    <div class="voy-card__placeholder" style="display:none;">
-                                        <div><i class="bx bx-map-pin fs-1 d-block mb-2"></i><span>Voyage</span></div>
-                                    </div>
-                                @else
-                                    <div class="voy-card__placeholder">
-                                        <div><i class="bx bx-map-pin fs-1 d-block mb-2"></i><span>Voyage</span></div>
-                                    </div>
-                                @endif
-                            </div>
 
-                            <div class="voy-card__main">
-                                <div class="voy-card__title-row">
-                                    <div class="voy-card__title">
-                                        <h3>{{ $voyageCard->title }}</h3>
-                                        <p>{{ $voyageCard->destination }}</p>
-                                        <p class="small text-muted mb-0">Depart: {{ $voyageCard->departure_label ?? optional($voyageCard->departure_date)->format('d/m/Y') ?? '—' }}</p>
-                                    </div>
-                                    <span class="voy-badge {{ $voyageCard->global_badge['class'] }}">{{ $voyageCard->global_badge['label'] }}</span>
-                                </div>
-
-                                <div class="voy-stats">
-                                    <div class="voy-stat"><span>Reservations</span><strong>{{ $voyageCard->reservations_count }}</strong></div>
-                                    <div class="voy-stat"><span>En attente</span><strong>{{ $voyageCard->pending_count }}</strong></div>
-                                    <div class="voy-stat"><span>Confirmees</span><strong>{{ $voyageCard->confirmed_count }}</strong></div>
-                                    <div class="voy-stat"><span>A suivre</span><strong>{{ $voyageCard->follow_up_count }}</strong></div>
-                                    <div class="voy-stat"><span>Total genere</span><strong>{{ number_format($voyageCard->total_amount, 0, ',', ' ') }} DH</strong></div>
-                                    <div class="voy-stat"><span>Restant</span><strong>{{ number_format($voyageCard->remaining_amount, 0, ',', ' ') }} DH</strong></div>
-                                </div>
-                            </div>
-
-                            <div class="voy-card__actions">
-                                <div class="voy-stat">
-                                    <span>Derniere reservation</span>
-                                    <strong>{{ optional($voyageCard->latest_reservation?->created_at)->format('d/m/Y H:i') ?? '—' }}</strong>
-                                </div>
-                                <button class="voy-btn voy-btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}" aria-expanded="false">
-                                    <i class="bx bx-list-ul"></i>
-                                    <span>Voir les reservations</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="collapse" id="voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}">
-                            <div class="voy-card__detail">
-                                <p class="voy-card__detail-subtitle mb-3">Réservations de ce départ uniquement.</p>
-                                <div class="voy-table-wrap">
-                                    <table class="table voy-table align-middle">
-                                        <thead>
-                                            <tr>
-                                                <th>Dossier</th>
-                                                <th>Client</th>
-                                                <th>Telephone</th>
-                                                <th>Depart</th>
-                                                <th>Reservation</th>
-                                                <th>Agent</th>
-                                                <th>Statut</th>
-                                                <th>Paiement</th>
-                                                <th>Total</th>
-                                                <th>Paye</th>
-                                                <th>Restant</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($voyageCard->reservations as $reservation)
-                                                @php
-                                                    $resBadge = $reservationBadge($reservation);
-                                                    $payBadge = $paymentBadge($reservation);
-                                                    $actor = $reservation->assignedTo ?? $reservation->agent ?? $reservation->creator ?? null;
-                                                    $detailUrl = $reservation->reservation_dossier_id
-                                                        ? route('admin.reservation-dossiers.show', $reservation->reservation_dossier_id)
-                                                        : route('admin.reservations.show', $reservation);
-                                                    $paymentFollowUrl = $detailUrl.'#payment-form';
-                                                @endphp
-                                                <tr>
-                                                    <td>{{ $reservation->dossier_number ?? ('RES-'.str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT)) }}</td>
-                                                    <td>{{ $reservation->client?->full_name ?: trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—' }}</td>
-                                                    <td>{{ $reservation->client?->phone ?: $reservation->client_phone ?: '—' }}</td>
-                                                    <td>{{ $reservation->travelDate?->date?->format('d/m/Y') ?? $reservation->departure?->start_date?->format('d/m/Y') ?? '—' }}</td>
-                                                    <td>{{ optional($reservation->created_at)->format('d/m/Y H:i') ?? '—' }}</td>
-                                                    <td>{{ $actor?->name ?? '—' }}</td>
-                                                    <td><span class="voy-badge {{ $resBadge['class'] }}">{{ $resBadge['label'] }}</span></td>
-                                                    <td><span class="voy-badge {{ $payBadge['class'] }}">{{ $payBadge['label'] }}</span></td>
-                                                    <td>{{ number_format((float) $reservation->effective_total_amount, 2, ',', ' ') }} DH</td>
-                                                    <td>{{ number_format((float) $reservation->effective_paid_amount, 2, ',', ' ') }} DH</td>
-                                                    <td>
-                                                        {{ number_format((float) $reservation->effective_remaining_amount, 2, ',', ' ') }} DH
-                                                        @if((float) $reservation->effective_remaining_amount > 0)
-                                                            <div class="mt-1"><span class="voy-badge is-follow-up-light">Restant a solder</span></div>
-                                                        @endif
-                                                    </td>
-                                                    <td>
-                                                        <div class="voy-row-actions">
-                                                            <a href="{{ $detailUrl }}" class="voy-mini-btn"><i class="bx bx-show"></i><span>Voir</span></a>
-                                                            @can('reservations.update')
-                                                                @if(in_array($reservation->status, [Reservation::STATUS_PENDING, Reservation::STATUS_OPTION, Reservation::STATUS_SHARED_ROOM_PENDING], true))
-                                                                    <form action="{{ route('admin.reservations.validate', $reservation) }}" method="POST">
-                                                                        @csrf
-                                                                        <button type="submit" class="voy-mini-btn"><i class="bx bx-check"></i><span>Valider</span></button>
-                                                                    </form>
-                                                                @endif
-                                                            @endcan
-                                                            <a href="{{ $paymentFollowUrl }}" class="voy-mini-btn"><i class="bx bx-wallet"></i><span>Suivre paiement</span></a>
-                                                            <a href="{{ route('admin.reservations.dossier.pdf', $reservation) }}" target="_blank" class="voy-mini-btn"><i class="bx bx-printer"></i><span>Imprimer</span></a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="12" class="text-center py-4 text-muted">Aucune reservation pour ce depart</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-
-            <div class="voy-pagination">
-                <div>
-                    Affichage de {{ $voyages->firstItem() ?? 0 }} a {{ $voyages->lastItem() ?? 0 }} sur {{ $voyages->total() }} departs avec reservations
-                </div>
-                <div>{{ $voyages->links() }}</div>
-            </div>
-        @else
-            <div class="voy-empty">
-                <div>
-                    <i class="bx bx-map"></i>
-                    <h3 class="h5 mb-2">Aucun depart avec reservations</h3>
-                    <p class="mb-0">Aucun depart ne correspond aux filtres actuels. Ajustez la periode ou les statuts pour retrouver l'activite reservation.</p>
-                </div>
-            </div>
-        @endif
-    </div>
-</div>
-@endsection
     .voy-badge {
         display: inline-flex;
         align-items: center;
@@ -549,7 +403,62 @@
                         <option value="cancelled" @selected(($filters['reservation_status'] ?? '') === 'cancelled')>Annulee</option>
                     </select>
                 </div>
-                <div>
+            </form>
+        </div>
+
+        @if($voyages->count() > 0)
+            <div class="voy-list">
+                @foreach($voyages as $voyageCard)
+                    <article class="voy-card">
+                        <div class="voy-card__head">
+                            <div class="voy-card__media">
+                                @if($voyageCard->image_url)
+                                    <img src="{{ $voyageCard->image_url }}" alt="{{ $voyageCard->title }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+                                    <div class="voy-card__placeholder" style="display:none;">
+                                        <div><i class="bx bx-map-pin fs-1 d-block mb-2"></i><span>Voyage</span></div>
+                                    </div>
+                                @else
+                                    <div class="voy-card__placeholder">
+                                        <div><i class="bx bx-map-pin fs-1 d-block mb-2"></i><span>Voyage</span></div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="voy-card__main">
+                                <div class="voy-card__title-row">
+                                    <div class="voy-card__title">
+                                        <h3>{{ $voyageCard->title }}</h3>
+                                        <p>{{ $voyageCard->destination }}</p>
+                                        <p class="small text-muted mb-0">Depart: {{ $voyageCard->departure_label ?? optional($voyageCard->departure_date)->format('d/m/Y') ?? '—' }}</p>
+                                    </div>
+                                    <span class="voy-badge {{ $voyageCard->global_badge['class'] }}">{{ $voyageCard->global_badge['label'] }}</span>
+                                </div>
+
+                                <div class="voy-stats">
+                                    <div class="voy-stat"><span>Reservations</span><strong>{{ $voyageCard->reservations_count }}</strong></div>
+                                    <div class="voy-stat"><span>En attente</span><strong>{{ $voyageCard->pending_count }}</strong></div>
+                                    <div class="voy-stat"><span>Confirmees</span><strong>{{ $voyageCard->confirmed_count }}</strong></div>
+                                    <div class="voy-stat"><span>A suivre</span><strong>{{ $voyageCard->follow_up_count }}</strong></div>
+                                    <div class="voy-stat"><span>Total genere</span><strong>{{ number_format($voyageCard->total_amount, 0, ',', ' ') }} DH</strong></div>
+                                    <div class="voy-stat"><span>Restant</span><strong>{{ number_format($voyageCard->remaining_amount, 0, ',', ' ') }} DH</strong></div>
+                                </div>
+                            </div>
+
+                            <div class="voy-card__actions">
+                                <div class="voy-stat">
+                                    <span>Derniere reservation</span>
+                                    <strong>{{ optional($voyageCard->latest_reservation?->created_at)->format('d/m/Y H:i') ?? '—' }}</strong>
+                                </div>
+                                <button class="voy-btn voy-btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}" aria-expanded="false">
+                                    <i class="bx bx-list-ul"></i>
+                                    <span>Voir les reservations</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="collapse" id="voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}">
+                            <div class="voy-card__detail">
+                                <p class="voy-card__detail-subtitle mb-3">Réservations de ce départ uniquement.</p>
                                 <div class="voy-table-wrap">
                                     <table class="table voy-table align-middle">
                                         <thead>
