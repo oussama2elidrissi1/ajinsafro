@@ -974,6 +974,38 @@
     body.ws-md-open {
         overflow: hidden !important;
     }
+
+    /* —— Boutons du footer modal : forcer texte blanc lisible — */
+    #ws-voyage-detail-modal .ws-md-footer .ws-md-btn-primary,
+    #ws-voyage-detail-modal .ws-md-footer a.ws-md-btn-primary,
+    #ws-voyage-detail-modal .ws-md-footer .ws-md-btn-primary *,
+    #ws-voyage-detail-modal .ws-md-footer .ws-md-btn-success,
+    #ws-voyage-detail-modal .ws-md-footer a.ws-md-btn-success,
+    #ws-voyage-detail-modal .ws-md-footer .ws-md-btn-success * {
+        color: #ffffff !important;
+    }
+
+    #ws-voyage-detail-modal .ws-md-footer .ws-md-btn-primary {
+        background: #0e3a5a !important;
+        border-color: #0e3a5a !important;
+    }
+
+    #ws-voyage-detail-modal .ws-md-footer .ws-md-btn-primary:hover {
+        background: #0083c4 !important;
+        border-color: #0083c4 !important;
+        color: #ffffff !important;
+    }
+
+    #ws-voyage-detail-modal .ws-md-footer .ws-md-btn-success {
+        background: #059669 !important;
+        border-color: #059669 !important;
+    }
+
+    #ws-voyage-detail-modal .ws-md-footer .ws-md-btn-success:hover {
+        background: #047857 !important;
+        border-color: #047857 !important;
+        color: #ffffff !important;
+    }
 </style>
 @endpush
 
