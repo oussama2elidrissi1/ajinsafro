@@ -201,6 +201,9 @@ class ReservationDossierController extends Controller
                     $departureDate = null;
                 }
                 $sorted = $group->sortByDesc(fn (Reservation $reservation) => optional($reservation->created_at)?->timestamp ?? 0)->values();
+                if ($sorted->count() === 0) {
+                    continue;
+                }
                 $pendingCount = $sorted->filter(fn (Reservation $reservation) => in_array($reservation->status, [
                     Reservation::STATUS_PENDING,
                     Reservation::STATUS_OPTION,
