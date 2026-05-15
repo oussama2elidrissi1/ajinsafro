@@ -16,11 +16,24 @@
         .commission-status--payable { background: #ecfeff; color: #0f766e; }
         .commission-status--paid { background: #ecfdf3; color: #15803d; }
         .commission-status--cancelled, .commission-status--reversed { background: #fef2f2; color: #b91c1c; }
+
+        /* Fix: normalize pagination arrow size and prevent layout blowout */
+        .agent-commissions-page nav[role="navigation"] svg,
+        .agent-commissions-page .pagination svg {
+            width: 16px !important;
+            height: 16px !important;
+        }
+        .agent-commissions-page nav[role="navigation"],
+        .agent-commissions-page .pagination {
+            margin-bottom: 0;
+            flex-wrap: wrap;
+            line-height: 1;
+        }
     </style>
 @endpush
 
 @section('content')
-    <div class="container-fluid py-3">
+    <div class="container-fluid py-3 agent-commissions-page">
         <div class="commission-shell">
             <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                 <div>
