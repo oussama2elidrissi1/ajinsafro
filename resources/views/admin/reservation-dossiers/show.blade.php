@@ -894,7 +894,8 @@
                                                     <div>
                                                         <div class="document-title">{{ $document->title }}</div>
                                                         <div class="document-meta">
-                                                            {{ ucfirst(str_replace('_', ' ', (string) $document->type)) }}
+                                                            <span class="text-dark fw-bold">Description : {{ $document->title }}</span>
+                                                            • {{ ucfirst(str_replace('_', ' ', (string) $document->type)) }}
                                                             • {{ optional($document->created_at)->format('d/m/Y H:i') ?? '—' }}
                                                             • {{ $document->creator?->name ?? 'Système' }}
                                                         </div>
@@ -923,12 +924,14 @@
                                                 <option value="payment_receipt">Reçu paiement</option>
                                                 <option value="passport">Passeport</option>
                                                 <option value="booking_voucher">Bon de réservation</option>
+                                                <option value="visa">Visa</option>
+                                                <option value="voucher">Voucher</option>
                                                 <option value="other">Autre fichier</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Titre</label>
-                                            <input type="text" name="title" class="form-control" placeholder="Ex. Facture acompte" required>
+                                            <label class="form-label">Description</label>
+                                            <input type="text" name="title" class="form-control" placeholder="Ex. Facture acompte, visa client, voucher hôtel…" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Fichier</label>
