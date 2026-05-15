@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Facture proforma {{ $reservation->dossier_number ?: $reservation->id }}</title>
     <style>
-        @page { margin: 30px; }
+        @page { margin: 150px 30px 100px 30px; }
 
         * { box-sizing: border-box; }
 
@@ -13,11 +13,39 @@
             font-size: 11px;
             color: #1e293b;
             line-height: 1.45;
+            margin: 0;
+            padding: 0;
         }
 
-        .invoice-header-img,
-        .invoice-footer-img {
+        .invoice-header {
+            position: fixed;
+            top: -140px;
+            left: -30px;
+            right: -30px;
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+
+        .invoice-header img {
             width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .invoice-footer {
+            position: fixed;
+            bottom: -90px;
+            left: -30px;
+            right: -30px;
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+
+        .invoice-footer img {
+            width: 100%;
+            height: auto;
             display: block;
         }
 
@@ -35,7 +63,7 @@
             text-align: center;
             color: #64748b;
             font-size: 11px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .section-title {
@@ -46,7 +74,7 @@
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e2e8f0;
             padding-bottom: 4px;
-            margin: 16px 0 10px;
+            margin: 14px 0 10px;
         }
 
         .info-grid {
@@ -127,7 +155,15 @@
     @endphp
 
     @if($invoiceHeaderLocal && file_exists($invoiceHeaderLocal))
-        <img src="{{ $invoiceHeaderLocal }}" class="invoice-header-img" alt="En-tête">
+        <div class="invoice-header">
+            <img src="{{ $invoiceHeaderLocal }}" alt="En-tête">
+        </div>
+    @endif
+
+    @if($invoiceFooterLocal && file_exists($invoiceFooterLocal))
+        <div class="invoice-footer">
+            <img src="{{ $invoiceFooterLocal }}" alt="Pied de page">
+        </div>
     @endif
 
     <!-- ===== TITLE ===== -->
@@ -212,10 +248,6 @@
             @endforelse
         </tbody>
     </table>
-
-    @if($invoiceFooterLocal && file_exists($invoiceFooterLocal))
-        <img src="{{ $invoiceFooterLocal }}" class="invoice-footer-img" alt="Pied de page">
-    @endif
 
 </body>
 </html>
