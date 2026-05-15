@@ -180,6 +180,9 @@ class ReservationDossierController extends Controller
         $reservationsByTravelDateId = $reservations
             ->groupBy(fn (Reservation $reservation) => (int) ($reservation->travel_date_id ?? 0));
 
+        $reservationsByDepartureId = $reservations
+            ->groupBy(fn (Reservation $reservation) => (int) ($reservation->departure_id ?? 0));
+
         $departureCards = collect();
         foreach ($voyagesById as $voyage) {
             $departureCollection = $voyage->departures instanceof Collection ? $voyage->departures : collect($voyage->departures ?? []);
@@ -190,7 +193,13 @@ class ReservationDossierController extends Controller
 
             foreach ($departureCollection as $departure) {
                 $travelDateId = $this->resolveDepartureTravelDateId($departure);
-                $group = $travelDateId ? ($reservationsByTravelDateId->get($travelDateId) ?? collect()) : collect();
+                if ($travelDateId) {
+                    $group = $reservationsByTravelDateId->get($travelDateId) ?? collect();
+                    $departureDate = TravelDate::query()->find($travelDateId)?->date;
+                } else {
+                    $group = $reservationsByDepartureId->get((int) $departure->id) ?? collect();
+                    $departureDate = null;
+                }
                 $sorted = $group->sortByDesc(fn (Reservation $reservation) => optional($reservation->created_at)?->timestamp ?? 0)->values();
                 $pendingCount = $sorted->filter(fn (Reservation $reservation) => in_array($reservation->status, [
                     Reservation::STATUS_PENDING,
@@ -210,7 +219,6 @@ class ReservationDossierController extends Controller
                 $paidAmount = round($sorted->sum(fn (Reservation $reservation) => (float) $reservation->effective_paid_amount), 2);
                 $remainingAmount = round($sorted->sum(fn (Reservation $reservation) => (float) $reservation->effective_remaining_amount), 2);
                 $latestReservation = $sorted->first();
-                $departureDate = $travelDateId ? TravelDate::query()->find($travelDateId)?->date : null;
                 $departureLabel = $departureDate ? Carbon::parse($departureDate)->locale('fr')->translatedFormat('d F Y') : Carbon::parse($departure->start_date)->locale('fr')->translatedFormat('d F Y');
                 $badgeDate = $departureDate ? Carbon::parse($departureDate)->format('d/m/Y') : Carbon::parse($departure->start_date)->format('d/m/Y');
 
@@ -414,6 +422,15 @@ class ReservationDossierController extends Controller
             'noteEntries' => $noteEntries,
             'notesContent' => $notesContent,
         ]);
+    }
+
+    private function resolveDepartureTravelDateId(Departure $departure): ?int
+    {
+        if (isset($departure->wp_travel_date_id) && $departure->wp_travel_date_id) {
+            return (int) $departure->wp_travel_date_id;
+        }
+
+        return null;
     }
 
     private function resolveReservationOffer(Reservation $reservation): ?Voyage
