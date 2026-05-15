@@ -172,7 +172,7 @@
 
     .reservation-dossiers-page .rd-filter-grid {
         display: grid;
-        grid-template-columns: 1fr 220px 220px;
+        grid-template-columns: 1fr 220px 220px 220px;
         gap: 12px;
         align-items: end;
     }
@@ -563,6 +563,15 @@
                         <option value="confirmed" @selected(($filters['reservation_status'] ?? '') === 'confirmed')>Confirmee</option>
                         <option value="paid" @selected(($filters['reservation_status'] ?? '') === 'paid')>Payee</option>
                         <option value="cancelled" @selected(($filters['reservation_status'] ?? '') === 'cancelled')>Annulee</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Periode</label>
+                    <select name="period" class="form-select" onchange="this.form.submit()">
+                        <option value="7d" @selected(($filters['period'] ?? '7d') === '7d')>7 derniers jours</option>
+                        <option value="30d" @selected(($filters['period'] ?? '') === '30d')>30 derniers jours</option>
+                        <option value="90d" @selected(($filters['period'] ?? '') === '90d')>90 derniers jours</option>
+                        <option value="all" @selected(($filters['period'] ?? '') === 'all')>Toutes les periodes</option>
                     </select>
                 </div>
             </form>

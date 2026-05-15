@@ -2,109 +2,324 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $reservation->dossier_number ?: $reservation->id }}</title>
+    <title>Facture proforma {{ $reservation->dossier_number ?: $reservation->id }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1e293b; }
-        h1, h2, h3 { margin: 0 0 8px; }
-        .muted { color: #64748b; }
-        .section { margin-bottom: 18px; }
-        .grid { width: 100%; margin-bottom: 18px; border-collapse: collapse; }
-        .grid td { vertical-align: top; padding: 10px 12px; border: 1px solid #dbe4ee; }
-        table.lines { width: 100%; border-collapse: collapse; }
-        table.lines th, table.lines td { border: 1px solid #dbe4ee; padding: 8px 10px; }
-        table.lines th { background: #eff6ff; text-align: left; }
+        @page { margin: 130px 30px 70px 30px; }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 11px;
+            color: #1e293b;
+            line-height: 1.45;
+        }
+
+        /* ===== Header (fixed for DomPDF) ===== */
+        .pdf-header {
+            position: fixed;
+            top: -115px;
+            left: 0;
+            right: 0;
+        }
+
+        .pdf-header table { width: 100%; border-collapse: collapse; }
+        .pdf-header td { vertical-align: top; padding: 0; }
+
+        .brand-logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #07598f;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-sub {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f97316;
+            margin-top: 2px;
+        }
+
+        .company-info {
+            text-align: right;
+            font-size: 10px;
+            color: #334155;
+            line-height: 1.65;
+        }
+
+        .company-info strong { color: #07598f; }
+
+        .header-line {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .header-line td {
+            height: 3px;
+            padding: 0;
+            line-height: 0;
+            font-size: 0;
+        }
+
+        .header-line .bar-blue { background: #07598f; width: 70%; }
+        .header-line .bar-orange { background: #f97316; width: 30%; }
+
+        /* ===== Footer (fixed for DomPDF) ===== */
+        .pdf-footer {
+            position: fixed;
+            bottom: -55px;
+            left: 0;
+            right: 0;
+        }
+
+        .footer-line {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+        }
+
+        .footer-line td {
+            height: 2px;
+            padding: 0;
+            line-height: 0;
+            font-size: 0;
+        }
+
+        .footer-line .bar-blue { background: #07598f; width: 70%; }
+        .footer-line .bar-orange { background: #f97316; width: 30%; }
+
+        .footer-text {
+            text-align: center;
+            font-size: 9px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* ===== Document title ===== */
+        h1.doc-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #07598f;
+            margin: 0 0 6px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .doc-meta {
+            text-align: center;
+            color: #64748b;
+            font-size: 11px;
+            margin-bottom: 20px;
+        }
+
+        /* ===== Sections ===== */
+        .section-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #07598f;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 4px;
+            margin: 18px 0 10px;
+        }
+
+        /* ===== Info grid ===== */
+        .info-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        .info-grid td {
+            vertical-align: top;
+            padding: 10px 12px;
+            border: 1px solid #dbe4ee;
+            background: #f8fafc;
+        }
+
+        .info-grid td.label {
+            background: #eff6ff;
+            font-weight: 700;
+            color: #07598f;
+            width: 1%;
+            white-space: nowrap;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        /* ===== Tables ===== */
+        table.lines {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        table.lines th {
+            background: #eff6ff;
+            color: #07598f;
+            font-weight: 800;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border: 1px solid #cbd5e1;
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        table.lines td {
+            border: 1px solid #dbe4ee;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        table.lines tbody tr:nth-child(even) td { background: #f8fafc; }
+
         .right { text-align: right; }
-        .totals td { font-weight: bold; }
+
+        .totals-row td {
+            font-weight: 800;
+            background: #fff7ed !important;
+            color: #9a3412;
+            border-top: 2px solid #f97316;
+        }
+
+        .grand-total td {
+            font-weight: 900;
+            background: #07598f !important;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .muted { color: #64748b; }
     </style>
 </head>
 <body>
-    <div class="section">
-        <h1>Facture dossier</h1>
-        <div class="muted">Dossier : {{ $reservation->dossier_number ?: 'RES-'.$reservation->id }}</div>
-        <div class="muted">Éditée le {{ now()->format('d/m/Y H:i') }}</div>
+
+    <!-- ===== HEADER ===== -->
+    <div class="pdf-header">
+        <table>
+            <tr>
+                <td>
+                    <!-- Logo placeholder : remplacer par <img src="..."> si le logo est disponible -->
+                    <div class="brand-logo">AJINSAFRO</div>
+                    <div class="brand-sub">Agence de voyage</div>
+                </td>
+                <td class="company-info">
+                    <div><strong>Agence de voyage :</strong> 45D / 17</div>
+                    <div><strong>Patente :</strong> 50471316 &nbsp;|&nbsp; <strong>R.C :</strong> 70489 &nbsp;|&nbsp; <strong>I.F :</strong> 15254892 &nbsp;|&nbsp; <strong>ICE :</strong> 001585417000035</div>
+                    <div>145, Avenue Mohammed V, Appart N&deg;30, 5&egrave;me &eacute;tage, 90 000 Tanger - Maroc</div>
+                    <div>T&eacute;l : 06 63 000 380 - 06 20 202 091 &nbsp;|&nbsp; Fixe : +212 5 39 323 874</div>
+                    <div>Email : contact@ajinsafro.ma &nbsp;|&nbsp; Site : www.ajinsafro.ma</div>
+                </td>
+            </tr>
+        </table>
+        <table class="header-line">
+            <tr>
+                <td class="bar-blue"></td>
+                <td class="bar-orange"></td>
+            </tr>
+        </table>
     </div>
 
-    <table class="grid">
+    <!-- ===== FOOTER ===== -->
+    <div class="pdf-footer">
+        <table class="footer-line">
+            <tr>
+                <td class="bar-blue"></td>
+                <td class="bar-orange"></td>
+            </tr>
+        </table>
+        <div class="footer-text">
+            Ajinsafro.ma &mdash; Agence de voyage &nbsp;|&nbsp; 145, Avenue Mohammed V, Tanger - Maroc<br>
+            Email : contact@ajinsafro.ma &nbsp;|&nbsp; Site : www.ajinsafro.ma
+        </div>
+    </div>
+
+    <!-- ===== TITLE ===== -->
+    <h1 class="doc-title">Facture proforma</h1>
+    <div class="doc-meta">
+        Dossier : {{ $reservation->dossier_number ?: 'RES-'.$reservation->id }} &nbsp;|&nbsp;
+        &Eacute;dit&eacute;e le {{ now()->format('d/m/Y H:i') }}
+    </div>
+
+    <!-- ===== CLIENT / OFFRE ===== -->
+    <table class="info-grid">
         <tr>
-            <td width="50%">
-                <h3>Client</h3>
-                <div>{{ $reservation->client?->full_name ?: trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—' }}</div>
-                <div>{{ $reservation->client?->phone ?: $reservation->client_phone ?: '—' }}</div>
-                <div>{{ $reservation->client?->email ?: $reservation->client_email ?: '—' }}</div>
+            <td class="label">Client</td>
+            <td>
+                <div><strong>{{ $reservation->client?->full_name ?: trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '&mdash;' }}</strong></div>
+                <div>{{ $reservation->client?->phone ?: $reservation->client_phone ?: '&mdash;' }}</div>
+                <div>{{ $reservation->client?->email ?: $reservation->client_email ?: '&mdash;' }}</div>
             </td>
-            <td width="50%">
-                <h3>Offre</h3>
-                <div>{{ $reservation->offer?->name ?? '—' }}</div>
-                <div>Départ : {{ $reservation->departure?->start_date?->format('d/m/Y') ?? '—' }}</div>
-                <div>Retour : {{ $reservation->departure?->end_date?->format('d/m/Y') ?? '—' }}</div>
+            <td class="label">Offre</td>
+            <td>
+                <div><strong>{{ $reservation->offer?->name ?? '&mdash;' }}</strong></div>
+                <div>D&eacute;part : {{ $reservation->departure?->start_date?->format('d/m/Y') ?? '&mdash;' }}</div>
+                <div>Retour : {{ $reservation->departure?->end_date?->format('d/m/Y') ?? '&mdash;' }}</div>
             </td>
         </tr>
     </table>
 
-    <div class="section">
-        <h3>Détail financier</h3>
-        <table class="lines">
-            <thead>
-                <tr>
-                    <th>Libellé</th>
-                    <th class="right">Montant</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Total base</td>
-                    <td class="right">{{ number_format((float) ($reservation->total_base ?? 0), 2, ',', ' ') }} DH</td>
-                </tr>
-                <tr>
-                    <td>Suppléments chambres</td>
-                    <td class="right">{{ number_format((float) ($reservation->room_supplement_total ?? 0), 2, ',', ' ') }} DH</td>
-                </tr>
-                <tr>
-                    <td>Extras</td>
-                    <td class="right">{{ number_format((float) ($reservation->extras_total ?? 0), 2, ',', ' ') }} DH</td>
-                </tr>
-                <tr class="totals">
-                    <td>Total dossier</td>
-                    <td class="right">{{ number_format((float) ($reservation->total_amount ?? 0), 2, ',', ' ') }} DH</td>
-                </tr>
-                <tr>
-                    <td>Déjà payé</td>
-                    <td class="right">{{ number_format((float) ($reservation->paid_amount ?? 0), 2, ',', ' ') }} DH</td>
-                </tr>
-                <tr class="totals">
-                    <td>Reste à payer</td>
-                    <td class="right">{{ number_format((float) ($reservation->remaining_amount ?? 0), 2, ',', ' ') }} DH</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <!-- ===== DETAIL FINANCIER ===== -->
+    <div class="section-title">D&eacute;tail financier</div>
+    <table class="lines">
+        <tbody>
+            <tr>
+                <td>Total base</td>
+                <td class="right">{{ number_format((float) ($reservation->total_base ?? 0), 2, ',', ' ') }} DH</td>
+            </tr>
+            <tr>
+                <td>Suppl&eacute;ments chambres</td>
+                <td class="right">{{ number_format((float) ($reservation->room_supplement_total ?? 0), 2, ',', ' ') }} DH</td>
+            </tr>
+            <tr>
+                <td>Extras</td>
+                <td class="right">{{ number_format((float) ($reservation->extras_total ?? 0), 2, ',', ' ') }} DH</td>
+            </tr>
+            <tr class="totals-row">
+                <td>Total dossier</td>
+                <td class="right">{{ number_format((float) ($reservation->total_amount ?? 0), 2, ',', ' ') }} DH</td>
+            </tr>
+            <tr>
+                <td>D&eacute;j&agrave; pay&eacute;</td>
+                <td class="right">{{ number_format((float) ($reservation->paid_amount ?? 0), 2, ',', ' ') }} DH</td>
+            </tr>
+            <tr class="grand-total">
+                <td>Reste &agrave; payer</td>
+                <td class="right">{{ number_format((float) ($reservation->remaining_amount ?? 0), 2, ',', ' ') }} DH</td>
+            </tr>
+        </tbody>
+    </table>
 
-    <div class="section">
-        <h3>Paiements enregistrés</h3>
-        <table class="lines">
-            <thead>
+    <!-- ===== PAIEMENTS ===== -->
+    <div class="section-title">Paiements enregistr&eacute;s</div>
+    <table class="lines">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Mode</th>
+                <th>R&eacute;f&eacute;rence</th>
+                <th class="right">Montant</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($reservation->payments as $payment)
                 <tr>
-                    <th>Date</th>
-                    <th>Mode</th>
-                    <th>Référence</th>
-                    <th class="right">Montant</th>
+                    <td>{{ $payment->payment_date?->format('d/m/Y') ?? '&mdash;' }}</td>
+                    <td>{{ $payment->payment_method ?: '&mdash;' }}</td>
+                    <td>{{ $payment->reference ?: '&mdash;' }}</td>
+                    <td class="right">{{ number_format((float) $payment->amount, 2, ',', ' ') }} DH</td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse($reservation->payments as $payment)
-                    <tr>
-                        <td>{{ $payment->payment_date?->format('d/m/Y') ?? '—' }}</td>
-                        <td>{{ $payment->payment_method ?: '—' }}</td>
-                        <td>{{ $payment->reference ?: '—' }}</td>
-                        <td class="right">{{ number_format((float) $payment->amount, 2, ',', ' ') }} DH</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4">Aucun paiement enregistré.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @empty
+                <tr>
+                    <td colspan="4" class="muted">Aucun paiement enregistr&eacute;.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
 </body>
 </html>

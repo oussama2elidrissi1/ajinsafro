@@ -140,6 +140,7 @@ class ReservationDossierController extends Controller
         match ($period) {
             'today' => $reservationQuery->whereDate('created_at', now()->toDateString()),
             '30d' => $reservationQuery->where('created_at', '>=', now()->subDays(30)),
+            '90d' => $reservationQuery->where('created_at', '>=', now()->subDays(90)),
             'all' => null,
             default => $reservationQuery->where('created_at', '>=', now()->subDays(7)),
         };
