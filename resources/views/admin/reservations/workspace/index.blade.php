@@ -1201,7 +1201,8 @@
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-avail">Disponibilité</label>
                     <select id="ws-filter-avail" class="ws-select">
-                        <option value="sellable" selected>Tous les vendables</option>
+                        <option value="all" selected>Tous</option>
+                        <option value="sellable">Tous les vendables</option>
                         <option value="depart_proche">Départ proche</option>
                         <option value="faible_stock">Faible stock</option>
                         <option value="disponible">Disponible</option>
@@ -1211,7 +1212,6 @@
                         <option value="low">Faible stock (strict)</option>
                         <option value="full">Complet</option>
                         <option value="configure">À configurer</option>
-                        <option value="all">Tous</option>
                     </select>
                 </div>
                 <div class="ws-field">
@@ -1285,9 +1285,26 @@
                         </tr>
                     </thead>
                     <tbody id="ws-catalog-table-body">
-                        @forelse($catalogRows as $row)
-                            @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
-                        @empty
+                        @php
+                            $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
+                            $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
+                        @endphp
+                        @if($sellableRows->isNotEmpty())
+                            @foreach($sellableRows as $row)
+                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+                            @endforeach
+                        @endif
+                        @if($nonSellableRows->isNotEmpty())
+                            <tr class="ws-catalog-section-divider">
+                                <td colspan="11" class="ws-catalog-section-divider__cell">
+                                    <span class="ws-catalog-section-divider__label">Voyages non disponibles / à configurer</span>
+                                </td>
+                            </tr>
+                            @foreach($nonSellableRows as $row)
+                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+                            @endforeach
+                        @endif
+                        @if($catalogRows->isEmpty())
                             <tr>
                                 <td colspan="11" class="ws-table-empty-cell">
                                     <div class="ws-catalog-empty ws-catalog-empty--inline">
@@ -1304,7 +1321,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>
@@ -1316,25 +1333,45 @@
                 <h2 class="ws-table-card__title">Présentation catalogue</h2>
                 <p class="ws-table-card__sub">Même jeu de données et même ordre que la liste (tri serveur, filtre période optionnel).</p>
             </div>
-            <div class="ws-catalog-section">
-                <div id="ws-catalog-list" class="ws-catalog-grid ws-catalog-grid--compact">
-                    @forelse($catalogRows as $row)
-                        @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
-                    @empty
-                        <div class="ws-catalog-empty">
-                            <div class="max-w-md mx-auto text-center py-12 px-6">
-                                <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-4 text-2xl">
-                                    <i class="fas fa-inbox"></i>
-                                </div>
-                                <p class="text-brand-dark font-bold text-lg mb-2">Aucun voyage dans le catalogue</p>
-                                <p class="text-gray-500 text-sm mb-6">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
-                                <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
-                                    <i class="fas fa-plus-circle"></i> Gérer les voyages
-                                </a>
-                            </div>
+            @php
+                $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
+                $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
+            @endphp
+            <div id="ws-catalog-list">
+                @if($sellableRows->isNotEmpty())
+                    <div class="ws-catalog-section">
+                        <h3 class="ws-catalog-section__title">Voyages disponibles à la vente</h3>
+                        <div class="ws-catalog-grid ws-catalog-grid--compact">
+                            @foreach($sellableRows as $row)
+                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
+                            @endforeach
                         </div>
-                    @endforelse
-                </div>
+                    </div>
+                @endif
+                @if($nonSellableRows->isNotEmpty())
+                    <div class="ws-catalog-section ws-catalog-section--configure">
+                        <h3 class="ws-catalog-section__title ws-catalog-section__title--configure">Voyages non disponibles / à configurer</h3>
+                        <div class="ws-catalog-grid ws-catalog-grid--compact">
+                            @foreach($nonSellableRows as $row)
+                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+                @if($catalogRows->isEmpty())
+                    <div class="ws-catalog-empty">
+                        <div class="max-w-md mx-auto text-center py-12 px-6">
+                            <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-4 text-2xl">
+                                <i class="fas fa-inbox"></i>
+                            </div>
+                            <p class="text-brand-dark font-bold text-lg mb-2">Aucun voyage dans le catalogue</p>
+                            <p class="text-gray-500 text-sm mb-6">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
+                            <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
+                                <i class="fas fa-plus-circle"></i> Gérer les voyages
+                            </a>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -1857,10 +1894,23 @@ document.addEventListener('DOMContentLoaded', function () {
         var list = document.getElementById(containerId);
         if (!list || !sortEl) return;
         var sort = sortEl.value || 'preserve';
-        if (sort === 'preserve') return;
-        var rows = Array.prototype.slice.call(list.querySelectorAll('.ws-catalog-row'));
-        rows.sort(function (a, b) { return wsRowCompare(a, b, sort); });
-        rows.forEach(function (el) { list.appendChild(el); });
+        var divider = list.querySelector ? list.querySelector('.ws-catalog-section-divider') : null;
+        if (sort === 'preserve') {
+            if (divider) divider.style.display = '';
+            return;
+        }
+        if (containerId === 'ws-catalog-list') {
+            list.querySelectorAll('.ws-catalog-grid').forEach(function (grid) {
+                var rows = Array.prototype.slice.call(grid.querySelectorAll('.ws-catalog-row'));
+                rows.sort(function (a, b) { return wsRowCompare(a, b, sort); });
+                rows.forEach(function (el) { grid.appendChild(el); });
+            });
+        } else {
+            if (divider) divider.style.display = 'none';
+            var rows = Array.prototype.slice.call(list.querySelectorAll('.ws-catalog-row'));
+            rows.sort(function (a, b) { return wsRowCompare(a, b, sort); });
+            rows.forEach(function (el) { list.appendChild(el); });
+        }
     }
 
     function wsApplySort() {
@@ -1933,8 +1983,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            // Default: hide non-sellable when avail filter is at default 'sellable'
-            if (ok && (!availEl || availEl.value === 'sellable')) {
+            // Explicit sellable filter: hide non-sellable rows
+            if (ok && availEl && availEl.value === 'sellable') {
                 var isSellableRow = tr.getAttribute('data-is-sellable') === '1';
                 if (!isSellableRow) ok = false;
             }
@@ -2006,7 +2056,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeEl) typeEl.value = 'all';
             if (cityEl) cityEl.value = 'all';
             if (budgetEl) budgetEl.value = 'all';
-            if (availEl) availEl.value = 'sellable';
+            if (availEl) availEl.value = 'all';
             if (priorityEl) priorityEl.value = 'all';
             if (resEl) resEl.value = 'all';
             if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();

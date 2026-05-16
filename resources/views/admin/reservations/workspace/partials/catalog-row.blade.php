@@ -169,6 +169,40 @@
     $nonSellablePriorityLabel = 'Non vendable';
     $nonSellablePriorityClass = 'ws-priority-badge ws-priority-badge--configure';
 
+    // Déterminer la raison exacte de non-vendabilité pour badge + bouton
+    $nonSellableReason = null;
+    $nonSellableBadge = null;
+    $nonSellableBadgeClass = null;
+    $nonSellableBtnText = null;
+    $nonSellableBtnClass = 'ws-btn ws-btn--sm ws-btn--disabled';
+    if (! $isSellable) {
+        $hasFutureDep = ($commercial['has_future_departure'] ?? false);
+        $cap = $commercial['capacity_total'] ?? null;
+        $rem = $commercial['places_restantes'] ?? null;
+        if (! $hasFutureDep) {
+            $nonSellableReason = 'no_departure';
+            $nonSellableBadge = 'Pas de départ';
+            $nonSellableBadgeClass = 'ws-commercial-badge ws-commercial-badge--configure';
+            $nonSellableBtnText = 'Pas de départ';
+        } elseif ($rem !== null && $rem <= 0) {
+            $nonSellableReason = 'full';
+            $nonSellableBadge = 'Complet';
+            $nonSellableBadgeClass = 'ws-commercial-badge ws-commercial-badge--configure';
+            $nonSellableBtnText = 'Complet';
+        } elseif ($cap === null || $cap <= 0) {
+            $nonSellableReason = 'no_capacity';
+            $nonSellableBadge = 'À configurer';
+            $nonSellableBadgeClass = 'ws-commercial-badge ws-commercial-badge--configure';
+            $nonSellableBtnText = 'Configurer';
+            $nonSellableBtnClass = 'ws-btn ws-btn--sm ' . ($editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled');
+        } else {
+            $nonSellableReason = 'not_sellable';
+            $nonSellableBadge = 'Indisponible';
+            $nonSellableBadgeClass = 'ws-commercial-badge ws-commercial-badge--configure';
+            $nonSellableBtnText = 'Indisponible';
+        }
+    }
+
     $progressColor = 'bg-emerald-500';
     if ($comFillRate !== null) {
         if ($comFillRate >= 90) $progressColor = 'bg-red-500';
@@ -272,6 +306,8 @@
     <td class="ws-td ws-td--avail" data-label="Disponibilité">
         @if($isSellable)
             <span class="{{ $availHtmlClass }}">{{ $availLabel }}</span>
+        @elseif($nonSellableBadge)
+            <span class="{{ $nonSellableBadgeClass }}">{{ $nonSellableBadge }}</span>
         @else
             <span class="ws-avail-badge ws-avail-badge--configure">{{ $configureLabel }}</span>
         @endif
@@ -310,8 +346,8 @@
                     <a href="{{ $editTourUrl ?: '#' }}"
                         class="ws-btn ws-btn--sm ws-btn--iconish {{ $editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled' }}"
                         {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
-                        title="Configurer le voyage">
-                        <i class="fas fa-cog" aria-hidden="true"></i><span>Configurer</span>
+                        title="{{ $nonSellableBtnText }}">
+                        <i class="fas fa-cog" aria-hidden="true"></i><span>{{ $nonSellableBtnText }}</span>
                     </a>
                 @else
                     <a href="{{ $editTourUrl ?: '#' }}"
@@ -356,8 +392,8 @@
 
     @if($comBadge)
         <div class="ws-offer-card__badge-overlay {{ $badgeHtmlClass }}">{{ $comBadge }}</div>
-    @elseif(! $isSellable)
-        <div class="ws-offer-card__badge-overlay {{ $configureBadgeClass }}">{{ $configureLabel }}</div>
+    @elseif(! $isSellable && $nonSellableBadge)
+        <div class="ws-offer-card__badge-overlay {{ $nonSellableBadgeClass }}">{{ $nonSellableBadge }}</div>
     @endif
 
     <div class="ws-offer-card__media ws-offer-card__media--compact{{ $imageUrl ? ' ws-offer-card__media--has-img' : '' }}">
@@ -513,10 +549,10 @@
                     </a>
                 @elseif(! $isSellable && $hasLaravel)
                     <a href="{{ $editTourUrl ?: '#' }}"
-                        class="ws-btn ws-btn--sm {{ $editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled' }}"
+                        class="{{ $nonSellableBtnClass }}"
                         {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
-                        title="Configurer le voyage">
-                        <i class="fas fa-cog" aria-hidden="true"></i><span>Configurer</span>
+                        title="{{ $nonSellableBtnText }}">
+                        <i class="fas fa-cog" aria-hidden="true"></i><span>{{ $nonSellableBtnText }}</span>
                     </a>
                 @else
                     <a href="{{ $editTourUrl ?: '#' }}"

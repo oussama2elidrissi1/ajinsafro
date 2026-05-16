@@ -4919,22 +4919,7 @@ body[data-layout="detached"] #page-topbar .header-item span {
 /* Configure section in catalog */
 .ws-catalog-section--configure {
     margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 2px dashed #e2e8f0;
-}
-
-.ws-catalog-section--configure__title {
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: #64748b;
-    margin: 0 0 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.ws-catalog-section--configure__title i {
-    color: #94a3b8;
+    padding-top: 0.5rem;
 }
 
 /* Row styling for non-sellable */
@@ -4948,5 +4933,43 @@ body[data-layout="detached"] #page-topbar .header-item span {
 
 .ws-catalog-row--configure .ws-td {
     background: #f8fafc;
+}
+
+/* Section titles for catalogue split */
+.ws-catalog-section__title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #0e3a5a;
+    margin: 0 0 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ws-catalog-section__title--configure {
+    color: #64748b;
+    border-bottom-style: dashed;
+}
+
+/* Table divider between sellable and non-sellable */
+.ws-catalog-section-divider {
+    background: #f8fafc;
+}
+
+.ws-catalog-section-divider__cell {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border-top: 2px dashed #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ws-catalog-section-divider__label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 

@@ -143,11 +143,9 @@ class ReservationWorkspaceCommercialService
             ! empty($row['image_url'])
         );
 
-        $isSellable = $score >= 0
-            && $hasFutureDeparture
+        $isSellable = $hasFutureDeparture
             && $capacityTotal !== null && $capacityTotal > 0
-            && $departureCity !== ''
-            && $priceSort > 0;
+            && $placesRemaining !== null && $placesRemaining > 0;
 
         $row['commercial'] = [
             'capacity_total' => $capacityTotal,
