@@ -15,6 +15,7 @@ use App\Services\ReservationDossierService;
 use App\Services\ReservationWorkspaceBookingService;
 use App\Services\ReservationWorkspaceCatalogService;
 use App\Services\ReservationWorkspaceCommercialService;
+use App\Models\Setting;
 use App\Support\AdminReservationFlash;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -64,6 +65,18 @@ class ReservationWorkspaceController extends Controller
 
         $rows = $this->catalog->sortCatalogRowsForWorkspaceDisplay($scoped);
 
+        $wsModalSettings = [
+            'show_commission' => Setting::getValue('ws_modal_show_commission', '1') === '1',
+            'show_commission_type' => Setting::getValue('ws_modal_show_commission_type', '1') === '1',
+            'show_commission_amount' => Setting::getValue('ws_modal_show_commission_amount', '1') === '1',
+            'show_commission_percentage' => Setting::getValue('ws_modal_show_commission_percentage', '1') === '1',
+            'show_commission_fixed' => Setting::getValue('ws_modal_show_commission_fixed', '1') === '1',
+            'show_commission_agent' => Setting::getValue('ws_modal_show_commission_agent', '1') === '1',
+            'show_commission_branch' => Setting::getValue('ws_modal_show_commission_branch', '1') === '1',
+            'show_commission_help' => Setting::getValue('ws_modal_show_commission_help', '1') === '1',
+            'show_departure_report' => Setting::getValue('ws_modal_show_departure_report', '1') === '1',
+        ];
+
         return view('admin.reservations.workspace.index', [
             'catalogRows' => $rows,
             'catalogMeta' => $catalogMeta,
@@ -73,6 +86,7 @@ class ReservationWorkspaceController extends Controller
             'catalogTotalCount' => $rows->count(),
             'commercialKpis' => $commercialKpis,
             'commercialAssistant' => $commercialAssistant,
+            'wsModalSettings' => $wsModalSettings,
         ]);
     }
 

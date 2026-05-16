@@ -324,11 +324,24 @@
         font-weight: 900;
         font-variant-numeric: tabular-nums;
     }
-    .ws-md-departure-kpi--ok { border-color: #bfdbfe; background: linear-gradient(180deg, #eff6ff, #fff); }
-    .ws-md-departure-kpi--wait { border-color: #fde68a; background: linear-gradient(180deg, #fffbeb, #fff); }
+    .ws-md-departure-kpi--ok { border-color: #bbf7d0; background: linear-gradient(180deg, #f0fdf4, #fff); }
+    .ws-md-departure-kpi--ok i { color: #16a34a; }
+    .ws-md-departure-kpi--wait { border-color: #fed7aa; background: linear-gradient(180deg, #fff7ed, #fff); }
+    .ws-md-departure-kpi--wait i { color: #f37a1f; }
     .ws-md-departure-kpi--cancel { border-color: #fecaca; background: linear-gradient(180deg, #fef2f2, #fff); }
+    .ws-md-departure-kpi--cancel i { color: #ef4444; }
     .ws-md-departure-kpi--remain { border-color: #bae6fd; background: linear-gradient(180deg, #f0f9ff, #fff); }
-    .ws-md-departure-kpi--rate { border-color: #bbf7d0; background: linear-gradient(180deg, #f0fdf4, #fff); }
+    .ws-md-departure-kpi--remain i { color: #0083c4; }
+    .ws-md-departure-kpi--neutral { border-color: #e2e8f0; background: linear-gradient(180deg, #f8fafc, #fff); }
+    .ws-md-departure-kpi--neutral i { color: #64748b; }
+    .ws-md-departure-kpi--rate-ok { border-color: #bbf7d0; background: linear-gradient(180deg, #f0fdf4, #fff); }
+    .ws-md-departure-kpi--rate-ok i { color: #16a34a; }
+    .ws-md-departure-kpi--rate-warn { border-color: #fed7aa; background: linear-gradient(180deg, #fff7ed, #fff); }
+    .ws-md-departure-kpi--rate-warn i { color: #f37a1f; }
+    .ws-md-departure-kpi--rate-full { border-color: #fecaca; background: linear-gradient(180deg, #fef2f2, #fff); }
+    .ws-md-departure-kpi--rate-full i { color: #ef4444; }
+    .ws-md-departure-kpi--rate-low { border-color: #e2e8f0; background: linear-gradient(180deg, #f8fafc, #fff); }
+    .ws-md-departure-kpi--rate-low i { color: #64748b; }
     .ws-md-departure-info-grid {
         display: grid;
         grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -373,6 +386,74 @@
         font-size: 0.85rem;
         font-weight: 700;
     }
+    .ws-md-report-card {
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        padding: 1rem;
+    }
+    .ws-md-report-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .ws-md-report-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+    .ws-md-report-badge--neutral { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .ws-md-report-badge--info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .ws-md-report-badge--warn { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .ws-md-report-badge--danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .ws-md-report-list {
+        margin: 0.5rem 0 0;
+        padding: 0;
+        list-style: none;
+    }
+    .ws-md-report-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .ws-md-report-item:last-child { border-bottom: none; }
+    .ws-md-report-item--neutral { color: #475569; }
+    .ws-md-report-item--info { color: #0369a1; }
+    .ws-md-report-item--warn { color: #c2410c; }
+    .ws-md-report-item--danger { color: #b91c1c; }
+    .ws-md-report-recos {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 12px;
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+    }
+    .ws-md-report-recos strong {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 900;
+        color: #0e3a5a;
+        margin-bottom: 0.35rem;
+    }
+    .ws-md-report-recos ul {
+        margin: 0;
+        padding-left: 1.1rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #334155;
+    }
+    .ws-md-report-recos li { margin: 0.15rem 0; }
     .ws-md-selector-actions { margin-top: 0.9rem; }
     .ws-md-selector-actions .ws-md-btn { margin: 0; }
     .ws-md-inline-note {
@@ -1447,6 +1528,7 @@
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 <script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/json" id="ws-modal-settings-json">{!! json_encode($wsModalSettings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
 @push('scripts')
@@ -1491,6 +1573,12 @@ document.addEventListener('DOMContentLoaded', function () {
         try { return JSON.parse(wsModalJson.textContent || '{}'); } catch (err) { return {}; }
     }
     var wsDetailMap = parseWsDetailMap();
+    var wsModalSettingsJson = document.getElementById('ws-modal-settings-json');
+    function parseWsModalSettings() {
+        if (!wsModalSettingsJson) return {};
+        try { return JSON.parse(wsModalSettingsJson.textContent || '{}'); } catch (err) { return {}; }
+    }
+    var wsModalSettings = parseWsModalSettings();
     function escapeWsHtml(s) {
         if (s == null || s === '') return '';
         var d = document.createElement('div');
@@ -2215,6 +2303,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function commercialCommissionHtml(detail) {
+        var s = wsModalSettings || {};
+        if (!s.show_commission) return '';
         var commission = detail && detail.commission ? detail.commission : null;
         var html = '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-hand-holding-usd"></i> Commission commerciale</div>';
         if (!commission || !commission.configured) {
@@ -2222,14 +2312,89 @@ document.addEventListener('DOMContentLoaded', function () {
             return html;
         }
         html += '<div class="ws-md-commission-card">';
-        html += '<span>' + escapeHtml(commission.type_label || 'Commission') + '</span>';
-        if (commission.type === 'percentage') {
-            html += '<strong>' + escapeHtml(commission.value_label || '') + ' = ' + escapeHtml(commission.estimated_label || '0 DH') + ' / voyageur</strong>';
-        } else {
-            html += '<strong>' + escapeHtml(commission.value_label || commission.estimated_label || '0 DH') + ' / voyageur</strong>';
+        if (s.show_commission_type) {
+            html += '<span>' + escapeHtml(commission.type_label || 'Commission') + '</span>';
         }
-        if (commission.basis_unit_price) {
+        if (s.show_commission_amount) {
+            if (commission.type === 'percentage' && s.show_commission_percentage) {
+                html += '<strong>' + escapeHtml(commission.value_label || '') + ' = ' + escapeHtml(commission.estimated_label || '0 DH') + ' / voyageur</strong>';
+            } else if (commission.type !== 'percentage' && s.show_commission_fixed) {
+                html += '<strong>' + escapeHtml(commission.value_label || commission.estimated_label || '0 DH') + ' / voyageur</strong>';
+            }
+        }
+        if (s.show_commission_agent && commission.agent_label) {
+            html += '<p>Agent : ' + escapeHtml(commission.agent_label) + '</p>';
+        }
+        if (s.show_commission_branch && commission.branch_label) {
+            html += '<p>Agence : ' + escapeHtml(commission.branch_label) + '</p>';
+        }
+        if (commission.basis_unit_price && s.show_commission_amount) {
             html += '<p>Estimation sur prix unitaire ' + escapeHtml(String(commission.basis_unit_price).replace('.', ',')) + ' ' + escapeHtml(commission.currency || 'MAD') + '.</p>';
+        }
+        if (s.show_commission_help) {
+            html += '<p style="margin-top:0.5rem;font-size:0.75rem;color:#64748b;font-weight:600;">Montant indicatif, sujet à validation finale.</p>';
+        }
+        html += '</div></section>';
+        return html;
+    }
+
+    function renderDepartureReport(detail, departure) {
+        if (!wsModalSettings.show_departure_report) return '';
+        var reservations = departure.reservations || {};
+        var capacity = departure.capacity != null ? Number(departure.capacity) : null;
+        var remaining = departure.remaining != null ? Number(departure.remaining) : null;
+        var fillPct = departure.fill_pct != null ? Number(departure.fill_pct) : 0;
+        var hasRooms = !!(detail.rooms && detail.rooms.length);
+        var daysUntil = departure.days_until != null ? Number(departure.days_until) : null;
+        var rules = [];
+        var badgeClass = 'ws-md-report-badge ws-md-report-badge--neutral';
+
+        if (!hasRooms) {
+            rules.push({ text: 'Chambres non configurées', type: 'warn' });
+        }
+        if (remaining !== null && remaining <= 0) {
+            rules.push({ text: 'Complet — ne pas vendre', type: 'danger' });
+            badgeClass = 'ws-md-report-badge ws-md-report-badge--danger';
+        } else if (remaining !== null && remaining < 5) {
+            rules.push({ text: 'Stock critique (' + remaining + ' places)', type: 'danger' });
+            badgeClass = 'ws-md-report-badge ws-md-report-badge--warn';
+        }
+        if (daysUntil !== null && daysUntil >= 0 && daysUntil < 7) {
+            rules.push({ text: 'Départ imminent (' + daysUntil + ' jours)', type: 'warn' });
+        }
+        if (capacity !== null && capacity > 0 && fillPct < 30) {
+            rules.push({ text: 'Faible remplissage (' + fillPct + '%)', type: 'info' });
+        }
+        if (!rules.length) {
+            rules.push({ text: 'Départ standard', type: 'neutral' });
+            badgeClass = 'ws-md-report-badge ws-md-report-badge--neutral';
+        }
+
+        var html = '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-clipboard-check"></i> Rapport du départ</div>';
+        html += '<div class="ws-md-report-card">';
+        html += '<div class="ws-md-report-header">';
+        html += '<span class="' + badgeClass + '">' + escapeHtml(rules[0].text) + '</span>';
+        html += '</div>';
+        if (rules.length > 1) {
+            html += '<ul class="ws-md-report-list">';
+            rules.forEach(function (rule) {
+                var icon = rule.type === 'danger' ? 'fa-exclamation-circle' : (rule.type === 'warn' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+                var cls = 'ws-md-report-item--' + rule.type;
+                html += '<li class="ws-md-report-item ' + cls + '"><i class="fas ' + icon + '"></i> ' + escapeHtml(rule.text) + '</li>';
+            });
+            html += '</ul>';
+        }
+        var recos = [];
+        if (!hasRooms) recos.push('Configurer les chambres dans Laravel pour activer la réservation.');
+        if (remaining !== null && remaining > 0 && remaining < 5) recos.push('Pousser la vente : stock très limité, urgence commerciale.');
+        if (daysUntil !== null && daysUntil >= 0 && daysUntil < 7 && remaining > 0) recos.push('Contacter les prospects en attente pour ce départ.');
+        if (capacity !== null && capacity > 0 && fillPct < 30 && remaining > 0) recos.push('Proposer une promotion ou un bonus pour booster les réservations.');
+        if (recos.length) {
+            html += '<div class="ws-md-report-recos">';
+            html += '<strong><i class="fas fa-lightbulb"></i> Recommandations</strong>';
+            html += '<ul>';
+            recos.forEach(function (r) { html += '<li>' + escapeHtml(r) + '</li>'; });
+            html += '</ul></div>';
         }
         html += '</div></section>';
         return html;
@@ -2238,15 +2403,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function departureBody(detail, departure) {
         var reservations = departure.reservations || {};
         var fillPct = departure.fill_pct != null ? departure.fill_pct : 0;
+        var rateClass = 'ws-md-departure-kpi--rate';
+        if (fillPct >= 100) rateClass = 'ws-md-departure-kpi--rate-full';
+        else if (fillPct >= 85) rateClass = 'ws-md-departure-kpi--rate-warn';
+        else if (fillPct >= 50) rateClass = 'ws-md-departure-kpi--rate-ok';
+        else rateClass = 'ws-md-departure-kpi--rate-low';
         var html = '<div class="ws-md-detail-panel">';
         html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-route"></i> Détail du départ</div>';
         html += '<div class="ws-md-departure-kpi-grid">';
-        html += '<div class="ws-md-departure-kpi"><i class="fas fa-users"></i><span>Capacité</span><strong>' + escapeHtml(departure.capacity != null ? departure.capacity : '—') + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--neutral"><i class="fas fa-users"></i><span>Capacité</span><strong>' + escapeHtml(departure.capacity != null ? departure.capacity : '—') + '</strong></div>';
         html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--ok"><i class="fas fa-check-circle"></i><span>Confirmées</span><strong>' + escapeHtml(reservations.validee != null ? reservations.validee : 0) + '</strong></div>';
         html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--wait"><i class="fas fa-hourglass-half"></i><span>En attente</span><strong>' + escapeHtml(reservations.en_cours != null ? reservations.en_cours : 0) + '</strong></div>';
         html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--cancel"><i class="fas fa-times-circle"></i><span>Annulées</span><strong>' + escapeHtml(reservations.annulee != null ? reservations.annulee : 0) + '</strong></div>';
         html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--remain"><i class="fas fa-chair"></i><span>Restantes</span><strong>' + escapeHtml(departure.remaining != null ? departure.remaining : '—') + '</strong></div>';
-        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--rate"><i class="fas fa-chart-line"></i><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ' + rateClass + '"><i class="fas fa-chart-line"></i><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
         html += '</div>';
         html += '<div class="ws-md-progress ws-md-progress--dep" role="progressbar" aria-valuenow="' + fillPct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + fillPct + '%"></div></div>';
         if (departure.capacity_note && !(detail.rooms && detail.rooms.length)) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
@@ -2264,6 +2434,7 @@ document.addEventListener('DOMContentLoaded', function () {
             html += '<div class="ws-md-departure-info"><span>Chambres disponibles</span><strong>Aucune chambre configurée</strong></div>';
         }
         html += '</div></section>';
+        html += renderDepartureReport(detail, departure);
         html += commercialCommissionHtml(detail);
         html += '</div>';
         return html;

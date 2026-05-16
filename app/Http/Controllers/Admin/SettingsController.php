@@ -47,6 +47,15 @@ class SettingsController extends Controller
                 'invoice_header_image_url' => Setting::storageUrl(Setting::getValue('invoice_header_image')),
                 'invoice_footer_image' => Setting::getValue('invoice_footer_image'),
                 'invoice_footer_image_url' => Setting::storageUrl(Setting::getValue('invoice_footer_image')),
+                'ws_modal_show_commission' => Setting::getValue('ws_modal_show_commission', '1'),
+                'ws_modal_show_commission_type' => Setting::getValue('ws_modal_show_commission_type', '1'),
+                'ws_modal_show_commission_amount' => Setting::getValue('ws_modal_show_commission_amount', '1'),
+                'ws_modal_show_commission_percentage' => Setting::getValue('ws_modal_show_commission_percentage', '1'),
+                'ws_modal_show_commission_fixed' => Setting::getValue('ws_modal_show_commission_fixed', '1'),
+                'ws_modal_show_commission_agent' => Setting::getValue('ws_modal_show_commission_agent', '1'),
+                'ws_modal_show_commission_branch' => Setting::getValue('ws_modal_show_commission_branch', '1'),
+                'ws_modal_show_commission_help' => Setting::getValue('ws_modal_show_commission_help', '1'),
+                'ws_modal_show_departure_report' => Setting::getValue('ws_modal_show_departure_report', '1'),
             ];
             return view($view, compact('settings'));
         }
@@ -80,6 +89,15 @@ class SettingsController extends Controller
             'hero_subtitle' => ['nullable', 'string', 'max:500'],
             'invoice_header_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
             'invoice_footer_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
+            'ws_modal_show_commission' => ['nullable', 'in:0,1'],
+            'ws_modal_show_commission_type' => ['nullable', 'in:0,1'],
+            'ws_modal_show_commission_amount' => ['nullable', 'in:0,1'],
+            'ws_modal_show_commission_percentage' => ['nullable', 'in:0,1'],
+            'ws_modal_show_commission_fixed' => ['nullable', 'in:0,1'],
+            'ws_modal_show_commission_agent' => ['nullable', 'in:0,1'],
+            'ws_modal_show_commission_branch' => ['nullable', 'in:0,1'],
+            'ws_modal_show_commission_help' => ['nullable', 'in:0,1'],
+            'ws_modal_show_departure_report' => ['nullable', 'in:0,1'],
         ]);
 
         // Vérification manuelle : si type=image et pas d'image actuelle ni uploadée
@@ -103,6 +121,16 @@ class SettingsController extends Controller
         Setting::setValue('hero_overlay_opacity', (string) $validated['hero_overlay_opacity']);
         Setting::setValue('hero_title', $validated['hero_title']);
         Setting::setValue('hero_subtitle', $validated['hero_subtitle'] ?? '');
+
+        Setting::setValue('ws_modal_show_commission', $request->input('ws_modal_show_commission', '0'));
+        Setting::setValue('ws_modal_show_commission_type', $request->input('ws_modal_show_commission_type', '0'));
+        Setting::setValue('ws_modal_show_commission_amount', $request->input('ws_modal_show_commission_amount', '0'));
+        Setting::setValue('ws_modal_show_commission_percentage', $request->input('ws_modal_show_commission_percentage', '0'));
+        Setting::setValue('ws_modal_show_commission_fixed', $request->input('ws_modal_show_commission_fixed', '0'));
+        Setting::setValue('ws_modal_show_commission_agent', $request->input('ws_modal_show_commission_agent', '0'));
+        Setting::setValue('ws_modal_show_commission_branch', $request->input('ws_modal_show_commission_branch', '0'));
+        Setting::setValue('ws_modal_show_commission_help', $request->input('ws_modal_show_commission_help', '0'));
+        Setting::setValue('ws_modal_show_departure_report', $request->input('ws_modal_show_departure_report', '0'));
 
         if ($request->hasFile('brand_logo')) {
             $oldPath = Setting::normalizePublicDiskPath(Setting::getValue('brand_logo'));

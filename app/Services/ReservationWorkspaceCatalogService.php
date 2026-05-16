@@ -2009,11 +2009,14 @@ class ReservationWorkspaceCatalogService
                 'travel_date_id' => $tid,
             ], fn ($v) => $v !== null && $v !== '')) : null;
 
+            $travelDateCarbon = Carbon::parse($td->date);
+            $daysUntil = $today->diffInDays($travelDateCarbon, false);
             $out[] = [
                 'travel_date_id' => $tid,
-                'date_iso' => Carbon::parse($td->date)->format('Y-m-d'),
-                'date_label' => $this->formatFrenchLongDate(Carbon::parse($td->date)),
-                'is_past' => Carbon::parse($td->date)->lt($today),
+                'date_iso' => $travelDateCarbon->format('Y-m-d'),
+                'date_label' => $this->formatFrenchLongDate($travelDateCarbon),
+                'is_past' => $travelDateCarbon->lt($today),
+                'days_until' => $daysUntil !== false ? (int) $daysUntil : null,
                 'departure_id' => $departureId,
                 'capacity' => $cap,
                 'capacity_known' => true,

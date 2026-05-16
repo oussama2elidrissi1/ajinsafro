@@ -224,6 +224,67 @@
             </div>
         </div>
 
+        {{-- E) Workspace commercial — modal départ --}}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">E) Workspace commercial — modal départ</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 row">
+                            <label class="col-md-3 col-form-label">Afficher le rapport du départ</label>
+                            <div class="col-md-9">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="ws_modal_show_departure_report" id="ws_modal_show_departure_report" value="1" {{ old('ws_modal_show_departure_report', $settings['ws_modal_show_departure_report'] ?? '1') == '1' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="ws_modal_show_departure_report">Afficher la section "Rapport du départ" dans le modal</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-md-3 col-form-label">Commission commerciale</label>
+                            <div class="col-md-9">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="ws_modal_show_commission" id="ws_modal_show_commission" value="1" {{ old('ws_modal_show_commission', $settings['ws_modal_show_commission'] ?? '1') == '1' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="ws_modal_show_commission">Afficher la section commission dans le modal</label>
+                                </div>
+                                <div class="ms-4">
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_type" id="ws_modal_show_commission_type" value="1" {{ old('ws_modal_show_commission_type', $settings['ws_modal_show_commission_type'] ?? '1') == '1' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="ws_modal_show_commission_type">Afficher le type de commission</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_amount" id="ws_modal_show_commission_amount" value="1" {{ old('ws_modal_show_commission_amount', $settings['ws_modal_show_commission_amount'] ?? '1') == '1' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="ws_modal_show_commission_amount">Afficher le montant estimé</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_percentage" id="ws_modal_show_commission_percentage" value="1" {{ old('ws_modal_show_commission_percentage', $settings['ws_modal_show_commission_percentage'] ?? '1') == '1' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="ws_modal_show_commission_percentage">Afficher le pourcentage</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_fixed" id="ws_modal_show_commission_fixed" value="1" {{ old('ws_modal_show_commission_fixed', $settings['ws_modal_show_commission_fixed'] ?? '1') == '1' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="ws_modal_show_commission_fixed">Afficher la commission fixe</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_agent" id="ws_modal_show_commission_agent" value="1" {{ old('ws_modal_show_commission_agent', $settings['ws_modal_show_commission_agent'] ?? '1') == '1' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="ws_modal_show_commission_agent">Afficher l'agent concerné</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_branch" id="ws_modal_show_commission_branch" value="1" {{ old('ws_modal_show_commission_branch', $settings['ws_modal_show_commission_branch'] ?? '1') == '1' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="ws_modal_show_commission_branch">Afficher le point de vente</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_help" id="ws_modal_show_commission_help" value="1" {{ old('ws_modal_show_commission_help', $settings['ws_modal_show_commission_help'] ?? '1') == '1' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="ws_modal_show_commission_help">Afficher le message d'aide</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-12">
                 <button type="submit" class="btn btn-primary waves-effect waves-light">Enregistrer les paramètres</button>
