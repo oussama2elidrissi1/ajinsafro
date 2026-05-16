@@ -4987,3 +4987,298 @@ body[data-layout="detached"] #page-topbar .header-item span {
     letter-spacing: 0.06em;
 }
 
+/* ============================================================
+   WORKSPACE LIST TABLE — PROFESSIONAL REDESIGN
+   ============================================================ */
+
+/* 1. Wrapper */
+.ws-page .workspace-list-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 2. Table base */
+.ws-page .workspace-list-table {
+    width: 100%;
+    min-width: 1600px;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8125rem;
+    background: #fff;
+}
+
+/* 3. Header */
+.ws-page .workspace-list-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 14px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+    white-space: nowrap;
+    text-align: left;
+}
+
+/* 4. Column widths */
+.ws-page .workspace-list-table .ws-data-table__th-ref,
+.ws-page .workspace-list-table .ws-td--ref {
+    width: 90px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-offer,
+.ws-page .workspace-list-table .ws-td--offer {
+    width: 260px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-city,
+.ws-page .workspace-list-table .ws-td--city {
+    width: 160px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-dep,
+.ws-page .workspace-list-table .ws-td--dep {
+    width: 130px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-price,
+.ws-page .workspace-list-table .ws-td--price {
+    width: 120px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-sold,
+.ws-page .workspace-list-table .ws-td--sold {
+    width: 90px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-remain,
+.ws-page .workspace-list-table .ws-td--remain {
+    width: 90px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-cap,
+.ws-page .workspace-list-table .ws-td--cap {
+    width: 120px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-avail,
+.ws-page .workspace-list-table .ws-td--avail {
+    width: 180px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-priority,
+.ws-page .workspace-list-table .ws-td--priority {
+    width: 180px;
+}
+
+.ws-page .workspace-list-table .ws-data-table__th-actions,
+.ws-page .workspace-list-table .ws-td--actions {
+    width: 150px;
+}
+
+/* 5. Cells — uniform, no per-cell backgrounds */
+.ws-page .workspace-list-table .ws-catalog-table-row td {
+    vertical-align: middle;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e8eef6;
+    color: #1e293b;
+    background: transparent !important;
+}
+
+/* 6. Row backgrounds — uniform */
+.ws-page .workspace-list-table tbody tr.ws-catalog-table-row {
+    background: #ffffff;
+}
+
+.ws-page .workspace-list-table tbody tr.ws-catalog-table-row:nth-child(even) {
+    background: #f9fcff;
+}
+
+.ws-page .workspace-list-table tbody tr.ws-catalog-table-row:hover {
+    background: #f3f8ff;
+}
+
+.ws-page .workspace-list-table tbody tr.ws-catalog-row--configure {
+    background: #f8fafc;
+    opacity: 0.88;
+}
+
+/* Remove vertical stripe inset shadows */
+.ws-page .workspace-list-table .ws-catalog-table-row td:first-child {
+    box-shadow: none !important;
+}
+
+/* 7. Voyage title clamp */
+.ws-page .workspace-list-table .ws-td__title--clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.35;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+/* 8. Badges — smaller, contained */
+.ws-page .workspace-list-table .ws-avail-badge,
+.ws-page .workspace-list-table .ws-priority-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 2px;
+}
+
+/* Badge cells allow wrap */
+.ws-page .workspace-list-table .ws-td--avail,
+.ws-page .workspace-list-table .ws-td--priority {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* 9. Actions */
+.ws-page .workspace-list-table .ws-td__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.ws-page .workspace-list-table .ws-td__actions .ws-btn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 1px solid transparent;
+    line-height: 1;
+    text-decoration: none;
+}
+
+/* Reserve button (primary in table) */
+.ws-page .workspace-list-table .ws-td__actions .ws-btn--primary {
+    background: #f97316;
+    color: #fff;
+    border-color: #f97316;
+}
+
+/* View / secondary button */
+.ws-page .workspace-list-table .ws-td__actions .ws-btn--secondary {
+    background: #fff;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+/* Ghost / link button */
+.ws-page .workspace-list-table .ws-td__actions .ws-btn--ghost {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+/* Disabled / configure button for non-sellable */
+.ws-page .workspace-list-table .ws-td__actions .ws-btn--disabled,
+.ws-page .workspace-list-table .ws-td__actions .ws-btn--configure,
+.ws-page .workspace-list-table .ws-td__actions .ws-btn[aria-disabled="true"] {
+    background: #e5eaf1;
+    color: #7b8794;
+    cursor: not-allowed;
+    box-shadow: none;
+    border-color: #e5eaf1;
+}
+
+/* 10. Progress bar — small and clean */
+.ws-page .workspace-list-table .ws-progress-bar--mini {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.ws-page .workspace-list-table .ws-progress-bar--mini__track {
+    flex: none;
+    width: 80px;
+    height: 5px;
+    background: #e5edf5;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.ws-page .workspace-list-table .ws-progress-bar--mini__fill {
+    height: 100%;
+    border-radius: 999px;
+}
+
+.ws-page .workspace-list-table .ws-progress-bar--mini__label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #64748b;
+    min-width: 1.8rem;
+    text-align: right;
+}
+
+/* 11. Separator row */
+.ws-page .workspace-list-table .ws-catalog-section-divider {
+    background: none;
+}
+
+.ws-page .workspace-list-table .ws-catalog-section-divider td {
+    background: #f1f5f9 !important;
+    color: #51657d;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 13px;
+    font-weight: 900;
+    text-align: center;
+    padding: 14px 16px;
+    border-top: 1px dashed #cbd5e1;
+    border-bottom: 1px dashed #cbd5e1;
+}
+
+/* 12. Responsive */
+@media (max-width: 1400px) {
+    .ws-page .workspace-list-table {
+        min-width: 1400px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .ws-page .workspace-list-table {
+        min-width: 1200px;
+    }
+}
+
+@media (max-width: 991px) {
+    .ws-page .workspace-list-table-wrapper {
+        border-radius: 12px;
+    }
+}
+

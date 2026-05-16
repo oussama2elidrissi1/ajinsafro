@@ -1267,8 +1267,8 @@
                 <h2 class="ws-table-card__title">Vue liste</h2>
                 <p class="ws-table-card__sub">Référence, voyage, départ, prix, capacité et actions. Tri serveur : futurs → sans date → passés.</p>
             </div>
-            <div class="ws-table-scroll">
-                <table class="ws-data-table ws-data-table--responsive" aria-label="Catalogue des offres en liste">
+            <div class="ws-table-scroll workspace-list-table-wrapper">
+                <table class="ws-data-table ws-data-table--responsive workspace-list-table" aria-label="Catalogue des offres en liste">
                     <thead>
                         <tr>
                             <th scope="col" class="ws-data-table__th-ref">Réf</th>
