@@ -609,11 +609,6 @@
         var passengers = collectPassengers();
         var allocation = getRoomAllocation();
 
-        if (allocation.length === 0) {
-            alert("Veuillez choisir au moins une chambre.");
-            return;
-        }
-
         var formData = new FormData();
         formData.append("action", "ajtb_v1_create_reservation");
         formData.append("nonce", window.ajtbData && window.ajtbData.reservationNonce ? window.ajtbData.reservationNonce : "");

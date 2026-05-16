@@ -730,12 +730,6 @@ class AJTB_Single_Tour_Page
                 'supplement' => isset($row['supplement']) ? max(0, (float) $row['supplement']) : 0.0,
             ];
         }
-        if ($roomDefs === []) {
-            wp_send_json_error([
-                'message' => __('Aucune chambre disponible pour ce départ.', 'ajinsafro-tour-bridge'),
-            ], 422);
-        }
-
         $reservations_table = 'reservations';
         $passengers_table = 'reservation_passengers';
         $extras_table = 'reservation_extras';
@@ -796,12 +790,6 @@ class AJTB_Single_Tour_Page
                     'source_room_type' => isset($line['source_room_type']) ? sanitize_key((string) $line['source_room_type']) : '',
                 ];
             }
-        }
-
-        if ($allocationLines === []) {
-            wp_send_json_error([
-                'message' => __('Veuillez répartir les voyageurs dans les chambres avant de confirmer.', 'ajinsafro-tour-bridge'),
-            ], 422);
         }
 
         $travelersNeed = max(1, $adults + $children);
@@ -953,21 +941,6 @@ class AJTB_Single_Tour_Page
                 'supplement_unit' => (float) ($def['supplement'] ?? 0),
                 'supplement_total' => ((float) ($def['supplement'] ?? 0)) * $assigned,
             ];
-        }
-
-        if ($normalizedLines === []) {
-            wp_send_json_error([
-                'message' => __('Veuillez choisir au moins une chambre.', 'ajinsafro-tour-bridge'),
-            ], 422);
-        }
-        if ($assignedTotal !== $travelersNeed) {
-            wp_send_json_error([
-                'message' => sprintf(
-                    'Répartition incomplète: %d voyageur(s) affecté(s) sur %d.',
-                    $assignedTotal,
-                    $travelersNeed
-                ),
-            ], 422);
         }
 
         $ownership = self::resolve_default_reservation_ownership();
