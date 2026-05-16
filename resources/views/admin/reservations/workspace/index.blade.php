@@ -1351,61 +1351,74 @@
             </div>
             <div class="ws-table-scroll workspace-list-table-wrapper">
                 <table class="ws-data-table ws-data-table--responsive workspace-list-table" aria-label="Catalogue des offres en liste">
-                    <thead>
-                        <tr>
-                            <th scope="col" class="ws-data-table__th-ref">Réf</th>
-                            <th scope="col" class="ws-data-table__th-offer">Voyage</th>
-                            <th scope="col" class="ws-data-table__th-city">Ville départ</th>
-                            <th scope="col" class="ws-data-table__th-dep">Départ</th>
-                            <th scope="col" class="ws-data-table__th-price">Prix</th>
-                            <th scope="col" class="ws-data-table__th-sold">Vendu</th>
-                            <th scope="col" class="ws-data-table__th-remain">Restant</th>
-                            <th scope="col" class="ws-data-table__th-cap">Capacité</th>
-                            <th scope="col" class="ws-data-table__th-avail">Dispo</th>
-                            <th scope="col" class="ws-data-table__th-priority">Priorité</th>
-                            <th scope="col" class="ws-data-table__th-actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ws-catalog-table-body">
-                        @php
-                            $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
-                            $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
-                        @endphp
-                        @if($sellableRows->isNotEmpty())
-                            @foreach($sellableRows as $row)
-                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
-                            @endforeach
-                        @endif
-                        @if($nonSellableRows->isNotEmpty())
-                            <tr class="ws-catalog-section-divider">
-                                <td colspan="11" class="ws-catalog-section-divider__cell">
-                                    <span class="ws-catalog-section-divider__label">Voyages non disponibles / à configurer</span>
-                                </td>
-                            </tr>
-                            @foreach($nonSellableRows as $row)
-                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
-                            @endforeach
-                        @endif
-                        @if($catalogRows->isEmpty())
-                            <tr>
-                                <td colspan="11" class="ws-table-empty-cell">
-                                    <div class="ws-catalog-empty ws-catalog-empty--inline">
-                                        <div class="max-w-md mx-auto text-center py-10 px-6">
-                                            <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3 text-xl">
-                                                <i class="fas fa-inbox"></i>
-                                            </div>
-                                            <p class="text-brand-dark font-bold text-base mb-2">Aucun voyage dans le catalogue</p>
-                                            <p class="text-gray-500 text-sm mb-5">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
-                                            <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-2.5 hover:bg-brand-dark transition-colors">
-                                                <i class="fas fa-plus-circle"></i> Gérer les voyages
-                                            </a>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endif
-                    </tbody>
-                </table>
+    <thead>
+        <tr>
+            <th scope="col" class="ws-data-table__th-ref">Réf</th>
+            <th scope="col" class="ws-data-table__th-offer">Voyage</th>
+            <th scope="col" class="ws-data-table__th-city">Ville départ</th>
+            <th scope="col" class="ws-data-table__th-dep">Départ</th>
+            <th scope="col" class="ws-data-table__th-price">Prix</th>
+            <th scope="col" class="ws-data-table__th-sold">Vendu</th>
+            <th scope="col" class="ws-data-table__th-remain">Restant</th>
+            <th scope="col" class="ws-data-table__th-cap">Capacité</th>
+            <th scope="col" class="ws-data-table__th-priority">Priorité</th>
+            <th scope="col" class="ws-data-table__th-actions">Actions</th>
+        </tr>
+    </thead>
+
+    <tbody id="ws-catalog-table-body">
+        @php
+            $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
+            $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
+        @endphp
+
+        @if($sellableRows->isNotEmpty())
+            @foreach($sellableRows as $row)
+                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+            @endforeach
+        @endif
+
+        @if($nonSellableRows->isNotEmpty())
+            <tr class="ws-catalog-section-divider">
+                <td colspan="10" class="ws-catalog-section-divider__cell">
+                    <span class="ws-catalog-section-divider__label">Voyages non disponibles / à configurer</span>
+                </td>
+            </tr>
+
+            @foreach($nonSellableRows as $row)
+                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+            @endforeach
+        @endif
+
+        @if($catalogRows->isEmpty())
+            <tr>
+                <td colspan="10" class="ws-table-empty-cell">
+                    <div class="ws-catalog-empty ws-catalog-empty--inline">
+                        <div class="max-w-md mx-auto text-center py-10 px-6">
+                            <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3 text-xl">
+                                <i class="fas fa-inbox"></i>
+                            </div>
+
+                            <p class="text-brand-dark font-bold text-base mb-2">
+                                Aucun voyage dans le catalogue
+                            </p>
+
+                            <p class="text-gray-500 text-sm mb-5">
+                                Créez ou liez des fiches voyages depuis Circuits / voyages.
+                            </p>
+
+                            <a href="{{ route('admin.circuits.voyages.index') }}"
+                               class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-2.5 hover:bg-brand-dark transition-colors">
+                                <i class="fas fa-plus-circle"></i>
+                                Gérer les voyages
+                            </a>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        @endif
+    </tbody>
+</table>
             </div>
         </div>
 
@@ -1579,16 +1592,16 @@
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /* Modal détail : enregistre en premier (avant FullCalendar) pour éviter qu'une erreur JS bloque le clic. */
-    var wsModalJson = document.getElementById('ws-modal-detail-json');
-    var wsModalEl = document.getElementById('ws-voyage-detail-modal');
-    var wsMdTitle = document.getElementById('ws-md-title');
-    var wsMdSub = document.getElementById('ws-md-sub');
-    var wsMdBody = document.getElementById('ws-md-body');
-    var wsMdFooter = document.getElementById('ws-md-footer');
+    /* Modal détail : enregistré en premier (avant FullCalendar) pour éviter qu’une erreur JS bloque le clic. */
+    var wsModalJson = document.getElementById('ws-modal-detail-json’);
+    var wsModalEl = document.getElementById('ws-voyage-detail-modal’);
+    var wsMdTitle = document.getElementById('ws-md-title’);
+    var wsMdSub = document.getElementById('ws-md-sub’);
+    var wsMdBody = document.getElementById('ws-md-body’);
+    var wsMdFooter = document.getElementById('ws-md-footer’);
     function parseWsDetailMap() {
         if (!wsModalJson) return {};
-        try { return JSON.parse(wsModalJson.textContent || '{}'); } catch (err) { return {}; }
+        try { return JSON.parse(wsModalJson.textContent || '{}’); } catch (err) { return {}; }
     }
     var wsDetailMap = parseWsDetailMap();
     var wsModalSettings = window.wsModalSettings || {};
