@@ -1409,17 +1409,20 @@
 }
 
 .ws-table-scroll {
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: auto;
     max-height: min(72vh, 920px);
     -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
 }
 
 /* Vue liste workspace : tableau data-dense */
 .ws-data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.8125rem;
-    min-width: min(100%, 860px);
 }
 
 .ws-data-table thead th {
@@ -1445,7 +1448,7 @@
 
 .ws-catalog-table-row td {
     vertical-align: middle;
-    padding: 0.45rem 0.65rem;
+    padding: 0.35rem 0.55rem;
     border-bottom: 1px solid #f1f5f9;
     color: #1e293b;
 }
@@ -1468,7 +1471,7 @@
 
 /* Mise en avant légère : départ dans les 30 prochains jours */
 .ws-catalog-table-row.ws-catalog-row--near td {
-    background: linear-gradient(90deg, rgba(0, 131, 196, 0.07) 0%, rgba(255, 255, 255, 0) 72%);
+    background: rgba(0, 131, 196, 0.04);
 }
 
 .ws-offer-card.ws-catalog-row--near {
@@ -3298,7 +3301,6 @@
 }
 
 .ws-data-table {
-    min-width: 920px;
     font-size: 0.82rem;
 }
 
@@ -3309,7 +3311,7 @@
 }
 
 .ws-catalog-table-row td {
-    padding: 0.62rem 0.7rem;
+    padding: 0.35rem 0.55rem;
     border-bottom: 1px solid #edf2f8;
 }
 
@@ -3605,12 +3607,12 @@ body[data-layout="detached"] .main-content {
 .ws-data-table {
     table-layout: fixed;
     width: 100%;
-    min-width: 1100px;
+    min-width: 1250px;
 }
 
 .ws-data-table__th-ref,
 .ws-td--ref {
-    width: 7%;
+    width: 6%;
 }
 
 .ws-data-table__th-offer,
@@ -3625,7 +3627,7 @@ body[data-layout="detached"] .main-content {
 
 .ws-data-table__th-dep,
 .ws-td--dep {
-    width: 10%;
+    width: 9%;
 }
 
 .ws-data-table__th-price,
@@ -3645,7 +3647,7 @@ body[data-layout="detached"] .main-content {
 
 .ws-data-table__th-cap,
 .ws-td--cap {
-    width: 9%;
+    width: 10%;
 }
 
 .ws-data-table__th-avail,
@@ -3655,12 +3657,12 @@ body[data-layout="detached"] .main-content {
 
 .ws-data-table__th-priority,
 .ws-td--priority {
-    width: 7%;
+    width: 8%;
 }
 
 .ws-data-table__th-actions,
 .ws-td--actions {
-    width: 14%;
+    width: 12%;
 }
 
 .ws-td--offer,
@@ -3686,9 +3688,9 @@ body[data-layout="detached"] .main-content {
     white-space: normal;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1400px) {
     .ws-data-table {
-        min-width: 980px;
+        min-width: 1150px;
     }
 
     .ws-data-table__th-offer,
@@ -3698,7 +3700,13 @@ body[data-layout="detached"] .main-content {
 
     .ws-data-table__th-actions,
     .ws-td--actions {
-        width: 16%;
+        width: 14%;
+    }
+}
+
+@media (max-width: 1200px) {
+    .ws-data-table {
+        min-width: 1100px;
     }
 }
 
@@ -4340,13 +4348,16 @@ body[data-layout="detached"] #page-topbar .header-item span {
 .ws-priority-badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.55rem;
+    padding: 0.2rem 0.45rem;
     border-radius: 999px;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .ws-priority-badge--push {
@@ -4389,13 +4400,16 @@ body[data-layout="detached"] #page-topbar .header-item span {
 .ws-avail-badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.55rem;
+    padding: 0.2rem 0.45rem;
     border-radius: 999px;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .ws-avail-badge--ok {
@@ -4559,7 +4573,7 @@ body[data-layout="detached"] #page-topbar .header-item span {
 
 .ws-td--avail,
 .ws-td--priority {
-    min-width: 110px;
+    min-width: 0;
 }
 
 .ws-td__cap-wrap {
@@ -4955,21 +4969,21 @@ body[data-layout="detached"] #page-topbar .header-item span {
 
 /* Table divider between sellable and non-sellable */
 .ws-catalog-section-divider {
-    background: #f8fafc;
+    background: #f1f5f9;
 }
 
 .ws-catalog-section-divider__cell {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     text-align: center;
-    border-top: 2px dashed #e2e8f0;
+    border-top: 1px solid #e2e8f0;
     border-bottom: 1px solid #e2e8f0;
 }
 
 .ws-catalog-section-divider__label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #475569;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
 }
 
