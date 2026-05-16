@@ -4206,18 +4206,42 @@ body[data-layout="detached"] #page-topbar .header-item span {
 }
 
 .ws-offer-card__actions--compact {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: center;
     margin-top: auto;
     padding-top: 0.7rem;
     border-top: 1px solid #ebf0f6;
-    gap: 0.55rem;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 5;
 }
 
 .ws-offer-card__actions--compact .ws-btn {
+    position: relative;
+    z-index: 2;
     min-height: 2.35rem;
     border-radius: 11px;
-    padding: 0.46rem 0.62rem;
-    font-size: 0.76rem;
+    padding: 0.46rem 0.62rem !important;
+    font-size: 0.76rem !important;
     font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+    text-decoration: none;
+    pointer-events: auto;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ws-offer-card__actions--compact .ws-btn:only-child {
+    grid-column: 1 / -1;
 }
 
 .ws-offer-card__actions--compact .ws-btn--secondary,
@@ -4243,6 +4267,23 @@ body[data-layout="detached"] #page-topbar .header-item span {
 .ws-offer-card__actions--compact .ws-btn--primary:hover {
     background: linear-gradient(135deg, #df6b17 0%, #c85a0e 100%);
     border-color: #c85a0e;
+}
+
+/* Non-sellable / disabled button in card actions */
+.ws-offer-card__actions--compact .ws-btn--disabled {
+    background: #e5eaf1;
+    color: #7b8794;
+    border: 1px solid #d8e0ea;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 1;
+}
+
+/* Responsive : empiler les boutons sur mobile */
+@media (max-width: 479.98px) {
+    .ws-offer-card__actions--compact {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (min-width: 768px) {
