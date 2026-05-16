@@ -118,6 +118,7 @@
     $comDaysUntil = $commercial['jours_avant_depart'] ?? null;
     $comAvailStatus = $commercial['statut_disponibilite'] ?? 'unknown';
     $comTopDates = $commercial['top_dates'] ?? [];
+    $isSellable = $commercial['is_sellable'] ?? false;
 
     $badgeHtmlClass = match ($comBadge) {
         'TOP VENTE' => 'ws-commercial-badge ws-commercial-badge--top',
@@ -163,6 +164,11 @@
         default => 'Standard',
     };
 
+    $configureBadgeClass = 'ws-commercial-badge ws-commercial-badge--configure';
+    $configureLabel = 'À configurer';
+    $nonSellablePriorityLabel = 'Non vendable';
+    $nonSellablePriorityClass = 'ws-priority-badge ws-priority-badge--configure';
+
     $progressColor = 'bg-emerald-500';
     if ($comFillRate !== null) {
         if ($comFillRate >= 90) $progressColor = 'bg-red-500';
@@ -172,7 +178,7 @@
 @endphp
 
 @if($viewMode === 'table')
-<tr class="ws-catalog-row ws-catalog-table-row {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}"
+<tr class="ws-catalog-row ws-catalog-table-row {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}{{ $isSellable ? '' : ' ws-catalog-row--configure' }}"
     data-type="{{ $typeKey }}"
     data-row-code="{{ $row['code'] }}"
     data-code="{{ $row['code'] }}"
@@ -197,6 +203,7 @@
     data-days-until="{{ $comDaysUntil ?? 9999 }}"
     data-fill-rate="{{ $comFillRate ?? -1 }}"
     data-price="{{ $priceSort }}"
+    data-is-sellable="{{ $isSellable ? '1' : '0' }}"
     title="{{ e($rowTitle) }}">
     <td class="ws-td ws-td--ref" data-label="Réf">
         <span class="ws-td__code">{{ $row['code'] }}</span>
@@ -263,10 +270,18 @@
         </div>
     </td>
     <td class="ws-td ws-td--avail" data-label="Disponibilité">
-        <span class="{{ $availHtmlClass }}">{{ $availLabel }}</span>
+        @if($isSellable)
+            <span class="{{ $availHtmlClass }}">{{ $availLabel }}</span>
+        @else
+            <span class="ws-avail-badge ws-avail-badge--configure">{{ $configureLabel }}</span>
+        @endif
     </td>
     <td class="ws-td ws-td--priority" data-label="Priorité">
-        <span class="{{ $priorityHtmlClass }}">{{ $priorityLabel }}</span>
+        @if($isSellable)
+            <span class="{{ $priorityHtmlClass }}">{{ $priorityLabel }}</span>
+        @else
+            <span class="{{ $nonSellablePriorityClass }}">{{ $nonSellablePriorityLabel }}</span>
+        @endif
     </td>
     <td class="ws-td ws-td--actions" data-label="Actions">
         <div class="ws-td__actions">
@@ -279,7 +294,7 @@
                 </button>
             @endif
             @can('reservations.view')
-                @if($hasLaravel)
+                @if($isSellable && $hasLaravel)
                     <button type="button"
                         class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish btn-ws-open-reserve"
                         data-row-code="{{ e($row['code']) }}"
@@ -291,6 +306,13 @@
                         @endif
                         <span>{{ $reserveLabel }}</span>
                     </button>
+                @elseif(! $isSellable && $hasLaravel)
+                    <a href="{{ $editTourUrl ?: '#' }}"
+                        class="ws-btn ws-btn--sm ws-btn--iconish {{ $editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled' }}"
+                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
+                        title="Configurer le voyage">
+                        <i class="fas fa-cog" aria-hidden="true"></i><span>Configurer</span>
+                    </a>
                 @else
                     <a href="{{ $editTourUrl ?: '#' }}"
                         class="ws-btn ws-btn--sm ws-btn--iconish {{ $editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled' }}"
@@ -304,7 +326,7 @@
     </td>
 </tr>
 @else
-<article class="ws-catalog-row ws-offer-card ws-offer-card--compact {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}"
+<article class="ws-catalog-row ws-offer-card ws-offer-card--compact {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}{{ $isSellable ? '' : ' ws-catalog-row--configure' }}"
     data-type="{{ $typeKey }}"
     data-row-code="{{ $row['code'] }}"
     data-code="{{ $row['code'] }}"
@@ -329,10 +351,13 @@
     data-days-until="{{ $comDaysUntil ?? 9999 }}"
     data-fill-rate="{{ $comFillRate ?? -1 }}"
     data-price="{{ $priceSort }}"
+    data-is-sellable="{{ $isSellable ? '1' : '0' }}"
     title="{{ e($rowTitle) }}">
 
     @if($comBadge)
         <div class="ws-offer-card__badge-overlay {{ $badgeHtmlClass }}">{{ $comBadge }}</div>
+    @elseif(! $isSellable)
+        <div class="ws-offer-card__badge-overlay {{ $configureBadgeClass }}">{{ $configureLabel }}</div>
     @endif
 
     <div class="ws-offer-card__media ws-offer-card__media--compact{{ $imageUrl ? ' ws-offer-card__media--has-img' : '' }}">
@@ -475,7 +500,7 @@
                 </button>
             @endif
             @can('reservations.view')
-                @if($hasLaravel)
+                @if($isSellable && $hasLaravel)
                     <a href="{{ $reserveUrl }}"
                         class="ws-btn ws-btn--primary ws-btn--sm"
                         title="{{ $reserveLabel }}">
@@ -485,6 +510,13 @@
                             <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
                         @endif
                         <span>{{ $reserveLabel }}</span>
+                    </a>
+                @elseif(! $isSellable && $hasLaravel)
+                    <a href="{{ $editTourUrl ?: '#' }}"
+                        class="ws-btn ws-btn--sm {{ $editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled' }}"
+                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
+                        title="Configurer le voyage">
+                        <i class="fas fa-cog" aria-hidden="true"></i><span>Configurer</span>
                     </a>
                 @else
                     <a href="{{ $editTourUrl ?: '#' }}"

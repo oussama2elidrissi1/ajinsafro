@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Enrichit les lignes du catalogue workspace avec des données commerciales
- * (KPIs, priorités, badges, recommandations) pour aider les commerciaux à vendre.
+ * (score, KPIs, priorités, badges, recommandations) pour aider les commerciaux à vendre.
  */
 class ReservationWorkspaceCommercialService
 {
@@ -30,7 +30,7 @@ class ReservationWorkspaceCommercialService
         $wpCities = $this->batchWpDepartureCities($wpPostIds);
         $monthlySold = $this->calculateMonthlySoldSeats();
 
-        // First pass: compute raw commercial data
+        // First pass: compute raw commercial data + score
         $enrichedRows = $rows->map(function (array $row) use ($today, $laravelCities, $wpCities) {
             return $this->enrichSingleRow($row, $today, $laravelCities, $wpCities);
         });
@@ -69,6 +69,7 @@ class ReservationWorkspaceCommercialService
         $placesRemaining = $placesTotal !== null ? max(0, $placesTotal - $soldGlobal) : null;
         $fillRate = null;
         $topDates = [];
+        $hasFutureDeparture = false;
 
         if ($departures->isNotEmpty()) {
             $futureDeps = $departures
@@ -78,7 +79,9 @@ class ReservationWorkspaceCommercialService
                 ->sortBy('date_iso')
                 ->values();
 
-            if ($futureDeps->isNotEmpty()) {
+            $hasFutureDeparture = $futureDeps->isNotEmpty();
+
+            if ($hasFutureDeparture) {
                 $nearestDeparture = $futureDeps->first();
                 $nearestDate = $nearestDeparture['date_iso'] ?? null;
                 $daysUntil = $nearestDate ? (int) $today->diffInDays(Carbon::parse($nearestDate), false) : null;
@@ -102,6 +105,7 @@ class ReservationWorkspaceCommercialService
             $d = Carbon::parse($row['departure_date']);
             $nearestDate = $d->format('Y-m-d');
             $daysUntil = (int) $today->diffInDays($d, false);
+            $hasFutureDeparture = $daysUntil !== null && $daysUntil >= 0;
         }
 
         if ($capacityTotal !== null && $capacityTotal > 0) {
@@ -127,6 +131,24 @@ class ReservationWorkspaceCommercialService
         $priority = $this->computePriority($daysUntil, $placesRemaining, $fillRate, $capacityTotal);
         $badge = $this->computeBadge($priority, $placesRemaining, $daysUntil, $fillRate, $placesSold);
 
+        $score = $this->computeSellabilityScore(
+            $hasFutureDeparture,
+            $daysUntil,
+            $capacityTotal,
+            $placesRemaining,
+            $fillRate,
+            $placesSold,
+            $departureCity,
+            $priceSort,
+            ! empty($row['image_url'])
+        );
+
+        $isSellable = $score >= 0
+            && $hasFutureDeparture
+            && $capacityTotal !== null && $capacityTotal > 0
+            && $departureCity !== ''
+            && $priceSort > 0;
+
         $row['commercial'] = [
             'capacity_total' => $capacityTotal,
             'places_vendues' => $placesSold,
@@ -141,7 +163,9 @@ class ReservationWorkspaceCommercialService
             'priorite_vente' => $priority,
             'badge' => $badge,
             'top_dates' => $topDates,
-            'has_future_departure' => $nearestDate !== null && $daysUntil !== null && $daysUntil >= 0,
+            'has_future_departure' => $hasFutureDeparture,
+            'score' => $score,
+            'is_sellable' => $isSellable,
         ];
 
         $row['data_commercial_priority'] = $priority;
@@ -152,8 +176,82 @@ class ReservationWorkspaceCommercialService
         $row['data_days_until'] = $daysUntil ?? 9999;
         $row['data_fill_rate'] = $fillRate ?? -1;
         $row['data_price'] = $priceSort;
+        $row['data_score'] = $score;
+        $row['data_is_sellable'] = $isSellable ? '1' : '0';
 
         return $row;
+    }
+
+    private function computeSellabilityScore(
+        bool $hasFutureDeparture,
+        ?int $daysUntil,
+        ?int $capacityTotal,
+        ?int $placesRemaining,
+        ?int $fillRate,
+        int $placesSold,
+        string $departureCity,
+        int $priceSort,
+        bool $hasImage
+    ): int {
+        $score = 0;
+
+        if (! $hasFutureDeparture) {
+            $score -= 100;
+        } else {
+            if ($daysUntil !== null) {
+                if ($daysUntil >= 0 && $daysUntil <= 7) {
+                    $score += 100;
+                } elseif ($daysUntil <= 15) {
+                    $score += 80;
+                } elseif ($daysUntil <= 30) {
+                    $score += 60;
+                } elseif ($daysUntil <= 60) {
+                    $score += 30;
+                } elseif ($daysUntil >= 0) {
+                    $score += 10;
+                }
+            }
+        }
+
+        if ($capacityTotal === null || $capacityTotal <= 0) {
+            $score -= 80;
+        }
+
+        if ($placesRemaining !== null && $placesRemaining > 0) {
+            if ($placesRemaining <= 5) {
+                $score += 50;
+            } elseif ($placesRemaining <= 10) {
+                $score += 25;
+            }
+        } elseif ($placesRemaining !== null && $placesRemaining <= 0) {
+            $score -= 50;
+        }
+
+        if ($fillRate !== null && $fillRate >= 80) {
+            $score += 40;
+        }
+
+        if ($placesSold > 0) {
+            $score += 30;
+        }
+
+        if ($departureCity !== '') {
+            $score += 20;
+        } else {
+            $score -= 60;
+        }
+
+        if ($priceSort > 0) {
+            $score += 20;
+        } else {
+            $score -= 80;
+        }
+
+        if ($hasImage) {
+            $score += 10;
+        }
+
+        return max(-999, $score);
     }
 
     private function assignTopVenteBadge(Collection $rows): Collection
@@ -175,9 +273,9 @@ class ReservationWorkspaceCommercialService
             $sold = $c['places_vendues'] ?? 0;
             $fillRate = $c['taux_remplissage'] ?? 0;
             $currentBadge = $c['badge'] ?? null;
+            $isSellable = $c['is_sellable'] ?? false;
 
-            // If no urgent badge yet, check TOP VENTE criteria
-            if ($currentBadge === null && $sold > 0) {
+            if ($isSellable && $currentBadge === null && $sold > 0) {
                 if ($sold >= $threshold || ($fillRate > 85 && $sold >= 10)) {
                     $row['commercial']['badge'] = 'TOP VENTE';
                     $row['data_commercial_badge'] = 'TOP VENTE';
@@ -320,12 +418,19 @@ class ReservationWorkspaceCommercialService
         $pushCount = 0;
         $allCities = [];
         $totalRemaining = 0;
+        $toConfigure = 0;
 
         foreach ($rows as $row) {
             $c = $row['commercial'] ?? [];
             $daysUntil = $c['jours_avant_depart'] ?? null;
             $remaining = $c['places_restantes'] ?? null;
             $priority = $c['priorite_vente'] ?? 'standard';
+            $isSellable = $c['is_sellable'] ?? false;
+
+            if (! $isSellable) {
+                $toConfigure++;
+                continue;
+            }
 
             if ($daysUntil !== null && $daysUntil >= 0 && $daysUntil <= 7 && $remaining !== null && $remaining > 0) {
                 $nearDepartures++;
@@ -357,6 +462,7 @@ class ReservationWorkspaceCommercialService
             'cities_count' => count($allCities),
             'monthly_sold' => $monthlySold,
             'total_remaining' => $totalRemaining,
+            'to_configure' => $toConfigure,
         ];
     }
 
@@ -376,6 +482,11 @@ class ReservationWorkspaceCommercialService
             $daysUntil = $c['jours_avant_depart'] ?? null;
             $remaining = $c['places_restantes'] ?? null;
             $priority = $c['priorite_vente'] ?? 'standard';
+            $isSellable = $c['is_sellable'] ?? false;
+
+            if (! $isSellable) {
+                continue;
+            }
 
             if ($daysUntil !== null && $daysUntil >= 0 && $daysUntil <= 7 && $remaining !== null && $remaining > 0) {
                 $nearCodes[] = $code;

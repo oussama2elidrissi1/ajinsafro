@@ -552,18 +552,21 @@ class ReservationWorkspaceCatalogService
         $today = Carbon::today()->startOfDay();
 
         return $rows->sort(function (array $a, array $b) use ($today) {
-            $typeA = $this->workspaceCatalogTypeTier($a);
-            $typeB = $this->workspaceCatalogTypeTier($b);
-            if ($typeA !== $typeB) {
-                return $typeA <=> $typeB;
+            // 1. Sellable items first
+            $sellableA = $a['commercial']['is_sellable'] ?? false;
+            $sellableB = $b['commercial']['is_sellable'] ?? false;
+            if ($sellableA !== $sellableB) {
+                return $sellableA ? -1 : 1;
             }
 
-            $priorityA = $this->workspaceCatalogPriorityTier($a);
-            $priorityB = $this->workspaceCatalogPriorityTier($b);
-            if ($priorityA !== $priorityB) {
-                return $priorityA <=> $priorityB;
+            // 2. Commercial score DESC
+            $scoreA = $a['commercial']['score'] ?? 0;
+            $scoreB = $b['commercial']['score'] ?? 0;
+            if ($scoreA !== $scoreB) {
+                return $scoreB <=> $scoreA;
             }
 
+            // 3. Days until departure ASC
             $daysA = $a['commercial']['jours_avant_depart'] ?? null;
             $daysB = $b['commercial']['jours_avant_depart'] ?? null;
             if ($daysA !== null && $daysB !== null && $daysA !== $daysB) {
@@ -576,6 +579,7 @@ class ReservationWorkspaceCatalogService
                 return 1;
             }
 
+            // 4. Remaining seats ASC
             $remainingA = $a['commercial']['places_restantes'] ?? null;
             $remainingB = $b['commercial']['places_restantes'] ?? null;
             if ($remainingA !== null && $remainingB !== null && $remainingA !== $remainingB) {
@@ -586,6 +590,20 @@ class ReservationWorkspaceCatalogService
             }
             if ($remainingA === null && $remainingB !== null) {
                 return 1;
+            }
+
+            // 5. Sold seats DESC
+            $soldA = $a['commercial']['places_vendues'] ?? 0;
+            $soldB = $b['commercial']['places_vendues'] ?? 0;
+            if ($soldA !== $soldB) {
+                return $soldB <=> $soldA;
+            }
+
+            // 6. Type tier
+            $typeA = $this->workspaceCatalogTypeTier($a);
+            $typeB = $this->workspaceCatalogTypeTier($b);
+            if ($typeA !== $typeB) {
+                return $typeA <=> $typeB;
             }
 
             $dateA = $this->normalizeCatalogRowDepartureDate($a);

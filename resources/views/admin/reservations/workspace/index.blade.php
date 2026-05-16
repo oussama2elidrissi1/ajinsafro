@@ -1050,6 +1050,12 @@
                     <span class="ws-kpi__val">{{ number_format($commercialKpis['total_remaining'] ?? 0, 0, ',', ' ') }}</span>
                     <span class="ws-kpi__lbl">Places restantes</span>
                 </div>
+                @if(($commercialKpis['to_configure'] ?? 0) > 0)
+                <div class="ws-kpi ws-kpi--configure">
+                    <span class="ws-kpi__val">{{ number_format($commercialKpis['to_configure'] ?? 0, 0, ',', ' ') }}</span>
+                    <span class="ws-kpi__lbl">À configurer</span>
+                </div>
+                @endif
             </div>
         </div>
         <div class="ws-hero__actions">
@@ -1195,12 +1201,17 @@
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-avail">Disponibilité</label>
                     <select id="ws-filter-avail" class="ws-select">
-                        <option value="all">Tous</option>
-                        <option value="ok">Disponible</option>
+                        <option value="sellable" selected>Tous les vendables</option>
+                        <option value="depart_proche">Départ proche</option>
+                        <option value="faible_stock">Faible stock</option>
+                        <option value="disponible">Disponible</option>
+                        <option value="fort_potentiel">Fort potentiel</option>
+                        <option value="ok">Disponible (standard)</option>
                         <option value="almost_full">Presque complet</option>
-                        <option value="low">Faible stock</option>
+                        <option value="low">Faible stock (strict)</option>
                         <option value="full">Complet</option>
-                        <option value="unknown">Non renseigné</option>
+                        <option value="configure">À configurer</option>
+                        <option value="all">Tous</option>
                     </select>
                 </div>
                 <div class="ws-field">
@@ -1888,9 +1899,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (budget === '6000-10000' && (price < 6000 || price >= 10000)) ok = false;
                 if (budget === '10000+' && price < 10000) ok = false;
             }
-            if (ok && av !== 'all') {
+            if (ok && av !== 'all' && av !== 'sellable') {
                 var astat = tr.getAttribute('data-avail-status') || 'unknown';
-                if (av === 'ok') {
+                var isSellableRow = tr.getAttribute('data-is-sellable') === '1';
+                var daysUntilRow = parseInt(tr.getAttribute('data-days-until'), 10);
+                var priorityRow = tr.getAttribute('data-commercial-priority') || 'standard';
+                var remainingRow = parseInt(tr.getAttribute('data-remaining'), 10);
+
+                if (av === 'sellable') {
+                    if (!isSellableRow) ok = false;
+                } else if (av === 'depart_proche') {
+                    if (!isSellableRow || isNaN(daysUntilRow) || daysUntilRow < 0 || daysUntilRow > 7) ok = false;
+                } else if (av === 'faible_stock') {
+                    if (!isSellableRow || isNaN(remainingRow) || remainingRow > 10 || remainingRow <= 0) ok = false;
+                } else if (av === 'disponible') {
+                    if (!isSellableRow || astat !== 'ok') ok = false;
+                } else if (av === 'fort_potentiel') {
+                    if (!isSellableRow || priorityRow !== 'high_potential') ok = false;
+                } else if (av === 'ok') {
                     if (astat !== 'ok') ok = false;
                 } else if (av === 'almost_full') {
                     if (astat !== 'almost_full') ok = false;
@@ -1900,9 +1926,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (astat !== 'full') ok = false;
                 } else if (av === 'unknown') {
                     if (astat !== 'unknown') ok = false;
+                } else if (av === 'configure') {
+                    if (isSellableRow) ok = false;
                 } else if (av === 'places') {
                     if (astat !== 'ok' && astat !== 'low' && astat !== 'almost_full') ok = false;
                 }
+            }
+
+            // Default: hide non-sellable when avail filter is at default 'sellable'
+            if (ok && (!availEl || availEl.value === 'sellable')) {
+                var isSellableRow = tr.getAttribute('data-is-sellable') === '1';
+                if (!isSellableRow) ok = false;
             }
             if (ok && pr !== 'all') {
                 if (tr.getAttribute('data-commercial-priority') !== pr) ok = false;
@@ -1972,7 +2006,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeEl) typeEl.value = 'all';
             if (cityEl) cityEl.value = 'all';
             if (budgetEl) budgetEl.value = 'all';
-            if (availEl) availEl.value = 'all';
+            if (availEl) availEl.value = 'sellable';
             if (priorityEl) priorityEl.value = 'all';
             if (resEl) resEl.value = 'all';
             if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();
@@ -1988,31 +2022,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // Assistant commercial buttons
     document.querySelectorAll('[data-filter-near]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            if (availEl) availEl.value = 'all';
+            if (availEl) availEl.value = 'depart_proche';
             if (priorityEl) priorityEl.value = 'all';
             if (sortEl) sortEl.value = 'dep-asc';
             applyWsFiltersAndSort();
-            setTimeout(function () {
-                var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row:not(.hidden), #ws-catalog-table-body .ws-catalog-row:not(.hidden)');
-                rows.forEach(function (tr) {
-                    var days = parseInt(tr.getAttribute('data-days-until'), 10);
-                    tr.classList.toggle('hidden', isNaN(days) || days < 0 || days > 7);
-                });
-                wsApplySort();
-            }, 10);
         });
     });
     document.querySelectorAll('[data-filter-low]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            if (availEl) availEl.value = 'low';
+            if (availEl) availEl.value = 'faible_stock';
             if (priorityEl) priorityEl.value = 'all';
             applyWsFiltersAndSort();
         });
     });
     document.querySelectorAll('[data-filter-potential]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            if (priorityEl) priorityEl.value = 'high_potential';
-            if (availEl) availEl.value = 'all';
+            if (availEl) availEl.value = 'fort_potentiel';
+            if (priorityEl) priorityEl.value = 'all';
             applyWsFiltersAndSort();
         });
     });
