@@ -340,6 +340,17 @@ class ReservationDossierController extends Controller
                 ->with('error', 'Aucune réservation liée à ce dossier.');
         }
 
+        // Refresh financials if missing (common for front-client reservations created without pricing)
+        if ($reservation->total_amount === null || $reservation->total_amount <= 0) {
+            try {
+                $service = app(\App\Services\ReservationDossierService::class);
+                $service->refreshReservationFinancials($reservation, false);
+                $reservation->refresh();
+            } catch (\Throwable $e) {
+                // Silently ignore refresh failures to avoid breaking the view
+            }
+        }
+
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403);
 
         $backUrl = url()->previous();

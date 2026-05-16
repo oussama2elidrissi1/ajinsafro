@@ -360,11 +360,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>{{ $clientLabel ?: 'Client principal' }}</td>
-                                    <td>Principal</td>
-                                    <td>{{ $reservation->client_document_type ?: '—' }} {{ $reservation->client_document_number ?: '' }}</td>
-                                </tr>
+                                @if($reservation->passengers->isEmpty())
+                                    <tr>
+                                        <td>{{ $clientLabel ?: 'Client principal' }}</td>
+                                        <td>Principal</td>
+                                        <td>{{ $reservation->client_document_type ?: '—' }} {{ $reservation->client_document_number ?: '' }}</td>
+                                    </tr>
+                                @endif
                                 @foreach($reservation->passengers as $passenger)
                                     <tr>
                                         <td>{{ trim(($passenger->first_name ?? '').' '.($passenger->last_name ?? '')) ?: '—' }}</td>

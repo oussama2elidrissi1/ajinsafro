@@ -6,6 +6,19 @@
         var overlay   = document.getElementById('aj-admin-v2-overlay');
         var hamburger = document.getElementById('aj-admin-v2-hamburger');
 
+        // Defensive: remove any duplicate sidebar wrappers that may leak from cached/old layouts
+        var root = document.getElementById('aj-admin-v2-root');
+        if (root) {
+            var sidebars = root.querySelectorAll('.aj-admin-v2-sidebar');
+            for (var i = 1; i < sidebars.length; i++) {
+                sidebars[i].remove();
+            }
+            var menus = root.querySelectorAll('.vertical-menu');
+            for (var j = 0; j < menus.length; j++) {
+                menus[j].style.display = 'none';
+            }
+        }
+
         if (!sidebar) return;
 
         function openSidebar() {

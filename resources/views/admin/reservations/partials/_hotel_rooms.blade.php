@@ -393,6 +393,11 @@
         };
     }
 
+    function getRoomMode() {
+        var container = document.getElementById('reservation-hotel-rooms-container');
+        return container ? (container.getAttribute('data-room-mode') || 'rooms') : 'rooms';
+    }
+
     function syncSummary() {
         var travelers = travelerCount();
         var baseUnitPrice = discountedUnitPrice();
@@ -942,10 +947,24 @@
                 syncSummary();
                 departurePreviousValue = departureSelect ? departureSelect.value : '';
             })
-            .catch(function () {
-                departureSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            .catch(function (error) {
+                console.error('[HotelRooms] loadDeparturesForTour failed', error);
+                departureSelect.innerHTML = '<option value="">— Erreur de chargement —</option>';
+                var wrapper = departureSelect.closest('.col-md-6') || departureSelect.parentElement;
+                if (wrapper && !wrapper.querySelector('.departure-load-error')) {
+                    var errDiv = document.createElement('div');
+                    errDiv.className = 'departure-load-error alert alert-danger mt-2 small mb-0';
+                    errDiv.innerHTML = 'Impossible de charger les départs. Vérifiez la connexion ou réessayez.';
+                    wrapper.appendChild(errDiv);
+                }
             });
     }
+
+    window.reservationReloadDeparturesForTour = function(tourId, selectedDepartureId) {
+        if (typeof loadDeparturesForTour === 'function') {
+            loadDeparturesForTour(tourId, selectedDepartureId);
+        }
+    };
 
     if (roomsContainer) {
         roomsContainer.addEventListener('input', function (event) {

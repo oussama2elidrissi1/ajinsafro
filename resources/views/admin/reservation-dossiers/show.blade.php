@@ -20,8 +20,11 @@
     $documents = $dossier->documents->isNotEmpty() ? $dossier->documents : ($reservation->documents ?? collect());
     $histories = $dossier->histories->isNotEmpty() ? $dossier->histories : ($reservation->histories ?? collect());
     $passengers = $reservation->passengers ?? collect();
-    $totalAmount = (float) ($dossier->total_amount ?? $reservation->total_amount ?? 0);
-    $paidAmount = (float) ($dossier->paid_amount ?? $reservation->paid_amount ?? 0);
+    $rawTotal = $dossier->total_amount ?? $reservation->total_amount ?? null;
+    $rawPaid = $dossier->paid_amount ?? $reservation->paid_amount ?? null;
+    $hasCalculatedFinancials = $rawTotal !== null && $rawTotal !== '';
+    $totalAmount = (float) ($rawTotal ?? 0);
+    $paidAmount = (float) ($rawPaid ?? 0);
     $remainingAmount = (float) ($dossier->remaining_amount ?? $reservation->remaining_amount ?? max(0, $totalAmount - $paidAmount));
     $paymentProgress = $totalAmount > 0 ? (int) min(100, round(($paidAmount / $totalAmount) * 100)) : 0;
     $dossierStatus = $dossier->dossier_status ?: $reservation->dossier_status ?: $reservation->status;
@@ -582,7 +585,7 @@
                     <span class="dossier-pill {{ $dossierBadge['class'] }}">{{ $dossierBadge['label'] }}</span>
                     <span class="dossier-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</span>
                 </div>
-                <h1>Dossier {{ $dossier->dossier_number ?? ('#'.$dossier->id) }}</h1>
+                <h1>Dossier {{ $dossier->dossier_number ?: 'En attente de confirmation' }}</h1>
                 <p>Vue détaillée du dossier client, du voyage, des paiements, documents et actions opérationnelles.</p>
             </div>
 
@@ -682,7 +685,7 @@
                     </div>
                     <div class="dossier-meta-card">
                         <span>Dossier</span>
-                        <strong>{{ $dossier->dossier_number ?? '—' }}</strong>
+                        <strong>{{ $dossier->dossier_number ?: 'En attente' }}</strong>
                     </div>
                 </div>
             </div>
@@ -1045,26 +1048,71 @@
 
                         <div class="summary-row">
                             <span>Total du dossier</span>
-                            <strong>{{ number_format($totalAmount, 2, ',', ' ') }} DH</strong>
+                            @if($hasCalculatedFinancials)
+                                <strong>{{ number_format($totalAmount, 2, ',', ' ') }} DH</strong>
+                            @else
+                                <strong class="text-muted" style="font-size:0.95rem;">Non calculé</strong>
+                            @endif
                         </div>
                         <div class="summary-row">
                             <span>Payé</span>
-                            <strong>{{ number_format($paidAmount, 2, ',', ' ') }} DH</strong>
+                            @if($hasCalculatedFinancials)
+                                <strong>{{ number_format($paidAmount, 2, ',', ' ') }} DH</strong>
+                            @else
+                                <strong class="text-muted" style="font-size:0.95rem;">—</strong>
+                            @endif
                         </div>
                         <div class="summary-row">
                             <span>Restant à payer</span>
-                            <strong>{{ number_format($remainingAmount, 2, ',', ' ') }} DH</strong>
+                            @if($hasCalculatedFinancials)
+                                <strong>{{ number_format($remainingAmount, 2, ',', ' ') }} DH</strong>
+                            @else
+                                <strong class="text-muted" style="font-size:0.95rem;">—</strong>
+                            @endif
                         </div>
                         <div class="summary-row">
                             <span>Suppléments</span>
-                            <strong>{{ number_format((float) ($dossier->room_supplement_total ?? $reservation->room_supplement_total ?? 0), 2, ',', ' ') }} DH</strong>
+                            @php $roomSupp = (float) ($dossier->room_supplement_total ?? $reservation->room_supplement_total ?? 0); @endphp
+                            @if($hasCalculatedFinancials || $roomSupp > 0)
+                                <strong>{{ number_format($roomSupp, 2, ',', ' ') }} DH</strong>
+                            @else
+                                <strong class="text-muted" style="font-size:0.95rem;">—</strong>
+                            @endif
                         </div>
                         <div class="summary-row">
                             <span>Extras</span>
-                            <strong>{{ number_format((float) ($dossier->extras_total ?? $reservation->extras_total ?? 0), 2, ',', ' ') }} DH</strong>
+                            @php $extrasTotal = (float) ($dossier->extras_total ?? $reservation->extras_total ?? 0); @endphp
+                            @if($hasCalculatedFinancials || $extrasTotal > 0)
+                                <strong>{{ number_format($extrasTotal, 2, ',', ' ') }} DH</strong>
+                            @else
+                                <strong class="text-muted" style="font-size:0.95rem;">—</strong>
+                            @endif
                         </div>
                     </div>
                 </section>
+
+                @php $roomAllocations = $reservation->reservationRooms ?? collect(); @endphp
+                @if($roomAllocations->isEmpty())
+                    <section class="dossier-card" style="border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb, #ffffff);">
+                        <div class="dossier-card-header">
+                            <h3 class="dossier-card-title" style="color: #b45309;"><i class="bx bx-bed me-1"></i>Rooming à traiter</h3>
+                            <p class="dossier-card-subtitle">Ce dossier n’a pas encore de chambres affectées.</p>
+                        </div>
+                        <div class="dossier-card-body">
+                            <div class="alert alert-warning border-0 mb-0 small">
+                                <strong>Demande client sans chambre.</strong> L’admin doit traiter le rooming manuellement via la modification du dossier.
+                            </div>
+                            <div class="mt-3">
+                                @if(Route::has('admin.reservations.edit'))
+                                    <a href="{{ route('admin.reservations.edit', $reservation) }}" class="dossier-btn dossier-btn-soft">
+                                        <i class="bx bx-edit"></i>
+                                        <span>Modifier le dossier</span>
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </section>
+                @endif
 
                 <section class="dossier-card">
                     <div class="dossier-card-header">
