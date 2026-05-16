@@ -29,23 +29,20 @@
         </div>
 
         <div id="existing-client-block" class="{{ $clientMode === 'existing' ? '' : 'd-none' }}">
-            <div class="reservation-create__field">
+            <div class="reservation-create__field" style="position:relative;z-index:20;">
                 <label class="reservation-create__label" for="reservation-client-search">Client existant <span>*</span></label>
-                <input type="search" id="reservation-client-search" class="reservation-create__input mb-2" placeholder="Recherche par nom, téléphone, email ou CIN" autocomplete="off">
-                <select name="client_external_id" id="client_external_id" class="reservation-create__input">
-                    <option value="">Choisir un client…</option>
-                    @foreach($clients as $client)
-                        <option
-                            value="{{ $client->id }}"
-                            data-search="{{ \Illuminate\Support\Str::lower(trim(($client->full_name ?? '').' '.($client->phone ?? '').' '.($client->email ?? '').' '.($client->national_id_number ?? '').' '.($client->passport_number ?? '').' '.($client->client_code ?? ''))) }}"
-                            {{ old('client_external_id') == $client->id ? 'selected' : '' }}
-                        >
-                            [{{ $client->client_code }}] {{ $client->full_name }}
-                            @if($client->phone) — {{ $client->phone }} @endif
-                            @if($client->email) — {{ $client->email }} @endif
-                        </option>
-                    @endforeach
-                </select>
+                <input type="hidden" name="client_external_id" id="client_external_id" value="{{ old('client_external_id') }}">
+                <input type="search" id="reservation-client-search" class="reservation-create__input mb-1" placeholder="Recherche par nom, téléphone, email ou CIN" autocomplete="off" value="">
+                <div id="client-search-results" class="reservation-create__search-results" hidden></div>
+                <div id="client-search-selected" class="reservation-create__search-selected {{ old('client_external_id') ? '' : 'd-none' }}">
+                    <span class="reservation-create__search-selected-label" id="client-search-selected-label">
+                        @if(old('client_external_id'))
+                            @php $oldClient = $clients->firstWhere('id', old('client_external_id')); @endphp
+                            {{ $oldClient ? '['.$oldClient->client_code.'] '.$oldClient->full_name : 'Client sélectionné' }}
+                        @endif
+                    </span>
+                    <button type="button" class="reservation-create__search-selected-clear" id="client-search-clear" aria-label="Effacer">&times;</button>
+                </div>
                 <p id="reservation-client-search-empty" class="reservation-create__helper d-none">Aucun client trouvé.</p>
                 <a href="{{ route('admin.customers.clients.create') }}" class="reservation-create__helper d-inline-flex mt-2" target="_blank" rel="noopener">Créer un nouveau client</a>
             </div>
@@ -86,6 +83,14 @@
                     <input type="text" name="client_nationality" id="client_nationality" class="reservation-create__input" value="{{ old('client_nationality') }}">
                 </div>
                 <div class="reservation-create__field">
+                    <label class="reservation-create__label" for="client_gender">Sexe</label>
+                    <select name="client_gender" id="client_gender" class="reservation-create__input">
+                        <option value="">Selectionner...</option>
+                        <option value="male" {{ old('client_gender') === 'male' ? 'selected' : '' }}>Homme</option>
+                        <option value="female" {{ old('client_gender') === 'female' ? 'selected' : '' }}>Femme</option>
+                    </select>
+                </div>
+                <div class="reservation-create__field">
                     <label class="reservation-create__label" for="client_birth_date">Date naissance</label>
                     <input type="date" name="client_birth_date" id="client_birth_date" class="reservation-create__input" value="{{ old('client_birth_date') }}">
                 </div>
@@ -96,25 +101,6 @@
                         <option value="child" {{ old('client_traveler_type') === 'child' ? 'selected' : '' }}>Enfant</option>
                         <option value="infant" {{ old('client_traveler_type') === 'infant' ? 'selected' : '' }}>Bebe</option>
                     </select>
-                </div>
-                <div class="reservation-create__field">
-                    <label class="reservation-create__label" for="client_gender">Sexe</label>
-                    <select name="client_gender" id="client_gender" class="reservation-create__input">
-                        <option value="">Selectionner...</option>
-                        <option value="male" {{ old('client_gender') === 'male' ? 'selected' : '' }}>Homme</option>
-                        <option value="female" {{ old('client_gender') === 'female' ? 'selected' : '' }}>Femme</option>
-                    </select>
-                </div>
-                <div class="reservation-create__field">
-                    <label class="reservation-create__label" for="client_consumes_bed">Lit</label>
-                    <select name="client_consumes_bed" id="client_consumes_bed" class="reservation-create__input">
-                        <option value="1" {{ old('client_consumes_bed', '1') === '1' ? 'selected' : '' }}>Consomme un lit</option>
-                        <option value="0" {{ old('client_consumes_bed') === '0' ? 'selected' : '' }}>Sans lit</option>
-                    </select>
-                </div>
-                <div class="reservation-create__field reservation-create__field--full">
-                    <label class="reservation-create__label" for="client_address">Adresse</label>
-                    <textarea name="client_address" id="client_address" class="reservation-create__input reservation-create__input--textarea" rows="3">{{ old('client_address') }}</textarea>
                 </div>
             </div>
         </div>
@@ -153,7 +139,6 @@
                         <div class="reservation-create__field"><label class="reservation-create__label">Date naissance</label><input type="date" name="passengers[{{ $companionKey }}][birth_date]" class="reservation-create__input" value="{{ $passenger['birth_date'] ?? '' }}"></div>
                         <div class="reservation-create__field"><label class="reservation-create__label">Type document</label><input type="text" name="passengers[{{ $companionKey }}][document_type]" class="reservation-create__input" value="{{ $passenger['document_type'] ?? '' }}"></div>
                         <div class="reservation-create__field"><label class="reservation-create__label">No document</label><input type="text" name="passengers[{{ $companionKey }}][document_number]" class="reservation-create__input" value="{{ $passenger['document_number'] ?? '' }}"></div>
-                        <div class="reservation-create__field"><label class="reservation-create__label">Lit</label><select name="passengers[{{ $companionKey }}][consumes_bed]" class="reservation-create__input"><option value="1" {{ ($passenger['consumes_bed'] ?? '1') === '1' ? 'selected' : '' }}>Consomme un lit</option><option value="0" {{ ($passenger['consumes_bed'] ?? '') === '0' ? 'selected' : '' }}>Sans lit</option></select></div>
                     </div>
                 </div>
             @endforeach
@@ -161,6 +146,7 @@
         <p id="create-no-companions" class="reservation-create__empty-state {{ $oldPassengers->isNotEmpty() ? 'd-none' : '' }}">Aucun accompagnant pour le moment.</p>
     </div>
 
+    <div class="reservation-create__step-errors" id="step-2-errors" hidden></div>
     <div class="reservation-create__actions">
         <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="1">Retour</button>
         <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="3">Continuer</button>

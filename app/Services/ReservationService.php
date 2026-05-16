@@ -559,7 +559,7 @@ class ReservationService
                 'relationship_to_main' => $row['relationship_to_main'] ?? null,
                 'traveler_key' => $row['traveler_key'] ?? ('companion_'.count($keepIds)),
                 'is_main' => false,
-                'consumes_bed' => (bool) ($row['consumes_bed'] ?? true),
+                'consumes_bed' => (bool) ($row['consumes_bed'] ?? (($row['type'] ?? 'adult') !== 'infant')),
             ];
 
             if ($id > 0) {

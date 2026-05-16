@@ -46,6 +46,7 @@
         <div class="reservation-create__alert reservation-create__alert--warn d-none" id="rooming-alerts"></div>
     </div>
 
+    <div class="reservation-create__step-errors" id="step-3-errors" hidden></div>
     <div class="reservation-create__actions">
         <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="2">Retour</button>
         <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="4">Continuer</button>

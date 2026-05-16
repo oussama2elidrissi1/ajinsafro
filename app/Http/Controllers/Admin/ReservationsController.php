@@ -580,11 +580,17 @@ class ReservationsController extends Controller
      */
     public function store(Request $request)
     {
-        $this->mergeDepartureFromLegacyRequest($request);
+        try {
+            $this->mergeDepartureFromLegacyRequest($request);
 
         $data = $request->validate($this->reservationValidationRules());
         $data['passengers'] = $this->mergeMainTravelerIntoPassengers($request, $data);
         $this->validateDepartureMatchesTour($data);
+        if (empty($data['client_external_id']) || (int) ($data['client_external_id'] ?? 0) <= 0) {
+            throw ValidationException::withMessages([
+                'client_external_id' => ['Le client est requis. Créez un client ou sélectionnez-en un existant.'],
+            ]);
+        }
         $data['room_allocations_payload'] = $this->extractRoomAllocationsPayloadFromRequest($request);
         $this->validateRoomingPayload($data['passengers'], $data['room_allocations_payload']);
 
@@ -592,6 +598,7 @@ class ReservationsController extends Controller
         $extrasPayload = $pricingContext['extras_payload'];
         $paymentAmount = $pricingContext['payment_amount'];
         $pricing = $pricingContext['pricing'];
+        $this->validateExtrasPayload($extrasPayload, $pricingContext['travelers_count']);
 
         // Enforce room selection when accommodation_mode == rooms
         $accommodationMode = (string) ($data['accommodation_mode'] ?? ($request->input('accommodation_mode') ?? 'rooms'));
@@ -787,9 +794,36 @@ class ReservationsController extends Controller
             return $dossier->fresh();
         });
 
-        return redirect()
-            ->route('admin.reservation-dossiers.show', $dossier)
-            ->with('success', 'Dossier de rÃ©servation crÃ©Ã© avec succÃ¨s.');
+            return redirect()
+                ->route('admin.reservation-dossiers.show', $dossier)
+                ->with('success', 'Dossier de rÃ©servation crÃ©Ã© avec succÃ¨s.');
+        } catch (ValidationException $e) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                $messages = $e->errors();
+                $grouped = [
+                    'rooming' => [],
+                    'extras' => [],
+                    'client' => [],
+                    'general' => [],
+                ];
+                foreach ($messages as $field => $errs) {
+                    if (str_starts_with($field, 'room_allocations') || str_starts_with($field, 'hotel_rooms')) {
+                        $grouped['rooming'] = array_merge($grouped['rooming'], $errs);
+                    } elseif (str_starts_with($field, 'extras')) {
+                        $grouped['extras'] = array_merge($grouped['extras'], $errs);
+                    } elseif (str_starts_with($field, 'client_')) {
+                        $grouped['client'] = array_merge($grouped['client'], $errs);
+                    } else {
+                        $grouped['general'] = array_merge($grouped['general'], $errs);
+                    }
+                }
+                return response()->json([
+                    'success' => false,
+                    'errors' => array_filter($grouped),
+                ], 422);
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -1211,7 +1245,7 @@ class ReservationsController extends Controller
             'client_birth_date' => 'nullable|date',
             'client_gender' => 'nullable|in:male,female',
             'client_traveler_type' => 'nullable|in:adult,child,infant',
-            'client_consumes_bed' => 'nullable|boolean',
+            // consumes_bed inferred from traveler_type: adult=true, child=true, infant=false
             'payment_type' => 'nullable|string|max:50',
             'payment_receipt' => 'nullable|file|max:5120',
             'base_price' => 'nullable|numeric|min:0',
@@ -1293,7 +1327,7 @@ class ReservationsController extends Controller
             'document_number' => $data['client_document_number'] ?? null,
             'nationality' => $request->input('client_nationality'),
             'relationship_to_main' => 'main',
-            'consumes_bed' => $request->boolean('client_consumes_bed', true),
+            'consumes_bed' => ($request->input('client_traveler_type', 'adult') !== 'infant'),
         ];
 
         return $passengers;
@@ -1329,6 +1363,31 @@ class ReservationsController extends Controller
                 throw ValidationException::withMessages([
                     "room_allocations.{$index}" => ['Capacite chambre invalide.'],
                 ]);
+            }
+            if (count($travelerKeys) === 0) {
+                throw ValidationException::withMessages([
+                    "room_allocations.{$index}" => ['Cette chambre ne contient aucun voyageur.'],
+                ]);
+            }
+
+            $mode = (string) ($allocation['occupancy_mode'] ?? '');
+            if ($mode === 'half_male') {
+                $hasNonMale = collect($travelerKeys)
+                    ->contains(fn ($key) => ($travelers->get($key)['gender'] ?? null) !== 'male');
+                if ($hasNonMale) {
+                    throw ValidationException::withMessages([
+                        "room_allocations.{$index}" => ['Demi-double homme incompatible : tous les voyageurs doivent etre des hommes.'],
+                    ]);
+                }
+            }
+            if ($mode === 'half_female') {
+                $hasNonFemale = collect($travelerKeys)
+                    ->contains(fn ($key) => ($travelers->get($key)['gender'] ?? null) !== 'female');
+                if ($hasNonFemale) {
+                    throw ValidationException::withMessages([
+                        "room_allocations.{$index}" => ['Demi-double femme incompatible : tous les voyageurs doivent etre des femmes.'],
+                    ]);
+                }
             }
 
             foreach ($travelerKeys as $travelerKey) {
@@ -1371,6 +1430,32 @@ class ReservationsController extends Controller
             throw ValidationException::withMessages([
                 'room_allocations' => ['Tous les voyageurs qui consomment un lit doivent etre affectes a une chambre.'],
             ]);
+        }
+    }
+
+    private function validateExtrasPayload(array $extrasPayload, int $travelersCount): void
+    {
+        foreach ($extrasPayload as $index => $extra) {
+            if (! is_array($extra)) {
+                continue;
+            }
+            $quantity = (int) ($extra['quantity'] ?? 0);
+            if ($quantity < 1) {
+                continue;
+            }
+            $scope = (string) ($extra['application_scope'] ?? 'dossier');
+            $name = (string) ($extra['name'] ?? 'Extra');
+            $maxAllowed = 1;
+            if ($scope === 'traveler_selection') {
+                $maxAllowed = count($extra['traveler_keys'] ?? []);
+            } elseif ($scope === 'per_traveler') {
+                $maxAllowed = $travelersCount;
+            }
+            if ($quantity > $maxAllowed && $maxAllowed > 0) {
+                throw ValidationException::withMessages([
+                    "extras.{$index}" => ["Extra \"{$name}\" : quantite max autorisee = {$maxAllowed}."],
+                ]);
+            }
         }
     }
 

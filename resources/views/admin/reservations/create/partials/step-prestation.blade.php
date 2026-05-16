@@ -74,6 +74,7 @@
         'compactAvailabilityOnly' => true,
     ])
 
+    <div class="reservation-create__step-errors" id="step-1-errors" hidden></div>
     <div class="reservation-create__actions">
         <span></span>
         <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="2">Continuer</button>

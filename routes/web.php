@@ -189,6 +189,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::get('customers/clients', [ClientController::class, 'index'])->name('customers.clients.index');
     Route::get('customers/clients/create', [ClientController::class, 'create'])->name('customers.clients.create');
     Route::get('customers/clients/search', [ClientController::class, 'search'])->name('customers.clients.search');
+    Route::post('customers/clients/quick-store', [ClientController::class, 'quickStore'])->name('customers.clients.quick-store');
     Route::post('customers/clients', [ClientController::class, 'store'])->name('customers.clients.store');
     Route::get('customers/clients/{client}', [ClientController::class, 'show'])->name('customers.clients.show');
     Route::get('customers/clients/{client}/edit', [ClientController::class, 'edit'])->name('customers.clients.edit');
