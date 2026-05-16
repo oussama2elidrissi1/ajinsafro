@@ -39,6 +39,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    {{-- TODO: remplacer par un build Tailwind local (Vite/PostCSS) avant mise en production --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -1528,7 +1529,6 @@
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 <script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-<script type="application/json" id="ws-modal-settings-json">{!! json_encode($wsModalSettings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
 @push('scripts')
@@ -1555,30 +1555,43 @@
 </div>
 @endpush
 
-@push('scripts')
+@push('scripts’)
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
+    var defaults = {
+        show_commission: true,
+        show_commission_type: true,
+        show_commission_amount: true,
+        show_commission_percentage: true,
+        show_commission_fixed: true,
+        show_commission_agent: true,
+        show_commission_branch: true,
+        show_commission_help: true,
+        show_departure_report: true
+    };
+    var injected = {!! json_encode($wsModalSettings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!};
+    if (!injected || typeof injected !== 'object’ || Array.isArray(injected)) injected = {};
+    window.wsModalSettings = Object.assign({}, defaults, injected);
+})();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded’, function () {
     /* Modal détail : enregistré en premier (avant FullCalendar) pour éviter qu’une erreur JS bloque le clic. */
-    var wsModalJson = document.getElementById('ws-modal-detail-json');
-    var wsModalEl = document.getElementById('ws-voyage-detail-modal');
-    var wsMdTitle = document.getElementById('ws-md-title');
-    var wsMdSub = document.getElementById('ws-md-sub');
-    var wsMdBody = document.getElementById('ws-md-body');
-    var wsMdFooter = document.getElementById('ws-md-footer');
+    var wsModalJson = document.getElementById('ws-modal-detail-json’);
+    var wsModalEl = document.getElementById('ws-voyage-detail-modal’);
+    var wsMdTitle = document.getElementById('ws-md-title’);
+    var wsMdSub = document.getElementById('ws-md-sub’);
+    var wsMdBody = document.getElementById('ws-md-body’);
+    var wsMdFooter = document.getElementById('ws-md-footer’);
     function parseWsDetailMap() {
         if (!wsModalJson) return {};
-        try { return JSON.parse(wsModalJson.textContent || '{}'); } catch (err) { return {}; }
+        try { return JSON.parse(wsModalJson.textContent || '{}’); } catch (err) { return {}; }
     }
     var wsDetailMap = parseWsDetailMap();
-    var wsModalSettingsJson = document.getElementById('ws-modal-settings-json');
-    function parseWsModalSettings() {
-        if (!wsModalSettingsJson) return {};
-        try { return JSON.parse(wsModalSettingsJson.textContent || '{}'); } catch (err) { return {}; }
-    }
-    var wsModalSettings = parseWsModalSettings();
+    var wsModalSettings = window.wsModalSettings || {};
     function escapeWsHtml(s) {
         if (s == null || s === '') return '';
         var d = document.createElement('div');
@@ -2303,7 +2316,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function commercialCommissionHtml(detail) {
-        var s = wsModalSettings || {};
+        var s = (typeof window !== 'undefined' && window.wsModalSettings) ? window.wsModalSettings : {};
         if (!s.show_commission) return '';
         var commission = detail && detail.commission ? detail.commission : null;
         var html = '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-hand-holding-usd"></i> Commission commerciale</div>';
@@ -2339,7 +2352,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderDepartureReport(detail, departure) {
-        if (!wsModalSettings.show_departure_report) return '';
+        var s = (typeof window !== 'undefined' && window.wsModalSettings) ? window.wsModalSettings : {};
+        if (!s.show_departure_report) return '';
         var reservations = departure.reservations || {};
         var capacity = departure.capacity != null ? Number(departure.capacity) : null;
         var remaining = departure.remaining != null ? Number(departure.remaining) : null;
