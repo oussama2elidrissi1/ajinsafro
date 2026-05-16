@@ -1081,6 +1081,10 @@
         var emptyMsg = document.getElementById('reservation-client-search-empty');
         if (!resultsContainer) return;
 
+        clearStepErrors(2);
+        clearInlineError();
+        unblockContinueButton();
+
         if (!query || query.length < 2) {
             resultsContainer.hidden = true;
             resultsContainer.innerHTML = '';
@@ -1102,12 +1106,25 @@
             });
     }
 
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function renderClientResults(items, query) {
         var container = document.getElementById('client-search-results');
         if (!container) return;
 
         if (!items.length) {
-            container.innerHTML = '<div class="reservation-create__search-result"><span>Aucun résultat</span></div>';
+            var noResultHtml = '<div class="reservation-create__search-result reservation-create__search-result--empty">' +
+                '<span><strong>Aucun client trouvé</strong><br><span class="reservation-create__search-result-meta">Pour "' + escapeHtml(query) + '"</span></span>' +
+                '</div>' +
+                '<div class="reservation-create__search-result reservation-create__search-result--action" id="client-search-create-new">' +
+                '<span>Créer un nouveau client avec cette recherche</span>' +
+                '<span class="reservation-create__search-result-code">+</span>' +
+                '</div>';
+            container.innerHTML = noResultHtml;
             container.hidden = false;
             return;
         }
@@ -1335,6 +1352,8 @@
                 }
                 var step = Number(panel.getAttribute('data-create-step')) || 0;
                 if (step === currentStep) {
+                    clearStepErrors(step);
+                    clearInlineError();
                     unblockContinueButton();
                 }
             });
@@ -1344,6 +1363,11 @@
                     fieldWrap.classList.remove('is-invalid');
                     var msg = fieldWrap.querySelector('.reservation-create__field-error');
                     if (msg) msg.remove();
+                }
+                var step = Number(panel.getAttribute('data-create-step')) || 0;
+                if (step === currentStep) {
+                    clearStepErrors(step);
+                    clearInlineError();
                 }
             });
         });
@@ -1672,6 +1696,9 @@
 
             if (target.matches('#client_mode_new, #client_mode_existing')) {
                 syncClientMode();
+                clearStepErrors(2);
+                clearInlineError();
+                unblockContinueButton();
                 renderExtras();
             }
             if (target.matches('#visa_ok')) {
@@ -1745,6 +1772,32 @@
                     searchResult.getAttribute('data-client-id'),
                     searchResult.getAttribute('data-client-label')
                 );
+                return;
+            }
+
+            var createNewFromSearch = target.closest('#client-search-create-new');
+            if (createNewFromSearch) {
+                event.preventDefault();
+                var query = document.getElementById('reservation-client-search');
+                var parts = query ? String(query.value || '').trim().split(/\s+/) : ['', ''];
+                document.getElementById('client_mode_new').checked = true;
+                syncClientMode();
+                clearStepErrors(2);
+                clearInlineError();
+                unblockContinueButton();
+                if (parts.length > 1) {
+                    document.getElementById('client_first_name').value = parts.slice(0, -1).join(' ');
+                    document.getElementById('client_last_name').value = parts[parts.length - 1];
+                } else {
+                    document.getElementById('client_first_name').value = parts[0] || '';
+                    document.getElementById('client_last_name').value = '';
+                }
+                if (query) query.value = '';
+                var results = document.getElementById('client-search-results');
+                if (results) {
+                    results.innerHTML = '';
+                    results.hidden = true;
+                }
                 return;
             }
 

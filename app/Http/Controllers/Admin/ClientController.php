@@ -280,7 +280,10 @@ class ClientController extends Controller
         $query = Client::query();
         $this->branchScope->scopeClients($query, $request->user());
 
-        $query->where(function ($qq) use ($q) {
+        $normalized = str_replace([' ', '-', '.', '/', '\\'], '', $q);
+        $hasNormalized = mb_strlen($normalized) >= 2;
+
+        $query->where(function ($qq) use ($q, $normalized, $hasNormalized) {
             $qq->where('client_code', 'like', '%'.$q.'%')
                 ->orWhere('full_name', 'like', '%'.$q.'%')
                 ->orWhere('first_name', 'like', '%'.$q.'%')
@@ -289,6 +292,12 @@ class ClientController extends Controller
                 ->orWhere('phone', 'like', '%'.$q.'%')
                 ->orWhere('national_id_number', 'like', '%'.$q.'%')
                 ->orWhere('passport_number', 'like', '%'.$q.'%');
+
+            if ($hasNormalized) {
+                $qq->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%'])
+                    ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(national_id_number, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%'])
+                    ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(passport_number, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%']);
+            }
         });
 
         $items = $query
