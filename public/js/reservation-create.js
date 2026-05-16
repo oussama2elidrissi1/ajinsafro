@@ -1371,6 +1371,19 @@
                     errors.push({ field: 'client_phone', message: 'Le téléphone du client principal est obligatoire.' });
                 }
             }
+
+            document.querySelectorAll('#companions-container .companion-row').forEach(function (row, index) {
+                var first = row.querySelector('input[name*="[first_name]"]');
+                var last = row.querySelector('input[name*="[last_name]"]');
+                var firstName = String(first && first.value || '').trim();
+                var lastName = String(last && last.value || '').trim();
+                var hasAny = firstName !== '' || lastName !== '';
+                var hasBoth = firstName !== '' && lastName !== '';
+                if (hasAny && !hasBoth) {
+                    errors.push({ field: null, message: 'Accompagnant #' + (index + 1) + ' : prénom et nom sont tous les deux obligatoires.' });
+                }
+            });
+
             return { valid: errors.length === 0, errors: errors };
         },
 
@@ -1478,9 +1491,6 @@
             if (summary.priceMissing) {
                 result.errors.push({ field: null, message: 'Aucun prix configuré pour ce voyage/départ.' });
             }
-            if (summary.roomMode === 'blocked') {
-                result.errors.push({ field: null, message: 'Configuration chambres indisponible pour ce départ.' });
-            }
             if (summary.availableDepartureCapacity > 0 && summary.travelerCount > summary.availableDepartureCapacity) {
                 result.errors.push({ field: null, message: 'Le nombre de voyageurs dépasse le stock disponible sur ce départ.' });
             }
@@ -1491,16 +1501,6 @@
                 }
                 if (summary.travelerCount > summary.availableDepartureCapacity) {
                     result.errors.push({ field: null, message: 'Stock insuffisant : il reste seulement ' + summary.availableDepartureCapacity + ' places.' });
-                }
-            } else if (summary.roomMode !== 'blocked') {
-                if (summary.selectedRoomCount < 1) {
-                    result.errors.push({ field: null, message: 'Sélectionnez au moins une chambre pour ce dossier.' });
-                }
-                if (summary.stockExceeded) {
-                    result.errors.push({ field: null, message: 'Le nombre de chambres demandé dépasse le stock disponible.' });
-                }
-                if (summary.selectedRoomCapacity < summary.travelerCount) {
-                    result.errors.push({ field: null, message: 'La capacité des chambres sélectionnées est insuffisante pour les voyageurs du dossier.' });
                 }
             }
             result.valid = result.errors.length === 0;

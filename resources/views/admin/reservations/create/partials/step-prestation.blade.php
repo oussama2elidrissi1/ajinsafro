@@ -74,6 +74,10 @@
         'compactAvailabilityOnly' => true,
     ])
 
+    <p class="reservation-create__helper" style="margin-top:1rem;">
+        La répartition des chambres sera effectuée à l'étape 3 après la saisie des voyageurs.
+    </p>
+
     <div class="reservation-create__step-errors" id="step-1-errors" hidden></div>
     <div class="reservation-create__actions">
         <span></span>
